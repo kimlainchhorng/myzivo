@@ -376,6 +376,8 @@ const DispatchAnalytics = lazy(() => import("./pages/dispatch/DispatchAnalytics"
 const DispatchQuality = lazy(() => import("./pages/dispatch/DispatchQuality"));
 const DispatchSupport = lazy(() => import("./pages/dispatch/DispatchSupport"));
 const DispatchSupportTicket = lazy(() => import("./pages/dispatch/DispatchSupportTicket"));
+const DispatchDisputes = lazy(() => import("./pages/dispatch/DispatchDisputes"));
+const DispatchDisputeDetail = lazy(() => import("./pages/dispatch/DispatchDisputeDetail"));
 const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
 
 // Public Rating Page
@@ -1377,6 +1379,8 @@ const App = () => (
                   <Route path="quality" element={<DispatchQuality />} />
                   <Route path="support" element={<DispatchSupport />} />
                   <Route path="support/:id" element={<DispatchSupportTicket />} />
+                  <Route path="disputes" element={<DispatchDisputes />} />
+                  <Route path="disputes/:id" element={<DispatchDisputeDetail />} />
                   <Route path="settings" element={<DispatchSettings />} />
                 </Route>
                 {/* User Ticket Detail Page */}

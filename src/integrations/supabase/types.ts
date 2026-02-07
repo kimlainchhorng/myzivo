@@ -1882,6 +1882,48 @@ export type Database = {
           },
         ]
       }
+      bonus_zones: {
+        Row: {
+          bonus_type: string | null
+          bonus_value: number | null
+          center_lat: number | null
+          center_lng: number | null
+          created_at: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string | null
+          radius_km: number | null
+          starts_at: string | null
+        }
+        Insert: {
+          bonus_type?: string | null
+          bonus_value?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          radius_km?: number | null
+          starts_at?: string | null
+        }
+        Update: {
+          bonus_type?: string | null
+          bonus_value?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          radius_km?: number | null
+          starts_at?: string | null
+        }
+        Relationships: []
+      }
       booking_audit_logs: {
         Row: {
           created_at: string
@@ -3641,6 +3683,45 @@ export type Database = {
           token?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      dispute_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
         }
         Relationships: []
       }
@@ -6924,6 +7005,8 @@ export type Database = {
           delivery_photo_url: string | null
           delivery_pin: string | null
           delivery_pin_verified: boolean | null
+          dispute_id: string | null
+          dispute_status: string | null
           distance_miles: number | null
           driver_id: string | null
           driver_payout_cents: number | null
@@ -6938,6 +7021,8 @@ export type Database = {
           payment_status: string | null
           payout_at: string | null
           payout_error: string | null
+          payout_hold: boolean | null
+          payout_hold_reason: string | null
           payout_idempotency_key: string | null
           payout_status: string | null
           payout_transfer_id: string | null
@@ -7002,6 +7087,8 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
@@ -7016,6 +7103,8 @@ export type Database = {
           payment_status?: string | null
           payout_at?: string | null
           payout_error?: string | null
+          payout_hold?: boolean | null
+          payout_hold_reason?: string | null
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
@@ -7080,6 +7169,8 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
@@ -7094,6 +7185,8 @@ export type Database = {
           payment_status?: string | null
           payout_at?: string | null
           payout_error?: string | null
+          payout_hold?: boolean | null
+          payout_hold_reason?: string | null
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
@@ -7140,6 +7233,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "restaurant_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "order_disputes"
             referencedColumns: ["id"]
           },
           {
@@ -9798,6 +9898,78 @@ export type Database = {
             columns: ["option_group_id"]
             isOneToOne: false
             referencedRelation: "option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_disputes: {
+        Row: {
+          approved_refund_amount: number | null
+          assigned_admin_id: string | null
+          created_at: string | null
+          created_by: string | null
+          created_role: string
+          description: string | null
+          id: string
+          order_id: string
+          payout_hold: boolean | null
+          priority: string
+          reason: string
+          requested_refund_amount: number | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_refund_amount?: number | null
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_role?: string
+          description?: string | null
+          id?: string
+          order_id: string
+          payout_hold?: boolean | null
+          priority?: string
+          reason: string
+          requested_refund_amount?: number | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_refund_amount?: number | null
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_role?: string
+          description?: string | null
+          id?: string
+          order_id?: string
+          payout_hold?: boolean | null
+          priority?: string
+          reason?: string
+          requested_refund_amount?: number | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -13396,6 +13568,73 @@ export type Database = {
           test_type?: string
         }
         Relationships: []
+      }
+      refund_requests: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          dispute_id: string | null
+          id: string
+          order_id: string
+          processed_at: string | null
+          refund_reason: string | null
+          status: string
+          stripe_error: string | null
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          dispute_id?: string | null
+          id?: string
+          order_id: string
+          processed_at?: string | null
+          refund_reason?: string | null
+          status?: string
+          stripe_error?: string | null
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          dispute_id?: string | null
+          id?: string
+          order_id?: string
+          processed_at?: string | null
+          refund_reason?: string | null
+          status?: string
+          stripe_error?: string | null
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "order_disputes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       region_bonuses: {
         Row: {
