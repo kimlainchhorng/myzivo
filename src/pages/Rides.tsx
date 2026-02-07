@@ -1,47 +1,52 @@
 /**
  * ZIVO Rides — Premium 2026 Booking Page
  * Dark Glassmorphism with layered scroll architecture
+ * Now with real Mapbox geocoding, routing, and dynamic pricing
  */
 
-import { useState, useEffect } from "react";
- import { useCurrentLocation } from "@/hooks/useCurrentLocation";
- import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
- import { 
+import { 
   MapPin, Navigation, Clock, Users, Shield, Star, CheckCircle2,
   ChevronRight, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
   Leaf, Zap, Briefcase, Crown, Anchor, Dog
- } from "lucide-react";
- import { Button } from "@/components/ui/button";
- import { Input } from "@/components/ui/input";
- import { Label } from "@/components/ui/label";
- import { Textarea } from "@/components/ui/textarea";
- import Header from "@/components/Header";
- import Footer from "@/components/Footer";
- import SEOHead from "@/components/SEOHead";
- import ZivoMobileNav from "@/components/app/ZivoMobileNav";
- import MobileCheckoutFooter from "@/components/mobile/MobileCheckoutFooter";
- import { useIsMobile } from "@/hooks/useMobileSettings";
- import { supabase } from "@/integrations/supabase/client";
- import { toast } from "sonner";
- import { GoogleMapProvider } from "@/components/maps";
- import RidesMapBackground from "@/components/ride/RidesMapBackground";
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import MobileCheckoutFooter from "@/components/mobile/MobileCheckoutFooter";
+import { useIsMobile } from "@/hooks/useMobileSettings";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import RidesMapBackground from "@/components/ride/RidesMapBackground";
+import { useMapboxRoute, RouteData } from "@/hooks/useMapboxRoute";
+import { useMapboxGeocode } from "@/hooks/useMapboxGeocode";
+import { calculateRidePrice, TripDetails } from "@/lib/tripCalculator";
  
- type RideStep = "request" | "options" | "confirm" | "processing" | "success";
- 
- interface RideOption {
-   id: string;
-   name: string;
-   image: string;
-   price: string;
-   time: string;
-   icon: React.ComponentType<{ className?: string }>;
-   desc: string;
-   multiplier?: number;
-   seats?: number;
- }
- 
- type CategoryKey = "Economy" | "Premium" | "Elite";
+type RideStep = "request" | "options" | "confirm" | "processing" | "success";
+
+interface RideOption {
+  id: string;
+  name: string;
+  image: string;
+  price: string;
+  time: string;
+  icon: React.ComponentType<{ className?: string }>;
+  desc: string;
+  multiplier?: number;
+  seats?: number;
+  subtitle?: string;
+  eta?: number;
+}
+
+type CategoryKey = "Economy" | "Premium" | "Elite";
  
  // Premium categorized vehicle options
  const rideCategories: Record<CategoryKey, RideOption[]> = {
@@ -185,35 +190,32 @@ import { motion, AnimatePresence } from "framer-motion";
    ]
  };
  
-// Louisiana mock address suggestions
-const mockAddressSuggestions = [
-  "109 Hickory Street, Denham Springs, LA",
-  "875 Florida Blvd, Baton Rouge, LA",
-  "6401 Bluebonnet Blvd, Baton Rouge, LA",
-  "660 Arlington Creek Centre, Baton Rouge, LA",
-  "1 Airport Rd, Baton Rouge, LA",
-  "3900 N I-10 Service Rd, Metairie, LA",
-  "10000 Perkins Rowe, Baton Rouge, LA",
-  "2142 O'Neal Lane, Baton Rouge, LA",
-  "7707 Bluebonnet Blvd, Baton Rouge, LA",
-  "3535 S Sherwood Forest Blvd, Baton Rouge, LA",
-];
-
+// Real fare calculation using spec formula
 const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
-  const baseFare = 3.50;
-  const perMile = 1.75;
-  const perMinute = 0.35;
-  const bookingFee = 2.50;
-  const minimumFare = 7.00;
-  const fare = (baseFare + (distanceMiles * perMile) + (durationMinutes * perMinute)) * multiplier + bookingFee;
-  return Math.max(fare, minimumFare);
+  const baseFare = 2.00;
+  const perMile = 1.25;
+  const perMinute = 0.20;
+  const fare = (baseFare + (distanceMiles * perMile) + (durationMinutes * perMinute)) * multiplier;
+  return Math.max(fare, 5.00); // $5 minimum
 };
 
 export default function Rides() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
- const isMobile = useIsMobile();
+  const isMobile = useIsMobile();
+  const { routeData, isLoading: isRouteLoading, fetchRoute } = useMapboxRoute();
+  const { 
+    suggestions: pickupSuggestions, 
+    fetchSuggestions: fetchPickupSuggestions,
+    clearSuggestions: clearPickupSuggestions 
+  } = useMapboxGeocode();
+  const { 
+    suggestions: dropoffSuggestions, 
+    fetchSuggestions: fetchDropoffSuggestions,
+    clearSuggestions: clearDropoffSuggestions 
+  } = useMapboxGeocode();
+  
   const [step, setStep] = useState<RideStep>("request");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
@@ -222,36 +224,36 @@ export default function Rides() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CategoryKey>("Premium");
-
-  const [estimatedDistance] = useState(5.2);
-  const [estimatedDuration] = useState(15);
- const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Address autocomplete state
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDropoffSuggestions, setShowDropoffSuggestions] = useState(false);
 
-  // Filter suggestions based on input
-  const getFilteredSuggestions = (input: string) => {
-    if (!input.trim()) return mockAddressSuggestions.slice(0, 6);
-    return mockAddressSuggestions
-      .filter(addr => addr.toLowerCase().includes(input.toLowerCase()))
-      .slice(0, 6);
-  };
+  // Real route data
+  const estimatedDistance = routeData?.distance || 5.2;
+  const estimatedDuration = routeData?.duration || 15;
 
-  const pickupSuggestions = getFilteredSuggestions(pickup);
-  const dropoffSuggestions = getFilteredSuggestions(dropoff);
+  // Fetch route when both addresses are set
+  useEffect(() => {
+    if (pickup.trim() && dropoff.trim()) {
+      fetchRoute(pickup, dropoff);
+    }
+  }, [pickup, dropoff, fetchRoute]);
 
-  const handlePickupSuggestionClick = (suggestion: string) => {
-    setPickup(suggestion);
+  // Handle suggestion selection
+  const handlePickupSuggestionClick = useCallback((suggestion: { placeName: string }) => {
+    setPickup(suggestion.placeName);
     setShowPickupSuggestions(false);
-  };
+    clearPickupSuggestions();
+  }, [clearPickupSuggestions]);
 
-  const handleDropoffSuggestionClick = (suggestion: string) => {
-    setDropoff(suggestion);
+  const handleDropoffSuggestionClick = useCallback((suggestion: { placeName: string }) => {
+    setDropoff(suggestion.placeName);
     setShowDropoffSuggestions(false);
-  };
+    clearDropoffSuggestions();
+  }, [clearDropoffSuggestions]);
  
    // Auto-detect location on mount
    useEffect(() => {
@@ -383,11 +385,14 @@ export default function Rides() {
        <Header />
  
       <main className="relative">
-        {/* FIXED LAYER — Dark Map Background with Google Maps */}
+        {/* FIXED LAYER — Dark Map Background with Mapbox */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <GoogleMapProvider>
-            <RidesMapBackground userLocation={userLocation} />
-          </GoogleMapProvider>
+          <RidesMapBackground 
+            userLocation={userLocation}
+            pickupCoords={routeData?.pickupCoords}
+            dropoffCoords={routeData?.dropoffCoords}
+            routeCoordinates={routeData?.coordinates}
+          />
           <div className="absolute inset-0 rides-gradient-overlay" />
         </div>
  
@@ -427,18 +432,19 @@ export default function Rides() {
                        </div>
                        <div className="flex-1 min-w-0">
                          <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Pickup Location</div>
-                         <input 
-                           value={pickup}
-                           onChange={(e) => {
-                             setPickup(e.target.value);
-                             setShowPickupSuggestions(true);
-                           }}
-                           onFocus={() => setShowPickupSuggestions(true)}
-                           onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
-                           placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Enter pickup address..."}
-                           className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
-                           style={{ fontSize: '16px' }}
-                         />
+                          <input 
+                            value={pickup}
+                            onChange={(e) => {
+                              setPickup(e.target.value);
+                              setShowPickupSuggestions(true);
+                              fetchPickupSuggestions(e.target.value, userLocation || undefined);
+                            }}
+                            onFocus={() => setShowPickupSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
+                            placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Enter pickup address..."}
+                            className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
+                            style={{ fontSize: '16px' }}
+                          />
                        </div>
                        <button
                          type="button"
@@ -465,23 +471,23 @@ export default function Rides() {
                              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
                            }}
                          >
-                           <div className="border border-zinc-700 rounded-xl overflow-hidden">
-                             {pickupSuggestions.map((suggestion, index) => (
-                               <button
-                                 key={index}
-                                 onClick={() => handlePickupSuggestionClick(suggestion)}
-                                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
-                                 style={{ 
-                                   backgroundColor: '#09090b',
-                                 }}
-                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
-                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
-                               >
-                                 <MapPin className="w-4 h-4 text-primary shrink-0" />
-                                 <span className="text-sm text-white truncate">{suggestion}</span>
-                               </button>
-                             ))}
-                           </div>
+                            <div className="border border-zinc-700 rounded-xl overflow-hidden">
+                              {pickupSuggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion.id}
+                                  onClick={() => handlePickupSuggestionClick(suggestion)}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
+                                  style={{ 
+                                    backgroundColor: '#09090b',
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
+                                >
+                                  <MapPin className="w-4 h-4 text-primary shrink-0" />
+                                  <span className="text-sm text-white truncate">{suggestion.placeName}</span>
+                                </button>
+                              ))}
+                            </div>
                          </motion.div>
                        )}
                      </AnimatePresence>
@@ -495,18 +501,19 @@ export default function Rides() {
                        </div>
                        <div className="flex-1 min-w-0">
                          <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Destination</div>
-                         <input 
-                           value={dropoff}
-                           onChange={(e) => {
-                             setDropoff(e.target.value);
-                             setShowDropoffSuggestions(true);
-                           }}
-                           onFocus={() => setShowDropoffSuggestions(true)}
-                           onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
-                           placeholder="Enter destination..."
-                           className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
-                           style={{ fontSize: '16px' }}
-                         />
+                          <input 
+                            value={dropoff}
+                            onChange={(e) => {
+                              setDropoff(e.target.value);
+                              setShowDropoffSuggestions(true);
+                              fetchDropoffSuggestions(e.target.value, userLocation || undefined);
+                            }}
+                            onFocus={() => setShowDropoffSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
+                            placeholder="Enter destination..."
+                            className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
+                            style={{ fontSize: '16px' }}
+                          />
                        </div>
                        <button
                          type="button"
@@ -533,23 +540,23 @@ export default function Rides() {
                              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
                            }}
                          >
-                           <div className="border border-zinc-700 rounded-xl overflow-hidden">
-                             {dropoffSuggestions.map((suggestion, index) => (
-                               <button
-                                 key={index}
-                                 onClick={() => handleDropoffSuggestionClick(suggestion)}
-                                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
-                                 style={{ 
-                                   backgroundColor: '#09090b',
-                                 }}
-                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
-                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
-                               >
-                                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                                 <span className="text-sm text-white truncate">{suggestion}</span>
-                               </button>
-                             ))}
-                           </div>
+                            <div className="border border-zinc-700 rounded-xl overflow-hidden">
+                              {dropoffSuggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion.id}
+                                  onClick={() => handleDropoffSuggestionClick(suggestion)}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
+                                  style={{ 
+                                    backgroundColor: '#09090b',
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
+                                >
+                                  <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <span className="text-sm text-white truncate">{suggestion.placeName}</span>
+                                </button>
+                              ))}
+                            </div>
                          </motion.div>
                        )}
                      </AnimatePresence>

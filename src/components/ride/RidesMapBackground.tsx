@@ -1,24 +1,31 @@
 /**
  * RidesMapBackground Component
  * 
- * Displays a Google Map as a background for the Rides page with user location marker.
+ * Displays a Mapbox map as a background for the Rides page with user location marker.
  * Falls back to static image if Maps fails to load.
  */
 
-import { GoogleMap, useGoogleMaps } from "@/components/maps";
+import MapboxMap from "@/components/maps/MapboxMap";
+import { hasMapboxToken } from "@/services/mapbox";
 
 interface RidesMapBackgroundProps {
   userLocation: { lat: number; lng: number } | null;
+  pickupCoords?: { lat: number; lng: number } | null;
+  dropoffCoords?: { lat: number; lng: number } | null;
+  routeCoordinates?: [number, number][];
 }
 
-const RidesMapBackground = ({ userLocation }: RidesMapBackgroundProps) => {
-  const { isLoaded, loadError } = useGoogleMaps();
-  
+const RidesMapBackground = ({ 
+  userLocation,
+  pickupCoords,
+  dropoffCoords,
+  routeCoordinates 
+}: RidesMapBackgroundProps) => {
   // Default to Baton Rouge if no user location
   const center = userLocation || { lat: 30.4515, lng: -91.1871 };
   
-  // Show static fallback if Maps not loaded or error
-  if (!isLoaded || loadError) {
+  // Show static fallback if Maps not available
+  if (!hasMapboxToken()) {
     return (
       <>
         <img 
@@ -35,22 +42,42 @@ const RidesMapBackground = ({ userLocation }: RidesMapBackgroundProps) => {
     );
   }
 
+  // Build markers array
+  const markers = [];
+  
+  if (pickupCoords) {
+    markers.push({
+      id: "pickup",
+      position: pickupCoords,
+      type: "pickup" as const,
+      title: "Pickup",
+    });
+  } else if (userLocation) {
+    markers.push({
+      id: "user-location",
+      position: userLocation,
+      type: "pickup" as const,
+      title: "Your Location",
+    });
+  }
+  
+  if (dropoffCoords) {
+    markers.push({
+      id: "dropoff",
+      position: dropoffCoords,
+      type: "dropoff" as const,
+      title: "Destination",
+    });
+  }
+
   return (
-    <GoogleMap
+    <MapboxMap
       className="w-full h-full opacity-70"
-      center={center}
-      zoom={15}
-      darkMode={true}
-      showControls={false}
-      markers={userLocation ? [
-        {
-          id: "user-location",
-          position: userLocation,
-          type: "pickup",
-          title: "Your Location",
-        }
-      ] : []}
-      fitBounds={false}
+      center={pickupCoords || center}
+      zoom={markers.length > 1 ? 12 : 15}
+      markers={markers}
+      routeCoordinates={routeCoordinates}
+      fitBounds={markers.length > 1}
     />
   );
 };
