@@ -132,6 +132,27 @@ export const createRideInDb = async (
     }
 
     console.log("[supabaseRide] Trip created with ID:", data.id, "rider_id:", user?.id ?? "anonymous");
+
+    // Trigger auto-dispatch to find and assign nearest driver
+    try {
+      const dispatchResponse = await fetch(
+        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI`,
+          },
+          body: JSON.stringify({ trip_id: data.id }),
+        }
+      );
+      const dispatchResult = await dispatchResponse.json();
+      console.log("[supabaseRide] Auto-dispatch result:", dispatchResult);
+    } catch (dispatchError) {
+      // Don't fail the trip creation if dispatch fails - it will stay in 'requested' status
+      console.warn("[supabaseRide] Auto-dispatch failed, trip remains in requested status:", dispatchError);
+    }
+
     return data.id;
   };
 
