@@ -25,61 +25,85 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
-const navItems = [
+interface NavItem {
+  label: string;
+  path: string;
+  icon: any;
+  permission?: string | null;
+}
+
+const navItems: NavItem[] = [
   {
     label: "Dashboard",
     path: "/dispatch",
     icon: LayoutDashboard,
+    permission: null, // Always visible
   },
   {
     label: "Orders",
     path: "/dispatch/orders",
     icon: ClipboardList,
+    permission: "orders.view",
   },
   {
     label: "Batches",
     path: "/dispatch/batches",
     icon: Package,
+    permission: "orders.dispatch",
   },
   {
     label: "Drivers",
     path: "/dispatch/drivers",
     icon: Users,
+    permission: "drivers.manage",
   },
   {
     label: "Merchants",
     path: "/dispatch/merchants",
     icon: Store,
+    permission: "merchants.manage",
   },
   {
     label: "Payouts",
     path: "/dispatch/payouts",
     icon: DollarSign,
+    permission: "payouts.manage",
   },
   {
     label: "Analytics",
     path: "/dispatch/analytics",
     icon: BarChart3,
+    permission: "analytics.view",
   },
   {
     label: "Disputes",
     path: "/dispatch/disputes",
     icon: AlertTriangle,
+    permission: "refunds.manage",
   },
   {
     label: "Quality",
     path: "/dispatch/quality",
     icon: Star,
+    permission: "analytics.view",
   },
   {
     label: "Support",
     path: "/dispatch/support",
     icon: Headphones,
+    permission: "support.manage",
+  },
+  {
+    label: "Team",
+    path: "/dispatch/team",
+    icon: Users,
+    permission: "tenant.manage_users",
   },
   {
     label: "Settings",
     path: "/dispatch/settings",
     icon: Settings,
+    permission: "tenant.manage_settings",
   },
 ];
 
