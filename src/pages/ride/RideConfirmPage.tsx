@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
+import { useCreateTrip } from "@/hooks/useRiderTrip";
+import { toast } from "sonner";
 
 interface LocationState {
   ride: RideOption;
@@ -29,6 +31,7 @@ const RideConfirmPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
+  const createTrip = useCreateTrip();
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
 
@@ -56,25 +59,45 @@ const RideConfirmPage = () => {
     ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
     : ride.price;
 
-  const handleConfirm = () => {
-    // Save trip to localStorage for persistence
-    const tripState = {
-      ride: { ...ride, price: displayPrice },
-      pickup,
-      destination,
-      paymentMethod: selectedPayment,
-      tripDetails,
-      routeCoordinates,
-      pickupCoords,
-      dropoffCoords,
-    };
+  const handleConfirm = async () => {
     try {
+      // Insert trip into database
+      const tripData = await createTrip.mutateAsync({
+        pickup_address: pickup,
+        dropoff_address: destination,
+        pickup_lat: pickupCoords?.lat,
+        pickup_lng: pickupCoords?.lng,
+        dropoff_lat: dropoffCoords?.lat,
+        dropoff_lng: dropoffCoords?.lng,
+        fare_amount: displayPrice,
+        distance_km: tripDetails?.distance ? tripDetails.distance * 1.60934 : 0, // Convert miles to km
+        duration_minutes: tripDetails?.duration || 0,
+        ride_type: ride.id,
+      });
+
+      // Save trip state for UI persistence
+      const tripState = {
+        ride: { ...ride, price: displayPrice },
+        pickup,
+        destination,
+        paymentMethod: selectedPayment,
+        tripDetails,
+        routeCoordinates,
+        pickupCoords,
+        dropoffCoords,
+        tripId: tripData.id,
+      };
+      
       localStorage.setItem("zivo_active_ride", JSON.stringify({ ...tripState, startedAt: Date.now() }));
-    } catch {}
-    
-    navigate("/ride/searching", {
-      state: tripState,
-    });
+      
+      // Navigate to searching with tripId
+      navigate(`/ride/searching?tripId=${tripData.id}`, {
+        state: tripState,
+      });
+    } catch (error) {
+      console.error("Failed to create trip:", error);
+      toast.error("Failed to request ride. Please try again.");
+    }
   };
 
   return (
@@ -219,9 +242,17 @@ const RideConfirmPage = () => {
           transition={{ delay: 0.2 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleConfirm}
-          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={createTrip.isPending}
+          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          PAY ${displayPrice.toFixed(2)} & REQUEST
+          {createTrip.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Requesting...
+            </>
+          ) : (
+            `PAY $${displayPrice.toFixed(2)} & REQUEST`
+          )}
         </motion.button>
       </div>
 

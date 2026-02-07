@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Car } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { RideOption } from "@/components/ride/RideCard";
+import { useTripById } from "@/hooks/useRiderTrip";
+import { useTripRealtime } from "@/hooks/useTripRealtime";
 
 interface LocationState {
   ride: RideOption;
   pickup: string;
   destination: string;
   paymentMethod: string;
+  tripId?: string;
 }
 
 // Status messages with timing thresholds (based on progress %)
@@ -22,11 +25,22 @@ const statusMessages = [
 const RideSearchingPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const routeState = location.state as LocationState | null;
   const [progress, setProgress] = useState(0);
 
+  // Get tripId from URL or state
+  const tripIdFromUrl = searchParams.get("tripId");
+  const tripId = tripIdFromUrl || routeState?.tripId;
+
   // Try to get state from route or localStorage
   const [state, setState] = useState<LocationState | null>(routeState);
+
+  // Subscribe to trip updates via realtime
+  useTripRealtime(tripId || undefined, !!tripId);
+  
+  // Fetch trip data to check for driver assignment
+  const { data: tripData } = useTripById(tripId);
 
   // Validate localStorage data structure
   const validateRideState = (data: unknown): data is LocationState => {
@@ -58,16 +72,23 @@ const RideSearchingPage = () => {
     }
   }, [routeState, navigate]);
 
+  // Watch for trip status changes - navigate when driver accepts
+  useEffect(() => {
+    if (tripData?.status === "accepted" && tripData.driver_id) {
+      navigate(`/ride/driver?tripId=${tripId}`, { state });
+    }
+  }, [tripData?.status, tripData?.driver_id, tripId, state, navigate]);
+
   // Get current status message based on progress
   const currentStatus = statusMessages.reduce((acc, msg) => {
     if (progress >= msg.threshold) return msg;
     return acc;
   }, statusMessages[0]);
 
-  // Progress animation - 0 to 100 over 6 seconds
+  // Progress animation - 0 to 100 over 6 seconds (simulated until driver accepts)
   useEffect(() => {
-    const duration = 6000; // 6 seconds
-    const interval = 60; // Update every 60ms
+    const duration = 6000;
+    const interval = 60;
     const increment = (100 * interval) / duration;
 
     const timer = setInterval(() => {
@@ -84,15 +105,15 @@ const RideSearchingPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-navigate when progress completes
+  // Auto-navigate when progress completes (fallback for demo without driver)
   useEffect(() => {
-    if (progress >= 100 && state) {
+    if (progress >= 100 && state && !tripData?.driver_id) {
       const timeout = setTimeout(() => {
         navigate("/ride/driver", { state });
       }, 300);
       return () => clearTimeout(timeout);
     }
-  }, [progress, navigate, state]);
+  }, [progress, navigate, state, tripData?.driver_id]);
 
   if (!state?.ride) {
     return null;
