@@ -4350,6 +4350,7 @@ export type Database = {
           id: string
           referee_email: string | null
           referee_name: string
+          referred_driver_id: string | null
           referrer_id: string
           signed_up_at: string
           status: string
@@ -4362,6 +4363,7 @@ export type Database = {
           id?: string
           referee_email?: string | null
           referee_name: string
+          referred_driver_id?: string | null
           referrer_id: string
           signed_up_at?: string
           status?: string
@@ -4374,12 +4376,27 @@ export type Database = {
           id?: string
           referee_email?: string | null
           referee_name?: string
+          referred_driver_id?: string | null
           referrer_id?: string
           signed_up_at?: string
           status?: string
           trips_completed?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_referrals_referred_driver_id_fkey"
+            columns: ["referred_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_referrals_referred_driver_id_fkey"
+            columns: ["referred_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "driver_referrals_referrer_id_fkey"
             columns: ["referrer_id"]
@@ -4786,6 +4803,7 @@ export type Database = {
           prev_lng: number | null
           prev_location_at: string | null
           rating: number | null
+          referral_code: string
           region_id: string | null
           rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
@@ -4831,6 +4849,7 @@ export type Database = {
           prev_lng?: number | null
           prev_location_at?: string | null
           rating?: number | null
+          referral_code?: string
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
@@ -4876,6 +4895,7 @@ export type Database = {
           prev_lng?: number | null
           prev_location_at?: string | null
           rating?: number | null
+          referral_code?: string
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
@@ -8789,6 +8809,60 @@ export type Database = {
           },
         ]
       }
+      menu_import_logs: {
+        Row: {
+          categories_imported: number | null
+          completed_at: string | null
+          created_at: string | null
+          errors: Json | null
+          file_name: string | null
+          id: string
+          items_imported: number | null
+          restaurant_id: string
+          source: string
+          status: string | null
+        }
+        Insert: {
+          categories_imported?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          file_name?: string | null
+          id?: string
+          items_imported?: number | null
+          restaurant_id: string
+          source: string
+          status?: string | null
+        }
+        Update: {
+          categories_imported?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          file_name?: string | null
+          id?: string
+          items_imported?: number | null
+          restaurant_id?: string
+          source?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_import_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_import_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category: string
@@ -11407,6 +11481,66 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      pos_integrations: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          external_merchant_id: string | null
+          id: string
+          last_sync_at: string | null
+          provider: string
+          refresh_token: string | null
+          restaurant_id: string
+          status: string | null
+          sync_error: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          external_merchant_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          provider: string
+          refresh_token?: string | null
+          restaurant_id: string
+          status?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          external_merchant_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          provider?: string
+          refresh_token?: string | null
+          restaurant_id?: string
+          status?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       price_calculations: {
         Row: {

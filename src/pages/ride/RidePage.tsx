@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, TrendingUp } from "lucide-react";
 import RideAppBar from "@/components/ride/RideAppBar";
 import RideLocationCard from "@/components/ride/RideLocationCard";
 import RideSegmentTabs, { RideCategory } from "@/components/ride/RideSegmentTabs";
@@ -12,6 +12,7 @@ import { RideOption } from "@/components/ride/RideCard";
 import { rideOptions } from "@/components/ride/rideData";
 import { useServerRoute } from "@/hooks/useServerRoute";
 import { calculateMockTrip, type TripDetails } from "@/lib/tripCalculator";
+import { useSurgePricing } from "@/hooks/useSurgePricing";
 
 const CITY_BG = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&h=1080&fit=crop";
 
@@ -32,6 +33,7 @@ const RidePage = () => {
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
 
   const { fetchRoute, isLoading: isRouteLoading } = useServerRoute();
+  const { multiplier: surgeMultiplier, isActive: surgeActive, label: surgeLabel, driverCount } = useSurgePricing();
 
   // Handle pickup change with optional coordinates
   const handlePickupChange = useCallback((value: string, coords?: LocationCoords) => {
@@ -93,6 +95,7 @@ const RidePage = () => {
           pickupCoords,
           dropoffCoords,
           routePolyline,
+          surgeMultiplier,
         },
       });
     }
@@ -160,6 +163,23 @@ const RidePage = () => {
             Choose Your <span className="text-primary">Ride</span>
           </h2>
 
+          {/* Surge Warning Message */}
+          {surgeActive && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-3"
+            >
+              <TrendingUp className="w-5 h-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-400">{surgeLabel}</p>
+                <p className="text-xs text-white/60">
+                  Prices are higher due to high demand
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Segment Tabs */}
           <div className="mb-4">
             <RideSegmentTabs
@@ -177,6 +197,7 @@ const RidePage = () => {
             selectedRideId={selectedRide?.id || null}
             onSelectRide={setSelectedRide}
             tripDetails={tripDetails}
+            surgeMultiplier={surgeMultiplier}
           />
 
           {/* Trip Info Pill */}
@@ -214,7 +235,8 @@ const RidePage = () => {
         pickup={pickup}
         destination={destination}
         tripDetails={tripDetails}
-        onConfirm={handleConfirm} 
+        onConfirm={handleConfirm}
+        surgeMultiplier={surgeMultiplier}
       />
 
       {/* Bottom Nav */}

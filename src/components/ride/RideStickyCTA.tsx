@@ -10,15 +10,16 @@ interface RideStickyCTAProps {
   destination: string;
   tripDetails: TripDetails | null;
   onConfirm: () => void;
+  surgeMultiplier?: number;
 }
 
-const RideStickyCTA = ({ selectedRide, pickup, destination, tripDetails, onConfirm }: RideStickyCTAProps) => {
+const RideStickyCTA = ({ selectedRide, pickup, destination, tripDetails, onConfirm, surgeMultiplier = 1.0 }: RideStickyCTAProps) => {
   const isDisabled = !selectedRide || !pickup.trim() || !destination.trim();
   const needsDestination = selectedRide && (!pickup.trim() || !destination.trim());
 
-  // Calculate dynamic price
+  // Calculate dynamic price with surge
   const displayPrice = tripDetails && selectedRide
-    ? calculateRidePrice(selectedRide.id, tripDetails.distance, tripDetails.duration)
+    ? calculateRidePrice(selectedRide.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
     : selectedRide?.price || 0;
 
   return (
