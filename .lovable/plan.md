@@ -1,9 +1,10 @@
 
-# Rider Driver Rating System
+
+# Rider: Assign Only Available Drivers
 
 ## Summary
 
-Enhance the ride completion flow to save driver ratings and optional feedback to the database. The receipt modal already has a star rating UI - we need to add a comment field and connect it to Supabase.
+Enhance the ride booking flow to verify driver availability before creating a trip. Filter drivers by `is_online = true` **and** current time within their configured schedule. If no drivers are available, show "No drivers available right now" instead of creating a trip that may never be matched.
 
 ---
 
@@ -11,23 +12,47 @@ Enhance the ride completion flow to save driver ratings and optional feedback to
 
 | Component | Status |
 |-----------|--------|
-| `trips.rating` column | Exists (integer, nullable) |
-| `trips.feedback` column | Does not exist |
-| Star rating UI | Exists in `RideReceiptModal` (not connected to DB) |
-| Comment/feedback field | Does not exist |
-| Save rating function | Does not exist |
+| `driver_schedules` table | Exists (day_of_week, start_time, end_time, is_active) |
+| `is_online` check | Exists in `useOnlineDrivers` hook |
+| Schedule-based filtering | Not implemented |
+| "No drivers" message | Not implemented |
+| Pre-request availability check | Not implemented |
 
 ---
 
-## Database Change Required
+## Implementation Approach
 
-Add a `feedback` column to the `trips` table:
+### 1. Create Availability Check Hook
 
-```sql
-ALTER TABLE trips ADD COLUMN feedback TEXT;
-```
+New hook `useAvailableDrivers` that:
+- Fetches drivers where `is_online = true` and `status = verified`
+- Joins with `driver_schedules` to filter by current day/time
+- Returns count of available drivers + loading state
 
-This will store the optional text comment from the rider.
+### 2. Create Edge Function or RPC
+
+Option A: **Client-side filtering** (simpler)
+- Fetch online drivers + their schedules
+- Filter in JavaScript based on current time
+
+Option B: **Database RPC function** (more efficient)
+- Create `get_available_drivers_count()` RPC
+- Filter at database level using current timestamp
+
+**Recommendation:** Start with client-side filtering for simplicity, optimize later if needed.
+
+### 3. Update RideConfirmPage
+
+Before creating a trip:
+1. Check if any drivers are available (online + within schedule)
+2. If no drivers → show "No drivers available" message with options
+3. If drivers available → proceed with existing flow
+
+### 4. Update RideSearchingPage
+
+Add timeout handling:
+- If no driver assigned within 60 seconds, show "No drivers available right now"
+- Allow user to cancel or retry
 
 ---
 
@@ -35,133 +60,247 @@ This will store the optional text comment from the rider.
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/lib/supabaseRide.ts` | Modify | Add `saveRideRating()` function |
-| `src/components/ride/RideReceiptModal.tsx` | Modify | Add feedback textarea, connect rating to DB |
+| `src/hooks/useAvailableDrivers.ts` | Create | Check driver availability with schedule filtering |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Add availability check before booking |
+| `src/pages/ride/RideSearchingPage.tsx` | Modify | Add timeout with "no drivers" message |
+| `src/components/ride/NoDriversAvailable.tsx` | Create | Reusable "no drivers" UI component |
 
 ---
 
 ## Technical Details
 
-### 1. New Function: `saveRideRating`
-
-Add to `src/lib/supabaseRide.ts`:
+### New Hook: `useAvailableDrivers`
 
 ```typescript
-export interface SaveRatingPayload {
-  tripId: string;
-  rating: number;      // 1-5
-  feedback?: string;   // Optional comment
+// src/hooks/useAvailableDrivers.ts
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface AvailableDriver {
+  id: string;
+  full_name: string;
+  current_lat: number;
+  current_lng: number;
 }
 
-export const saveRideRating = async (
-  payload: SaveRatingPayload
-): Promise<UpdateRideResult> => {
-  // Check online status
-  if (!isOnline()) {
-    return { success: false, error: { ... }, attempts: 0 };
-  }
+export function useAvailableDrivers() {
+  return useQuery({
+    queryKey: ["available-drivers"],
+    queryFn: async () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+      const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
 
-  try {
-    const { error } = await supabase
-      .from("trips")
-      .update({ 
-        rating: payload.rating,
-        feedback: payload.feedback || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", payload.tripId);
+      // Fetch online, verified drivers
+      const { data: drivers, error } = await supabase
+        .from("drivers")
+        .select(`
+          id, 
+          full_name, 
+          current_lat, 
+          current_lng,
+          driver_schedules!inner(
+            day_of_week,
+            start_time,
+            end_time,
+            is_active
+          )
+        `)
+        .eq("is_online", true)
+        .eq("status", "verified")
+        .eq("is_suspended", false)
+        .not("current_lat", "is", null)
+        .not("current_lng", "is", null);
 
-    if (error) throw error;
-    return { success: true, error: null, attempts: 1 };
-  } catch (err) {
-    return { success: false, error: categorizeError(err), attempts: 1 };
+      if (error) throw error;
+
+      // Filter by current day and time
+      const available = (drivers || []).filter(driver => {
+        const schedule = driver.driver_schedules?.find(
+          s => s.day_of_week === dayOfWeek && s.is_active
+        );
+        if (!schedule) return false;
+        
+        // Check if current time is within schedule
+        return currentTime >= schedule.start_time && 
+               currentTime <= schedule.end_time;
+      });
+
+      return available as AvailableDriver[];
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 10000,
+  });
+}
+
+export function useAvailableDriversCount() {
+  const { data, isLoading, error } = useAvailableDrivers();
+  return {
+    count: data?.length || 0,
+    isLoading,
+    hasDrivers: (data?.length || 0) > 0,
+    error,
+  };
+}
+```
+
+### Alternative: Handle drivers without schedules
+
+Some drivers may not have schedules configured. Treat them as "always available" if online:
+
+```typescript
+// Filter logic with fallback
+const available = (drivers || []).filter(driver => {
+  // If driver has no schedules, consider them available when online
+  if (!driver.driver_schedules || driver.driver_schedules.length === 0) {
+    return true; // Available if online
   }
+  
+  const schedule = driver.driver_schedules.find(
+    s => s.day_of_week === dayOfWeek && s.is_active
+  );
+  if (!schedule) return false;
+  
+  return currentTime >= schedule.start_time && 
+         currentTime <= schedule.end_time;
+});
+```
+
+### New Component: `NoDriversAvailable`
+
+```typescript
+// src/components/ride/NoDriversAvailable.tsx
+import { motion } from "framer-motion";
+import { Car, Clock, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface NoDriversAvailableProps {
+  onRetry: () => void;
+  onCancel: () => void;
+  isRetrying?: boolean;
+}
+
+export function NoDriversAvailable({ onRetry, onCancel, isRetrying }: NoDriversAvailableProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center"
+    >
+      <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+        <Car className="w-8 h-8 text-amber-500" />
+      </div>
+      
+      <h3 className="text-lg font-bold text-white mb-2">
+        No drivers available right now
+      </h3>
+      
+      <p className="text-sm text-white/60 mb-6">
+        All drivers are currently busy or offline. Please try again in a few minutes.
+      </p>
+      
+      <div className="flex gap-3 justify-center">
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onRetry}
+          disabled={isRetrying}
+          className="bg-primary"
+        >
+          {isRetrying ? (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              Checking...
+            </>
+          ) : (
+            <>
+              <Clock className="w-4 h-4 mr-2" />
+              Try Again
+            </>
+          )}
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
+```
+
+### Update RideConfirmPage
+
+Add availability check before creating trip:
+
+```typescript
+const { hasDrivers, isLoading: isCheckingDrivers, refetch } = useAvailableDriversCount();
+const [showNoDrivers, setShowNoDrivers] = useState(false);
+
+const handleConfirm = async () => {
+  if (isSubmitting) return;
+  
+  // Check availability first
+  const { data } = await refetch();
+  if (!data || data.length === 0) {
+    setShowNoDrivers(true);
+    return;
+  }
+  
+  setShowNoDrivers(false);
+  setIsSubmitting(true);
+  // ... existing booking logic
 };
-```
 
-### 2. Update RideReceiptModal
-
-The modal already has star rating UI. We need to:
-
-**Add state for feedback:**
-```typescript
-const [feedback, setFeedback] = useState("");
-const [isSaving, setIsSaving] = useState(false);
-const [ratingError, setRatingError] = useState<string | null>(null);
-```
-
-**Add new prop for tripId:**
-```typescript
-interface RideReceiptModalProps {
-  // ... existing props
-  tripId?: string; // Add this
-}
-```
-
-**Add feedback textarea below star rating:**
-```typescript
-{/* Optional Comment */}
-<div className="mt-4">
-  <Textarea
-    value={feedback}
-    onChange={(e) => setFeedback(e.target.value)}
-    placeholder="Tell us about your experience (optional)..."
-    className="min-h-[80px] bg-white/5 border-white/10 text-white placeholder:text-white/40"
-    maxLength={500}
+// In JSX, conditionally show NoDriversAvailable or confirm button
+{showNoDrivers ? (
+  <NoDriversAvailable
+    onRetry={() => refetch().then(({ data }) => {
+      if (data && data.length > 0) setShowNoDrivers(false);
+    })}
+    onCancel={() => navigate("/ride")}
   />
-</div>
+) : (
+  <motion.button onClick={handleConfirm} ...>
+    PAY & REQUEST
+  </motion.button>
+)}
 ```
 
-**Update rating handler to save to DB:**
+### Update RideSearchingPage
+
+Add timeout handling for "no drivers found":
+
 ```typescript
-const handleRate = async (stars: number) => {
-  setRating(stars);
-  
-  if (tripId) {
-    setIsSaving(true);
-    const result = await saveRideRating({ 
-      tripId, 
-      rating: stars, 
-      feedback: feedback.trim() || undefined 
-    });
-    setIsSaving(false);
-    
-    if (!result.success) {
-      setRatingError("Failed to save rating. Please try again.");
-      return;
+const [timedOut, setTimedOut] = useState(false);
+const SEARCH_TIMEOUT = 60000; // 60 seconds
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (state.status === 'searching') {
+      setTimedOut(true);
     }
-  }
+  }, SEARCH_TIMEOUT);
   
-  setHasRated(true);
-};
-```
+  return () => clearTimeout(timer);
+}, [state.status]);
 
-**Update submit button to also allow saving just feedback:**
-```typescript
-<Button
-  onClick={handleSubmitRating}
-  disabled={isSaving || rating === 0}
-  className="w-full mt-2"
->
-  {isSaving ? 'Saving...' : 'Submit Rating'}
-</Button>
-```
-
-### 3. Pass tripId to RideReceiptModal
-
-Update `RideTripPage.tsx` to pass the tripId:
-
-```typescript
-<RideReceiptModal
-  isOpen={showReceipt}
-  onClose={() => setShowReceipt(false)}
-  tripElapsed={elapsed}
-  distance={state.distance}
-  price={state.price}
-  rideName={state.rideName}
-  onDone={handleReceiptDone}
-  tripId={state.tripId || undefined}  // Add this
-/>
+// In JSX
+{timedOut ? (
+  <NoDriversAvailable
+    onRetry={() => {
+      setTimedOut(false);
+      // Reset progress and try again
+    }}
+    onCancel={() => {
+      cancelRide();
+      navigate("/ride");
+    }}
+  />
+) : (
+  // Existing searching UI
+)}
 ```
 
 ---
@@ -169,105 +308,78 @@ Update `RideTripPage.tsx` to pass the tripId:
 ## User Flow
 
 ```text
-Trip completes
-    |
-    v
-Receipt modal opens
-    |
-    v
-User sees fare breakdown
-    |
-    v
-"Rate your driver" section with 5 stars
-    |
-    v
-User taps stars (1-5)
-    |
-    v
-Optional: User types comment in textarea
-    |
-    v
-User taps "Submit Rating" button
-    |
-    v
-Rating + feedback saved to trips table
-    |
-    v
-Show "Thanks for your feedback!" message
-    |
-    v
-User taps "DONE" to close modal
+User taps "PAY & REQUEST"
+        │
+        ▼
+Check available drivers (online + in schedule)
+        │
+    ┌───┴───┐
+    │       │
+    ▼       ▼
+ Drivers  No Drivers
+ Found    Available
+    │       │
+    ▼       ▼
+ Create   Show "No drivers
+  Trip    available" message
+    │       │
+    ▼       └──> [Retry] or [Cancel]
+ Navigate to
+ /ride/searching
+        │
+        ▼
+ Wait for driver (60s timeout)
+        │
+    ┌───┴───┐
+    │       │
+    ▼       ▼
+ Driver   Timeout
+ Assigned (no match)
+    │       │
+    ▼       ▼
+ Continue Show "No drivers"
+  flow    [Retry] or [Cancel]
 ```
 
 ---
 
-## UI Mockup
+## UI Mockup: No Drivers Message
 
 ```text
 +----------------------------------+
-|     [check] Trip Complete!       |
-+----------------------------------+
-| Base fare             $2.50      |
-| Time (3:45)           $1.15      |
-| Distance (2.4 mi)     $4.80      |
-| Service fee           $1.50      |
-|----------------------------------|
-| Total                 $9.95      |
-+----------------------------------+
-| Rate your driver                 |
-|   [*] [*] [*] [*] [*]           |
 |                                  |
-| +------------------------------+ |
-| | Tell us about your           | |
-| | experience (optional)...     | |
-| +------------------------------+ |
+|           🚗                     |
+|    (amber car icon)              |
 |                                  |
-| [     Submit Rating      ]       |
-|  "Thanks for your feedback!"     |
-+----------------------------------+
-| Add a tip                        |
-|   [$1] [$3] [$5]                |
-+----------------------------------+
-|       [     DONE     ]           |
+|  No drivers available right now  |
+|                                  |
+|  All drivers are currently busy  |
+|  or offline. Please try again    |
+|  in a few minutes.               |
+|                                  |
+|  [Cancel]    [⏰ Try Again]      |
+|                                  |
 +----------------------------------+
 ```
 
 ---
 
-## Confirmation Message
+## Edge Cases
 
-After successful save, display an animated confirmation:
-
-```typescript
-<AnimatePresence>
-  {hasRated && (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="flex items-center justify-center gap-2 text-green-400 mt-2"
-    >
-      <CheckCircle2 className="w-4 h-4" />
-      <span className="text-sm">Thanks for your feedback!</span>
-    </motion.div>
-  )}
-</AnimatePresence>
-```
+| Scenario | Handling |
+|----------|----------|
+| Driver has no schedule configured | Treat as always available when online |
+| All drivers offline | Show "no drivers" message |
+| Drivers online but outside schedule | Show "no drivers" message |
+| Network error checking availability | Fall back to existing flow (let backend handle) |
+| Driver goes offline during search | 60s timeout catches this |
 
 ---
 
-## Error Handling
+## No Changes To
 
-If save fails (network error, etc.):
-- Show error message: "Failed to save rating. Please try again."
-- Allow user to retry by tapping stars again
-- Don't block the DONE button - user can still dismiss modal
+- Driver app components
+- Admin panel
+- Database schema (uses existing `driver_schedules` table)
+- Manual dispatch edge function (already filters correctly)
 
----
-
-## Mobile-Friendly Considerations
-
-- Textarea has `min-h-[80px]` for comfortable typing
-- Touch-friendly star buttons with adequate spacing
-- Clear disabled states during save
-- Optimistic UI with loading indicator
