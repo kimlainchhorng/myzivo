@@ -1,160 +1,198 @@
 
-
-# ZIVO Map Styling + Pulsing Pickup Marker Animation
+# Refactor to @react-google-maps/api Library
 
 ## Overview
-This update applies your requested map configuration and adds an animated pulsing ring around the pickup marker for a premium Uber-style experience.
+This update refactors the map system to use the `@react-google-maps/api` library for cleaner, declarative React components. This replaces the imperative DOM manipulation approach with React-native components like `<GoogleMap>`, `<MarkerF>`, `<OverlayViewF>`, and `<PolylineF>`.
 
 ---
 
 ## Changes
 
-### 1. Update Map Styles to Your Specification
+### 1. Install @react-google-maps/api
 
-**File: `src/components/maps/GoogleMap.tsx`** (lines 52-64)
+Add the library for declarative Google Maps React components:
 
-Update `zivoMapStyles` with your exact color values (slightly refined water color):
-
-```typescript
-// ZIVO Dark map theme - premium, removes "Google look"
-const zivoMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
-];
+```bash
+npm install @react-google-maps/api
 ```
 
-### 2. Confirm Map Options
+---
 
-**File: `src/components/maps/GoogleMap.tsx`** (lines 108-120)
+### 2. Refactor GoogleMapProvider
 
-Already correctly configured:
-- `disableDefaultUI: true` (when showControls is false)
-- `clickableIcons: false`
-- `gestureHandling: "greedy"`
-- `zoomControl: false`
+**File: `src/components/maps/GoogleMapProvider.tsx`**
 
-Add `keyboardShortcuts: false` for cleaner experience:
-
-```typescript
-mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-  center,
-  zoom,
-  mapId: resolvedMapId || undefined,
-  styles: resolvedMapId ? undefined : (darkMode ? zivoMapStyles : undefined),
-  disableDefaultUI: !showControls,
-  zoomControl: false,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  gestureHandling: "greedy",
-  clickableIcons: false,
-  keyboardShortcuts: false,  // NEW: cleaner experience
-});
-```
-
-### 3. Add Pulsing Keyframes to Tailwind
-
-**File: `tailwind.config.ts`** (keyframes section)
-
-Add the pulsing ring animation:
-
-```typescript
-keyframes: {
-  // ...existing keyframes...
-  'ping-slow': {
-    '75%, 100%': { transform: 'scale(2.5)', opacity: '0' }
-  },
-  'ping-medium': {
-    '75%, 100%': { transform: 'scale(2)', opacity: '0' }
-  }
-},
-animation: {
-  // ...existing animations...
-  'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
-  'ping-medium': 'ping-medium 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
-}
-```
-
-### 4. Create Pulsing Pickup Marker Component
-
-**New File: `src/components/maps/ZivoPickupMarker.tsx`**
-
-Create a custom HTML overlay marker with pulsing animation rings:
+Replace custom script loading with `LoadScriptNext`:
 
 ```tsx
-/**
- * ZivoPickupMarker - Custom pulsing pickup marker overlay
- */
+import { LoadScriptNext } from "@react-google-maps/api";
 
-interface ZivoPickupMarkerProps {
-  position: { lat: number; lng: number };
-  map: google.maps.Map;
+const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
+
+export default function GoogleMapProvider({ children }) {
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  if (!apiKey) {
+    return <div className="...">Missing VITE_GOOGLE_MAPS_API_KEY</div>;
+  }
+
+  return (
+    <LoadScriptNext googleMapsApiKey={apiKey} libraries={LIBRARIES}>
+      {children}
+    </LoadScriptNext>
+  );
 }
-
-// Renders pulsing pickup marker using CSS animations
-// - Outer ring: slow ping animation (2s)
-// - Middle ring: medium ping animation (1.5s)
-// - Center: solid blue circle with white border
 ```
 
-### 5. Integrate Pulsing Marker in GoogleMap Component
+**Benefits:**
+- Cleaner API loading
+- Built-in loading states
+- Proper library management
+
+---
+
+### 3. Refactor ZivoPickupMarker
+
+**File: `src/components/maps/ZivoPickupMarker.tsx`**
+
+Use `OverlayViewF` for declarative overlay:
+
+```tsx
+import { OverlayViewF } from "@react-google-maps/api";
+
+export default function ZivoPickupMarker({ position }) {
+  return (
+    <OverlayViewF position={position} mapPaneName="overlayMouseTarget">
+      <div className="relative flex items-center justify-center w-16 h-16 -translate-x-1/2 -translate-y-1/2">
+        <div className="absolute w-16 h-16 rounded-full bg-blue-500/30 animate-ping" />
+        <div className="absolute w-10 h-10 rounded-full bg-blue-500/20 animate-pulse" />
+        <div className="w-5 h-5 rounded-full bg-blue-500 border-2 border-white shadow-lg z-10">
+          <div className="w-1.5 h-1.5 bg-white/80 rounded-full m-auto mt-1" />
+        </div>
+      </div>
+    </OverlayViewF>
+  );
+}
+```
+
+**Benefits:**
+- No manual DOM manipulation
+- React state management
+- Clean component lifecycle
+
+---
+
+### 4. Refactor GoogleMap Component
 
 **File: `src/components/maps/GoogleMap.tsx`**
 
-For pickup markers, use DOM-based overlay instead of standard marker to enable CSS animations:
+Complete rewrite using declarative components:
 
-```typescript
-// In the marker creation loop, for pickup type:
-if (marker.type === "pickup") {
-  // Create a custom overlay with pulsing animation
-  const overlayDiv = document.createElement('div');
-  overlayDiv.innerHTML = `
-    <div class="relative flex items-center justify-center">
-      <div class="absolute w-16 h-16 rounded-full bg-blue-500/30 animate-ping-slow"></div>
-      <div class="absolute w-12 h-12 rounded-full bg-blue-500/40 animate-ping-medium"></div>
-      <div class="w-6 h-6 rounded-full bg-blue-500 border-[3px] border-white shadow-lg relative z-10"></div>
+```tsx
+import { GoogleMap as GMap, MarkerF, PolylineF, useJsApiLoader } from "@react-google-maps/api";
+import ZivoPickupMarker from "./ZivoPickupMarker";
+
+const ZIVO_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
+];
+
+export default function GoogleMap({ center, pickup, dropoff, routePath, className }) {
+  const options = useMemo(() => ({
+    styles: ZIVO_MAP_STYLE,
+    disableDefaultUI: true,
+    clickableIcons: false,
+    keyboardShortcuts: false,
+    gestureHandling: "greedy",
+    tilt: 0,
+  }), []);
+
+  return (
+    <div className={`relative ${className}`}>
+      <GMap mapContainerClassName="w-full h-full" center={center} zoom={14} options={options}>
+        {pickup && <ZivoPickupMarker position={pickup} />}
+        {dropoff && <MarkerF position={dropoff} icon={{
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#000000",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 2,
+        }} />}
+        {routePath?.length && <PolylineF path={routePath} options={{
+          strokeColor: "#3b82f6",
+          strokeOpacity: 0.9,
+          strokeWeight: 5,
+        }} />}
+      </GMap>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
     </div>
-  `;
-  // Use OverlayView to position it on the map
+  );
 }
 ```
 
-### 6. Gradient Overlay (Already Added)
+---
 
-**File: `src/pages/Rides.tsx`** (line 246)
+### 5. Update RidesMapBackground
 
-The gradient overlay is already in place:
+**File: `src/components/ride/RidesMapBackground.tsx`**
+
+Simplified wrapper with extra bottom fade:
+
 ```tsx
-<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+import GoogleMap from "../maps/GoogleMap";
+
+export default function RidesMapBackground({ center, pickup, dropoff, routePath }) {
+  return (
+    <div className="absolute inset-0 z-0">
+      <GoogleMap
+        center={center}
+        pickup={pickup}
+        dropoff={dropoff}
+        routePath={routePath}
+        className="w-full h-full"
+      />
+      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/80 to-transparent" />
+    </div>
+  );
+}
 ```
 
 ---
 
-## Summary
+## Comparison: Before vs After
 
-| File | Change |
-|------|--------|
-| `src/components/maps/GoogleMap.tsx` | Update styles to `#0b1220` base, `#061226` water; add `keyboardShortcuts: false`; implement pulsing pickup overlay |
-| `tailwind.config.ts` | Add `ping-slow` and `ping-medium` keyframes/animations |
-| `src/pages/Rides.tsx` | Already has gradient overlay and `darkMode={true}` |
+| Aspect | Current (Imperative) | New (Declarative) |
+|--------|---------------------|-------------------|
+| **API Loading** | Custom script injection | `LoadScriptNext` |
+| **Markers** | `new google.maps.Marker()` | `<MarkerF position={...} />` |
+| **Overlays** | Custom `OverlayView` class | `<OverlayViewF>` |
+| **Routes** | `DirectionsService` + imperative | `<PolylineF path={...} />` |
+| **Cleanup** | Manual ref management | Automatic via React |
+| **Code Size** | ~370 lines | ~100 lines |
 
 ---
 
-## Visual Result
+## Files Modified
 
-The map will display with:
-- Deep navy ZIVO background (`#0b1220`)
-- No POIs or transit markers
-- Smoother dark water (`#061226`)
-- Custom pulsing pickup marker with 2 expanding rings
-- Premium gradient overlay for depth
-- Bottom sheet UI unchanged
+| File | Action |
+|------|--------|
+| `package.json` | Add `@react-google-maps/api` |
+| `src/components/maps/GoogleMapProvider.tsx` | Refactor to use `LoadScriptNext` |
+| `src/components/maps/ZivoPickupMarker.tsx` | Refactor to use `OverlayViewF` |
+| `src/components/maps/GoogleMap.tsx` | Complete rewrite with declarative components |
+| `src/components/ride/RidesMapBackground.tsx` | Simplify props interface |
 
+---
+
+## Result
+
+- **Cleaner code**: React-native components instead of imperative DOM
+- **Better React integration**: Proper lifecycle management
+- **Simpler API**: Just pass props, components handle the rest
+- **Premium look preserved**: ZIVO dark theme + pulsing pickup marker + gradient overlay
+- **Bottom sheet UI**: Unchanged
