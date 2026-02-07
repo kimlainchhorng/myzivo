@@ -1,63 +1,65 @@
 
-# Uber-Style Car Icon & Pill Badges
+
+# Upgrade Ride Cards to Glassmorphism Design with Lucide Icons
 
 ## Overview
-Replace the current car emoji (`🚗`) with a stylized CSS-based car icon component matching your reference, and add support for optional pill badges (e.g., "⏱️ Wait & Save", "⚡ Priority").
+Replace the current CSS-based `CarIcon` and `RidePill` components with a refined glassmorphism card design using Lucide's `CarFront` and `UserRound` icons, matching the provided reference implementation.
 
 ---
 
-## What Changes
+## Visual Comparison
 
-### Current → New
-- **Current**: Simple car emoji `🚗`
-- **New**: Custom `CarIcon` component built with CSS shapes (rounded white "car body" with wheels)
-- **Add**: Optional pill badges above ride names for special features
+### Current Design
+- CSS-based car shape (rounded divs for body/wheels)
+- Simple zinc-colored pill badges
+- Basic dark background cards
 
-### Visual Reference
-```text
-┌─────────────────────────────────────────────────────────┐
-│  [Car Icon]  │  ⏱️ Wait & Save                │ $24.57  │
-│     ●   ●    │  Wait & Save                   │         │
-│              │  👤 4                           │         │
-│              │  5:01 PM · 12–21 min            │         │
-│              │  Get a cheaper ride by wait...  │         │
-└─────────────────────────────────────────────────────────┘
-```
+### New Design
+- Lucide `CarFront` icon in a frosted glass circle
+- Refined glassmorphism card styling with:
+  - `bg-black/35 backdrop-blur-[14px]`
+  - `shadow-[0_12px_30px_rgba(0,0,0,0.35)]`
+- Tag pills with `backdrop-blur` glass effect
+- Blue selection ring with glow effect
+- Small selection dot on the right side of price
 
 ---
 
-## Technical Implementation
+## Technical Changes
 
-### 1. Create CarIcon Component
+### 1. Update Imports
+Add `CarFront` and `UserRound` from `lucide-react`
 
-Add a new component at the top of `Rides.tsx` (or in a separate file):
-
+### 2. Replace `CarIcon` Component
+**Current:**
 ```tsx
 function CarIcon({ selected }: { selected?: boolean }) {
   return (
     <div className="relative flex h-12 w-12 items-center justify-center">
-      {/* Car body - rounded white/dark shape */}
-      <div className={`h-8 w-10 rounded-full border ${
-        selected ? "border-primary bg-zinc-800" : "border-zinc-600 bg-zinc-900"
-      }`} />
-      {/* Wheels */}
-      <div className="absolute -left-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
-      <div className="absolute -right-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
-      {/* Selected indicator dot */}
-      {selected && (
-        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary ring-2 ring-zinc-900" />
-      )}
+      <div className={`h-8 w-10 rounded-full border ${...}`} />
+      {/* CSS wheels */}
     </div>
   );
 }
 ```
 
-### 2. Create Pill Component
+**New:**
+```tsx
+function CarIcon({ selected }: { selected?: boolean }) {
+  return (
+    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+      <CarFront className="h-6 w-6 text-white/90" />
+    </div>
+  );
+}
+```
 
+### 3. Replace `RidePill` with `TagPill`
+**Current:**
 ```tsx
 function RidePill({ icon, label }: { icon: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
+    <span className="... bg-zinc-800 ...">
       <span aria-hidden>{icon}</span>
       {label}
     </span>
@@ -65,46 +67,64 @@ function RidePill({ icon, label }: { icon: string; label: string }) {
 }
 ```
 
-### 3. Add Pill Data to Ride Options
-
-Update `rideCategories` to include optional `pill` property:
-
+**New:**
 ```tsx
-{
-  id: "wait-save",
-  name: "Wait & Save",
-  pill: { icon: "⏱️", label: "Wait & Save" },
-  // ...other props
-},
-{
-  id: "priority",
-  name: "Priority",
-  pill: { icon: "⚡", label: "Priority" },
-  // ...other props
+function TagPill({ icon, label }: { icon: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur">
+      <span aria-hidden>{icon}</span>
+      {label}
+    </span>
+  );
 }
 ```
 
-### 4. Update Card Rendering
-
-Replace the emoji div with the CarIcon component and add pill support:
-
+### 4. Update Data Model
+Change `pill` property to `tag` in `RideOption` interface and update the data:
 ```tsx
-{/* Left - Car Icon */}
-<CarIcon selected={selectedOption?.id === ride.id} />
+interface RideOption {
+  // ... existing props
+  tag?: RideTag;
+}
 
-{/* Middle - Info section */}
-<div className="flex-1 min-w-0 text-left">
-  {/* Optional pill badge */}
-  {ride.pill && (
-    <div className="mb-1">
-      <RidePill icon={ride.pill.icon} label={ride.pill.label} />
-    </div>
-  )}
-  <div className="flex items-center gap-1.5">
-    <h3 className="font-bold">{ride.name}</h3>
-    <span className="text-xs text-zinc-500">👤 {ride.seats || 4}</span>
+type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
+```
+
+### 5. Update Card Styling
+Apply glassmorphism styling to ride buttons:
+```tsx
+className={[
+  "w-full text-left rounded-[18px] p-[14px]",
+  "bg-black/35 backdrop-blur-[14px]",
+  "border border-white/10",
+  "shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+  "transition active:scale-[0.99]",
+  selected
+    ? "border-blue-500/90 shadow-[0_0_0_1px_rgba(59,130,246,0.65),...]"
+    : "hover:bg-black/40",
+].join(" ")}
+```
+
+### 6. Update Seat Display
+Replace `Users` icon with `UserRound` icon:
+```tsx
+<span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-medium text-white/80">
+  <UserRound className="h-3.5 w-3.5" />
+  {ride.seats}
+</span>
+```
+
+### 7. Add Selection Dot
+Add a small dot indicator next to price:
+```tsx
+<div className="flex items-center gap-3">
+  <div className="text-[16px] font-bold text-white tabular-nums">
+    {price}
   </div>
-  {/* ...time, eta, desc */}
+  <div className={[
+    "h-2 w-2 rounded-full",
+    selected ? "bg-blue-500 ring-2 ring-white/90" : "bg-white/20",
+  ].join(" ")} />
 </div>
 ```
 
@@ -113,21 +133,23 @@ Replace the emoji div with the CarIcon component and add pill support:
 ## Files to Modify
 
 ### `src/pages/Rides.tsx`
-1. Add `CarIcon` component function (~line 50)
-2. Add `RidePill` component function (~line 65)
-3. Add `pill` property type to ride options interface
-4. Update `rideCategories` data with pill properties for relevant rides
-5. Replace emoji `🚗` with `<CarIcon />` in:
-   - Request step (~line 699)
-   - Options step (~line 791)
-   - Confirm step (~line 823)
-6. Add conditional `<RidePill />` rendering above ride names
+1. Add `CarFront`, `UserRound` to imports (~line 14)
+2. Add `RideTag` type definition (~line 37)
+3. Replace `CarIcon` component (~lines 52-69)
+4. Replace `RidePill` with `TagPill` component (~lines 71-79)
+5. Update `RideOption` interface: change `pill` to `tag` (~line 49)
+6. Update `rideCategories` data: replace `pill` with `tag` values (~lines 84-238)
+7. Update card rendering in 3 locations:
+   - Request step (~lines 718-763)
+   - Options step (~lines 820-857)
+   - Confirm step (~lines 866-883)
 
 ---
 
 ## Styling Notes
-- Colors adapted for dark theme (zinc-800/900 instead of white/gray)
-- Primary color used for selected states
-- Selection dot uses `bg-primary` to match brand
-- Pill badges use subtle zinc-800 background
+- Uses `blue-500` for selection states (matching reference)
+- Glass effect with `backdrop-blur-[14px]` and `bg-black/35`
+- Selection glow: `shadow-[0_0_0_1px_rgba(59,130,246,0.65)]`
+- All text uses `text-white` with varying opacity levels
+- Icons sized at `h-6 w-6` in the main icon container
 
