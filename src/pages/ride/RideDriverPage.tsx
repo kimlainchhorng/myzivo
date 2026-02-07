@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Phone, MessageCircle, X, Star, Clock } from "lucide-react";
@@ -21,6 +21,8 @@ const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
 const RideDriverPage = () => {
   const navigate = useNavigate();
   const { state, updateEta, setStatus, startTrip, cancelRide } = useRideStore();
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isStartingTrip, setIsStartingTrip] = useState(false);
 
   // Subscribe to realtime updates
   const { isDemoMode } = useRideRealtime({
@@ -82,18 +84,42 @@ const RideDriverPage = () => {
   };
 
   const handleCancel = async () => {
+    if (isCancelling) return;
+    setIsCancelling(true);
+    
     if (state.tripId) {
-      await cancelRideInDb(state.tripId);
+      const result = await cancelRideInDb(state.tripId);
+      
+      if (!result.success && result.error) {
+        setIsCancelling(false);
+        toast.error("Failed to cancel", {
+          description: result.error.userMessage,
+        });
+        return;
+      }
     }
+    
     cancelRide();
     toast.error("Ride cancelled");
     navigate("/ride");
   };
 
   const handleStartTrip = async () => {
+    if (isStartingTrip) return;
+    setIsStartingTrip(true);
+    
     if (state.tripId) {
-      await updateRideStatusInDb(state.tripId, "in_trip");
+      const result = await updateRideStatusInDb(state.tripId, "in_trip");
+      
+      if (!result.success && result.error) {
+        setIsStartingTrip(false);
+        toast.error("Failed to start trip", {
+          description: result.error.userMessage,
+        });
+        return;
+      }
     }
+    
     startTrip();
     navigate("/ride/trip");
   };
@@ -197,10 +223,11 @@ const RideDriverPage = () => {
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                className="flex flex-col items-center gap-1 py-4 h-auto border-destructive/50 bg-destructive/10 hover:bg-destructive/20 text-destructive"
+                disabled={isCancelling}
+                className="flex flex-col items-center gap-1 py-4 h-auto border-destructive/50 bg-destructive/10 hover:bg-destructive/20 text-destructive disabled:opacity-50"
               >
                 <X className="w-5 h-5" />
-                <span className="text-xs">Cancel</span>
+                <span className="text-xs">{isCancelling ? "..." : "Cancel"}</span>
               </Button>
             </div>
 
@@ -221,9 +248,10 @@ const RideDriverPage = () => {
               >
                 <Button
                   onClick={handleStartTrip}
-                  className="w-full h-14 text-lg font-bold bg-green-500 hover:bg-green-600 mt-4"
+                  disabled={isStartingTrip}
+                  className="w-full h-14 text-lg font-bold bg-green-500 hover:bg-green-600 mt-4 disabled:opacity-50"
                 >
-                  START TRIP
+                  {isStartingTrip ? "Starting..." : "START TRIP"}
                 </Button>
               </motion.div>
             )}

@@ -8,7 +8,7 @@ import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
-import { cancelRideInDb } from "@/lib/supabaseRide";
+import { cancelRideInDb, SupabaseErrorInfo } from "@/lib/supabaseRide";
 
 // Status messages with timing thresholds (based on progress %)
 const statusMessages = [
@@ -21,6 +21,7 @@ const RideSearchingPage = () => {
   const navigate = useNavigate();
   const { state, assignDriver, cancelRide, setStatus } = useRideStore();
   const [progress, setProgress] = useState(0);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Subscribe to realtime updates if we have a tripId
   const { isDemoMode, isRealtime, connectionError, isReconnecting, reconnect } = useRideRealtime({
@@ -87,10 +88,22 @@ const RideSearchingPage = () => {
   }, [state.status, state.driver, navigate]);
 
   const handleCancel = async () => {
+    if (isCancelling) return;
+    setIsCancelling(true);
+    
     // Cancel in database if we have a tripId
     if (state.tripId) {
-      await cancelRideInDb(state.tripId);
+      const result = await cancelRideInDb(state.tripId);
+      
+      if (!result.success && result.error) {
+        setIsCancelling(false);
+        toast.error("Failed to cancel", {
+          description: result.error.userMessage,
+        });
+        return; // Don't navigate if cancel failed
+      }
     }
+    
     cancelRide();
     toast.error("Ride cancelled");
     navigate("/ride");
@@ -192,9 +205,10 @@ const RideSearchingPage = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           onClick={handleCancel}
-          className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors"
+          disabled={isCancelling}
+          className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors disabled:opacity-50"
         >
-          Cancel
+          {isCancelling ? "Cancelling..." : "Cancel"}
         </motion.button>
       </motion.div>
     </div>
