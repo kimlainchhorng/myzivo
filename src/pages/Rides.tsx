@@ -2,6 +2,7 @@
  * ZIVO Rides — Premium 2026 Booking Page
  * Dark Glassmorphism with layered scroll architecture
  * Now with real Mapbox geocoding, routing, and dynamic pricing
+ * Embedded Stripe Elements checkout (no redirect)
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -29,8 +30,9 @@ import RidesMapBackground from "@/components/ride/RidesMapBackground";
 import { useGoogleMapsRoute, RouteData } from "@/hooks/useGoogleMapsRoute";
 import { useGoogleMapsGeocode } from "@/hooks/useGoogleMapsGeocode";
 import { calculateRidePrice, TripDetails } from "@/lib/tripCalculator";
+import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
  
-type RideStep = "request" | "options" | "confirm" | "processing" | "success";
+type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 
 interface RideOption {
   id: string;
@@ -226,6 +228,10 @@ export default function Rides() {
   const [activeTab, setActiveTab] = useState<CategoryKey>("Premium");
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // Embedded checkout state
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [checkoutAmount, setCheckoutAmount] = useState<number>(0);
 
   // Address autocomplete state
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
@@ -323,24 +329,16 @@ export default function Rides() {
      setStep("confirm");
    };
  
-   // State for manual checkout URL fallback
-   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-
-   const handlePayment = async () => {
+   // Start embedded checkout - creates PaymentIntent and shows form
+   const handleStartCheckout = async () => {
      if (!contactInfo.name || !contactInfo.phone || !selectedOption) return;
-     
-     // Pre-open popup tab synchronously (beats popup blockers)
-     console.log("[Rides] Pre-opening popup tab...");
-     const popup = window.open("about:blank", "_blank");
      
      setStep("processing");
      setIsSubmitting(true);
-     setCheckoutUrl(null);
      
      try {
        const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0);
-       console.log("[Rides] Starting checkout...", { estimatedFare, selectedOption: selectedOption.id });
-       console.log("[Rides] Invoking edge function create-ride-checkout...");
+       console.log("[Rides] Creating payment intent...", { estimatedFare, selectedOption: selectedOption.id });
        
        // Create a timeout promise (15 seconds)
        const timeoutPromise = new Promise<never>((_, reject) => {
@@ -348,7 +346,7 @@ export default function Rides() {
        });
        
        // Race between the actual request and the timeout
-       const invokePromise = supabase.functions.invoke("create-ride-checkout", {
+       const invokePromise = supabase.functions.invoke("create-ride-payment-intent", {
          body: {
            customer_name: contactInfo.name,
            customer_phone: contactInfo.phone,
@@ -365,30 +363,20 @@ export default function Rides() {
        
        const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
        
-       console.log("[Rides] Checkout response:", { data, error });
+       console.log("[Rides] Payment intent response:", { data, error });
        
        if (error) throw error;
-       if (!data?.url) throw new Error("No checkout URL returned");
+       if (!data?.clientSecret) throw new Error("No client secret returned");
        
-       console.log("[Rides] Redirecting to:", data.url);
-       setCheckoutUrl(data.url);
-       
-       // Navigate using the pre-opened popup or fallback to same-tab
-       if (popup && !popup.closed) {
-         console.log("[Rides] Navigating popup to checkout URL");
-         popup.location.href = data.url;
-       } else {
-         console.log("[Rides] Popup blocked or closed, using same-tab navigation");
-         window.location.assign(data.url);
-       }
+       // Set checkout state and show embedded form
+       setClientSecret(data.clientSecret);
+       setCheckoutAmount(data.amount);
+       setRequestId(data.requestId);
+       setStep("checkout");
+       setIsSubmitting(false);
        
      } catch (error) {
-       // Close popup if it was opened but we errored
-       if (popup && !popup.closed) {
-         popup.close();
-       }
-       
-       console.error("[Rides] Payment error:", error);
+       console.error("[Rides] Payment intent error:", error);
        const errorMessage = error instanceof Error ? error.message : "Unknown error";
        
        if (errorMessage === "Request timed out") {
@@ -402,16 +390,18 @@ export default function Rides() {
      }
    };
    
-   const handleCancelProcessing = () => {
-     setStep("confirm");
-     setIsSubmitting(false);
-     setCheckoutUrl(null);
+   // Handle successful payment from embedded checkout
+   const handlePaymentSuccess = (paymentIntentId: string) => {
+     console.log("[Rides] Payment successful:", paymentIntentId);
+     setStep("success");
+     toast.success("Payment successful! Your ride is being confirmed.");
    };
    
-   const handleOpenCheckoutManually = () => {
-     if (checkoutUrl) {
-       window.location.assign(checkoutUrl);
-     }
+   // Cancel checkout and go back to confirm step
+   const handleCancelCheckout = () => {
+     setStep("confirm");
+     setClientSecret(null);
+     setCheckoutAmount(0);
    };
  
    const handleReset = () => {
@@ -833,20 +823,37 @@ export default function Rides() {
                  <Textarea id="notes" placeholder="Any special requests..." value={contactInfo.notes} onChange={(e) => setContactInfo(prev => ({ ...prev, notes: e.target.value }))} className="mt-1.5 min-h-[80px] md:min-h-[100px] bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" style={{ fontSize: '16px' }} />
                  </div>
                </div>
-             <Button onClick={handlePayment} disabled={!contactInfo.name || !contactInfo.phone || isSubmitting} size="lg" className="w-full h-14 rounded-xl font-bold gap-3 bg-white text-black hover:bg-zinc-200 text-base md:text-lg touch-manipulation active:scale-[0.98]">
+             <Button onClick={handleStartCheckout} disabled={!contactInfo.name || !contactInfo.phone || isSubmitting} size="lg" className="w-full h-14 rounded-xl font-bold gap-3 bg-white text-black hover:bg-zinc-200 text-base md:text-lg touch-manipulation active:scale-[0.98]">
                  <CreditCard className="w-5 h-5" />
-                  Pay ${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)} & Request
+                  Continue to Payment
                </Button>
               <p className="text-xs text-center text-zinc-500">Secure payment via Stripe. We don't store your card details.</p>
              </div>
+           )}
+           
+           {/* Embedded Stripe Checkout */}
+           {step === "checkout" && selectedOption && clientSecret && (
+           <div className="max-w-xl mx-auto space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right duration-300">
+             <Button variant="ghost" onClick={handleCancelCheckout} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
+             
+             <RideEmbeddedCheckout
+               clientSecret={clientSecret}
+               amount={checkoutAmount}
+               onSuccess={handlePaymentSuccess}
+               onCancel={handleCancelCheckout}
+               pickupAddress={pickup}
+               dropoffAddress={dropoff}
+               rideName={selectedOption.name}
+             />
+           </div>
            )}
  
            {step === "processing" && (
            <div className="max-w-xl mx-auto py-16 md:py-24 text-center space-y-4 md:space-y-6 animate-in fade-in duration-200">
              <Loader2 className="w-12 h-12 md:w-14 md:h-14 mx-auto text-primary animate-spin" />
                <div>
-                <h2 className="font-display text-xl md:text-2xl font-bold mb-2">Redirecting to Payment...</h2>
-                <p className="text-zinc-400">Please wait while we set up your secure checkout.</p>
+                <h2 className="font-display text-xl md:text-2xl font-bold mb-2">Setting up payment...</h2>
+                <p className="text-zinc-400">Please wait while we prepare your secure checkout.</p>
                </div>
                
                {/* Help text for ad blockers */}
@@ -854,21 +861,10 @@ export default function Rides() {
                  If you use an ad blocker, please allow <span className="text-zinc-400">supabase.co</span> and <span className="text-zinc-400">stripe.com</span>.
                </p>
                
-               {/* Manual checkout button if URL was received */}
-               {checkoutUrl && (
-                 <Button 
-                   onClick={handleOpenCheckoutManually}
-                   className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-6 gap-2"
-                 >
-                   <CreditCard className="w-4 h-4" />
-                   Open Secure Checkout
-                 </Button>
-               )}
-               
                {/* Cancel button */}
                <Button 
                  variant="ghost" 
-                 onClick={handleCancelProcessing}
+                 onClick={handleCancelCheckout}
                  className="text-zinc-400 hover:text-white hover:bg-white/10"
                >
                  ← Cancel and go back
