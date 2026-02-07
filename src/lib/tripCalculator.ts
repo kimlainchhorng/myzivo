@@ -12,19 +12,34 @@ export interface RidePrices {
   [rideId: string]: number;
 }
 
-// Pricing constants
+// Pricing constants (user's spec)
 const BASE_FARE = 2.00;
 const PER_MILE_RATE = 1.25;
 const PER_MINUTE_RATE = 0.20;
 
-// Ride multipliers by ID
+// Ride multipliers by ID (matching Rides.tsx categories)
 export const RIDE_MULTIPLIERS: Record<string, number> = {
-  "wait-save": 0.85,
+  // Economy tier
+  "wait_save": 0.75,
   "standard": 1.0,
-  "extra-comfort": 1.2,
-  "zivo-black": 1.4,
-  "executive": 1.8,
-  "zivo-lux": 2.0,
+  "green": 1.02,
+  "priority": 1.3,
+  // Premium tier
+  "comfort": 1.55,
+  "black": 2.65,
+  "black_suv": 3.5,
+  "xxl": 3.7,
+  // Elite tier
+  "lux": 10.0,
+  "sprinter": 7.3,
+  "secure": 20.0,
+  "pet": 3.0,
+  // Legacy IDs for backwards compatibility
+  "wait-save": 0.75,
+  "extra-comfort": 1.55,
+  "zivo-black": 2.65,
+  "executive": 7.3,
+  "zivo-lux": 10.0,
 };
 
 /**

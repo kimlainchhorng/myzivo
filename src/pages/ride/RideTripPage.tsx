@@ -7,19 +7,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import RideReceiptModal from "@/components/ride/RideReceiptModal";
 import { RideOption } from "@/components/ride/RideCard";
-import { GoogleMapProvider } from "@/components/maps";
 import TripMapView from "@/components/ride/TripMapView";
+import { interpolateRoutePosition } from "@/services/mapbox";
+import { TripDetails } from "@/lib/tripCalculator";
 
 interface LocationState {
   ride: RideOption;
   pickup: string;
   destination: string;
   paymentMethod: string;
+  tripDetails?: TripDetails;
+  routeCoordinates?: [number, number][];
+  pickupCoords?: { lat: number; lng: number };
+  dropoffCoords?: { lat: number; lng: number };
 }
 
-// Mock coordinates for Baton Rouge area
-const PICKUP_LOCATION = { lat: 30.4515, lng: -91.1871 };
-const DESTINATION_LOCATION = { lat: 30.4315, lng: -91.1671 };
+// Default coordinates for Baton Rouge
+const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
+const DEFAULT_DESTINATION = { lat: 30.4315, lng: -91.1671 };
 
 type TripStatus = "on_the_way" | "arrived";
 
@@ -31,9 +36,25 @@ const RideTripPage = () => {
   // Try to get state from route or localStorage
   const [state, setState] = useState<LocationState | null>(routeState);
   const [tripStatus, setTripStatus] = useState<TripStatus>("on_the_way");
-  const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 8);
+  const [tripProgress, setTripProgress] = useState(0);
   const [showReceipt, setShowReceipt] = useState(false);
-  const [carPosition, setCarPosition] = useState(PICKUP_LOCATION);
+  
+  // Get coordinates from state or use defaults
+  const pickupLocation = state?.pickupCoords || DEFAULT_PICKUP;
+  const destinationLocation = state?.dropoffCoords || DEFAULT_DESTINATION;
+  const routeCoordinates = state?.routeCoordinates || [];
+  const tripDuration = state?.tripDetails?.duration || 8;
+
+  // Calculate car position based on progress
+  const carPosition = routeCoordinates.length > 0
+    ? interpolateRoutePosition(routeCoordinates, tripProgress)
+    : {
+        lat: pickupLocation.lat + (destinationLocation.lat - pickupLocation.lat) * tripProgress,
+        lng: pickupLocation.lng + (destinationLocation.lng - pickupLocation.lng) * tripProgress,
+      };
+
+  // Calculate remaining ETA
+  const etaMinutes = Math.max(0, Math.ceil(tripDuration * (1 - tripProgress)));
 
   // Load from localStorage if route state is missing
   useEffect(() => {
@@ -43,7 +64,6 @@ const RideTripPage = () => {
         if (stored) {
           const parsed = JSON.parse(stored);
           setState(parsed);
-          setEtaMinutes(parsed.ride?.eta || 8);
           return;
         }
       } catch {}
@@ -51,42 +71,23 @@ const RideTripPage = () => {
     }
   }, [routeState, navigate]);
 
-  // Auto-progress to "arrived" after delay
-  useEffect(() => {
-    if (tripStatus === "on_the_way") {
-      const timer = setTimeout(() => {
-        setTripStatus("arrived");
-        setEtaMinutes(0);
-        setCarPosition(DESTINATION_LOCATION);
-      }, 8000); // 8 seconds for demo
-
-      return () => clearTimeout(timer);
-    }
-  }, [tripStatus]);
-
-  // Update car position during trip
+  // Animate trip progress
   useEffect(() => {
     if (tripStatus === "arrived") return;
-    
+
     const interval = setInterval(() => {
-      setCarPosition((prev) => ({
-        lat: prev.lat + (DESTINATION_LOCATION.lat - PICKUP_LOCATION.lat) / 8,
-        lng: prev.lng + (DESTINATION_LOCATION.lng - PICKUP_LOCATION.lng) / 8,
-      }));
-    }, 1000);
+      setTripProgress((prev) => {
+        const newProgress = prev + 0.015; // Move ~1.5% per interval
+        if (newProgress >= 1) {
+          clearInterval(interval);
+          setTripStatus("arrived");
+          return 1;
+        }
+        return newProgress;
+      });
+    }, 200); // Update every 200ms for smooth animation
 
     return () => clearInterval(interval);
-  }, [tripStatus]);
-
-  // Countdown timer for ETA
-  useEffect(() => {
-    if (tripStatus === "arrived" || etaMinutes <= 0) return;
-
-    const timer = setInterval(() => {
-      setEtaMinutes((prev) => Math.max(0, prev - 1));
-    }, 1000); // Update every second for demo
-
-    return () => clearInterval(timer);
   }, [tripStatus]);
 
   const handleEndTrip = () => {
@@ -104,15 +105,14 @@ const RideTripPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
-      {/* Google Maps View */}
-      <GoogleMapProvider>
-        <TripMapView
-          pickupLocation={PICKUP_LOCATION}
-          destinationLocation={DESTINATION_LOCATION}
-          carPosition={carPosition}
-          isArrived={tripStatus === "arrived"}
-        />
-      </GoogleMapProvider>
+      {/* Mapbox Map View */}
+      <TripMapView
+        pickupLocation={pickupLocation}
+        destinationLocation={destinationLocation}
+        carPosition={carPosition}
+        isArrived={tripStatus === "arrived"}
+        routeCoordinates={routeCoordinates}
+      />
 
       {/* Trip Status Card */}
       <motion.div
@@ -164,6 +164,23 @@ const RideTripPage = () => {
                 )}
               </motion.div>
             </AnimatePresence>
+
+            {/* Progress Bar */}
+            {tripStatus === "on_the_way" && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Trip Progress</span>
+                  <span>{Math.round(tripProgress * 100)}%</span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${tripProgress * 100}%` }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Destination Info */}
             <div className="space-y-3">

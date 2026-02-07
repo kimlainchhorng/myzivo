@@ -12,6 +12,9 @@ interface LocationState {
   pickup: string;
   destination: string;
   tripDetails?: TripDetails;
+  routeCoordinates?: [number, number][];
+  pickupCoords?: { lat: number; lng: number };
+  dropoffCoords?: { lat: number; lng: number };
 }
 
 type PaymentMethod = "card" | "apple" | "cash";
@@ -46,7 +49,7 @@ const RideConfirmPage = () => {
     );
   }
 
-  const { ride, pickup, destination, tripDetails } = state;
+  const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords } = state;
 
   // Calculate dynamic price
   const displayPrice = tripDetails
@@ -61,6 +64,9 @@ const RideConfirmPage = () => {
       destination,
       paymentMethod: selectedPayment,
       tripDetails,
+      routeCoordinates,
+      pickupCoords,
+      dropoffCoords,
     };
     try {
       localStorage.setItem("zivo_active_ride", JSON.stringify({ ...tripState, startedAt: Date.now() }));

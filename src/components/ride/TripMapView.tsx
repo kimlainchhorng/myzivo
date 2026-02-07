@@ -1,25 +1,31 @@
 /**
  * TripMapView Component
  * 
- * Shows Google Map with route from pickup to destination during active trip.
+ * Shows Mapbox map with route from pickup to destination during active trip.
  * Falls back to static image if Maps fails to load.
  */
 
 import { motion } from "framer-motion";
-import { GoogleMap, useGoogleMaps } from "@/components/maps";
+import MapboxMap from "@/components/maps/MapboxMap";
+import { hasMapboxToken } from "@/services/mapbox";
 
 interface TripMapViewProps {
   pickupLocation: { lat: number; lng: number };
   destinationLocation: { lat: number; lng: number };
   carPosition: { lat: number; lng: number };
   isArrived: boolean;
+  routeCoordinates?: [number, number][];
 }
 
-const TripMapView = ({ pickupLocation, destinationLocation, carPosition, isArrived }: TripMapViewProps) => {
-  const { isLoaded, loadError } = useGoogleMaps();
-
-  // Show static fallback if Maps not loaded or error
-  if (!isLoaded || loadError) {
+const TripMapView = ({ 
+  pickupLocation, 
+  destinationLocation, 
+  carPosition, 
+  isArrived,
+  routeCoordinates 
+}: TripMapViewProps) => {
+  // Show static fallback if Maps not available
+  if (!hasMapboxToken()) {
     return (
       <div className="relative h-[45vh] w-full">
         <img
@@ -70,17 +76,12 @@ const TripMapView = ({ pickupLocation, destinationLocation, carPosition, isArriv
 
   return (
     <div className="relative h-[45vh] w-full">
-      <GoogleMap
+      <MapboxMap
         className="w-full h-full"
         center={destinationLocation}
         zoom={14}
-        darkMode={true}
-        showControls={false}
         markers={markers}
-        route={{
-          origin: pickupLocation,
-          destination: destinationLocation,
-        }}
+        routeCoordinates={routeCoordinates}
         fitBounds={true}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950 pointer-events-none" />

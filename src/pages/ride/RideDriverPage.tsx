@@ -1,21 +1,26 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, MessageCircle, X, Star, MapPin, Clock } from "lucide-react";
+import { Phone, MessageCircle, X, Star, Clock } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { RideOption } from "@/components/ride/RideCard";
 import { toast } from "sonner";
-import { GoogleMapProvider } from "@/components/maps";
 import DriverMapView from "@/components/ride/DriverMapView";
+import { interpolateRoutePosition } from "@/services/mapbox";
+import { TripDetails } from "@/lib/tripCalculator";
 
 interface LocationState {
   ride: RideOption;
   pickup: string;
   destination: string;
   paymentMethod: string;
+  tripDetails?: TripDetails;
+  routeCoordinates?: [number, number][];
+  pickupCoords?: { lat: number; lng: number };
+  dropoffCoords?: { lat: number; lng: number };
 }
 
 const mockDriver = {
@@ -27,9 +32,9 @@ const mockDriver = {
   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
 };
 
-// Mock coordinates for Baton Rouge area
-const PICKUP_LOCATION = { lat: 30.4515, lng: -91.1871 };
-const INITIAL_DRIVER_LOCATION = { lat: 30.4615, lng: -91.1971 };
+// Default coordinates for Baton Rouge
+const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
+const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
 
 const RideDriverPage = () => {
   const location = useLocation();
@@ -38,8 +43,21 @@ const RideDriverPage = () => {
   
   // Try to get state from route or localStorage
   const [state, setState] = useState<LocationState | null>(routeState);
-  const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 4);
-  const [driverLocation, setDriverLocation] = useState(INITIAL_DRIVER_LOCATION);
+  const [etaMinutes, setEtaMinutes] = useState(4);
+  const [driverProgress, setDriverProgress] = useState(0);
+  
+  // Get coordinates from state or use defaults
+  const pickupLocation = state?.pickupCoords || DEFAULT_PICKUP;
+  const routeCoordinates = state?.routeCoordinates || [];
+  
+  // Simulate driver route from a point before pickup
+  // In real app, this would be actual driver route to pickup
+  const driverRouteToPickup: [number, number][] = routeCoordinates.length > 0
+    ? routeCoordinates.slice(0, Math.ceil(routeCoordinates.length * 0.3)).reverse()
+    : [[DEFAULT_DRIVER_START.lng, DEFAULT_DRIVER_START.lat], [pickupLocation.lng, pickupLocation.lat]];
+
+  // Calculate driver position based on progress
+  const driverLocation = interpolateRoutePosition(driverRouteToPickup, driverProgress);
 
   // Load from localStorage if route state is missing
   useEffect(() => {
@@ -49,7 +67,6 @@ const RideDriverPage = () => {
         if (stored) {
           const parsed = JSON.parse(stored);
           setState(parsed);
-          setEtaMinutes(parsed.ride?.eta || 4);
           return;
         }
       } catch {}
@@ -57,30 +74,39 @@ const RideDriverPage = () => {
     }
   }, [routeState, navigate]);
 
-  // Mock countdown timer - updates every 12 seconds for demo
+  // Animate driver movement toward pickup
   useEffect(() => {
-    if (etaMinutes <= 0) return;
+    if (driverProgress >= 1) return;
+
+    const interval = setInterval(() => {
+      setDriverProgress((prev) => {
+        const newProgress = prev + 0.02; // Move 2% per interval
+        if (newProgress >= 1) {
+          clearInterval(interval);
+          toast.success("Your driver has arrived!");
+          setEtaMinutes(0);
+          return 1;
+        }
+        return newProgress;
+      });
+    }, 200); // Update every 200ms for smooth animation
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update ETA countdown
+  useEffect(() => {
+    if (etaMinutes <= 0 || driverProgress >= 1) return;
 
     const timer = setInterval(() => {
       setEtaMinutes((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          toast.success("Your driver has arrived!");
-          setDriverLocation(PICKUP_LOCATION);
-          return 0;
-        }
-        return prev - 1;
+        const newEta = Math.max(0, Math.round(4 * (1 - driverProgress)));
+        return newEta;
       });
-      
-      // Move driver closer to pickup
-      setDriverLocation((prev) => ({
-        lat: prev.lat + (PICKUP_LOCATION.lat - INITIAL_DRIVER_LOCATION.lat) / 4,
-        lng: prev.lng + (PICKUP_LOCATION.lng - INITIAL_DRIVER_LOCATION.lng) / 4,
-      }));
-    }, 12000); // Update every 12 seconds for demo
+    }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [driverProgress]);
 
   const handleCall = () => {
     toast.info("Calling driver...", { duration: 2000 });
@@ -101,14 +127,13 @@ const RideDriverPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
-      {/* Google Maps Background */}
-      <GoogleMapProvider>
-        <DriverMapView 
-          pickupLocation={PICKUP_LOCATION} 
-          driverLocation={driverLocation}
-          hasArrived={etaMinutes === 0}
-        />
-      </GoogleMapProvider>
+      {/* Mapbox Map Background */}
+      <DriverMapView 
+        pickupLocation={pickupLocation} 
+        driverLocation={driverLocation}
+        hasArrived={driverProgress >= 1}
+        routeCoordinates={driverRouteToPickup}
+      />
 
       {/* Driver Card Bottom Sheet */}
       <motion.div
