@@ -379,6 +379,12 @@ const DispatchSupportTicket = lazy(() => import("./pages/dispatch/DispatchSuppor
 const DispatchDisputes = lazy(() => import("./pages/dispatch/DispatchDisputes"));
 const DispatchDisputeDetail = lazy(() => import("./pages/dispatch/DispatchDisputeDetail"));
 const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
+// Batch management
+const DispatchBatches = lazy(() => import("./pages/dispatch/DispatchBatches"));
+const DispatchBatchNew = lazy(() => import("./pages/dispatch/DispatchBatchNew"));
+const DispatchBatchDetail = lazy(() => import("./pages/dispatch/DispatchBatchDetail"));
+// Driver batch page
+const DriverBatchPage = lazy(() => import("./pages/driver/DriverBatchPage"));
 
 // Public Rating Page
 const RateOrderPage = lazy(() => import("./pages/rate/RateOrderPage"));
@@ -1372,6 +1378,9 @@ const App = () => (
                   <Route index element={<DispatchDashboard />} />
                   <Route path="orders" element={<DispatchOrdersKanban />} />
                   <Route path="orders/:id" element={<DispatchOrderDetail />} />
+                  <Route path="batches" element={<DispatchBatches />} />
+                  <Route path="batches/new" element={<DispatchBatchNew />} />
+                  <Route path="batches/:id" element={<DispatchBatchDetail />} />
                   <Route path="drivers" element={<DispatchDrivers />} />
                   <Route path="merchants" element={<DispatchMerchants />} />
                   <Route path="payouts" element={<DispatchPayouts />} />

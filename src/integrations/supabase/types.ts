@@ -1496,12 +1496,17 @@ export type Database = {
       }
       batch_stops: {
         Row: {
+          actual_time: string | null
           address: string
           arrived_at: string | null
           batch_id: string
           completed_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          eta: string | null
           food_order_id: string | null
           id: string
+          kind: string | null
           lat: number
           lng: number
           notes: string | null
@@ -1511,12 +1516,17 @@ export type Database = {
           trip_id: string | null
         }
         Insert: {
+          actual_time?: string | null
           address: string
           arrived_at?: string | null
           batch_id: string
           completed_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          eta?: string | null
           food_order_id?: string | null
           id?: string
+          kind?: string | null
           lat: number
           lng: number
           notes?: string | null
@@ -1526,12 +1536,17 @@ export type Database = {
           trip_id?: string | null
         }
         Update: {
+          actual_time?: string | null
           address?: string
           arrived_at?: string | null
           batch_id?: string
           completed_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          eta?: string | null
           food_order_id?: string | null
           id?: string
+          kind?: string | null
           lat?: number
           lng?: number
           notes?: string | null
@@ -3592,33 +3607,51 @@ export type Database = {
           created_at: string
           driver_id: string
           id: string
+          notes: string | null
+          optimization_source: string | null
+          planned_end: string | null
+          planned_start: string | null
           region_id: string | null
           started_at: string | null
           status: string
           total_distance_km: number | null
+          total_duration_minutes: number | null
           total_earnings: number | null
+          total_stops: number | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
           driver_id: string
           id?: string
+          notes?: string | null
+          optimization_source?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
           region_id?: string | null
           started_at?: string | null
           status?: string
           total_distance_km?: number | null
+          total_duration_minutes?: number | null
           total_earnings?: number | null
+          total_stops?: number | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
           driver_id?: string
           id?: string
+          notes?: string | null
+          optimization_source?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
           region_id?: string | null
           started_at?: string | null
           status?: string
           total_distance_km?: number | null
+          total_duration_minutes?: number | null
           total_earnings?: number | null
+          total_stops?: number | null
         }
         Relationships: [
           {
@@ -4536,6 +4569,68 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: true
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_penalties: {
+        Row: {
+          amount_cents: number | null
+          applied_by: string | null
+          created_at: string | null
+          driver_id: string
+          id: string
+          note: string | null
+          order_id: string | null
+          type: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          applied_by?: string | null
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          type: string
+        }
+        Update: {
+          amount_cents?: number | null
+          applied_by?: string | null
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_penalties_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_penalties_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_penalties_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_penalties_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -7078,6 +7173,7 @@ export type Database = {
           admin_price_override: number | null
           assigned_at: string | null
           base_fare: number | null
+          batch_id: string | null
           branch_id: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
@@ -7088,6 +7184,7 @@ export type Database = {
           customer_id: string
           customer_name: string | null
           customer_phone: string | null
+          deliver_by: string | null
           delivered_at: string | null
           delivery_address: string
           delivery_confirmed_by: string | null
@@ -7108,8 +7205,11 @@ export type Database = {
           duration_minutes: number | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
+          eta_dropoff: string | null
           eta_minutes: number | null
+          eta_pickup: string | null
           id: string
+          is_scheduled: boolean | null
           items: Json
           paid_at: string | null
           payment_status: string | null
@@ -7127,6 +7227,8 @@ export type Database = {
           pickup_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
           placed_at: string | null
           platform_fee: number | null
           prep_minutes: number | null
@@ -7154,6 +7256,7 @@ export type Database = {
           square_location_id: string | null
           square_order_id: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
+          stop_sequence: number | null
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
           subtotal: number
@@ -7173,6 +7276,7 @@ export type Database = {
           admin_price_override?: number | null
           assigned_at?: string | null
           base_fare?: number | null
+          batch_id?: string | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -7183,6 +7287,7 @@ export type Database = {
           customer_id: string
           customer_name?: string | null
           customer_phone?: string | null
+          deliver_by?: string | null
           delivered_at?: string | null
           delivery_address: string
           delivery_confirmed_by?: string | null
@@ -7203,8 +7308,11 @@ export type Database = {
           duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
+          eta_dropoff?: string | null
           eta_minutes?: number | null
+          eta_pickup?: string | null
           id?: string
+          is_scheduled?: boolean | null
           items: Json
           paid_at?: string | null
           payment_status?: string | null
@@ -7222,6 +7330,8 @@ export type Database = {
           pickup_by?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -7249,6 +7359,7 @@ export type Database = {
           square_location_id?: string | null
           square_order_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stop_sequence?: number | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal: number
@@ -7268,6 +7379,7 @@ export type Database = {
           admin_price_override?: number | null
           assigned_at?: string | null
           base_fare?: number | null
+          batch_id?: string | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -7278,6 +7390,7 @@ export type Database = {
           customer_id?: string
           customer_name?: string | null
           customer_phone?: string | null
+          deliver_by?: string | null
           delivered_at?: string | null
           delivery_address?: string
           delivery_confirmed_by?: string | null
@@ -7298,8 +7411,11 @@ export type Database = {
           duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
+          eta_dropoff?: string | null
           eta_minutes?: number | null
+          eta_pickup?: string | null
           id?: string
+          is_scheduled?: boolean | null
           items?: Json
           paid_at?: string | null
           payment_status?: string | null
@@ -7317,6 +7433,8 @@ export type Database = {
           pickup_by?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -7344,6 +7462,7 @@ export type Database = {
           square_location_id?: string | null
           square_order_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stop_sequence?: number | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal?: number
@@ -7358,6 +7477,13 @@ export type Database = {
           zone_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "food_orders_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "food_orders_branch_id_fkey"
             columns: ["branch_id"]
@@ -10028,6 +10154,54 @@ export type Database = {
             columns: ["option_group_id"]
             isOneToOne: false
             referencedRelation: "option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_actions: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string | null
+          created_at: string | null
+          id: string
+          meta: Json | null
+          order_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          order_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          order_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_actions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_actions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -13846,6 +14020,63 @@ export type Database = {
           },
           {
             foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refunds: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          initiated_by: string | null
+          order_id: string
+          processed_at: string | null
+          reason: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          initiated_by?: string | null
+          order_id: string
+          processed_at?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          initiated_by?: string | null
+          order_id?: string
+          processed_at?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"
@@ -18571,6 +18802,27 @@ export type Database = {
           },
         ]
       }
+      trip_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          ride_id: string
+          share_token: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ride_id: string
+          share_token: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ride_id?: string
+          share_token?: string
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           accepted_at: string | null
@@ -23193,6 +23445,10 @@ export type Database = {
       }
     }
     Functions: {
+      assign_batch_to_driver: {
+        Args: { p_batch_id: string; p_driver_id: string }
+        Returns: Json
+      }
       auto_assign_order: { Args: { p_order_id: string }; Returns: Json }
       auto_assign_order_v2: {
         Args: { p_order_id: string; p_service_type?: string }
@@ -23240,6 +23496,7 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: boolean
       }
+      cancel_batch: { Args: { p_batch_id: string }; Returns: Json }
       check_expiring_documents: { Args: never; Returns: number }
       check_login_anomaly: {
         Args: {
@@ -23262,6 +23519,10 @@ export type Database = {
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }
       create_available_test_orders: { Args: never; Returns: number }
+      create_batch_from_orders: {
+        Args: { p_notes?: string; p_order_ids: string[]; p_region_id?: string }
+        Returns: string
+      }
       create_driver_on_signup: {
         Args: {
           p_email: string
@@ -23308,6 +23569,7 @@ export type Database = {
           region: string
         }[]
       }
+      get_batch_details: { Args: { p_batch_id: string }; Returns: Json }
       get_country_services: {
         Args: { p_country_code: string }
         Returns: {
@@ -23460,6 +23722,10 @@ export type Database = {
         Args: { p_restaurant_id: string }
         Returns: number
       }
+      optimize_batch_route: {
+        Args: { p_batch_id: string; p_start_lat?: number; p_start_lng?: number }
+        Returns: Json
+      }
       process_referral_signup: {
         Args: { p_referee_id: string; p_referral_code: string }
         Returns: Json
@@ -23480,6 +23746,10 @@ export type Database = {
         }
         Returns: number
       }
+      start_batch: {
+        Args: { p_batch_id: string; p_driver_id: string }
+        Returns: Json
+      }
       submit_order_rating: {
         Args: {
           p_comment?: string
@@ -23489,6 +23759,10 @@ export type Database = {
           p_tags?: string[]
           p_tracking_code: string
         }
+        Returns: Json
+      }
+      update_batch_stop_status: {
+        Args: { p_driver_id: string; p_status: string; p_stop_id: string }
         Returns: Json
       }
       update_notification_updated_at: {
