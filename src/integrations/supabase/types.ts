@@ -17519,6 +17519,99 @@ export type Database = {
           },
         ]
       }
+      wallet_balances: {
+        Row: {
+          available: number | null
+          driver_id: string
+          paid_out: number | null
+          pending: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          available?: number | null
+          driver_id: string
+          paid_out?: number | null
+          pending?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          available?: number | null
+          driver_id?: string
+          paid_out?: number | null
+          pending?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_balances_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_balances_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_ledger: {
+        Row: {
+          amount: number
+          available_at: string | null
+          created_at: string | null
+          driver_id: string
+          id: string
+          note: string | null
+          order_id: string | null
+          order_type: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          available_at?: string | null
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          status?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          available_at?: string | null
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          order_type?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_ledger_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_ledger_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waste_categories: {
         Row: {
           color: string | null
@@ -20475,6 +20568,10 @@ export type Database = {
       }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
+        Returns: undefined
+      }
+      refresh_wallet_balance: {
+        Args: { p_driver_id: string }
         Returns: undefined
       }
       update_notification_updated_at: {
