@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ClipboardList,
+  Star,
   Users,
   Store,
   DollarSign,
@@ -51,6 +52,11 @@ const navItems = [
     label: "Analytics",
     path: "/dispatch/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Quality",
+    path: "/dispatch/quality",
+    icon: Star,
   },
   {
     label: "Settings",
