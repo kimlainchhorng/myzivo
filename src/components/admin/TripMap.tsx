@@ -47,7 +47,7 @@ const TripMap = () => {
     if (!googleLoaded || !mapContainer.current || mapRef.current) return;
 
     if (googleError) {
-      setMapError(googleError);
+      setMapError(googleError.message || "Failed to load Google Maps");
       return;
     }
 
@@ -317,7 +317,7 @@ const TripMap = () => {
                 <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
               <p className="font-bold text-lg mb-1">Map Unavailable</p>
-              <p className="text-sm text-muted-foreground">{mapError || googleError}</p>
+              <p className="text-sm text-muted-foreground">{mapError || googleError?.message || "Map failed to load"}</p>
               <Button 
                 variant="outline" 
                 size="sm" 
