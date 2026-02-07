@@ -695,13 +695,13 @@ export default function Rides() {
                              : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                          }`}
                        >
-                         {/* Left - Text Badge */}
-                         <div className="w-16 md:w-20 flex-shrink-0 text-center">
-                           <div className="text-[10px] md:text-xs font-bold text-primary leading-tight">
-                             {ride.name.split(' ').map((word, i) => (
-                               <div key={i}>{word}</div>
-                             ))}
-                           </div>
+                         {/* Left - Car Image (Uber style) */}
+                         <div className="w-16 h-10 md:w-20 md:h-12 flex-shrink-0 flex items-center justify-center">
+                           <img 
+                             src={ride.image} 
+                             className="w-full h-full object-contain" 
+                             alt={ride.name} 
+                           />
                          </div>
 
                          {/* Middle - Info section */}
@@ -793,13 +793,9 @@ export default function Rides() {
                        : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                    }`}
                  >
-                   {/* Left - Text Badge */}
-                   <div className="w-16 md:w-20 flex-shrink-0 text-center">
-                     <div className="text-[10px] md:text-xs font-bold text-primary leading-tight">
-                       {option.name.split(' ').map((word, i) => (
-                         <div key={i}>{word}</div>
-                       ))}
-                     </div>
+                   {/* Left - Car Image (Uber style) */}
+                   <div className="w-16 h-10 md:w-20 md:h-12 flex-shrink-0 flex items-center justify-center">
+                     <img src={option.image} alt={option.name} className="w-full h-full object-contain" />
                    </div>
                    
                    {/* Info section */}
