@@ -24,6 +24,7 @@ export interface DispatchDriver {
   rating: number | null;
   total_trips: number | null;
   updated_at: string;
+  last_active_at: string | null;
   activeOrder?: {
     id: string;
     status: string;
@@ -55,7 +56,8 @@ export const useDispatchDrivers = (onlineOnly?: boolean) => {
           current_lng,
           rating,
           total_trips,
-          updated_at
+          updated_at,
+          last_active_at
         `)
         .eq("status", "verified")
         .order("is_online", { ascending: false })

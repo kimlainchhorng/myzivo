@@ -4363,6 +4363,48 @@ export type Database = {
           },
         ]
       }
+      driver_payout_settings: {
+        Row: {
+          auto_weekly: boolean | null
+          driver_id: string | null
+          id: string
+          min_threshold: number | null
+          payout_day: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_weekly?: boolean | null
+          driver_id?: string | null
+          id?: string
+          min_threshold?: number | null
+          payout_day?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_weekly?: boolean | null
+          driver_id?: string | null
+          id?: string
+          min_threshold?: number | null
+          payout_day?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payout_settings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payout_settings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_referrals: {
         Row: {
           bonus_earned: number | null
@@ -4818,6 +4860,9 @@ export type Database = {
           id: string
           is_online: boolean | null
           is_suspended: boolean | null
+          last_active_at: string | null
+          last_heading: number | null
+          last_speed: number | null
           level: string | null
           license_number: string
           location_suspicious: boolean | null
@@ -4867,6 +4912,9 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           is_suspended?: boolean | null
+          last_active_at?: string | null
+          last_heading?: number | null
+          last_speed?: number | null
           level?: string | null
           license_number: string
           location_suspicious?: boolean | null
@@ -4916,6 +4964,9 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           is_suspended?: boolean | null
+          last_active_at?: string | null
+          last_heading?: number | null
+          last_speed?: number | null
           level?: string | null
           license_number?: string
           location_suspicious?: boolean | null
@@ -6823,6 +6874,7 @@ export type Database = {
           distance_miles: number | null
           driver_id: string | null
           driver_payout_cents: number | null
+          duration_minutes: number | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
           eta_minutes: number | null
@@ -6837,6 +6889,8 @@ export type Database = {
           payout_transfer_id: string | null
           picked_up_at: string | null
           pickup_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
           placed_at: string | null
           platform_fee: number | null
           prep_minutes: number | null
@@ -6895,6 +6949,7 @@ export type Database = {
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
+          duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           eta_minutes?: number | null
@@ -6909,6 +6964,8 @@ export type Database = {
           payout_transfer_id?: string | null
           picked_up_at?: string | null
           pickup_by?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -6967,6 +7024,7 @@ export type Database = {
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
+          duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           eta_minutes?: number | null
@@ -6981,6 +7039,8 @@ export type Database = {
           payout_transfer_id?: string | null
           picked_up_at?: string | null
           pickup_by?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -22046,6 +22106,18 @@ export type Database = {
       get_or_create_referral_code: {
         Args: { p_user_id: string }
         Returns: string
+      }
+      get_order_driver_location: {
+        Args: { p_order_id: string }
+        Returns: {
+          driver_avatar_url: string
+          driver_id: string
+          driver_lat: number
+          driver_lng: number
+          driver_name: string
+          driver_vehicle_type: string
+          last_updated: string
+        }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
       get_user_security_summary: {
