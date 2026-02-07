@@ -14829,6 +14829,36 @@ export type Database = {
           },
         ]
       }
+      square_catalog_categories: {
+        Row: {
+          id: string
+          name: string
+          raw: Json
+          square_category_id: string
+          square_merchant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          raw: Json
+          square_category_id: string
+          square_merchant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          raw?: Json
+          square_category_id?: string
+          square_merchant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       square_catalog_items: {
         Row: {
           currency: string | null
@@ -14876,11 +14906,17 @@ export type Database = {
           access_token: string
           created_at: string
           env: string
+          error_message: string | null
           expires_at: string | null
           id: string
+          last_sync_at: string | null
+          location_ids: string[] | null
           refresh_token: string | null
+          scopes: string[] | null
           square_location_id: string | null
           square_merchant_id: string
+          status: string | null
+          token_type: string | null
           updated_at: string
           user_id: string
         }
@@ -14888,11 +14924,17 @@ export type Database = {
           access_token: string
           created_at?: string
           env: string
+          error_message?: string | null
           expires_at?: string | null
           id?: string
+          last_sync_at?: string | null
+          location_ids?: string[] | null
           refresh_token?: string | null
+          scopes?: string[] | null
           square_location_id?: string | null
           square_merchant_id: string
+          status?: string | null
+          token_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -14900,13 +14942,259 @@ export type Database = {
           access_token?: string
           created_at?: string
           env?: string
+          error_message?: string | null
           expires_at?: string | null
           id?: string
+          last_sync_at?: string | null
+          location_ids?: string[] | null
           refresh_token?: string | null
+          scopes?: string[] | null
           square_location_id?: string | null
           square_merchant_id?: string
+          status?: string | null
+          token_type?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      square_item_variations: {
+        Row: {
+          currency: string | null
+          id: string
+          inventory_tracking: boolean | null
+          name: string | null
+          price_cents: number | null
+          raw: Json
+          sku: string | null
+          square_item_id: string
+          square_merchant_id: string
+          square_variation_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          currency?: string | null
+          id?: string
+          inventory_tracking?: boolean | null
+          name?: string | null
+          price_cents?: number | null
+          raw: Json
+          sku?: string | null
+          square_item_id: string
+          square_merchant_id: string
+          square_variation_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          currency?: string | null
+          id?: string
+          inventory_tracking?: boolean | null
+          name?: string | null
+          price_cents?: number | null
+          raw?: Json
+          sku?: string | null
+          square_item_id?: string
+          square_merchant_id?: string
+          square_variation_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_items: {
+        Row: {
+          category_ids: string[] | null
+          description: string | null
+          id: string
+          is_archived: boolean | null
+          name: string
+          raw: Json
+          square_item_id: string
+          square_merchant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category_ids?: string[] | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean | null
+          name: string
+          raw: Json
+          square_item_id: string
+          square_merchant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category_ids?: string[] | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean | null
+          name?: string
+          raw?: Json
+          square_item_id?: string
+          square_merchant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_modifiers: {
+        Row: {
+          id: string
+          name: string
+          raw: Json
+          square_merchant_id: string
+          square_modifier_list_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          raw: Json
+          square_merchant_id: string
+          square_modifier_list_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          raw?: Json
+          square_merchant_id?: string
+          square_modifier_list_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_orders: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          env: string
+          id: string
+          raw: Json
+          square_location_id: string | null
+          square_merchant_id: string
+          square_order_id: string
+          state: string | null
+          total_cents: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          env: string
+          id?: string
+          raw: Json
+          square_location_id?: string | null
+          square_merchant_id: string
+          square_order_id: string
+          state?: string | null
+          total_cents?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          env?: string
+          id?: string
+          raw?: Json
+          square_location_id?: string | null
+          square_merchant_id?: string
+          square_order_id?: string
+          state?: string | null
+          total_cents?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_sync_jobs: {
+        Row: {
+          categories_count: number | null
+          created_at: string | null
+          env: string
+          finished_at: string | null
+          id: string
+          items_count: number | null
+          job_type: string
+          log: string | null
+          modifiers_count: number | null
+          square_merchant_id: string
+          started_at: string | null
+          status: string | null
+          user_id: string
+          variations_count: number | null
+        }
+        Insert: {
+          categories_count?: number | null
+          created_at?: string | null
+          env: string
+          finished_at?: string | null
+          id?: string
+          items_count?: number | null
+          job_type: string
+          log?: string | null
+          modifiers_count?: number | null
+          square_merchant_id: string
+          started_at?: string | null
+          status?: string | null
+          user_id: string
+          variations_count?: number | null
+        }
+        Update: {
+          categories_count?: number | null
+          created_at?: string | null
+          env?: string
+          finished_at?: string | null
+          id?: string
+          items_count?: number | null
+          job_type?: string
+          log?: string | null
+          modifiers_count?: number | null
+          square_merchant_id?: string
+          started_at?: string | null
+          status?: string | null
+          user_id?: string
+          variations_count?: number | null
+        }
+        Relationships: []
+      }
+      square_webhook_events: {
+        Row: {
+          env: string
+          event_id: string
+          event_type: string
+          id: string
+          merchant_id: string
+          payload: Json
+          received_at: string | null
+        }
+        Insert: {
+          env: string
+          event_id: string
+          event_type: string
+          id?: string
+          merchant_id: string
+          payload: Json
+          received_at?: string | null
+        }
+        Update: {
+          env?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          merchant_id?: string
+          payload?: Json
+          received_at?: string | null
         }
         Relationships: []
       }
@@ -15312,6 +15600,7 @@ export type Database = {
           priority: string | null
           resolved_at: string | null
           restaurant_id: string | null
+          ride_id: string | null
           search_session_id: string | null
           sla_paused_at: string | null
           sla_paused_duration_minutes: number | null
@@ -15345,6 +15634,7 @@ export type Database = {
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
+          ride_id?: string | null
           search_session_id?: string | null
           sla_paused_at?: string | null
           sla_paused_duration_minutes?: number | null
@@ -15378,6 +15668,7 @@ export type Database = {
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
+          ride_id?: string | null
           search_session_id?: string | null
           sla_paused_at?: string | null
           sla_paused_duration_minutes?: number | null
@@ -15426,6 +15717,20 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
