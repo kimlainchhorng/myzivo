@@ -1,24 +1,36 @@
 /**
  * GoogleMap Component
  * 
- * A reusable Google Maps component that replaces Mapbox across the app.
- * Supports markers, routes, and custom styling.
+ * Declarative Google Maps component using @react-google-maps/api.
+ * Supports ZIVO dark theme, markers, routes, and custom styling.
  */
 
-/// <reference types="@types/google.maps" />
-
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import { useGoogleMaps } from "./GoogleMapProvider";
+import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef } from "react";
+import { GoogleMap as GMap, MarkerF, PolylineF } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Loader2 } from "lucide-react";
+import ZivoPickupMarker from "./ZivoPickupMarker";
+
+// ZIVO Dark map theme - premium, removes "Google look"
+const ZIVO_MAP_STYLE: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
+];
 
 export interface MapMarker {
   id: string;
   position: { lat: number; lng: number };
   type?: "pickup" | "dropoff" | "driver" | "custom";
   title?: string;
-  icon?: string;           // URL to custom SVG/PNG icon
-  iconSize?: number;       // Size in pixels (default: 36)
+  icon?: string;
+  iconSize?: number;
   label?: string;
 }
 
@@ -35,12 +47,16 @@ export interface GoogleMapProps {
   zoom?: number;
   markers?: MapMarker[];
   route?: MapRoute;
+  routePath?: google.maps.LatLngLiteral[];
   showControls?: boolean;
   darkMode?: boolean;
   mapId?: string;
   onMapClick?: (position: { lat: number; lng: number }) => void;
   onMarkerClick?: (markerId: string) => void;
   fitBounds?: boolean;
+  // New simplified props
+  pickup?: google.maps.LatLngLiteral;
+  dropoff?: google.maps.LatLngLiteral;
 }
 
 export interface GoogleMapRef {
@@ -49,320 +65,177 @@ export interface GoogleMapRef {
   fitMarkerBounds: () => void;
 }
 
-// ZIVO Dark map theme - premium, removes "Google look"
-const zivoMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
-];
-
-// Create pulsing pickup overlay with CSS animations
-function createPulsingOverlay(
-  position: { lat: number; lng: number },
-  map: google.maps.Map
-): google.maps.OverlayView {
-  class PulsingOverlay extends google.maps.OverlayView {
-    private position: google.maps.LatLng;
-    private div: HTMLDivElement | null = null;
-
-    constructor(pos: { lat: number; lng: number }) {
-      super();
-      this.position = new google.maps.LatLng(pos.lat, pos.lng);
-    }
-
-    onAdd() {
-      this.div = document.createElement("div");
-      this.div.style.position = "absolute";
-      this.div.style.transform = "translate(-50%, -50%)";
-      this.div.innerHTML = `
-        <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px;">
-          <div style="position: absolute; width: 64px; height: 64px; border-radius: 50%; background: rgba(59, 130, 246, 0.3);" class="animate-ping-slow"></div>
-          <div style="position: absolute; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.4);" class="animate-ping-medium"></div>
-          <div style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; z-index: 10;"></div>
-        </div>
-      `;
-
-      const panes = this.getPanes();
-      panes?.overlayMouseTarget.appendChild(this.div);
-    }
-
-    draw() {
-      if (!this.div) return;
-      const overlayProjection = this.getProjection();
-      const pos = overlayProjection.fromLatLngToDivPixel(this.position);
-      if (pos) {
-        this.div.style.left = `${pos.x}px`;
-        this.div.style.top = `${pos.y}px`;
-      }
-    }
-
-    onRemove() {
-      if (this.div?.parentNode) {
-        this.div.parentNode.removeChild(this.div);
-        this.div = null;
-      }
-    }
-  }
-
-  const overlay = new PulsingOverlay(position);
-  overlay.setMap(map);
-  return overlay;
-}
-
 const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   className,
-  center = { lat: 40.7128, lng: -74.006 }, // NYC default
-  zoom = 13,
+  center = { lat: 40.7128, lng: -74.006 },
+  zoom = 14,
   markers = [],
   route,
-  showControls = true,
+  routePath,
+  showControls = false,
   darkMode = true,
-  mapId,
   onMapClick,
   onMarkerClick,
   fitBounds = true,
+  pickup,
+  dropoff,
 }, ref) => {
-  const { isLoaded, loadError } = useGoogleMaps();
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersInstanceRef = useRef<google.maps.Marker[]>([]);
-  const overlaysInstanceRef = useRef<google.maps.OverlayView[]>([]);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
-  const [mapReady, setMapReady] = useState(false);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Map options
+  const options = useMemo<google.maps.MapOptions>(() => ({
+    styles: darkMode ? ZIVO_MAP_STYLE : undefined,
+    disableDefaultUI: !showControls,
+    clickableIcons: false,
+    keyboardShortcuts: false,
+    zoomControl: false,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    gestureHandling: "greedy",
+    tilt: 0,
+  }), [darkMode, showControls]);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
-    panTo: (position) => {
-      mapInstanceRef.current?.panTo(position);
-    },
-    setZoom: (z) => {
-      mapInstanceRef.current?.setZoom(z);
-    },
+    panTo: (position) => mapRef.current?.panTo(position),
+    setZoom: (z) => mapRef.current?.setZoom(z),
     fitMarkerBounds: () => {
-      if (!mapInstanceRef.current || markers.length === 0 || !window.google) return;
+      if (!mapRef.current || !window.google) return;
       const bounds = new window.google.maps.LatLngBounds();
       markers.forEach(m => bounds.extend(m.position));
-      mapInstanceRef.current.fitBounds(bounds, 50);
+      if (pickup) bounds.extend(pickup);
+      if (dropoff) bounds.extend(dropoff);
+      mapRef.current.fitBounds(bounds, 50);
     },
   }));
 
-  // Initialize map
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current || mapInstanceRef.current || !window.google) return;
-
-    const resolvedMapId = mapId || import.meta.env.VITE_GOOGLE_MAP_ID;
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
     
-    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-      center,
-      zoom,
-      mapId: resolvedMapId || undefined,
-      styles: resolvedMapId ? undefined : (darkMode ? zivoMapStyles : undefined),
-      disableDefaultUI: !showControls,
-      zoomControl: false,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      gestureHandling: "greedy",
-      clickableIcons: false,
-      keyboardShortcuts: false,
-    });
-
-    if (onMapClick) {
-      mapInstanceRef.current.addListener("click", (e: google.maps.MapMouseEvent) => {
-        if (e.latLng) {
-          onMapClick({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-        }
-      });
-    }
-
-    setMapReady(true);
-
-    return () => {
-      // Cleanup
-      markersInstanceRef.current.forEach(m => m.setMap(null));
-      markersInstanceRef.current = [];
-      overlaysInstanceRef.current.forEach(o => o.setMap(null));
-      overlaysInstanceRef.current = [];
-      directionsRendererRef.current?.setMap(null);
-    };
-  }, [isLoaded, darkMode, showControls]);
-
-  // Update markers
-  useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current || !window.google) return;
-
-    // Clear existing markers and overlays
-    markersInstanceRef.current.forEach(m => m.setMap(null));
-    markersInstanceRef.current = [];
-    overlaysInstanceRef.current.forEach(o => o.setMap(null));
-    overlaysInstanceRef.current = [];
-
-    const bounds = new window.google.maps.LatLngBounds();
-
-    markers.forEach(marker => {
-      bounds.extend(marker.position);
+    // Fit bounds on load if multiple points
+    if (fitBounds && window.google) {
+      const bounds = new window.google.maps.LatLngBounds();
+      let pointCount = 0;
       
-      // Use pulsing overlay for pickup markers
-      if (marker.type === "pickup" && !marker.icon) {
-        const overlay = createPulsingOverlay(marker.position, mapInstanceRef.current!);
-        overlaysInstanceRef.current.push(overlay);
-        return; // Skip creating regular marker
-      }
-
-      // Create marker icon based on type
-      let icon: google.maps.Symbol | google.maps.Icon | undefined;
+      markers.forEach(m => { bounds.extend(m.position); pointCount++; });
+      if (pickup) { bounds.extend(pickup); pointCount++; }
+      if (dropoff) { bounds.extend(dropoff); pointCount++; }
       
-      // Use custom icon if provided (highest priority)
-      if (marker.icon) {
-        const size = marker.iconSize || 36;
-        icon = {
-          url: marker.icon,
-          scaledSize: new window.google.maps.Size(size, size),
-          anchor: new window.google.maps.Point(size / 2, size / 2),
-        };
-      } else if (marker.type === "dropoff") {
-        // Black square pin for destination (more visible contrast)
-        icon = {
-          path: "M-6,-6 L6,-6 L6,6 L-6,6 Z", // Square path
-          fillColor: "#000000",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-          scale: 1,
-        };
-      } else if (marker.type === "driver") {
-        icon = {
-          path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-          fillColor: "#f59e0b",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-          scale: 2,
-          anchor: new window.google.maps.Point(12, 24),
-        };
+      if (pointCount > 1) {
+        map.fitBounds(bounds, 50);
       }
-
-      const gMarker = new window.google.maps.Marker({
-        position: marker.position,
-        map: mapInstanceRef.current!,
-        title: marker.title,
-        icon,
-        label: marker.label ? {
-          text: marker.label,
-          color: "#ffffff",
-          fontSize: "12px",
-          fontWeight: "bold",
-        } : undefined,
-        animation: marker.type === "driver" ? window.google.maps.Animation.DROP : undefined,
-      });
-
-      if (onMarkerClick) {
-        gMarker.addListener("click", () => onMarkerClick(marker.id));
-      }
-
-      markersInstanceRef.current.push(gMarker);
-    });
-
-    // Fit bounds if we have markers
-    if (fitBounds && markers.length > 1) {
-      mapInstanceRef.current.fitBounds(bounds, 50);
-    } else if (markers.length === 1) {
-      mapInstanceRef.current.setCenter(markers[0].position);
     }
-  }, [markers, mapReady, fitBounds, onMarkerClick]);
+  }, [markers, pickup, dropoff, fitBounds]);
 
-  // Update center when prop changes
-  useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current) return;
-    mapInstanceRef.current.panTo(center);
-  }, [center.lat, center.lng, mapReady]);
-
-  // Update zoom when prop changes
-  useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current) return;
-    mapInstanceRef.current.setZoom(zoom);
-  }, [zoom, mapReady]);
-
-  // Update route
-  useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current || !window.google) return;
-
-    // If no route, clear the directions renderer
-    if (!route) {
-      if (directionsRendererRef.current) {
-        directionsRendererRef.current.setMap(null);
-        directionsRendererRef.current = null;
-      }
-      return;
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng && onMapClick) {
+      onMapClick({ lat: e.latLng.lat(), lng: e.latLng.lng() });
     }
+  }, [onMapClick]);
 
-    // Initialize directions renderer if needed
-    if (!directionsRendererRef.current) {
-      directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
-        suppressMarkers: true, // We handle our own markers
-        polylineOptions: {
-          strokeColor: route.color || "#3b82f6",
-          strokeWeight: 5,
-          strokeOpacity: 0.8,
-        },
-      });
-      directionsRendererRef.current.setMap(mapInstanceRef.current);
-    }
+  // Dropoff marker icon
+  const dropoffIcon = useMemo(() => ({
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 8,
+    fillColor: "#000000",
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeWeight: 2,
+  }), []);
 
-    const directionsService = new window.google.maps.DirectionsService();
+  // Driver marker icon
+  const driverIcon = useMemo(() => ({
+    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
+    fillColor: "#f59e0b",
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeWeight: 2,
+    scale: 2,
+    anchor: new google.maps.Point(12, 24),
+  }), []);
 
-    directionsService.route(
-      {
-        origin: route.origin,
-        destination: route.destination,
-        waypoints: route.waypoints?.map(wp => ({ location: wp, stopover: false })),
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK && result) {
-          directionsRendererRef.current?.setDirections(result);
-        }
-      }
-    );
-  }, [route, mapReady]);
+  // Determine effective center
+  const effectiveCenter = pickup || center;
 
-  // Loading state
-  if (!isLoaded) {
-    return (
-      <div className={cn("relative flex items-center justify-center bg-background/50", className)}>
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="text-sm">Loading map...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (loadError) {
-    return (
-      <div className={cn("relative flex items-center justify-center bg-background/50", className)}>
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <AlertCircle className="w-8 h-8 text-destructive" />
-          <span className="text-sm">{loadError}</span>
-        </div>
-      </div>
-    );
-  }
+  // Build route path for polyline
+  const polylinePath = routePath || (route ? undefined : undefined);
 
   return (
-    <div 
-      ref={mapRef} 
-      className={cn("relative", className)} 
-      style={{ minHeight: "200px" }}
-    />
+    <div className={cn("relative", className)}>
+      <GMap
+        mapContainerClassName="w-full h-full"
+        center={effectiveCenter}
+        zoom={zoom}
+        options={options}
+        onLoad={onLoad}
+        onClick={handleMapClick}
+      >
+        {/* Pickup marker with premium pulsing effect */}
+        {pickup && <ZivoPickupMarker position={pickup} />}
+
+        {/* Dropoff marker */}
+        {dropoff && (
+          <MarkerF
+            position={dropoff}
+            icon={dropoffIcon}
+          />
+        )}
+
+        {/* Legacy markers support */}
+        {markers.map(marker => {
+          if (marker.type === "pickup" && !marker.icon) {
+            return <ZivoPickupMarker key={marker.id} position={marker.position} />;
+          }
+
+          let icon: google.maps.Symbol | google.maps.Icon | undefined;
+          
+          if (marker.icon) {
+            const size = marker.iconSize || 36;
+            icon = {
+              url: marker.icon,
+              scaledSize: new google.maps.Size(size, size),
+              anchor: new google.maps.Point(size / 2, size / 2),
+            };
+          } else if (marker.type === "dropoff") {
+            icon = dropoffIcon;
+          } else if (marker.type === "driver") {
+            icon = driverIcon;
+          }
+
+          return (
+            <MarkerF
+              key={marker.id}
+              position={marker.position}
+              title={marker.title}
+              icon={icon}
+              onClick={() => onMarkerClick?.(marker.id)}
+              label={marker.label ? {
+                text: marker.label,
+                color: "#ffffff",
+                fontSize: "12px",
+                fontWeight: "bold",
+              } : undefined}
+            />
+          );
+        })}
+
+        {/* Route polyline */}
+        {polylinePath && polylinePath.length > 0 && (
+          <PolylineF
+            path={polylinePath}
+            options={{
+              strokeColor: route?.color || "#3b82f6",
+              strokeOpacity: 0.9,
+              strokeWeight: 5,
+            }}
+          />
+        )}
+      </GMap>
+
+      {/* ZIVO gradient overlay for premium look */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+    </div>
   );
 });
 
