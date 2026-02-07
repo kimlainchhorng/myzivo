@@ -1,7 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SupabaseErrorInfo } from "@/lib/supabaseErrors";
+import {
+  acceptTripWithRetry,
+  updateTripStatusWithRetry,
+  updateLocationWithRetry,
+  updateDriverStatusWithRetry,
+} from "@/lib/supabaseDriverOperations";
 
 export type DriverAppStatus = "offline" | "online" | "busy";
 
@@ -61,56 +68,71 @@ export const useDriverProfile = () => {
   });
 };
 
-// Hook to update driver online status
+// Hook to update driver online status with retry
 export const useUpdateDriverStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ driverId, isOnline }: { driverId: string; isOnline: boolean }) => {
-      const { error } = await supabase
-        .from("drivers")
-        .update({ 
-          is_online: isOnline,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", driverId);
-
-      if (error) throw error;
+      const result = await updateDriverStatusWithRetry(driverId, isOnline);
+      
+      if (result.error) {
+        const err = new Error(result.error.userMessage);
+        (err as any).errorInfo = result.error;
+        (err as any).attempts = result.attempts;
+        throw err;
+      }
+      
+      return { isOnline };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["driver-profile"] });
-      toast.success(variables.isOnline ? "You are now online" : "You are now offline");
+      toast.success(data.isOnline ? "You are now online" : "You are now offline");
     },
-    onError: (error) => {
-      toast.error("Failed to update status: " + error.message);
+    onError: (error: Error & { errorInfo?: SupabaseErrorInfo; attempts?: number }) => {
+      const info = error.errorInfo;
+      
+      if (info?.isRetryable) {
+        toast.error("Failed to update status", {
+          description: info.userMessage,
+        });
+      } else {
+        toast.error(info?.userMessage || error.message);
+      }
     },
   });
 };
 
-// Hook to update driver location
+// Hook to update driver location with silent retry
 export const useUpdateDriverLocation = () => {
-  const queryClient = useQueryClient();
+  const locationFailuresRef = useRef(0);
 
   return useMutation({
     mutationFn: async ({ driverId, lat, lng }: { driverId: string; lat: number; lng: number }) => {
-      const { error } = await supabase
-        .from("drivers")
-        .update({ 
-          current_lat: lat,
-          current_lng: lng,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", driverId);
-
-      if (error) throw error;
+      const success = await updateLocationWithRetry(driverId, lat, lng);
+      
+      if (!success) {
+        locationFailuresRef.current++;
+        
+        // Only warn after 3 consecutive failures
+        if (locationFailuresRef.current >= 3) {
+          console.warn("[Location] Multiple update failures, driver may appear offline to riders");
+        }
+        
+        throw new Error("Location update failed");
+      }
+      
+      // Reset on success
+      locationFailuresRef.current = 0;
+      return { lat, lng };
     },
-    onError: (error) => {
-      console.error("Failed to update location:", error);
+    onError: () => {
+      // Silent failure - no toast for location updates
     },
   });
 };
 
-// Hook for location tracking
+// Hook for location tracking with retry
 export const useDriverLocationTracking = (driverId: string | undefined, isOnline: boolean) => {
   const updateLocation = useUpdateDriverLocation();
   const [watchId, setWatchId] = useState<number | null>(null);
@@ -195,43 +217,41 @@ export const useAvailableTripRequests = (enabled: boolean = true) => {
   });
 };
 
-// Hook to accept a trip with better race condition handling
+// Hook to accept a trip with retry and race condition handling
 export const useAcceptTrip = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ tripId, driverId }: { tripId: string; driverId: string }) => {
-      const { data, error } = await supabase
-        .from("trips")
-        .update({ 
-          status: "accepted",
-          driver_id: driverId,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", tripId)
-        .eq("status", "requested") // Only accept if still requested
-        .is("driver_id", null)     // Extra safety: only if no driver assigned
-        .select();
-
-      if (error) throw error;
+      const result = await acceptTripWithRetry(tripId, driverId);
       
-      // No rows updated means trip was already taken by another driver
-      if (!data || data.length === 0) {
-        throw new Error("TRIP_ALREADY_TAKEN");
+      if (result.error) {
+        const err = new Error(result.error.userMessage);
+        (err as any).errorInfo = result.error;
+        (err as any).attempts = result.attempts;
+        throw err;
       }
-
-      return data[0];
+      
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["available-trip-requests"] });
       queryClient.invalidateQueries({ queryKey: ["driver-active-trip"] });
       toast.success("Trip accepted!");
     },
-    onError: (error) => {
-      if (error.message === "TRIP_ALREADY_TAKEN") {
-        toast.error("This ride was already accepted by another driver");
+    onError: (error: Error & { errorInfo?: SupabaseErrorInfo; attempts?: number }) => {
+      const info = error.errorInfo;
+      
+      if (info?.message === "Trip already taken") {
+        toast.error("Ride unavailable", {
+          description: "Another driver accepted this trip.",
+        });
+      } else if (info?.isRetryable) {
+        toast.error("Failed to accept", {
+          description: info.userMessage,
+        });
       } else {
-        toast.error("Failed to accept trip: " + error.message);
+        toast.error(info?.userMessage || error.message);
       }
     },
   });
@@ -261,26 +281,24 @@ export const useDriverActiveTrip = (driverId: string | undefined) => {
   });
 };
 
-// Hook to update trip status
+// Hook to update trip status with retry
 export const useUpdateTripStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ tripId, status }: { tripId: string; status: string }) => {
-      // Cast status to the expected enum type
-      const tripStatus = status as "requested" | "accepted" | "en_route" | "arrived" | "in_progress" | "completed" | "cancelled";
+      const result = await updateTripStatusWithRetry(tripId, status);
       
-      const { error } = await supabase
-        .from("trips")
-        .update({ 
-          status: tripStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", tripId);
-
-      if (error) throw error;
+      if (result.error) {
+        const err = new Error(result.error.userMessage);
+        (err as any).errorInfo = result.error;
+        (err as any).attempts = result.attempts;
+        throw err;
+      }
+      
+      return { status };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["driver-active-trip"] });
       queryClient.invalidateQueries({ queryKey: ["available-trip-requests"] });
       
@@ -292,10 +310,18 @@ export const useUpdateTripStatus = () => {
         cancelled: "Trip cancelled",
       };
       
-      toast.success(statusMessages[variables.status] || "Status updated");
+      toast.success(statusMessages[data.status] || "Status updated");
     },
-    onError: (error) => {
-      toast.error("Failed to update trip: " + error.message);
+    onError: (error: Error & { errorInfo?: SupabaseErrorInfo; attempts?: number }) => {
+      const info = error.errorInfo;
+      
+      if (info?.isRetryable) {
+        toast.error("Failed to update status", {
+          description: info.userMessage,
+        });
+      } else {
+        toast.error(info?.userMessage || error.message);
+      }
     },
   });
 };

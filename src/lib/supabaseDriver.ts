@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { upsertDriverProfileWithRetry } from "./supabaseDriverOperations";
 
 // Check if Supabase is properly configured and accessible
 export const isSupabaseConfigured = async (): Promise<boolean> => {
@@ -10,51 +11,19 @@ export const isSupabaseConfigured = async (): Promise<boolean> => {
   }
 };
 
-// Upsert driver profile from auth user
+// Upsert driver profile from auth user - now with retry
 export const upsertDriverProfile = async (userId: string, email: string): Promise<string | null> => {
-  try {
-    // Check if driver already exists
-    const { data: existing } = await supabase
-      .from("drivers")
-      .select("id")
-      .eq("user_id", userId)
-      .single();
-
-    if (existing) {
-      return existing.id;
-    }
-
-    // Create new driver profile with defaults
-    const { data, error } = await supabase
-      .from("drivers")
-      .insert({
-        user_id: userId,
-        full_name: email.split("@")[0],
-        email: email,
-        phone: "",
-        license_number: "PENDING",
-        vehicle_type: "sedan",
-        vehicle_plate: "PENDING",
-        rating: 4.8,
-        is_online: false,
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Failed to create driver profile:", error);
-      return null;
-    }
-
-    return data?.id ?? null;
-  } catch (error) {
-    console.error("Error upserting driver profile:", error);
+  const result = await upsertDriverProfileWithRetry(userId, email);
+  
+  if (result.error) {
+    console.error("Failed to upsert driver profile:", result.error.message);
     return null;
   }
+  
+  return result.data?.id ?? null;
 };
 
-// Update driver location with fallback handling
+// Update driver location with fallback handling (legacy - use updateLocationWithRetry directly)
 export const updateDriverLocation = async (
   driverId: string,
   lat: number,
