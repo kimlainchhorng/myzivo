@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import RideReceiptModal from "@/components/ride/RideReceiptModal";
+import RideStatusBanner from "@/components/ride/RideStatusBanner";
 import TripMapView from "@/components/ride/TripMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { updateRideStatusInDb } from "@/lib/supabaseRide";
@@ -36,6 +38,9 @@ const RideTripPage = () => {
   const { isDemoMode } = useRideRealtime({
     tripId: state.tripId,
   });
+
+  // Subscribe to status notifications
+  const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
 
   // Redirect if no active ride
   useEffect(() => {
@@ -180,6 +185,17 @@ const RideTripPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
+      {/* Status Banner for in_trip and completed */}
+      {activeNotification && ["in_trip", "completed"].includes(activeNotification.status) && (
+        <RideStatusBanner
+          status={activeNotification.status}
+          message={activeNotification.message}
+          subMessage={activeNotification.subMessage}
+          isVisible={showBanner}
+          onDismiss={dismissBanner}
+        />
+      )}
+
       {/* Demo Mode Banner */}
       {isDemoMode && <DemoModeBanner />}
       {/* Mapbox Map View */}

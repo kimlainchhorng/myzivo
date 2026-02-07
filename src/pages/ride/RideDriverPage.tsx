@@ -6,11 +6,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
+import RideStatusBanner from "@/components/ride/RideStatusBanner";
 import { toast } from "sonner";
 import DriverMapView from "@/components/ride/DriverMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
@@ -43,6 +45,9 @@ const RideDriverPage = () => {
   const { isDemoMode } = useRideRealtime({
     tripId: state.tripId,
   });
+
+  // Subscribe to status notifications
+  const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
 
   // Get driver info from store or fallback
   const driver = state.driver || DEFAULT_MOCK_DRIVER;
@@ -174,6 +179,17 @@ const RideDriverPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
+      {/* Status Banner */}
+      {activeNotification && activeNotification.status === "arrived" && (
+        <RideStatusBanner
+          status={activeNotification.status}
+          message={activeNotification.message}
+          subMessage={activeNotification.subMessage}
+          isVisible={showBanner}
+          onDismiss={dismissBanner}
+        />
+      )}
+
       {/* Demo Mode Banner */}
       {isDemoMode && <DemoModeBanner />}
 

@@ -8753,6 +8753,71 @@ export type Database = {
           },
         ]
       }
+      merchant_earnings: {
+        Row: {
+          created_at: string | null
+          id: string
+          net_amount: number
+          order_id: string | null
+          order_total: number
+          platform_fee: number | null
+          processed_at: string | null
+          restaurant_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          net_amount?: number
+          order_id?: string | null
+          order_total?: number
+          platform_fee?: number | null
+          processed_at?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          net_amount?: number
+          order_id?: string | null
+          order_total?: number
+          platform_fee?: number | null
+          processed_at?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_earnings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_earnings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -12902,6 +12967,7 @@ export type Database = {
           cuisine_type: string
           description: string | null
           email: string
+          hours: Json | null
           id: string
           is_open: boolean | null
           lat: number | null
@@ -12925,6 +12991,7 @@ export type Database = {
           cuisine_type: string
           description?: string | null
           email: string
+          hours?: Json | null
           id?: string
           is_open?: boolean | null
           lat?: number | null
@@ -12948,6 +13015,7 @@ export type Database = {
           cuisine_type?: string
           description?: string | null
           email?: string
+          hours?: Json | null
           id?: string
           is_open?: boolean | null
           lat?: number | null

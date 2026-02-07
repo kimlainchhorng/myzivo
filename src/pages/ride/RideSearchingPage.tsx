@@ -6,8 +6,10 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
+import RideStatusBanner from "@/components/ride/RideStatusBanner";
 import { cancelRideInDb, SupabaseErrorInfo } from "@/lib/supabaseRide";
 
 // Status messages with timing thresholds (based on progress %)
@@ -28,6 +30,9 @@ const RideSearchingPage = () => {
     tripId: state.tripId,
     enableMockFallback: false, // We handle mock in this component
   });
+
+  // Subscribe to status notifications
+  const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
 
   // Redirect if no active ride
   useEffect(() => {
@@ -115,6 +120,17 @@ const RideSearchingPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-6">
+      {/* Status Banner */}
+      {activeNotification && activeNotification.status === "assigned" && (
+        <RideStatusBanner
+          status={activeNotification.status}
+          message={activeNotification.message}
+          subMessage={activeNotification.subMessage}
+          isVisible={showBanner}
+          onDismiss={dismissBanner}
+        />
+      )}
+
       {/* Connection Error Banner */}
       <AnimatePresence>
         {connectionError && (
