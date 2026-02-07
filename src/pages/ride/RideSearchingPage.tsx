@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Car } from "lucide-react";
+import { Car, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
@@ -10,7 +10,7 @@ import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
 import RideStatusBanner from "@/components/ride/RideStatusBanner";
-import { cancelRideInDb } from "@/lib/supabaseRide";
+import { cancelRideInDb, fetchTripById } from "@/lib/supabaseRide";
 import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 
 const SEARCH_TIMEOUT = 60000; // 60 seconds
@@ -24,11 +24,74 @@ const statusMessages = [
 
 const RideSearchingPage = () => {
   const navigate = useNavigate();
-  const { state, assignDriver, cancelRide, setStatus } = useRideStore();
+  const [searchParams] = useSearchParams();
+  const { state, assignDriver, cancelRide, setStatus, createRide, setTripId } = useRideStore();
   const [progress, setProgress] = useState(0);
   const [isCancelling, setIsCancelling] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  // Restore state from URL param (returning from payments app)
+  useEffect(() => {
+    const rideIdFromUrl = searchParams.get("rideId");
+    
+    if (rideIdFromUrl && (!state.tripId || state.tripId !== rideIdFromUrl)) {
+      setIsRestoring(true);
+      
+      // Try to restore from localStorage first (faster)
+      const pendingRide = localStorage.getItem('zivo_pending_ride');
+      if (pendingRide) {
+        try {
+          const parsed = JSON.parse(pendingRide);
+          if (parsed.tripId === rideIdFromUrl) {
+            // Restore state from localStorage
+            createRide({
+              pickup: parsed.pickup,
+              destination: parsed.destination,
+              rideType: parsed.rideType || 'standard',
+              rideName: parsed.rideName,
+              rideImage: parsed.rideImage || '',
+              price: parsed.price,
+              distance: parsed.distance || 0,
+              duration: parsed.duration || 0,
+              paymentMethod: parsed.paymentMethod || 'card',
+            });
+            setTripId(rideIdFromUrl);
+            localStorage.removeItem('zivo_pending_ride');
+            setIsRestoring(false);
+            console.log("[RideSearching] Restored ride from localStorage:", rideIdFromUrl);
+            return;
+          }
+        } catch (e) {
+          console.warn("[RideSearching] Failed to parse pending ride:", e);
+        }
+      }
+      
+      // Fallback: fetch from database
+      fetchTripById(rideIdFromUrl).then((trip) => {
+        if (trip) {
+          createRide({
+            pickup: trip.pickup_address,
+            destination: trip.dropoff_address,
+            rideType: trip.ride_type || 'standard',
+            rideName: trip.ride_type || 'Standard',
+            rideImage: '',
+            price: trip.fare_amount || 0,
+            distance: (trip.distance_km || 0) / 1.60934, // km to miles
+            duration: trip.duration_minutes || 0,
+            paymentMethod: 'card',
+          });
+          setTripId(rideIdFromUrl);
+          console.log("[RideSearching] Restored ride from database:", rideIdFromUrl);
+        } else {
+          toast.error("Could not find ride details");
+          navigate("/ride");
+        }
+        setIsRestoring(false);
+      });
+    }
+  }, [searchParams, state.tripId, createRide, setTripId, navigate]);
 
   // Subscribe to realtime updates if we have a tripId
   const { isDemoMode, isRealtime, connectionError, isReconnecting, reconnect } = useRideRealtime({
@@ -39,12 +102,13 @@ const RideSearchingPage = () => {
   // Subscribe to status notifications
   const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
 
-  // Redirect if no active ride
+  // Redirect if no active ride (only if not restoring)
   useEffect(() => {
+    if (isRestoring) return;
     if (state.status === 'idle' || !state.rideId) {
       navigate("/ride");
     }
-  }, [state.status, state.rideId, navigate]);
+  }, [state.status, state.rideId, navigate, isRestoring]);
 
   // Get current status message based on progress
   const currentStatus = statusMessages.reduce((acc, msg) => {
@@ -145,6 +209,18 @@ const RideSearchingPage = () => {
 
   if (state.status === 'idle' || !state.rideId) {
     return null;
+  }
+
+  // Show loading while restoring state from payments redirect
+  if (isRestoring) {
+    return (
+      <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-white/60">Resuming your ride...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

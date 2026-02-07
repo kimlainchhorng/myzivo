@@ -4776,14 +4776,17 @@ export type Database = {
       }
       drivers: {
         Row: {
+          acceptance_count: number
           allowed_regions: string[] | null
           apns_token: string | null
           avatar_url: string | null
           bank_connected: boolean | null
+          cancel_count: number
           created_at: string
           current_lat: number | null
           current_lng: number | null
           daily_goal: number | null
+          decline_count: number
           device_platform: string | null
           documents_verified: boolean | null
           eats_enabled: boolean | null
@@ -4822,14 +4825,17 @@ export type Database = {
           vehicle_type: string
         }
         Insert: {
+          acceptance_count?: number
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
           bank_connected?: boolean | null
+          cancel_count?: number
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           daily_goal?: number | null
+          decline_count?: number
           device_platform?: string | null
           documents_verified?: boolean | null
           eats_enabled?: boolean | null
@@ -4868,14 +4874,17 @@ export type Database = {
           vehicle_type: string
         }
         Update: {
+          acceptance_count?: number
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
           bank_connected?: boolean | null
+          cancel_count?: number
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
           daily_goal?: number | null
+          decline_count?: number
           device_platform?: string | null
           documents_verified?: boolean | null
           eats_enabled?: boolean | null
@@ -9003,6 +9012,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      merchant_plans: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string | null
+          id: string
+          monthly_price: number
+          name: string
+          placement_boost: number
+          platform_fee_percent: number
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string | null
+          id?: string
+          monthly_price?: number
+          name: string
+          placement_boost?: number
+          platform_fee_percent?: number
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string | null
+          id?: string
+          monthly_price?: number
+          name?: string
+          placement_boost?: number
+          platform_fee_percent?: number
+        }
+        Relationships: []
       }
       notification_preferences: {
         Row: {
@@ -13462,12 +13504,17 @@ export type Database = {
           opening_hours: Json | null
           owner_id: string | null
           phone: string
+          plan_code: string | null
+          plan_updated_at: string | null
           rating: number | null
           status: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id: string | null
+          stripe_customer_id: string | null
           stripe_details_submitted: boolean | null
           stripe_last_sync: string | null
           stripe_payouts_enabled: boolean | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           total_orders: number | null
           updated_at: string | null
         }
@@ -13491,12 +13538,17 @@ export type Database = {
           opening_hours?: Json | null
           owner_id?: string | null
           phone: string
+          plan_code?: string | null
+          plan_updated_at?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
+          stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_last_sync?: string | null
           stripe_payouts_enabled?: boolean | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           total_orders?: number | null
           updated_at?: string | null
         }
@@ -13520,12 +13572,17 @@ export type Database = {
           opening_hours?: Json | null
           owner_id?: string | null
           phone?: string
+          plan_code?: string | null
+          plan_updated_at?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
+          stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_last_sync?: string | null
           stripe_payouts_enabled?: boolean | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           total_orders?: number | null
           updated_at?: string | null
         }
@@ -14771,6 +14828,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      square_catalog_items: {
+        Row: {
+          currency: string | null
+          description: string | null
+          id: string
+          name: string | null
+          object_type: string
+          price_cents: number | null
+          raw: Json
+          square_merchant_id: string
+          square_object_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          currency?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          object_type: string
+          price_cents?: number | null
+          raw: Json
+          square_merchant_id: string
+          square_object_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          currency?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          object_type?: string
+          price_cents?: number | null
+          raw?: Json
+          square_merchant_id?: string
+          square_object_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          env: string
+          expires_at: string | null
+          id: string
+          refresh_token: string | null
+          square_location_id: string | null
+          square_merchant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          env: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          square_location_id?: string | null
+          square_merchant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          env?: string
+          expires_at?: string | null
+          id?: string
+          refresh_token?: string | null
+          square_location_id?: string | null
+          square_merchant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       staff_members: {
         Row: {
@@ -21022,6 +21160,18 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      increment_driver_acceptance: {
+        Args: { driver_id_param: string }
+        Returns: undefined
+      }
+      increment_driver_cancel: {
+        Args: { driver_id_param: string }
+        Returns: undefined
+      }
+      increment_driver_decline: {
+        Args: { driver_id_param: string }
+        Returns: undefined
+      }
       increment_promo_uses: { Args: { promo_id: string }; Returns: undefined }
       is_admin: { Args: { user_uuid: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -21068,6 +21218,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      merchant_fee_percent: {
+        Args: { p_restaurant_id: string }
+        Returns: number
       }
       process_referral_signup: {
         Args: { p_referee_id: string; p_referral_code: string }
