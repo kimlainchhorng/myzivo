@@ -3691,6 +3691,66 @@ export type Database = {
           },
         ]
       }
+      customer_wallet_transactions: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string | null
+          description: string | null
+          id: string
+          reference_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_wallets: {
+        Row: {
+          balance_cents: number | null
+          created_at: string | null
+          id: string
+          lifetime_credits_cents: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number | null
+          created_at?: string | null
+          id?: string
+          lifetime_credits_cents?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number | null
+          created_at?: string | null
+          id?: string
+          lifetime_credits_cents?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string | null
@@ -5616,6 +5676,7 @@ export type Database = {
           license_number: string
           location_suspicious: boolean | null
           move_enabled: boolean | null
+          on_time_rate: number | null
           performance_score: number | null
           phone: string
           prev_lat: number | null
@@ -5635,6 +5696,7 @@ export type Database = {
           stripe_payouts_enabled: boolean | null
           suspicious_count: number | null
           tenant_id: string | null
+          total_deliveries: number | null
           total_trips: number | null
           updated_at: string
           user_id: string
@@ -5676,6 +5738,7 @@ export type Database = {
           license_number: string
           location_suspicious?: boolean | null
           move_enabled?: boolean | null
+          on_time_rate?: number | null
           performance_score?: number | null
           phone: string
           prev_lat?: number | null
@@ -5695,6 +5758,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean | null
           suspicious_count?: number | null
           tenant_id?: string | null
+          total_deliveries?: number | null
           total_trips?: number | null
           updated_at?: string
           user_id: string
@@ -5736,6 +5800,7 @@ export type Database = {
           license_number?: string
           location_suspicious?: boolean | null
           move_enabled?: boolean | null
+          on_time_rate?: number | null
           performance_score?: number | null
           phone?: string
           prev_lat?: number | null
@@ -5755,6 +5820,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean | null
           suspicious_count?: number | null
           tenant_id?: string | null
+          total_deliveries?: number | null
           total_trips?: number | null
           updated_at?: string
           user_id?: string
@@ -7693,6 +7759,8 @@ export type Database = {
           delivery_photo_url: string | null
           delivery_pin: string | null
           delivery_pin_verified: boolean | null
+          discount_amount: number | null
+          discount_type: string | null
           dispute_id: string | null
           dispute_status: string | null
           distance_miles: number | null
@@ -7734,6 +7802,8 @@ export type Database = {
           pricing_breakdown: Json | null
           pricing_locked: boolean | null
           pricing_version: string | null
+          promo_code: string | null
+          promotion_id: string | null
           quoted_delivery_fee: number | null
           quoted_service_fee: number | null
           quoted_small_order_fee: number | null
@@ -7812,6 +7882,8 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          discount_amount?: number | null
+          discount_type?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
@@ -7853,6 +7925,8 @@ export type Database = {
           pricing_breakdown?: Json | null
           pricing_locked?: boolean | null
           pricing_version?: string | null
+          promo_code?: string | null
+          promotion_id?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
@@ -7931,6 +8005,8 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          discount_amount?: number | null
+          discount_type?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
@@ -7972,6 +8048,8 @@ export type Database = {
           pricing_breakdown?: Json | null
           pricing_locked?: boolean | null
           pricing_version?: string | null
+          promo_code?: string | null
+          promotion_id?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
@@ -8054,6 +8132,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
           {
@@ -10991,7 +11076,12 @@ export type Database = {
           customer_id: string | null
           driver_id: string | null
           driver_rating: number | null
+          flag_reason: string | null
+          flagged_at: string | null
+          flagged_by: string | null
           id: string
+          is_flagged: boolean | null
+          is_public: boolean | null
           merchant_rating: number | null
           order_id: string
           restaurant_id: string | null
@@ -11004,7 +11094,12 @@ export type Database = {
           customer_id?: string | null
           driver_id?: string | null
           driver_rating?: number | null
+          flag_reason?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
           id?: string
+          is_flagged?: boolean | null
+          is_public?: boolean | null
           merchant_rating?: number | null
           order_id: string
           restaurant_id?: string | null
@@ -11017,7 +11112,12 @@ export type Database = {
           customer_id?: string | null
           driver_id?: string | null
           driver_rating?: number | null
+          flag_reason?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
           id?: string
+          is_flagged?: boolean | null
+          is_public?: boolean | null
           merchant_rating?: number | null
           order_id?: string
           restaurant_id?: string | null
@@ -15716,6 +15816,7 @@ export type Database = {
           address: string
           auto_accept_orders: boolean | null
           avg_prep_time: number | null
+          avg_rating: number | null
           bank_connected: boolean | null
           busy_mode: boolean | null
           busy_prep_time_bonus_minutes: number | null
@@ -15750,9 +15851,11 @@ export type Database = {
           phone: string
           plan_code: string | null
           plan_updated_at: string | null
+          prep_time_accuracy: number | null
           prep_time_minutes: number | null
           rating: number | null
           rating_count: number | null
+          ratings_count: number | null
           region_id: string | null
           service_fee_percent: number | null
           state: string | null
@@ -15775,6 +15878,7 @@ export type Database = {
           address: string
           auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
+          avg_rating?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
           busy_prep_time_bonus_minutes?: number | null
@@ -15809,9 +15913,11 @@ export type Database = {
           phone: string
           plan_code?: string | null
           plan_updated_at?: string | null
+          prep_time_accuracy?: number | null
           prep_time_minutes?: number | null
           rating?: number | null
           rating_count?: number | null
+          ratings_count?: number | null
           region_id?: string | null
           service_fee_percent?: number | null
           state?: string | null
@@ -15834,6 +15940,7 @@ export type Database = {
           address?: string
           auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
+          avg_rating?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
           busy_prep_time_bonus_minutes?: number | null
@@ -15868,9 +15975,11 @@ export type Database = {
           phone?: string
           plan_code?: string | null
           plan_updated_at?: string | null
+          prep_time_accuracy?: number | null
           prep_time_minutes?: number | null
           rating?: number | null
           rating_count?: number | null
+          ratings_count?: number | null
           region_id?: string | null
           service_fee_percent?: number | null
           state?: string | null
@@ -24862,6 +24971,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_moderate_review: {
+        Args: { p_action: string; p_reason?: string; p_review_id: string }
+        Returns: Json
+      }
       admin_override_order_status: {
         Args: {
           p_new_status: string
@@ -24978,6 +25091,16 @@ export type Database = {
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
+      }
+      credit_customer_wallet: {
+        Args: {
+          p_amount_cents: number
+          p_description?: string
+          p_reference_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       credit_driver_earnings: {
         Args: {
@@ -25103,6 +25226,15 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_restaurant_reviews: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_restaurant_id: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       get_sla_by_driver: {
         Args: {
           p_date_from?: string
@@ -25281,6 +25413,14 @@ export type Database = {
         Args: { p_tenant_id?: string }
         Returns: number
       }
+      recompute_driver_rating_stats: {
+        Args: { p_driver_id: string }
+        Returns: undefined
+      }
+      recompute_restaurant_rating_stats: {
+        Args: { p_restaurant_id: string }
+        Returns: undefined
+      }
       record_sla_metrics: { Args: { p_order_id: string }; Returns: string }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
@@ -25307,17 +25447,28 @@ export type Database = {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
       }
-      submit_order_rating: {
-        Args: {
-          p_comment?: string
-          p_contact_back?: boolean
-          p_driver_rating: number
-          p_merchant_rating: number
-          p_tags?: string[]
-          p_tracking_code: string
-        }
-        Returns: Json
-      }
+      submit_order_rating:
+        | {
+            Args: {
+              p_comment?: string
+              p_contact_back?: boolean
+              p_driver_rating: number
+              p_merchant_rating: number
+              p_tags?: string[]
+              p_tracking_code: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_comment?: string
+              p_driver_rating?: number
+              p_merchant_rating: number
+              p_tags?: string[]
+              p_tracking_code: string
+            }
+            Returns: Json
+          }
       update_all_driver_performance: { Args: never; Returns: number }
       update_batch_stop_status: {
         Args: { p_driver_id: string; p_status: string; p_stop_id: string }
@@ -25331,15 +25482,26 @@ export type Database = {
         Args: { notification_id: string }
         Returns: undefined
       }
-      validate_promo_code: {
-        Args: {
-          p_code: string
-          p_order_total: number
-          p_product_type: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      validate_promo_code:
+        | {
+            Args: {
+              p_code: string
+              p_customer_id: string
+              p_delivery_fee_cents?: number
+              p_order_subtotal_cents: number
+              p_restaurant_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_code: string
+              p_order_total: number
+              p_product_type: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       validate_withdrawal: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
