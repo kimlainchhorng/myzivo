@@ -1,52 +1,148 @@
 
+# ZIVO Ride Real-Time Dispatch System
 
-# Fix: White Screen Crash at End of ZIVO Ride Flow
+## Summary
 
-## Problem Summary
+Connect the existing rider app to Supabase real-time dispatch and add a complete driver-side experience. This builds on your existing `drivers` and `trips` tables, enabling:
 
-When the user completes the ride flow and clicks "DONE" on the receipt modal, the app crashes with a white screen. This happens because the `RideReceiptModal` component performs arithmetic operations on `ride.eta` which may be `undefined`.
+- Riders request real trips stored in the database
+- Drivers see incoming requests and accept them in real-time
+- Both apps sync status updates via Supabase Realtime
 
 ---
 
-## Root Cause Analysis
+## Current State Analysis
 
-The crash originates in `src/components/ride/RideReceiptModal.tsx`:
+| Component | Status |
+|-----------|--------|
+| `drivers` table | Already exists with all needed fields |
+| `trips` table | Already exists with all needed fields |
+| Realtime hooks | Already implemented (`useTripRealtime.ts`) |
+| Rider UI | Uses simulated data, not connected to database |
+| Driver UI | Does not exist yet |
 
-```typescript
-// Line 30 - crashes when ride.eta is undefined
-const timeCost = ride.eta * 0.30;  // undefined * 0.30 = NaN
+---
 
-// Line 31 - produces NaN due to timeCost being NaN
-const distanceCost = Math.max(0, ride.price - baseFare - serviceFee - timeCost);
+## Implementation Plan
+
+### Phase 1: Database Enhancement
+
+Add a new column to `trips` table for ride type:
+
+```text
+ride_type (text) - e.g., "standard", "black", "comfort"
 ```
 
-When these values are `NaN`, calling `.toFixed(2)` or displaying them in the UI can cause rendering errors that React cannot recover from (since there's no Error Boundary).
-
-**Why `ride.eta` can be undefined:**
-1. The ride state is loaded from `localStorage` (see `RideTripPage.tsx` line 63)
-2. If the localStorage data is corrupted, incomplete, or from an older schema, `eta` may be missing
-3. The `RideOption` type in `RideCard.tsx` requires `eta: number`, but TypeScript doesn't enforce this at runtime
+Also, you may want to add a `rider_phone` column if it doesn't exist (currently only `customer_phone` is used for guest bookings).
 
 ---
 
-## Solution
+### Phase 2: New Routes to Create
 
-### 1. Add Null Safety to RideReceiptModal
+| Route | Purpose |
+|-------|---------|
+| `/driver` | Driver home with online toggle |
+| `/driver/login` | Driver authentication |
+| `/driver/trips` | Incoming requests + active trip |
+| `/admin/dispatch` | Admin dispatch dashboard |
 
-Update `src/components/ride/RideReceiptModal.tsx` to handle missing `eta`:
+---
 
-| Line | Current Code | Fixed Code |
-|------|--------------|------------|
-| 30 | `ride.eta * 0.30` | `(ride.eta ?? 0) * 0.30` |
-| 82 | `{ride.eta} min` | `{ride.eta ?? 0} min` |
+### Phase 3: Rider App Integration
 
-### 2. Add Error Boundary (Optional but Recommended)
+Modify the existing rider flow to write to the database:
 
-Create a simple `ErrorBoundary` component to catch rendering errors and show a fallback UI instead of a white screen.
+**A) When user taps "Pay & Request" (in `Rides.tsx` or `RideConfirmPage.tsx`):**
 
-### 3. Validate localStorage Data on Load
+1. Insert a row into `trips` table:
+   - pickup_text, dest_text, pickup/dropoff lat/lng
+   - ride_type, fare_amount, distance_km, duration_minutes
+   - status = 'requested'
+   - customer_name, customer_phone (or rider_id if logged in)
 
-Add validation in `RideTripPage.tsx` to ensure required fields exist when loading from localStorage.
+2. Save the `trip_id` to localStorage
+
+3. Navigate to `/ride/searching?tripId=<id>`
+
+**B) Update `/ride/searching` page:**
+
+1. Subscribe (realtime) to the trip row by tripId
+2. When status becomes 'accepted', navigate to `/ride/driver?tripId=<id>`
+3. Fetch driver info by joining via driver_id → drivers table
+
+**C) Update `/ride/driver` page:**
+
+1. Subscribe (realtime) to the drivers row for the assigned driver
+2. Update UI with driver name, car, plate, rating, ETA
+3. Move driver marker using drivers.current_lat/current_lng
+4. Cancel button → update trips.status='cancelled'
+
+**D) Status flow:**
+
+- 'arrived' → show "Driver arrived"
+- 'in_progress' → show trip screen
+- 'completed' → show receipt
+
+---
+
+### Phase 4: Driver App Implementation
+
+**A) Driver Authentication (`/driver/login`):**
+
+- Supabase Auth login for drivers
+- On first login, upsert into drivers table with user_id, name, phone, car_model, plate
+- Check if driver record exists for user_id
+
+**B) Driver Home (`/driver`):**
+
+- Show "Go Online / Go Offline" toggle → updates `drivers.is_online`
+- When online, start location updates every 5 seconds:
+  - Use browser geolocation if allowed
+  - If denied, simulate location with small random movement
+  - Update `drivers.current_lat`, `drivers.current_lng`
+
+**C) Incoming Requests (`/driver/trips`):**
+
+- Subscribe to `trips` where `status='requested'` (realtime)
+- Show list of available trips with pickup/dropoff, fare, distance
+- Accept button:
+  - Update `trips.status='accepted'`
+  - Set `trips.driver_id` to current driver id
+  - Show active ride details
+
+**D) Active Ride Controls:**
+
+- "Arrived" → `trips.status='arrived'`
+- "Start Trip" → `trips.status='in_progress'`
+- "Complete Trip" → `trips.status='completed'`
+- "Cancel" → `trips.status='cancelled'`
+
+---
+
+### Phase 5: Admin Dispatch (`/admin/dispatch`)
+
+Simple dispatch dashboard showing:
+
+- Map with online drivers (using existing `useOnlineDrivers` hook)
+- List of requested rides
+- Button: "Assign nearest driver" with basic distance logic
+- On assign: set `ride.driver_id` + `status='accepted'`
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/pages/driver/DriverHomePage.tsx` | Main driver dashboard |
+| `src/pages/driver/DriverLoginPage.tsx` | Driver authentication |
+| `src/pages/driver/DriverTripsPage.tsx` | Incoming + active trips |
+| `src/pages/admin/DispatchPage.tsx` | Admin dispatch view |
+| `src/hooks/useDriverApp.ts` | Driver-specific hooks (location, status) |
+| `src/hooks/useRiderTrip.ts` | Rider trip management |
+| `src/components/driver/DriverOnlineToggle.tsx` | Online/offline toggle |
+| `src/components/driver/TripRequestCard.tsx` | Incoming trip card |
+| `src/components/driver/ActiveTripCard.tsx` | Active trip controls |
 
 ---
 
@@ -54,57 +150,72 @@ Add validation in `RideTripPage.tsx` to ensure required fields exist when loadin
 
 | File | Changes |
 |------|---------|
-| `src/components/ride/RideReceiptModal.tsx` | Add null safety for `ride.eta` with fallback to 0 |
-| `src/pages/ride/RideTripPage.tsx` | Add validation for localStorage data |
-| `src/pages/ride/RideDriverPage.tsx` | Add validation for localStorage data |
-| `src/pages/ride/RideSearchingPage.tsx` | Add validation for localStorage data |
+| `src/App.tsx` | Add new routes |
+| `src/pages/Rides.tsx` | Insert trip to DB on request |
+| `src/pages/ride/RideSearchingPage.tsx` | Subscribe to trip realtime |
+| `src/pages/ride/RideDriverPage.tsx` | Subscribe to driver location realtime |
+| `src/pages/ride/RideTripPage.tsx` | Subscribe to trip status realtime |
 
 ---
 
-## Technical Implementation Details
+## Technical Details
 
-### RideReceiptModal.tsx Changes
+### Database Migration
 
-```typescript
-// Before (line 30)
-const timeCost = ride.eta * 0.30;
-
-// After
-const etaMinutes = ride.eta ?? ride.price / 5 ?? 10; // Fallback to estimated value
-const timeCost = etaMinutes * 0.30;
+```sql
+-- Add ride_type column if not exists
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS ride_type TEXT;
 ```
 
-```typescript
-// Before (line 82)
-<span className="text-white/60">Time ({ride.eta} min)</span>
+### Realtime Subscriptions
 
-// After
-<span className="text-white/60">Time ({ride.eta ?? etaMinutes} min)</span>
+The project already has realtime enabled for `trips` and `drivers` tables. The existing hooks in `useTripRealtime.ts` will be reused:
+
+- `useTripRealtime(tripId)` - for rider watching their trip
+- `useDriverTripRealtime(driverId)` - for driver watching assignments
+- `useDriverLocationRealtime(driverId, callback)` - for rider watching driver location
+
+### Location Updates (Driver)
+
+```typescript
+// Update driver location every 5 seconds
+navigator.geolocation.watchPosition(
+  (position) => {
+    supabase.from('drivers').update({
+      current_lat: position.coords.latitude,
+      current_lng: position.coords.longitude,
+      updated_at: new Date().toISOString()
+    }).eq('id', driverId);
+  },
+  (error) => {
+    // Fallback to simulated location
+  }
+);
 ```
 
-### LocalStorage Validation Pattern
+### Trip Status Flow
 
-```typescript
-// Add to each page that loads from localStorage
-const validateRideState = (data: unknown): data is LocationState => {
-  if (!data || typeof data !== 'object') return false;
-  const d = data as Record<string, unknown>;
-  return !!(
-    d.ride &&
-    typeof (d.ride as Record<string, unknown>).id === 'string' &&
-    typeof (d.ride as Record<string, unknown>).name === 'string' &&
-    typeof (d.ride as Record<string, unknown>).price === 'number'
-  );
-};
+```text
+requested → accepted → en_route → arrived → in_progress → completed
+                                                        ↘ cancelled
 ```
 
 ---
 
-## Testing Verification
+## Security Considerations
 
-After implementation, test the following scenarios:
-1. Complete a full ride flow from `/ride` to receipt
-2. Navigate directly to `/ride/trip` with missing localStorage
-3. Manually corrupt localStorage and navigate to `/ride/trip`
-4. Verify no white screen crashes occur
+- Driver routes protected by auth check (must be logged in + have driver record)
+- RLS policies already exist for trips and drivers tables
+- Drivers can only update trips they are assigned to
+- Riders can only cancel their own trips
 
+---
+
+## Testing Recommendations
+
+After implementation:
+1. Test rider flow: request ride → see searching → driver accepts → see driver approach → complete trip
+2. Test driver flow: login → go online → receive request → accept → navigate through statuses
+3. Test realtime: open rider and driver in separate tabs, verify instant updates
+4. Test location: verify driver marker moves on rider's map
+5. Test admin dispatch: verify manual driver assignment works
