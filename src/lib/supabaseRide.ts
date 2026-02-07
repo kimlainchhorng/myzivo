@@ -304,6 +304,48 @@ export const updateRideStatusInDb = async (
   }
 };
 
+// Save rating and feedback to the database
+export interface SaveRatingPayload {
+  tripId: string;
+  rating: number; // 1-5
+  feedback?: string; // Optional comment
+}
+
+export const saveRideRating = async (
+  payload: SaveRatingPayload
+): Promise<UpdateRideResult> => {
+  // Check if we're online first
+  if (!isOnline()) {
+    return {
+      success: false,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("trips")
+      .update({
+        rating: payload.rating,
+        feedback: payload.feedback || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payload.tripId);
+
+    if (error) throw error;
+    return { success: true, error: null, attempts: 1 };
+  } catch (err) {
+    console.error("Failed to save rating:", err);
+    return { success: false, error: categorizeError(err), attempts: 1 };
+  }
+};
+
 // Cancel a ride in the database with retry
 export const cancelRideInDb = async (
   tripId: string,
