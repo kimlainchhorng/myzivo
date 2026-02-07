@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp, Tag, X, Loader2 } from "lucide-react";
@@ -14,6 +14,7 @@ import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
 import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 import { usePromoCode } from "@/hooks/usePromoCode";
 import { incrementPromoCodeUse } from "@/lib/promoCodeService";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Payments app URL for checkout redirect
 const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
@@ -37,11 +38,14 @@ const fallbackPaymentMethods: { id: PaymentMethod; label: string; icon: typeof C
   { id: "cash", label: "Cash", icon: Banknote, sublabel: "Pay driver directly" },
 ];
 
+const PENDING_CONFIRM_KEY = "zivo_pending_confirm";
+
 const RideConfirmPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
   const { createRide, setTripId } = useRideStore();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<SupabaseErrorInfo | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -51,6 +55,25 @@ const RideConfirmPage = () => {
   const defaultCard = getDefault();
   const { refetch: checkAvailableDrivers } = useAvailableDriversCount();
   const [promoInput, setPromoInput] = useState("");
+
+  // Restore pending ride confirmation after login
+  useEffect(() => {
+    const pending = localStorage.getItem(PENDING_CONFIRM_KEY);
+    if (pending && user && !state?.ride) {
+      try {
+        const restored = JSON.parse(pending);
+        // Navigate back to confirm page with restored state
+        navigate("/ride/confirm", {
+          state: restored,
+          replace: true,
+        });
+        localStorage.removeItem(PENDING_CONFIRM_KEY);
+      } catch (e) {
+        console.warn("[RideConfirm] Failed to restore pending state:", e);
+        localStorage.removeItem(PENDING_CONFIRM_KEY);
+      }
+    }
+  }, [user, state?.ride, navigate]);
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(
     defaultCard ? "card" : "apple"
@@ -94,6 +117,32 @@ const RideConfirmPage = () => {
 
   const handleConfirm = async () => {
     if (isSubmitting || isCheckingAvailability) return;
+    
+    // Auth gate: if not logged in, redirect to login with return path
+    if (!user) {
+      // Save current ride state to localStorage for restoration
+      const rideState = {
+        ride,
+        pickup,
+        destination,
+        tripDetails,
+        routeCoordinates,
+        pickupCoords,
+        dropoffCoords,
+        surgeMultiplier,
+        selectedPayment,
+        promoCode: promoCode?.code || null,
+      };
+      localStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify(rideState));
+
+      // Redirect to login with return path
+      navigate("/login", {
+        state: { from: { pathname: "/ride/confirm" } },
+        replace: false,
+      });
+      return;
+    }
+
     setError(null);
     setShowNoDrivers(false);
     
