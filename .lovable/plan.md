@@ -1,66 +1,133 @@
 
-
-# Simple Emoji-Style Ride Cards
+# Uber-Style Car Icon & Pill Badges
 
 ## Overview
-Replace the current 3D car images with a simple car emoji (🚗) for a clean, lightweight design that matches your provided code example.
+Replace the current car emoji (`🚗`) with a stylized CSS-based car icon component matching your reference, and add support for optional pill badges (e.g., "⏱️ Wait & Save", "⚡ Priority").
 
 ---
 
 ## What Changes
 
 ### Current → New
-- **Current**: External image URLs loaded via `<img>` tags
-- **New**: Simple text emoji `🚗` in place of images
+- **Current**: Simple car emoji `🚗`
+- **New**: Custom `CarIcon` component built with CSS shapes (rounded white "car body" with wheels)
+- **Add**: Optional pill badges above ride names for special features
 
-### Card Layout (Your Reference)
-```
-┌──────────────────────────────────────────────┐
-│  🚗  │  ZivoX                       │ $25.94 │
-│      │  4:51 PM · 11 min            │        │
-│      │  Affordable rides all to...  │        │
-└──────────────────────────────────────────────┘
+### Visual Reference
+```text
+┌─────────────────────────────────────────────────────────┐
+│  [Car Icon]  │  ⏱️ Wait & Save                │ $24.57  │
+│     ●   ●    │  Wait & Save                   │         │
+│              │  👤 4                           │         │
+│              │  5:01 PM · 12–21 min            │         │
+│              │  Get a cheaper ride by wait...  │         │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Technical Changes
+## Technical Implementation
 
-### File: `src/pages/Rides.tsx`
+### 1. Create CarIcon Component
 
-**1. Remove Image Container & Replace with Emoji**
+Add a new component at the top of `Rides.tsx` (or in a separate file):
 
-In both card locations (step "request" ~lines 698-705 and step "options" ~lines 796-799):
-
-Replace:
 ```tsx
-<div className="w-16 h-10 md:w-20 md:h-12 flex-shrink-0 flex items-center justify-center">
-  <img src={ride.image} className="w-full h-full object-contain" alt={ride.name} />
+function CarIcon({ selected }: { selected?: boolean }) {
+  return (
+    <div className="relative flex h-12 w-12 items-center justify-center">
+      {/* Car body - rounded white/dark shape */}
+      <div className={`h-8 w-10 rounded-full border ${
+        selected ? "border-primary bg-zinc-800" : "border-zinc-600 bg-zinc-900"
+      }`} />
+      {/* Wheels */}
+      <div className="absolute -left-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
+      <div className="absolute -right-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
+      {/* Selected indicator dot */}
+      {selected && (
+        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary ring-2 ring-zinc-900" />
+      )}
+    </div>
+  );
+}
+```
+
+### 2. Create Pill Component
+
+```tsx
+function RidePill({ icon, label }: { icon: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
+      <span aria-hidden>{icon}</span>
+      {label}
+    </span>
+  );
+}
+```
+
+### 3. Add Pill Data to Ride Options
+
+Update `rideCategories` to include optional `pill` property:
+
+```tsx
+{
+  id: "wait-save",
+  name: "Wait & Save",
+  pill: { icon: "⏱️", label: "Wait & Save" },
+  // ...other props
+},
+{
+  id: "priority",
+  name: "Priority",
+  pill: { icon: "⚡", label: "Priority" },
+  // ...other props
+}
+```
+
+### 4. Update Card Rendering
+
+Replace the emoji div with the CarIcon component and add pill support:
+
+```tsx
+{/* Left - Car Icon */}
+<CarIcon selected={selectedOption?.id === ride.id} />
+
+{/* Middle - Info section */}
+<div className="flex-1 min-w-0 text-left">
+  {/* Optional pill badge */}
+  {ride.pill && (
+    <div className="mb-1">
+      <RidePill icon={ride.pill.icon} label={ride.pill.label} />
+    </div>
+  )}
+  <div className="flex items-center gap-1.5">
+    <h3 className="font-bold">{ride.name}</h3>
+    <span className="text-xs text-zinc-500">👤 {ride.seats || 4}</span>
+  </div>
+  {/* ...time, eta, desc */}
 </div>
 ```
-
-With:
-```tsx
-<div className="text-3xl md:text-4xl mr-1">🚗</div>
-```
-
-**2. Also Update Confirm Step (~line 831-833)**
-
-Replace the image in the confirmation card with the emoji:
-```tsx
-<div className="text-4xl md:text-5xl">🚗</div>
-```
-
----
-
-## Benefits
-- No external image loading = faster load times
-- No broken images if URLs change
-- Simpler, cleaner aesthetic matching your reference
-- Reduced bandwidth usage
 
 ---
 
 ## Files to Modify
-- `src/pages/Rides.tsx` — Replace 3 image containers with emoji text
+
+### `src/pages/Rides.tsx`
+1. Add `CarIcon` component function (~line 50)
+2. Add `RidePill` component function (~line 65)
+3. Add `pill` property type to ride options interface
+4. Update `rideCategories` data with pill properties for relevant rides
+5. Replace emoji `🚗` with `<CarIcon />` in:
+   - Request step (~line 699)
+   - Options step (~line 791)
+   - Confirm step (~line 823)
+6. Add conditional `<RidePill />` rendering above ride names
+
+---
+
+## Styling Notes
+- Colors adapted for dark theme (zinc-800/900 instead of white/gray)
+- Primary color used for selected states
+- Selection dot uses `bg-primary` to match brand
+- Pill badges use subtle zinc-800 background
 
