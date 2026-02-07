@@ -12,6 +12,7 @@ import { useRideStore } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { updateRideStatusInDb } from "@/lib/supabaseRide";
+import { toast } from "sonner";
 
 // Default coordinates for Baton Rouge
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
@@ -22,6 +23,7 @@ const RideTripPage = () => {
   const { state, updateElapsed, completeRide, clearRide } = useRideStore();
   const [showReceipt, setShowReceipt] = useState(false);
   const [tripProgress, setTripProgress] = useState(0);
+  const [isEndingTrip, setIsEndingTrip] = useState(false);
 
   // Subscribe to realtime updates
   const { isDemoMode } = useRideRealtime({
@@ -88,9 +90,21 @@ const RideTripPage = () => {
   const isArrived = tripProgress >= 1;
 
   const handleEndTrip = async () => {
+    if (isEndingTrip) return;
+    setIsEndingTrip(true);
+    
     if (state.tripId) {
-      await updateRideStatusInDb(state.tripId, "completed");
+      const result = await updateRideStatusInDb(state.tripId, "completed");
+      
+      if (!result.success && result.error) {
+        setIsEndingTrip(false);
+        toast.error("Failed to complete trip", {
+          description: result.error.userMessage,
+        });
+        return;
+      }
     }
+    
     completeRide();
     setShowReceipt(true);
   };
@@ -231,10 +245,10 @@ const RideTripPage = () => {
             {/* End Trip Button */}
             <Button
               onClick={handleEndTrip}
-              disabled={!canEndTrip}
+              disabled={!canEndTrip || isEndingTrip}
               className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 disabled:opacity-50"
             >
-              {canEndTrip ? 'END TRIP' : `Wait ${60 - elapsed}s to end trip`}
+              {isEndingTrip ? 'Completing...' : canEndTrip ? 'END TRIP' : `Wait ${60 - elapsed}s to end trip`}
             </Button>
           </CardContent>
         </Card>

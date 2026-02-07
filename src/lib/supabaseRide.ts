@@ -231,43 +231,130 @@ export const subscribeToRide = (
 // Database trip status type
 type DbTripStatus = "requested" | "accepted" | "en_route" | "arrived" | "in_progress" | "completed" | "cancelled";
 
-// Update ride status in database
-export const updateRideStatusInDb = async (tripId: string, status: RideStatus): Promise<boolean> => {
-  try {
+// Result type for status update operations
+export interface UpdateRideResult {
+  success: boolean;
+  error: SupabaseErrorInfo | null;
+  attempts: number;
+}
+
+// Options for update/cancel operations
+export interface UpdateRideOptions {
+  enableRetry?: boolean;
+  maxAttempts?: number;
+  onRetry?: (attempt: number, error: SupabaseErrorInfo) => void;
+}
+
+// Update ride status in database with retry
+export const updateRideStatusInDb = async (
+  tripId: string,
+  status: RideStatus,
+  options: UpdateRideOptions = {}
+): Promise<UpdateRideResult> => {
+  const { enableRetry = true, maxAttempts = 3, onRetry } = options;
+
+  // Check if we're online first
+  if (!isOnline()) {
+    return {
+      success: false,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  const operation = async (): Promise<boolean> => {
     const dbStatus = mapFrontendStatusToDb(status) as DbTripStatus;
     const { error } = await supabase
       .from("trips")
       .update({ status: dbStatus, updated_at: new Date().toISOString() })
       .eq("id", tripId);
 
-    if (error) {
-      console.error("Error updating ride status:", error);
-      return false;
-    }
-
+    if (error) throw error;
     return true;
+  };
+
+  if (enableRetry) {
+    const result = await withRetry(operation, {
+      maxAttempts,
+      onRetry: (attempt, err) => {
+        console.log(`[updateRideStatus] Retry ${attempt}...`);
+        onRetry?.(attempt, err);
+      },
+    });
+    return {
+      success: result.data ?? false,
+      error: result.error,
+      attempts: result.attempts,
+    };
+  }
+
+  // Single attempt without retry
+  try {
+    await operation();
+    return { success: true, error: null, attempts: 1 };
   } catch (err) {
     console.error("Failed to update ride status:", err);
-    return false;
+    return { success: false, error: categorizeError(err), attempts: 1 };
   }
 };
 
-// Cancel a ride in the database
-export const cancelRideInDb = async (tripId: string): Promise<boolean> => {
-  try {
+// Cancel a ride in the database with retry
+export const cancelRideInDb = async (
+  tripId: string,
+  options: UpdateRideOptions = {}
+): Promise<UpdateRideResult> => {
+  const { enableRetry = true, maxAttempts = 3, onRetry } = options;
+
+  // Check if we're online first
+  if (!isOnline()) {
+    return {
+      success: false,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  const operation = async (): Promise<boolean> => {
     const { error } = await supabase
       .from("trips")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", tripId);
 
-    if (error) {
-      console.error("Error cancelling ride:", error);
-      return false;
-    }
-
+    if (error) throw error;
     return true;
+  };
+
+  if (enableRetry) {
+    const result = await withRetry(operation, {
+      maxAttempts,
+      onRetry: (attempt, err) => {
+        console.log(`[cancelRide] Retry ${attempt}...`);
+        onRetry?.(attempt, err);
+      },
+    });
+    return {
+      success: result.data ?? false,
+      error: result.error,
+      attempts: result.attempts,
+    };
+  }
+
+  // Single attempt without retry
+  try {
+    await operation();
+    return { success: true, error: null, attempts: 1 };
   } catch (err) {
     console.error("Failed to cancel ride:", err);
-    return false;
+    return { success: false, error: categorizeError(err), attempts: 1 };
   }
 };
