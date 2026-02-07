@@ -1897,6 +1897,53 @@ export type Database = {
           },
         ]
       }
+      blocked_entities: {
+        Row: {
+          blocked_by: string | null
+          created_at: string | null
+          entity_type: string
+          entity_value: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          reason: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          blocked_by?: string | null
+          created_at?: string | null
+          entity_type: string
+          entity_value: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          reason?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          blocked_by?: string | null
+          created_at?: string | null
+          entity_type?: string
+          entity_value?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          reason?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_entities_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bonus_zones: {
         Row: {
           bonus_type: string | null
@@ -3779,6 +3826,50 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_sessions: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string
+          id: string
+          ip_address: string | null
+          is_trusted: boolean | null
+          last_seen: string | null
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint: string
+          id?: string
+          ip_address?: string | null
+          is_trusted?: boolean | null
+          last_seen?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string
+          id?: string
+          ip_address?: string | null
+          is_trusted?: boolean | null
+          last_seen?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -7465,7 +7556,14 @@ export type Database = {
           refund_status: string | null
           refunded_at: string | null
           region_id: string | null
+          requires_review: boolean | null
           restaurant_id: string
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_level: string | null
+          risk_score: number | null
+          risk_signals: string[] | null
           service_fee: number | null
           service_fee_cents: number | null
           sla_at_risk_at: string | null
@@ -7577,7 +7675,14 @@ export type Database = {
           refund_status?: string | null
           refunded_at?: string | null
           region_id?: string | null
+          requires_review?: boolean | null
           restaurant_id: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string | null
+          risk_score?: number | null
+          risk_signals?: string[] | null
           service_fee?: number | null
           service_fee_cents?: number | null
           sla_at_risk_at?: string | null
@@ -7689,7 +7794,14 @@ export type Database = {
           refund_status?: string | null
           refunded_at?: string | null
           region_id?: string | null
+          requires_review?: boolean | null
           restaurant_id?: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string | null
+          risk_score?: number | null
+          risk_signals?: string[] | null
           service_fee?: number | null
           service_fee_cents?: number | null
           sla_at_risk_at?: string | null
@@ -10004,6 +10116,39 @@ export type Database = {
           name?: string
           placement_boost?: number
           platform_fee_percent?: number
+        }
+        Relationships: []
+      }
+      notification_attempts: {
+        Row: {
+          channel: string
+          created_at: string | null
+          error: string | null
+          id: string
+          payload: Json | null
+          provider_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          provider_id?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          provider_id?: string | null
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -15968,9 +16113,12 @@ export type Database = {
           id: string
           ip_address: string | null
           is_resolved: boolean | null
+          order_id: string | null
           resolved_at: string | null
           resolved_by: string | null
+          score: number | null
           severity: number
+          tenant_id: string | null
           user_agent: string | null
           user_id: string | null
         }
@@ -15983,9 +16131,12 @@ export type Database = {
           id?: string
           ip_address?: string | null
           is_resolved?: boolean | null
+          order_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          score?: number | null
           severity?: number
+          tenant_id?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -15998,9 +16149,12 @@ export type Database = {
           id?: string
           ip_address?: string | null
           is_resolved?: boolean | null
+          order_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          score?: number | null
           severity?: number
+          tenant_id?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -16017,6 +16171,68 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_scores: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_evaluated: string | null
+          risk_level: string | null
+          score_breakdown: Json | null
+          tenant_id: string | null
+          total_score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_evaluated?: string | null
+          risk_level?: string | null
+          score_breakdown?: Json | null
+          tenant_id?: string | null
+          total_score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_evaluated?: string | null
+          risk_level?: string | null
+          score_breakdown?: Json | null
+          tenant_id?: string | null
+          total_score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_scores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
