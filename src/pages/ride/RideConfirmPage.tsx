@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
@@ -10,6 +10,8 @@ import { useRideStore } from "@/stores/rideStore";
 import { createRideInDb, SupabaseErrorInfo, categorizeError } from "@/lib/supabaseRide";
 import { toast } from "sonner";
 import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
+import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
+import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 
 interface LocationState {
   ride: RideOption;
@@ -37,8 +39,11 @@ const RideConfirmPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<SupabaseErrorInfo | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showNoDrivers, setShowNoDrivers] = useState(false);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const { getDefault, methods } = useLocalPaymentMethods();
   const defaultCard = getDefault();
+  const { refetch: checkAvailableDrivers } = useAvailableDriversCount();
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(
     defaultCard ? "card" : "apple"
@@ -69,9 +74,26 @@ const RideConfirmPage = () => {
     : ride.price;
 
   const handleConfirm = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+    if (isSubmitting || isCheckingAvailability) return;
     setError(null);
+    setShowNoDrivers(false);
+    
+    // Check driver availability first
+    setIsCheckingAvailability(true);
+    try {
+      const { data: availableDrivers } = await checkAvailableDrivers();
+      if (!availableDrivers || availableDrivers.length === 0) {
+        setShowNoDrivers(true);
+        setIsCheckingAvailability(false);
+        return;
+      }
+    } catch (err) {
+      // If check fails, proceed anyway - let the search handle it
+      console.warn("[RideConfirm] Availability check failed, proceeding:", err);
+    }
+    setIsCheckingAvailability(false);
+    
+    setIsSubmitting(true);
 
     try {
       // Create ride in the central store first
@@ -145,6 +167,19 @@ const RideConfirmPage = () => {
       toast.error(errorInfo.userMessage);
       setIsSubmitting(false);
     }
+  };
+
+  const handleRetryAvailability = async () => {
+    setIsCheckingAvailability(true);
+    try {
+      const { data: availableDrivers } = await checkAvailableDrivers();
+      if (availableDrivers && availableDrivers.length > 0) {
+        setShowNoDrivers(false);
+      }
+    } catch (err) {
+      console.warn("[RideConfirm] Retry availability check failed:", err);
+    }
+    setIsCheckingAvailability(false);
   };
 
   // Continue in demo mode (bypass database)
@@ -346,25 +381,43 @@ const RideConfirmPage = () => {
           </div>
         </motion.div>
 
-        {/* Confirm Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleConfirm}
-          disabled={isSubmitting}
-          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              REQUESTING...
-            </>
-          ) : (
-            `PAY $${displayPrice.toFixed(2)} & REQUEST`
+        {/* No Drivers Available Message */}
+        <AnimatePresence>
+          {showNoDrivers && (
+            <NoDriversAvailable
+              onRetry={handleRetryAvailability}
+              onCancel={() => navigate("/ride")}
+              isRetrying={isCheckingAvailability}
+            />
           )}
-        </motion.button>
+        </AnimatePresence>
+
+        {/* Confirm Button */}
+        {!showNoDrivers && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleConfirm}
+            disabled={isSubmitting || isCheckingAvailability}
+            className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCheckingAvailability ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                CHECKING DRIVERS...
+              </>
+            ) : isSubmitting ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                REQUESTING...
+              </>
+            ) : (
+              `PAY $${displayPrice.toFixed(2)} & REQUEST`
+            )}
+          </motion.button>
+        )}
 
         {/* Error Panel */}
         {error && (

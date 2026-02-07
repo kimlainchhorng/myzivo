@@ -4396,6 +4396,54 @@ export type Database = {
           },
         ]
       }
+      driver_schedule: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          driver_id: string
+          end_time: string
+          id: string
+          is_active: boolean
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          driver_id: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          driver_id?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_schedule_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_schedule_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_schedules: {
         Row: {
           created_at: string
@@ -6675,6 +6723,7 @@ export type Database = {
           accepted_at: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
+          branch_id: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
           cancelled_at: string | null
@@ -6735,6 +6784,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -6795,6 +6845,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -6852,6 +6903,13 @@ export type Database = {
           zone_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "food_orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "food_orders_driver_id_fkey"
             columns: ["driver_id"]
@@ -13025,8 +13083,11 @@ export type Database = {
           city: string | null
           created_at: string
           email: string | null
+          hours: Json | null
           id: string
           is_active: boolean | null
+          lat: number | null
+          lng: number | null
           name: string
           parent_restaurant_id: string
           phone: string | null
@@ -13037,8 +13098,11 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          hours?: Json | null
           id?: string
           is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
           name: string
           parent_restaurant_id: string
           phone?: string | null
@@ -13049,8 +13113,11 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          hours?: Json | null
           id?: string
           is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
           name?: string
           parent_restaurant_id?: string
           phone?: string | null
@@ -20695,6 +20762,10 @@ export type Database = {
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
+      }
+      find_nearest_branch: {
+        Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
+        Returns: string
       }
       find_nearest_drivers: {
         Args: {

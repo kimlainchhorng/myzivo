@@ -10,7 +10,10 @@ import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
 import RideStatusBanner from "@/components/ride/RideStatusBanner";
-import { cancelRideInDb, SupabaseErrorInfo } from "@/lib/supabaseRide";
+import { cancelRideInDb } from "@/lib/supabaseRide";
+import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
+
+const SEARCH_TIMEOUT = 60000; // 60 seconds
 
 // Status messages with timing thresholds (based on progress %)
 const statusMessages = [
@@ -24,6 +27,8 @@ const RideSearchingPage = () => {
   const { state, assignDriver, cancelRide, setStatus } = useRideStore();
   const [progress, setProgress] = useState(0);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Subscribe to realtime updates if we have a tripId
   const { isDemoMode, isRealtime, connectionError, isReconnecting, reconnect } = useRideRealtime({
@@ -92,6 +97,30 @@ const RideSearchingPage = () => {
     }
   }, [state.status, state.driver, navigate]);
 
+  // Timeout for realtime mode - show "no drivers" after 60 seconds
+  useEffect(() => {
+    if (!isRealtime || state.status !== 'searching') return;
+    
+    const timer = setTimeout(() => {
+      if (state.status === 'searching') {
+        setTimedOut(true);
+      }
+    }, SEARCH_TIMEOUT);
+    
+    return () => clearTimeout(timer);
+  }, [isRealtime, state.status]);
+
+  const handleRetrySearch = () => {
+    setIsRetrying(true);
+    setTimedOut(false);
+    setProgress(0);
+    
+    // Simulate a new search cycle
+    setTimeout(() => {
+      setIsRetrying(false);
+    }, 1000);
+  };
+
   const handleCancel = async () => {
     if (isCancelling) return;
     setIsCancelling(true);
@@ -143,90 +172,108 @@ const RideSearchingPage = () => {
       </AnimatePresence>
 
       {/* Demo Mode Banner (only show if no connection error) */}
-      {isDemoMode && !connectionError && <DemoModeBanner />}
+      {isDemoMode && !connectionError && !timedOut && <DemoModeBanner />}
       
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm text-center"
-      >
-        {/* Animated Car Icon */}
+      {/* Timed Out - No Drivers Available */}
+      {timedOut ? (
         <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.8, 1, 0.8],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
         >
+          <NoDriversAvailable
+            onRetry={handleRetrySearch}
+            onCancel={() => {
+              cancelRide();
+              navigate("/ride");
+            }}
+            isRetrying={isRetrying}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm text-center"
+        >
+          {/* Animated Car Icon */}
           <motion.div
             animate={{
-              rotate: [0, 5, -5, 0],
+              scale: [1, 1.1, 1],
+              opacity: [0.8, 1, 0.8],
             }}
             transition={{
-              duration: 1.5,
+              duration: 2,
               repeat: Infinity,
               ease: "easeInOut",
             }}
+            className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-8"
           >
-            <Car className="w-12 h-12 text-primary" />
+            <motion.div
+              animate={{
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Car className="w-12 h-12 text-primary" />
+            </motion.div>
           </motion.div>
+
+          {/* Heading with animated status */}
+          <motion.div
+            key={currentStatus.text}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {currentStatus.text}
+            </h2>
+            <p className="text-white/60 text-sm mb-8">
+              {currentStatus.subtext}
+            </p>
+          </motion.div>
+
+          {/* Progress Bar */}
+          <div className="space-y-3">
+            <Progress value={progress} className="h-2 bg-white/10" />
+            <p className="text-sm text-white/50">
+              {Math.round(progress)}% complete
+            </p>
+          </div>
+
+          {/* Ride Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 p-4 bg-white/5 rounded-xl border border-white/10"
+          >
+            <p className="text-sm text-white/60">Looking for</p>
+            <p className="font-semibold text-white">{state.rideName}</p>
+            <p className="text-primary font-bold text-lg mt-1">
+              ${state.price.toFixed(2)}
+            </p>
+          </motion.div>
+
+          {/* Cancel Button */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            onClick={handleCancel}
+            disabled={isCancelling}
+            className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {isCancelling ? "Cancelling..." : "Cancel"}
+          </motion.button>
         </motion.div>
-
-        {/* Heading with animated status */}
-        <motion.div
-          key={currentStatus.text}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-        >
-          <h2 className="text-2xl font-bold text-white mb-2">
-            {currentStatus.text}
-          </h2>
-          <p className="text-white/60 text-sm mb-8">
-            {currentStatus.subtext}
-          </p>
-        </motion.div>
-
-        {/* Progress Bar */}
-        <div className="space-y-3">
-          <Progress value={progress} className="h-2 bg-white/10" />
-          <p className="text-sm text-white/50">
-            {Math.round(progress)}% complete
-          </p>
-        </div>
-
-        {/* Ride Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 p-4 bg-white/5 rounded-xl border border-white/10"
-        >
-          <p className="text-sm text-white/60">Looking for</p>
-          <p className="font-semibold text-white">{state.rideName}</p>
-          <p className="text-primary font-bold text-lg mt-1">
-            ${state.price.toFixed(2)}
-          </p>
-        </motion.div>
-
-        {/* Cancel Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          onClick={handleCancel}
-          disabled={isCancelling}
-          className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors disabled:opacity-50"
-        >
-          {isCancelling ? "Cancelling..." : "Cancel"}
-        </motion.button>
-      </motion.div>
+      )}
     </div>
   );
 };
