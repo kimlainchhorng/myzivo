@@ -373,6 +373,9 @@ const DispatchMerchants = lazy(() => import("./pages/dispatch/DispatchMerchants"
 const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
 const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
 
+// Order Tracking
+const OrderTrackingPage = lazy(() => import("./pages/track/OrderTrackingPage"));
+
 // Go-Live & Launch Runbook
 const GoLiveChecklist = lazy(() => import("./pages/admin/GoLiveChecklist"));
 const LaunchDayRunbook = lazy(() => import("./pages/admin/LaunchDayRunbook"));
@@ -1364,6 +1367,8 @@ const App = () => (
                   <Route path="payouts" element={<DispatchPayouts />} />
                   <Route path="settings" element={<DispatchSettings />} />
                 </Route>
+                {/* Order Tracking - Customer */}
+                <Route path="/track/:orderId" element={<OrderTrackingPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

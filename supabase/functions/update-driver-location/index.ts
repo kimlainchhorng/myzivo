@@ -171,12 +171,13 @@ Deno.serve(async (req) => {
       console.log(`[GPS] Bad accuracy: ${accuracy}m for driver ${driverId}`);
     }
 
-    // Update driver's current location in drivers table
+    // Update driver's current location in drivers table (includes last_active_at)
     await supabaseAdmin
       .from("drivers")
       .update({
         current_lat: lat,
         current_lng: lng,
+        last_active_at: nowISO(),
         updated_at: nowISO(),
       })
       .eq("id", driverId);

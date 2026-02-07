@@ -1,15 +1,16 @@
 /**
  * Dispatch Dashboard
- * Overview with KPIs, attention panel, and quick actions
+ * Overview with KPIs, attention panel, live map, and quick actions
  */
 
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, Truck, CheckCircle, XCircle, Users, AlertTriangle, Zap, Plus } from "lucide-react";
+import { Loader2, Package, Truck, CheckCircle, XCircle, Users, AlertTriangle, Zap } from "lucide-react";
 import { useDispatchStats, useAttentionItems } from "@/hooks/useDispatchStats";
 import { useAssignDriver } from "@/hooks/useOrderMutations";
+import DispatchLiveMap from "@/components/dispatch/DispatchLiveMap";
 
 const DispatchDashboard = () => {
   const { data: stats, isLoading: statsLoading } = useDispatchStats();
@@ -103,6 +104,9 @@ const DispatchDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Map */}
+      <DispatchLiveMap className="mt-6" />
 
       {/* Attention Panel */}
       <Card>
