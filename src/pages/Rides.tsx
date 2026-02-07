@@ -134,6 +134,7 @@ function RidesMapView({
   dropoffCoords,
   pickup,
   dropoff,
+  etaMinutes,
   onPickupClick,
   onDropoffClick,
   onLocateMe
@@ -143,6 +144,7 @@ function RidesMapView({
   dropoffCoords?: { lat: number; lng: number } | null;
   pickup: string;
   dropoff: string;
+  etaMinutes?: number;
   onPickupClick?: () => void;
   onDropoffClick?: () => void;
   onLocateMe?: () => void;
@@ -241,45 +243,44 @@ function RidesMapView({
         />
       )}
       
-      {/* Floating Location Chips */}
-      <div className="absolute top-4 left-4 right-4 z-10 space-y-2">
-        {pickup && (
-          <button
-            onClick={onPickupClick}
-            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
-          >
-            <div className="bg-zinc-900 text-white px-2 py-1.5 rounded text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[36px]">
-              <div>5-10</div>
-              <div className="text-[8px] font-medium text-zinc-400">MIN</div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-zinc-900 truncate">{pickup.split(',')[0]}</div>
-              {pickup.split(',').length > 1 && (
-                <div className="text-xs text-zinc-500 truncate">{pickup.split(',').slice(1, 2).join(',').trim()}</div>
-              )}
-            </div>
-            <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-          </button>
-        )}
-        
-        {dropoff && (
-          <button
-            onClick={onDropoffClick}
-            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
-          >
-            <div className="w-8 h-8 bg-black rounded flex items-center justify-center flex-shrink-0">
-              <div className="w-2.5 h-2.5 bg-white rounded-sm" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-zinc-900 truncate">{dropoff.split(',')[0]}</div>
-              {dropoff.split(',').length > 1 && (
-                <div className="text-xs text-zinc-500 truncate">{dropoff.split(',').slice(1, 2).join(',').trim()}</div>
-              )}
-            </div>
-            <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-          </button>
-        )}
-      </div>
+      {/* Floating Pickup Card - Top Left */}
+      {pickup && (
+        <button
+          onClick={onPickupClick}
+          className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+        >
+          <div className="bg-zinc-900 text-white px-2 py-1.5 rounded text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[40px]">
+            <div>{etaMinutes ? `${etaMinutes}-${etaMinutes + 10}` : "5-10"}</div>
+            <div className="text-[8px] font-medium text-zinc-400">MIN</div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-zinc-900 truncate">{pickup.split(',')[0]}</div>
+            {pickup.split(',').length > 1 && (
+              <div className="text-xs text-zinc-500 truncate">{pickup.split(',').slice(1, 2).join(',').trim()}</div>
+            )}
+          </div>
+          <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+        </button>
+      )}
+      
+      {/* Floating Dropoff Card - Bottom Left (near destination) */}
+      {dropoff && (
+        <button
+          onClick={onDropoffClick}
+          className="absolute bottom-16 left-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+        >
+          <div className="w-8 h-8 bg-black rounded flex items-center justify-center flex-shrink-0">
+            <div className="w-2.5 h-2.5 bg-white rounded-sm" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-zinc-900 truncate">{dropoff.split(',')[0]}</div>
+            {dropoff.split(',').length > 1 && (
+              <div className="text-xs text-zinc-500 truncate">{dropoff.split(',').slice(1, 2).join(',').trim()}</div>
+            )}
+          </div>
+          <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+        </button>
+      )}
 
       {/* Current location button */}
       <div className="absolute bottom-4 right-4 z-10">
@@ -593,6 +594,7 @@ function RidesInner() {
           dropoffCoords={dropoffCoords}
           pickup={pickup}
           dropoff={dropoff}
+          etaMinutes={routeData?.duration ? Math.round(routeData.duration) : undefined}
           onLocateMe={handleUseCurrentLocation}
         />
       </div>
