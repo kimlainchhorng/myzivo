@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DriverSchedule {
@@ -23,7 +24,37 @@ export interface AvailableDriver {
   current_lng: number;
 }
 
-export function useAvailableDrivers() {
+export function useAvailableDrivers(enableRealtime: boolean = true) {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime driver updates for instant availability changes
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    const channel = supabase
+      .channel("available-drivers-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "drivers",
+        },
+        (payload) => {
+          // Immediately invalidate on online status or location changes
+          const newData = payload.new as { is_online?: boolean; current_lat?: number; current_lng?: number };
+          if (newData.is_online !== undefined || newData.current_lat !== undefined || newData.current_lng !== undefined) {
+            queryClient.invalidateQueries({ queryKey: ["available-drivers"] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enableRealtime, queryClient]);
+
   return useQuery({
     queryKey: ["available-drivers"],
     queryFn: async () => {
@@ -84,13 +115,14 @@ export function useAvailableDrivers() {
   });
 }
 
-export function useAvailableDriversCount() {
-  const { data, isLoading, error, refetch } = useAvailableDrivers();
+export function useAvailableDriversCount(enableRealtime: boolean = true) {
+  const { data, isLoading, error, refetch } = useAvailableDrivers(enableRealtime);
   return {
     count: data?.length || 0,
     isLoading,
     hasDrivers: (data?.length || 0) > 0,
     error,
     refetch,
+    drivers: data || [],
   };
 }

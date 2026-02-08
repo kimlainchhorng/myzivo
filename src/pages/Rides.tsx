@@ -43,6 +43,7 @@ import {
 } from "@/lib/pricing";
 import { extractCityFromAddress, normalizeCityName } from "@/lib/cityUtils";
 import { PricingDebugPanel } from "@/components/ride/PricingDebugPanel";
+import { LiveDriverIndicator } from "@/components/ride/LiveDriverIndicator";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -698,8 +699,11 @@ function RidesInner() {
           {/* Request Step */}
           {step === "request" && (
             <div className="space-y-3">
-              {/* Title */}
-              <h1 className="text-lg font-bold text-zinc-900">Where to?</h1>
+              {/* Title + Driver Availability */}
+              <div className="flex items-center justify-between">
+                <h1 className="text-lg font-bold text-zinc-900">Where to?</h1>
+                <LiveDriverIndicator pickupLocation={pickupCoords} variant="compact" />
+              </div>
               
               {/* Pickup & Dropoff Inputs */}
               <div className="relative bg-zinc-100 rounded-xl p-1">
