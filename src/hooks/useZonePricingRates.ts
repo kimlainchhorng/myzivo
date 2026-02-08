@@ -130,3 +130,70 @@ export function useAllZoneRates(zoneId: string | null | undefined) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+/**
+ * Fetch ALL ride-type rates for a zone and return as a Map for quick lookup
+ * This is used to display different prices for each ride type card.
+ * 
+ * Fallback priority:
+ * 1. Zone-specific rates
+ * 2. Default US zone rates (00000000-0000-0000-0000-000000000001)
+ * 
+ * @param zoneId - The pricing zone ID
+ * @returns Map<ride_type, ZonePricingRate> for quick lookup
+ */
+export function useAllZoneRatesMap(zoneId: string | null | undefined) {
+  const DEFAULT_ZONE_ID = "00000000-0000-0000-0000-000000000001";
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["zone-pricing-rates-map", zoneId],
+    queryFn: async () => {
+      const ratesMap = new Map<string, ZonePricingRate>();
+      
+      // 1. First try to fetch rates for the specific zone
+      if (zoneId && zoneId !== DEFAULT_ZONE_ID) {
+        const { data: zoneData } = await supabase
+          .from("zone_pricing_rates")
+          .select("*")
+          .eq("zone_id", zoneId);
+        
+        if (zoneData && zoneData.length > 0) {
+          zoneData.forEach((rate) => {
+            ratesMap.set(rate.ride_type, rate as ZonePricingRate);
+          });
+        }
+      }
+      
+      // 2. Fetch default US zone rates to fill in any missing ride types
+      const { data: defaultData, error: defaultError } = await supabase
+        .from("zone_pricing_rates")
+        .select("*")
+        .eq("zone_id", DEFAULT_ZONE_ID);
+      
+      if (defaultError) {
+        console.warn("[useAllZoneRatesMap] Error fetching default zone rates:", defaultError);
+      }
+      
+      if (defaultData) {
+        defaultData.forEach((rate) => {
+          // Only add if not already present from specific zone
+          if (!ratesMap.has(rate.ride_type)) {
+            ratesMap.set(rate.ride_type, rate as ZonePricingRate);
+          }
+        });
+      }
+      
+      return ratesMap;
+    },
+    enabled: true, // Always enabled since we have a default fallback
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    ratesMap: data ?? new Map<string, ZonePricingRate>(),
+    isLoading,
+    error: error as Error | null,
+  };
+}

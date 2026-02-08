@@ -34,7 +34,8 @@ import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
 import { usePricingZone, DEFAULT_US_ZONE } from "@/hooks/usePricingZone";
-import { useZonePricingRates, DEFAULT_ZONE_RATES } from "@/hooks/useZonePricingRates";
+import { useAllZoneRatesMap, DEFAULT_ZONE_RATES, type ZonePricingRate } from "@/hooks/useZonePricingRates";
+import { RIDE_TYPE_MULTIPLIERS } from "@/lib/pricing";
 import { 
   quoteRidePrice, 
   validateRouteData, 
@@ -313,15 +314,15 @@ function RidesInner() {
   
   // Zone-based pricing using pickup coordinates
   const { zone: pricingZone } = usePricingZone(pickupCoords?.lat, pickupCoords?.lng);
-  // Fetch ride-type-specific rates (or fallback to "standard")
-  const { rates: zoneRates } = useZonePricingRates(pricingZone?.id, selectedOption?.id ?? "standard");
+  // Fetch ALL ride-type rates for the zone (for per-card pricing)
+  const { ratesMap: zoneRatesMap } = useAllZoneRatesMap(pricingZone?.id);
   
   // Log zone detection for debugging
   useEffect(() => {
     if (pricingZone && pickupCoords) {
-      console.log(`[Rides] Detected pricing zone: ${pricingZone.name} (${pricingZone.id})`);
+      console.log(`[Rides] Detected pricing zone: ${pricingZone.name} (${pricingZone.id}), rates loaded: ${zoneRatesMap.size} types`);
     }
-  }, [pricingZone, pickupCoords]);
+  }, [pricingZone, pickupCoords, zoneRatesMap.size]);
   
   // Debug panel toggle: ?debug=1 URL param OR localStorage
   const showDebugPanel = useMemo(() => {
@@ -355,37 +356,44 @@ function RidesInner() {
     return validateRouteData(estimatedDistance, estimatedDuration);
   }, [estimatedDistance, estimatedDuration]);
   
-  // Get pricing settings for quoteRidePrice (from zone rates or fallback)
-  const pricingQuoteSettings: PriceQuoteSettings = useMemo(() => {
-    if (zoneRates) {
-      return {
-        base_fare: zoneRates.base_fare,
-        per_mile: zoneRates.per_mile,
-        per_minute: zoneRates.per_minute,
-        booking_fee: zoneRates.booking_fee,
-        minimum_fare: zoneRates.minimum_fare,
-      };
-    }
-    // Fallback to default zone rates
-    return {
+  // Get pricing settings for a specific ride type from the rates map
+  const getRatesForRideType = useCallback((rideTypeId: string): ZonePricingRate | null => {
+    // Priority: exact match → "standard" fallback
+    const exactMatch = zoneRatesMap.get(rideTypeId);
+    if (exactMatch) return exactMatch;
+    
+    const standardFallback = zoneRatesMap.get("standard");
+    return standardFallback ?? null;
+  }, [zoneRatesMap]);
+
+  // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
+  // Now uses per-ride-type rates from the Map
+  const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
+    if (!routeValidation.valid) return null;
+    
+    // Get rates specific to this ride type
+    const ratesForType = getRatesForRideType(option.id);
+    
+    // Build settings from ride-type-specific rates or defaults
+    const settings: PriceQuoteSettings = ratesForType ? {
+      base_fare: ratesForType.base_fare,
+      per_mile: ratesForType.per_mile,
+      per_minute: ratesForType.per_minute,
+      booking_fee: ratesForType.booking_fee,
+      minimum_fare: ratesForType.minimum_fare,
+    } : {
       base_fare: DEFAULT_ZONE_RATES.base_fare,
       per_mile: DEFAULT_ZONE_RATES.per_mile,
       per_minute: DEFAULT_ZONE_RATES.per_minute,
       booking_fee: DEFAULT_ZONE_RATES.booking_fee,
       minimum_fare: DEFAULT_ZONE_RATES.minimum_fare,
     };
-  }, [zoneRates]);
-
-  // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
-  // Simplified: uses single multiplier from zone_pricing_rates
-  const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
-    if (!routeValidation.valid) return null;
     
-    // Multiplier from zone_pricing_rates already includes ride-type adjustment
-    const multiplier = zoneRates?.multiplier ?? 1.0;
+    // Multiplier: from zone rates if available, otherwise fallback to RIDE_TYPE_MULTIPLIERS
+    const multiplier = ratesForType?.multiplier ?? RIDE_TYPE_MULTIPLIERS[option.id] ?? 1.0;
     
     return quoteRidePrice(
-      pricingQuoteSettings,
+      settings,
       estimatedDistance,
       estimatedDuration,
       option.id,
@@ -394,7 +402,7 @@ function RidesInner() {
         zoneName: pricingZone?.name,
       }
     );
-  }, [pricingQuoteSettings, estimatedDistance, estimatedDuration, routeValidation, zoneRates?.multiplier, pricingZone?.name]);
+  }, [routeValidation.valid, getRatesForRideType, estimatedDistance, estimatedDuration, pricingZone?.name]);
 
   // Current quote for selected option (for debug panel)
   const currentQuote = useMemo(() => {
