@@ -4,7 +4,7 @@
  * Mobile-first, no scroll required
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useDragControls, useMotionValue, animate } from "framer-motion";
@@ -26,9 +26,10 @@ import { toast } from "sonner";
 import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
 
-import { useServerRoute } from "@/hooks/useServerRoute";
+import { useServerRoute, ServerRouteData } from "@/hooks/useServerRoute";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { getPlaceDetails } from "@/services/mapsApi";
+import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
@@ -135,6 +136,7 @@ function RidesMapView({
   pickup,
   dropoff,
   etaMinutes,
+  routeData,
   onPickupClick,
   onDropoffClick,
   onLocateMe
@@ -145,6 +147,7 @@ function RidesMapView({
   pickup: string;
   dropoff: string;
   etaMinutes?: number;
+  routeData?: ServerRouteData | null;
   onPickupClick?: () => void;
   onDropoffClick?: () => void;
   onLocateMe?: () => void;
@@ -152,21 +155,19 @@ function RidesMapView({
   const { isLoaded, loadError } = useGoogleMaps();
   const center = pickupCoords || userLocation || { lat: 30.4515, lng: -91.1871 };
   
-  // Build markers
-  const markers: MapMarker[] = [];
-  if (pickupCoords) {
-    markers.push({ id: "pickup", position: pickupCoords, type: "pickup", title: "Pickup" });
-  } else if (userLocation) {
-    markers.push({ id: "user-location", position: userLocation, type: "pickup", title: "Your Location" });
-  }
-  if (dropoffCoords) {
-    markers.push({ id: "dropoff", position: dropoffCoords, type: "dropoff", title: "Destination" });
-  }
+  // Decode route polyline for map display
+  const routePath = useMemo(() => {
+    if (routeData?.polyline) {
+      // decodePolyline returns [lng, lat] pairs, convert to LatLngLiteral
+      return decodePolyline(routeData.polyline).map(([lng, lat]) => ({ lat, lng }));
+    }
+    return undefined;
+  }, [routeData?.polyline]);
 
   const route: MapRoute | undefined = pickupCoords && dropoffCoords ? {
     origin: pickupCoords,
     destination: dropoffCoords,
-    color: "#1a1a1a",
+    color: "#3b82f6",
   } : undefined;
 
   // Show loading state while Maps is loading
@@ -240,6 +241,7 @@ function RidesMapView({
             zoom={pickupCoords && dropoffCoords ? 12 : 15}
             markers={[]}
             route={route}
+            routePath={routePath}
             fitBounds={!!(pickupCoords && dropoffCoords)}
             showControls={false}
             darkMode={true}
@@ -601,6 +603,7 @@ function RidesInner() {
           pickup={pickup}
           dropoff={dropoff}
           etaMinutes={routeData?.duration ? Math.round(routeData.duration) : undefined}
+          routeData={routeData}
           onLocateMe={handleUseCurrentLocation}
         />
       </div>
