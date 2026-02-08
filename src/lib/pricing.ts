@@ -161,6 +161,16 @@ export interface UnifiedRidePricingSettings {
   service_fee_percent?: number;
 }
 
+// Zone pricing rates (from zone_pricing_rates table)
+export interface ZonePricingRates {
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
+  multiplier: number; // Zone-specific multiplier
+}
+
 // Price quote input settings (simplified)
 export interface PriceQuoteSettings {
   base_fare: number;
@@ -413,16 +423,21 @@ export function calculateCityRideFare(
  * SINGLE SOURCE OF TRUTH for ride pricing
  * All UI and server-side code should use this function
  * 
- * Formula:
- *   subtotal = (base_fare + (miles * per_mile) + (minutes * per_minute))
- *   subtotal *= rideTypeMultiplier * zoneMultiplier * surgeMultiplier * longTripMultiplier
- *   total = max(subtotal, minimum_fare) + booking_fee
+ * Formula (NEW - zone-based):
+ *   miles = distanceMeters / 1609.344
+ *   minutes = durationSeconds / 60
+ *   subtotal = base_fare + (miles * per_mile) + (minutes * per_minute) + booking_fee
+ *   subtotal = max(subtotal, minimum_fare)
+ *   final = subtotal * multiplier * surgeMult * zoneMult * longTripMult
+ *   (rounded to 2 decimals)
  * 
- * @param settings - Base pricing settings (from city_pricing or pricing_settings)
+ * The `multiplier` from zone_pricing_rates is the ride-type-specific multiplier for that zone.
+ * 
+ * @param settings - Base pricing settings (from zone_pricing_rates, city_pricing, or pricing_settings)
  * @param distanceMiles - Route distance in miles
  * @param durationMinutes - Route duration in minutes
  * @param rideType - Ride type ID (standard, black, etc.)
- * @param options - Optional multipliers (surge, zone) and city name
+ * @param options - Optional multipliers (surge, zone, rateMultiplier) and city/zone name
  */
 export function quoteRidePrice(
   settings: PriceQuoteSettings,
@@ -432,11 +447,14 @@ export function quoteRidePrice(
   options?: {
     surgeMultiplier?: number;
     zoneMultiplier?: number;
+    rateMultiplier?: number; // From zone_pricing_rates.multiplier
     city?: string;
+    zoneName?: string;
   }
 ): RidePriceQuote {
   const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
   const zoneMultiplier = options?.zoneMultiplier ?? 1.0;
+  const rateMultiplier = options?.rateMultiplier ?? 1.0; // Zone rate multiplier
   const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
   const longTripMultiplier = getLongTripMultiplier(distanceMiles);
   
@@ -446,23 +464,20 @@ export function quoteRidePrice(
   const timeFee = durationMinutes * settings.per_minute;
   const bookingFee = settings.booking_fee;
   
-  // 2. Calculate subtotal
-  let subtotal = baseFare + distanceFee + timeFee;
+  // 2. Calculate subtotal (NEW: include booking_fee in subtotal before multipliers)
+  let subtotal = baseFare + distanceFee + timeFee + bookingFee;
   
-  // 3. Apply all multipliers
-  subtotal *= rideTypeMultiplier;
-  subtotal *= zoneMultiplier;
-  subtotal *= surgeMultiplier;
-  subtotal *= longTripMultiplier;
-  
-  // 4. Enforce minimum fare
+  // 3. Enforce minimum fare BEFORE multipliers
   const minimumApplied = subtotal < settings.minimum_fare;
   if (minimumApplied) {
     subtotal = settings.minimum_fare;
   }
   
-  // 5. Add booking fee
-  const total = round(subtotal + bookingFee);
+  // 4. Apply all multipliers to get final price
+  // Formula: final = subtotal * rateMultiplier * rideTypeMultiplier * surgeMult * zoneMult * longTripMult
+  const total = round(
+    subtotal * rateMultiplier * rideTypeMultiplier * surgeMultiplier * zoneMultiplier * longTripMultiplier
+  );
   
   return {
     baseFare: round(baseFare),
