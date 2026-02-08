@@ -6150,6 +6150,8 @@ export type Database = {
       }
       driver_settings: {
         Row: {
+          auto_accept_delay_seconds: number | null
+          auto_accept_enabled: boolean | null
           auto_sync_enabled: boolean | null
           cache_trips_days: number | null
           created_at: string
@@ -6172,6 +6174,8 @@ export type Database = {
           voice_language: string | null
         }
         Insert: {
+          auto_accept_delay_seconds?: number | null
+          auto_accept_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
           created_at?: string
@@ -6194,6 +6198,8 @@ export type Database = {
           voice_language?: string | null
         }
         Update: {
+          auto_accept_delay_seconds?: number | null
+          auto_accept_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
           created_at?: string
