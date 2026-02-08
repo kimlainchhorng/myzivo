@@ -10,9 +10,13 @@ import { MapPin, Navigation, Loader2 } from "lucide-react";
 interface DeliveryMapProps {
   driverLat?: number | null;
   driverLng?: number | null;
+  driverHeading?: number | null;
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;
+  restaurantLat?: number;
+  restaurantLng?: number;
+  isLocationStale?: boolean;
   className?: string;
 }
 
@@ -51,9 +55,13 @@ const darkMapStyles = [
 export function DeliveryMap({
   driverLat,
   driverLng,
+  driverHeading,
   deliveryAddress,
   deliveryLat = 40.7128,
   deliveryLng = -73.006,
+  restaurantLat,
+  restaurantLng,
+  isLocationStale = false,
   className,
 }: DeliveryMapProps) {
   const { isLoaded, loadError } = useGoogleMaps();
@@ -62,15 +70,28 @@ export function DeliveryMap({
 
   const hasDriverLocation = driverLat != null && driverLng != null;
 
+  const hasRestaurantLocation = restaurantLat != null && restaurantLng != null;
+
   useEffect(() => {
-    if (hasDriverLocation && mapRef.current) {
-      // Fit bounds to include both driver and delivery location
+    if (mapRef.current) {
       const bounds = new google.maps.LatLngBounds();
-      bounds.extend({ lat: driverLat!, lng: driverLng! });
+      
+      // Always include delivery location
       bounds.extend({ lat: deliveryLat, lng: deliveryLng });
+      
+      // Include driver if available
+      if (hasDriverLocation) {
+        bounds.extend({ lat: driverLat!, lng: driverLng! });
+      }
+      
+      // Include restaurant if available
+      if (hasRestaurantLocation) {
+        bounds.extend({ lat: restaurantLat!, lng: restaurantLng! });
+      }
+      
       mapRef.current.fitBounds(bounds, 60);
     }
-  }, [driverLat, driverLng, deliveryLat, deliveryLng, hasDriverLocation]);
+  }, [driverLat, driverLng, deliveryLat, deliveryLng, restaurantLat, restaurantLng, hasDriverLocation, hasRestaurantLocation]);
 
   if (loadError) {
     return (
@@ -106,6 +127,21 @@ export function DeliveryMap({
           mapRef.current = map;
         }}
       >
+        {/* Restaurant Location Marker */}
+        {hasRestaurantLocation && (
+          <Marker
+            position={{ lat: restaurantLat!, lng: restaurantLng! }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#f97316",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+            }}
+          />
+        )}
+
         {/* Delivery Location Marker */}
         <Marker
           position={{ lat: deliveryLat, lng: deliveryLng }}
@@ -119,7 +155,7 @@ export function DeliveryMap({
           }}
         />
 
-        {/* Driver Location Marker */}
+        {/* Driver Location Marker with heading rotation */}
         {hasDriverLocation && (
           <Marker
             position={{ lat: driverLat!, lng: driverLng! }}
@@ -130,18 +166,24 @@ export function DeliveryMap({
               fillOpacity: 1,
               strokeColor: "#ffffff",
               strokeWeight: 2,
-              rotation: 0,
+              rotation: driverHeading ?? 0,
             }}
           />
         )}
       </GoogleMap>
 
       {/* Legend */}
-      <div className="absolute bottom-3 left-3 right-3 flex justify-between">
+      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 justify-between">
         <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
           <div className="w-3 h-3 rounded-full bg-emerald-500" />
-          <span className="text-xs text-white">Your Location</span>
+          <span className="text-xs text-white">Delivery</span>
         </div>
+        {hasRestaurantLocation && (
+          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <span className="text-xs text-white">Restaurant</span>
+          </div>
+        )}
         {hasDriverLocation && (
           <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
             <Navigation className="w-3 h-3 text-orange-500" />
@@ -149,6 +191,16 @@ export function DeliveryMap({
           </div>
         )}
       </div>
+
+      {/* Stale Location Warning */}
+      {isLocationStale && hasDriverLocation && (
+        <div className="absolute top-3 left-3 right-3">
+          <div className="bg-yellow-500/20 border border-yellow-500/30 backdrop-blur px-3 py-2 rounded-lg flex items-center gap-2">
+            <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
+            <span className="text-xs text-yellow-400">Updating driver location...</span>
+          </div>
+        </div>
+      )}
 
       {/* No Driver Overlay */}
       {!hasDriverLocation && (

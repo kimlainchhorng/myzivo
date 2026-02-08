@@ -256,6 +256,10 @@ export const useDriverLocationTracking = (
     checkArrivalProximity(lat, lng);
   }, [driverId, updateLocation, checkArrivalProximity]);
 
+  // Throttle ref to limit updates to every 12 seconds
+  const lastUpdateRef = useRef<number>(0);
+  const UPDATE_INTERVAL_MS = 12000; // 12 seconds throttle
+
   useEffect(() => {
     if (!driverId || !isOnline || isSuspended) {
       if (watchId !== null) {
@@ -269,6 +273,16 @@ export const useDriverLocationTracking = (
     if (navigator.geolocation) {
       const id = navigator.geolocation.watchPosition(
         (position) => {
+          const now = Date.now();
+          
+          // Throttle updates to every 12 seconds
+          if (now - lastUpdateRef.current < UPDATE_INTERVAL_MS) {
+            // Still check arrival proximity even if we don't send update
+            checkArrivalProximity(position.coords.latitude, position.coords.longitude);
+            return;
+          }
+          lastUpdateRef.current = now;
+          
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           
@@ -289,7 +303,7 @@ export const useDriverLocationTracking = (
           // Fallback to simulation - Baton Rouge area
           const interval = setInterval(() => {
             simulateLocation(30.4515, -91.1871);
-          }, 5000);
+          }, UPDATE_INTERVAL_MS);
           return () => clearInterval(interval);
         },
         {
@@ -303,7 +317,7 @@ export const useDriverLocationTracking = (
       // No geolocation support, use simulation
       const interval = setInterval(() => {
         simulateLocation(30.4515, -91.1871);
-      }, 5000);
+      }, UPDATE_INTERVAL_MS);
       return () => clearInterval(interval);
     }
 

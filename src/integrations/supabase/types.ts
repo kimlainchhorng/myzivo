@@ -2591,6 +2591,42 @@ export type Database = {
           },
         ]
       }
+      call_sessions: {
+        Row: {
+          created_at: string
+          customer_user_id: string
+          driver_user_id: string | null
+          expires_at: string | null
+          id: string
+          merchant_user_id: string
+          order_id: string
+          status: string
+          twilio_proxy_number: string
+        }
+        Insert: {
+          created_at?: string
+          customer_user_id: string
+          driver_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          merchant_user_id: string
+          order_id: string
+          status?: string
+          twilio_proxy_number: string
+        }
+        Update: {
+          created_at?: string
+          customer_user_id?: string
+          driver_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          merchant_user_id?: string
+          order_id?: string
+          status?: string
+          twilio_proxy_number?: string
+        }
+        Relationships: []
+      }
       cancellation_rules: {
         Row: {
           active: boolean | null
@@ -3207,6 +3243,7 @@ export type Database = {
       chat_messages: {
         Row: {
           attachment_url: string | null
+          chat_id: string | null
           created_at: string
           id: string
           is_read: boolean | null
@@ -3218,6 +3255,7 @@ export type Database = {
         }
         Insert: {
           attachment_url?: string | null
+          chat_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
@@ -3229,6 +3267,7 @@ export type Database = {
         }
         Update: {
           attachment_url?: string | null
+          chat_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
@@ -3239,6 +3278,13 @@ export type Database = {
           trip_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "order_chats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_messages_order_id_fkey"
             columns: ["order_id"]
@@ -3272,6 +3318,52 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_read_receipts: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_read_at: string | null
+          order_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          order_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_read_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_read_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_read_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -8358,36 +8450,57 @@ export type Database = {
       }
       fee_settings: {
         Row: {
+          default_currency: string | null
           driver_base_pay: number
           driver_per_mile: number | null
           id: number
+          instant_payout_enabled: boolean | null
+          instant_payout_fee_flat: number | null
+          instant_payout_fee_percent: number | null
+          min_instant_payout_amount: number | null
           min_payout_threshold: number | null
           payout_hold_days: number | null
           platform_commission_percent: number
           service_fee: number
           service_fee_percent: number | null
+          tips_settle_instantly: boolean | null
+          tips_to_driver_percent: number | null
           updated_at: string
         }
         Insert: {
+          default_currency?: string | null
           driver_base_pay?: number
           driver_per_mile?: number | null
           id?: number
+          instant_payout_enabled?: boolean | null
+          instant_payout_fee_flat?: number | null
+          instant_payout_fee_percent?: number | null
+          min_instant_payout_amount?: number | null
           min_payout_threshold?: number | null
           payout_hold_days?: number | null
           platform_commission_percent?: number
           service_fee?: number
           service_fee_percent?: number | null
+          tips_settle_instantly?: boolean | null
+          tips_to_driver_percent?: number | null
           updated_at?: string
         }
         Update: {
+          default_currency?: string | null
           driver_base_pay?: number
           driver_per_mile?: number | null
           id?: number
+          instant_payout_enabled?: boolean | null
+          instant_payout_fee_flat?: number | null
+          instant_payout_fee_percent?: number | null
+          min_instant_payout_amount?: number | null
           min_payout_threshold?: number | null
           payout_hold_days?: number | null
           platform_commission_percent?: number
           service_fee?: number
           service_fee_percent?: number | null
+          tips_settle_instantly?: boolean | null
+          tips_to_driver_percent?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -9760,6 +9873,7 @@ export type Database = {
           created_at: string | null
           credit_applied_cents: number | null
           credit_used_amount: number
+          currency: string | null
           customer_email: string | null
           customer_id: string
           customer_name: string | null
@@ -9872,6 +9986,7 @@ export type Database = {
           tax: number | null
           tenant_id: string | null
           tip_amount: number | null
+          tip_cents: number | null
           total_amount: number
           tracking_code: string | null
           updated_at: string | null
@@ -9897,6 +10012,7 @@ export type Database = {
           created_at?: string | null
           credit_applied_cents?: number | null
           credit_used_amount?: number
+          currency?: string | null
           customer_email?: string | null
           customer_id: string
           customer_name?: string | null
@@ -10009,6 +10125,7 @@ export type Database = {
           tax?: number | null
           tenant_id?: string | null
           tip_amount?: number | null
+          tip_cents?: number | null
           total_amount: number
           tracking_code?: string | null
           updated_at?: string | null
@@ -10034,6 +10151,7 @@ export type Database = {
           created_at?: string | null
           credit_applied_cents?: number | null
           credit_used_amount?: number
+          currency?: string | null
           customer_email?: string | null
           customer_id?: string
           customer_name?: string | null
@@ -10146,6 +10264,7 @@ export type Database = {
           tax?: number | null
           tenant_id?: string | null
           tip_amount?: number | null
+          tip_cents?: number | null
           total_amount?: number
           tracking_code?: string | null
           updated_at?: string | null
@@ -12681,6 +12800,7 @@ export type Database = {
       }
       merchant_balances: {
         Row: {
+          currency: string | null
           id: string
           last_payout_at: string | null
           paid_out: number | null
@@ -12689,6 +12809,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          currency?: string | null
           id?: string
           last_payout_at?: string | null
           paid_out?: number | null
@@ -12697,6 +12818,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          currency?: string | null
           id?: string
           last_payout_at?: string | null
           paid_out?: number | null
@@ -16440,6 +16562,7 @@ export type Database = {
           driver_id: string | null
           fee_amount: number
           id: string
+          is_instant: boolean | null
           locked_at: string | null
           locked_by: string | null
           net_amount: number
@@ -16464,6 +16587,7 @@ export type Database = {
           driver_id?: string | null
           fee_amount?: number
           id?: string
+          is_instant?: boolean | null
           locked_at?: string | null
           locked_by?: string | null
           net_amount?: number
@@ -16488,6 +16612,7 @@ export type Database = {
           driver_id?: string | null
           fee_amount?: number
           id?: string
+          is_instant?: boolean | null
           locked_at?: string | null
           locked_by?: string | null
           net_amount?: number
@@ -26127,26 +26252,32 @@ export type Database = {
       wallet_balances: {
         Row: {
           available: number | null
+          currency: string | null
           driver_id: string
           lifetime_earnings: number | null
           paid_out: number | null
           pending: number | null
+          tip_balance: number | null
           updated_at: string | null
         }
         Insert: {
           available?: number | null
+          currency?: string | null
           driver_id: string
           lifetime_earnings?: number | null
           paid_out?: number | null
           pending?: number | null
+          tip_balance?: number | null
           updated_at?: string | null
         }
         Update: {
           available?: number | null
+          currency?: string | null
           driver_id?: string
           lifetime_earnings?: number | null
           paid_out?: number | null
           pending?: number | null
+          tip_balance?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -29842,6 +29973,10 @@ export type Database = {
           tenant_slug: string
           user_role: string
         }[]
+      }
+      get_or_create_order_chat: {
+        Args: { p_order_id: string }
+        Returns: string
       }
       get_or_create_referral_code: {
         Args: { p_user_id: string }
