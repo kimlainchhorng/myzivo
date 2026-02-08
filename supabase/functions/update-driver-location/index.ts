@@ -182,6 +182,18 @@ Deno.serve(async (req) => {
       })
       .eq("id", driverId);
 
+    // Also upsert to driver_locations table for efficient realtime subscriptions
+    await supabaseAdmin
+      .from("driver_locations")
+      .upsert({
+        driver_id: driverId,
+        lat,
+        lng,
+        heading: heading ?? null,
+        speed: speed ?? null,
+        updated_at: nowISO(),
+      }, { onConflict: "driver_id" });
+
     // Insert into location history with GPS spoof detection data
     await supabaseAdmin.from("driver_location_history").insert({
       driver_id: driverId,

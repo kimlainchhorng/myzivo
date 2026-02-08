@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { useEatsDriver } from "@/hooks/useEatsDriver";
+import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
+import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
@@ -24,12 +26,18 @@ export default function EatsOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { order, loading, error } = useLiveEatsOrder(id);
   const { driver } = useEatsDriver(order?.driver_id);
+  const { location: liveDriverLocation, isStale } = useLiveDriverLocation(order?.driver_id, order?.status);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
 
   // Determine if we should show the map
   const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
   const isDelivering = order?.status === "out_for_delivery";
+  
+  // Use live location when available, fall back to driver profile location
+  const driverLat = liveDriverLocation?.lat ?? driver?.current_lat;
+  const driverLng = liveDriverLocation?.lng ?? driver?.current_lng;
+  const driverHeading = liveDriverLocation?.heading;
 
   // Copy order link to clipboard for support/sharing
   const handleShareOrderLink = async () => {
@@ -235,6 +243,30 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
+        {/* ETA Countdown for active deliveries */}
+        {order.driver_id && order.eta_dropoff && order.status !== "delivered" && order.status !== "cancelled" && (
+          <EtaCountdown
+            etaDropoff={order.eta_dropoff}
+            driverLat={driverLat}
+            driverLng={driverLng}
+            deliveryLat={order.delivery_lat ?? undefined}
+            deliveryLng={order.delivery_lng ?? undefined}
+          />
+        )}
+
+        {/* Stale Location Warning */}
+        {isStale && order.status === "out_for_delivery" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3"
+          >
+            <p className="text-sm text-yellow-400 text-center">
+              Updating driver location...
+            </p>
+          </motion.div>
+        )}
+
         {/* Live Delivery Map */}
         {showMap && (
           <motion.div
@@ -242,11 +274,15 @@ export default function EatsOrderDetail() {
             animate={{ opacity: 1, y: 0 }}
           >
             <DeliveryMap
-              driverLat={driver?.current_lat}
-              driverLng={driver?.current_lng}
+              driverLat={driverLat}
+              driverLng={driverLng}
+              driverHeading={driverHeading}
               deliveryAddress={order.delivery_address || undefined}
-              deliveryLat={order.delivery_lat || undefined}
-              deliveryLng={order.delivery_lng || undefined}
+              deliveryLat={order.delivery_lat ?? undefined}
+              deliveryLng={order.delivery_lng ?? undefined}
+              restaurantLat={(order.restaurants as any)?.lat}
+              restaurantLng={(order.restaurants as any)?.lng}
+              isLocationStale={isStale}
               className="h-48"
             />
           </motion.div>
