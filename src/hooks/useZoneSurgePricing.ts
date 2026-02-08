@@ -77,10 +77,10 @@ async function getZoneDemandMetrics(
 /**
  * Hook to calculate zone-specific surge pricing
  * 
- * Surge rules:
- * - ratio >= 2.0 or no drivers: 2.0x (High)
- * - ratio >= 1.5: 1.6x (High)
- * - ratio >= 1.0: 1.3x (Medium)
+ * Surge rules (capped at 1.35x to stay cheaper than Uber/Lyft):
+ * - ratio >= 2.0 or no drivers: 1.35x (High)
+ * - ratio >= 1.5: 1.25x (High)
+ * - ratio >= 1.0: 1.12x (Medium)
  * - ratio < 1.0: 1.0x (Low)
  * 
  * @param zone - Pricing zone with bounding box coordinates

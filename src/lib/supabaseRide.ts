@@ -150,6 +150,9 @@ export const createRideInDb = async (
       // Quote-based pricing data
       insurance_fee: payload.insuranceFee || 0,
       zone_id: payload.zoneId || null,
+      zone_name: payload.zoneName || null,
+      // Full multipliers JSON for auditing
+      multipliers: payload.multipliers ? JSON.stringify(payload.multipliers) : null,
       // Platform fee (15%) and driver earning (85%)
       commission_amount: platformFee,
       platform_fee: platformFee,
