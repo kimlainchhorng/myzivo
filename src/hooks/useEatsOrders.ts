@@ -57,17 +57,23 @@ export interface CreateFoodOrderInput {
   total: number;
 }
 
-// Fetch all active restaurants
-export function useRestaurants() {
+// Fetch all active restaurants (including closed ones for display)
+export function useRestaurants(onlyOpen: boolean = false) {
   return useQuery({
-    queryKey: ["restaurants"],
+    queryKey: ["restaurants", onlyOpen],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("restaurants")
         .select("*")
         .eq("status", "active")
-        .eq("is_open", true)
         .order("rating", { ascending: false });
+
+      // Optionally filter to only open restaurants
+      if (onlyOpen) {
+        query = query.eq("is_open", true);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Restaurant[];
