@@ -234,13 +234,13 @@ function RidesMapView({
         </button>
       )}
       
-      {/* Floating Dropoff Card - Bottom Left (near destination) */}
+      {/* Floating Dropoff Card - Bottom Right */}
       {dropoff && (
         <button
           onClick={onDropoffClick}
-          className="absolute bottom-16 left-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+          className="absolute bottom-16 right-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
         >
-          <div className="w-8 h-8 bg-black rounded flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-zinc-900 rounded flex items-center justify-center flex-shrink-0">
             <div className="w-2.5 h-2.5 bg-white rounded-sm" />
           </div>
           <div className="min-w-0 flex-1">
