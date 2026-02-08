@@ -791,6 +791,36 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_daily: {
+        Row: {
+          cancelled_count: number | null
+          created_at: string | null
+          day: string
+          delivered_count: number | null
+          gmv: number | null
+          orders_count: number | null
+          platform_revenue: number | null
+        }
+        Insert: {
+          cancelled_count?: number | null
+          created_at?: string | null
+          day: string
+          delivered_count?: number | null
+          gmv?: number | null
+          orders_count?: number | null
+          platform_revenue?: number | null
+        }
+        Update: {
+          cancelled_count?: number | null
+          created_at?: string | null
+          day?: string
+          delivered_count?: number | null
+          gmv?: number | null
+          orders_count?: number | null
+          platform_revenue?: number | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           country: string | null
@@ -12594,6 +12624,83 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_campaign_stats: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          id: string
+          notifications_sent: number | null
+          orders_generated: number | null
+          revenue_generated: number | null
+          users_targeted: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          notifications_sent?: number | null
+          orders_generated?: number | null
+          revenue_generated?: number | null
+          users_targeted?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          notifications_sent?: number | null
+          orders_generated?: number | null
+          revenue_generated?: number | null
+          users_targeted?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaign_stats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_campaigns: {
+        Row: {
+          campaign_type: string
+          created_at: string | null
+          end_date: string | null
+          id: string
+          message: string | null
+          name: string
+          promo_code_id: string | null
+          start_date: string | null
+          status: string | null
+          target_audience: string | null
+        }
+        Insert: {
+          campaign_type: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          promo_code_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+        }
+        Update: {
+          campaign_type?: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          promo_code_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+        }
+        Relationships: []
       }
       membership_plans: {
         Row: {
