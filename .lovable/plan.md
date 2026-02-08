@@ -1,273 +1,99 @@
 
-
-# Promo Codes for Rides Implementation Plan
+# Update Surge and Weather Pricing Logic
 
 ## Overview
-
-This plan adds a promo code input to the ride booking flow, allowing riders to enter discount codes before payment. The system validates codes against city, usage limits, and per-user limits, then applies the discount to the final fare.
+Update the surge pricing tiers and weather multipliers to match your new specifications.
 
 ---
 
-## Current State Analysis
+## Changes Summary
 
-### Existing Infrastructure
+### 1. New Surge Pricing Tiers
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `promo_codes` table | Exists | Has code, discount_type, discount_value, max_uses, expires_at, is_active |
-| `promo_redemptions` table | Exists | Tracks order_id, discount_amount, final_amount, status |
-| `validate_promo_code` RPC | Exists | But uses `promotions` table, not `promo_codes` |
-| `increment_promo_uses` RPC | Exists | Atomic counter for promo usage |
-| `ride_requests` table | Missing promo fields | Needs price_before_discount, promo_code, promo_discount |
+| Demand Ratio | Current Multiplier | New Multiplier |
+|--------------|-------------------|----------------|
+| < 1.0        | 1.0x              | 1.0x           |
+| 1.0 – 1.5    | 1.12x             | 1.1x           |
+| 1.5 – 2.0    | 1.25x             | 1.25x          |
+| 2.0 – 3.0    | 1.35x (capped)    | 1.5x           |
+| > 3.0        | 1.35x (capped)    | 2.0x           |
+| No drivers   | 1.35x             | 2.0x           |
 
-### Flow to Modify
+### 2. Weather Multipliers
+
+| Condition   | Current | New   |
+|-------------|---------|-------|
+| Clear       | 1.0x    | 1.0x  |
+| Rain        | 1.1x    | 1.1x  |
+| Heavy Rain  | 1.2x    | 1.2x  |
+| Snow        | 1.25x   | 1.3x  |
+
+---
+
+## Files to Update
+
+### File 1: `src/lib/surge.ts`
+Update the `calculateSurge` function with new tiers:
 
 ```text
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Request   │───>│   Options   │───>│   Confirm   │───>│  Checkout   │
-│  (pickup/   │    │  (ride      │    │  (contact   │    │  (payment)  │
-│  dropoff)   │    │   type)     │    │   info)     │    │             │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                                            │
-                                     + PROMO CODE INPUT
-                                     + PRICE BREAKDOWN
+if demand_ratio < 1     → 1.0x (Low)
+if demand_ratio 1–1.5   → 1.1x (Medium)
+if demand_ratio 1.5–2   → 1.25x (Medium)
+if demand_ratio 2–3     → 1.5x (High)
+if demand_ratio > 3     → 2.0x (High)
+if no drivers           → 2.0x (High)
 ```
 
----
-
-## Database Changes
-
-### 1. Extend `promo_codes` table
-
-Add columns to support your requirements:
-
-| Column | Type | Purpose |
-|--------|------|---------|
-| city | TEXT | Restrict to specific pickup city (NULL = all cities) |
-| start_at | TIMESTAMPTZ | Start date for validity window |
-| min_fare | NUMERIC | Minimum fare required to apply promo |
-| max_discount | NUMERIC | Cap on discount amount (for percent type) |
-| max_uses_per_user | INTEGER | Per-user usage limit |
-
-### 2. Extend `ride_requests` table
-
-Add promo tracking columns:
-
-| Column | Type | Purpose |
-|--------|------|---------|
-| price_before_discount | NUMERIC | Original quoted fare |
-| promo_code | TEXT | Applied promo code |
-| promo_id | UUID | Reference to promo_codes.id |
-| promo_discount | NUMERIC | Discount amount applied |
-
----
-
-## Backend Implementation
-
-### 1. Create `validate_ride_promo` RPC Function
-
-A new PostgreSQL function specifically for rides:
-
-**Parameters:**
-- `p_code` - Promo code to validate
-- `p_user_id` - Logged-in user ID (optional for guests)
-- `p_pickup_city` - City from pickup address (for geo-restriction)
-- `p_fare_amount` - Pre-discount fare (for min_fare check)
-
-**Validation Logic:**
-1. Fetch promo where `code = UPPER(p_code)` AND `is_active = true`
-2. Check date range: `start_at <= now() <= expires_at`
-3. Check city restriction: if `promo.city IS NOT NULL`, require `promo.city = p_pickup_city`
-4. Check min fare: if `promo.min_fare IS NOT NULL`, require `p_fare_amount >= min_fare`
-5. Check total uses: `SELECT COUNT(*) FROM promo_redemptions WHERE promo_id = ?` < `max_uses`
-6. Check per-user uses (if p_user_id provided): count redemptions for this user < `max_uses_per_user`
-
-**Returns:**
-```json
-{
-  "valid": true,
-  "promo_id": "uuid",
-  "discount_type": "percent|fixed",
-  "discount_value": 25,
-  "discount_amount": 8.50,
-  "final_total": 25.50,
-  "description": "25% off your ride"
-}
-```
-
-### 2. Update `create-ride-payment-intent` Edge Function
-
-Add promo code handling:
-
-1. Accept new parameters: `promo_code`, `promo_id`, `promo_discount`
-2. Re-validate promo server-side (security)
-3. Calculate final amount with discount
-4. Store promo fields in `ride_requests`
-5. Create PaymentIntent with discounted amount
-6. On success path, insert into `promo_redemptions`
-
----
-
-## Frontend Implementation
-
-### 1. New Component: `PromoCodeInput.tsx`
-
-Location: `src/components/ride/PromoCodeInput.tsx`
-
-Features:
-- Text input with "Apply" button
-- Loading state during validation
-- Success state showing discount
-- Error toast for invalid codes
-- Remove promo button
-
-### 2. New Hook: `useRidePromoValidation.ts`
-
-Location: `src/hooks/useRidePromoValidation.ts`
-
-Responsibilities:
-- Call `validate_ride_promo` RPC
-- Calculate discounted total
-- Track applied promo state
-- Input validation (trim, uppercase)
-
-### 3. Update `Rides.tsx` - Confirm Step
-
-Add promo code UI between contact form and price breakdown:
-
-**Before (lines ~1115-1127):**
-```tsx
-// Notes textarea
-</div>
-</div>
-```
-
-**After:**
-```tsx
-// Notes textarea
-</div>
-
-{/* Promo Code Section */}
-<PromoCodeInput
-  originalPrice={currentQuote?.total ?? 0}
-  pickupCity={extractCity(pickup)}
-  onPromoApplied={(promo) => setAppliedPromo(promo)}
-  onPromoRemoved={() => setAppliedPromo(null)}
-/>
-
-{/* Price Breakdown with Discount */}
-{currentQuote && (
-  <PriceBreakdownWithDiscount
-    quote={currentQuote}
-    appliedPromo={appliedPromo}
-  />
-)}
-
-</div>
-```
-
-### 4. Update `handleStartCheckout`
-
-Pass promo data to edge function:
-
-```typescript
-const invokePromise = supabase.functions.invoke("create-ride-payment-intent", {
-  body: {
-    // ... existing fields ...
-    promo_code: appliedPromo?.code,
-    promo_id: appliedPromo?.promo_id,
-    promo_discount: appliedPromo?.discount_amount,
-    price_before_discount: currentQuote?.total,
-  },
-});
-```
-
----
-
-## UI Design (Confirm Step)
+### File 2: `src/lib/quoteRidePrice.ts`
+Update `getSurgeMultiplier` function with matching logic:
 
 ```text
-┌────────────────────────────────────────┐
-│ Your Information                       │
-│                                        │
-│ Full Name *                            │
-│ ┌──────────────────────────────────┐   │
-│ │ John Doe                         │   │
-│ └──────────────────────────────────┘   │
-│                                        │
-│ Phone Number *                         │
-│ ┌──────────────────────────────────┐   │
-│ │ (555) 123-4567                   │   │
-│ └──────────────────────────────────┘   │
-│                                        │
-│ Email (optional)                       │
-│ ┌──────────────────────────────────┐   │
-│ │ john@email.com                   │   │
-│ └──────────────────────────────────┘   │
-│                                        │
-│ ─────────────────────────────────────  │
-│                                        │
-│ Promo Code                             │
-│ ┌────────────────────────┐ ┌────────┐  │
-│ │ FIRST25                │ │ Apply  │  │
-│ └────────────────────────┘ └────────┘  │
-│                                        │
-│ ✓ FIRST25 applied: -$8.50 off          │
-│                                        │
-│ ─────────────────────────────────────  │
-│                                        │
-│ Fare Breakdown                         │
-│ Base fare               $3.50          │
-│ Distance (5.2 mi)       $9.10          │
-│ Time (~12 min)          $4.20          │
-│ Booking fee             $2.50          │
-│ ─────────────────────────────────────  │
-│ Subtotal                $19.30         │
-│ Promo discount (FIRST25) -$4.83        │
-│ ─────────────────────────────────────  │
-│ Total                   $14.47         │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │       Continue to Payment          │ │
-│ └────────────────────────────────────┘ │
-└────────────────────────────────────────┘
+if drivers <= 0         → 2.0x
+if ratio > 3            → 2.0x
+if ratio >= 2           → 1.5x
+if ratio >= 1.5         → 1.25x
+if ratio >= 1           → 1.1x
+else                    → 1.0x
+```
+
+Also update `getWeatherMultiplier` to fetch from the `weather_multipliers` database table instead of returning 1.0.
+
+### File 3: `src/hooks/useZoneSurgePricing.ts`
+Update comment documentation to reflect new tiers.
+
+### File 4: `src/hooks/useSurgePricing.ts`
+Update comment documentation to reflect new tiers.
+
+### Database Update
+Update the snow multiplier in `weather_multipliers` table:
+```sql
+UPDATE weather_multipliers 
+SET multiplier = 1.30 
+WHERE weather_key = 'snow';
 ```
 
 ---
 
-## Security Considerations
+## Technical Details
 
-| Risk | Mitigation |
-|------|------------|
-| Client tampering with discount | Server re-validates promo in edge function |
-| Applying promo after ride created | Only accept promo before payment intent creation |
-| Race condition on max_uses | Use atomic increment in transaction |
-| Promo applied to wrong city | Validate pickup city in RPC |
-| User exceeds per-user limit | Check promo_redemptions count in RPC |
+### Weather Integration
+The `getWeatherMultiplier` function will be updated to:
+1. Query the `weather_multipliers` table for the matching `weather_key`
+2. Support zone-specific overrides (if `zone_id` is set)
+3. Fallback to global multipliers (where `zone_id` is null)
 
----
+### Surge Formula
+```
+demand_ratio = ride_requests_last_5min / available_drivers
+price = base_price × surge_multiplier
+```
 
-## File Changes Summary
-
-| File | Action |
-|------|--------|
-| `supabase/migrations/xxxxx.sql` | Add columns to promo_codes and ride_requests |
-| `supabase/migrations/xxxxx.sql` | Create `validate_ride_promo` RPC function |
-| `src/components/ride/PromoCodeInput.tsx` | New component |
-| `src/hooks/useRidePromoValidation.ts` | New hook |
-| `src/pages/Rides.tsx` | Add promo UI to confirm step |
-| `supabase/functions/create-ride-payment-intent/index.ts` | Handle promo validation and discount |
+### Cap Removal
+The 1.35x cap is being removed to allow the full 2.0x multiplier during extreme demand.
 
 ---
 
 ## Testing Checklist
-
-- [ ] Enter valid promo code, see discount applied
-- [ ] Enter invalid code, see error toast
-- [ ] Enter expired code, see "expired" error
-- [ ] Enter code at max uses, see "limit reached" error
-- [ ] Enter city-restricted code from wrong city, see error
-- [ ] Apply promo, complete payment, verify promo_redemptions record
-- [ ] Remove promo, see original price restored
-- [ ] Try same promo twice (per-user limit), see error on second use
-
+- Verify surge displays correctly at each ratio tier
+- Confirm weather multipliers apply when fetched
+- Check final price reflects both surge and weather multipliers
