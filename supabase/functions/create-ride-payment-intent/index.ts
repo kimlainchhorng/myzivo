@@ -40,6 +40,17 @@ interface PricingSettings {
   booking_fee: number;
 }
 
+interface CityPricing {
+  city: string;
+  ride_type: string;
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
+  is_active: boolean;
+}
+
 interface PriceBreakdown {
   baseFare: number;
   distanceFee: number;
@@ -48,9 +59,72 @@ interface PriceBreakdown {
   subtotal: number;
   total: number;
   minimumApplied: boolean;
+  city?: string;
 }
 
-// Server-side fare calculation (source of truth)
+// Extract city from address
+function extractCityFromAddress(address: string): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map(p => p.trim());
+  if (parts.length >= 2) {
+    const potentialCity = parts[parts.length - 2];
+    const cleaned = potentialCity.replace(/\d+/g, '').replace(/\b[A-Z]{2}\b/g, '').trim();
+    return cleaned && cleaned.length > 1 ? cleaned : null;
+  }
+  return null;
+}
+
+// Normalize city name for lookup
+function normalizeCityName(city: string | null): string | null {
+  if (!city) return null;
+  const variations: Record<string, string> = {
+    'baton rouge': 'Baton Rouge',
+    'new orleans': 'New Orleans',
+    'metairie': 'New Orleans',
+    'kenner': 'New Orleans',
+    'denham springs': 'Baton Rouge',
+    'gonzales': 'Baton Rouge',
+    'prairieville': 'Baton Rouge',
+  };
+  const lowerCity = city.toLowerCase().trim();
+  return variations[lowerCity] || city;
+}
+
+// Calculate fare using city pricing (preferred)
+function calculateCityFare(
+  cityPricing: CityPricing,
+  distanceMiles: number,
+  durationMinutes: number,
+  surgeMultiplier: number
+): PriceBreakdown {
+  const baseFare = cityPricing.base_fare;
+  const distanceFee = distanceMiles * cityPricing.per_mile;
+  const timeFee = durationMinutes * cityPricing.per_minute;
+  const bookingFee = cityPricing.booking_fee;
+  
+  let subtotal = baseFare + distanceFee + timeFee;
+  subtotal *= surgeMultiplier;
+  
+  const minimumApplied = subtotal < cityPricing.minimum_fare;
+  if (minimumApplied) {
+    subtotal = cityPricing.minimum_fare;
+  }
+  
+  const total = subtotal + bookingFee;
+  
+  return {
+    baseFare: Math.round(baseFare * 100) / 100,
+    distanceFee: Math.round(distanceFee * 100) / 100,
+    timeFee: Math.round(timeFee * 100) / 100,
+    bookingFee: Math.round(bookingFee * 100) / 100,
+    subtotal: Math.round(subtotal * 100) / 100,
+    total: Math.round(total * 100) / 100,
+    minimumApplied,
+    city: cityPricing.city,
+  };
+}
+
+// Server-side fare calculation using global settings (fallback)
 function calculateServerFare(
   settings: PricingSettings,
   distanceMiles: number,
@@ -123,49 +197,99 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
-    console.log("[create-ride-payment-intent] Fetching pricing settings...");
+    console.log("[create-ride-payment-intent] Processing ride for:", pickup_address);
 
-    // 1. Fetch pricing_settings from DB
-    const { data: settingsData, error: settingsError } = await supabase
-      .from("pricing_settings")
-      .select("setting_key, setting_value")
-      .eq("service_type", "rides")
-      .eq("is_active", true);
+    // 1. Extract city from pickup address for city-specific pricing
+    const rawCity = extractCityFromAddress(pickup_address);
+    const pickupCity = normalizeCityName(rawCity);
+    console.log("[create-ride-payment-intent] Detected city:", pickupCity);
 
-    if (settingsError) {
-      console.error("[create-ride-payment-intent] Error fetching settings:", settingsError);
+    // 2. Try to fetch city-specific pricing first
+    let breakdown: PriceBreakdown;
+    let usedCityPricing = false;
+
+    if (pickupCity) {
+      const { data: cityPricingData, error: cityError } = await supabase
+        .from("city_pricing")
+        .select("*")
+        .eq("city", pickupCity)
+        .eq("ride_type", ride_type)
+        .eq("is_active", true)
+        .single();
+
+      if (cityPricingData && !cityError) {
+        console.log("[create-ride-payment-intent] Using city pricing:", cityPricingData);
+        breakdown = calculateCityFare(
+          cityPricingData as CityPricing,
+          distance_miles,
+          duration_minutes,
+          surge_multiplier
+        );
+        usedCityPricing = true;
+      } else {
+        // Try default city pricing for ride_type
+        const { data: defaultCityPricing } = await supabase
+          .from("city_pricing")
+          .select("*")
+          .eq("city", "default")
+          .eq("ride_type", ride_type)
+          .eq("is_active", true)
+          .single();
+
+        if (defaultCityPricing) {
+          console.log("[create-ride-payment-intent] Using default city pricing:", defaultCityPricing);
+          breakdown = calculateCityFare(
+            defaultCityPricing as CityPricing,
+            distance_miles,
+            duration_minutes,
+            surge_multiplier
+          );
+          usedCityPricing = true;
+        }
+      }
     }
 
-    // Convert to settings object with defaults
-    const settingsMap: Record<string, number> = {};
-    if (settingsData) {
-      settingsData.forEach((row: { setting_key: string; setting_value: unknown }) => {
-        settingsMap[row.setting_key] = parseFloat(String(row.setting_value)) || 0;
-      });
+    // 3. Fall back to global pricing_settings if no city pricing found
+    if (!usedCityPricing) {
+      console.log("[create-ride-payment-intent] Fetching global pricing settings...");
+      const { data: settingsData, error: settingsError } = await supabase
+        .from("pricing_settings")
+        .select("setting_key, setting_value")
+        .eq("service_type", "rides")
+        .eq("is_active", true);
+
+      if (settingsError) {
+        console.error("[create-ride-payment-intent] Error fetching settings:", settingsError);
+      }
+
+      const settingsMap: Record<string, number> = {};
+      if (settingsData) {
+        settingsData.forEach((row: { setting_key: string; setting_value: unknown }) => {
+          settingsMap[row.setting_key] = parseFloat(String(row.setting_value)) || 0;
+        });
+      }
+
+      const pricingSettings: PricingSettings = {
+        base_fare: settingsMap.base_fare ?? 3.50,
+        per_mile: settingsMap.per_mile ?? 1.75,
+        per_minute: settingsMap.per_minute ?? 0.35,
+        minimum_fare: settingsMap.minimum_fare ?? 7.00,
+        booking_fee: settingsMap.booking_fee ?? 2.50,
+      };
+
+      console.log("[create-ride-payment-intent] Using global pricing:", pricingSettings);
+      breakdown = calculateServerFare(
+        pricingSettings,
+        distance_miles,
+        duration_minutes,
+        ride_type_multiplier,
+        surge_multiplier
+      );
     }
 
-    const pricingSettings: PricingSettings = {
-      base_fare: settingsMap.base_fare ?? 3.50,
-      per_mile: settingsMap.per_mile ?? 1.75,
-      per_minute: settingsMap.per_minute ?? 0.35,
-      minimum_fare: settingsMap.minimum_fare ?? 7.00,
-      booking_fee: settingsMap.booking_fee ?? 2.50,
-    };
+    console.log("[create-ride-payment-intent] Final breakdown:", breakdown!);
 
-    console.log("[create-ride-payment-intent] Using pricing settings:", pricingSettings);
-
-    // 2. Calculate fare server-side (source of truth)
-    const breakdown = calculateServerFare(
-      pricingSettings,
-      distance_miles,
-      duration_minutes,
-      ride_type_multiplier,
-      surge_multiplier
-    );
-
-    console.log("[create-ride-payment-intent] Calculated breakdown:", breakdown);
-
-    // 3. Fetch commission rate from commission_settings
+    // 4. Fetch commission rate from commission_settings
     const { data: commissionData } = await supabase
       .from("commission_settings")
       .select("commission_percentage")
@@ -175,12 +299,12 @@ serve(async (req) => {
       .single();
 
     const commissionPercent = commissionData?.commission_percentage ?? 25;
-    const commissionAmount = Math.round(breakdown.total * (commissionPercent / 100) * 100) / 100;
-    const driverEarning = Math.round((breakdown.total - commissionAmount) * 100) / 100;
+    const commissionAmount = Math.round(breakdown!.total * (commissionPercent / 100) * 100) / 100;
+    const driverEarning = Math.round((breakdown!.total - commissionAmount) * 100) / 100;
 
     console.log("[create-ride-payment-intent] Commission:", { commissionPercent, commissionAmount, driverEarning });
 
-    // 4. Create ride request with all breakdown fields
+    // 5. Create ride request with all breakdown fields
     const { data: rideRequest, error: rideError } = await supabase
       .from("ride_requests")
       .insert({
@@ -198,17 +322,17 @@ serve(async (req) => {
         notes: notes || null,
         status: "pending_payment",
         payment_status: "pending",
-        payment_amount: breakdown.total,
+        payment_amount: breakdown!.total,
         payment_currency: "usd",
-        estimated_fare_min: Math.floor(breakdown.total * 0.9),
-        estimated_fare_max: Math.ceil(breakdown.total * 1.1),
+        estimated_fare_min: Math.floor(breakdown!.total * 0.9),
+        estimated_fare_max: Math.ceil(breakdown!.total * 1.1),
         distance_miles: distance_miles || null,
         duration_minutes: duration_minutes || null,
         // New breakdown fields
-        quoted_base_fare: breakdown.baseFare,
-        quoted_distance_fee: breakdown.distanceFee,
-        quoted_time_fee: breakdown.timeFee,
-        quoted_booking_fee: breakdown.bookingFee,
+        quoted_base_fare: breakdown!.baseFare,
+        quoted_distance_fee: breakdown!.distanceFee,
+        quoted_time_fee: breakdown!.timeFee,
+        quoted_booking_fee: breakdown!.bookingFee,
         quoted_surge_multiplier: surge_multiplier,
         ride_type_multiplier: ride_type_multiplier,
         commission_amount: commissionAmount,
@@ -228,7 +352,7 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Create PaymentIntent
-    const amountInCents = Math.round(breakdown.total * 100);
+    const amountInCents = Math.round(breakdown!.total * 100);
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
@@ -244,12 +368,13 @@ serve(async (req) => {
         ride_type,
         pickup_address,
         dropoff_address,
-        base_fare: breakdown.baseFare.toString(),
-        distance_fee: breakdown.distanceFee.toString(),
-        time_fee: breakdown.timeFee.toString(),
-        booking_fee: breakdown.bookingFee.toString(),
+        base_fare: breakdown!.baseFare.toString(),
+        distance_fee: breakdown!.distanceFee.toString(),
+        time_fee: breakdown!.timeFee.toString(),
+        booking_fee: breakdown!.bookingFee.toString(),
         commission_amount: commissionAmount.toString(),
         driver_earning: driverEarning.toString(),
+        city: breakdown!.city || "default",
       },
       description: `ZIVO Ride - ${ride_type}: ${pickup_address} → ${dropoff_address}`,
       receipt_email: customer_email || undefined,
@@ -270,14 +395,15 @@ serve(async (req) => {
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id,
         requestId: rideRequest.id,
-        amount: breakdown.total,
+        amount: breakdown!.total,
         breakdown: {
-          baseFare: breakdown.baseFare,
-          distanceFee: breakdown.distanceFee,
-          timeFee: breakdown.timeFee,
-          bookingFee: breakdown.bookingFee,
-          total: breakdown.total,
-          minimumApplied: breakdown.minimumApplied,
+          baseFare: breakdown!.baseFare,
+          distanceFee: breakdown!.distanceFee,
+          timeFee: breakdown!.timeFee,
+          bookingFee: breakdown!.bookingFee,
+          total: breakdown!.total,
+          minimumApplied: breakdown!.minimumApplied,
+          city: breakdown!.city,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

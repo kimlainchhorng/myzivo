@@ -2833,6 +2833,45 @@ export type Database = {
         }
         Relationships: []
       }
+      city_pricing: {
+        Row: {
+          base_fare: number | null
+          booking_fee: number | null
+          city: string | null
+          id: string
+          is_active: boolean | null
+          minimum_fare: number | null
+          per_mile: number | null
+          per_minute: number | null
+          ride_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_fare?: number | null
+          booking_fee?: number | null
+          city?: string | null
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number | null
+          per_mile?: number | null
+          per_minute?: number | null
+          ride_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_fare?: number | null
+          booking_fee?: number | null
+          city?: string | null
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number | null
+          per_mile?: number | null
+          per_minute?: number | null
+          ride_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       commission_settings: {
         Row: {
           commission_percentage: number

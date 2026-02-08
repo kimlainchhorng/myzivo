@@ -33,7 +33,9 @@ import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
-import { calculateUnifiedRideFare, formatCurrency, type UnifiedRidePriceBreakdown } from "@/lib/pricing";
+import { useCityPricing, type CityPricingData } from "@/hooks/useCityPricing";
+import { calculateUnifiedRideFare, calculateCityRideFare, formatCurrency, type UnifiedRidePriceBreakdown, type CityPricing } from "@/lib/pricing";
+import { extractCityFromAddress, normalizeCityName } from "@/lib/cityUtils";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -273,7 +275,7 @@ function RidesInner() {
   const { suggestions: pickupSuggestions, fetchSuggestions: fetchPickupSuggestions, clearSuggestions: clearPickupSuggestions } = useGoogleMapsGeocode();
   const { suggestions: dropoffSuggestions, fetchSuggestions: fetchDropoffSuggestions, clearSuggestions: clearDropoffSuggestions } = useGoogleMapsGeocode();
   
-  // DB-driven pricing settings
+  // DB-driven pricing settings (fallback)
   const { data: pricingSettings } = useRidePricingSettings();
   const pricing = pricingSettings || DEFAULT_RIDE_PRICING;
   
@@ -299,6 +301,26 @@ function RidesInner() {
   const [showStopSuggestions, setShowStopSuggestions] = useState(false);
   const { suggestions: stopSuggestions, fetchSuggestions: fetchStopSuggestions, clearSuggestions: clearStopSuggestions } = useGoogleMapsGeocode();
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // City detection from pickup address
+  const [pickupCity, setPickupCity] = useState<string | null>(null);
+  
+  // Extract city when pickup changes
+  useEffect(() => {
+    if (pickup) {
+      const rawCity = extractCityFromAddress(pickup);
+      const normalizedCity = normalizeCityName(rawCity);
+      setPickupCity(normalizedCity);
+      if (normalizedCity) {
+        console.log(`[Rides] Detected city: ${normalizedCity}`);
+      }
+    } else {
+      setPickupCity(null);
+    }
+  }, [pickup]);
+  
+  // City-specific pricing hook
+  const { data: cityPricing } = useCityPricing(pickupCity, selectedOption?.id || "standard");
 
   // Bottom sheet state - simplified 2-state snap
   const dragControls = useDragControls();
@@ -316,20 +338,35 @@ function RidesInner() {
   const estimatedDistance = routeData?.distance || 5.2;
   const estimatedDuration = routeData?.duration || 15;
   
-  // Calculate current fare breakdown using unified pricing
+  // Calculate current fare breakdown - prefer city pricing, fallback to global
   const currentBreakdown = useMemo((): UnifiedRidePriceBreakdown | null => {
     if (!selectedOption) return null;
+    
+    // Use city-specific pricing if available
+    if (cityPricing) {
+      return calculateCityRideFare(
+        cityPricing as CityPricing,
+        estimatedDistance,
+        estimatedDuration,
+        1.0 // surge multiplier - TODO: integrate with useSurgePricing
+      );
+    }
+    
+    // Fallback to global pricing with multiplier
     return calculateUnifiedRideFare(
       pricing,
       estimatedDistance,
       estimatedDuration,
       selectedOption.multiplier || 1.0,
-      1.0 // surge multiplier - TODO: integrate with useSurgePricing
+      1.0
     );
-  }, [pricing, estimatedDistance, estimatedDuration, selectedOption]);
+  }, [cityPricing, pricing, estimatedDistance, estimatedDuration, selectedOption]);
 
-  // Helper to calculate fare for any option
+  // Helper to calculate fare for any option - used in option list
   const getFareForOption = useCallback((option: RideOption): UnifiedRidePriceBreakdown => {
+    // For the option list, we need to fetch city pricing per ride_type
+    // But since we can't call hooks in callbacks, we use global pricing with multiplier
+    // The actual fare shown after selection will use city pricing
     return calculateUnifiedRideFare(
       pricing,
       estimatedDistance,

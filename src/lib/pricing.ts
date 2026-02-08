@@ -70,6 +70,19 @@ export interface UnifiedRidePriceBreakdown {
   commissionPercent?: number;
   commissionAmount?: number;
   driverEarning?: number;
+  // City info
+  city?: string;
+}
+
+// City pricing interface (from city_pricing table)
+export interface CityPricing {
+  city: string;
+  ride_type: string;
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
 }
 
 // Settings interface for unified ride pricing
@@ -241,6 +254,51 @@ export function calculateUnifiedRideFare(
     total: round(total),
     estimatedMin,
     estimatedMax,
+  };
+}
+
+/**
+ * Calculate ride fare using city-specific pricing
+ * This is the preferred method when city_pricing data is available
+ */
+export function calculateCityRideFare(
+  cityPricing: CityPricing,
+  distanceMiles: number,
+  durationMinutes: number,
+  surgeMultiplier: number = 1.0
+): UnifiedRidePriceBreakdown {
+  const baseFare = cityPricing.base_fare;
+  const distanceFee = distanceMiles * cityPricing.per_mile;
+  const timeFee = durationMinutes * cityPricing.per_minute;
+  const bookingFee = cityPricing.booking_fee;
+  
+  let subtotal = baseFare + distanceFee + timeFee;
+  subtotal *= surgeMultiplier;
+  
+  const minimumApplied = subtotal < cityPricing.minimum_fare;
+  if (minimumApplied) {
+    subtotal = cityPricing.minimum_fare;
+  }
+  
+  const total = subtotal + bookingFee;
+  
+  // Calculate estimate range (±10%)
+  const estimatedMin = Math.floor(total * 0.9);
+  const estimatedMax = Math.ceil(total * 1.1);
+
+  return {
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    rideTypeMultiplier: 1.0, // Already baked into city pricing per ride_type
+    surgeMultiplier,
+    minimumApplied,
+    total: round(total),
+    estimatedMin,
+    estimatedMax,
+    city: cityPricing.city,
   };
 }
 
