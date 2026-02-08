@@ -7826,6 +7826,8 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          commission_amount_cents: number | null
+          commission_percent: number | null
           created_at: string | null
           credit_applied_cents: number | null
           customer_email: string | null
@@ -7905,6 +7907,7 @@ export type Database = {
           region_id: string | null
           requires_review: boolean | null
           restaurant_id: string
+          restaurant_payout_cents: number | null
           review_status: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -7953,6 +7956,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount_cents?: number | null
+          commission_percent?: number | null
           created_at?: string | null
           credit_applied_cents?: number | null
           customer_email?: string | null
@@ -8032,6 +8037,7 @@ export type Database = {
           region_id?: string | null
           requires_review?: boolean | null
           restaurant_id: string
+          restaurant_payout_cents?: number | null
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -8080,6 +8086,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount_cents?: number | null
+          commission_percent?: number | null
           created_at?: string | null
           credit_applied_cents?: number | null
           customer_email?: string | null
@@ -8159,6 +8167,7 @@ export type Database = {
           region_id?: string | null
           requires_review?: boolean | null
           restaurant_id?: string
+          restaurant_payout_cents?: number | null
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
