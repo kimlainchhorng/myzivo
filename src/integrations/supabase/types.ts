@@ -15849,6 +15849,7 @@ export type Database = {
           created_at: string | null
           discount_type: string
           discount_value: number
+          end_at: string | null
           expires_at: string | null
           id: string
           is_active: boolean | null
@@ -15865,6 +15866,7 @@ export type Database = {
           created_at?: string | null
           discount_type: string
           discount_value: number
+          end_at?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -15881,6 +15883,7 @@ export type Database = {
           created_at?: string | null
           discount_type?: string
           discount_value?: number
+          end_at?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
