@@ -1,7 +1,73 @@
 /**
  * ZIVO Pricing Engine
  * Centralized pricing calculations for Rides and Eats
+ * 
+ * IMPORTANT: quoteRidePrice() is the SINGLE SOURCE OF TRUTH for ride pricing.
+ * All UI and server-side code should use this function.
  */
+
+// ==================== RIDE TYPE MULTIPLIERS (Uber-like) ====================
+
+export const RIDE_TYPE_MULTIPLIERS: Record<string, number> = {
+  wait_save: 0.92,
+  standard: 1.00,
+  green: 1.02,
+  priority: 1.12,
+  pet: 1.15,
+  comfort: 1.45,
+  xl: 1.45,
+  black: 1.65,
+  black_suv: 2.10,
+  xxl: 2.10,
+  premium: 1.65,
+  elite: 2.10,
+  lux: 3.50,
+  sprinter: 2.50,
+  secure: 4.00,
+};
+
+// ==================== ROUTE LIMITS ====================
+
+export const ROUTE_LIMITS = {
+  MAX_DISTANCE_MILES: 300,
+  MAX_DURATION_MINUTES: 600,
+};
+
+// ==================== LONG-TRIP DISCOUNT ====================
+
+/**
+ * Get long-trip discount multiplier
+ * > 50 miles: 12% discount (0.88)
+ * > 25 miles: 8% discount (0.92)
+ */
+export function getLongTripMultiplier(distanceMiles: number): number {
+  if (distanceMiles > 50) return 0.88;
+  if (distanceMiles > 25) return 0.92;
+  return 1.0;
+}
+
+// ==================== ROUTE VALIDATION ====================
+
+export interface RouteValidation {
+  valid: boolean;
+  error?: string;
+}
+
+export function validateRouteData(
+  distanceMiles: number,
+  durationMinutes: number
+): RouteValidation {
+  if (distanceMiles > ROUTE_LIMITS.MAX_DISTANCE_MILES) {
+    return { valid: false, error: `Bad route data: distance ${distanceMiles.toFixed(1)} miles exceeds maximum of ${ROUTE_LIMITS.MAX_DISTANCE_MILES}` };
+  }
+  if (durationMinutes > ROUTE_LIMITS.MAX_DURATION_MINUTES) {
+    return { valid: false, error: `Bad route data: duration ${Math.round(durationMinutes)} min exceeds maximum of ${ROUTE_LIMITS.MAX_DURATION_MINUTES}` };
+  }
+  if (distanceMiles < 0 || durationMinutes < 0) {
+    return { valid: false, error: "Bad route data: negative values" };
+  }
+  return { valid: true };
+}
 
 // ==================== TYPES ====================
 
@@ -93,6 +159,45 @@ export interface UnifiedRidePricingSettings {
   minimum_fare: number;
   booking_fee: number;
   service_fee_percent?: number;
+}
+
+// Price quote input settings (simplified)
+export interface PriceQuoteSettings {
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
+}
+
+// Price quote result with full debug info
+export interface RidePriceQuote {
+  // Core breakdown
+  baseFare: number;
+  distanceFee: number;
+  timeFee: number;
+  bookingFee: number;
+  subtotal: number;
+  total: number;
+  
+  // Multipliers applied
+  rideTypeMultiplier: number;
+  zoneMultiplier: number;
+  surgeMultiplier: number;
+  longTripMultiplier: number;
+  
+  // Metadata
+  minimumApplied: boolean;
+  estimatedMin: number;
+  estimatedMax: number;
+  city?: string;
+  
+  // Debug info
+  debug: {
+    distanceMiles: number;
+    durationMinutes: number;
+    rideType: string;
+  };
 }
 
 export interface EatsPriceBreakdown {
@@ -299,6 +404,86 @@ export function calculateCityRideFare(
     estimatedMin,
     estimatedMax,
     city: cityPricing.city,
+  };
+}
+
+// ==================== QUOTE RIDE PRICE (SINGLE SOURCE OF TRUTH) ====================
+
+/**
+ * SINGLE SOURCE OF TRUTH for ride pricing
+ * All UI and server-side code should use this function
+ * 
+ * Formula:
+ *   subtotal = (base_fare + (miles * per_mile) + (minutes * per_minute))
+ *   subtotal *= rideTypeMultiplier * zoneMultiplier * surgeMultiplier * longTripMultiplier
+ *   total = max(subtotal, minimum_fare) + booking_fee
+ * 
+ * @param settings - Base pricing settings (from city_pricing or pricing_settings)
+ * @param distanceMiles - Route distance in miles
+ * @param durationMinutes - Route duration in minutes
+ * @param rideType - Ride type ID (standard, black, etc.)
+ * @param options - Optional multipliers (surge, zone) and city name
+ */
+export function quoteRidePrice(
+  settings: PriceQuoteSettings,
+  distanceMiles: number,
+  durationMinutes: number,
+  rideType: string,
+  options?: {
+    surgeMultiplier?: number;
+    zoneMultiplier?: number;
+    city?: string;
+  }
+): RidePriceQuote {
+  const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
+  const zoneMultiplier = options?.zoneMultiplier ?? 1.0;
+  const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
+  const longTripMultiplier = getLongTripMultiplier(distanceMiles);
+  
+  // 1. Calculate base components
+  const baseFare = settings.base_fare;
+  const distanceFee = distanceMiles * settings.per_mile;
+  const timeFee = durationMinutes * settings.per_minute;
+  const bookingFee = settings.booking_fee;
+  
+  // 2. Calculate subtotal
+  let subtotal = baseFare + distanceFee + timeFee;
+  
+  // 3. Apply all multipliers
+  subtotal *= rideTypeMultiplier;
+  subtotal *= zoneMultiplier;
+  subtotal *= surgeMultiplier;
+  subtotal *= longTripMultiplier;
+  
+  // 4. Enforce minimum fare
+  const minimumApplied = subtotal < settings.minimum_fare;
+  if (minimumApplied) {
+    subtotal = settings.minimum_fare;
+  }
+  
+  // 5. Add booking fee
+  const total = round(subtotal + bookingFee);
+  
+  return {
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    total,
+    rideTypeMultiplier,
+    zoneMultiplier,
+    surgeMultiplier,
+    longTripMultiplier,
+    minimumApplied,
+    estimatedMin: Math.floor(total * 0.9),
+    estimatedMax: Math.ceil(total * 1.1),
+    city: options?.city,
+    debug: {
+      distanceMiles: round(distanceMiles),
+      durationMinutes: Math.round(durationMinutes),
+      rideType,
+    },
   };
 }
 

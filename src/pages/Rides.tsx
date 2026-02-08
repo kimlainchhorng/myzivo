@@ -34,8 +34,15 @@ import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
 import { useCityPricing, type CityPricingData } from "@/hooks/useCityPricing";
-import { calculateUnifiedRideFare, calculateCityRideFare, formatCurrency, type UnifiedRidePriceBreakdown, type CityPricing } from "@/lib/pricing";
+import { 
+  quoteRidePrice, 
+  validateRouteData, 
+  formatCurrency, 
+  type RidePriceQuote,
+  type PriceQuoteSettings 
+} from "@/lib/pricing";
 import { extractCityFromAddress, normalizeCityName } from "@/lib/cityUtils";
+import { PricingDebugPanel } from "@/components/ride/PricingDebugPanel";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -59,25 +66,25 @@ interface RideOption {
 
 type CategoryKey = "Economy" | "Premium" | "Elite";
 
-// Vehicle options
+// Vehicle options (multipliers are now in RIDE_TYPE_MULTIPLIERS in pricing.ts)
 const rideCategories: Record<CategoryKey, RideOption[]> = {
   Economy: [
-    { id: "wait_save", name: "Wait & Save", desc: "Lowest price, longer wait.", price: "$18.50", time: "15 min", eta: 15, icon: Clock, image: "", multiplier: 0.75, seats: 4, tag: "wait_save" },
-    { id: "standard", name: "Standard", desc: "Reliable everyday rides.", price: "$24.50", time: "4 min", eta: 4, icon: Navigation, image: "", multiplier: 1.0, seats: 4, tag: "standard" },
-    { id: "green", name: "Green", desc: "EVs & Hybrids.", price: "$25.00", time: "6 min", eta: 6, icon: Leaf, image: "", multiplier: 1.02, seats: 4, tag: "green" },
-    { id: "priority", name: "Priority", desc: "Faster pickup.", price: "$32.00", time: "1 min", eta: 1, icon: Zap, image: "", multiplier: 1.3, seats: 4, tag: "priority" },
-    { id: "pet", name: "Pet", desc: "Pet-friendly rides.", price: "$28.00", time: "8 min", eta: 8, icon: Dog, image: "", multiplier: 1.15, seats: 4 }
+    { id: "wait_save", name: "Wait & Save", desc: "Lowest price, longer wait.", price: "", time: "15 min", eta: 15, icon: Clock, image: "", seats: 4, tag: "wait_save" },
+    { id: "standard", name: "Standard", desc: "Reliable everyday rides.", price: "", time: "4 min", eta: 4, icon: Navigation, image: "", seats: 4, tag: "standard" },
+    { id: "green", name: "Green", desc: "EVs & Hybrids.", price: "", time: "6 min", eta: 6, icon: Leaf, image: "", seats: 4, tag: "green" },
+    { id: "priority", name: "Priority", desc: "Faster pickup.", price: "", time: "1 min", eta: 1, icon: Zap, image: "", seats: 4, tag: "priority" },
+    { id: "pet", name: "Pet", desc: "Pet-friendly rides.", price: "", time: "8 min", eta: 8, icon: Dog, image: "", seats: 4 }
   ],
   Premium: [
-    { id: "comfort", name: "Extra Comfort", desc: "Newer cars, more legroom.", price: "$38.00", time: "5 min", eta: 5, icon: Star, image: "", multiplier: 1.55, seats: 4 },
-    { id: "black", name: "ZIVO Black", desc: "Premium leather sedans.", price: "$65.00", time: "8 min", eta: 8, icon: Briefcase, image: "", multiplier: 2.65, seats: 4 },
-    { id: "black_suv", name: "Black SUV", desc: "Luxury for 6.", price: "$85.00", time: "10 min", eta: 10, icon: Shield, image: "", multiplier: 3.5, seats: 6 },
-    { id: "xxl", name: "XXL", desc: "Max luggage space.", price: "$90.00", time: "12 min", eta: 12, icon: Anchor, image: "", multiplier: 3.7, seats: 6 }
+    { id: "comfort", name: "Extra Comfort", desc: "Newer cars, more legroom.", price: "", time: "5 min", eta: 5, icon: Star, image: "", seats: 4 },
+    { id: "black", name: "ZIVO Black", desc: "Premium leather sedans.", price: "", time: "8 min", eta: 8, icon: Briefcase, image: "", seats: 4 },
+    { id: "black_suv", name: "Black SUV", desc: "Luxury for 6.", price: "", time: "10 min", eta: 10, icon: Shield, image: "", seats: 6 },
+    { id: "xxl", name: "XXL", desc: "Max luggage space.", price: "", time: "12 min", eta: 12, icon: Anchor, image: "", seats: 6 }
   ],
   Elite: [
-    { id: "lux", name: "ZIVO Lux", desc: "Rolls-Royce / Bentley.", price: "$250.00", time: "20 min", eta: 20, icon: Crown, image: "", multiplier: 10.0, seats: 4, tag: "lux" },
-    { id: "sprinter", name: "Executive Sprinter", desc: "Jet van for 12.", price: "$180.00", time: "45 min", eta: 45, icon: Briefcase, image: "", multiplier: 7.3, seats: 12 },
-    { id: "secure", name: "Secure Transit", desc: "Armored transport.", price: "$500.00", time: "60 min", eta: 60, icon: Shield, image: "", multiplier: 20.0, seats: 4 }
+    { id: "lux", name: "ZIVO Lux", desc: "Rolls-Royce / Bentley.", price: "", time: "20 min", eta: 20, icon: Crown, image: "", seats: 4, tag: "lux" },
+    { id: "sprinter", name: "Executive Sprinter", desc: "Jet van for 12.", price: "", time: "45 min", eta: 45, icon: Briefcase, image: "", seats: 12 },
+    { id: "secure", name: "Secure Transit", desc: "Armored transport.", price: "", time: "60 min", eta: 60, icon: Shield, image: "", seats: 4 }
   ]
 };
 
@@ -319,8 +326,17 @@ function RidesInner() {
     }
   }, [pickup]);
   
-  // City-specific pricing hook
-  const { data: cityPricing } = useCityPricing(pickupCity, selectedOption?.id || "standard");
+  // City-specific pricing hook (uses standard as default for list view)
+  const { data: cityPricing } = useCityPricing(pickupCity, "standard");
+  
+  // Debug panel toggle (localStorage.setItem('zivo_debug_pricing', 'true'))
+  const [showDebugPanel] = useState(() => {
+    try {
+      return localStorage.getItem('zivo_debug_pricing') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Bottom sheet state - simplified 2-state snap
   const dragControls = useDragControls();
@@ -338,43 +354,53 @@ function RidesInner() {
   const estimatedDistance = routeData?.distance || 5.2;
   const estimatedDuration = routeData?.duration || 15;
   
-  // Calculate current fare breakdown - prefer city pricing, fallback to global
-  const currentBreakdown = useMemo((): UnifiedRidePriceBreakdown | null => {
-    if (!selectedOption) return null;
-    
-    // Use city-specific pricing if available
+  // Validate route data (sanity checks)
+  const routeValidation = useMemo(() => {
+    return validateRouteData(estimatedDistance, estimatedDuration);
+  }, [estimatedDistance, estimatedDuration]);
+  
+  // Get pricing settings for quoteRidePrice
+  const pricingQuoteSettings: PriceQuoteSettings = useMemo(() => {
     if (cityPricing) {
-      return calculateCityRideFare(
-        cityPricing as CityPricing,
-        estimatedDistance,
-        estimatedDuration,
-        1.0 // surge multiplier - TODO: integrate with useSurgePricing
-      );
+      return {
+        base_fare: cityPricing.base_fare,
+        per_mile: cityPricing.per_mile,
+        per_minute: cityPricing.per_minute,
+        booking_fee: cityPricing.booking_fee,
+        minimum_fare: cityPricing.minimum_fare,
+      };
     }
-    
-    // Fallback to global pricing with multiplier
-    return calculateUnifiedRideFare(
-      pricing,
-      estimatedDistance,
-      estimatedDuration,
-      selectedOption.multiplier || 1.0,
-      1.0
-    );
-  }, [cityPricing, pricing, estimatedDistance, estimatedDuration, selectedOption]);
+    return {
+      base_fare: pricing.base_fare,
+      per_mile: pricing.per_mile_rate,
+      per_minute: pricing.per_minute_rate,
+      booking_fee: pricing.booking_fee,
+      minimum_fare: pricing.minimum_fare,
+    };
+  }, [cityPricing, pricing]);
 
-  // Helper to calculate fare for any option - used in option list
-  const getFareForOption = useCallback((option: RideOption): UnifiedRidePriceBreakdown => {
-    // For the option list, we need to fetch city pricing per ride_type
-    // But since we can't call hooks in callbacks, we use global pricing with multiplier
-    // The actual fare shown after selection will use city pricing
-    return calculateUnifiedRideFare(
-      pricing,
+  // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
+  const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
+    if (!routeValidation.valid) return null;
+    
+    return quoteRidePrice(
+      pricingQuoteSettings,
       estimatedDistance,
       estimatedDuration,
-      option.multiplier || 1.0,
-      1.0
+      option.id,
+      {
+        surgeMultiplier: 1.0, // TODO: integrate with useSurgePricing
+        zoneMultiplier: 1.0,
+        city: cityPricing?.city,
+      }
     );
-  }, [pricing, estimatedDistance, estimatedDuration]);
+  }, [pricingQuoteSettings, estimatedDistance, estimatedDuration, routeValidation, cityPricing?.city]);
+
+  // Current quote for selected option (for debug panel)
+  const currentQuote = useMemo(() => {
+    if (!selectedOption) return null;
+    return getQuoteForOption(selectedOption);
+  }, [selectedOption, getQuoteForOption]);
 
   // Fetch route when both coordinates are available
   useEffect(() => {
@@ -514,8 +540,8 @@ function RidesInner() {
     setIsSubmitting(true);
     
     try {
-      // Use unified pricing breakdown
-      const breakdown = getFareForOption(selectedOption);
+      // Use unified pricing (quoteRidePrice)
+      const quote = getQuoteForOption(selectedOption);
       
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Request timed out")), 15000);
@@ -530,10 +556,9 @@ function RidesInner() {
           dropoff_address: dropoff,
           ride_type: selectedOption.id,
           notes: contactInfo.notes || undefined,
-          estimated_fare: breakdown.total, // Client estimate for comparison
+          estimated_fare: quote?.total ?? 0, // Client estimate for comparison
           distance_miles: estimatedDistance,
           duration_minutes: estimatedDuration,
-          ride_type_multiplier: selectedOption.multiplier || 1.0,
           surge_multiplier: 1.0, // TODO: integrate with useSurgePricing
         },
       });
@@ -584,10 +609,11 @@ function RidesInner() {
     navigate("/rides", { replace: true });
   };
 
-  // Use unified pricing for display
-  const getFareFixed = (option: RideOption) => {
-    const breakdown = getFareForOption(option);
-    return formatCurrency(breakdown.total);
+  // Use unified pricing for display - just format the quote's total
+  const getFareDisplay = (option: RideOption): string => {
+    const quote = getQuoteForOption(option);
+    if (!quote) return "--";
+    return formatCurrency(quote.total);
   };
 
   // Simplified drag handling - 2 states: collapsed (55%) and expanded (85%)
@@ -908,7 +934,7 @@ function RidesInner() {
                     seats={ride.seats || 4}
                     time={getPickupTime(ride.eta || 5)}
                     eta={`${ride.eta} min`}
-                    price={getFareFixed(ride)}
+                    price={getFareDisplay(ride)}
                     onClick={() => handleSelectOption(ride)}
                     compact
                   />
@@ -955,11 +981,11 @@ function RidesInner() {
                   <span className="font-semibold text-zinc-900">{selectedOption.name}</span>
                   <div className="text-sm text-zinc-500">{selectedOption.eta} min away</div>
                 </div>
-                <span className="text-lg font-bold text-zinc-900">{getFareFixed(selectedOption)}</span>
+                <span className="text-lg font-bold text-zinc-900">{getFareDisplay(selectedOption)}</span>
               </div>
 
               {/* Price Breakdown */}
-              {currentBreakdown && (
+              {currentQuote && (
                 <div className="space-y-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
                   <div className="flex items-center gap-2 pb-2 border-b border-zinc-200">
                     <Receipt className="w-4 h-4 text-zinc-500" />
@@ -968,39 +994,45 @@ function RidesInner() {
                   <div className="space-y-1.5 text-sm">
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Base fare</span>
-                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.baseFare)}</span>
+                      <span className="text-zinc-900">{formatCurrency(currentQuote.baseFare)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Distance ({estimatedDistance.toFixed(1)} mi)</span>
-                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.distanceFee)}</span>
+                      <span className="text-zinc-900">{formatCurrency(currentQuote.distanceFee)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Time (~{estimatedDuration} min)</span>
-                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.timeFee)}</span>
+                      <span className="text-zinc-900">{formatCurrency(currentQuote.timeFee)}</span>
                     </div>
-                    {currentBreakdown.rideTypeMultiplier !== 1 && (
+                    {currentQuote.rideTypeMultiplier !== 1 && (
                       <div className="flex justify-between text-zinc-400 text-xs">
-                        <span>{selectedOption.name} ({currentBreakdown.rideTypeMultiplier}x)</span>
+                        <span>{selectedOption.name} ({currentQuote.rideTypeMultiplier}x)</span>
                         <span>applied</span>
                       </div>
                     )}
-                    {currentBreakdown.minimumApplied && (
+                    {currentQuote.longTripMultiplier !== 1 && (
+                      <div className="flex justify-between text-blue-500 text-xs">
+                        <span>Long-trip discount ({Math.round((1 - currentQuote.longTripMultiplier) * 100)}% off)</span>
+                        <span>applied</span>
+                      </div>
+                    )}
+                    {currentQuote.minimumApplied && (
                       <div className="flex justify-between text-zinc-400 text-xs italic">
                         <span>Minimum fare applied</span>
-                        <span>{formatCurrency(currentBreakdown.subtotal)}</span>
+                        <span>{formatCurrency(currentQuote.subtotal)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Booking fee</span>
-                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.bookingFee)}</span>
+                      <span className="text-zinc-900">{formatCurrency(currentQuote.bookingFee)}</span>
                     </div>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-zinc-200 font-bold">
                     <span className="text-zinc-900">Total</span>
-                    <span className="text-zinc-900">{formatCurrency(currentBreakdown.total)}</span>
+                    <span className="text-zinc-900">{formatCurrency(currentQuote.total)}</span>
                   </div>
                   <p className="text-[10px] text-zinc-400 pt-1">
-                    Estimated range: ${currentBreakdown.estimatedMin}-${currentBreakdown.estimatedMax}. Final price may vary based on route and traffic.
+                    Estimated range: ${currentQuote.estimatedMin}-${currentQuote.estimatedMax}. Final price may vary based on route and traffic.
                   </p>
                 </div>
               )}
@@ -1158,6 +1190,9 @@ function RidesInner() {
           </div>
         )}
       </motion.div>
+
+      {/* Debug Panel - enabled via localStorage.setItem('zivo_debug_pricing', 'true') */}
+      <PricingDebugPanel quote={currentQuote} show={showDebugPanel} />
 
       {/* Mobile Nav - hidden when bottom sheet is shown */}
       {isMobile && step === "success" && <ZivoMobileNav />}
