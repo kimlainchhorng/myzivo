@@ -63,7 +63,8 @@ const rideCategories: Record<CategoryKey, RideOption[]> = {
     { id: "wait_save", name: "Wait & Save", desc: "Lowest price, longer wait.", price: "$18.50", time: "15 min", eta: 15, icon: Clock, image: "", multiplier: 0.75, seats: 4, tag: "wait_save" },
     { id: "standard", name: "Standard", desc: "Reliable everyday rides.", price: "$24.50", time: "4 min", eta: 4, icon: Navigation, image: "", multiplier: 1.0, seats: 4, tag: "standard" },
     { id: "green", name: "Green", desc: "EVs & Hybrids.", price: "$25.00", time: "6 min", eta: 6, icon: Leaf, image: "", multiplier: 1.02, seats: 4, tag: "green" },
-    { id: "priority", name: "Priority", desc: "Faster pickup.", price: "$32.00", time: "1 min", eta: 1, icon: Zap, image: "", multiplier: 1.3, seats: 4, tag: "priority" }
+    { id: "priority", name: "Priority", desc: "Faster pickup.", price: "$32.00", time: "1 min", eta: 1, icon: Zap, image: "", multiplier: 1.3, seats: 4, tag: "priority" },
+    { id: "pet", name: "Pet", desc: "Pet-friendly rides.", price: "$28.00", time: "8 min", eta: 8, icon: Dog, image: "", multiplier: 1.15, seats: 4 }
   ],
   Premium: [
     { id: "comfort", name: "Extra Comfort", desc: "Newer cars, more legroom.", price: "$38.00", time: "5 min", eta: 5, icon: Star, image: "", multiplier: 1.55, seats: 4 },
@@ -74,8 +75,7 @@ const rideCategories: Record<CategoryKey, RideOption[]> = {
   Elite: [
     { id: "lux", name: "ZIVO Lux", desc: "Rolls-Royce / Bentley.", price: "$250.00", time: "20 min", eta: 20, icon: Crown, image: "", multiplier: 10.0, seats: 4, tag: "lux" },
     { id: "sprinter", name: "Executive Sprinter", desc: "Jet van for 12.", price: "$180.00", time: "45 min", eta: 45, icon: Briefcase, image: "", multiplier: 7.3, seats: 12 },
-    { id: "secure", name: "Secure Transit", desc: "Armored transport.", price: "$500.00", time: "60 min", eta: 60, icon: Shield, image: "", multiplier: 20.0, seats: 4 },
-    { id: "pet", name: "Pet Premium", desc: "Luxury with pets.", price: "$75.00", time: "10 min", eta: 10, icon: Dog, image: "", multiplier: 3.0, seats: 4 }
+    { id: "secure", name: "Secure Transit", desc: "Armored transport.", price: "$500.00", time: "60 min", eta: 60, icon: Shield, image: "", multiplier: 20.0, seats: 4 }
   ]
 };
 
