@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
-import { EATS_TABLES, INITIAL_ORDER_STATUS } from "@/config/eatsTables";
+import { EATS_TABLES, INITIAL_ORDER_STATUS } from "@/lib/eatsTables";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -64,7 +64,7 @@ export function useRestaurants(onlyOpen: boolean = false) {
     queryKey: ["restaurants", onlyOpen],
     queryFn: async () => {
       let query = supabase
-        .from("restaurants")
+        .from(EATS_TABLES.restaurants)
         .select("*")
         .eq("status", "active")
         .order("rating", { ascending: false });
@@ -90,7 +90,7 @@ export function useRestaurant(id: string | undefined) {
       if (!id) return null;
 
       const { data, error } = await supabase
-        .from("restaurants")
+        .from(EATS_TABLES.restaurants)
         .select("*")
         .eq("id", id)
         .single();
@@ -110,7 +110,7 @@ export function useMenuItems(restaurantId: string | undefined) {
       if (!restaurantId) return [];
 
       const { data, error } = await supabase
-        .from("menu_items")
+        .from(EATS_TABLES.menuItems)
         .select("*")
         .eq("restaurant_id", restaurantId)
         .eq("is_available", true)
@@ -186,7 +186,7 @@ export function useCreateFoodOrder() {
 
       // For authenticated users
       const { data: order, error: orderError } = await supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .insert({
           restaurant_id: input.restaurant_id,
           customer_id: customerId || '00000000-0000-0000-0000-000000000000', // Placeholder for guest
@@ -238,7 +238,7 @@ export function useFoodOrders(statusFilterOrOptions?: string | UseFoodOrdersOpti
     queryKey: ["food-orders", options.statusFilter, options.regionId],
     queryFn: async () => {
       let query = supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .select(`
           *,
           restaurants:restaurant_id (name, phone),
@@ -276,7 +276,7 @@ export function useUpdateFoodOrder() {
       updates: { status?: BookingStatus; driver_id?: string | null; admin_notes?: string };
     }) => {
       const { data, error } = await supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .update(updates as never)
         .eq("id", id)
         .select()
@@ -326,7 +326,7 @@ export function useCreateTestFoodOrder() {
     mutationFn: async () => {
       // Get first active restaurant
       const { data: restaurants } = await supabase
-        .from("restaurants")
+        .from(EATS_TABLES.restaurants)
         .select("id, name")
         .eq("status", "active")
         .limit(1);
@@ -352,7 +352,7 @@ export function useCreateTestFoodOrder() {
       });
 
       const { data, error } = await supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .insert({
           restaurant_id: restaurantId,
           customer_id: "00000000-0000-0000-0000-000000000000",
@@ -393,7 +393,7 @@ export function useMyEatsOrders() {
       if (!userId) return [];
 
       const { data, error } = await supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .select("*, restaurants:restaurant_id(name, logo_url, phone)")
         .eq("customer_id", userId)
         .order("created_at", { ascending: false });
@@ -412,7 +412,7 @@ export function useSingleEatsOrder(orderId: string | undefined) {
       if (!orderId) return null;
 
       const { data, error } = await supabase
-        .from("food_orders")
+        .from(EATS_TABLES.orders)
         .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
         .eq("id", orderId)
         .single();
