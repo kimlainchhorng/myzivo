@@ -2717,6 +2717,88 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_deliveries: {
+        Row: {
+          campaign_id: string
+          conversion_order_id: string | null
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          notification_id: string | null
+          promo_code_id: string | null
+          sent_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          conversion_order_id?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_id?: string | null
+          promo_code_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          conversion_order_id?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_id?: string | null
+          promo_code_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_deliveries_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deliveries_conversion_order_id_fkey"
+            columns: ["conversion_order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deliveries_conversion_order_id_fkey"
+            columns: ["conversion_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deliveries_conversion_order_id_fkey"
+            columns: ["conversion_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deliveries_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_rules: {
         Row: {
           active: boolean | null
@@ -12813,38 +12895,71 @@ export type Database = {
         Row: {
           campaign_type: string
           created_at: string | null
+          created_by: string | null
+          credits_amount: number | null
+          email_enabled: boolean | null
           end_date: string | null
+          executed_at: string | null
           id: string
           message: string | null
           name: string
+          notification_body: string | null
+          notification_title: string | null
           promo_code_id: string | null
+          push_enabled: boolean | null
           start_date: string | null
           status: string | null
           target_audience: string | null
+          target_city: string | null
+          target_criteria: Json | null
+          target_restaurant_id: string | null
+          title: string | null
         }
         Insert: {
           campaign_type: string
           created_at?: string | null
+          created_by?: string | null
+          credits_amount?: number | null
+          email_enabled?: boolean | null
           end_date?: string | null
+          executed_at?: string | null
           id?: string
           message?: string | null
           name: string
+          notification_body?: string | null
+          notification_title?: string | null
           promo_code_id?: string | null
+          push_enabled?: boolean | null
           start_date?: string | null
           status?: string | null
           target_audience?: string | null
+          target_city?: string | null
+          target_criteria?: Json | null
+          target_restaurant_id?: string | null
+          title?: string | null
         }
         Update: {
           campaign_type?: string
           created_at?: string | null
+          created_by?: string | null
+          credits_amount?: number | null
+          email_enabled?: boolean | null
           end_date?: string | null
+          executed_at?: string | null
           id?: string
           message?: string | null
           name?: string
+          notification_body?: string | null
+          notification_title?: string | null
           promo_code_id?: string | null
+          push_enabled?: boolean | null
           start_date?: string | null
           status?: string | null
           target_audience?: string | null
+          target_city?: string | null
+          target_criteria?: Json | null
+          target_restaurant_id?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -26107,6 +26222,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_promo_wallet: {
+        Row: {
+          assigned_at: string | null
+          campaign_id: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          promo_code_id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          campaign_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          promo_code_id: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          campaign_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          promo_code_id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_promo_wallet_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_promo_wallet_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_recently_viewed: {
         Row: {
