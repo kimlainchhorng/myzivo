@@ -204,6 +204,7 @@ export interface RidePriceQuote {
     distanceMiles: number;
     durationMinutes: number;
     rideType: string;
+    longTripDiscount?: number; // Only set if discount applied
   };
 }
 
@@ -447,8 +448,11 @@ export function quoteRidePrice(
   const zoneMultiplier = options?.multiplier ?? 1.0;
   const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
   
-  // Combined multiplier: zone rate × surge
-  const combinedMultiplier = zoneMultiplier * surgeMultiplier;
+  // Apply long-trip discount (12% off > 50mi, 8% off > 25mi)
+  const longTripDiscount = getLongTripMultiplier(distanceMiles);
+  
+  // Combined multiplier: zone rate × surge × long-trip discount
+  const combinedMultiplier = zoneMultiplier * surgeMultiplier * longTripDiscount;
   
   // 1. Calculate base components
   const baseFare = settings.base_fare;
@@ -465,7 +469,7 @@ export function quoteRidePrice(
     subtotal = settings.minimum_fare;
   }
   
-  // 4. Apply combined multiplier (zone × surge) to get final price
+  // 4. Apply combined multiplier (zone × surge × long-trip) to get final price
   const total = round(subtotal * combinedMultiplier);
   
   return {
@@ -484,6 +488,7 @@ export function quoteRidePrice(
       distanceMiles: round(distanceMiles),
       durationMinutes: Math.round(durationMinutes),
       rideType,
+      longTripDiscount: longTripDiscount < 1 ? longTripDiscount : undefined,
     },
   };
 }

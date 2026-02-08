@@ -13905,6 +13905,66 @@ export type Database = {
           },
         ]
       }
+      payment_disputes: {
+        Row: {
+          amount_cents: number | null
+          created_at: string | null
+          currency: string | null
+          dispute_id: string
+          evidence_due_by: string | null
+          id: string
+          order_id: string | null
+          provider: string | null
+          raw: Json
+          reason: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string | null
+          currency?: string | null
+          dispute_id: string
+          evidence_due_by?: string | null
+          id?: string
+          order_id?: string | null
+          provider?: string | null
+          raw: Json
+          reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string | null
+          currency?: string | null
+          dispute_id?: string
+          evidence_due_by?: string | null
+          id?: string
+          order_id?: string | null
+          provider?: string | null
+          raw?: Json
+          reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_notifications: {
         Row: {
           created_at: string | null
@@ -17560,6 +17620,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      risk_flags: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          meta: Json | null
+          reason_code: string
+          severity: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          meta?: Json | null
+          reason_code: string
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          meta?: Json | null
+          reason_code?: string
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      risk_holds: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          hold_type: string
+          id: string
+          is_active: boolean | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          hold_type: string
+          id?: string
+          is_active?: boolean | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          hold_type?: string
+          id?: string
+          is_active?: boolean | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+        }
+        Relationships: []
       }
       risk_scores: {
         Row: {
@@ -23348,6 +23495,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      watchlist: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          note: string | null
+          type: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          note?: string | null
+          type: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          note?: string | null
+          type?: string
+          value?: string
+        }
+        Relationships: []
       }
       withdrawal_rate_limits: {
         Row: {
