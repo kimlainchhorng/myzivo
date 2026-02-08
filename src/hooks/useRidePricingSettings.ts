@@ -17,17 +17,17 @@ export interface RidePricingSettings {
   premium_multiplier: number;
 }
 
-// Default fallback values matching the plan
+// Default fallback values - competitive with Uber/Lyft
 const DEFAULT_SETTINGS: RidePricingSettings = {
-  base_fare: 3.50,
-  per_mile_rate: 1.75,
-  per_minute_rate: 0.35,
-  minimum_fare: 7.00,
-  booking_fee: 2.50,
+  base_fare: 1.99,
+  per_mile_rate: 0.89,
+  per_minute_rate: 0.18,
+  minimum_fare: 4.99,
+  booking_fee: 0.75,
   service_fee_percent: 0,
   standard_multiplier: 1.0,
-  xl_multiplier: 1.3,
-  premium_multiplier: 1.6,
+  xl_multiplier: 1.45,
+  premium_multiplier: 1.65,
 };
 
 interface PricingSettingRow {
