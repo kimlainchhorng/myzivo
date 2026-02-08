@@ -5732,6 +5732,7 @@ export type Database = {
           action_url: string | null
           amount: number | null
           created_at: string
+          data: Json | null
           description: string
           driver_id: string
           icon: string | null
@@ -5744,6 +5745,7 @@ export type Database = {
           action_url?: string | null
           amount?: number | null
           created_at?: string
+          data?: Json | null
           description: string
           driver_id: string
           icon?: string | null
@@ -5756,6 +5758,7 @@ export type Database = {
           action_url?: string | null
           amount?: number | null
           created_at?: string
+          data?: Json | null
           description?: string
           driver_id?: string
           icon?: string | null
@@ -7066,6 +7069,85 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eats_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          delivery_rating: number | null
+          food_rating: number | null
+          id: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          delivery_rating?: number | null
+          food_rating?: number | null
+          id?: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          delivery_rating?: number | null
+          food_rating?: number | null
+          id?: string
+          order_id?: string
+          rating?: number
+          restaurant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eats_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -9214,6 +9296,7 @@ export type Database = {
           merchant_coupon_id: string | null
           paid_at: string | null
           payment_status: string | null
+          payment_type: string | null
           payout_at: string | null
           payout_driver: number | null
           payout_error: string | null
@@ -9344,6 +9427,7 @@ export type Database = {
           merchant_coupon_id?: string | null
           paid_at?: string | null
           payment_status?: string | null
+          payment_type?: string | null
           payout_at?: string | null
           payout_driver?: number | null
           payout_error?: string | null
@@ -9474,6 +9558,7 @@ export type Database = {
           merchant_coupon_id?: string | null
           paid_at?: string | null
           payment_status?: string | null
+          payment_type?: string | null
           payout_at?: string | null
           payout_driver?: number | null
           payout_error?: string | null
