@@ -33,7 +33,8 @@ import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
-import { useCityPricing, type CityPricingData } from "@/hooks/useCityPricing";
+import { usePricingZone, DEFAULT_US_ZONE } from "@/hooks/usePricingZone";
+import { useZonePricingRates, DEFAULT_ZONE_RATES } from "@/hooks/useZonePricingRates";
 import { 
   quoteRidePrice, 
   validateRouteData, 
@@ -41,7 +42,6 @@ import {
   type RidePriceQuote,
   type PriceQuoteSettings 
 } from "@/lib/pricing";
-import { extractCityFromAddress, normalizeCityName } from "@/lib/cityUtils";
 import { PricingDebugPanel } from "@/components/ride/PricingDebugPanel";
 import { LiveDriverIndicator } from "@/components/ride/LiveDriverIndicator";
 
@@ -310,25 +310,17 @@ function RidesInner() {
   const { suggestions: stopSuggestions, fetchSuggestions: fetchStopSuggestions, clearSuggestions: clearStopSuggestions } = useGoogleMapsGeocode();
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   
-  // City detection from pickup address
-  const [pickupCity, setPickupCity] = useState<string | null>(null);
   
-  // Extract city when pickup changes
+  // Zone-based pricing using pickup coordinates
+  const { zone: pricingZone } = usePricingZone(pickupCoords?.lat, pickupCoords?.lng);
+  const { rates: zoneRates } = useZonePricingRates(pricingZone?.id, "standard");
+  
+  // Log zone detection for debugging
   useEffect(() => {
-    if (pickup) {
-      const rawCity = extractCityFromAddress(pickup);
-      const normalizedCity = normalizeCityName(rawCity);
-      setPickupCity(normalizedCity);
-      if (normalizedCity) {
-        console.log(`[Rides] Detected city: ${normalizedCity}`);
-      }
-    } else {
-      setPickupCity(null);
+    if (pricingZone && pickupCoords) {
+      console.log(`[Rides] Detected pricing zone: ${pricingZone.name} (${pricingZone.id})`);
     }
-  }, [pickup]);
-  
-  // City-specific pricing hook (uses standard as default for list view)
-  const { data: cityPricing } = useCityPricing(pickupCity, "standard");
+  }, [pricingZone, pickupCoords]);
   
   // Debug panel toggle (localStorage.setItem('zivo_debug_pricing', 'true'))
   const [showDebugPanel] = useState(() => {
@@ -360,29 +352,33 @@ function RidesInner() {
     return validateRouteData(estimatedDistance, estimatedDuration);
   }, [estimatedDistance, estimatedDuration]);
   
-  // Get pricing settings for quoteRidePrice
+  // Get pricing settings for quoteRidePrice (from zone rates or fallback)
   const pricingQuoteSettings: PriceQuoteSettings = useMemo(() => {
-    if (cityPricing) {
+    if (zoneRates) {
       return {
-        base_fare: cityPricing.base_fare,
-        per_mile: cityPricing.per_mile,
-        per_minute: cityPricing.per_minute,
-        booking_fee: cityPricing.booking_fee,
-        minimum_fare: cityPricing.minimum_fare,
+        base_fare: zoneRates.base_fare,
+        per_mile: zoneRates.per_mile,
+        per_minute: zoneRates.per_minute,
+        booking_fee: zoneRates.booking_fee,
+        minimum_fare: zoneRates.minimum_fare,
       };
     }
+    // Fallback to default zone rates
     return {
-      base_fare: pricing.base_fare,
-      per_mile: pricing.per_mile_rate,
-      per_minute: pricing.per_minute_rate,
-      booking_fee: pricing.booking_fee,
-      minimum_fare: pricing.minimum_fare,
+      base_fare: DEFAULT_ZONE_RATES.base_fare,
+      per_mile: DEFAULT_ZONE_RATES.per_mile,
+      per_minute: DEFAULT_ZONE_RATES.per_minute,
+      booking_fee: DEFAULT_ZONE_RATES.booking_fee,
+      minimum_fare: DEFAULT_ZONE_RATES.minimum_fare,
     };
-  }, [cityPricing, pricing]);
+  }, [zoneRates]);
 
   // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
   const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
     if (!routeValidation.valid) return null;
+    
+    // Get rate multiplier from zone rates if available
+    const rateMultiplier = zoneRates?.multiplier ?? 1.0;
     
     return quoteRidePrice(
       pricingQuoteSettings,
@@ -392,10 +388,11 @@ function RidesInner() {
       {
         surgeMultiplier: 1.0, // TODO: integrate with useSurgePricing
         zoneMultiplier: 1.0,
-        city: cityPricing?.city,
+        rateMultiplier,
+        zoneName: pricingZone?.name,
       }
     );
-  }, [pricingQuoteSettings, estimatedDistance, estimatedDuration, routeValidation, cityPricing?.city]);
+  }, [pricingQuoteSettings, estimatedDistance, estimatedDuration, routeValidation, zoneRates?.multiplier, pricingZone?.name]);
 
   // Current quote for selected option (for debug panel)
   const currentQuote = useMemo(() => {

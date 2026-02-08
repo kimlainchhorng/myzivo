@@ -11035,6 +11035,108 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_alerts: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          is_resolved: boolean | null
+          message: string
+          order_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          restaurant_id: string | null
+          severity: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message: string
+          order_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          restaurant_id?: string | null
+          severity?: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message?: string
+          order_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          restaurant_id?: string | null
+          severity?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_alerts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       optimization_metrics: {
         Row: {
           created_at: string
@@ -14198,6 +14300,45 @@ export type Database = {
           setting_key?: string
           setting_value?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_zones: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          max_lat: number | null
+          max_lng: number | null
+          min_lat: number | null
+          min_lng: number | null
+          name: string | null
+          state: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_lat?: number | null
+          max_lng?: number | null
+          min_lat?: number | null
+          min_lng?: number | null
+          name?: string | null
+          state?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_lat?: number | null
+          max_lng?: number | null
+          min_lat?: number | null
+          min_lng?: number | null
+          name?: string | null
+          state?: string | null
         }
         Relationships: []
       }
@@ -24153,6 +24294,53 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "zivo_payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zone_pricing_rates: {
+        Row: {
+          base_fare: number | null
+          booking_fee: number | null
+          id: string
+          minimum_fare: number | null
+          multiplier: number | null
+          per_mile: number | null
+          per_minute: number | null
+          ride_type: string | null
+          updated_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          base_fare?: number | null
+          booking_fee?: number | null
+          id?: string
+          minimum_fare?: number | null
+          multiplier?: number | null
+          per_mile?: number | null
+          per_minute?: number | null
+          ride_type?: string | null
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          base_fare?: number | null
+          booking_fee?: number | null
+          id?: string
+          minimum_fare?: number | null
+          multiplier?: number | null
+          per_mile?: number | null
+          per_minute?: number | null
+          ride_type?: string | null
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zone_pricing_rates_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
             referencedColumns: ["id"]
           },
         ]

@@ -51,6 +51,30 @@ function getLongTripMultiplier(distanceMiles: number): number {
 
 // ==================== TYPES ====================
 
+interface PricingZone {
+  id: string;
+  name: string;
+  state: string | null;
+  country: string;
+  min_lat: number;
+  max_lat: number;
+  min_lng: number;
+  max_lng: number;
+  is_active: boolean;
+}
+
+interface ZonePricingRate {
+  id: string;
+  zone_id: string;
+  ride_type: string;
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
+  multiplier: number;
+}
+
 interface RidePaymentRequest {
   customer_name: string;
   customer_phone: string;
@@ -78,17 +102,6 @@ interface PricingSettings {
   booking_fee: number;
 }
 
-interface CityPricing {
-  city: string;
-  ride_type: string;
-  base_fare: number;
-  per_mile: number;
-  per_minute: number;
-  booking_fee: number;
-  minimum_fare: number;
-  is_active: boolean;
-}
-
 interface PriceBreakdown {
   baseFare: number;
   distanceFee: number;
@@ -100,75 +113,88 @@ interface PriceBreakdown {
   rideTypeMultiplier: number;
   longTripMultiplier: number;
   surgeMultiplier: number;
-  city?: string;
+  rateMultiplier: number;
+  zoneName?: string;
 }
 
-// ==================== UTILITIES ====================
+// Default US zone fallback
+const DEFAULT_US_ZONE_ID = "00000000-0000-0000-0000-000000000001";
+
+// Default zone rates fallback
+const DEFAULT_ZONE_RATES: PricingSettings = {
+  base_fare: 3.50,
+  per_mile: 1.75,
+  per_minute: 0.35,
+  minimum_fare: 7.00,
+  booking_fee: 2.50,
+};
+
+// ==================== ZONE LOOKUP ====================
+
+/**
+ * Find the best matching pricing zone for given coordinates
+ * Prefers smallest bounding box (most specific/local zone)
+ */
+function findBestZone(zones: PricingZone[], lat: number, lng: number): PricingZone | null {
+  // Filter zones that contain the point
+  const matches = zones.filter(zone =>
+    lat >= zone.min_lat &&
+    lat <= zone.max_lat &&
+    lng >= zone.min_lng &&
+    lng <= zone.max_lng
+  );
+
+  if (matches.length === 0) {
+    return null;
+  }
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  // Multiple matches: prefer smallest bounding box (most specific)
+  return matches.sort((a, b) => {
+    const areaA = (a.max_lat - a.min_lat) * (a.max_lng - a.min_lng);
+    const areaB = (b.max_lat - b.min_lat) * (b.max_lng - b.min_lng);
+    return areaA - areaB;
+  })[0];
+}
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-// Extract city from address
-function extractCityFromAddress(address: string): string | null {
-  if (!address) return null;
-  const parts = address.split(',').map(p => p.trim());
-  if (parts.length >= 2) {
-    const potentialCity = parts[parts.length - 2];
-    const cleaned = potentialCity.replace(/\d+/g, '').replace(/\b[A-Z]{2}\b/g, '').trim();
-    return cleaned && cleaned.length > 1 ? cleaned : null;
-  }
-  return null;
-}
-
-// Normalize city name for lookup
-function normalizeCityName(city: string | null): string | null {
-  if (!city) return null;
-  const variations: Record<string, string> = {
-    'baton rouge': 'Baton Rouge',
-    'new orleans': 'New Orleans',
-    'metairie': 'New Orleans',
-    'kenner': 'New Orleans',
-    'denham springs': 'Baton Rouge',
-    'gonzales': 'Baton Rouge',
-    'prairieville': 'Baton Rouge',
-  };
-  const lowerCity = city.toLowerCase().trim();
-  return variations[lowerCity] || city;
-}
-
-// ==================== PRICING FUNCTIONS ====================
-
 /**
- * Calculate fare using city pricing (preferred)
- * Uses RIDE_TYPE_MULTIPLIERS for ride type adjustments
+ * Calculate fare using zone pricing rates
+ * Uses the new formula: subtotal = base + dist + time + booking_fee, then apply multipliers
  */
-function calculateCityFare(
-  cityPricing: CityPricing,
+function calculateZoneFare(
+  rates: ZonePricingRate,
   distanceMiles: number,
   durationMinutes: number,
   rideType: string,
-  surgeMultiplier: number
+  surgeMultiplier: number,
+  zoneName?: string
 ): PriceBreakdown {
-  const baseFare = cityPricing.base_fare;
-  const distanceFee = distanceMiles * cityPricing.per_mile;
-  const timeFee = durationMinutes * cityPricing.per_minute;
-  const bookingFee = cityPricing.booking_fee;
+  const baseFare = rates.base_fare;
+  const distanceFee = distanceMiles * rates.per_mile;
+  const timeFee = durationMinutes * rates.per_minute;
+  const bookingFee = rates.booking_fee;
   
   const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
   const longTripMultiplier = getLongTripMultiplier(distanceMiles);
+  const rateMultiplier = rates.multiplier ?? 1.0;
   
-  let subtotal = baseFare + distanceFee + timeFee;
-  subtotal *= rideTypeMultiplier;
-  subtotal *= surgeMultiplier;
-  subtotal *= longTripMultiplier;
+  // NEW FORMULA: subtotal includes booking_fee, then apply minimum, then multipliers
+  let subtotal = baseFare + distanceFee + timeFee + bookingFee;
   
-  const minimumApplied = subtotal < cityPricing.minimum_fare;
+  const minimumApplied = subtotal < rates.minimum_fare;
   if (minimumApplied) {
-    subtotal = cityPricing.minimum_fare;
+    subtotal = rates.minimum_fare;
   }
   
-  const total = round(subtotal + bookingFee);
+  // Apply all multipliers to get final price
+  const total = round(subtotal * rateMultiplier * rideTypeMultiplier * surgeMultiplier * longTripMultiplier);
   
   return {
     baseFare: round(baseFare),
@@ -181,40 +207,37 @@ function calculateCityFare(
     rideTypeMultiplier,
     longTripMultiplier,
     surgeMultiplier,
-    city: cityPricing.city,
+    rateMultiplier,
+    zoneName,
   };
 }
 
 /**
- * Server-side fare calculation using global settings (fallback)
- * Uses RIDE_TYPE_MULTIPLIERS for ride type adjustments
+ * Fallback fare calculation using default zone rates
  */
-function calculateServerFare(
-  settings: PricingSettings,
+function calculateFallbackFare(
   distanceMiles: number,
   durationMinutes: number,
   rideType: string,
   surgeMultiplier: number
 ): PriceBreakdown {
-  const baseFare = settings.base_fare;
-  const distanceFee = distanceMiles * settings.per_mile;
-  const timeFee = durationMinutes * settings.per_minute;
-  const bookingFee = settings.booking_fee;
+  const baseFare = DEFAULT_ZONE_RATES.base_fare;
+  const distanceFee = distanceMiles * DEFAULT_ZONE_RATES.per_mile;
+  const timeFee = durationMinutes * DEFAULT_ZONE_RATES.per_minute;
+  const bookingFee = DEFAULT_ZONE_RATES.booking_fee;
   
   const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
   const longTripMultiplier = getLongTripMultiplier(distanceMiles);
   
-  let subtotal = baseFare + distanceFee + timeFee;
-  subtotal *= rideTypeMultiplier;
-  subtotal *= surgeMultiplier;
-  subtotal *= longTripMultiplier;
+  // NEW FORMULA: subtotal includes booking_fee, then apply minimum, then multipliers
+  let subtotal = baseFare + distanceFee + timeFee + bookingFee;
   
-  const minimumApplied = subtotal < settings.minimum_fare;
+  const minimumApplied = subtotal < DEFAULT_ZONE_RATES.minimum_fare;
   if (minimumApplied) {
-    subtotal = settings.minimum_fare;
+    subtotal = DEFAULT_ZONE_RATES.minimum_fare;
   }
   
-  const total = round(subtotal + bookingFee);
+  const total = round(subtotal * rideTypeMultiplier * surgeMultiplier * longTripMultiplier);
   
   return {
     baseFare: round(baseFare),
@@ -227,6 +250,8 @@ function calculateServerFare(
     rideTypeMultiplier,
     longTripMultiplier,
     surgeMultiplier,
+    rateMultiplier: 1.0,
+    zoneName: "Default US",
   };
 }
 
@@ -279,92 +304,69 @@ serve(async (req) => {
     }
 
     console.log("[create-ride-payment-intent] Processing ride for:", pickup_address);
-    console.log("[create-ride-payment-intent] Route data:", { distance_miles, duration_minutes, ride_type, surge_multiplier });
+    console.log("[create-ride-payment-intent] Route data:", { distance_miles, duration_minutes, ride_type, surge_multiplier, pickup_lat, pickup_lng });
 
-    // 1. Extract city from pickup address for city-specific pricing
-    const rawCity = extractCityFromAddress(pickup_address);
-    const pickupCity = normalizeCityName(rawCity);
-    console.log("[create-ride-payment-intent] Detected city:", pickupCity);
-
-    // 2. Try to fetch city-specific pricing first
+    // 1. Find pricing zone by coordinates
     let breakdown: PriceBreakdown;
-    let usedCityPricing = false;
+    let usedZonePricing = false;
+    let matchedZoneName = "Default US";
 
-    if (pickupCity) {
-      // First try exact city + standard ride type (base pricing)
-      const { data: cityPricingData, error: cityError } = await supabase
-        .from("city_pricing")
+    if (pickup_lat != null && pickup_lng != null) {
+      // Fetch all active pricing zones
+      const { data: zones, error: zonesError } = await supabase
+        .from("pricing_zones")
         .select("*")
-        .eq("city", pickupCity)
-        .eq("ride_type", "standard")  // Always use standard as base, multipliers handle the rest
-        .eq("is_active", true)
-        .single();
+        .eq("is_active", true);
 
-      if (cityPricingData && !cityError) {
-        console.log("[create-ride-payment-intent] Using city pricing:", cityPricingData);
-        breakdown = calculateCityFare(
-          cityPricingData as CityPricing,
-          distance_miles,
-          duration_minutes,
-          ride_type,
-          surge_multiplier
-        );
-        usedCityPricing = true;
-      } else {
-        // Try default city pricing
-        const { data: defaultCityPricing } = await supabase
-          .from("city_pricing")
-          .select("*")
-          .eq("city", "default")
-          .eq("ride_type", "standard")
-          .eq("is_active", true)
-          .single();
+      if (!zonesError && zones && zones.length > 0) {
+        const matchedZone = findBestZone(zones as PricingZone[], pickup_lat, pickup_lng);
+        
+        if (matchedZone) {
+          console.log("[create-ride-payment-intent] Matched zone:", matchedZone.name);
+          matchedZoneName = matchedZone.name;
+          
+          // Fetch zone pricing rates for this zone + ride_type (or standard fallback)
+          let { data: zoneRate, error: rateError } = await supabase
+            .from("zone_pricing_rates")
+            .select("*")
+            .eq("zone_id", matchedZone.id)
+            .eq("ride_type", "standard")  // Use standard rates as base
+            .single();
 
-        if (defaultCityPricing) {
-          console.log("[create-ride-payment-intent] Using default city pricing:", defaultCityPricing);
-          breakdown = calculateCityFare(
-            defaultCityPricing as CityPricing,
-            distance_miles,
-            duration_minutes,
-            ride_type,
-            surge_multiplier
-          );
-          usedCityPricing = true;
+          // If no rate for this zone, try default zone
+          if (rateError || !zoneRate) {
+            const { data: defaultRate } = await supabase
+              .from("zone_pricing_rates")
+              .select("*")
+              .eq("zone_id", DEFAULT_US_ZONE_ID)
+              .eq("ride_type", "standard")
+              .single();
+            
+            if (defaultRate) {
+              zoneRate = defaultRate;
+            }
+          }
+
+          if (zoneRate) {
+            console.log("[create-ride-payment-intent] Using zone rates:", zoneRate);
+            breakdown = calculateZoneFare(
+              zoneRate as ZonePricingRate,
+              distance_miles,
+              duration_minutes,
+              ride_type,
+              surge_multiplier,
+              matchedZoneName
+            );
+            usedZonePricing = true;
+          }
         }
       }
     }
 
-    // 3. Fall back to global pricing_settings if no city pricing found
-    if (!usedCityPricing) {
-      console.log("[create-ride-payment-intent] Fetching global pricing settings...");
-      const { data: settingsData, error: settingsError } = await supabase
-        .from("pricing_settings")
-        .select("setting_key, setting_value")
-        .eq("service_type", "rides")
-        .eq("is_active", true);
-
-      if (settingsError) {
-        console.error("[create-ride-payment-intent] Error fetching settings:", settingsError);
-      }
-
-      const settingsMap: Record<string, number> = {};
-      if (settingsData) {
-        settingsData.forEach((row: { setting_key: string; setting_value: unknown }) => {
-          settingsMap[row.setting_key] = parseFloat(String(row.setting_value)) || 0;
-        });
-      }
-
-      const pricingSettings: PricingSettings = {
-        base_fare: settingsMap.base_fare ?? 3.50,
-        per_mile: settingsMap.per_mile ?? 1.75,
-        per_minute: settingsMap.per_minute ?? 0.35,
-        minimum_fare: settingsMap.minimum_fare ?? 7.00,
-        booking_fee: settingsMap.booking_fee ?? 2.50,
-      };
-
-      console.log("[create-ride-payment-intent] Using global pricing:", pricingSettings);
-      breakdown = calculateServerFare(
-        pricingSettings,
+    // 2. Fallback to default zone rates if no zone matched
+    if (!usedZonePricing) {
+      console.log("[create-ride-payment-intent] Using fallback rates (no zone match)");
+      breakdown = calculateFallbackFare(
         distance_miles,
         duration_minutes,
         ride_type,
@@ -376,6 +378,8 @@ serve(async (req) => {
       ...breakdown!,
       rideTypeMultiplier: breakdown!.rideTypeMultiplier,
       longTripMultiplier: breakdown!.longTripMultiplier,
+      rateMultiplier: breakdown!.rateMultiplier,
+      zoneName: breakdown!.zoneName,
     });
 
     // 4. Fetch commission rate from commission_settings
@@ -463,7 +467,7 @@ serve(async (req) => {
         booking_fee: breakdown!.bookingFee.toString(),
         commission_amount: commissionAmount.toString(),
         driver_earning: driverEarning.toString(),
-        city: breakdown!.city || "default",
+        zone_name: breakdown!.zoneName || "Default US",
       },
       description: `ZIVO Ride - ${ride_type}: ${pickup_address} → ${dropoff_address}`,
       receipt_email: customer_email || undefined,
@@ -492,7 +496,7 @@ serve(async (req) => {
           bookingFee: breakdown!.bookingFee,
           total: breakdown!.total,
           minimumApplied: breakdown!.minimumApplied,
-          city: breakdown!.city,
+          zoneName: breakdown!.zoneName,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
