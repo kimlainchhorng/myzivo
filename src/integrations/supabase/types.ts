@@ -4158,6 +4158,33 @@ export type Database = {
           },
         ]
       }
+      credit_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          order_id: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cross_app_tokens: {
         Row: {
           created_at: string
@@ -8244,23 +8271,29 @@ export type Database = {
       fee_settings: {
         Row: {
           driver_base_pay: number
+          driver_per_mile: number | null
           id: number
           platform_commission_percent: number
           service_fee: number
+          service_fee_percent: number | null
           updated_at: string
         }
         Insert: {
           driver_base_pay?: number
+          driver_per_mile?: number | null
           id?: number
           platform_commission_percent?: number
           service_fee?: number
+          service_fee_percent?: number | null
           updated_at?: string
         }
         Update: {
           driver_base_pay?: number
+          driver_per_mile?: number | null
           id?: number
           platform_commission_percent?: number
           service_fee?: number
+          service_fee_percent?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -9666,6 +9699,8 @@ export type Database = {
           id: string
           is_scheduled: boolean | null
           items: Json
+          membership_applied: boolean | null
+          membership_discount_cents: number | null
           merchant_coupon_id: string | null
           needs_driver: boolean | null
           paid_at: string | null
@@ -9798,6 +9833,8 @@ export type Database = {
           id?: string
           is_scheduled?: boolean | null
           items: Json
+          membership_applied?: boolean | null
+          membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
           needs_driver?: boolean | null
           paid_at?: string | null
@@ -9930,6 +9967,8 @@ export type Database = {
           id?: string
           is_scheduled?: boolean | null
           items?: Json
+          membership_applied?: boolean | null
+          membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
           needs_driver?: boolean | null
           paid_at?: string | null
@@ -12199,6 +12238,118 @@ export type Database = {
           },
         ]
       }
+      membership_plans: {
+        Row: {
+          created_at: string | null
+          delivery_fee_discount_percent: number | null
+          free_delivery_min_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          service_fee_discount_percent: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_fee_discount_percent?: number | null
+          free_delivery_min_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly: number
+          service_fee_discount_percent?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_fee_discount_percent?: number | null
+          free_delivery_min_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          service_fee_discount_percent?: number | null
+        }
+        Relationships: []
+      }
+      membership_usage: {
+        Row: {
+          benefit_type: string
+          created_at: string | null
+          id: string
+          order_id: string | null
+          saved_amount_cents: number | null
+          user_id: string
+        }
+        Insert: {
+          benefit_type: string
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          saved_amount_cents?: number | null
+          user_id: string
+        }
+        Update: {
+          benefit_type?: string
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          saved_amount_cents?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_usage_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_usage_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_usage_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memberships: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan_id?: string | null
+          status: string
+          stripe_subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -12414,6 +12565,62 @@ export type Database = {
             foreignKeyName: "menu_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_balances: {
+        Row: {
+          id: string
+          last_payout_at: string | null
+          paid_out: number | null
+          pending: number | null
+          restaurant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          last_payout_at?: string | null
+          paid_out?: number | null
+          pending?: number | null
+          restaurant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          last_payout_at?: string | null
+          paid_out?: number | null
+          pending?: number | null
+          restaurant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_balances_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_balances_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_balances_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_balances_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
             referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
@@ -15726,6 +15933,33 @@ export type Database = {
           },
         ]
       }
+      payout_holds: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          payee_id: string
+          payee_type: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          payee_id: string
+          payee_type: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          payee_id?: string
+          payee_type?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       payout_items: {
         Row: {
           amount: number
@@ -15909,9 +16143,12 @@ export type Database = {
           created_at: string | null
           currency: string | null
           driver_id: string | null
+          fee_amount: number
           id: string
+          net_amount: number
           notes: string | null
           payout_method: string | null
+          payout_speed: string | null
           processed_at: string | null
           processed_by: string | null
           reference_id: string | null
@@ -15927,9 +16164,12 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           driver_id?: string | null
+          fee_amount?: number
           id?: string
+          net_amount?: number
           notes?: string | null
           payout_method?: string | null
+          payout_speed?: string | null
           processed_at?: string | null
           processed_by?: string | null
           reference_id?: string | null
@@ -15945,9 +16185,12 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           driver_id?: string | null
+          fee_amount?: number
           id?: string
+          net_amount?: number
           notes?: string | null
           payout_method?: string | null
+          payout_speed?: string | null
           processed_at?: string | null
           processed_by?: string | null
           reference_id?: string | null
@@ -17723,6 +17966,24 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       referral_settings: {
         Row: {
           credit_expiry_days: number | null
@@ -17759,6 +18020,33 @@ export type Database = {
           max_credit_apply_percent?: number | null
           min_order_total_cents?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          earned_at: string | null
+          id: string
+          referee_user_id: string
+          referrer_user_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          earned_at?: string | null
+          id?: string
+          referee_user_id: string
+          referrer_user_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          earned_at?: string | null
+          id?: string
+          referee_user_id?: string
+          referrer_user_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -27055,41 +27343,56 @@ export type Database = {
         Row: {
           benefits: Json | null
           created_at: string
+          delivery_fee_discount_pct: number | null
           description: string | null
           fee_reduction_pct: number | null
+          free_delivery_min_order: number | null
           id: string
           is_active: boolean | null
           name: string
           price_monthly: number
           price_yearly: number | null
           priority_support: boolean | null
+          service_fee_discount_pct: number | null
           slug: string
+          stripe_price_id_monthly: string | null
+          stripe_price_id_yearly: string | null
         }
         Insert: {
           benefits?: Json | null
           created_at?: string
+          delivery_fee_discount_pct?: number | null
           description?: string | null
           fee_reduction_pct?: number | null
+          free_delivery_min_order?: number | null
           id?: string
           is_active?: boolean | null
           name: string
           price_monthly: number
           price_yearly?: number | null
           priority_support?: boolean | null
+          service_fee_discount_pct?: number | null
           slug: string
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
         }
         Update: {
           benefits?: Json | null
           created_at?: string
+          delivery_fee_discount_pct?: number | null
           description?: string | null
           fee_reduction_pct?: number | null
+          free_delivery_min_order?: number | null
           id?: string
           is_active?: boolean | null
           name?: string
           price_monthly?: number
           price_yearly?: number | null
           priority_support?: boolean | null
+          service_fee_discount_pct?: number | null
           slug?: string
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
         }
         Relationships: []
       }

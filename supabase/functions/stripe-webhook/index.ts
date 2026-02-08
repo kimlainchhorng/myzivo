@@ -569,9 +569,114 @@ serve(async (req) => {
         break;
       }
 
+      // ============ ZIVO+ MEMBERSHIP SUBSCRIPTION EVENTS ============
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const metadata = subscription.metadata || {};
+        
+        // Only handle membership subscriptions
+        if (metadata.type === "membership" && metadata.user_id && metadata.plan_id) {
+          console.log("[Webhook] Membership subscription event:", event.type, "Sub:", subscription.id);
+          
+          const subscriptionData = {
+            user_id: metadata.user_id,
+            plan_id: metadata.plan_id,
+            status: subscription.status,
+            stripe_subscription_id: subscription.id,
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          };
+
+          // Upsert subscription record
+          const { error: upsertError } = await supabase
+            .from("zivo_subscriptions")
+            .upsert(subscriptionData, { onConflict: "user_id" });
+
+          if (upsertError) {
+            console.error("[Webhook] Error upserting membership:", upsertError);
+          } else {
+            console.log("[Webhook] Membership subscription synced:", metadata.user_id, "Status:", subscription.status);
+          }
+        }
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const metadata = subscription.metadata || {};
+        
+        if (metadata.type === "membership") {
+          console.log("[Webhook] Membership subscription deleted:", subscription.id);
+          
+          const { error: updateError } = await supabase
+            .from("zivo_subscriptions")
+            .update({ 
+              status: "cancelled",
+              cancelled_at: new Date().toISOString(),
+            })
+            .eq("stripe_subscription_id", subscription.id);
+
+          if (updateError) {
+            console.error("[Webhook] Error cancelling membership:", updateError);
+          } else {
+            console.log("[Webhook] Membership cancelled for subscription:", subscription.id);
+          }
+        }
+        break;
+      }
+
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = typeof invoice.subscription === 'string' 
+          ? invoice.subscription 
+          : invoice.subscription?.id;
+        
+        if (subscriptionId) {
+          // Check if this is a membership subscription
+          const { data: existingSub } = await supabase
+            .from("zivo_subscriptions")
+            .select("id")
+            .eq("stripe_subscription_id", subscriptionId)
+            .maybeSingle();
+
+          if (existingSub) {
+            console.log("[Webhook] Membership invoice paid, ensuring active status");
+            await supabase
+              .from("zivo_subscriptions")
+              .update({ status: "active" })
+              .eq("stripe_subscription_id", subscriptionId);
+          }
+        }
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = typeof invoice.subscription === 'string' 
+          ? invoice.subscription 
+          : invoice.subscription?.id;
+        
+        if (subscriptionId) {
+          // Check if this is a membership subscription
+          const { data: existingSub } = await supabase
+            .from("zivo_subscriptions")
+            .select("id")
+            .eq("stripe_subscription_id", subscriptionId)
+            .maybeSingle();
+
+          if (existingSub) {
+            console.log("[Webhook] Membership invoice payment failed, setting past_due");
+            await supabase
+              .from("zivo_subscriptions")
+              .update({ status: "past_due" })
+              .eq("stripe_subscription_id", subscriptionId);
+          }
+        }
+        break;
+      }
+
       default:
         console.log("[Webhook] Unhandled event type:", event.type);
-    }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

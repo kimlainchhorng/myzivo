@@ -311,6 +311,7 @@ const BusinessDashboard = lazy(() => import("./pages/business/BusinessDashboard"
 const BusinessLandingPage = lazy(() => import("./pages/business/BusinessLandingPage"));
 const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
+const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const Vision = lazy(() => import("./pages/Vision"));
 const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
 // Corporate & Brand pages
