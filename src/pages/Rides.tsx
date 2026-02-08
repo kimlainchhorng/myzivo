@@ -235,10 +235,12 @@ function RidesMapView({
           <GoogleMap
             className="w-full h-full"
             center={center}
-            zoom={markers.length > 1 ? 12 : 15}
-            markers={markers}
+            pickup={pickupCoords || userLocation || center}
+            dropoff={dropoffCoords || undefined}
+            zoom={pickupCoords && dropoffCoords ? 12 : 15}
+            markers={[]}
             route={route}
-            fitBounds={markers.length > 1}
+            fitBounds={!!(pickupCoords && dropoffCoords)}
             showControls={false}
             darkMode={true}
           />

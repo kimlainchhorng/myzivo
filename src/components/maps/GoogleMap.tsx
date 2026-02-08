@@ -50,7 +50,6 @@ export interface GoogleMapProps {
   routePath?: google.maps.LatLngLiteral[];
   showControls?: boolean;
   darkMode?: boolean;
-  mapId?: string;
   onMapClick?: (position: { lat: number; lng: number }) => void;
   onMarkerClick?: (markerId: string) => void;
   fitBounds?: boolean;
@@ -171,8 +170,8 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         onLoad={onLoad}
         onClick={handleMapClick}
       >
-        {/* Pickup marker with premium pulsing effect */}
-        {pickup && <ZivoPickupMarker position={pickup} />}
+        {/* Pickup marker with premium pulsing effect - always show, fall back to center */}
+        <ZivoPickupMarker position={pickup ?? center} />
 
         {/* Dropoff marker */}
         {dropoff && (
@@ -182,10 +181,11 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
           />
         )}
 
-        {/* Legacy markers support */}
+        {/* Legacy markers support - skip pickup types as they're rendered above */}
         {markers.map(marker => {
-          if (marker.type === "pickup" && !marker.icon) {
-            return <ZivoPickupMarker key={marker.id} position={marker.position} />;
+          // Skip pickup type - already rendered above with ZivoPickupMarker
+          if (marker.type === "pickup") {
+            return null;
           }
 
           let icon: google.maps.Symbol | google.maps.Icon | undefined;

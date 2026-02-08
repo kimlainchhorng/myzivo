@@ -25503,6 +25503,10 @@ export type Database = {
         }
         Returns: Json
       }
+      customer_can_view_driver: {
+        Args: { _driver_id: string }
+        Returns: boolean
+      }
       evaluate_sla_status: {
         Args: never
         Returns: {
