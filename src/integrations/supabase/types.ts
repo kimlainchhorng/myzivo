@@ -2202,6 +2202,105 @@ export type Database = {
         }
         Relationships: []
       }
+      call_logs: {
+        Row: {
+          call_direction: string
+          created_at: string | null
+          created_by: string | null
+          duration_seconds: number | null
+          id: string
+          notes: string | null
+          outcome: string | null
+          phone: string
+          related_driver_id: string | null
+          related_order_id: string | null
+          related_restaurant_id: string | null
+        }
+        Insert: {
+          call_direction?: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_seconds?: number | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          phone: string
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+        }
+        Update: {
+          call_direction?: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_seconds?: number | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          phone?: string
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_rules: {
         Row: {
           active: boolean | null
@@ -2232,6 +2331,45 @@ export type Database = {
           free_cancel_seconds?: number
           id?: string
           service_type?: string
+        }
+        Relationships: []
+      }
+      canned_responses: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          shortcut: string | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          shortcut?: string | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          shortcut?: string | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Relationships: []
       }
@@ -3182,6 +3320,102 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          driver_id: string | null
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          related_order_id: string | null
+          restaurant_id: string | null
+          subject: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          driver_id?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          related_order_id?: string | null
+          restaurant_id?: string | null
+          subject?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          driver_id?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          related_order_id?: string | null
+          restaurant_id?: string | null
+          subject?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       countries: {
         Row: {
@@ -10738,6 +10972,50 @@ export type Database = {
           platform_fee_percent?: number
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          channel: string
+          conversation_id: string
+          created_at: string | null
+          direction: string
+          id: string
+          provider_message_id: string | null
+          sender_user_id: string | null
+          status: string | null
+        }
+        Insert: {
+          body: string
+          channel: string
+          conversation_id: string
+          created_at?: string | null
+          direction: string
+          id?: string
+          provider_message_id?: string | null
+          sender_user_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: string
+          conversation_id?: string
+          created_at?: string | null
+          direction?: string
+          id?: string
+          provider_message_id?: string | null
+          sender_user_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_attempts: {
         Row: {
@@ -19763,6 +20041,82 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          ticket_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          ticket_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          ticket_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_comments: {
+        Row: {
+          author_user_id: string | null
+          created_at: string | null
+          id: string
+          is_internal: boolean | null
+          message: string
+          ticket_id: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message: string
+          ticket_id: string
+        }
+        Update: {
+          author_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_escalations: {
         Row: {
           created_at: string | null
@@ -19803,6 +20157,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ticket_escalations_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          meta: Json | null
+          ticket_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          meta?: Json | null
+          ticket_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          meta?: Json | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_events_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "support_tickets"

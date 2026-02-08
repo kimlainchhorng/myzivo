@@ -323,14 +323,16 @@ function RidesInner() {
     }
   }, [pricingZone, pickupCoords]);
   
-  // Debug panel toggle (localStorage.setItem('zivo_debug_pricing', 'true'))
-  const [showDebugPanel] = useState(() => {
+  // Debug panel toggle: ?debug=1 URL param OR localStorage
+  const showDebugPanel = useMemo(() => {
+    const urlDebug = searchParams.get("debug") === "1";
     try {
-      return localStorage.getItem('zivo_debug_pricing') === 'true';
+      const lsDebug = localStorage.getItem('zivo_debug_pricing') === 'true';
+      return urlDebug || lsDebug;
     } catch {
-      return false;
+      return urlDebug;
     }
-  });
+  }, [searchParams]);
 
   // Bottom sheet state - simplified 2-state snap
   const dragControls = useDragControls();
@@ -375,11 +377,12 @@ function RidesInner() {
   }, [zoneRates]);
 
   // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
+  // Simplified: uses single multiplier from zone_pricing_rates
   const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
     if (!routeValidation.valid) return null;
     
-    // Get rate multiplier from zone rates if available
-    const rateMultiplier = zoneRates?.multiplier ?? 1.0;
+    // Multiplier from zone_pricing_rates already includes ride-type adjustment
+    const multiplier = zoneRates?.multiplier ?? 1.0;
     
     return quoteRidePrice(
       pricingQuoteSettings,
@@ -387,9 +390,7 @@ function RidesInner() {
       estimatedDuration,
       option.id,
       {
-        surgeMultiplier: 1.0, // TODO: integrate with useSurgePricing
-        zoneMultiplier: 1.0,
-        rateMultiplier,
+        multiplier,
         zoneName: pricingZone?.name,
       }
     );
@@ -1006,15 +1007,9 @@ function RidesInner() {
                       <span className="text-zinc-500">Time (~{estimatedDuration} min)</span>
                       <span className="text-zinc-900">{formatCurrency(currentQuote.timeFee)}</span>
                     </div>
-                    {currentQuote.rideTypeMultiplier !== 1 && (
+                    {currentQuote.multiplier !== 1 && (
                       <div className="flex justify-between text-zinc-400 text-xs">
-                        <span>{selectedOption.name} ({currentQuote.rideTypeMultiplier}x)</span>
-                        <span>applied</span>
-                      </div>
-                    )}
-                    {currentQuote.longTripMultiplier !== 1 && (
-                      <div className="flex justify-between text-blue-500 text-xs">
-                        <span>Long-trip discount ({Math.round((1 - currentQuote.longTripMultiplier) * 100)}% off)</span>
+                        <span>{selectedOption.name} ({currentQuote.multiplier}x)</span>
                         <span>applied</span>
                       </div>
                     )}
