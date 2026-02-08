@@ -1135,15 +1135,26 @@ function RidesInner() {
                 />
               </div>
 
-              {/* Price Breakdown with Promo */}
+              {/* Final Price Only */}
               {currentQuote && (
-                <RidePriceBreakdownWithPromo
-                  quote={currentQuote}
-                  appliedPromo={appliedPromo}
-                  distance={estimatedDistance}
-                  duration={estimatedDuration}
-                  rideTypeName={selectedOption.name}
-                />
+                <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-4 h-4 text-zinc-500" />
+                      <span className="text-sm font-medium text-zinc-700">Total</span>
+                    </div>
+                    <div className="text-right">
+                      {appliedPromo?.valid && appliedPromo.discount_amount ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-zinc-400 line-through">{formatCurrency(currentQuote.total)}</span>
+                          <span className="text-lg font-bold text-emerald-600">{formatCurrency(Math.max(0, currentQuote.total - appliedPromo.discount_amount))}</span>
+                        </div>
+                      ) : (
+                        <span className="text-lg font-bold text-zinc-900">{formatCurrency(currentQuote.total)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
 
             </div>
