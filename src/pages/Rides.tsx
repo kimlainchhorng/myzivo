@@ -23,7 +23,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useIsMobile } from "@/hooks/useMobileSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
 
 import { useServerRoute, ServerRouteData } from "@/hooks/useServerRoute";
@@ -1226,9 +1226,5 @@ function RidesInner() {
 }
 
 export default function Rides() {
-  return (
-    <GoogleMapProvider>
-      <RidesInner />
-    </GoogleMapProvider>
-  );
+  return <RidesInner />;
 }
