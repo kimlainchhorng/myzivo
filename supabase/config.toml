@@ -167,3 +167,15 @@ verify_jwt = false
 
 [functions.create-eats-payment-intent]
 verify_jwt = false
+
+[functions.eats-call-session]
+verify_jwt = true
+
+[functions.eats-call-start]
+verify_jwt = true
+
+[functions.eats-twilio-voice]
+verify_jwt = false
+
+[functions.eats-twilio-status]
+verify_jwt = false

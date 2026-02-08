@@ -2594,36 +2594,48 @@ export type Database = {
       call_sessions: {
         Row: {
           created_at: string
+          customer_phone: string | null
           customer_user_id: string
+          driver_phone: string | null
           driver_user_id: string | null
           expires_at: string | null
           id: string
+          merchant_phone: string | null
           merchant_user_id: string
           order_id: string
           status: string
           twilio_proxy_number: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
+          customer_phone?: string | null
           customer_user_id: string
+          driver_phone?: string | null
           driver_user_id?: string | null
           expires_at?: string | null
           id?: string
+          merchant_phone?: string | null
           merchant_user_id: string
           order_id: string
           status?: string
           twilio_proxy_number: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
+          customer_phone?: string | null
           customer_user_id?: string
+          driver_phone?: string | null
           driver_user_id?: string | null
           expires_at?: string | null
           id?: string
+          merchant_phone?: string | null
           merchant_user_id?: string
           order_id?: string
           status?: string
           twilio_proxy_number?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -22774,8 +22786,10 @@ export type Database = {
           escalated_at: string | null
           escalation_reason: string | null
           first_response_at: string | null
+          food_order_id: string | null
           id: string
           is_escalated: boolean | null
+          is_locked: boolean | null
           last_message_at: string | null
           order_id: string | null
           partner_name: string | null
@@ -22796,6 +22810,7 @@ export type Database = {
           tags: string[] | null
           tenant_id: string | null
           ticket_number: string
+          ticket_type: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -22811,8 +22826,10 @@ export type Database = {
           escalated_at?: string | null
           escalation_reason?: string | null
           first_response_at?: string | null
+          food_order_id?: string | null
           id?: string
           is_escalated?: boolean | null
+          is_locked?: boolean | null
           last_message_at?: string | null
           order_id?: string | null
           partner_name?: string | null
@@ -22833,6 +22850,7 @@ export type Database = {
           tags?: string[] | null
           tenant_id?: string | null
           ticket_number: string
+          ticket_type?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -22848,8 +22866,10 @@ export type Database = {
           escalated_at?: string | null
           escalation_reason?: string | null
           first_response_at?: string | null
+          food_order_id?: string | null
           id?: string
           is_escalated?: boolean | null
+          is_locked?: boolean | null
           last_message_at?: string | null
           order_id?: string | null
           partner_name?: string | null
@@ -22870,6 +22890,7 @@ export type Database = {
           tags?: string[] | null
           tenant_id?: string | null
           ticket_number?: string
+          ticket_type?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -22886,6 +22907,27 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
           {

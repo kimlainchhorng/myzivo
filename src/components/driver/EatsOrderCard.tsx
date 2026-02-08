@@ -8,10 +8,8 @@ import { motion } from "framer-motion";
 import { 
   MapPin, 
   Navigation, 
-  Phone, 
   Package, 
   Clock, 
-  DollarSign,
   CheckCircle2,
   XCircle,
   ChevronDown,
@@ -32,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
 import type { DriverEatsOrder } from "@/hooks/useDriverEatsOrders";
 
 interface EatsOrderCardProps {
@@ -67,12 +66,6 @@ export function EatsOrderCard({
       url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address || "")}`;
     }
     window.open(url, "_blank");
-  };
-
-  // Call phone number
-  const handleCall = (phone: string | null) => {
-    if (!phone) return;
-    window.location.href = `tel:${phone}`;
   };
 
   const getStatusColor = () => {
@@ -161,16 +154,13 @@ export function EatsOrderCard({
                       <Navigation className="w-4 h-4 mr-1" />
                       Navigate
                     </Button>
-                    {order.restaurant?.phone && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-zinc-700"
-                        onClick={() => handleCall(order.restaurant?.phone || null)}
-                      >
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <MaskedCallButton
+                      orderId={order.id}
+                      myRole="driver"
+                      targetRole="merchant"
+                      variant="icon"
+                      size="sm"
+                    />
                   </div>
                 </div>
               )}
@@ -202,16 +192,13 @@ export function EatsOrderCard({
                       <Navigation className="w-4 h-4 mr-1" />
                       Navigate
                     </Button>
-                    {order.customer?.phone && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-zinc-700"
-                        onClick={() => handleCall(order.customer?.phone || null)}
-                      >
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <MaskedCallButton
+                      orderId={order.id}
+                      myRole="driver"
+                      targetRole="customer"
+                      variant="icon"
+                      size="sm"
+                    />
                   </div>
                 )}
               </div>

@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -16,6 +16,7 @@ import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
+import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
 import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
@@ -295,6 +296,7 @@ export default function EatsOrderDetail() {
             <DriverInfoCard
               driver={driver}
               isDelivering={isDelivering}
+              orderId={order.id}
             />
             {/* Chat button for active orders */}
             {order.status !== "delivered" && order.status !== "cancelled" && (
@@ -338,14 +340,22 @@ export default function EatsOrderDetail() {
                 {format(createdAt, "MMM d, yyyy 'at' h:mm a")}
               </p>
             </div>
-            {restaurantPhone && (
+            {/* Masked call to restaurant for active orders */}
+            {order.status !== "delivered" && order.status !== "cancelled" ? (
+              <MaskedCallButton
+                orderId={order.id}
+                myRole="customer"
+                targetRole="merchant"
+                variant="icon"
+              />
+            ) : restaurantPhone ? (
               <a
                 href={`tel:${restaurantPhone}`}
-                className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center"
+                className="w-10 h-10 rounded-full bg-eats/20 flex items-center justify-center"
               >
-                <Phone className="w-4 h-4 text-orange-500" />
+                <UtensilsCrossed className="w-4 h-4 text-eats" />
               </a>
-            )}
+            ) : null}
           </div>
         </motion.div>
 

@@ -2,25 +2,21 @@
  * Driver Info Card Component
  * Shows assigned driver details for food delivery
  */
-import { Phone, Star, Car, Navigation } from "lucide-react";
+import { Star, Car, Navigation } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { EatsDriver } from "@/hooks/useEatsDriver";
 import { motion } from "framer-motion";
+import { MaskedCallButton } from "./MaskedCallButton";
 
 interface DriverInfoCardProps {
   driver: EatsDriver;
   isDelivering: boolean;
+  orderId?: string;
   className?: string;
 }
 
-export function DriverInfoCard({ driver, isDelivering, className }: DriverInfoCardProps) {
-  const handleCall = () => {
-    if (driver.phone) {
-      window.location.href = `tel:${driver.phone}`;
-    }
-  };
+export function DriverInfoCard({ driver, isDelivering, orderId, className }: DriverInfoCardProps) {
 
   const initials = driver.full_name
     ? driver.full_name
@@ -104,15 +100,22 @@ export function DriverInfoCard({ driver, isDelivering, className }: DriverInfoCa
           )}
         </div>
 
-        {/* Call Button */}
-        {driver.phone && (
-          <Button
-            onClick={handleCall}
-            size="icon"
-            className="w-12 h-12 rounded-full bg-orange-500 hover:bg-orange-600 shrink-0"
+        {/* Call Button - use masked if orderId provided, otherwise fallback to tel: */}
+        {orderId ? (
+          <MaskedCallButton
+            orderId={orderId}
+            myRole="customer"
+            targetRole="driver"
+            variant="icon"
+            className="w-12 h-12"
+          />
+        ) : driver.phone && (
+          <a
+            href={`tel:${driver.phone}`}
+            className="w-12 h-12 rounded-full bg-eats hover:bg-eats/90 flex items-center justify-center shrink-0"
           >
-            <Phone className="w-5 h-5 text-white" />
-          </Button>
+            <Navigation className="w-5 h-5 text-white" />
+          </a>
         )}
       </div>
 
