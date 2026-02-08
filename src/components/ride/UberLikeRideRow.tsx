@@ -23,6 +23,8 @@ interface UberLikeRideRowProps {
   surgeMultiplier?: number;
   surgeLevel?: SurgeLevel;
   surgeActive?: boolean;
+  // Real-time pricing indicator
+  showRealTimeIndicator?: boolean;
 }
 
 // Inline SVG car thumbnail (Uber-style, no external assets)
@@ -118,6 +120,7 @@ export function UberLikeRideRow({
   surgeMultiplier,
   surgeLevel,
   surgeActive = false,
+  showRealTimeIndicator = false,
 }: UberLikeRideRowProps) {
   const showSurge = surgeActive && surgeMultiplier && surgeMultiplier > 1.0;
   const isHighSurge = surgeLevel === "High";
@@ -187,6 +190,11 @@ export function UberLikeRideRow({
           )}>
             {price}
           </span>
+          {showRealTimeIndicator && (
+            <span className="text-[10px] text-zinc-400 mt-0.5">
+              Live prices
+            </span>
+          )}
         </div>
       </div>
     </button>

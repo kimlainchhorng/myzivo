@@ -14740,6 +14740,7 @@ export type Database = {
           min_lat: number | null
           min_lng: number | null
           name: string | null
+          priority: number
           state: string | null
         }
         Insert: {
@@ -14753,6 +14754,7 @@ export type Database = {
           min_lat?: number | null
           min_lng?: number | null
           name?: string | null
+          priority?: number
           state?: string | null
         }
         Update: {
@@ -14766,6 +14768,7 @@ export type Database = {
           min_lat?: number | null
           min_lng?: number | null
           name?: string | null
+          priority?: number
           state?: string | null
         }
         Relationships: []
