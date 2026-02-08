@@ -60,9 +60,12 @@
     --cars: 263 70% 50%;
     --cars-light: 263 75% 92%;
 
-    /* Rides - Green */
-    --rides: 142 71% 45%;
-    --rides-light: 142 76% 90%;
+    /* Rides - ZIVO Emerald/Teal Brand */
+    --rides: 160 84% 39%;           /* Emerald-500 */
+    --rides-light: 160 84% 92%;
+    --rides-secondary: 174 72% 40%; /* Teal-500 */
+    --rides-cream: 35 100% 98%;     /* Warm cream background */
+    --rides-surge: 0 76% 71%;       /* Coral for surge */
     
     /* Eats - Red */
     --eats: 0 84% 60%;

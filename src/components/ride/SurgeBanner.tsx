@@ -1,11 +1,11 @@
 /**
- * SurgeBanner - Animated surge pricing notification banner
- * Shows when demand is high in the user's pickup zone
+ * SurgeBanner - ZIVO Brand Surge Pricing Banner
+ * Coral/Rose gradient with premium styling
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, X } from "lucide-react";
+import { TrendingUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SurgeLevel } from "@/lib/surge";
 
@@ -42,9 +42,10 @@ export function SurgeBanner({
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className={cn(
           "rounded-xl p-3 mb-3 relative overflow-hidden",
+          // ZIVO brand: Coral to rose gradient
           isHigh
-            ? "bg-gradient-to-r from-red-50 to-orange-50 border border-red-200"
-            : "bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200",
+            ? "bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200"
+            : "bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200",
           className
         )}
       >
@@ -52,23 +53,25 @@ export function SurgeBanner({
         <motion.div
           className={cn(
             "absolute inset-0 opacity-30",
-            isHigh ? "bg-red-100" : "bg-amber-100"
+            isHigh ? "bg-rose-100" : "bg-orange-100"
           )}
           animate={{ opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
 
         <div className="relative flex items-start gap-3">
-          {/* Lightning icon with pulse */}
+          {/* Trend icon with pulse (ZIVO style) */}
           <motion.div
             className={cn(
               "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center",
-              isHigh ? "bg-red-500" : "bg-amber-500"
+              isHigh 
+                ? "bg-gradient-to-br from-rose-500 to-pink-600" 
+                : "bg-gradient-to-br from-orange-400 to-amber-500"
             )}
-            animate={{ scale: [1, 1.1, 1] }}
+            animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Zap className="w-5 h-5 text-white fill-current" />
+            <TrendingUp className="w-5 h-5 text-white" />
           </motion.div>
 
           {/* Content */}
@@ -77,17 +80,17 @@ export function SurgeBanner({
               <span
                 className={cn(
                   "text-sm font-semibold",
-                  isHigh ? "text-red-800" : "text-amber-800"
+                  isHigh ? "text-rose-800" : "text-orange-800"
                 )}
               >
-                Busy time pricing ×{multiplier.toFixed(1)}
+                High demand pricing ×{multiplier.toFixed(1)}
                 {zoneName && ` near ${zoneName}`}
               </span>
             </div>
             <p
               className={cn(
                 "text-[13px] mt-0.5",
-                isHigh ? "text-red-700" : "text-amber-700"
+                isHigh ? "text-rose-700" : "text-orange-700"
               )}
             >
               Prices are temporarily higher due to increased demand
@@ -100,8 +103,8 @@ export function SurgeBanner({
             className={cn(
               "flex-shrink-0 p-1.5 rounded-full transition-colors",
               isHigh
-                ? "hover:bg-red-200/50 text-red-600"
-                : "hover:bg-amber-200/50 text-amber-600"
+                ? "hover:bg-rose-200/50 text-rose-600"
+                : "hover:bg-orange-200/50 text-orange-600"
             )}
             aria-label="Dismiss surge notice"
           >
@@ -114,8 +117,8 @@ export function SurgeBanner({
           className={cn(
             "absolute top-2 right-10 px-2 py-0.5 rounded-full text-[10px] font-bold",
             isHigh
-              ? "bg-red-500 text-white"
-              : "bg-amber-500 text-white"
+              ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white"
+              : "bg-gradient-to-r from-orange-400 to-amber-500 text-white"
           )}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

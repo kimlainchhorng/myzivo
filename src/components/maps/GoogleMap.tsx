@@ -229,14 +229,14 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
           />
         )}
 
-        {/* Render route with Uber-style dark polyline */}
+        {/* Render route with ZIVO emerald polyline */}
         {directions && (
           <DirectionsRenderer
             directions={directions}
             options={{
               suppressMarkers: true, // We use custom markers
               polylineOptions: {
-                strokeColor: "#111827", // Dark gray like Uber
+                strokeColor: "#10B981", // ZIVO emerald
                 strokeOpacity: 0.9,
                 strokeWeight: 6,
               },

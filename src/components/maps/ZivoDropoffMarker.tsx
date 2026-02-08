@@ -1,7 +1,7 @@
 /**
  * ZivoDropoffMarker Component
  * 
- * Uber-style black square destination marker with pin stem.
+ * ZIVO Brand teal destination pin marker.
  * Uses OverlayViewF from @react-google-maps/api for precise positioning.
  */
 
@@ -18,10 +18,12 @@ export default function ZivoDropoffMarker({ position }: ZivoDropoffMarkerProps) 
         className="flex flex-col items-center -translate-x-1/2 -translate-y-full"
         style={{ zIndex: 90 }}
       >
-        {/* Black square destination marker (Uber style) */}
-        <div className="w-5 h-5 bg-black rounded-sm shadow-lg border-2 border-white" />
-        {/* Pin stem */}
-        <div className="w-0.5 h-3 bg-black" />
+        {/* ZIVO teal destination pin */}
+        <div className="w-6 h-6 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full shadow-lg border-2 border-white flex items-center justify-center">
+          <div className="w-2 h-2 bg-white rounded-full" />
+        </div>
+        {/* Pin stem - teal */}
+        <div className="w-0.5 h-3 bg-teal-600" />
       </div>
     </OverlayViewF>
   );
