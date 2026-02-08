@@ -39,6 +39,10 @@ export interface LiveEatsOrder {
   delivered_at?: string | null;
   assigned_at?: string | null;
   cancelled_at?: string | null;
+  // ETA fields
+  eta_pickup?: string | null;
+  eta_dropoff?: string | null;
+  eta_minutes?: number | null;
   restaurants?: {
     name: string;
     logo_url: string | null;
