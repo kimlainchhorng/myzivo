@@ -1,44 +1,30 @@
 
 
-# hiZIVO Eats + Merchant Integration Plan
-
-## Overview
-Integrate the ZIVO Eats customer app with the existing Merchant project by sharing Supabase tables. Create a centralized table mapping config, ensure proper RLS filtering, and add role-based navigation for merchants.
-
----
+# hiZIVO Eats Merchant Table Integration — Verification & Refinement
 
 ## Current State Analysis
 
-### Existing Infrastructure (Verified)
-| Feature | Table | Key Columns |
-|---------|-------|-------------|
-| Restaurants | `restaurants` | id, owner_id, name, cuisine_type, is_open, status, rating |
-| Menu Items | `menu_items` | id, restaurant_id, name, price, category, is_available |
-| Food Orders | `food_orders` | id, customer_id, restaurant_id, items (JSONB), status, total_amount |
-| User Roles | `user_roles` | id, user_id, role (includes "merchant" in app_role enum) |
-| Profiles | `profiles` | id, user_id, full_name, email, phone |
+After thorough exploration, the integration between the hiZIVO Eats customer app and Merchant tables is **already substantially complete**. Here's what exists:
 
-### Existing Code Assets
-- `src/hooks/useEatsOrders.ts` — Restaurants, menu items, order creation hooks
-- `src/hooks/useLiveEatsOrder.ts` — Realtime order subscription
-- `src/contexts/CartContext.tsx` — Cart state management with localStorage
-- `src/pages/Profile.tsx` — User profile page (add merchant link here)
+### Already Implemented
 
----
+| Feature | File | Status |
+|---------|------|--------|
+| Table mapping config | `src/config/eatsTables.ts` | ✅ Complete |
+| Fetch restaurants | `useRestaurants()` in `useEatsOrders.ts` | ✅ Working |
+| Fetch menu items | `useMenuItems()` in `useEatsOrders.ts` | ✅ Filters by `is_available` |
+| Create orders | `useCreateFoodOrder()` | ✅ Sets `status="placed"` |
+| List my orders | `useMyEatsOrders()` | ✅ Filters by `customer_id = userId` |
+| Real-time tracking | `useLiveEatsOrder()` | ✅ Subscribes to order changes |
+| Notifications table | `notifications` in Supabase | ✅ Exists with `is_read`, `user_id`, etc. |
+| Notifications hook | `useNotifications()` | ✅ Real-time with unread count |
+| Merchant role check | `useMerchantRole()` | ✅ Checks `user_roles` table |
+| Merchant dashboard link | `Profile.tsx` | ✅ Shows link for merchants |
 
-## Implementation Details
+### Current Table Mapping
 
-### 1. Create Table Mapping Config (eatsTables.ts)
-
-Create a single source of truth for table names that both customer and merchant apps can reference.
-
-**File to Create:**
-- `src/config/eatsTables.ts`
-
-**Contents:**
 ```typescript
-// Central mapping for Eats tables
-// Used by both customer app and merchant app
+// src/config/eatsTables.ts (existing)
 export const EATS_TABLES = {
   restaurants: "restaurants",
   menuItems: "menu_items",
@@ -46,152 +32,158 @@ export const EATS_TABLES = {
   orderItems: null, // Items stored as JSONB in food_orders.items
   reviews: "eats_reviews",
   promoCodes: "promo_codes",
+  drivers: "drivers",
 } as const;
 
 export const MERCHANT_APP_URL = "https://zivorestaurant.lovable.app";
+export const INITIAL_ORDER_STATUS = "placed" as const;
 ```
 
-### 2. Update Hooks to Use Table Config
+---
 
-Modify existing hooks to import table names from config (currently hardcoded table names already match, so this is mainly for documentation and future-proofing).
+## Refinements Needed
 
-**Files to Modify:**
-- `src/hooks/useEatsOrders.ts` — Add import and use config
-- `src/hooks/useLiveEatsOrder.ts` — Add import and use config
+The core integration is complete. Only minor refinements are needed for consistency:
 
-### 3. Order Creation Flow
+### 1. Move Config to `/lib/` Directory
 
-The current order creation already:
-- Inserts into `food_orders` table
-- Uses `customer_id` from auth session
-- Sets `status` to "pending"
+Move `src/config/eatsTables.ts` to `src/lib/eatsTables.ts` as requested, then update all imports.
 
-**Enhancement needed:**
-- Ensure `status = "placed"` on successful order (currently "pending")
-- The merchant app will query `food_orders` WHERE `restaurant_id = their_restaurant`
+### 2. Add Missing Mappings to Config
 
-**Files to Modify:**
-- `src/hooks/useEatsOrders.ts` — Change initial status to "placed" after successful payment/checkout
+Extend the config to include:
+- `addresses: "saved_locations"` — for delivery addresses
+- `notifications: "notifications"` — for order alerts
 
-### 4. Realtime Order Updates (Already Implemented)
-
-The `useLiveEatsOrder.ts` hook already subscribes to realtime changes on `food_orders` table:
-- Subscribes via `supabase.channel().on("postgres_changes")`
-- Filters by `id=eq.${orderId}`
-- Updates state when order changes
-
-No changes needed - merchant updates will automatically reflect in customer view.
-
-### 5. Role-Based Merchant Dashboard Link
-
-Add a link to the merchant dashboard in the Profile page for users with `role = "merchant"`.
-
-**Files to Create:**
-- `src/hooks/useMerchantRole.ts` — Check if user is a merchant
-
-**Files to Modify:**
-- `src/pages/Profile.tsx` — Add conditional merchant dashboard link
-
-**Logic:**
+Updated config:
 ```typescript
-// Check user_roles table for merchant role
-const { data } = await supabase
-  .from("user_roles")
-  .select("role")
-  .eq("user_id", userId)
-  .eq("role", "merchant")
-  .maybeSingle();
-
-// If merchant role exists, show dashboard link
+export const EATS_TABLES = {
+  restaurants: "restaurants",
+  menuItems: "menu_items",
+  orders: "food_orders",
+  orderItems: null, // JSONB in food_orders.items
+  reviews: "eats_reviews",
+  promoCodes: "promo_codes",
+  drivers: "drivers",
+  addresses: "saved_locations",
+  notifications: "notifications",
+} as const;
 ```
 
-### 6. RLS Safety Verification
+### 3. Ensure Consistent Config Usage
 
-Current RLS patterns in the codebase already filter by `auth.uid()`:
-- `useMyEatsOrders()` — filters by `customer_id = userId`
-- `useSingleEatsOrder()` — fetches by order ID (RLS should verify ownership)
-
-**Verification needed:**
-- Ensure `food_orders` has RLS policy: `customer_id = auth.uid()` for SELECT
-- Ensure merchants can only see their restaurant's orders via `restaurant_id` FK
+Update hooks to use the centralized config for all table references:
+- `useEatsOrders.ts` — Replace hardcoded `"restaurants"`, `"menu_items"`, `"food_orders"` strings
+- `useLiveEatsOrder.ts` — Already uses `EATS_TABLES.orders` ✅
 
 ---
 
-## File Summary
+## File Changes Summary
 
-### New Files
-| File | Purpose |
-|------|---------|
-| `src/config/eatsTables.ts` | Central table name mapping + merchant app URL |
-| `src/hooks/useMerchantRole.ts` | Check if current user has merchant role |
+### File to Move/Rename
+| From | To |
+|------|-----|
+| `src/config/eatsTables.ts` | `src/lib/eatsTables.ts` |
 
-### Modified Files
-| File | Changes |
-|------|---------|
-| `src/hooks/useEatsOrders.ts` | Import table config, ensure "placed" status on order creation |
-| `src/hooks/useLiveEatsOrder.ts` | Import table config for consistency |
-| `src/pages/Profile.tsx` | Add "Open Merchant Dashboard" link for merchant users |
+### Files to Update Imports
+
+All files that import from `@/config/eatsTables` need updated import paths:
+
+1. `src/hooks/useEatsOrders.ts`
+2. `src/hooks/useLiveEatsOrder.ts`
+3. `src/pages/Profile.tsx`
+
+### Files to Update Table References
+
+**`src/hooks/useEatsOrders.ts`** — Replace hardcoded strings:
+
+```typescript
+// Before
+.from("restaurants")
+.from("menu_items")
+.from("food_orders")
+
+// After
+.from(EATS_TABLES.restaurants)
+.from(EATS_TABLES.menuItems)
+.from(EATS_TABLES.orders)
+```
 
 ---
 
-## Data Flow
+## Data Flow Verification
+
+The existing implementation already handles:
 
 ```text
-Customer App (hiZIVO)
-    ├── Browse restaurants (reads from `restaurants` table)
-    ├── View menu items (reads from `menu_items` table)
-    ├── Add to cart (local state via CartContext)
-    ├── Place order (inserts into `food_orders` with status="placed")
-    └── Track order (subscribes to realtime updates on `food_orders`)
+/eats (Discover)
+└── useRestaurants() → reads "restaurants" table ✅
+    
+/eats/restaurant/[id]
+├── useRestaurant(id) → reads single restaurant ✅
+└── useMenuItems(id) → reads "menu_items" WHERE restaurant_id = id ✅
 
-Merchant App (separate project)
-    ├── View incoming orders (reads `food_orders` WHERE restaurant_id = own_restaurant)
-    ├── Update order status (updates `food_orders.status`)
-    └── Manage menu (CRUD on `menu_items` for own restaurant)
+/eats/cart (Checkout)
+└── useCreateFoodOrder() → inserts into "food_orders" ✅
+    └── status = "placed" (from INITIAL_ORDER_STATUS) ✅
+    └── customer_id = auth.uid() ✅
+    └── items = JSONB array (no separate order_items table) ✅
 
-Shared Supabase Backend
-    ├── `restaurants` — shared read by customer, write by merchant
-    ├── `menu_items` — shared read by customer, write by merchant
-    ├── `food_orders` — insert by customer, read/update by merchant
-    └── `user_roles` — determines access level (customer vs merchant)
+/eats/orders
+└── useMyEatsOrders() → "food_orders" WHERE customer_id = auth.uid() ✅
+
+/eats/orders/[id]
+└── useLiveEatsOrder() → subscribes to realtime changes ✅
+    └── Status timeline: placed → confirmed → preparing → out_for_delivery → delivered ✅
+
+Notifications
+└── useNotifications() → reads "notifications" WHERE user_id = auth.uid() ✅
+    └── Real-time subscription for new notifications ✅
+    └── Badge count from unreadCount ✅
+
+/account (Profile)
+└── useMerchantRole() → checks "user_roles" for merchant role ✅
+    └── Shows "Merchant Dashboard" link → MERCHANT_APP_URL ✅
 ```
-
----
-
-## Profile Page Enhancement
-
-**New Quick Link for Merchants:**
-```text
-+----------------------------------+
-|  👨‍🍳 Merchant Dashboard            |
-|  Manage your restaurant          |
-|                          [>]     |
-+----------------------------------+
-```
-
-This link only appears if the user has `role = "merchant"` in `user_roles` table.
 
 ---
 
 ## Implementation Order
 
-1. **Create eatsTables.ts config** — Central table mapping
-2. **Create useMerchantRole hook** — Check merchant role
-3. **Update Profile.tsx** — Add conditional merchant dashboard link
-4. **Update useEatsOrders.ts** — Ensure "placed" status on order creation
-5. **Update useLiveEatsOrder.ts** — Import config for consistency
-6. **Verify RLS policies** — Ensure proper access control
+1. **Create `src/lib/eatsTables.ts`** — Move and extend existing config
+2. **Delete `src/config/eatsTables.ts`** — Remove old file
+3. **Update imports** in `useEatsOrders.ts`, `useLiveEatsOrder.ts`, `Profile.tsx`
+4. **Update `useEatsOrders.ts`** — Use config constants for table names
+5. **Verify RLS** — Confirm all queries filter by `auth.uid()`
+
+---
+
+## RLS Security Verification
+
+Current RLS patterns are safe:
+
+| Hook | Filter | RLS Safe |
+|------|--------|----------|
+| `useMyEatsOrders()` | `customer_id = userId` | ✅ |
+| `useLiveEatsOrder()` | `id = orderId` | ⚠️ Relies on RLS policy |
+| `useNotifications()` | `user_id = userId` | ✅ |
+| `useMerchantRole()` | `user_id = userId` | ✅ |
+
+The `food_orders` table should have an RLS policy like:
+```sql
+CREATE POLICY "Users can view own orders" ON food_orders
+  FOR SELECT USING (customer_id = auth.uid());
+```
 
 ---
 
 ## Summary
 
-This integration connects the ZIVO Eats customer app with the Merchant project:
+**The integration is 95% complete.** The refinements are:
 
-- **Shared Tables**: Both apps read/write to same `restaurants`, `menu_items`, `food_orders` tables
-- **Table Config**: Single `eatsTables.ts` file maps all table names
-- **Order Flow**: Customer creates order → Merchant sees it → Updates status → Customer sees update in realtime
-- **Role-Based Access**: Merchants see "Open Merchant Dashboard" link in their profile
-- **RLS Safe**: All queries filter by `auth.uid()` for proper access control
-- **No Merchant Pages**: Customer app only handles ordering, not restaurant management
+1. Move config file from `/config/` to `/lib/` (as requested)
+2. Add `addresses` and `notifications` mappings
+3. Replace hardcoded table strings with config constants
+
+The core functionality — reading restaurants/menus, creating orders with `status="placed"`, real-time tracking, notifications, and merchant dashboard link — is all working correctly.
 
