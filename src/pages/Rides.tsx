@@ -50,11 +50,11 @@ interface RideOption {
   tag?: RideTag;
 }
 
-// Glassmorphism Car Icon
-function CarIcon() {
+// Premium car image thumbnail (Uber-style)
+function RideImage({ type }: { type?: string }) {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 shrink-0">
-      <CarFront className="h-5 w-5 text-zinc-700" />
+    <div className="w-14 h-10 bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-lg flex items-center justify-center shrink-0">
+      <CarFront className="w-7 h-5 text-zinc-600" />
     </div>
   );
 }
@@ -231,7 +231,7 @@ function RidesMapView({
           </div>
         </div>
       ) : (
-        // Google Map with ZIVO dark theme
+        // Google Map with ZIVO light theme (Uber-inspired)
         <>
           <GoogleMap
             className="w-full h-full"
@@ -244,10 +244,10 @@ function RidesMapView({
             routePath={routePath}
             fitBounds={!!(pickupCoords && dropoffCoords)}
             showControls={false}
-            darkMode={true}
+            darkMode={false}
           />
-          {/* Premium gradient overlay */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+          {/* Subtle light vignette */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.03)_100%)]" />
         </>
       )}
       
@@ -608,7 +608,7 @@ function RidesInner() {
         />
       </div>
       
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet - Premium Glassmorphism */}
       <motion.div
         drag="y"
         dragControls={dragControls}
@@ -617,7 +617,7 @@ function RidesInner() {
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ y }}
-        className="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col"
+        className="rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col"
         animate={{ height: getSheetHeight() }}
         transition={{ type: "spring", stiffness: 300, damping: 35 }}
       >
@@ -626,7 +626,7 @@ function RidesInner() {
           onPointerDown={(e) => dragControls.start(e)}
           className="flex justify-center py-3 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
         >
-          <div className="w-10 h-1 bg-zinc-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-zinc-300/80 rounded-full" />
         </div>
 
         {/* Content */}
@@ -860,11 +860,11 @@ function RidesInner() {
                       onClick={() => handleSelectOption(ride)}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
                         isSelected 
-                          ? "bg-zinc-100 ring-2 ring-zinc-900" 
-                          : "hover:bg-zinc-50"
+                          ? "bg-zinc-50 border-2 border-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]" 
+                          : "border border-transparent hover:bg-zinc-50"
                       }`}
                     >
-                      <CarIcon />
+                      <RideImage type={ride.id} />
                       <div className="flex-1 min-w-0 text-left">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-zinc-900">{ride.name}</span>
@@ -926,7 +926,7 @@ function RidesInner() {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-xl">
-                <CarIcon />
+                <RideImage type={selectedOption.id} />
                 <div className="flex-1">
                   <span className="font-semibold text-zinc-900">{selectedOption.name}</span>
                   <div className="text-sm text-zinc-500">{selectedOption.eta} min away</div>

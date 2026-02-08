@@ -14,7 +14,7 @@ import ZivoDropoffMarker from "./ZivoDropoffMarker";
 import NearbyCars from "./NearbyCars";
 
 // ZIVO Dark map theme - premium, removes "Google look"
-const ZIVO_MAP_STYLE: google.maps.MapTypeStyle[] = [
+const ZIVO_DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
@@ -25,6 +25,20 @@ const ZIVO_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
+];
+
+// ZIVO Light map theme - Uber-inspired clean look
+const ZIVO_LIGHT_MAP_STYLE: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#f5f6f7" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#111827" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f6f7" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e5e7eb" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#374151" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbeafe" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3b82f6" }] },
 ];
 
 export interface MapMarker {
@@ -101,7 +115,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
 
   // Map options
   const options = useMemo<google.maps.MapOptions>(() => ({
-    styles: darkMode ? ZIVO_MAP_STYLE : undefined,
+    styles: darkMode ? ZIVO_DARK_MAP_STYLE : ZIVO_LIGHT_MAP_STYLE,
     disableDefaultUI: !showControls,
     clickableIcons: false,
     keyboardShortcuts: false,
@@ -258,7 +272,12 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       </GMap>
 
       {/* ZIVO gradient overlay for premium look */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+      <div className={cn(
+        "pointer-events-none absolute inset-0",
+        darkMode 
+          ? "bg-gradient-to-b from-black/20 via-transparent to-black/60"
+          : "bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.04)_100%)]"
+      )} />
     </div>
   );
 });
