@@ -2,15 +2,15 @@ import { useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  EatsOrderStatus,
+  getStatusMessage,
+  normalizeStatus,
+} from "@/lib/orderStatus";
 
-type OrderStatus = "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
-
-const orderStatusMessages: Record<OrderStatus, { title: string; description: string; type: "success" | "info" | "warning" }> = {
-  pending: { title: "Order Placed", description: "Your order is being reviewed", type: "info" },
-  confirmed: { title: "Order Confirmed", description: "Restaurant is preparing your food", type: "success" },
-  in_progress: { title: "Order In Progress", description: "Your order is being prepared", type: "info" },
-  completed: { title: "Order Delivered", description: "Enjoy your meal!", type: "success" },
-  cancelled: { title: "Order Cancelled", description: "Your order has been cancelled", type: "warning" },
+// Helper to get status message using centralized logic
+const getOrderStatusMessage = (status: string) => {
+  return getStatusMessage(normalizeStatus(status));
 };
 
 /**
@@ -34,11 +34,11 @@ export const useCustomerOrdersRealtime = (customerId: string | undefined) => {
         },
         (payload) => {
           if (payload.eventType === "UPDATE") {
-            const newStatus = payload.new.status as OrderStatus;
-            const oldStatus = payload.old?.status as OrderStatus | undefined;
+            const newStatus = payload.new.status as string;
+            const oldStatus = payload.old?.status as string | undefined;
 
             if (newStatus && newStatus !== oldStatus) {
-              const message = orderStatusMessages[newStatus];
+              const message = getOrderStatusMessage(newStatus);
               if (message) {
                 switch (message.type) {
                   case "success":
@@ -93,8 +93,8 @@ export const useRestaurantOrdersRealtime = (restaurantId: string | undefined) =>
               duration: 10000,
             });
           } else if (payload.eventType === "UPDATE") {
-            const newStatus = payload.new.status as OrderStatus;
-            if (newStatus === "cancelled") {
+            const newStatus = normalizeStatus(payload.new.status as string);
+            if (newStatus === EatsOrderStatus.CANCELLED) {
               toast.warning("Order Cancelled", { description: "An order was cancelled" });
             }
           }
