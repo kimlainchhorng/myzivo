@@ -214,11 +214,11 @@ function RidesMapView({
         </>
       )}
       
-      {/* Floating Pickup Card - Top Left */}
+      {/* Floating Pickup Card - Top Right */}
       {pickup && (
         <button
           onClick={onPickupClick}
-          className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+          className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
         >
           <div className="bg-zinc-900 text-white px-2 py-1.5 rounded text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[40px]">
             <div>{etaMinutes ? `${etaMinutes}-${etaMinutes + 10}` : "5-10"}</div>
