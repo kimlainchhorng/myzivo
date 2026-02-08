@@ -96,6 +96,8 @@ const EatsOrders = lazy(() => import("./pages/EatsOrders"));
 const EatsOrderDetail = lazy(() => import("./pages/EatsOrderDetail"));
 const EatsAddress = lazy(() => import("./pages/EatsAddress"));
 const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
+const EatsAlerts = lazy(() => import("./pages/EatsAlerts"));
+const EatsFavorites = lazy(() => import("./pages/EatsFavorites"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -578,6 +580,8 @@ const App = () => (
                 <Route path="/eats/orders" element={<EatsOrders />} />
                 <Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
                 <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
+                <Route path="/eats/alerts" element={<EatsAlerts />} />
+                <Route path="/eats/favorites" element={<EatsFavorites />} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />

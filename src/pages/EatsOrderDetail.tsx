@@ -4,21 +4,52 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { HelpModal } from "@/components/eats/HelpModal";
+import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function EatsOrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { order, loading, error } = useLiveEatsOrder(id);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const { clearCart, addItem } = useCart();
+
+  // Order Again handler
+  const handleOrderAgain = () => {
+    if (!order) return;
+
+    // Clear current cart
+    clearCart();
+
+    // Rebuild cart from order items
+    const orderItems = (order.items as any[]) || [];
+    const restaurantName = order.restaurants?.name || "Restaurant";
+
+    orderItems.forEach((item) => {
+      addItem({
+        id: item.menu_item_id,
+        restaurantId: order.restaurant_id,
+        restaurantName,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        notes: item.notes,
+        imageUrl: item.imageUrl,
+      });
+    });
+
+    toast.success("Items added to cart!");
+    navigate("/eats/cart");
+  };
 
   // Loading state
   if (loading) {
@@ -281,11 +312,28 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
+        {/* Order Again Button */}
+        {(order.status === "delivered" || order.status === "cancelled") && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Button
+              onClick={handleOrderAgain}
+              className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Order Again
+            </Button>
+          </motion.div>
+        )}
+
         {/* Help Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.35 }}
         >
           <Button
             variant="outline"

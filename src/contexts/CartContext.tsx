@@ -11,6 +11,15 @@ export interface CartItem {
   notes?: string;
 }
 
+interface OrderItem {
+  menu_item_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  notes?: string;
+  imageUrl?: string;
+}
+
 interface CartContextType {
   items: CartItem[];
   deliveryAddress: string;
@@ -22,6 +31,11 @@ interface CartContextType {
   getItemCount: () => number;
   getSubtotal: () => number;
   getRestaurantId: () => string | null;
+  rebuildFromOrder: (order: {
+    restaurant_id: string;
+    restaurants?: { name: string } | null;
+    items: OrderItem[];
+  }) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -115,6 +129,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.length > 0 ? items[0].restaurantId : null;
   }, [items]);
 
+  // Rebuild cart from a previous order (Order Again feature)
+  const rebuildFromOrder = useCallback(
+    (order: {
+      restaurant_id: string;
+      restaurants?: { name: string } | null;
+      items: OrderItem[];
+    }) => {
+      // Clear current cart
+      setItems([]);
+
+      // Rebuild from order items
+      const restaurantName = order.restaurants?.name || "Restaurant";
+      const newItems: CartItem[] = order.items.map((item) => ({
+        id: item.menu_item_id,
+        restaurantId: order.restaurant_id,
+        restaurantName,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        notes: item.notes,
+        imageUrl: item.imageUrl,
+      }));
+
+      setItems(newItems);
+    },
+    []
+  );
+
   return (
     <CartContext.Provider
       value={{
@@ -128,6 +170,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         getItemCount,
         getSubtotal,
         getRestaurantId,
+        rebuildFromOrder,
       }}
     >
       {children}
