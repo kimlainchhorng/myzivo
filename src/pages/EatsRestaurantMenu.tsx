@@ -204,6 +204,9 @@ function EatsRestaurantMenuContent() {
   const isLoading = restaurantLoading || menuLoading;
   const cartCount = getItemCount();
   const subtotal = getSubtotal();
+  
+  // Check if restaurant is closed
+  const isClosed = restaurant && restaurant.is_open === false;
 
   // Group menu items by category
   const categories = menuItems?.reduce((acc, item) => {
@@ -304,10 +307,22 @@ function EatsRestaurantMenuContent() {
                 </div>
               </div>
 
-              {restaurant.is_open !== false && (
+              {restaurant.is_open === false ? (
+                <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 self-start">
+                  Closed
+                </Badge>
+              ) : (
                 <Badge className="bg-emerald-500 self-start">Open Now</Badge>
               )}
             </div>
+            
+            {/* Closed Banner */}
+            {isClosed && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mt-4">
+                <p className="font-bold text-red-400">This restaurant is currently closed</p>
+                <p className="text-sm text-zinc-400 mt-1">Check back later for opening hours</p>
+              </div>
+            )}
           </div>
 
           {/* Menu */}

@@ -1,13 +1,15 @@
 /**
  * ZIVO Eats — Order Detail Page
- * Shows order status timeline and details
+ * Real-time status updates with Supabase subscription
  */
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSingleEatsOrder } from "@/hooks/useEatsOrders";
+import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
+import { HelpModal } from "@/components/eats/HelpModal";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -15,10 +17,11 @@ import { motion } from "framer-motion";
 export default function EatsOrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { data: order, isLoading, error } = useSingleEatsOrder(id);
+  const { order, loading, error } = useLiveEatsOrder(id);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
 
   // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white">
         <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
@@ -56,10 +59,32 @@ export default function EatsOrderDetail() {
     );
   }
 
-  const restaurantName = (order.restaurants as any)?.name || "Restaurant";
-  const restaurantPhone = (order.restaurants as any)?.phone;
+  const restaurantName = order.restaurants?.name || "Restaurant";
+  const restaurantPhone = order.restaurants?.phone;
   const items = (order.items as any[]) || [];
   const createdAt = new Date(order.created_at);
+
+  // Get status-specific messaging
+  const getStatusMessage = () => {
+    switch (order.status) {
+      case "pending":
+        return "Waiting for restaurant confirmation...";
+      case "confirmed":
+        return "Restaurant is preparing your order";
+      case "preparing":
+        return "Your food is being prepared";
+      case "ready":
+        return "Order ready for pickup";
+      case "out_for_delivery":
+        return "Driver is on the way!";
+      case "delivered":
+        return "Order delivered. Enjoy!";
+      case "cancelled":
+        return "Order was cancelled";
+      default:
+        return "Processing your order...";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
@@ -81,11 +106,53 @@ export default function EatsOrderDetail() {
             <h1 className="font-bold text-lg">Order Details</h1>
             <p className="text-xs text-zinc-500">#{order.id.slice(0, 8).toUpperCase()}</p>
           </div>
-          <div className="w-10" />
+          <button
+            onClick={() => setHelpModalOpen(true)}
+            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
       <div className="px-6 py-6 space-y-6">
+        {/* Live Status Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`p-4 rounded-2xl border ${
+            order.status === "delivered" 
+              ? "bg-emerald-500/10 border-emerald-500/30" 
+              : order.status === "cancelled"
+              ? "bg-red-500/10 border-red-500/30"
+              : "bg-orange-500/10 border-orange-500/30"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${
+              order.status === "delivered" 
+                ? "bg-emerald-500" 
+                : order.status === "cancelled"
+                ? "bg-red-500"
+                : "bg-orange-500 animate-pulse"
+            }`} />
+            <div>
+              <p className={`font-bold text-sm ${
+                order.status === "delivered" 
+                  ? "text-emerald-400" 
+                  : order.status === "cancelled"
+                  ? "text-red-400"
+                  : "text-orange-400"
+              }`}>
+                {getStatusMessage()}
+              </p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                {order.status !== "delivered" && order.status !== "cancelled" && "Updates in real-time"}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Status Timeline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -188,6 +255,14 @@ export default function EatsOrderDetail() {
             <span className="text-zinc-400">Subtotal</span>
             <span>${order.subtotal?.toFixed(2) || "0.00"}</span>
           </div>
+          
+          {order.discount_amount && order.discount_amount > 0 && (
+            <div className="flex justify-between text-sm text-emerald-400">
+              <span>Discount {order.promo_code && `(${order.promo_code})`}</span>
+              <span>-${order.discount_amount.toFixed(2)}</span>
+            </div>
+          )}
+          
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Delivery Fee</span>
             <span>${order.delivery_fee?.toFixed(2) || "0.00"}</span>
@@ -206,7 +281,7 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
-        {/* Support Button */}
+        {/* Help Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -215,12 +290,21 @@ export default function EatsOrderDetail() {
           <Button
             variant="outline"
             className="w-full h-12 rounded-xl border-zinc-700 bg-zinc-900 text-white"
-            onClick={() => navigate("/support")}
+            onClick={() => setHelpModalOpen(true)}
           >
+            <HelpCircle className="w-4 h-4 mr-2" />
             Need Help with this Order?
           </Button>
         </motion.div>
       </div>
+
+      {/* Help Modal */}
+      <HelpModal
+        open={helpModalOpen}
+        onOpenChange={setHelpModalOpen}
+        orderId={order.id}
+        restaurantPhone={restaurantPhone}
+      />
     </div>
   );
 }

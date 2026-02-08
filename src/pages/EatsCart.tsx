@@ -1,25 +1,126 @@
 /**
- * ZIVO Eats — Cart Page
- * Dark glass UI with price breakdown
+ * ZIVO Eats — Enhanced Cart Page
+ * Full checkout flow with address, promo, payment
  */
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/contexts/CartContext";
+import { AddressSelector } from "@/components/eats/AddressSelector";
+import { PromoCodeInput } from "@/components/eats/PromoCodeInput";
+import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/components/eats/PaymentMethodModal";
+import { useEatsPromo } from "@/hooks/useEatsPromo";
+import { useSavedLocations, type SavedLocation } from "@/hooks/useSavedLocations";
+import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
+import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 function EatsCartContent() {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeItem, getSubtotal, clearCart } = useCart();
+  const { items, updateQuantity, removeItem, getSubtotal, clearCart, deliveryAddress, setDeliveryAddress } = useCart();
 
+  // State
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [selectedAddress, setSelectedAddress] = useState<SavedLocation | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>({
+    id: "pm_1",
+    type: "card",
+    brand: "Visa",
+    last4: "4242",
+    isDefault: true,
+  });
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Hooks
+  const { data: addresses } = useSavedLocations(userId);
+  const promo = useEatsPromo();
+  const createOrder = useCreateFoodOrder();
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id);
+    });
+  }, []);
+
+  // Set default address
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddress) {
+      const defaultAddr = addresses.find(a => a.icon === "default") || addresses[0];
+      setSelectedAddress(defaultAddr);
+      setDeliveryAddress(defaultAddr.address);
+    }
+  }, [addresses, selectedAddress, setDeliveryAddress]);
+
+  // Recalculate promo when subtotal changes
   const subtotal = getSubtotal();
+  useEffect(() => {
+    promo.recalculateDiscount(subtotal);
+  }, [subtotal]);
+
+  // Price calculations
   const deliveryFee = 3.99;
-  const serviceFee = subtotal * 0.05; // 5% service fee
-  const tax = subtotal * 0.08; // 8% tax
-  const total = subtotal + deliveryFee + serviceFee + tax;
+  const serviceFee = subtotal * 0.05;
+  const tax = (subtotal - promo.discountAmount) * 0.08;
+  const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax;
 
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
+  const restaurantId = items.length > 0 ? items[0].restaurantId : "";
+
+  // Handle promo apply
+  const handleApplyPromo = async (code: string) => {
+    return promo.applyPromo(code, subtotal);
+  };
+
+  // Handle order submission
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address");
+      return;
+    }
+
+    if (!selectedPayment) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const orderItems = items.map(item => ({
+        menu_item_id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        notes: item.notes,
+      }));
+
+      const order = await createOrder.mutateAsync({
+        customer_name: "Customer", // Would come from profile
+        customer_phone: "", // Would come from profile
+        customer_email: "", // Would come from profile
+        delivery_address: selectedAddress.address,
+        preferred_time: "asap",
+        restaurant_id: restaurantId,
+        items: orderItems,
+        subtotal,
+        delivery_fee: deliveryFee,
+        total: total,
+      });
+
+      clearCart();
+      toast.success("Order placed successfully!");
+      navigate(`/eats/orders/${order.id}`);
+    } catch (error) {
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Empty cart
   if (items.length === 0) {
@@ -62,7 +163,7 @@ function EatsCartContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-40">
+    <div className="min-h-screen bg-zinc-950 text-white pb-48">
       <SEOHead title="Cart — ZIVO Eats" description="Review your food order" />
       
       {/* Header */}
@@ -97,74 +198,101 @@ function EatsCartContent() {
         </div>
       </div>
 
-      {/* Cart Items */}
       <div className="px-6 py-4 space-y-4">
-        {items.map((item) => (
-          <motion.div
-            key={item.id}
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-4"
-          >
-            <div className="flex gap-4">
-              {/* Image */}
-              <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                ) : (
-                  <UtensilsCrossed className="w-6 h-6 text-orange-500/30" />
-                )}
-              </div>
+        {/* Delivery Address */}
+        <AddressSelector selectedAddress={selectedAddress} />
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-sm line-clamp-1">{item.name}</h3>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="text-zinc-500 hover:text-red-400 transition-colors p-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+        {/* Cart Items */}
+        <div className="space-y-3">
+          {items.map((item) => (
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-4"
+            >
+              <div className="flex gap-4">
+                {/* Image */}
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <UtensilsCrossed className="w-5 h-5 text-orange-500/30" />
+                  )}
                 </div>
-                {item.notes && (
-                  <p className="text-xs text-zinc-500 mt-1">{item.notes}</p>
-                )}
-                <div className="flex items-center justify-between mt-3">
-                  <span className="font-bold text-orange-400">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </span>
-                  <div className="flex items-center gap-3">
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-sm line-clamp-1">{item.name}</h3>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center"
+                      onClick={() => removeItem(item.id)}
+                      className="text-zinc-500 hover:text-red-400 transition-colors p-1"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                    <span className="w-6 text-center font-bold">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                  </div>
+                  {item.notes && (
+                    <p className="text-xs text-zinc-500 mt-1">{item.notes}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-bold text-orange-400">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="w-7 h-7 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="w-5 text-center font-bold text-sm">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="w-7 h-7 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
 
-      {/* Price Breakdown */}
-      <div className="px-6 py-4">
+        {/* Promo Code */}
+        <PromoCodeInput
+          appliedPromo={promo.promoCode}
+          discountAmount={promo.discountAmount}
+          isValidating={promo.isValidating}
+          error={promo.error}
+          onApply={handleApplyPromo}
+          onClear={promo.clearPromo}
+        />
+
+        {/* Payment Method */}
+        <PaymentMethodDisplay
+          selectedMethod={selectedPayment}
+          onClick={() => setPaymentModalOpen(true)}
+        />
+
+        {/* Price Breakdown */}
         <div className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Subtotal</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
+          
+          {promo.discountAmount > 0 && (
+            <div className="flex justify-between text-sm text-emerald-400">
+              <span>Discount ({promo.promoCode?.code})</span>
+              <span>-${promo.discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Delivery Fee</span>
             <span>${deliveryFee.toFixed(2)}</span>
@@ -189,12 +317,25 @@ function EatsCartContent() {
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-zinc-950 via-zinc-950 to-transparent">
         <Button
-          onClick={() => navigate("/eats/checkout")}
-          className="w-full h-14 rounded-2xl font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-xl shadow-orange-500/20"
+          onClick={handlePlaceOrder}
+          disabled={isSubmitting || !selectedAddress}
+          className="w-full h-14 rounded-2xl font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-xl shadow-orange-500/20 disabled:opacity-50"
         >
-          Proceed to Checkout · ${total.toFixed(2)}
+          {isSubmitting ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            `Place Order · $${total.toFixed(2)}`
+          )}
         </Button>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentMethodModal
+        open={paymentModalOpen}
+        onOpenChange={setPaymentModalOpen}
+        selectedMethodId={selectedPayment?.id || null}
+        onSelect={setSelectedPayment}
+      />
     </div>
   );
 }
