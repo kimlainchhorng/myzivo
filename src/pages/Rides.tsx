@@ -706,7 +706,8 @@ function RidesInner() {
             handleReset();
           }
         }}
-        className="absolute top-4 left-4 z-50 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
+        className="absolute top-4 left-4 z-[60] w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
+        style={{ pointerEvents: 'auto' }}
       >
         <ChevronLeft className="w-5 h-5 text-zinc-700" />
       </button>
