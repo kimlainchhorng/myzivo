@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { DollarSign, MapPin, Shield, Palette, Save, Loader2, UserPlus } from "lucide-react";
+import { DollarSign, MapPin, Shield, Palette, Save, Loader2, UserPlus, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -140,41 +140,23 @@ const SettingsHub = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Driver & Delivery</CardTitle>
-              <CardDescription>Commission and fee structure for rides and deliveries</CardDescription>
+              <CardTitle>Zone Pricing Rates</CardTitle>
+              <CardDescription>Manage ride pricing by geographic zone</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="driverCommission">Driver Commission (%)</Label>
-                  <Input
-                    id="driverCommission"
-                    type="number"
-                    value={fees.driverCommission}
-                    onChange={(e) => setFees({ ...fees, driverCommission: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Percentage taken from each ride fare
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg border">
+                <div>
+                  <p className="font-medium">Zone-Based Pricing</p>
+                  <p className="text-sm text-muted-foreground">
+                    Configure base fare, per-mile, per-minute rates by zone
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryFee">Base Delivery Fee ($)</Label>
-                  <Input
-                    id="deliveryFee"
-                    type="number"
-                    value={fees.deliveryFee}
-                    onChange={(e) => setFees({ ...fees, deliveryFee: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryCommission">Delivery Commission (%)</Label>
-                  <Input
-                    id="deliveryCommission"
-                    type="number"
-                    value={fees.deliveryCommission}
-                    onChange={(e) => setFees({ ...fees, deliveryCommission: e.target.value })}
-                  />
-                </div>
+                <Button asChild>
+                  <Link to="/admin/zone-pricing">
+                    <Calculator className="mr-2 h-4 w-4" />
+                    Manage Rates
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
