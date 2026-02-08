@@ -668,7 +668,7 @@ function RidesInner() {
           dropoffCoords={dropoffCoords}
           pickup={pickup}
           dropoff={dropoff}
-          etaMinutes={routeData?.duration ? Math.round(routeData.duration) : undefined}
+          etaMinutes={selectedOption?.eta ?? (routeData?.duration ? Math.round(routeData.duration) : undefined)}
           routeData={routeData}
           onLocateMe={handleUseCurrentLocation}
         />

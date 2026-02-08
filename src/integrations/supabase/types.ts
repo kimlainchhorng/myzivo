@@ -14587,6 +14587,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean | null
+          is_default: boolean | null
           max_lat: number | null
           max_lng: number | null
           min_lat: number | null
@@ -14599,6 +14600,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_default?: boolean | null
           max_lat?: number | null
           max_lng?: number | null
           min_lat?: number | null
@@ -14611,6 +14613,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_default?: boolean | null
           max_lat?: number | null
           max_lng?: number | null
           min_lat?: number | null
@@ -26260,6 +26263,7 @@ export type Database = {
         Args: { p_policy_type: string }
         Returns: string
       }
+      get_default_pricing_zone_id: { Args: never; Returns: string }
       get_delivered_order_for_rating: {
         Args: { p_tracking_code: string }
         Returns: {
