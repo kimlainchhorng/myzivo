@@ -27263,19 +27263,34 @@ export type Database = {
         Args: { p_notes?: string; p_order_ids: string[]; p_region_id?: string }
         Returns: string
       }
-      create_driver_on_signup: {
-        Args: {
-          p_email: string
-          p_full_name: string
-          p_license_number: string
-          p_phone: string
-          p_user_id: string
-          p_vehicle_model?: string
-          p_vehicle_plate: string
-          p_vehicle_type: string
-        }
-        Returns: string
-      }
+      create_driver_on_signup:
+        | {
+            Args: {
+              p_email: string
+              p_full_name: string
+              p_license_number: string
+              p_phone: string
+              p_user_id: string
+              p_vehicle_model?: string
+              p_vehicle_plate: string
+              p_vehicle_type: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_email: string
+              p_full_name: string
+              p_license_number: string
+              p_phone: string
+              p_referral_code?: string
+              p_user_id: string
+              p_vehicle_model?: string
+              p_vehicle_plate: string
+              p_vehicle_type: string
+            }
+            Returns: string
+          }
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
