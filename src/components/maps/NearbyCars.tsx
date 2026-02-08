@@ -18,25 +18,29 @@ interface CarPosition extends google.maps.LatLngLiteral {
   rot: number;
 }
 
-// Top-down car SVG icon
+// Uber-style white car SVG with shadow
 function CarSvg({ rotation }: { rotation: number }) {
   return (
     <svg 
-      width="20" 
-      height="28" 
-      viewBox="0 0 20 28" 
-      style={{ transform: `rotate(${rotation}deg)` }}
-      className="drop-shadow-md"
+      width="24" 
+      height="36" 
+      viewBox="0 0 24 36" 
+      style={{ 
+        transform: `rotate(${rotation}deg)`,
+        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))"
+      }}
     >
-      {/* Car body */}
-      <rect x="4" y="2" width="12" height="24" rx="3" fill="#1a1a1a" />
+      {/* Shadow base */}
+      <ellipse cx="12" cy="34" rx="8" ry="2" fill="rgba(0,0,0,0.15)" />
+      {/* Car body - white like Uber */}
+      <rect x="4" y="4" width="16" height="26" rx="5" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" />
       {/* Front windshield */}
-      <rect x="5" y="4" width="10" height="6" rx="1" fill="#4a4a4a" />
+      <rect x="6" y="8" width="12" height="7" rx="2" fill="#94a3b8" />
       {/* Rear window */}
-      <rect x="5" y="18" width="10" height="4" rx="1" fill="#4a4a4a" />
+      <rect x="6" y="22" width="12" height="5" rx="1.5" fill="#94a3b8" />
       {/* Headlights */}
-      <rect x="5" y="2" width="3" height="1.5" rx="0.5" fill="#fef08a" />
-      <rect x="12" y="2" width="3" height="1.5" rx="0.5" fill="#fef08a" />
+      <rect x="6" y="4" width="4" height="2" rx="1" fill="#fef08a" />
+      <rect x="14" y="4" width="4" height="2" rx="1" fill="#fef08a" />
     </svg>
   );
 }
@@ -124,7 +128,7 @@ export default function NearbyCars({
           mapPaneName={OverlayView.OVERLAY_LAYER}
         >
           <div 
-            className="-translate-x-1/2 -translate-y-1/2 transition-transform duration-1000 ease-out"
+            className="-translate-x-1/2 -translate-y-1/2 transition-all duration-[1800ms] ease-out"
             style={{ zIndex: 50 }}
           >
             <CarSvg rotation={car.rot} />
