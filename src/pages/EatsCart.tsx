@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats — Enhanced Cart Page
- * Full checkout flow with address, promo, payment, tip
+ * Full checkout flow with address, promo, payment, tip, and ZIVO+ discounts
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,9 +11,11 @@ import { AddressSelector } from "@/components/eats/AddressSelector";
 import { PromoCodeInput } from "@/components/eats/PromoCodeInput";
 import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/components/eats/PaymentMethodModal";
 import { TipSelector } from "@/components/eats/TipSelector";
+import { MembershipSavingsBadge } from "@/components/membership/MembershipSavingsBadge";
 import { useEatsPromo } from "@/hooks/useEatsPromo";
 import { useSavedLocations, type SavedLocation } from "@/hooks/useSavedLocations";
 import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
+import { useMembership, calculateMembershipSavings } from "@/hooks/useMembership";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
@@ -41,6 +43,7 @@ function EatsCartContent() {
   const { data: addresses } = useSavedLocations(userId);
   const promo = useEatsPromo();
   const createOrder = useCreateFoodOrder();
+  const { membership, isActive: isMember } = useMembership();
 
   // Get current user
   useEffect(() => {
@@ -65,8 +68,20 @@ function EatsCartContent() {
   }, [subtotal]);
 
   // Price calculations
-  const deliveryFee = 3.99;
-  const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
+  const deliveryFeeBase = 3.99;
+  const serviceFeeBase = Math.round(subtotal * 0.05 * 100) / 100;
+  
+  // Calculate membership savings
+  const membershipSavings = useMemo(() => {
+    if (!isMember || !membership?.plan) {
+      return { deliverySavings: 0, serviceSavings: 0, total: 0 };
+    }
+    return calculateMembershipSavings(membership.plan, subtotal, deliveryFeeBase, serviceFeeBase);
+  }, [isMember, membership, subtotal, deliveryFeeBase, serviceFeeBase]);
+
+  // Apply membership discounts
+  const deliveryFee = Math.max(0, deliveryFeeBase - membershipSavings.deliverySavings);
+  const serviceFee = Math.max(0, serviceFeeBase - membershipSavings.serviceSavings);
   const tax = Math.round((subtotal - promo.discountAmount) * 0.08 * 100) / 100;
   const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax + tipAmount;
 
@@ -115,6 +130,9 @@ function EatsCartContent() {
         tax: tax,
         tip_amount: tipAmount,
         total: total,
+        // Membership tracking
+        membership_applied: isMember,
+        membership_discount_cents: Math.round(membershipSavings.total * 100),
       });
 
       clearCart();
@@ -291,7 +309,10 @@ function EatsCartContent() {
           onTipChange={setTipAmount}
         />
 
-        {/* Price Breakdown */}
+        {/* ZIVO+ Membership Savings Badge */}
+        {isMember && membershipSavings.total > 0 && (
+          <MembershipSavingsBadge totalSavings={membershipSavings.total} />
+        )}
         <div className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Subtotal</span>

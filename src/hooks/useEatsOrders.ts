@@ -59,6 +59,9 @@ export interface CreateFoodOrderInput {
   tax?: number;
   tip_amount?: number;
   total: number;
+  // Membership fields
+  membership_applied?: boolean;
+  membership_discount_cents?: number;
 }
 
 // Fetch all active restaurants (including closed ones for display)
@@ -207,6 +210,9 @@ export function useCreateFoodOrder() {
             ? `${input.delivery_instructions}\n\n---\nCustomer Info: ${customerInfo}`
             : `Customer Info: ${customerInfo}`,
           status: INITIAL_ORDER_STATUS as BookingStatus,
+          // Membership tracking
+          membership_applied: input.membership_applied || false,
+          membership_discount_cents: input.membership_discount_cents || 0,
         })
         .select()
         .single();
