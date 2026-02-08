@@ -23,6 +23,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useIsMobile } from "@/hooks/useMobileSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
 
@@ -691,11 +692,12 @@ function RidesInner() {
         description="Book a ride with ZIVO. Fast, reliable, and safe rides with verified drivers."
       />
       
-      {/* Back button - always visible */}
+      {/* Back button - steps back within ride flow only, hidden on first step */}
       <button
         onClick={() => {
           if (step === "request") {
-            navigate(-1); // Go back to previous page
+            // Do nothing - we don't leave /rides
+            return;
           } else if (step === "options") {
             setStep("request");
           } else if (step === "confirm") {
@@ -706,24 +708,30 @@ function RidesInner() {
             handleReset();
           }
         }}
-        className="absolute top-4 left-4 z-[60] w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
-        style={{ pointerEvents: 'auto' }}
+        className={cn(
+          "absolute top-4 left-4 z-[60] w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform",
+          step === "request" && "opacity-0 pointer-events-none"
+        )}
+        style={{ pointerEvents: step === "request" ? 'none' : 'auto' }}
+        aria-hidden={step === "request"}
       >
         <ChevronLeft className="w-5 h-5 text-zinc-700" />
       </button>
       
-      {/* Full-height Map - Takes remaining space above sheet */}
-      <div className="absolute inset-0">
-        <RidesMapView
-          userLocation={userLocation}
-          pickupCoords={pickupCoords}
-          dropoffCoords={dropoffCoords}
-          pickup={pickup}
-          dropoff={dropoff}
-          etaMinutes={selectedOption?.eta ?? (routeData?.duration ? Math.round(routeData.duration) : undefined)}
-          routeData={routeData}
-          onLocateMe={handleUseCurrentLocation}
-        />
+      {/* Full-height Map - pointer-events-none wrapper allows back button clicks */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="w-full h-full pointer-events-auto">
+          <RidesMapView
+            userLocation={userLocation}
+            pickupCoords={pickupCoords}
+            dropoffCoords={dropoffCoords}
+            pickup={pickup}
+            dropoff={dropoff}
+            etaMinutes={selectedOption?.eta ?? (routeData?.duration ? Math.round(routeData.duration) : undefined)}
+            routeData={routeData}
+            onLocateMe={handleUseCurrentLocation}
+          />
+        </div>
       </div>
       
       {/* Bottom Sheet - Fixed positioning with CSS-based heights */}
