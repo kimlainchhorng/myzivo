@@ -17,13 +17,13 @@ export interface ZonePricingRate {
   multiplier: number;
 }
 
-// Default rates when no zone-specific rates exist
+// Default rates when no zone-specific rates exist - competitive with Uber/Lyft
 export const DEFAULT_ZONE_RATES: Omit<ZonePricingRate, "id" | "zone_id" | "ride_type"> = {
-  base_fare: 3.50,
-  per_mile: 1.75,
-  per_minute: 0.35,
-  booking_fee: 2.50,
-  minimum_fare: 7.00,
+  base_fare: 1.99,
+  per_mile: 0.89,
+  per_minute: 0.18,
+  booking_fee: 0.75,
+  minimum_fare: 4.99,
   multiplier: 1.0,
 };
 

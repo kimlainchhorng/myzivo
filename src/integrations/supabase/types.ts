@@ -4421,6 +4421,156 @@ export type Database = {
         }
         Relationships: []
       }
+      dispute_cases: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          dispute_id: string
+          due_by: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          dispute_id: string
+          due_by?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          dispute_id?: string
+          due_by?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_cases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispute_evidence_fields: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          delivery_date: string | null
+          dispute_id: string
+          product_description: string | null
+          refund_policy: string | null
+          service_date: string | null
+          shipping_address: string | null
+          tracking_number: string | null
+          uncategorized_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivery_date?: string | null
+          dispute_id: string
+          product_description?: string | null
+          refund_policy?: string | null
+          service_date?: string | null
+          shipping_address?: string | null
+          tracking_number?: string | null
+          uncategorized_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivery_date?: string | null
+          dispute_id?: string
+          product_description?: string | null
+          refund_policy?: string | null
+          service_date?: string | null
+          shipping_address?: string | null
+          tracking_number?: string | null
+          uncategorized_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dispute_evidence_files: {
+        Row: {
+          created_at: string
+          dispute_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          mime_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          dispute_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          mime_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          dispute_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          mime_type?: string | null
+        }
+        Relationships: []
+      }
+      dispute_reminders: {
+        Row: {
+          created_at: string
+          dispute_id: string
+          id: string
+          remind_at: string
+          sent: boolean
+        }
+        Insert: {
+          created_at?: string
+          dispute_id: string
+          id?: string
+          remind_at: string
+          sent?: boolean
+        }
+        Update: {
+          created_at?: string
+          dispute_id?: string
+          id?: string
+          remind_at?: string
+          sent?: boolean
+        }
+        Relationships: []
+      }
       dr_active_incidents: {
         Row: {
           affected_services: string[] | null
