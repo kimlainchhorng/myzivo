@@ -5052,64 +5052,6 @@ export type Database = {
         }
         Relationships: []
       }
-      driver_bonus_history: {
-        Row: {
-          bonus_amount: number
-          bonus_date: string
-          bonus_type: string
-          created_at: string | null
-          credited: boolean | null
-          driver_id: string
-          goal_id: string | null
-          id: string
-          notes: string | null
-        }
-        Insert: {
-          bonus_amount: number
-          bonus_date?: string
-          bonus_type: string
-          created_at?: string | null
-          credited?: boolean | null
-          driver_id: string
-          goal_id?: string | null
-          id?: string
-          notes?: string | null
-        }
-        Update: {
-          bonus_amount?: number
-          bonus_date?: string
-          bonus_type?: string
-          created_at?: string | null
-          credited?: boolean | null
-          driver_id?: string
-          goal_id?: string | null
-          id?: string
-          notes?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "driver_bonus_history_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "driver_bonus_history_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "driver_bonus_history_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "driver_daily_goals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       driver_cash_collections: {
         Row: {
           amount: number
@@ -5262,63 +5204,6 @@ export type Database = {
           trips_required?: number
         }
         Relationships: []
-      }
-      driver_daily_goals: {
-        Row: {
-          bonus_earned: number | null
-          completed: boolean | null
-          completed_at: string | null
-          created_at: string | null
-          driver_id: string
-          goal_date: string
-          goal_target: number
-          goal_type: string
-          id: string
-          progress: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          bonus_earned?: number | null
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string | null
-          driver_id: string
-          goal_date?: string
-          goal_target: number
-          goal_type: string
-          id?: string
-          progress?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          bonus_earned?: number | null
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string | null
-          driver_id?: string
-          goal_date?: string
-          goal_target?: number
-          goal_type?: string
-          id?: string
-          progress?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "driver_daily_goals_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "driver_daily_goals_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers_public"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       driver_documents: {
         Row: {
@@ -20946,30 +20831,6 @@ export type Database = {
           level?: string | null
           multiplier?: number | null
           requested_count?: number | null
-          zone?: string | null
-        }
-        Relationships: []
-      }
-      surge_multipliers: {
-        Row: {
-          id: string
-          multiplier: number | null
-          reason: string | null
-          updated_at: string | null
-          zone: string | null
-        }
-        Insert: {
-          id?: string
-          multiplier?: number | null
-          reason?: string | null
-          updated_at?: string | null
-          zone?: string | null
-        }
-        Update: {
-          id?: string
-          multiplier?: number | null
-          reason?: string | null
-          updated_at?: string | null
           zone?: string | null
         }
         Relationships: []
