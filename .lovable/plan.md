@@ -1,8 +1,8 @@
 
-# AI Insights and Demand Forecasting Implementation Plan
+# Marketing Automation and Campaigns System Implementation Plan
 
 ## Overview
-Enhance the analytics system with AI-powered actionable insights including demand prediction, driver staffing recommendations, merchant promotional suggestions, and anomaly detection. This builds on the existing analytics infrastructure and demand forecasting tables.
+Build a comprehensive marketing automation system that enables admin to create, schedule, and manage campaigns that automatically send promo codes, push notifications, re-engage inactive users, and boost slow restaurants. This leverages existing `marketing_campaigns`, `marketing_campaign_stats`, and `notifications` tables, along with established promo and push notification infrastructure.
 
 ---
 
@@ -11,511 +11,593 @@ Enhance the analytics system with AI-powered actionable insights including deman
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `demand_forecasts` table | Available | Database with zone-level predictions |
-| `demand_snapshots` table | Available | Historical order data by hour/zone |
-| `risk_events` table | Available | Fraud/anomaly event logging |
-| `fraud_signals` table | Available | Detailed signal tracking |
-| `useDemandForecast` hook | Complete | Zone forecasts, at-risk zones, heatmap |
-| `check-fraud-signals` edge function | Complete | Refund/cancel/velocity detection |
-| `src/lib/analytics.ts` | Complete | Core analytics functions |
-| `getPeakHours()` function | Complete | Hourly order aggregation |
-| DispatchDemand page | Complete | `/dispatch/demand` with forecasts |
+| `marketing_campaigns` table | ✅ Available | Database with name, type, status, target_audience |
+| `marketing_campaign_stats` table | ✅ Available | users_targeted, notifications_sent, orders_generated |
+| `zivo_promo_campaigns` table | ✅ Available | Full promo campaign infrastructure |
+| `zivo_promo_codes` table | ✅ Available | Code generation and tracking |
+| `notifications` table | ✅ Available | Multi-channel notification storage |
+| `send-push-notification` edge function | ✅ Complete | iOS, Android, Web push support |
+| `usePromotions` hook | ✅ Complete | Campaign CRUD, code validation |
+| `profiles` table | ✅ Available | User info including email, phone |
+| `food_orders` table | ✅ Available | Order history for targeting |
+| `AdminEmailCampaigns` component | ✅ Mock data | Email campaign UI template |
 
 ### Missing
 | Feature | Status |
 |---------|--------|
-| Admin AI Insights page | `/admin/insights` with actionable cards |
-| Insights data library | `src/lib/insights.ts` with prediction functions |
-| Insights hooks | React Query hooks for insights data |
-| Merchant insights section | Promo timing and demand recommendations |
-| Driver best hours UI | Optimal shift suggestions |
-| Anomaly detection dashboard | Risk events and fraud signal viewer |
-| Declining restaurants detection | Trend analysis for merchants |
+| Marketing dashboard pages | `/admin/marketing/*` routes |
+| Campaign builder UI | Create/edit campaigns form |
+| Targeting rules engine | Filter users by criteria |
+| `marketing.ts` data library | Campaign CRUD functions |
+| Campaign execution edge function | Auto-send notifications |
+| Campaign scheduling | Cron job for scheduled campaigns |
+| User wallet for saved promos | Store assigned codes per user |
+| Campaign reporting | Stats visualization |
+
+---
+
+## Database Schema Enhancement
+
+### New Table: `campaign_deliveries`
+Track individual campaign deliveries to users:
+
+```sql
+CREATE TABLE campaign_deliveries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID NOT NULL REFERENCES marketing_campaigns(id),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  notification_id UUID REFERENCES notifications(id),
+  promo_code_id UUID REFERENCES promo_codes(id),
+  status TEXT DEFAULT 'pending', -- pending, sent, failed, converted
+  sent_at TIMESTAMPTZ,
+  converted_at TIMESTAMPTZ,
+  conversion_order_id UUID,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_campaign_deliveries_campaign ON campaign_deliveries(campaign_id);
+CREATE INDEX idx_campaign_deliveries_user ON campaign_deliveries(user_id);
+```
+
+### New Table: `user_promo_wallet`
+Store assigned promo codes per user:
+
+```sql
+CREATE TABLE user_promo_wallet (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  promo_code_id UUID NOT NULL REFERENCES promo_codes(id),
+  campaign_id UUID REFERENCES marketing_campaigns(id),
+  assigned_at TIMESTAMPTZ DEFAULT now(),
+  used_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,
+  UNIQUE(user_id, promo_code_id)
+);
+```
+
+### Extend `marketing_campaigns`
+Add new columns:
+
+```sql
+ALTER TABLE marketing_campaigns ADD COLUMN IF NOT EXISTS
+  title TEXT,
+  notification_title TEXT,
+  notification_body TEXT,
+  push_enabled BOOLEAN DEFAULT true,
+  email_enabled BOOLEAN DEFAULT false,
+  credits_amount INTEGER DEFAULT 0,
+  target_criteria JSONB DEFAULT '{}',
+  target_city TEXT,
+  target_restaurant_id UUID,
+  executed_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id);
+```
 
 ---
 
 ## Implementation Plan
 
-### A) Insights Data Library
+### A) Marketing Data Library
 
-Create a new library for AI-powered insights that uses historical data to generate predictions.
-
-**File to Create:** `src/lib/insights.ts`
+**File to Create:** `src/lib/marketing.ts`
 
 ```typescript
 // Interfaces
-export interface DemandForecast {
-  peakHours: { start: string; end: string; expectedOrders: number }[];
-  suggestedDrivers: number;
-  confidence: number;
-  trend: "increasing" | "stable" | "decreasing";
-  basedOnDays: number;
-}
-
-export interface ZoneDemandGap {
-  zoneCode: string;
-  expectedOrders: number;
-  driversOnline: number;
-  driversNeeded: number;
-  shortage: number;
-  urgency: "critical" | "warning" | "ok";
-}
-
-export interface DecliningMerchant {
-  restaurantId: string;
-  restaurantName: string;
-  currentWeekOrders: number;
-  previousWeekOrders: number;
-  changePercent: number;
-  avgRating: number;
-}
-
-export interface AnomalySignal {
+export interface MarketingCampaign {
   id: string;
-  userId: string | null;
-  driverId: string | null;
-  eventType: string;
-  severity: number;
-  score: number;
-  details: Record<string, any>;
-  createdAt: string;
-  isResolved: boolean;
+  name: string;
+  campaign_type: "promo" | "push" | "winback" | "restaurant_boost";
+  status: "draft" | "scheduled" | "running" | "completed" | "paused";
+  target_audience: "all" | "inactive" | "city" | "segment" | "restaurant_customers";
+  target_criteria: {
+    last_order_days_ago?: number;
+    min_total_orders?: number;
+    max_total_orders?: number;
+    city?: string;
+    membership_status?: string;
+    restaurant_id?: string;
+  };
+  message: string | null;
+  notification_title: string | null;
+  notification_body: string | null;
+  promo_code_id: string | null;
+  credits_amount: number;
+  start_date: string | null;
+  end_date: string | null;
+  push_enabled: boolean;
+  email_enabled: boolean;
+  created_at: string;
+  created_by: string | null;
 }
 
-export interface MerchantInsight {
-  bestPromoTimes: { day: string; hour: number; expectedLift: number }[];
-  lowDemandHours: { hour: number; avgOrders: number }[];
-  topItems: { id: string; name: string; orders: number; revenue: number }[];
-  recommendations: string[];
-}
-
-export interface DriverInsight {
-  bestHours: { hour: number; avgEarnings: number; avgDeliveries: number }[];
-  hotZones: { zoneCode: string; expectedOrders: number; competition: "low" | "medium" | "high" }[];
-  optimalShift: { start: number; end: number; expectedEarnings: number };
+export interface CampaignStats {
+  users_targeted: number;
+  notifications_sent: number;
+  orders_generated: number;
+  revenue_generated: number;
 }
 
 // Functions
-export async function getDemandForecast(): Promise<DemandForecast>
-export async function getZoneDemandGaps(): Promise<ZoneDemandGap[]>
-export async function getDecliningMerchants(limit?: number): Promise<DecliningMerchant[]>
-export async function getAnomalySignals(limit?: number): Promise<AnomalySignal[]>
-export async function getMerchantInsights(restaurantId: string): Promise<MerchantInsight>
-export async function getDriverInsights(driverId: string): Promise<DriverInsight>
+export async function getCampaigns(): Promise<MarketingCampaign[]>
+export async function getCampaign(id: string): Promise<MarketingCampaign | null>
+export async function createCampaign(campaign: Partial<MarketingCampaign>): Promise<MarketingCampaign>
+export async function updateCampaign(id: string, updates: Partial<MarketingCampaign>): Promise<void>
+export async function deleteCampaign(id: string): Promise<void>
+export async function getCampaignStats(id: string): Promise<CampaignStats>
+export async function getTargetedUsers(criteria: CampaignTargetCriteria): Promise<TargetedUser[]>
+export async function previewCampaign(id: string): Promise<{ count: number; sample: TargetedUser[] }>
+export async function executeCampaign(id: string): Promise<ExecutionResult>
 ```
 
-**Key Algorithms:**
+### B) Marketing Hooks
 
-1. **Peak Hours Prediction (Moving Average)**
-   - Query last 7-14 days of orders grouped by hour
-   - Calculate weighted average (recent days weighted higher)
-   - Identify hours with > 1.5x average as peak hours
-   - Calculate suggested drivers: `peakOrders / avgDeliveriesPerDriver`
-
-2. **Zone Demand Gaps**
-   - Query `demand_forecasts` for next 2-3 hours
-   - Compare `predicted_drivers_needed` vs `current_drivers_online`
-   - Calculate shortage and urgency level
-
-3. **Declining Merchants**
-   - Compare current week orders vs previous week
-   - Flag restaurants with > 20% decline
-   - Include rating trend
-
-4. **Anomaly Detection**
-   - Query `risk_events` with severity >= 2
-   - Include unresolved events from last 7 days
-   - Aggregate by user/driver
-
-### B) Insights Hooks
-
-**File to Create:** `src/hooks/useInsights.ts`
+**File to Create:** `src/hooks/useMarketing.ts`
 
 ```typescript
-// Hooks with caching
-export function useDemandForecast()
-export function useZoneDemandGaps()
-export function useDecliningMerchants(limit?: number)
-export function useAnomalySignals(limit?: number)
-export function useMerchantInsights(restaurantId: string | undefined)
-export function useDriverInsights(driverId: string | undefined)
+export function useCampaigns()
+export function useCampaign(id: string | undefined)
+export function useCampaignStats(id: string | undefined)
+export function useCreateCampaign()
+export function useUpdateCampaign()
+export function useDeleteCampaign()
+export function useExecuteCampaign()
+export function useTargetPreview(criteria: CampaignTargetCriteria)
 ```
 
-### C) Admin AI Insights Page
+### C) Marketing Hub Page
 
-**File to Create:** `src/pages/admin/AdminInsightsPage.tsx`
+**File to Create:** `src/pages/admin/marketing/MarketingHub.tsx`
 
-**Route:** `/admin/insights`
+**Route:** `/admin/marketing`
 
 **Layout:**
-
 ```text
 +----------------------------------------------------------+
-|  AI Insights                          [Last 7 days ▼]     |
+|  Marketing Hub                        [+ New Campaign]    |
 +----------------------------------------------------------+
 |                                                           |
 |  +------------------+  +------------------+               |
-|  | PREDICTED PEAK   |  | DRIVER SHORTAGE  |               |
-|  | 6pm - 8pm        |  | 3 zones at risk  |               |
-|  | ~45 orders       |  | Need 12 drivers  |               |
-|  | Suggest: 12 drv  |  | [View Zones]     |               |
+|  | ACTIVE CAMPAIGNS |  | USERS REACHED    |               |
+|  | 3                |  | 12,450           |               |
 |  +------------------+  +------------------+               |
 |                                                           |
 |  +------------------+  +------------------+               |
-|  | DECLINING MERCH  |  | ANOMALY ALERTS   |               |
-|  | 2 restaurants    |  | 5 unresolved     |               |
-|  | >20% drop        |  | 2 critical       |               |
-|  | [View List]      |  | [View Signals]   |               |
+|  | ORDERS GENERATED |  | REVENUE IMPACT   |               |
+|  | 856              |  | $24,320          |               |
 |  +------------------+  +------------------+               |
 |                                                           |
-|  24-Hour Demand Forecast Chart                            |
-|  [AreaChart showing predicted orders by hour]             |
+|  Quick Actions                                            |
+|  [Campaigns] [Email Flows] [Promo Codes] [Analytics]     |
 |                                                           |
-|  Anomaly Timeline                                         |
-|  [Timeline of recent risk events with severity badges]    |
+|  Recent Campaigns                                         |
+|  +------------------------------------------------------+|
+|  | Win-back Inactive    | Running  | 2,340 sent         ||
+|  | Weekend Flash Sale   | Scheduled| Starts Sat 10am    ||
+|  | New User Welcome     | Completed| 890 conversions    ||
+|  +------------------------------------------------------+|
 |                                                           |
 +----------------------------------------------------------+
 ```
 
 **Features:**
-- KPI cards with AI-generated insights
-- 24-hour demand forecast visualization
-- Zone shortage map/list with driver recommendations
-- Declining merchants table with week-over-week comparison
-- Anomaly signals timeline with severity indicators
-- Explanatory text: "Based on last 30 days of orders..."
+- KPI cards with aggregate stats
+- Quick action navigation
+- Recent campaigns list with status badges
+- Create campaign button
 
-### D) Zone Demand Gaps Panel
+### D) Campaigns List Page
 
-**File to Create:** `src/components/insights/ZoneDemandPanel.tsx`
+**File to Create:** `src/pages/admin/marketing/CampaignsPage.tsx`
 
-- List zones with driver shortage
-- Color-coded urgency (critical/warning/ok)
-- Show: zone code, expected orders, drivers online/needed
-- Link to dispatch reposition page
+**Route:** `/admin/marketing/campaigns`
 
-### E) Declining Merchants Table
+**Features:**
+- Filterable table of all campaigns
+- Status filter (All, Draft, Scheduled, Running, Completed)
+- Type filter (Promo, Push, Winback, Boost)
+- Bulk actions (pause, delete)
+- Create new campaign button
 
-**File to Create:** `src/components/insights/DecliningMerchantsTable.tsx`
+### E) Campaign Detail Page
 
-- Table with: Restaurant name, This Week, Last Week, Change %, Rating
-- Sortable columns
-- Link to merchant analytics
-- Suggest outreach actions
+**File to Create:** `src/pages/admin/marketing/CampaignDetailPage.tsx`
 
-### F) Anomaly Signals Panel
+**Route:** `/admin/marketing/campaigns/:id`
 
-**File to Create:** `src/components/insights/AnomalySignalsPanel.tsx`
+**Features:**
+- Campaign info header with status badge
+- Edit campaign button (if draft/scheduled)
+- Pause/Resume button (if running)
+- Performance stats cards
+- Delivery timeline
+- Targeted users preview
+- Conversion tracking chart
 
-- Timeline view of recent risk events
-- Filter by: type, severity, resolved status
-- Details: user/driver ID, event type, score, timestamp
-- Actions: Mark as resolved, View profile, Block user
+### F) Campaign Builder
 
-### G) Enhanced Merchant Analytics
+**File to Create:** `src/components/marketing/CampaignBuilder.tsx`
 
-**File to Modify:** `src/pages/merchant/MerchantDashboard.tsx` or create new section
+**Features:**
+- Step 1: Campaign Type Selection
+  - Promo campaign (discount or credits)
+  - Push notification campaign
+  - Win-back campaign (inactive users)
+  - Restaurant boost campaign
 
-**Add Insights Card:**
-- "Best Time to Run Promotions" - based on low-demand hours
-- "Top Selling Items" - already exists, enhance with trends
-- "Low Demand Hours" - suggest promotional opportunities
-- "Recommendations" - AI-generated text suggestions
+- Step 2: Targeting Rules
+  - All users
+  - Inactive users (no order in X days)
+  - Users by city
+  - Users by order count
+  - Restaurant customers
+  - Preview targeted count
 
-**UI:**
-```text
-+------------------------------------------+
-| AI Insights                               |
-+------------------------------------------+
-| Best Time for Promotions                  |
-| Tuesday 2pm-4pm: Expected 15% lift        |
-| Wednesday 3pm-5pm: Expected 12% lift      |
-+------------------------------------------+
-| Low Demand Hours                          |
-| 2pm-4pm: Only 3 orders avg                |
-| Consider running a 20% off promo          |
-+------------------------------------------+
-```
+- Step 3: Message Configuration
+  - Notification title
+  - Notification body (with variables: {first_name}, {promo_code})
+  - Promo code selection (optional)
+  - Credits amount (optional)
 
-### H) Enhanced Driver Analytics
+- Step 4: Schedule
+  - Send immediately
+  - Schedule for specific date/time
+  - Set end date
 
-**File to Modify:** `src/pages/driver/DriverAnalyticsPage.tsx`
+- Step 5: Review & Launch
+  - Summary of all settings
+  - Preview message
+  - Launch/Schedule button
 
-**Add Best Hours Section:**
-- "Best Hours to Go Online" - when earnings are highest
-- "Hot Zones" - areas with high demand, low competition
-- "Optimal Shift" - suggested start/end time for max earnings
-- Hour-by-hour earnings heatmap
+### G) Targeting Engine Component
 
-**UI:**
-```text
-+------------------------------------------+
-| Suggested Best Hours                      |
-+------------------------------------------+
-| 11am - 1pm: $18/hr avg                    |
-| 6pm - 9pm: $22/hr avg  [Peak]             |
-+------------------------------------------+
-| Hot Zones Now                             |
-| Downtown: 15 orders expected, low comp    |
-| University: 12 orders expected, med comp  |
-+------------------------------------------+
-```
+**File to Create:** `src/components/marketing/TargetingRulesBuilder.tsx`
 
-### I) Anomaly Detection Enhancement
+**Features:**
+- Visual rule builder
+- Condition types:
+  - Last order date (days ago)
+  - Total orders (min/max)
+  - City selection
+  - Membership status
+  - Restaurant ID (for boost campaigns)
+- Live preview of targeted user count
+- Sample user list
 
-The existing `check-fraud-signals` edge function already handles:
-- High refund rate (>=5 in 30 days)
-- High cancellation rate (>=3 in 7 days)
-- Wrong PIN attempts
-- Order velocity spikes (>=10 in 1 hour)
+### H) Campaign Execution Edge Function
 
-**Enhancements to add:**
-1. Query `risk_events` for admin dashboard display
-2. Add severity-based filtering
-3. Create resolution workflow
+**File to Create:** `supabase/functions/execute-campaign/index.ts`
 
-**File to Modify:** `src/lib/insights.ts`
+**Functionality:**
+1. Validate campaign is scheduled and ready
+2. Query targeted users based on criteria
+3. For each user:
+   - Insert notification record
+   - Send push notification via send-push-notification
+   - Assign promo code if configured
+   - Add credits if configured
+   - Record delivery in campaign_deliveries
+4. Update campaign status to "running"
+5. Update campaign_stats
 
 ```typescript
-export async function getAnomalySignals(limit: number = 50) {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const { data } = await supabase
-    .from("risk_events")
-    .select("*")
-    .gte("created_at", sevenDaysAgo.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  return data?.map(event => ({
-    id: event.id,
-    userId: event.user_id,
-    driverId: event.driver_id,
-    eventType: event.event_type,
-    severity: event.severity,
-    score: event.score,
-    details: event.details,
-    createdAt: event.created_at,
-    isResolved: event.is_resolved,
-  }));
-}
+// Targeting query example
+const targetedUsers = await supabase
+  .from("profiles")
+  .select("id, email, full_name, user_id")
+  .leftJoin("food_orders", (join) => 
+    join.on("profiles.user_id", "=", "food_orders.customer_id")
+  )
+  .filter((profile) => {
+    if (criteria.last_order_days_ago) {
+      // Filter by last order date
+    }
+    if (criteria.city) {
+      // Filter by city from saved_locations
+    }
+    // etc.
+  });
 ```
 
-### J) Routes Configuration
+### I) Campaign Scheduler Edge Function
+
+**File to Create:** `supabase/functions/campaign-scheduler/index.ts`
+
+**Runs via pg_cron every 5 minutes:**
+- Query campaigns with status='scheduled' and start_date <= now()
+- Call execute-campaign for each
+- Query campaigns with status='running' and end_date <= now()
+- Update status to 'completed'
+
+**Cron Setup SQL:**
+```sql
+SELECT cron.schedule(
+  'campaign-scheduler',
+  '*/5 * * * *',
+  $$
+  SELECT net.http_post(
+    url:='https://slirphzzwcogdbkeicff.supabase.co/functions/v1/campaign-scheduler',
+    headers:='{"Authorization": "Bearer <anon_key>"}'::jsonb
+  );
+  $$
+);
+```
+
+### J) User Promo Wallet Component
+
+**File to Create:** `src/components/eats/UserPromoWallet.tsx`
+
+**Features:**
+- Display saved promo codes for user
+- Show expiration dates
+- Quick apply to cart
+- Mark as used when redeemed
+
+### K) Merchant Notification
+
+When a "restaurant_boost" campaign runs:
+- Send notification to restaurant owner
+- Show campaign banner in merchant dashboard
+- Track orders from campaign
+
+---
+
+## Routes Configuration
 
 **File to Modify:** `src/App.tsx`
 
 ```typescript
-const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
+// Marketing Routes
+const MarketingHub = lazy(() => import("./pages/admin/marketing/MarketingHub"));
+const CampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
+const CampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
 
-// Route
-<Route path="/admin/insights" element={<ProtectedRoute requireAdmin><AdminInsightsPage /></ProtectedRoute>} />
+// Routes
+<Route path="/admin/marketing" element={<ProtectedRoute requireAdmin><MarketingHub /></ProtectedRoute>} />
+<Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin><CampaignsPage /></ProtectedRoute>} />
+<Route path="/admin/marketing/campaigns/:id" element={<ProtectedRoute requireAdmin><CampaignDetailPage /></ProtectedRoute>} />
 ```
-
-**Add Link to Analytics Hub:**
-
-**File to Modify:** `src/pages/admin/analytics/AnalyticsHub.tsx`
-
-Add navigation card for AI Insights page.
 
 ---
 
 ## File Summary
 
-### New Files (6)
+### Database Migration
+| Change | Purpose |
+|--------|---------|
+| Create `campaign_deliveries` table | Track individual deliveries |
+| Create `user_promo_wallet` table | Store assigned promos |
+| Extend `marketing_campaigns` | Add notification and targeting fields |
+
+### New Files (12)
 | File | Purpose |
 |------|---------|
-| `src/lib/insights.ts` | AI insights data functions |
-| `src/hooks/useInsights.ts` | React Query hooks for insights |
-| `src/pages/admin/AdminInsightsPage.tsx` | Main AI insights dashboard |
-| `src/components/insights/ZoneDemandPanel.tsx` | Zone shortage display |
-| `src/components/insights/DecliningMerchantsTable.tsx` | Merchant trend table |
-| `src/components/insights/AnomalySignalsPanel.tsx` | Risk event timeline |
+| `src/lib/marketing.ts` | Marketing data functions |
+| `src/hooks/useMarketing.ts` | React Query hooks |
+| `src/pages/admin/marketing/MarketingHub.tsx` | Main marketing dashboard |
+| `src/pages/admin/marketing/CampaignsPage.tsx` | Campaigns list |
+| `src/pages/admin/marketing/CampaignDetailPage.tsx` | Campaign detail/stats |
+| `src/components/marketing/CampaignBuilder.tsx` | Multi-step campaign creator |
+| `src/components/marketing/TargetingRulesBuilder.tsx` | Audience targeting UI |
+| `src/components/marketing/CampaignStatsCard.tsx` | Stats visualization |
+| `src/components/eats/UserPromoWallet.tsx` | User's saved promos |
+| `supabase/functions/execute-campaign/index.ts` | Campaign execution logic |
+| `supabase/functions/campaign-scheduler/index.ts` | Scheduled campaign runner |
+| Migration SQL | Database schema changes |
 
-### Modified Files (3)
+### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add `/admin/insights` route |
-| `src/pages/admin/analytics/AnalyticsHub.tsx` | Add AI Insights nav card |
-| `src/pages/driver/DriverAnalyticsPage.tsx` | Add best hours and hot zones section |
+| `src/App.tsx` | Add marketing routes |
+| `src/pages/mobile/MobileAccount.tsx` | Add "My Promos" link |
 
 ---
 
-## Prediction Algorithm Details
+## Targeting Rules Implementation
 
-### Peak Hours Prediction (MVP)
+### Query Builder for User Targeting
 
 ```typescript
-async function predictPeakHours(): Promise<PeakHourPrediction[]> {
-  // Get last 7 days of orders grouped by hour
-  const { data } = await supabase
-    .from("food_orders")
-    .select("created_at")
-    .gte("created_at", sevenDaysAgo);
+async function getTargetedUsers(criteria: TargetCriteria) {
+  let query = supabase.from("profiles").select(`
+    id,
+    user_id,
+    email,
+    full_name,
+    phone
+  `);
 
-  // Count orders per hour
-  const hourCounts = new Array(24).fill(0);
-  const hourDays = new Array(24).fill(0);
+  // Filter by last order date
+  if (criteria.last_order_days_ago) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - criteria.last_order_days_ago);
+    
+    // Get users with no orders after cutoff
+    const { data: activeUsers } = await supabase
+      .from("food_orders")
+      .select("customer_id")
+      .gte("created_at", cutoffDate.toISOString())
+      .eq("status", "completed");
+    
+    const activeIds = new Set(activeUsers?.map(o => o.customer_id));
+    // Filter out active users
+  }
 
-  data?.forEach(order => {
-    const hour = new Date(order.created_at).getHours();
-    hourCounts[hour]++;
-    // Track unique days for averaging
-  });
+  // Filter by city
+  if (criteria.city) {
+    const { data: cityUsers } = await supabase
+      .from("saved_locations")
+      .select("user_id")
+      .eq("city", criteria.city);
+    // Filter to city users
+  }
 
-  // Calculate average per hour
-  const avgByHour = hourCounts.map((count, hour) => ({
-    hour,
-    avgOrders: count / 7, // Divide by days
-  }));
+  // Filter by total orders
+  if (criteria.min_total_orders || criteria.max_total_orders) {
+    // Aggregate order counts
+  }
 
-  // Find peak hours (> 1.5x overall average)
-  const overallAvg = avgByHour.reduce((s, h) => s + h.avgOrders, 0) / 24;
-  const peaks = avgByHour.filter(h => h.avgOrders > overallAvg * 1.5);
+  // Filter by membership
+  if (criteria.membership_status) {
+    const { data: members } = await supabase
+      .from("user_memberships")
+      .select("user_id")
+      .eq("status", criteria.membership_status);
+    // Filter by membership
+  }
 
-  // Group consecutive hours into ranges
-  const ranges = groupConsecutiveHours(peaks);
-
-  // Calculate suggested drivers
-  const avgDeliveriesPerDriverPerHour = 3; // Configurable
-  const suggestedDrivers = Math.ceil(
-    Math.max(...peaks.map(p => p.avgOrders)) / avgDeliveriesPerDriverPerHour
-  );
-
-  return {
-    peakHours: ranges,
-    suggestedDrivers,
-    confidence: 0.85, // Based on data quality
-    trend: calculateTrend(data),
-    basedOnDays: 7,
-  };
+  return query;
 }
 ```
 
-### Merchant Low-Demand Detection
+### Anomaly Detection Rules (from existing system)
 
-```typescript
-async function getMerchantLowDemandHours(restaurantId: string) {
-  // Get orders by hour for this restaurant
-  const { data } = await supabase
-    .from("food_orders")
-    .select("created_at")
-    .eq("restaurant_id", restaurantId)
-    .gte("created_at", thirtyDaysAgo);
-
-  // Calculate average orders per hour
-  const hourCounts = new Array(24).fill(0);
-  data?.forEach(order => {
-    const hour = new Date(order.created_at).getHours();
-    hourCounts[hour]++;
-  });
-
-  const avgByHour = hourCounts.map((count, hour) => ({
-    hour,
-    avgOrders: count / 30,
-  }));
-
-  // Find low-demand hours (< 0.5x average, during business hours)
-  const overallAvg = avgByHour
-    .filter(h => h.hour >= 10 && h.hour <= 22) // Business hours
-    .reduce((s, h) => s + h.avgOrders, 0) / 12;
-
-  return avgByHour
-    .filter(h => h.hour >= 10 && h.hour <= 22 && h.avgOrders < overallAvg * 0.5)
-    .map(h => ({
-      hour: h.hour,
-      avgOrders: Math.round(h.avgOrders * 10) / 10,
-      suggestion: `Run a promo at ${formatHour(h.hour)} to boost orders`,
-    }));
-}
-```
+Integrate with existing `check-fraud-signals` to exclude:
+- Users with high refund rate
+- Users flagged for fraud
+- Users on block list
 
 ---
 
-## UI Design Patterns
-
-### Insight Cards
-
-Each insight card follows this pattern:
-- Icon + Title
-- Key metric (large, prominent)
-- Supporting text (smaller, muted)
-- Action button or link
-- Explanatory footer: "Based on last X days..."
-
-### Color Coding
-
-| Level | Color | Use |
-|-------|-------|-----|
-| Critical | Red | Shortage >50%, severity 4-5 |
-| Warning | Amber | Shortage 20-50%, severity 2-3 |
-| Good | Green | No issues, positive trends |
-| Neutral | Gray | Informational |
-
-### Dark Theme Consistency
-
-All components follow the existing dark dashboard style:
-- `bg-zinc-950` / `bg-zinc-900/80` backgrounds
-- `border-white/10` borders
-- `text-white/60` for muted text
-- Gradient accents for emphasis
-
----
-
-## Data Flow
+## Campaign Execution Flow
 
 ```text
-Supabase Tables
-    ├── food_orders → Peak hours, merchant trends
-    ├── demand_forecasts → Zone predictions
-    ├── demand_snapshots → Historical patterns
-    ├── risk_events → Anomaly signals
-    ├── drivers → Online status, ratings
-    └── restaurants → Merchant details
-
-↓
-
-src/lib/insights.ts (Prediction Functions)
-    ├── getDemandForecast() → 7-day moving average
-    ├── getZoneDemandGaps() → Forecast vs reality
-    ├── getDecliningMerchants() → Week-over-week comparison
-    ├── getAnomalySignals() → Risk event aggregation
-    ├── getMerchantInsights() → Promo timing
-    └── getDriverInsights() → Optimal shift
-
-↓
-
-React Query Hooks (with 2-minute caching)
-    ├── useDemandForecast()
-    ├── useZoneDemandGaps()
-    ├── useMerchantInsights()
-    └── useDriverInsights()
-
-↓
-
-UI Components
-    ├── AdminInsightsPage → Full dashboard
-    ├── ZoneDemandPanel → Shortage alerts
-    ├── DecliningMerchantsTable → Trend analysis
-    ├── AnomalySignalsPanel → Risk timeline
-    ├── DriverAnalyticsPage → Best hours section
-    └── MerchantDashboard → Promo suggestions
+Admin Creates Campaign
+        ↓
+    [Draft Status]
+        ↓
+Admin Sets Schedule
+        ↓
+    [Scheduled Status]
+        ↓
+campaign-scheduler runs (every 5 min)
+        ↓
+Checks start_date <= now()
+        ↓
+Calls execute-campaign edge function
+        ↓
+    [Running Status]
+        ↓
+For each targeted user:
+  ├── Insert notification
+  ├── Call send-push-notification
+  ├── Assign promo code (if configured)
+  ├── Add credits (if configured)
+  └── Record in campaign_deliveries
+        ↓
+Update campaign_stats
+        ↓
+campaign-scheduler checks end_date
+        ↓
+    [Completed Status]
 ```
+
+---
+
+## Campaign Reporting
+
+### Stats to Track
+
+| Metric | Source |
+|--------|--------|
+| Users Targeted | COUNT of campaign_deliveries |
+| Notifications Sent | COUNT where status='sent' |
+| Push Delivered | Push notification logs |
+| Orders Generated | COUNT food_orders with conversion_order_id |
+| Revenue Generated | SUM of order total_amount |
+| Conversion Rate | Orders / Notifications Sent |
+| Promo Codes Redeemed | COUNT from promo_redemptions |
+
+### Reporting UI
+
+- Time-series chart of deliveries
+- Conversion funnel visualization
+- Top performing campaigns table
+- Export to CSV
+
+---
+
+## User Experience
+
+### Customer Side
+
+1. **Notification Arrives**
+   - Push notification with campaign message
+   - Tap opens app to relevant page
+
+2. **Promo Auto-Applied**
+   - If promo code assigned, appears in "My Promos"
+   - Auto-applies at checkout if conditions met
+
+3. **Credits Added**
+   - Credits appear in wallet
+   - Notification confirms credit amount
+
+### Merchant Side (for Boost Campaigns)
+
+1. **Notification to Owner**
+   - "Your restaurant is featured in a ZIVO campaign!"
+   
+2. **Dashboard Banner**
+   - Shows active boost campaigns
+   - Expected traffic increase
+
+3. **Order Attribution**
+   - Orders from campaign marked with campaign_id
+   - Revenue from campaign visible in analytics
+
+---
+
+## Security Considerations
+
+1. **Admin-only access** - All marketing routes protected
+2. **Rate limiting** - Max 10,000 notifications per campaign execution batch
+3. **Opt-out respect** - Skip users with `marketing_opt_in = false`
+4. **Fraud exclusion** - Skip users flagged in risk_events
+5. **Promo abuse prevention** - Check per_user_limit before assignment
+
+---
+
+## Performance Optimization
+
+1. **Batch processing** - Process 100 users per batch in edge function
+2. **Async notifications** - Queue push notifications
+3. **Caching** - Cache targeted user counts
+4. **Pagination** - Paginate campaign list and delivery history
 
 ---
 
 ## Summary
 
-This implementation adds:
+This implementation creates a complete marketing automation system:
 
-1. **Insights Library** (`/lib/insights.ts`) with prediction algorithms for demand, gaps, and anomalies
-2. **Admin AI Dashboard** at `/admin/insights` with actionable insight cards
-3. **Demand Forecasting** using 7-day moving average to predict peak hours and driver needs
-4. **Zone Shortage Detection** comparing forecasts to actual driver availability
-5. **Merchant Recommendations** for optimal promo timing based on low-demand hours
-6. **Driver Best Hours** showing when to go online for maximum earnings
-7. **Anomaly Detection UI** displaying risk events with severity filtering
-8. **Declining Merchants** week-over-week comparison for proactive outreach
+1. **Marketing Dashboard** at `/admin/marketing` with KPIs and quick actions
+2. **Campaign Builder** with multi-step wizard for promo, push, winback, and boost campaigns
+3. **Targeting Engine** filtering users by order history, city, membership, and more
+4. **Automatic Delivery** via edge function with push notifications and promo assignment
+5. **Scheduling System** with pg_cron for automated campaign start/end
+6. **User Promo Wallet** for saved promotional codes
+7. **Comprehensive Reporting** with conversion tracking and revenue attribution
+8. **Merchant Notifications** for restaurant boost campaigns
 
-All insights include explanatory text ("Based on last 30 days...") and follow the existing dark dashboard styling.
+All integrated with existing promo code, notification, and push infrastructure.
