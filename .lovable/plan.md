@@ -1,138 +1,253 @@
 
 
-# Dynamic Surge Pricing from Database
+# ZIVO Rides - New Brand Design System
 
 ## Overview
-Implement dynamic surge pricing that fetches the multiplier directly from the `surge_multipliers` table (zone='GLOBAL') instead of calculating it from demand/supply ratios. This provides admin control over surge pricing with a max cap of 2.5x.
+Create a distinctive ZIVO brand identity for the Rides page that moves away from the current Uber-inspired design. The new design will emphasize ZIVO's premium, modern aesthetic with a unique visual language.
 
 ---
 
-## Current State
+## Current State (Uber-like)
+- White bottom sheet with gray/zinc accents
+- Black/white category pills
+- Simple row-based ride selection with inline car SVGs
+- Blue pickup dot, black dropoff square (Uber standard)
+- Zinc-900 CTA buttons
+- Minimal color differentiation
 
-The system currently calculates surge based on demand/supply ratio:
-- Counts active rides in last 5 minutes
-- Counts online drivers in last 2 minutes
-- Applies tiered multipliers (1.0x → 2.0x)
+---
 
-**Database:** `surge_multipliers` table exists with a GLOBAL row:
+## New ZIVO Design Philosophy
+
+### Brand Personality
+- **Premium but Approachable**: Not intimidating luxury, but confident quality
+- **Vibrant Energy**: Dynamic colors that feel alive
+- **Distinct Identity**: Immediately recognizable as ZIVO, not a clone
+
+### Color Palette (ZIVO Rides)
+| Element | Current | New ZIVO |
+|---------|---------|----------|
+| Primary Accent | Black/Zinc-900 | Emerald-500 (#10B981) |
+| Background | White | Cream/Off-white (#FFFBF5) with soft gradients |
+| Cards | White + gray border | Soft cream with emerald accents |
+| CTA Buttons | Black | Gradient emerald-to-teal |
+| Pickup Marker | Blue dot | Emerald ring with pulse |
+| Dropoff Marker | Black square | Teal location pin |
+| Surge | Amber/Red | Coral accent (#FF6B6B) |
+
+---
+
+## Component Updates
+
+### 1. Bottom Sheet Redesign
+**File: `src/pages/Rides.tsx`**
+
+Current:
 ```
-zone: GLOBAL, multiplier: 1.0, reason: normal
+bg-white rounded-t-[28px]
+```
+
+New ZIVO:
+```
+bg-gradient-to-b from-[#FFFBF5] to-white 
+rounded-t-[32px] 
+border-t border-emerald-100/50
+```
+
+- Warmer, cream-tinted background
+- Subtle emerald accent on border
+- Larger corner radius for softer feel
+
+### 2. Address Input Field Styling
+**File: `src/pages/Rides.tsx`**
+
+Current:
+```
+bg-zinc-100 rounded-xl
+Blue dot for pickup, Black square for dropoff
+```
+
+New ZIVO:
+```
+bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-100
+Emerald ring for pickup, Teal filled circle for dropoff
+Soft shadow: shadow-[0_4px_20px_rgba(16,185,129,0.08)]
+```
+
+### 3. Category Tabs
+**File: `src/pages/Rides.tsx` (inline tabs)**
+
+Current:
+```
+bg-zinc-900 text-white (active)
+bg-zinc-100 text-zinc-600 (inactive)
+```
+
+New ZIVO:
+```
+bg-gradient-to-r from-emerald-500 to-teal-500 text-white (active)
+bg-white border border-emerald-200 text-emerald-700 (inactive)
+```
+
+- Gradient active state for brand recognition
+- Emerald-tinted inactive states
+
+### 4. Ride Row Cards
+**File: `src/components/ride/UberLikeRideRow.tsx` → Rename to `ZivoRideRow.tsx`**
+
+Current:
+```
+- White background, black border when selected
+- Generic inline car SVG
+- Tag pills with colored dots
+```
+
+New ZIVO Design:
+```
+- Cream background (#FFFBF5) with soft border
+- Selected: emerald gradient border + soft glow
+- ZIVO-branded car silhouette SVG (more stylized, less generic)
+- Tag pills: emerald/teal themed badges
+- Price: bold emerald color when surge-free
+```
+
+Visual Structure:
+```text
+┌─────────────────────────────────────────────────┐
+│  🚗 ──────────── Economy Standard              │
+│  [car icon]     1:42 PM · 4 min    👤4   $8.50 │
+│                                        ⚡1.2× │
+└─────────────────────────────────────────────────┘
+```
+
+### 5. CTA Buttons
+**File: `src/pages/Rides.tsx`**
+
+Current:
+```
+bg-zinc-900 hover:bg-zinc-800 text-white
+```
+
+New ZIVO:
+```
+bg-gradient-to-r from-emerald-500 to-teal-500 
+hover:from-emerald-600 hover:to-teal-600 
+text-white font-bold
+shadow-lg shadow-emerald-500/25
+```
+
+- Branded gradient buttons
+- Glow effect for premium feel
+
+### 6. Surge Banner
+**File: `src/components/ride/SurgeBanner.tsx`**
+
+Current:
+```
+Amber/red gradient with lightning icon
+```
+
+New ZIVO:
+```
+Coral (#FF6B6B) to rose gradient
+Custom ZIVO surge icon (stylized wave/pulse)
+Text: "High demand pricing" instead of "Busy time pricing"
+```
+
+### 7. Location Markers (Map)
+**File: `src/components/maps/GoogleMap.tsx` (marker updates)**
+
+Current:
+- Blue pulsing circle (pickup)
+- Black square with white center (dropoff)
+
+New ZIVO:
+- Emerald pulsing ring with white center (pickup)
+- Teal filled pin with subtle shadow (dropoff)
+- Route line: emerald (#10B981) instead of gray
+
+### 8. Floating Address Cards (Map overlay)
+**File: `src/pages/Rides.tsx` (RidesMapView)**
+
+Current:
+```
+bg-white rounded-lg shadow-lg
+Black time badge
+```
+
+New ZIVO:
+```
+bg-[#FFFBF5] rounded-2xl 
+border border-emerald-100
+Emerald gradient time badge
+```
+
+### 9. Success State
+**File: `src/pages/Rides.tsx`**
+
+Current:
+```
+Emerald-100 background with emerald checkmark
+```
+
+Keep this (already aligns with new ZIVO emerald theme), but enhance:
+```
+Add confetti animation
+Gradient background pulse
+"Ride Confirmed" with ZIVO branding
 ```
 
 ---
 
-## New Behavior
+## Technical Implementation
 
-1. **Fetch multiplier** from `surge_multipliers` where `zone='GLOBAL'`
-2. **Apply cap:** `min(multiplier, 2.5)`
-3. **Calculate:** `final_price = base_price × multiplier`
-4. **UI Badge:** When multiplier > 1, show: `"Busy time pricing ×{multiplier}"`
+### New Files to Create
+1. `src/components/ride/ZivoRideRow.tsx` - New branded ride row component
+2. Update `src/index.css` - Add ZIVO rides-specific CSS variables
 
----
+### Files to Modify
+1. `src/pages/Rides.tsx` - Main page styling overhaul
+2. `src/components/ride/SurgeBanner.tsx` - ZIVO surge styling
+3. `src/components/maps/GoogleMap.tsx` - Marker colors
+4. `src/components/ride/UberLikeRideRow.tsx` - Deprecate or refactor
 
-## Files to Update
-
-### 1. `src/lib/quoteRidePrice.ts`
-Update `getSurgeMultiplier()` to fetch from database:
-
-```text
-async function getSurgeMultiplier(): Promise<number> {
-  1. Query surge_multipliers where zone = 'GLOBAL'
-  2. Get multiplier value (default to 1.0 if not found)
-  3. Apply cap: min(multiplier, 2.5)
-  4. Return the capped value
-}
-```
-
-### 2. `src/lib/surge.ts`
-Add new function to fetch from database:
-
-```text
-async function fetchGlobalSurgeMultiplier(): Promise<number> {
-  1. Query surge_multipliers table
-  2. Filter by zone = 'GLOBAL'
-  3. Return multiplier (capped at 2.5)
-}
-```
-
-Update `calculateSurge` to optionally accept a database override.
-
-### 3. `src/hooks/useSurgePricing.ts`
-Update to fetch from `surge_multipliers` table:
-
-```text
-- Replace demand-based calculation with database fetch
-- Query surge_multipliers where zone = 'GLOBAL'
-- Cap at 2.5x
-- Return multiplier, level, and label
-```
-
-### 4. `src/hooks/useZoneSurgePricing.ts`
-Update to use database multiplier:
-
-```text
-- Fetch from surge_multipliers (zone='GLOBAL' or zone-specific)
-- Apply 2.5x cap
-- Return surge info for UI
-```
-
-### 5. `src/components/ride/RideCard.tsx`
-Update badge text from "Busy now" to dynamic text:
-
-```text
-Current (line 68-72):
-  <span>🔥</span>
-  <span>Busy now</span>
-
-New:
-  <span>🔥</span>
-  <span>Busy time pricing ×{multiplier.toFixed(1)}</span>
-```
-
-### 6. `src/components/ride/UberLikeRideRow.tsx`
-Already shows multiplier correctly with `×{surgeMultiplier.toFixed(1)}`, but update label context.
-
-### 7. `src/components/ride/SurgeBanner.tsx`
-Update text to use "Busy time pricing" terminology.
-
----
-
-## Technical Details
-
-### Database Query
-```sql
-SELECT multiplier FROM surge_multipliers 
-WHERE zone = 'GLOBAL' 
-LIMIT 1;
-```
-
-### Max Cap Constant
-```typescript
-const MAX_SURGE_MULTIPLIER = 2.5;
-```
-
-### Level Mapping
-| Multiplier | Level | Label |
-|------------|-------|-------|
-| 1.0 | Low | (no badge) |
-| 1.1-1.5 | Medium | Busy time pricing ×1.x |
-| 1.5+ | High | Busy time pricing ×1.x |
-
----
-
-## Surge Level Logic
-```text
-multiplier = 1.0       → Low (no badge shown)
-multiplier 1.01-1.5    → Medium
-multiplier > 1.5       → High
+### New CSS Variables
+```css
+/* ZIVO Rides Brand Colors */
+--zivo-rides-primary: 160 84% 39%;  /* Emerald-500 */
+--zivo-rides-secondary: 174 72% 40%; /* Teal-500 */
+--zivo-rides-cream: 35 100% 98%;     /* Warm cream */
+--zivo-rides-surge: 0 100% 71%;      /* Coral */
+--zivo-rides-glow: 0 0 30px rgba(16, 185, 129, 0.15);
 ```
 
 ---
 
-## Testing Checklist
-- Verify surge fetches from `surge_multipliers` table
-- Confirm 2.5x cap is enforced
-- Check "Busy time pricing ×X.X" badge appears when multiplier > 1
-- Verify no badge when multiplier = 1.0
-- Test admin can update multiplier in database and see changes
+## Summary of Visual Changes
+
+| Element | Before (Uber-like) | After (ZIVO) |
+|---------|-------------------|--------------|
+| Bottom sheet | Pure white | Cream gradient |
+| Primary color | Black/zinc | Emerald/teal gradient |
+| Pickup marker | Blue circle | Emerald ring |
+| Dropoff marker | Black square | Teal pin |
+| CTA buttons | Solid black | Gradient emerald |
+| Category tabs | Black active | Emerald gradient |
+| Surge indicator | Amber/orange | Coral/rose |
+| Cards | White + shadow | Cream + emerald accent |
+| Route line | Gray | Emerald |
+
+---
+
+## Implementation Order
+1. Add new CSS variables for ZIVO Rides brand
+2. Update bottom sheet and background styling
+3. Create new ZivoRideRow component
+4. Update CTA buttons with gradient
+5. Restyle category tabs
+6. Update address input styling
+7. Modify map markers and route colors
+8. Update surge banner to ZIVO style
+9. Polish floating map cards
+10. Final QA pass on all states
 
