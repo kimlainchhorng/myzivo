@@ -40,9 +40,9 @@ export default function MobileAccount() {
     .toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
   const accountItems: MenuItem[] = [
+    { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
-    { icon: Bell, label: "Notification Settings", path: "/profile#notifications" },
     { icon: CreditCard, label: "Payment Methods", path: "/profile#payment" },
     { icon: Gift, label: "ZIVO Rewards", path: "/wallet", badge: "New" },
   ];
