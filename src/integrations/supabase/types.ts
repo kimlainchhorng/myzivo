@@ -9956,6 +9956,30 @@ export type Database = {
           },
         ]
       }
+      long_trip_discounts: {
+        Row: {
+          city: string | null
+          id: string
+          multiplier: number | null
+          threshold_miles: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string | null
+          id?: string
+          multiplier?: number | null
+          threshold_miles?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string | null
+          id?: string
+          multiplier?: number | null
+          threshold_miles?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       loyalty_members: {
         Row: {
           birthday: string | null
@@ -14068,6 +14092,30 @@ export type Database = {
           per_minute_rate?: number
           service_fee_flat?: number
           service_fee_percent?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pricing_multipliers: {
+        Row: {
+          city: string | null
+          id: string
+          multiplier: number | null
+          ride_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string | null
+          id?: string
+          multiplier?: number | null
+          ride_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string | null
+          id?: string
+          multiplier?: number | null
+          ride_type?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -25803,7 +25851,9 @@ export type Database = {
         Returns: undefined
       }
       increment_promo_uses: { Args: { promo_id: string }; Returns: undefined }
-      is_admin: { Args: { user_uuid: string }; Returns: boolean }
+      is_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_uuid: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
