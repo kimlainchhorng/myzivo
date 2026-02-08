@@ -1,188 +1,180 @@
 
 
-# Admin Panel for Zone Pricing Rates
+# Real-Time Pricing with Short Cache (60s)
 
 ## Overview
 
-Create a dedicated admin page to manage the `zone_pricing_rates` table without requiring direct database access. Admins will be able to view, edit, create, and delete pricing rates for each ride type within each pricing zone.
+Update the pricing hooks to use a short 60-second cache for zone pricing rates, ensuring riders always see the latest prices. Add automatic refetch when pickup location changes, and optionally display a "Pricing updated in real time" indicator.
 
 ## Current State
 
-| Component | Status |
-|-----------|--------|
-| `zone_pricing_rates` table | 15+ rate entries across multiple zones |
-| `pricing_zones` table | 7 zones including Default US, Baton Rouge, New Orleans |
-| Admin pattern | Existing `AdminPricingControls` uses `usePricing` hook pattern |
-| Settings integration | `SettingsHub.tsx` has Fees & Pricing tab |
+| Component | Current Setting | Target |
+|-----------|-----------------|--------|
+| `useAllZoneRatesMap` staleTime | 5 minutes | 60 seconds |
+| `useZonePricingRates` staleTime | 5 minutes | 60 seconds |
+| Refetch on pickup change | Not explicit | Yes |
+| "Real-time" indicator | Not present | Optional |
 
 ## Implementation Plan
 
-### Step 1: Create Zone Pricing Rates Hook
-**File**: `src/hooks/useZonePricingAdmin.ts` (NEW)
+### Step 1: Update Cache Settings in useZonePricingRates.ts
 
-Create a hook with CRUD operations:
-- `useZonePricingRates(zoneId)` - Fetch rates for a zone
-- `useAllZones()` - Fetch all pricing zones
-- `useUpdateZonePricingRate()` - Update a rate
-- `useCreateZonePricingRate()` - Add new rate
-- `useDeleteZonePricingRate()` - Remove a rate
+**File**: `src/hooks/useZonePricingRates.ts`
 
-### Step 2: Create Admin Page Component
-**File**: `src/pages/admin/ZonePricingRatesPage.tsx` (NEW)
+Reduce cache times from 5 minutes to 60 seconds:
 
-Features:
-- Zone selector dropdown (filter by zone)
-- Table showing all rates for selected zone
-- Inline editing for rate values
-- Add new ride type button
-- Delete rate with confirmation
-- Quick stats cards (zone count, rate count, avg multiplier)
-- Fare calculator preview
-
-### Step 3: Add Route to App.tsx
-**File**: `src/App.tsx`
-
-Add route:
 ```text
-/admin/zone-pricing → ZonePricingRatesPage
+useZonePricingRates():
+  staleTime: 5 * 60 * 1000 → 60 * 1000 (60 seconds)
+  gcTime: 10 * 60 * 1000 → 2 * 60 * 1000 (2 minutes)
+  
+useAllZoneRates():
+  staleTime: 5 * 60 * 1000 → 60 * 1000 (60 seconds)
+  
+useAllZoneRatesMap():
+  staleTime: 5 * 60 * 1000 → 60 * 1000 (60 seconds)
+  gcTime: 10 * 60 * 1000 → 2 * 60 * 1000 (2 minutes)
 ```
 
-### Step 4: Link from Settings Hub
-**File**: `src/pages/admin/settings/SettingsHub.tsx`
+Also add `refetchInterval: 60 * 1000` to auto-refresh every 60 seconds while the component is mounted.
 
-Add navigation card in "Fees & Pricing" tab linking to the new page.
+### Step 2: Add Zone ID to Query Key for Automatic Refetch
 
-## UI Design
+**File**: `src/hooks/useZonePricingRates.ts`
 
-### Header
+The `useAllZoneRatesMap` hook already includes `zoneId` in its query key:
+
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│  📍 Zone Pricing Rates                                          │
-│  Manage ride pricing by geographic zone                          │
-│                                                                   │
-│  [Zone: Default US ▼]              [+ Add Rate] [Bulk Import]    │
-└─────────────────────────────────────────────────────────────────┘
+queryKey: ["zone-pricing-rates-map", zoneId]
 ```
 
-### Stats Cards
+This means when `pricingZone.id` changes (triggered by pickup location change), TanStack Query automatically:
+1. Invalidates the cached data
+2. Fetches fresh rates for the new zone
+
+No changes needed here - the architecture already handles pickup-change refetch.
+
+### Step 3: Add "lastUpdated" Timestamp to Hook Return
+
+**File**: `src/hooks/useZonePricingRates.ts`
+
+Return additional metadata from `useAllZoneRatesMap`:
+
 ```text
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│ Total Zones   │ │ Rates in Zone │ │ Lowest Base   │ │ Highest Multi │
-│      7        │ │      15       │ │    $2.50      │ │    4.00×      │
-└───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
+return {
+  ratesMap: data ?? new Map(),
+  isLoading,
+  error,
+  dataUpdatedAt,    // Timestamp of last successful fetch
+  isRefetching,     // True when background refetch in progress
+}
 ```
 
-### Rates Table
+### Step 4: Add Real-Time Indicator to UberLikeRideRow
+
+**File**: `src/components/ride/UberLikeRideRow.tsx`
+
+Add optional prop `showRealTimeIndicator`:
+
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│ Ride Type │ Base  │ /Mile │ /Min  │ Booking │ Min Fare │ Multi │
-├───────────────────────────────────────────────────────────────────┤
-│ standard  │ $3.50 │ $1.75 │ $0.35 │  $2.50  │  $7.00   │ 1.00× │ [✏️][🗑️]
-│ black     │ $5.00 │ $2.30 │ $0.38 │  $2.50  │ $14.00   │ 1.65× │ [✏️][🗑️]
-│ lux       │$15.00 │ $6.00 │ $1.00 │  $5.00  │ $75.00   │ 3.50× │ [✏️][🗑️]
-│ secure    │$25.00 │ $8.00 │ $1.25 │ $10.00  │$100.00   │ 4.00× │ [✏️][🗑️]
-└─────────────────────────────────────────────────────────────────┘
+interface UberLikeRideRowProps {
+  ...existing props...
+  showRealTimeIndicator?: boolean; // Show "Live pricing" text
+}
 ```
 
-### Edit Dialog
+When enabled, display subtle text below the price:
+
 ```text
-┌──────────────────────────────────────┐
-│  Edit Rate: Black                    │
-├──────────────────────────────────────┤
-│  Base Fare ($)      [5.00      ]     │
-│  Per Mile ($)       [2.30      ]     │
-│  Per Minute ($)     [0.38      ]     │
-│  Booking Fee ($)    [2.50      ]     │
-│  Minimum Fare ($)   [14.00     ]     │
-│  Multiplier         [1.65      ]     │
-│                                      │
-│  Preview: 10mi / 25min = $66.00      │
-├──────────────────────────────────────┤
-│           [Cancel]    [Save]         │
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  🚗  Standard                    👤 4   $20.00  │
+│       4:15 PM · 4 min               Live prices │
+└─────────────────────────────────────────────────┘
 ```
 
-### Add New Rate Dialog
+### Step 5: Verify UI Only Uses quoteRidePrice()
+
+**File**: `src/pages/Rides.tsx`
+
+Current implementation already correct:
+- `getFareDisplay()` calls `getQuoteForOption()` which uses `quoteRidePrice()`
+- No additional math is performed on the price
+- Price breakdown also comes from the quote
+
+No changes needed - architecture is already clean.
+
+## Visual Design
+
+### Real-Time Indicator (subtle, optional)
+
 ```text
-┌──────────────────────────────────────┐
-│  Add New Ride Type Rate              │
-├──────────────────────────────────────┤
-│  Ride Type ID     [___________]      │
-│  (e.g., economy, black, lux)         │
-│                                      │
-│  [Copy from existing ▼]              │
-│                                      │
-│  Base Fare ($)      [3.50      ]     │
-│  Per Mile ($)       [1.75      ]     │
-│  Per Minute ($)     [0.35      ]     │
-│  Booking Fee ($)    [2.50      ]     │
-│  Minimum Fare ($)   [7.00      ]     │
-│  Multiplier         [1.00      ]     │
-├──────────────────────────────────────┤
-│           [Cancel]    [Create]       │
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  🚗  Wait & Save                 👤 4   $18.40  │
+│       4:15 PM · 15 min              Live prices │
+│                                   ↑ text-[10px] │
+│                                     text-zinc-400│
+└─────────────────────────────────────────────────┘
 ```
 
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/hooks/useZonePricingAdmin.ts` | Create | CRUD hooks for zone pricing rates |
-| `src/pages/admin/ZonePricingRatesPage.tsx` | Create | Main admin page component |
-| `src/App.tsx` | Modify | Add route for new page |
-| `src/pages/admin/settings/SettingsHub.tsx` | Modify | Add link to new page |
+Only shown when `showRealTimeIndicator={true}` is passed to the component.
 
 ## Technical Details
 
-### Hook API
+### Updated Cache Configuration
 
 ```text
-// Fetch all zones for dropdown
-useAllZones() → { zones: PricingZone[], isLoading, error }
+// Before (5 minutes)
+staleTime: 5 * 60 * 1000,
+gcTime: 10 * 60 * 1000,
 
-// Fetch rates for a specific zone
-useZoneRates(zoneId) → { rates: ZonePricingRate[], isLoading, error }
-
-// Update a rate
-useUpdateZoneRate() → { mutate: (rate) => void, isPending }
-
-// Create a new rate
-useCreateZoneRate() → { mutate: (rate) => void, isPending }
-
-// Delete a rate
-useDeleteZoneRate() → { mutate: (id) => void, isPending }
+// After (60 seconds with auto-refresh)
+staleTime: 60 * 1000,
+gcTime: 2 * 60 * 1000,
+refetchInterval: 60 * 1000,
+refetchOnWindowFocus: true,  // Also refetch when user returns to tab
 ```
 
-### Validation Rules
+### Pickup Change Flow
 
-- Base fare: 0-100
-- Per mile: 0-50
-- Per minute: 0-10
-- Booking fee: 0-25
-- Minimum fare: 0-200
-- Multiplier: 0.5-10.0
-- Ride type: lowercase, alphanumeric, underscores only
-
-### Fare Preview Calculator
-
-Live preview calculation:
 ```text
-preview = max(
-  (base + (miles × per_mile) + (mins × per_minute) + booking_fee),
-  minimum_fare
-) × multiplier
+User enters new pickup address
+    ↓
+pickupCoords state updates
+    ↓
+usePricingZone(lat, lng) finds new zone
+    ↓
+pricingZone.id changes
+    ↓
+useAllZoneRatesMap(pricingZone.id) detects key change
+    ↓
+TanStack Query fetches fresh rates for new zone
+    ↓
+getQuoteForOption() recalculates with new rates
+    ↓
+UI re-renders with updated prices
 ```
 
-Default preview: 10 miles, 25 minutes
+### Query Key Structure
+
+```text
+["zone-pricing-rates-map", "00000000-0000-0000-0000-000000000001"]  // Default US
+["zone-pricing-rates-map", "baton-rouge-zone-id"]                   // After pickup change
+```
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/hooks/useZonePricingRates.ts` | Reduce staleTime to 60s, add refetchInterval, return metadata |
+| `src/components/ride/UberLikeRideRow.tsx` | Add optional "Live prices" indicator |
+| `src/pages/Rides.tsx` | Pass `showRealTimeIndicator` prop (optional) |
 
 ## Testing Checklist
 
-1. Navigate to `/admin/zone-pricing`
-2. Select different zones from dropdown
-3. Verify rates load correctly for each zone
-4. Edit a rate and verify changes persist
-5. Add a new rate for a zone
-6. Delete a rate with confirmation
-7. Verify fare preview updates live
-8. Test validation for invalid inputs
+1. Navigate to `/rides` and enter pickup/destination
+2. Verify prices load correctly
+3. Wait 60+ seconds - confirm background refetch occurs (check Network tab)
+4. Change pickup to a different zone - verify prices update immediately
+5. Verify "Live prices" indicator appears under price (if enabled)
+6. Confirm no extra math is applied to prices in UI
 
