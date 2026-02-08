@@ -1,198 +1,105 @@
 
-# Refactor to @react-google-maps/api Library
+# Fix ZIVO Map Styling & Pickup Marker
 
-## Overview
-This update refactors the map system to use the `@react-google-maps/api` library for cleaner, declarative React components. This replaces the imperative DOM manipulation approach with React-native components like `<GoogleMap>`, `<MarkerF>`, `<OverlayViewF>`, and `<PolylineF>`.
+## Summary
+The ZIVO dark theme and pulsing pickup marker are not displaying correctly because:
+1. The `pickup` prop may be empty/undefined, so no marker renders
+2. The `markers` array approach does render `ZivoPickupMarker` for pickup type, but there might be rendering issues
+3. The `mapId` prop is defined but unused (which is fine - it's not being passed)
 
 ---
 
 ## Changes
 
-### 1. Install @react-google-maps/api
-
-Add the library for declarative Google Maps React components:
-
-```bash
-npm install @react-google-maps/api
-```
-
----
-
-### 2. Refactor GoogleMapProvider
-
-**File: `src/components/maps/GoogleMapProvider.tsx`**
-
-Replace custom script loading with `LoadScriptNext`:
-
-```tsx
-import { LoadScriptNext } from "@react-google-maps/api";
-
-const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
-
-export default function GoogleMapProvider({ children }) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-  if (!apiKey) {
-    return <div className="...">Missing VITE_GOOGLE_MAPS_API_KEY</div>;
-  }
-
-  return (
-    <LoadScriptNext googleMapsApiKey={apiKey} libraries={LIBRARIES}>
-      {children}
-    </LoadScriptNext>
-  );
-}
-```
-
-**Benefits:**
-- Cleaner API loading
-- Built-in loading states
-- Proper library management
-
----
-
-### 3. Refactor ZivoPickupMarker
-
-**File: `src/components/maps/ZivoPickupMarker.tsx`**
-
-Use `OverlayViewF` for declarative overlay:
-
-```tsx
-import { OverlayViewF } from "@react-google-maps/api";
-
-export default function ZivoPickupMarker({ position }) {
-  return (
-    <OverlayViewF position={position} mapPaneName="overlayMouseTarget">
-      <div className="relative flex items-center justify-center w-16 h-16 -translate-x-1/2 -translate-y-1/2">
-        <div className="absolute w-16 h-16 rounded-full bg-blue-500/30 animate-ping" />
-        <div className="absolute w-10 h-10 rounded-full bg-blue-500/20 animate-pulse" />
-        <div className="w-5 h-5 rounded-full bg-blue-500 border-2 border-white shadow-lg z-10">
-          <div className="w-1.5 h-1.5 bg-white/80 rounded-full m-auto mt-1" />
-        </div>
-      </div>
-    </OverlayViewF>
-  );
-}
-```
-
-**Benefits:**
-- No manual DOM manipulation
-- React state management
-- Clean component lifecycle
-
----
-
-### 4. Refactor GoogleMap Component
-
+### 1. Remove Unused `mapId` Prop
 **File: `src/components/maps/GoogleMap.tsx`**
 
-Complete rewrite using declarative components:
+Remove the unused `mapId` prop from the interface since it's never used and would conflict with `styles[]` if it were:
 
-```tsx
-import { GoogleMap as GMap, MarkerF, PolylineF, useJsApiLoader } from "@react-google-maps/api";
-import ZivoPickupMarker from "./ZivoPickupMarker";
-
-const ZIVO_MAP_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
-];
-
-export default function GoogleMap({ center, pickup, dropoff, routePath, className }) {
-  const options = useMemo(() => ({
-    styles: ZIVO_MAP_STYLE,
-    disableDefaultUI: true,
-    clickableIcons: false,
-    keyboardShortcuts: false,
-    gestureHandling: "greedy",
-    tilt: 0,
-  }), []);
-
-  return (
-    <div className={`relative ${className}`}>
-      <GMap mapContainerClassName="w-full h-full" center={center} zoom={14} options={options}>
-        {pickup && <ZivoPickupMarker position={pickup} />}
-        {dropoff && <MarkerF position={dropoff} icon={{
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#000000",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        }} />}
-        {routePath?.length && <PolylineF path={routePath} options={{
-          strokeColor: "#3b82f6",
-          strokeOpacity: 0.9,
-          strokeWeight: 5,
-        }} />}
-      </GMap>
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
-    </div>
-  );
-}
+```typescript
+// Remove this line from GoogleMapProps interface:
+// mapId?: string;
 ```
 
----
+### 2. Always Show Pickup Marker at Center When No Pickup Set
+**File: `src/components/maps/GoogleMap.tsx`**
 
-### 5. Update RidesMapBackground
+Ensure the pickup marker always shows, defaulting to center position:
 
-**File: `src/components/ride/RidesMapBackground.tsx`**
+```typescript
+// Change line 175 from:
+{pickup && <ZivoPickupMarker position={pickup} />}
 
-Simplified wrapper with extra bottom fade:
-
-```tsx
-import GoogleMap from "../maps/GoogleMap";
-
-export default function RidesMapBackground({ center, pickup, dropoff, routePath }) {
-  return (
-    <div className="absolute inset-0 z-0">
-      <GoogleMap
-        center={center}
-        pickup={pickup}
-        dropoff={dropoff}
-        routePath={routePath}
-        className="w-full h-full"
-      />
-      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/80 to-transparent" />
-    </div>
-  );
-}
+// To:
+{/* Always show pickup marker - fall back to center */}
+<ZivoPickupMarker position={pickup ?? center} />
 ```
 
----
+### 3. Remove Duplicate Marker Rendering for Pickup Type
+**File: `src/components/maps/GoogleMap.tsx`**
 
-## Comparison: Before vs After
+The legacy markers loop (lines 186-221) renders `ZivoPickupMarker` for markers with `type === "pickup"`. This could cause duplicate markers. We should skip pickup-type markers in the loop since we're already rendering the primary pickup marker above:
 
-| Aspect | Current (Imperative) | New (Declarative) |
-|--------|---------------------|-------------------|
-| **API Loading** | Custom script injection | `LoadScriptNext` |
-| **Markers** | `new google.maps.Marker()` | `<MarkerF position={...} />` |
-| **Overlays** | Custom `OverlayView` class | `<OverlayViewF>` |
-| **Routes** | `DirectionsService` + imperative | `<PolylineF path={...} />` |
-| **Cleanup** | Manual ref management | Automatic via React |
-| **Code Size** | ~370 lines | ~100 lines |
+```typescript
+// Update the markers.map() to skip pickup types:
+{markers.map(marker => {
+  // Skip pickup type - already rendered above
+  if (marker.type === "pickup") {
+    return null;
+  }
+  
+  // ...rest of marker rendering
+})}
+```
+
+### 4. Ensure RidesMapView Uses Correct Props
+**File: `src/pages/Rides.tsx` (RidesMapView component ~line 235)**
+
+The `GoogleMap` component is receiving `markers` array but not the `pickup` prop directly. Update to pass `pickup` prop:
+
+```typescript
+// Around line 235, change:
+<GoogleMap
+  className="w-full h-full"
+  center={center}
+  zoom={markers.length > 1 ? 12 : 15}
+  markers={markers}
+  route={route}
+  fitBounds={markers.length > 1}
+  showControls={false}
+  darkMode={true}
+/>
+
+// To:
+<GoogleMap
+  className="w-full h-full"
+  center={center}
+  pickup={pickupCoords || userLocation || center}
+  dropoff={dropoffCoords || undefined}
+  zoom={pickupCoords && dropoffCoords ? 12 : 15}
+  markers={[]} // Clear legacy markers since we use pickup/dropoff props
+  route={route}
+  fitBounds={!!(pickupCoords && dropoffCoords)}
+  showControls={false}
+  darkMode={true}
+/>
+```
 
 ---
 
 ## Files Modified
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `package.json` | Add `@react-google-maps/api` |
-| `src/components/maps/GoogleMapProvider.tsx` | Refactor to use `LoadScriptNext` |
-| `src/components/maps/ZivoPickupMarker.tsx` | Refactor to use `OverlayViewF` |
-| `src/components/maps/GoogleMap.tsx` | Complete rewrite with declarative components |
-| `src/components/ride/RidesMapBackground.tsx` | Simplify props interface |
+| `src/components/maps/GoogleMap.tsx` | Remove unused `mapId` prop, always render pickup marker at `pickup ?? center`, skip pickup type in legacy markers loop |
+| `src/pages/Rides.tsx` | Pass `pickup` and `dropoff` props directly to GoogleMap instead of using markers array |
 
 ---
 
 ## Result
 
-- **Cleaner code**: React-native components instead of imperative DOM
-- **Better React integration**: Proper lifecycle management
-- **Simpler API**: Just pass props, components handle the rest
-- **Premium look preserved**: ZIVO dark theme + pulsing pickup marker + gradient overlay
-- **Bottom sheet UI**: Unchanged
+After these changes:
+- **ZIVO dark theme** will apply (no `mapId` conflict)
+- **Pulsing pickup marker** will always show (at pickup location or center)
+- **No duplicate markers** from legacy markers array
+- **Blue Google dot removed** - only custom `ZivoPickupMarker` renders
