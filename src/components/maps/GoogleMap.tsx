@@ -11,7 +11,7 @@ import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer } fro
 import { cn } from "@/lib/utils";
 import ZivoPickupMarker from "./ZivoPickupMarker";
 import ZivoDropoffMarker from "./ZivoDropoffMarker";
-import NearbyCars from "./NearbyCars";
+import RealDriverMarkers from "./RealDriverMarkers";
 
 // ZIVO Dark map theme - premium, removes "Google look"
 const ZIVO_DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
@@ -224,8 +224,8 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
           />
         )}
 
-        {/* Uber-style animated nearby cars */}
-        <NearbyCars center={pickup ?? center} count={12} radiusMeters={900} />
+        {/* Real online drivers from database */}
+        <RealDriverMarkers center={pickup ?? center} radiusMiles={10} />
 
         {/* Pickup marker with premium pulsing effect */}
         <ZivoPickupMarker position={pickup ?? center} />
