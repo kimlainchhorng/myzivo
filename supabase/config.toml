@@ -164,3 +164,6 @@ verify_jwt = false
 
 [functions.sync-offline-actions]
 verify_jwt = false
+
+[functions.create-eats-payment-intent]
+verify_jwt = false

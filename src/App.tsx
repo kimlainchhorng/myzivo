@@ -95,6 +95,7 @@ const EatsCart = lazy(() => import("./pages/EatsCart"));
 const EatsOrders = lazy(() => import("./pages/EatsOrders"));
 const EatsOrderDetail = lazy(() => import("./pages/EatsOrderDetail"));
 const EatsAddress = lazy(() => import("./pages/EatsAddress"));
+const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -576,6 +577,7 @@ const App = () => (
                 <Route path="/eats/address" element={<EatsAddress />} />
                 <Route path="/eats/orders" element={<EatsOrders />} />
                 <Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
+                <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />
