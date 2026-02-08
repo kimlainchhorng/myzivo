@@ -60,6 +60,7 @@ export function HelpModal({
   const [message, setMessage] = useState("");
   const [ticketCreated, setTicketCreated] = useState(false);
   const [createdTicketNumber, setCreatedTicketNumber] = useState<string | null>(null);
+  const [createdTicketId, setCreatedTicketId] = useState<string | null>(null);
   
   const createTicket = useCreateEatsTicket();
 
@@ -78,6 +79,7 @@ export function HelpModal({
     });
     
     setCreatedTicketNumber(result.ticket_number);
+    setCreatedTicketId(result.id);
     setTicketCreated(true);
   };
 
@@ -87,7 +89,15 @@ export function HelpModal({
     setMessage("");
     setTicketCreated(false);
     setCreatedTicketNumber(null);
+    setCreatedTicketId(null);
     onOpenChange(false);
+  };
+
+  const handleViewTicket = () => {
+    if (createdTicketId) {
+      handleClose();
+      navigate(`/support/tickets/${createdTicketId}`);
+    }
   };
 
   const handleContactSupport = () => {
@@ -125,12 +135,22 @@ export function HelpModal({
                 We'll get back to you within 24 hours.
               </p>
               
-              <Button
-                onClick={handleClose}
-                className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold mt-6"
-              >
-                Done
-              </Button>
+              <div className="flex flex-col gap-3 mt-6">
+                <Button
+                  onClick={handleViewTicket}
+                  className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  View Ticket
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  className="w-full h-12 rounded-xl border-zinc-700 bg-transparent text-white"
+                >
+                  Done
+                </Button>
+              </div>
             </motion.div>
           )}
 
