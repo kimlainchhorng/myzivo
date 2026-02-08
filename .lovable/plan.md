@@ -1,366 +1,370 @@
 
-# Customer Order Tracking Enhancement — Driver Display, Live Map & Timestamps
-
-## Overview
-Enhance the `/eats/orders/[id]` page with real-time driver tracking, live map display, timeline timestamps, and automated order status notifications.
-
----
+# Standardize Eats Order Flow & Reliability
 
 ## Current State Analysis
 
-### Already Implemented
-| Feature | Status | Location |
-|---------|--------|----------|
-| Order realtime subscription | ✅ Working | `useLiveEatsOrder.ts` |
-| Driver fetching hook | ✅ Working | `useEatsDriver.ts` — fetches from `drivers` table |
-| Delivery map component | ✅ Exists | `DeliveryMap.tsx` — shows driver + destination markers |
-| Status timeline | ⚠️ Partial | `StatusTimeline.tsx` — no timestamps shown |
-| Order detail page | ✅ Exists | `EatsOrderDetail.tsx` — missing driver card |
-| Notifications table | ✅ Exists | Has `order_id`, `user_id`, `title`, `body`, etc. |
-| Eats alerts hook | ✅ Working | `useEatsAlerts.ts` — realtime subscription |
+### Database Schema
+- **`food_orders.status`** uses `booking_status` enum with values: `pending`, `confirmed`, `in_progress`, `ready_for_pickup`, `out_for_delivery`, `completed`, `cancelled`, `refunded`
+- **`order_events`** table already exists with: `id`, `order_id`, `trip_id`, `actor_id`, `type`, `data`, `created_at`
 
-### Database Schema Findings
+### Status Inconsistencies Found
+| Location | Status Values Used |
+|----------|-------------------|
+| `StatusTimeline.tsx` | `pending`, `confirmed`, `preparing`, `ready_for_pickup`, `out_for_delivery`, `delivered` |
+| `useOrderMutations.ts` | `confirmed`, `pending`, `in_progress`, `completed`, `cancelled` |
+| `useCrossAppRealtime.ts` | `pending`, `confirmed`, `in_progress`, `completed`, `cancelled` |
+| `RealtimeOrderToasts.tsx` | `confirmed`, `in_progress`, `completed`, `cancelled` |
+| Database enum | `pending`, `confirmed`, `in_progress`, `ready_for_pickup`, `out_for_delivery`, `completed`, `cancelled`, `refunded` |
 
-**`food_orders` Table — Has Timestamps:**
-```text
-- placed_at           (when order was placed)
-- accepted_at         (when restaurant confirmed)
-- prepared_at         (when food was ready)
-- picked_up_at        (when driver picked up)
-- delivered_at        (when delivered)
-- ready_at            (ready for pickup)
-- assigned_at         (driver assigned)
-- cancelled_at
-```
-
-**`drivers` Table:**
-```text
-- id, full_name, phone, avatar_url, rating
-- current_lat, current_lng (live location)
-- vehicle_type, vehicle_model, vehicle_plate
-```
-
-**No `driver_locations` table exists** — Driver location is stored directly in `drivers.current_lat/lng`
+### Problems
+1. **Inconsistent naming**: `delivered` vs `completed`, `preparing` vs `in_progress`
+2. **No transition validation**: Any status can be set without checking if allowed
+3. **No audit logging**: Status changes not logged to `order_events`
+4. **No completed order lock**: Delivered/cancelled orders can still be modified
+5. **No reconnection handling**: Realtime drops not recovered
 
 ---
 
-## Implementation Details
+## Implementation Plan
 
-### 1. Extend LiveEatsOrder Interface with Timestamps
+### 1. Create Order Status Constants (`/lib/orderStatus.ts`)
 
-Update `useLiveEatsOrder.ts` to fetch all timestamp columns for the timeline.
+Single source of truth for all order status logic across all apps:
 
-**File to Modify:**
-- `src/hooks/useLiveEatsOrder.ts`
-
-**Add Fields:**
 ```typescript
-interface LiveEatsOrder {
-  // ... existing fields ...
-  placed_at: string | null;
-  accepted_at: string | null;
-  prepared_at: string | null;
-  ready_at: string | null;
-  picked_up_at: string | null;
-  delivered_at: string | null;
-  assigned_at: string | null;
-}
+// Standard Eats order statuses (use these exact strings everywhere)
+export const EatsOrderStatus = {
+  PLACED: "placed",
+  CONFIRMED: "confirmed", 
+  PREPARING: "preparing",
+  READY: "ready",
+  OUT_FOR_DELIVERY: "out_for_delivery",
+  DELIVERED: "delivered",
+  CANCELLED: "cancelled",
+} as const;
+
+export type EatsOrderStatusType = typeof EatsOrderStatus[keyof typeof EatsOrderStatus];
+
+// Actor roles for audit trail
+export const ActorRole = {
+  CUSTOMER: "customer",
+  MERCHANT: "merchant", 
+  DRIVER: "driver",
+  SYSTEM: "system",
+  ADMIN: "admin",
+} as const;
+
+// Allowed status transitions by role
+const MERCHANT_TRANSITIONS: Record<string, string[]> = {
+  placed: ["confirmed", "cancelled"],
+  confirmed: ["preparing", "cancelled"],
+  preparing: ["ready", "cancelled"],
+  ready: ["out_for_delivery"], // When driver picks up
+};
+
+const DRIVER_TRANSITIONS: Record<string, string[]> = {
+  ready: ["out_for_delivery"],
+  out_for_delivery: ["delivered"],
+};
+
+// Validation functions
+export function canMerchantUpdateStatus(current: string, next: string): boolean;
+export function canDriverUpdateStatus(current: string, next: string): boolean;
+export function getNextStatusOptions(role: ActorRole, status: string): string[];
+export function isOrderLocked(status: string): boolean;
+export function getStatusLabel(status: string): string;
+export function getStatusTimestampField(status: string): string;
 ```
 
-### 2. Create Driver Info Card Component
+### 2. Update Database Enum
 
-Create a reusable card to display assigned driver info (similar to ride tracking).
+The current `booking_status` enum needs to be extended to include `placed`, `preparing`, `ready`, `delivered`:
 
-**File to Create:**
-- `src/components/eats/DriverInfoCard.tsx`
-
-**Features:**
-- Driver avatar, name, rating
-- Vehicle type/model
-- Phone button to call driver
-- Animated "arriving" indicator when out for delivery
-
-**Props:**
-```typescript
-interface DriverInfoCardProps {
-  driver: EatsDriver;
-  isDelivering: boolean;
-  onCall?: () => void;
-}
-```
-
-### 3. Enhance StatusTimeline with Timestamps
-
-Update the timeline to show actual timestamps for each completed step.
-
-**File to Modify:**
-- `src/components/eats/StatusTimeline.tsx`
-
-**Add Props:**
-```typescript
-interface StatusTimelineProps {
-  currentStatus: string;
-  timestamps?: {
-    placed_at?: string | null;
-    accepted_at?: string | null;
-    prepared_at?: string | null;
-    ready_at?: string | null;
-    picked_up_at?: string | null;
-    delivered_at?: string | null;
-  };
-  className?: string;
-}
-```
-
-**Display:**
-```text
-✓ Order Placed         10:32 AM
-✓ Confirmed           10:35 AM
-● Preparing           In progress...
-○ On the Way
-○ Delivered
-```
-
-### 4. Integrate Driver + Map into Order Detail
-
-Update `EatsOrderDetail.tsx` to:
-- Fetch driver info when `driver_id` exists
-- Show `DriverInfoCard` component
-- Show `DeliveryMap` with live driver location
-- Subscribe to driver location updates
-
-**File to Modify:**
-- `src/pages/EatsOrderDetail.tsx`
-
-**Logic:**
-```typescript
-// Fetch driver when assigned
-const { driver } = useEatsDriver(order?.driver_id);
-
-// Show map when order is out for delivery
-const showMap = ["confirmed", "ready_for_pickup", "out_for_delivery"].includes(order.status);
-```
-
-### 5. Create Order Status Alert Trigger
-
-Create a database trigger to automatically insert notifications when order status changes.
-
-**Database Migration — Create Trigger:**
 ```sql
--- Function to create notification on order status change
-CREATE OR REPLACE FUNCTION notify_customer_order_status()
+-- Add missing enum values
+ALTER TYPE booking_status ADD VALUE IF NOT EXISTS 'placed';
+ALTER TYPE booking_status ADD VALUE IF NOT EXISTS 'preparing';
+ALTER TYPE booking_status ADD VALUE IF NOT EXISTS 'ready';
+ALTER TYPE booking_status ADD VALUE IF NOT EXISTS 'delivered';
+```
+
+### 3. Add `actor_role` Column to `order_events`
+
+Enhance the existing table:
+
+```sql
+ALTER TABLE order_events 
+ADD COLUMN IF NOT EXISTS actor_role TEXT DEFAULT 'system';
+```
+
+### 4. Create Validated Order Update Hook
+
+New hook that enforces transition rules and logs events:
+
+**File: `src/hooks/useEatsOrderMutations.ts`**
+
+```typescript
+export function useUpdateEatsOrderStatus() {
+  return useMutation({
+    mutationFn: async ({ 
+      orderId, 
+      newStatus, 
+      actorRole, 
+      actorId 
+    }: UpdateParams) => {
+      // 1. Fetch current order status
+      const { data: order } = await supabase
+        .from("food_orders")
+        .select("status")
+        .eq("id", orderId)
+        .single();
+      
+      // 2. Check if order is locked
+      if (isOrderLocked(order.status)) {
+        throw new Error("Cannot modify completed or cancelled orders");
+      }
+      
+      // 3. Validate transition based on role
+      const canTransition = actorRole === "merchant" 
+        ? canMerchantUpdateStatus(order.status, newStatus)
+        : canDriverUpdateStatus(order.status, newStatus);
+      
+      if (!canTransition) {
+        throw new Error(`Invalid status transition: ${order.status} → ${newStatus}`);
+      }
+      
+      // 4. Build update with correct timestamp
+      const timestampField = getStatusTimestampField(newStatus);
+      const updates = {
+        status: newStatus,
+        [timestampField]: new Date().toISOString(),
+      };
+      
+      // 5. Update order
+      const { error } = await supabase
+        .from("food_orders")
+        .update(updates)
+        .eq("id", orderId);
+      
+      if (error) throw error;
+      
+      // 6. Log event to order_events
+      await supabase.from("order_events").insert({
+        order_id: orderId,
+        type: `status_${newStatus}`,
+        actor_id: actorId,
+        actor_role: actorRole,
+        data: { 
+          previous_status: order.status, 
+          new_status: newStatus 
+        },
+      });
+    },
+    onError: (error) => {
+      toast.error("Update failed", { 
+        description: error.message,
+        action: { label: "Retry", onClick: () => {} }
+      });
+    }
+  });
+}
+```
+
+### 5. Create Database Trigger for Event Logging
+
+Automatic event logging as backup (in case app doesn't log):
+
+```sql
+CREATE OR REPLACE FUNCTION log_order_status_change()
 RETURNS TRIGGER AS $$
-DECLARE
-  notification_title TEXT;
-  notification_body TEXT;
-  action_link TEXT;
 BEGIN
-  -- Only notify on specific status changes
   IF OLD.status IS DISTINCT FROM NEW.status THEN
-    action_link := '/eats/orders/' || NEW.id;
-    
-    CASE NEW.status
-      WHEN 'confirmed' THEN
-        notification_title := 'Order Confirmed';
-        notification_body := 'Your order has been accepted and is being prepared';
-      WHEN 'preparing' THEN
-        notification_title := 'Preparing Your Order';
-        notification_body := 'The restaurant is now preparing your food';
-      WHEN 'ready_for_pickup' THEN
-        notification_title := 'Order Ready';
-        notification_body := 'Your order is ready and waiting for pickup';
-      WHEN 'out_for_delivery' THEN
-        notification_title := 'Driver On The Way';
-        notification_body := 'Your order is on its way to you!';
-      WHEN 'delivered' THEN
-        notification_title := 'Order Delivered';
-        notification_body := 'Enjoy your meal! Rate your experience';
-        action_link := '/eats/orders/' || NEW.id || '?rate=true';
-      ELSE
-        RETURN NEW;
-    END CASE;
-    
-    -- Insert in-app notification
-    INSERT INTO notifications (
-      user_id, order_id, channel, category, template,
-      title, body, action_url, status, metadata
-    ) VALUES (
-      NEW.customer_id,
+    INSERT INTO order_events (order_id, type, actor_role, data)
+    VALUES (
       NEW.id,
-      'in_app',
-      'transactional',
-      'order_status_update',
-      notification_title,
-      notification_body,
-      action_link,
-      'sent',
-      jsonb_build_object('status', NEW.status, 'type', 'eats')
+      'status_' || NEW.status,
+      COALESCE(current_setting('app.actor_role', true), 'system'),
+      jsonb_build_object(
+        'previous_status', OLD.status,
+        'new_status', NEW.status
+      )
     );
-    
-    -- Also notify when driver is assigned
-    IF OLD.driver_id IS NULL AND NEW.driver_id IS NOT NULL THEN
-      INSERT INTO notifications (
-        user_id, order_id, channel, category, template,
-        title, body, action_url, status, metadata
-      ) VALUES (
-        NEW.customer_id,
-        NEW.id,
-        'in_app',
-        'transactional',
-        'driver_assigned',
-        'Driver Assigned',
-        'A driver has been assigned to your order',
-        '/eats/orders/' || NEW.id,
-        'sent',
-        jsonb_build_object('driver_id', NEW.driver_id, 'type', 'eats')
-      );
-    END IF;
+  END IF;
+  
+  -- Log driver assignment
+  IF OLD.driver_id IS NULL AND NEW.driver_id IS NOT NULL THEN
+    INSERT INTO order_events (order_id, type, actor_role, data)
+    VALUES (
+      NEW.id,
+      'driver_assigned',
+      'system',
+      jsonb_build_object('driver_id', NEW.driver_id)
+    );
   END IF;
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
--- Create trigger
-DROP TRIGGER IF EXISTS on_food_order_status_change ON food_orders;
-CREATE TRIGGER on_food_order_status_change
-  AFTER UPDATE ON food_orders
-  FOR EACH ROW
-  EXECUTE FUNCTION notify_customer_order_status();
+CREATE TRIGGER on_food_order_change
+AFTER UPDATE ON food_orders
+FOR EACH ROW
+EXECUTE FUNCTION log_order_status_change();
 ```
+
+### 6. Safe Realtime Reconnection
+
+Update `useLiveEatsOrder.ts` with reconnection logic:
+
+```typescript
+export function useLiveEatsOrder(orderId: string | undefined) {
+  const [order, setOrder] = useState<LiveEatsOrder | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"connected" | "disconnected">("disconnected");
+  
+  // Refetch function for reconnection
+  const refetch = useCallback(async () => {
+    if (!orderId) return;
+    const { data } = await supabase
+      .from(EATS_TABLES.orders)
+      .select("*, restaurants:restaurant_id(...)")
+      .eq("id", orderId)
+      .single();
+    if (data) setOrder(data);
+  }, [orderId]);
+
+  useEffect(() => {
+    // ... existing subscription code ...
+    
+    channel
+      .on("system", { event: "disconnect" }, () => {
+        setConnectionStatus("disconnected");
+        // Auto-reconnect with fresh data
+        setTimeout(() => {
+          refetch();
+          channel.subscribe();
+        }, 2000);
+      })
+      .subscribe((status) => {
+        setConnectionStatus(status === "SUBSCRIBED" ? "connected" : "disconnected");
+      });
+  }, [orderId, refetch]);
+
+  return { order, loading, error, connectionStatus, refetch };
+}
+```
+
+### 7. Update All Status References
+
+**Files to update:**
+
+| File | Changes |
+|------|---------|
+| `StatusTimeline.tsx` | Use `EatsOrderStatus` constants, map DB values |
+| `useOrderMutations.ts` | Use new `useUpdateEatsOrderStatus` |
+| `useCrossAppRealtime.ts` | Update status type to `EatsOrderStatusType` |
+| `RealtimeOrderToasts.tsx` | Use `EatsOrderStatus` for switch cases |
+| `EatsOrderDetail.tsx` | Use `getStatusLabel()` for display |
 
 ---
 
-## File Summary
+## File Changes Summary
 
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/components/eats/DriverInfoCard.tsx` | Driver display card with avatar, info, call button |
+| `src/lib/orderStatus.ts` | Status constants, transitions, validation helpers |
+| `src/hooks/useEatsOrderMutations.ts` | Validated order update mutation with event logging |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/hooks/useLiveEatsOrder.ts` | Add timestamp fields to interface and select |
-| `src/components/eats/StatusTimeline.tsx` | Add timestamp prop, display times for completed steps |
-| `src/pages/EatsOrderDetail.tsx` | Integrate useEatsDriver, show DriverInfoCard + DeliveryMap |
+| `src/components/eats/StatusTimeline.tsx` | Import from `orderStatus.ts`, use standard constants |
+| `src/hooks/useLiveEatsOrder.ts` | Add reconnection handling, connection status |
+| `src/hooks/useOrderMutations.ts` | Use central validation, log to `order_events` |
+| `src/hooks/useCrossAppRealtime.ts` | Use `EatsOrderStatus` type |
+| `src/components/dispatch/RealtimeOrderToasts.tsx` | Use standard status constants |
+| `src/lib/eatsTables.ts` | Add `orderEvents` table reference |
 
-### Database Migration
-| Change | Purpose |
-|--------|---------|
-| `notify_customer_order_status()` function | Auto-create notifications on status change |
-| `on_food_order_status_change` trigger | Fire function after order updates |
+### Database Migrations
+| Migration | Purpose |
+|-----------|---------|
+| Add enum values | Add `placed`, `preparing`, `ready`, `delivered` to `booking_status` |
+| Add `actor_role` column | Extend `order_events` table |
+| Create trigger | Auto-log status changes to `order_events` |
 
 ---
 
-## UI Layout
+## Validation Flow Diagram
 
-### Order Detail Page (Enhanced)
 ```text
-+----------------------------------+
-| [← Back]  Order Details  [?]     |
-+----------------------------------+
-| [Live Status Banner]             |
-| "Driver is on the way!"          |
-+----------------------------------+
-|                                  |
-|        [LIVE MAP]                |
-|    Driver ▸         📍 You       |
-|    "3 min away"                  |
-|                                  |
-+----------------------------------+
-| Driver Info Card                 |
-| +------------------------------+ |
-| | 👤 John D.    ★ 4.9    📞    | |
-| | Toyota Prius • ABC-1234      | |
-| +------------------------------+ |
-+----------------------------------+
-| Order Status                     |
-| ✓ Placed          10:32 AM      |
-| ✓ Confirmed       10:35 AM      |
-| ✓ Preparing       10:40 AM      |
-| ● On the Way      10:55 AM      |
-| ○ Delivered                      |
-+----------------------------------+
-| Restaurant Info                  |
-| ...                              |
-+----------------------------------+
-| Items Ordered                    |
-| ...                              |
-+----------------------------------+
+Order Status Update Request
+          │
+          ▼
+┌─────────────────────────┐
+│ 1. Fetch current status │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ 2. Check if locked      │──▶ REJECT if delivered/cancelled
+│    (delivered/cancelled)│
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ 3. Validate transition  │──▶ REJECT if not allowed for role
+│    by role              │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ 4. Update with timestamp│
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ 5. Log to order_events  │
+└───────────┬─────────────┘
+            │
+            ▼
+         SUCCESS
 ```
 
 ---
 
-## Data Flow
+## Status Transition Rules
 
-```text
-Order Status Change (Merchant/Driver App)
-    │
-    ▼
-food_orders UPDATE
-    │
-    ├──▶ Trigger: notify_customer_order_status()
-    │       └──▶ INSERT into notifications
-    │               └──▶ Realtime push to customer app
-    │                       └──▶ useEatsAlerts() catches new alert
-    │                              └──▶ Toast notification + badge
-    │
-    └──▶ Realtime: useLiveEatsOrder() catches update
-            └──▶ UI updates status banner + timeline
+### Merchant (Restaurant) Can:
+| From | To |
+|------|----|
+| placed | confirmed, cancelled |
+| confirmed | preparing, cancelled |
+| preparing | ready, cancelled |
 
-Driver Location Update
-    │
-    ▼
-drivers UPDATE (current_lat, current_lng)
-    │
-    └──▶ Realtime: useEatsDriver() catches update
-            └──▶ DeliveryMap marker moves
-```
+### Driver Can:
+| From | To |
+|------|----|
+| ready | out_for_delivery |
+| out_for_delivery | delivered |
 
----
-
-## Implementation Order
-
-1. **Update `useLiveEatsOrder.ts`** — Add timestamp fields
-2. **Update `StatusTimeline.tsx`** — Add timestamp display
-3. **Create `DriverInfoCard.tsx`** — Driver display component
-4. **Update `EatsOrderDetail.tsx`** — Integrate driver card + map
-5. **Create database trigger** — Auto-notify on status changes
-
----
-
-## Technical Notes
-
-### Driver Location Source
-- Location stored in `drivers.current_lat` and `drivers.current_lng`
-- `useEatsDriver` hook already subscribes to realtime updates
-- `DeliveryMap` component already handles driver markers
-
-### Timestamp Mapping
-| Status | Timestamp Column |
-|--------|------------------|
-| placed | `placed_at` or `created_at` |
-| confirmed | `accepted_at` |
-| preparing | `prepared_at` |
-| ready | `ready_at` |
-| out_for_delivery | `picked_up_at` |
-| delivered | `delivered_at` |
-
-### Map Display Conditions
-Show map when:
-- `order.status` is `confirmed`, `ready_for_pickup`, or `out_for_delivery`
-- `order.driver_id` is not null
-- `order.delivery_lat` and `order.delivery_lng` are set
+### Locked States (No Changes Allowed):
+- `delivered`
+- `cancelled`
 
 ---
 
 ## Summary
 
-This update enhances order tracking with:
+This update standardizes the Eats order flow with:
 
-- **Driver Card**: Shows assigned driver info (photo, name, vehicle, rating, call button)
-- **Live Map**: Real-time driver location on map with destination marker
-- **Timestamped Timeline**: Each status step shows when it happened
-- **Automatic Alerts**: Database trigger creates notifications on status changes (driver assigned, picked up, delivered)
-- **Real-time Updates**: All changes sync instantly via Supabase Realtime
+1. **Single Source of Truth**: `orderStatus.ts` with exact status enum and labels
+2. **Central Validation**: `canMerchantUpdateStatus()` and `canDriverUpdateStatus()` functions
+3. **Audit Trail**: Every status change logged to `order_events` with actor info
+4. **Double-Update Prevention**: Fetch-then-validate pattern before any update
+5. **Locked Orders**: Delivered and cancelled orders cannot be modified
+6. **Safe Reconnection**: Realtime drops trigger refetch and resubscribe
+7. **Error Handling**: Clear error messages with retry options
+
+All apps (customer, merchant, driver, dispatch) will import from `orderStatus.ts` to ensure consistency.
