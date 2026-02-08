@@ -4546,10 +4546,12 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivery_pin: string | null
           discount_amount: number
           estimated_prep_minutes: number | null
           id: string
           notes: string | null
+          pin_attempts: number
           prep_started_at: string | null
           priority: string | null
           promo_code: string | null
@@ -4567,10 +4569,12 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_pin?: string | null
           discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
+          pin_attempts?: number
           prep_started_at?: string | null
           priority?: string | null
           promo_code?: string | null
@@ -4588,10 +4592,12 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_pin?: string | null
           discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
+          pin_attempts?: number
           prep_started_at?: string | null
           priority?: string | null
           promo_code?: string | null
@@ -11467,6 +11473,91 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      incident_reports: {
+        Row: {
+          attachment_url: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          reported_user_id: string | null
+          reporter_role: string
+          reporter_user_id: string
+          severity: string
+          status: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          reported_user_id?: string | null
+          reporter_role: string
+          reporter_user_id: string
+          severity?: string
+          status?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          reported_user_id?: string | null
+          reporter_role?: string
+          reporter_user_id?: string
+          severity?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_reports_customer_order_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_customer_order_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_travel_order_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incident_templates: {
         Row: {
@@ -24542,6 +24633,7 @@ export type Database = {
           created_at: string
           credit_used_amount: number
           currency: string
+          delivery_pin: string | null
           discount_amount: number
           fees: number
           flagged_for_review: boolean | null
@@ -24551,6 +24643,7 @@ export type Database = {
           holder_phone: string | null
           id: string
           order_number: string
+          pin_attempts: number
           promo_code: string | null
           provider: string
           status: string
@@ -24571,6 +24664,7 @@ export type Database = {
           created_at?: string
           credit_used_amount?: number
           currency?: string
+          delivery_pin?: string | null
           discount_amount?: number
           fees?: number
           flagged_for_review?: boolean | null
@@ -24580,6 +24674,7 @@ export type Database = {
           holder_phone?: string | null
           id?: string
           order_number: string
+          pin_attempts?: number
           promo_code?: string | null
           provider?: string
           status?: string
@@ -24600,6 +24695,7 @@ export type Database = {
           created_at?: string
           credit_used_amount?: number
           currency?: string
+          delivery_pin?: string | null
           discount_amount?: number
           fees?: number
           flagged_for_review?: boolean | null
@@ -24609,6 +24705,7 @@ export type Database = {
           holder_phone?: string | null
           id?: string
           order_number?: string
+          pin_attempts?: number
           promo_code?: string | null
           provider?: string
           status?: string
@@ -25227,6 +25324,30 @@ export type Database = {
           session_id?: string | null
           signal_type?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_user_id: string
+          blocker_user_id: string
+          created_at: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_user_id: string
+          blocker_user_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_user_id?: string
+          blocker_user_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
         }
         Relationships: []
       }
