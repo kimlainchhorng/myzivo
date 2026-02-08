@@ -4,10 +4,10 @@
  * Mobile-first, no scroll required
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useLayoutEffect } from "react";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence, useDragControls, useMotionValue, animate } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { 
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
@@ -299,13 +299,18 @@ function RidesInner() {
   const { suggestions: stopSuggestions, fetchSuggestions: fetchStopSuggestions, clearSuggestions: clearStopSuggestions } = useGoogleMapsGeocode();
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Bottom sheet state with snap points
-  const y = useMotionValue(0);
+  // Bottom sheet state - simplified 2-state snap
   const dragControls = useDragControls();
-  const [currentSnapIndex, setCurrentSnapIndex] = useState(1); // 0=collapsed, 1=mid, 2=expanded
+  const [isExpanded, setIsExpanded] = useState(false);
   
-  // Snap points as percentage from bottom (higher = more visible)
-  const snapPoints = [0.25, 0.55, 0.85]; // 25%, 55%, 85% of screen
+  // Lock body scroll for Uber-style full app experience
+  useLayoutEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const estimatedDistance = routeData?.distance || 5.2;
   const estimatedDuration = routeData?.duration || 15;
@@ -519,40 +524,21 @@ function RidesInner() {
     return `$${fare.toFixed(2)}`;
   };
 
-  // Sheet snap handling with multiple snap points
-  const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-  const snapPositions = snapPoints.map(p => windowHeight * (1 - p)); // Convert to y positions from top
-  
-  const snapToPosition = (snapIndex: number) => {
-    const clampedIndex = Math.max(0, Math.min(snapIndex, snapPoints.length - 1));
-    const targetY = snapPositions[clampedIndex] - snapPositions[1]; // Relative to initial position
-    animate(y, targetY, { type: "spring", stiffness: 400, damping: 40 });
-    setCurrentSnapIndex(clampedIndex);
+  // Simplified drag handling - 2 states: collapsed (55%) and expanded (85%)
+  const handleDragEnd = (_: unknown, info: { offset: { y: number }; velocity: { y: number } }) => {
+    // Expand if dragged up fast/far, collapse if dragged down fast/far
+    if (info.offset.y < -50 || info.velocity.y < -500) {
+      setIsExpanded(true);
+    } else if (info.offset.y > 50 || info.velocity.y > 500) {
+      setIsExpanded(false);
+    }
   };
 
-  const handleDragEnd = () => {
-    const currentY = y.get();
-    const currentPosition = snapPositions[1] + currentY; // Actual position from top
-    
-    // Find nearest snap point
-    let nearestIndex = 0;
-    let minDistance = Math.abs(currentPosition - snapPositions[0]);
-    
-    snapPositions.forEach((pos, index) => {
-      const distance = Math.abs(currentPosition - pos);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestIndex = index;
-      }
-    });
-    
-    snapToPosition(nearestIndex);
-  };
-
-  // Calculate sheet height based on current snap point
-  const getSheetHeight = () => {
-    const baseHeight = snapPoints[currentSnapIndex] * 100;
-    return `${baseHeight}dvh`;
+  // Sheet height class based on step and expansion state
+  const getSheetHeightClass = () => {
+    if (step === "checkout" || step === "success") return "h-[75%]";
+    if (step === "confirm" || step === "options") return "h-[65%]";
+    return isExpanded ? "h-[85%]" : "h-[55%]";
   };
 
   return (
@@ -590,21 +576,15 @@ function RidesInner() {
         />
       </div>
       
-      {/* Bottom Sheet - Premium Glassmorphism with Multi-Snap */}
+      {/* Bottom Sheet - Fixed positioning with CSS-based heights */}
       <motion.div
         drag="y"
         dragControls={dragControls}
         dragListener={false}
-        dragConstraints={{ 
-          top: -(windowHeight * 0.6), // Allow drag up to 85%
-          bottom: windowHeight * 0.3  // Allow drag down to 25%
-        }}
-        dragElastic={0.1}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.2}
         onDragEnd={handleDragEnd}
-        style={{ y }}
-        className="absolute bottom-0 left-0 right-0 rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-40"
-        animate={{ height: getSheetHeight() }}
-        transition={{ type: "spring", stiffness: 300, damping: 35 }}
+        className={`fixed bottom-0 left-0 right-0 ${getSheetHeightClass()} rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-50 transition-[height] duration-300 ease-out`}
       >
         {/* Drag Handle */}
         <div
@@ -615,7 +595,8 @@ function RidesInner() {
         </div>
 
         {/* Content - scrollable when expanded */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-20">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-4 pb-4">
           {/* Request Step */}
           {step === "request" && (
             <div className="space-y-3">
@@ -853,19 +834,10 @@ function RidesInner() {
                 ))}
               </div>
 
-              {/* Confirm Button */}
-              {selectedOption && dropoff && (
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
-                  <Button
-                    onClick={handleFindRides}
-                    className="w-full h-12 bg-black hover:bg-zinc-900 text-white font-bold text-sm rounded-xl"
-                  >
-                    Choose {selectedOption.name}
-                  </Button>
-                </div>
-              )}
             </div>
           )}
+
+          {/* Options Step - Confirm selection */}
 
           {/* Options Step - Confirm selection */}
           {step === "options" && selectedOption && (
@@ -905,14 +877,6 @@ function RidesInner() {
                 <span className="text-lg font-bold text-zinc-900">{getFareFixed(selectedOption)}</span>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
-                <Button
-                  onClick={handleConfirmRide}
-                  className="w-full h-12 bg-black hover:bg-zinc-900 text-white font-bold text-sm rounded-xl"
-                >
-                  Continue
-                </Button>
-              </div>
             </div>
           )}
 
@@ -975,16 +939,6 @@ function RidesInner() {
                 </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
-                <Button
-                  onClick={handleStartCheckout}
-                  disabled={!contactInfo.name || !contactInfo.phone || isSubmitting}
-                  className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl gap-2"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  Continue to Payment
-                </Button>
-              </div>
             </div>
           )}
 
@@ -1036,8 +990,45 @@ function RidesInner() {
                 Request Another Ride
               </Button>
             </div>
-          )}
+        )}
+          </div>
         </div>
+
+        {/* Sticky CTA Buttons - positioned at bottom of sheet */}
+        {step === "request" && selectedOption && dropoff && (
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+            <Button
+              onClick={handleFindRides}
+              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl"
+            >
+              Choose {selectedOption.name}
+            </Button>
+          </div>
+        )}
+
+        {step === "options" && selectedOption && (
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+            <Button
+              onClick={handleConfirmRide}
+              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl"
+            >
+              Continue
+            </Button>
+          </div>
+        )}
+
+        {step === "confirm" && selectedOption && (
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+            <Button
+              onClick={handleStartCheckout}
+              disabled={!contactInfo.name || !contactInfo.phone || isSubmitting}
+              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              Continue to Payment
+            </Button>
+          </div>
+        )}
       </motion.div>
 
       {/* Mobile Nav - hidden when bottom sheet is shown */}
