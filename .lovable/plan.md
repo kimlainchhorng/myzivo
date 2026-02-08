@@ -1,207 +1,242 @@
 
-# Price by City and Ride Type
+
+# Fix Pricing Accuracy + Add Breakdown Debug
 
 ## Summary
-Implement city-specific and ride-type-specific pricing by:
-1. Detecting the city from the pickup address
-2. Looking up pricing in the `city_pricing` table by city + ride_type
-3. Calculating fare using city-specific rates
-4. Falling back to global `pricing_settings` if no city match
-5. Server-side validation in the edge function
+This update consolidates all ride pricing logic into a single source of truth function (`quoteRidePrice`) to prevent double-multiplier issues, adds long-trip discounts, implements Uber-like sane multipliers, includes sanity checks for bad route data, and adds a developer debug panel to verify pricing calculations.
 
 ---
 
-## Current State
+## Current Issues Identified
 
-| Component | Status |
-|-----------|--------|
-| `city_pricing` table | Exists with columns: city, ride_type, base_fare, per_mile, per_minute, booking_fee, minimum_fare - **Currently empty** |
-| `pricing_settings` table | Has global ride settings (used as fallback) |
-| `useRidePricingSettings` | Fetches global settings only |
-| Rides.tsx | Uses global pricing, no city detection |
-| Edge function | Uses global `pricing_settings` only |
-
----
-
-## Database Changes
-
-### 1. Add `is_active` column to `city_pricing`
-```sql
-ALTER TABLE city_pricing 
-  ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-```
-
-### 2. Seed initial city pricing data
-```sql
-INSERT INTO city_pricing (city, ride_type, base_fare, per_mile, per_minute, booking_fee, minimum_fare, is_active) VALUES
--- Baton Rouge (home market)
-('Baton Rouge', 'standard', 3.00, 1.50, 0.30, 2.00, 6.00, true),
-('Baton Rouge', 'comfort', 4.50, 2.25, 0.45, 2.50, 9.00, true),
-('Baton Rouge', 'black', 8.00, 4.00, 0.80, 3.00, 15.00, true),
--- New Orleans (premium market)
-('New Orleans', 'standard', 3.50, 1.75, 0.35, 2.50, 7.00, true),
-('New Orleans', 'comfort', 5.00, 2.50, 0.50, 3.00, 10.00, true),
-('New Orleans', 'black', 9.00, 4.50, 0.90, 3.50, 18.00, true),
--- Default fallback
-('default', 'standard', 3.50, 1.75, 0.35, 2.50, 7.00, true);
-```
+| Issue | Location | Problem |
+|-------|----------|---------|
+| Multipliers duplicated | `rideCategories` in Rides.tsx + `city_pricing` table | Ride type multiplier applied in UI AND in city pricing |
+| Inconsistent multipliers | Various places | `wait_save: 0.75` vs Uber-like `0.92` |
+| No long-trip discount | Pricing functions | Long trips aren't discounted |
+| No sanity checks | Pricing functions | Extreme values not validated |
+| Price calculated multiple times | `getFareForOption()` + `currentBreakdown` | Different code paths can yield different results |
+| No debug visibility | UI | Hard to verify pricing is correct |
 
 ---
 
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CITY-BASED PRICING FLOW                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  1. User selects pickup location                                    │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────┐                                │
-│  │ extractCityFromAddress()       │                                 │
-│  │ Parse city from address string │                                 │
-│  │ e.g. "123 Main St, Baton Rouge,│                                 │
-│  │       LA 70801" → "Baton Rouge"│                                 │
-│  └─────────────────────────────────┘                                │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────┐                                │
-│  │ useCityPricing(city, rideType) │                                 │
-│  │ Query: SELECT * FROM           │                                 │
-│  │   city_pricing WHERE           │                                 │
-│  │   city = ? AND ride_type = ?   │                                 │
-│  └─────────────────────────────────┘                                │
-│         │                                                           │
-│    Found? ─────────No──────▶ Use global pricing_settings            │
-│         │                                                           │
-│        Yes                                                          │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────────────────┐                    │
-│  │ calculateCityRideFare()                     │                    │
-│  │ fare = base_fare                            │                    │
-│  │      + (distance * per_mile)                │                    │
-│  │      + (duration * per_minute)              │                    │
-│  │      + booking_fee                          │                    │
-│  │ Apply minimum_fare, surge multiplier        │                    │
-│  └─────────────────────────────────────────────┘                    │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────────────────┐                    │
-│  │ Edge Function: create-ride-payment-intent   │                    │
-│  │ 1. Extract city from pickup_address         │                    │
-│  │ 2. Query city_pricing for city + ride_type  │                    │
-│  │ 3. Calculate fare server-side               │                    │
-│  │ 4. Fall back to pricing_settings if needed  │                    │
-│  └─────────────────────────────────────────────┘                    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                    UNIFIED PRICING FLOW                            │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  Route Data (from maps-route edge function)                        │
+│  ├── distance_miles (meters / 1609.344)  ← Already correct         │
+│  └── duration_minutes (seconds / 60)     ← Already correct         │
+│                                                                    │
+│  ┌────────────────────────────────────────────────────────────┐    │
+│  │ quoteRidePrice() - SINGLE SOURCE OF TRUTH                  │    │
+│  │                                                            │    │
+│  │ Inputs:                                                    │    │
+│  │  - distance_miles, duration_minutes                        │    │
+│  │  - rideType (wait_save, standard, premium, etc.)           │    │
+│  │  - cityPricing or fallback settings                        │    │
+│  │  - surgeMultiplier, zoneMultiplier                         │    │
+│  │                                                            │    │
+│  │ Steps:                                                     │    │
+│  │  1. Sanity check: if miles > 300 or mins > 600 → error     │    │
+│  │  2. subtotal = base + (miles * perMile) + (mins * perMin)  │    │
+│  │  3. Apply rideTypeMultiplier                               │    │
+│  │  4. Apply zoneMultiplier                                   │    │
+│  │  5. Apply surgeMultiplier                                  │    │
+│  │  6. Apply longTripMultiplier:                              │    │
+│  │     - > 25 miles: 0.92                                     │    │
+│  │     - > 50 miles: 0.88                                     │    │
+│  │  7. Enforce minimum fare                                   │    │
+│  │  8. Add booking fee                                        │    │
+│  │  9. Return breakdown object                                │    │
+│  └────────────────────────────────────────────────────────────┘    │
+│         │                                                          │
+│         ▼                                                          │
+│  ┌────────────────────────────────────────────────────────────┐    │
+│  │ UI Components                                              │    │
+│  │ - Display returned finalPrice directly                     │    │
+│  │ - NO extra math in rendering                               │    │
+│  └────────────────────────────────────────────────────────────┘    │
+│         │                                                          │
+│         ▼                                                          │
+│  ┌────────────────────────────────────────────────────────────┐    │
+│  │ Debug Panel (behind localStorage toggle)                   │    │
+│  │ Shows: miles, minutes, subtotal, all multipliers, final    │    │
+│  └────────────────────────────────────────────────────────────┘    │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Sane Ride Type Multipliers (Uber-like)
+
+| Ride Type | Current | New (Uber-like) |
+|-----------|---------|-----------------|
+| wait_save | 0.75 | 0.92 |
+| standard | 1.00 | 1.00 |
+| green | 1.02 | 1.02 |
+| priority | 1.30 | 1.12 |
+| pet | 1.15 | 1.15 |
+| comfort | 1.55 | 1.45 |
+| black | 2.65 | 1.65 |
+| black_suv | 3.50 | 2.10 |
+| xxl | 3.70 | 2.10 |
+| lux | 10.00 | 3.50 |
+| sprinter | 7.30 | 2.50 |
+| secure | 20.00 | 4.00 |
+
+---
+
+## Long-Trip Discount Logic
+
+```typescript
+function getLongTripMultiplier(distanceMiles: number): number {
+  if (distanceMiles > 50) return 0.88;  // 12% discount
+  if (distanceMiles > 25) return 0.92;  // 8% discount
+  return 1.0;
+}
 ```
 
 ---
 
 ## Implementation Steps
 
-### 1. City Extraction Utility
-New file: `src/lib/cityUtils.ts`
+### 1. Update `src/lib/pricing.ts`
+
+**Add new exports:**
 
 ```typescript
-/**
- * Extract city name from a formatted address
- * Handles formats like:
- * - "123 Main St, Baton Rouge, LA 70801"
- * - "875 Florida Blvd, Baton Rouge, LA"
- */
-export function extractCityFromAddress(address: string): string | null {
-  if (!address) return null;
+// Sane ride type multipliers (Uber-like behavior)
+export const RIDE_TYPE_MULTIPLIERS: Record<string, number> = {
+  wait_save: 0.92,
+  standard: 1.00,
+  green: 1.02,
+  priority: 1.12,
+  pet: 1.15,
+  comfort: 1.45,
+  xl: 1.45,
+  black: 1.65,
+  black_suv: 2.10,
+  xxl: 2.10,
+  premium: 1.65,
+  elite: 2.10,
+  lux: 3.50,
+  sprinter: 2.50,
+  secure: 4.00,
+};
+
+// Sanity check limits
+export const ROUTE_LIMITS = {
+  MAX_DISTANCE_MILES: 300,
+  MAX_DURATION_MINUTES: 600,
+};
+
+// Long-trip discount
+export function getLongTripMultiplier(distanceMiles: number): number {
+  if (distanceMiles > 50) return 0.88;
+  if (distanceMiles > 25) return 0.92;
+  return 1.0;
+}
+
+// Price quote result with debug info
+export interface RidePriceQuote {
+  // Core breakdown
+  baseFare: number;
+  distanceFee: number;
+  timeFee: number;
+  bookingFee: number;
+  subtotal: number;
+  total: number;
   
-  // Split by comma and look for city pattern
-  const parts = address.split(',').map(p => p.trim());
+  // Multipliers applied
+  rideTypeMultiplier: number;
+  zoneMultiplier: number;
+  surgeMultiplier: number;
+  longTripMultiplier: number;
   
-  // Usually: [street, city, state+zip] or [place, street, city, state+zip]
-  // City is typically the second-to-last segment before state
-  if (parts.length >= 2) {
-    // Check second-to-last part (before state/zip)
-    const potentialCity = parts[parts.length - 2];
-    // Remove any numbers (zip codes that may be attached)
-    const cleaned = potentialCity.replace(/\d+/g, '').trim();
-    if (cleaned && cleaned.length > 1) {
-      return cleaned;
-    }
+  // Metadata
+  minimumApplied: boolean;
+  estimatedMin: number;
+  estimatedMax: number;
+  city?: string;
+  
+  // Debug info
+  debug: {
+    distanceMiles: number;
+    durationMinutes: number;
+    rideType: string;
+  };
+}
+
+// Validation result
+export interface RouteValidation {
+  valid: boolean;
+  error?: string;
+}
+
+export function validateRouteData(
+  distanceMiles: number,
+  durationMinutes: number
+): RouteValidation {
+  if (distanceMiles > ROUTE_LIMITS.MAX_DISTANCE_MILES) {
+    return { valid: false, error: `Bad route data: distance ${distanceMiles} miles exceeds maximum` };
   }
-  
-  return null;
+  if (durationMinutes > ROUTE_LIMITS.MAX_DURATION_MINUTES) {
+    return { valid: false, error: `Bad route data: duration ${durationMinutes} min exceeds maximum` };
+  }
+  if (distanceMiles < 0 || durationMinutes < 0) {
+    return { valid: false, error: "Bad route data: negative values" };
+  }
+  return { valid: true };
 }
-```
 
-### 2. City Pricing Hook
-New file: `src/hooks/useCityPricing.ts`
-
-```typescript
 /**
- * Fetch city-specific pricing for a ride type
- * Falls back to global pricing_settings if no city match
+ * SINGLE SOURCE OF TRUTH for ride pricing
+ * All UI and server-side code should use this function
  */
-export function useCityPricing(
-  city: string | null,
-  rideType: string
-) {
-  return useQuery({
-    queryKey: ["city-pricing", city, rideType],
-    queryFn: async () => {
-      if (!city) return null;
-      
-      // Query city_pricing table
-      const { data } = await supabase
-        .from("city_pricing")
-        .select("*")
-        .eq("city", city)
-        .eq("ride_type", rideType)
-        .eq("is_active", true)
-        .single();
-      
-      return data;
-    },
-    enabled: !!city && !!rideType,
-  });
-}
-```
-
-### 3. Update `src/lib/pricing.ts`
-Add city-specific calculation function:
-
-```typescript
-export interface CityPricing {
-  city: string;
-  ride_type: string;
-  base_fare: number;
-  per_mile: number;
-  per_minute: number;
-  booking_fee: number;
-  minimum_fare: number;
-}
-
-export function calculateCityRideFare(
-  cityPricing: CityPricing,
+export function quoteRidePrice(
+  settings: { base_fare: number; per_mile: number; per_minute: number; booking_fee: number; minimum_fare: number },
   distanceMiles: number,
   durationMinutes: number,
-  surgeMultiplier: number = 1.0
-): UnifiedRidePriceBreakdown {
-  const baseFare = cityPricing.base_fare;
-  const distanceFee = distanceMiles * cityPricing.per_mile;
-  const timeFee = durationMinutes * cityPricing.per_minute;
-  const bookingFee = cityPricing.booking_fee;
+  rideType: string,
+  options?: {
+    surgeMultiplier?: number;
+    zoneMultiplier?: number;
+    city?: string;
+  }
+): RidePriceQuote {
+  const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
+  const zoneMultiplier = options?.zoneMultiplier ?? 1.0;
+  const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
+  const longTripMultiplier = getLongTripMultiplier(distanceMiles);
   
+  // 1. Calculate base components
+  const baseFare = settings.base_fare;
+  const distanceFee = distanceMiles * settings.per_mile;
+  const timeFee = durationMinutes * settings.per_minute;
+  const bookingFee = settings.booking_fee;
+  
+  // 2. Calculate subtotal
   let subtotal = baseFare + distanceFee + timeFee;
-  subtotal *= surgeMultiplier;
   
-  const minimumApplied = subtotal < cityPricing.minimum_fare;
+  // 3. Apply all multipliers
+  subtotal *= rideTypeMultiplier;
+  subtotal *= zoneMultiplier;
+  subtotal *= surgeMultiplier;
+  subtotal *= longTripMultiplier;
+  
+  // 4. Enforce minimum fare
+  const minimumApplied = subtotal < settings.minimum_fare;
   if (minimumApplied) {
-    subtotal = cityPricing.minimum_fare;
+    subtotal = settings.minimum_fare;
   }
   
-  const total = subtotal + bookingFee;
+  // 5. Add booking fee
+  const total = round(subtotal + bookingFee);
   
   return {
     baseFare: round(baseFare),
@@ -209,129 +244,175 @@ export function calculateCityRideFare(
     timeFee: round(timeFee),
     bookingFee: round(bookingFee),
     subtotal: round(subtotal),
-    rideTypeMultiplier: 1.0, // Already baked into city pricing
+    total,
+    rideTypeMultiplier,
+    zoneMultiplier,
     surgeMultiplier,
+    longTripMultiplier,
     minimumApplied,
-    total: round(total),
     estimatedMin: Math.floor(total * 0.9),
     estimatedMax: Math.ceil(total * 1.1),
+    city: options?.city,
+    debug: {
+      distanceMiles: round(distanceMiles),
+      durationMinutes: Math.round(durationMinutes),
+      rideType,
+    },
   };
 }
 ```
 
-### 4. Update `src/pages/Rides.tsx`
+### 2. Update `src/pages/Rides.tsx`
+
+**Remove multipliers from `rideCategories`** - multipliers are now in `RIDE_TYPE_MULTIPLIERS`:
 
 ```typescript
-// Add city extraction state
-const [pickupCity, setPickupCity] = useState<string | null>(null);
+// Remove multiplier property from each ride option
+// multiplier is now looked up from RIDE_TYPE_MULTIPLIERS[option.id]
+```
 
-// Extract city when pickup changes
-useEffect(() => {
-  if (pickup) {
-    const city = extractCityFromAddress(pickup);
-    setPickupCity(city);
-  }
-}, [pickup]);
+**Replace pricing logic:**
 
-// Use city pricing hook
-const { data: cityPricing } = useCityPricing(
-  pickupCity,
-  selectedOption?.id || "standard"
-);
+```typescript
+import { 
+  quoteRidePrice, 
+  validateRouteData, 
+  RIDE_TYPE_MULTIPLIERS,
+  type RidePriceQuote 
+} from "@/lib/pricing";
 
-// Calculate fare using city pricing if available
-const currentBreakdown = useMemo(() => {
-  if (!selectedOption) return null;
+// Add debug toggle state
+const [showDebugPanel, setShowDebugPanel] = useState(() => {
+  return localStorage.getItem('zivo_debug_pricing') === 'true';
+});
+
+// Validate route data
+const routeValidation = useMemo(() => {
+  return validateRouteData(estimatedDistance, estimatedDuration);
+}, [estimatedDistance, estimatedDuration]);
+
+// Single price quote function - used everywhere
+const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
+  if (!routeValidation.valid) return null;
   
-  if (cityPricing) {
-    // Use city-specific pricing
-    return calculateCityRideFare(
-      cityPricing,
-      estimatedDistance,
-      estimatedDuration,
-      1.0 // surge
-    );
-  }
+  // Use city pricing if available, otherwise global
+  const settings = cityPricing 
+    ? {
+        base_fare: cityPricing.base_fare,
+        per_mile: cityPricing.per_mile,
+        per_minute: cityPricing.per_minute,
+        booking_fee: cityPricing.booking_fee,
+        minimum_fare: cityPricing.minimum_fare,
+      }
+    : {
+        base_fare: pricing.base_fare,
+        per_mile: pricing.per_mile_rate,
+        per_minute: pricing.per_minute_rate,
+        booking_fee: pricing.booking_fee,
+        minimum_fare: pricing.minimum_fare,
+      };
   
-  // Fall back to global pricing
-  return calculateUnifiedRideFare(
-    pricing,
+  return quoteRidePrice(
+    settings,
     estimatedDistance,
     estimatedDuration,
-    selectedOption.multiplier || 1.0,
-    1.0
+    option.id,
+    {
+      surgeMultiplier: 1.0, // TODO: integrate with useSurgePricing
+      zoneMultiplier: 1.0,
+      city: cityPricing?.city,
+    }
   );
-}, [cityPricing, pricing, selectedOption, estimatedDistance, estimatedDuration]);
+}, [cityPricing, pricing, estimatedDistance, estimatedDuration, routeValidation]);
+
+// Display price - just format the quote's total
+const getFareDisplay = (option: RideOption): string => {
+  const quote = getQuoteForOption(option);
+  if (!quote) return "--";
+  return formatCurrency(quote.total);
+};
 ```
 
-### 5. Update Edge Function
-Modify `supabase/functions/create-ride-payment-intent/index.ts`:
+**Add error display for bad routes:**
 
 ```typescript
-// Add city extraction function
-function extractCityFromAddress(address: string): string | null {
-  const parts = address.split(',').map(p => p.trim());
-  if (parts.length >= 2) {
-    const potentialCity = parts[parts.length - 2];
-    return potentialCity.replace(/\d+/g, '').trim() || null;
-  }
-  return null;
-}
+{!routeValidation.valid && (
+  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+    <strong>Error:</strong> {routeValidation.error}
+  </div>
+)}
+```
 
-// In the handler:
-const pickupCity = extractCityFromAddress(pickup_address);
+### 3. Add Debug Panel Component
 
-// Try city_pricing first
-const { data: cityPricing } = await supabase
-  .from("city_pricing")
-  .select("*")
-  .eq("city", pickupCity || "")
-  .eq("ride_type", ride_type)
-  .eq("is_active", true)
-  .single();
+New file: `src/components/ride/PricingDebugPanel.tsx`
 
-let breakdown: PriceBreakdown;
-
-if (cityPricing) {
-  // Use city-specific rates
-  breakdown = calculateCityFare(cityPricing, distance_miles, duration_minutes, surge_multiplier);
-} else {
-  // Fall back to global pricing_settings
-  breakdown = calculateServerFare(pricingSettings, distance_miles, duration_minutes, ride_type_multiplier, surge_multiplier);
+```typescript
+/**
+ * Debug panel for verifying pricing calculations
+ * Only visible when localStorage.zivo_debug_pricing = 'true'
+ */
+export function PricingDebugPanel({ quote }: { quote: RidePriceQuote | null }) {
+  if (!quote) return null;
+  
+  return (
+    <div className="fixed bottom-20 left-4 z-50 bg-black/90 text-green-400 font-mono text-xs p-3 rounded-lg max-w-xs">
+      <div className="font-bold text-yellow-400 mb-2">🔧 Pricing Debug</div>
+      <div>Miles: {quote.debug.distanceMiles}</div>
+      <div>Minutes: {quote.debug.durationMinutes}</div>
+      <div>Ride: {quote.debug.rideType}</div>
+      <div className="border-t border-green-800 my-1 pt-1">
+        <div>Subtotal: ${quote.subtotal}</div>
+        <div>× rideType: {quote.rideTypeMultiplier}</div>
+        <div>× zone: {quote.zoneMultiplier}</div>
+        <div>× surge: {quote.surgeMultiplier}</div>
+        <div>× longTrip: {quote.longTripMultiplier}</div>
+        {quote.minimumApplied && <div className="text-yellow-400">⚠ Min fare applied</div>}
+      </div>
+      <div className="border-t border-green-800 mt-1 pt-1 font-bold text-white">
+        Final: ${quote.total}
+      </div>
+    </div>
+  );
 }
 ```
 
----
+### 4. Update Edge Function
 
-## Price Calculation Flow
+Modify `supabase/functions/create-ride-payment-intent/index.ts`:
 
-```text
-User selects:
-  Pickup: "875 Florida Blvd, Baton Rouge, LA"
-  Ride Type: "comfort"
-  Distance: 10 miles
-  Duration: 20 minutes
+- Add the same `RIDE_TYPE_MULTIPLIERS` and `getLongTripMultiplier`
+- Add sanity checks before calculation
+- Use the same formula as client-side
 
-1. Extract city: "Baton Rouge"
+```typescript
+// Add at top
+const RIDE_TYPE_MULTIPLIERS: Record<string, number> = {
+  wait_save: 0.92,
+  standard: 1.00,
+  green: 1.02,
+  priority: 1.12,
+  // ... etc
+};
 
-2. Query city_pricing:
-   SELECT * FROM city_pricing 
-   WHERE city = 'Baton Rouge' AND ride_type = 'comfort'
-   
-   Result: base_fare=4.50, per_mile=2.25, per_minute=0.45, 
-           booking_fee=2.50, minimum_fare=9.00
+const ROUTE_LIMITS = {
+  MAX_DISTANCE_MILES: 300,
+  MAX_DURATION_MINUTES: 600,
+};
 
-3. Calculate:
-   base_fare    = $4.50
-   distance_fee = 10 * $2.25 = $22.50
-   time_fee     = 20 * $0.45 = $9.00
-   ─────────────────────────────────
-   subtotal     = $36.00 (no minimum needed)
-   booking_fee  = $2.50
-   ─────────────────────────────────
-   TOTAL        = $38.50
+function getLongTripMultiplier(distanceMiles: number): number {
+  if (distanceMiles > 50) return 0.88;
+  if (distanceMiles > 25) return 0.92;
+  return 1.0;
+}
 
-4. If no city match, fall back to global pricing with multiplier
+// In handler, add validation
+if (distance_miles > ROUTE_LIMITS.MAX_DISTANCE_MILES || 
+    duration_minutes > ROUTE_LIMITS.MAX_DURATION_MINUTES) {
+  throw new Error("Invalid route data: values exceed limits");
+}
+
+// Update calculate functions to apply long-trip multiplier
 ```
 
 ---
@@ -340,36 +421,58 @@ User selects:
 
 | File | Changes |
 |------|---------|
-| `src/lib/cityUtils.ts` | **NEW** - City extraction utility |
-| `src/hooks/useCityPricing.ts` | **NEW** - Hook to fetch city-specific pricing |
-| `src/lib/pricing.ts` | Add `CityPricing` interface and `calculateCityRideFare` function |
-| `src/pages/Rides.tsx` | Integrate city detection and city pricing |
-| `supabase/functions/create-ride-payment-intent/index.ts` | Server-side city pricing lookup |
-| Database migration | Add `is_active` column and seed data |
+| `src/lib/pricing.ts` | Add `quoteRidePrice()`, `RIDE_TYPE_MULTIPLIERS`, `getLongTripMultiplier()`, `validateRouteData()` |
+| `src/pages/Rides.tsx` | Remove hardcoded multipliers from categories, use `quoteRidePrice()` everywhere, add debug panel |
+| `src/components/ride/PricingDebugPanel.tsx` | **NEW** - Debug overlay component |
+| `supabase/functions/create-ride-payment-intent/index.ts` | Add same multipliers, long-trip discount, sanity checks |
 
 ---
 
-## Fallback Strategy
+## Debug Panel Usage
 
-```text
-Priority order:
-1. city_pricing (city + ride_type match) → Use city-specific rates
-2. city_pricing (city + 'default' ride_type) → City default
-3. city_pricing ('default' + ride_type) → Global default by type
-4. pricing_settings → Global settings with multiplier
+To enable the debug panel:
+1. Open browser console
+2. Run: `localStorage.setItem('zivo_debug_pricing', 'true')`
+3. Refresh page
+4. Debug panel appears in bottom-left corner
 
-This ensures pricing always works, even for new cities.
+To disable:
+```javascript
+localStorage.removeItem('zivo_debug_pricing')
 ```
 
 ---
 
-## UI Display
+## Price Display Example
 
-The existing `RidePriceBreakdown` component will display:
-- Base fare (city-specific)
-- Distance fee (city-specific per_mile rate)
-- Time fee (city-specific per_minute rate)
-- Booking fee
-- Total
+```text
+Route: 30 miles, 45 minutes
+Ride Type: black (multiplier: 1.65)
+Long-trip: 0.92 (8% discount for > 25 miles)
 
-No UI changes needed - just different underlying values.
+Calculation:
+  base_fare     = $3.50
+  distance_fee  = 30 × $1.75 = $52.50
+  time_fee      = 45 × $0.35 = $15.75
+  ────────────────────────────────
+  subtotal      = $71.75
+  × rideType    = × 1.65 = $118.39
+  × longTrip    = × 0.92 = $108.92
+  + booking_fee = + $2.50
+  ════════════════════════════════
+  TOTAL         = $111.42
+```
+
+---
+
+## Verification Checklist
+
+After implementation, verify:
+1. Route edge function returns distance in miles, duration in minutes (already correct)
+2. `quoteRidePrice()` is called exactly once per price display
+3. UI cards show the returned `total` with no additional math
+4. Long-trip discounts apply correctly for 25+ and 50+ mile trips
+5. Sanity checks trigger error UI for extreme route values
+6. Debug panel shows all multipliers correctly
+7. Edge function uses identical logic to client
+
