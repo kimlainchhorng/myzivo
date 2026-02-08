@@ -15,6 +15,9 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 export type SurgeLevel = "Low" | "Medium" | "High";
 
+// Maximum surge multiplier cap (admin abuse prevention)
+export const MAX_SURGE_MULTIPLIER = 2.5;
+
 export interface SurgeResult {
   multiplier: number;
   level: SurgeLevel;
@@ -71,45 +74,39 @@ export function calculateSurge({
 }
 
 /**
- * Fetch live demand metrics from Supabase
+ * Fetch global surge multiplier from surge_multipliers table
  * 
  * @param supabase - Supabase client instance
- * @param windowMinutes - Time window for counting active rides (default: 5 min)
- * @returns Demand metrics with requestedCount and availableDrivers
+ * @returns Capped multiplier from database (max 2.5x)
  */
-export async function getDemandMetrics(
-  supabase: SupabaseClient,
-  windowMinutes: number = 5
-): Promise<DemandMetrics> {
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
-  const driverActiveThreshold = new Date(now.getTime() - 2 * 60 * 1000);
+export async function fetchGlobalSurgeMultiplier(
+  supabase: SupabaseClient
+): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from("surge_multipliers")
+      .select("multiplier")
+      .eq("zone", "GLOBAL")
+      .single();
 
-  // Count rides in 'requested', 'accepted', or 'en_route' status from last N minutes
-  const { count: requestedCount, error: ridesError } = await supabase
-    .from("trips")
-    .select("*", { count: "exact", head: true })
-    .in("status", ["requested", "accepted", "en_route"])
-    .gte("created_at", windowStart.toISOString());
+    if (error || !data) {
+      console.warn("[fetchGlobalSurgeMultiplier] No GLOBAL surge found, defaulting to 1.0");
+      return 1.0;
+    }
 
-  if (ridesError) {
-    console.warn("[getDemandMetrics] Failed to fetch rides count:", ridesError);
+    const multiplier = Number(data.multiplier) || 1.0;
+    return Math.min(multiplier, MAX_SURGE_MULTIPLIER);
+  } catch (err) {
+    console.warn("[fetchGlobalSurgeMultiplier] Error:", err);
+    return 1.0;
   }
+}
 
-  // Count online drivers that were updated within last 2 min (actively pinging)
-  const { count: availableDrivers, error: driversError } = await supabase
-    .from("drivers")
-    .select("*", { count: "exact", head: true })
-    .eq("is_online", true)
-    .eq("status", "verified")
-    .gte("updated_at", driverActiveThreshold.toISOString());
-
-  if (driversError) {
-    console.warn("[getDemandMetrics] Failed to fetch drivers count:", driversError);
-  }
-
-  return {
-    requestedCount: requestedCount || 0,
-    availableDrivers: availableDrivers || 0,
-  };
+/**
+ * Derive surge level from multiplier value
+ */
+export function getSurgeLevelFromMultiplier(multiplier: number): SurgeLevel {
+  if (multiplier <= 1.0) return "Low";
+  if (multiplier <= 1.5) return "Medium";
+  return "High";
 }

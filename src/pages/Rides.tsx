@@ -347,10 +347,10 @@ function RidesInner() {
     if (pricingZone && pickupCoords) {
       console.log(`[Rides] Detected pricing zone: ${pricingZone.name} (${pricingZone.id}), rates loaded: ${zoneRatesMap.size} types`);
       if (surge.isActive) {
-        console.log(`[Rides] Surge active: ${surge.multiplier}x (${surge.level}) - ${surge.requestedCount} requests / ${surge.availableDrivers} drivers`);
+        console.log(`[Rides] Surge active: ${surge.multiplier}x (${surge.level})`);
       }
     }
-  }, [pricingZone, pickupCoords, zoneRatesMap.size, surge.isActive, surge.multiplier, surge.level, surge.requestedCount, surge.availableDrivers]);
+  }, [pricingZone, pickupCoords, zoneRatesMap.size, surge.isActive, surge.multiplier, surge.level]);
   
   // Debug panel toggle: ?debug=1 URL param OR localStorage
   const showDebugPanel = useMemo(() => {

@@ -80,7 +80,7 @@ export function SurgeBanner({
                   isHigh ? "text-red-800" : "text-amber-800"
                 )}
               >
-                {isHigh ? "High demand" : "Moderate demand"}
+                Busy time pricing ×{multiplier.toFixed(1)}
                 {zoneName && ` near ${zoneName}`}
               </span>
             </div>
@@ -90,7 +90,7 @@ export function SurgeBanner({
                 isHigh ? "text-red-700" : "text-amber-700"
               )}
             >
-              Prices are currently <strong>{multiplier.toFixed(1)}×</strong> higher
+              Prices are temporarily higher due to increased demand
             </p>
           </div>
 

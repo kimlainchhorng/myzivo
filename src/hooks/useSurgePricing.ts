@@ -1,62 +1,50 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { calculateSurge, getDemandMetrics, SurgeLevel } from "@/lib/surge";
+import { fetchGlobalSurgeMultiplier, getSurgeLevelFromMultiplier, SurgeLevel, MAX_SURGE_MULTIPLIER } from "@/lib/surge";
 
 export interface SurgePricingInfo {
   multiplier: number;
   isActive: boolean;
   label: string;
   level: SurgeLevel;
-  requestedCount: number;
-  availableDrivers: number;
   isLoading: boolean;
   refetch: () => void;
 }
 
 /**
- * Hook to calculate surge pricing based on demand vs supply ratio.
+ * Hook to fetch surge pricing from database (zone='GLOBAL').
  * 
- * Surge tiers:
- * - ratio < 1.0: 1.0x (Low)
- * - ratio 1.0–1.5: 1.1x (Medium)
- * - ratio 1.5–2.0: 1.25x (Medium)
- * - ratio 2.0–3.0: 1.5x (High)
- * - ratio > 3.0 or no drivers: 2.0x (High)
+ * Admin-controlled dynamic pricing with max cap of 2.5x.
  * 
- * Where ratio = requestedCount / max(1, availableDrivers)
+ * Surge levels:
+ * - multiplier = 1.0: Low (no badge)
+ * - multiplier 1.01–1.5: Medium
+ * - multiplier > 1.5: High
  * 
  * Refreshes every 15 seconds automatically.
  */
 export function useSurgePricing(): SurgePricingInfo {
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["demand-metrics"],
-    queryFn: () => getDemandMetrics(supabase, 5),
+  const { data: multiplier, isLoading, refetch } = useQuery({
+    queryKey: ["global-surge-multiplier"],
+    queryFn: () => fetchGlobalSurgeMultiplier(supabase),
     refetchInterval: 15000, // Every 15 seconds
     staleTime: 10000,
   });
 
-  const requestedCount = data?.requestedCount || 0;
-  const availableDrivers = data?.availableDrivers || 0;
-
-  const surgeResult = calculateSurge({
-    requestedCount,
-    availableDrivers,
-    basePrice: 1, // Base price is applied elsewhere
-  });
+  const cappedMultiplier = Math.min(multiplier || 1.0, MAX_SURGE_MULTIPLIER);
+  const level = getSurgeLevelFromMultiplier(cappedMultiplier);
 
   const labelMap: Record<SurgeLevel, string> = {
     Low: "",
-    Medium: "Moderate demand",
-    High: "High demand",
+    Medium: `Busy time pricing ×${cappedMultiplier.toFixed(1)}`,
+    High: `Busy time pricing ×${cappedMultiplier.toFixed(1)}`,
   };
 
   return {
-    multiplier: surgeResult.multiplier,
-    isActive: surgeResult.multiplier > 1.0,
-    label: labelMap[surgeResult.level],
-    level: surgeResult.level,
-    requestedCount,
-    availableDrivers,
+    multiplier: cappedMultiplier,
+    isActive: cappedMultiplier > 1.0,
+    label: labelMap[level],
+    level,
     isLoading,
     refetch,
   };
