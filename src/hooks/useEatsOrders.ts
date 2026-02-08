@@ -375,3 +375,44 @@ export function useCreateTestFoodOrder() {
     },
   });
 }
+
+// Fetch current user's orders
+export function useMyEatsOrders() {
+  return useQuery({
+    queryKey: ["my-eats-orders"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) return [];
+
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select("*, restaurants:restaurant_id(name, logo_url, phone)")
+        .eq("customer_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// Fetch single order by ID (for order detail page)
+export function useSingleEatsOrder(orderId: string | undefined) {
+  return useQuery({
+    queryKey: ["eats-order", orderId],
+    queryFn: async () => {
+      if (!orderId) return null;
+
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
+        .eq("id", orderId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!orderId,
+  });
+}

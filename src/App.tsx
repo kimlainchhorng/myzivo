@@ -91,6 +91,9 @@ const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
 const EatsRestaurantMenu = lazy(() => import("./pages/EatsRestaurantMenu"));
 const EatsCheckout = lazy(() => import("./pages/EatsCheckout"));
+const EatsCart = lazy(() => import("./pages/EatsCart"));
+const EatsOrders = lazy(() => import("./pages/EatsOrders"));
+const EatsOrderDetail = lazy(() => import("./pages/EatsOrderDetail"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -564,10 +567,13 @@ const App = () => (
                 <Route path="/zivo-eats" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
                 
-                {/* Legacy deep links for Eats */}
+                {/* ZIVO Eats Routes */}
                 <Route path="/eats/restaurants" element={<EatsRestaurants />} />
                 <Route path="/eats/restaurant/:id" element={<EatsRestaurantMenu />} />
+                <Route path="/eats/cart" element={<EatsCart />} />
                 <Route path="/eats/checkout" element={<EatsCheckout />} />
+                <Route path="/eats/orders" element={<EatsOrders />} />
+                <Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />

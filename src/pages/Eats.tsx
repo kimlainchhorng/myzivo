@@ -1,11 +1,11 @@
 /**
-  * ZIVO Eats — Responsive Landing Page
+ * ZIVO Eats — Responsive Landing Page
  * 
-  * Desktop: Marketing landing page with ZIVO Driver redirect
-  * Mobile: Premium "Curated Dining" visual experience
+ * Desktop: Marketing landing page
+ * Mobile: Premium "Curated Dining" visual experience with real data
  */
 import { lazy, Suspense } from "react";
-import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, ExternalLink, Truck, Loader2 } from "lucide-react";
+import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -15,11 +15,11 @@ import heroEats from "@/assets/hero-eats.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
 import { MobilityFeaturesGrid, MobilityComplianceFooter } from "@/components/mobility";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CartProvider } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 
 // Lazy load mobile premium component
 const MobileEatsPremium = lazy(() => import("@/components/eats/MobileEatsPremium"));
-
-const ZIVO_DRIVER_URL = "https://zivo-driver-app.rork.app";
 
 const features = [
   {
@@ -95,21 +95,20 @@ const howItWorks = [
 
 export default function Eats() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
-  const handleOpenZivoDriver = () => {
-    window.open(ZIVO_DRIVER_URL, "_blank", "noopener,noreferrer");
-  };
-
-  // Mobile: Premium visual experience
+  // Mobile: Premium visual experience with real data
   if (isMobile) {
     return (
-      <Suspense fallback={
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        </div>
-      }>
-        <MobileEatsPremium />
-      </Suspense>
+      <CartProvider>
+        <Suspense fallback={
+          <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+          </div>
+        }>
+          <MobileEatsPremium />
+        </Suspense>
+      </CartProvider>
     );
   }
 
@@ -159,16 +158,16 @@ export default function Eats() {
 
               {/* CTA Button */}
               <Button
-                onClick={handleOpenZivoDriver}
+                onClick={() => navigate("/eats/restaurants")}
                 size="lg"
                 className="h-14 px-8 text-lg rounded-2xl font-bold gap-3 bg-eats hover:bg-eats/90 shadow-lg"
               >
-                Open ZIVO Driver
-                <ExternalLink className="w-5 h-5" />
+                Browse Restaurants
+                <ArrowRight className="w-5 h-5" />
               </Button>
 
               <p className="mt-4 text-sm text-muted-foreground">
-                You'll be redirected to zivodriver.com to order food
+                Order from local restaurants with fast delivery
               </p>
             </div>
           </div>
@@ -222,7 +221,7 @@ export default function Eats() {
                 <Card 
                   key={cuisine.name}
                   className="overflow-hidden border-2 hover:border-eats/30 transition-all duration-300 group cursor-pointer"
-                  onClick={handleOpenZivoDriver}
+                  onClick={() => navigate("/eats/restaurants")}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
@@ -279,7 +278,7 @@ export default function Eats() {
                 </div>
 
                 <Button
-                  onClick={handleOpenZivoDriver}
+                  onClick={() => navigate("/eats/restaurants")}
                   size="lg"
                   className="rounded-2xl font-bold gap-2 bg-eats hover:bg-eats/90"
                 >
@@ -339,16 +338,16 @@ export default function Eats() {
                 Hungry?
               </h2>
               <p className="text-muted-foreground mb-8">
-                Open ZIVO Driver to browse restaurants and order food. 
+                Browse restaurants and order food. 
                 Fast delivery, great selection.
               </p>
               <Button
-                onClick={handleOpenZivoDriver}
+                onClick={() => navigate("/eats/restaurants")}
                 size="lg"
                 className="h-14 px-10 text-lg rounded-2xl font-bold gap-3 bg-eats hover:bg-eats/90 shadow-lg"
               >
-                Open ZIVO Driver
-                <ExternalLink className="w-5 h-5" />
+                Browse Restaurants
+                <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
           </div>
