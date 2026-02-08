@@ -556,7 +556,7 @@ function RidesInner() {
   };
 
   return (
-    <div className="fixed inset-0 bg-zinc-100 flex flex-col">
+    <div className="fixed inset-0 bg-zinc-100 overflow-hidden">
       <SEOHead
         title="ZIVO Rides — Request a Ride"
         description="Book a ride with ZIVO. Fast, reliable, and safe rides with verified drivers."
@@ -576,8 +576,8 @@ function RidesInner() {
         </button>
       )}
       
-      {/* Full-height Map */}
-      <div className="flex-1 relative">
+      {/* Full-height Map - Takes remaining space above sheet */}
+      <div className="absolute inset-0">
         <RidesMapView
           userLocation={userLocation}
           pickupCoords={pickupCoords}
@@ -596,13 +596,13 @@ function RidesInner() {
         dragControls={dragControls}
         dragListener={false}
         dragConstraints={{ 
-          top: snapPositions[snapPoints.length - 1] - snapPositions[1], // Allow drag to expanded
-          bottom: snapPositions[0] - snapPositions[1] // Allow drag to collapsed
+          top: -(windowHeight * 0.6), // Allow drag up to 85%
+          bottom: windowHeight * 0.3  // Allow drag down to 25%
         }}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ y }}
-        className="fixed bottom-0 left-0 right-0 rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-40"
+        className="absolute bottom-0 left-0 right-0 rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-40"
         animate={{ height: getSheetHeight() }}
         transition={{ type: "spring", stiffness: 300, damping: 35 }}
       >
