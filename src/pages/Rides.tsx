@@ -11,7 +11,7 @@ import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { 
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
-  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X
+  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X, Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,8 @@ import { getPlaceDetails } from "@/services/mapsApi";
 import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
+import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
+import { calculateUnifiedRideFare, formatCurrency, type UnifiedRidePriceBreakdown } from "@/lib/pricing";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -83,13 +85,8 @@ const getPickupTime = (etaMinutes: number) => {
   return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 };
 
-const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
-  const baseFare = 2.00;
-  const perMile = 1.25;
-  const perMinute = 0.20;
-  const fare = (baseFare + (distanceMiles * perMile) + (durationMinutes * perMinute)) * multiplier;
-  return Math.max(fare, 5.00);
-};
+// Fare calculation now uses DB-driven pricing via useRidePricingSettings hook
+// See calculateUnifiedRideFare in src/lib/pricing.ts
 
 // Map View Component
 function RidesMapView({ 
@@ -276,6 +273,10 @@ function RidesInner() {
   const { suggestions: pickupSuggestions, fetchSuggestions: fetchPickupSuggestions, clearSuggestions: clearPickupSuggestions } = useGoogleMapsGeocode();
   const { suggestions: dropoffSuggestions, fetchSuggestions: fetchDropoffSuggestions, clearSuggestions: clearDropoffSuggestions } = useGoogleMapsGeocode();
   
+  // DB-driven pricing settings
+  const { data: pricingSettings } = useRidePricingSettings();
+  const pricing = pricingSettings || DEFAULT_RIDE_PRICING;
+  
   const [step, setStep] = useState<RideStep>("request");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
@@ -314,6 +315,29 @@ function RidesInner() {
 
   const estimatedDistance = routeData?.distance || 5.2;
   const estimatedDuration = routeData?.duration || 15;
+  
+  // Calculate current fare breakdown using unified pricing
+  const currentBreakdown = useMemo((): UnifiedRidePriceBreakdown | null => {
+    if (!selectedOption) return null;
+    return calculateUnifiedRideFare(
+      pricing,
+      estimatedDistance,
+      estimatedDuration,
+      selectedOption.multiplier || 1.0,
+      1.0 // surge multiplier - TODO: integrate with useSurgePricing
+    );
+  }, [pricing, estimatedDistance, estimatedDuration, selectedOption]);
+
+  // Helper to calculate fare for any option
+  const getFareForOption = useCallback((option: RideOption): UnifiedRidePriceBreakdown => {
+    return calculateUnifiedRideFare(
+      pricing,
+      estimatedDistance,
+      estimatedDuration,
+      option.multiplier || 1.0,
+      1.0
+    );
+  }, [pricing, estimatedDistance, estimatedDuration]);
 
   // Fetch route when both coordinates are available
   useEffect(() => {
@@ -453,7 +477,9 @@ function RidesInner() {
     setIsSubmitting(true);
     
     try {
-      const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0);
+      // Use unified pricing breakdown
+      const breakdown = getFareForOption(selectedOption);
+      
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Request timed out")), 15000);
       });
@@ -467,9 +493,11 @@ function RidesInner() {
           dropoff_address: dropoff,
           ride_type: selectedOption.id,
           notes: contactInfo.notes || undefined,
-          estimated_fare: estimatedFare,
+          estimated_fare: breakdown.total, // Client estimate for comparison
           distance_miles: estimatedDistance,
           duration_minutes: estimatedDuration,
+          ride_type_multiplier: selectedOption.multiplier || 1.0,
+          surge_multiplier: 1.0, // TODO: integrate with useSurgePricing
         },
       });
       
@@ -519,9 +547,10 @@ function RidesInner() {
     navigate("/rides", { replace: true });
   };
 
+  // Use unified pricing for display
   const getFareFixed = (option: RideOption) => {
-    const fare = calculateFare(estimatedDistance, estimatedDuration, option.multiplier || 1.0);
-    return `$${fare.toFixed(2)}`;
+    const breakdown = getFareForOption(option);
+    return formatCurrency(breakdown.total);
   };
 
   // Simplified drag handling - 2 states: collapsed (55%) and expanded (85%)
@@ -891,6 +920,53 @@ function RidesInner() {
                 </div>
                 <span className="text-lg font-bold text-zinc-900">{getFareFixed(selectedOption)}</span>
               </div>
+
+              {/* Price Breakdown */}
+              {currentBreakdown && (
+                <div className="space-y-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-200">
+                    <Receipt className="w-4 h-4 text-zinc-500" />
+                    <span className="text-sm font-medium text-zinc-700">Fare Breakdown</span>
+                  </div>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Base fare</span>
+                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.baseFare)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Distance ({estimatedDistance.toFixed(1)} mi)</span>
+                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.distanceFee)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Time (~{estimatedDuration} min)</span>
+                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.timeFee)}</span>
+                    </div>
+                    {currentBreakdown.rideTypeMultiplier !== 1 && (
+                      <div className="flex justify-between text-zinc-400 text-xs">
+                        <span>{selectedOption.name} ({currentBreakdown.rideTypeMultiplier}x)</span>
+                        <span>applied</span>
+                      </div>
+                    )}
+                    {currentBreakdown.minimumApplied && (
+                      <div className="flex justify-between text-zinc-400 text-xs italic">
+                        <span>Minimum fare applied</span>
+                        <span>{formatCurrency(currentBreakdown.subtotal)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Booking fee</span>
+                      <span className="text-zinc-900">{formatCurrency(currentBreakdown.bookingFee)}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-zinc-200 font-bold">
+                    <span className="text-zinc-900">Total</span>
+                    <span className="text-zinc-900">{formatCurrency(currentBreakdown.total)}</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 pt-1">
+                    Estimated range: ${currentBreakdown.estimatedMin}-${currentBreakdown.estimatedMax}. Final price may vary based on route and traffic.
+                  </p>
+                </div>
+              )}
 
             </div>
           )}

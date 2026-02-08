@@ -53,6 +53,35 @@ export interface RidePriceBreakdown {
   zoneCode: string;
 }
 
+// Unified ride pricing breakdown (DB-driven)
+export interface UnifiedRidePriceBreakdown {
+  baseFare: number;
+  distanceFee: number;
+  timeFee: number;
+  bookingFee: number;
+  subtotal: number;
+  rideTypeMultiplier: number;
+  surgeMultiplier: number;
+  minimumApplied: boolean;
+  total: number;
+  estimatedMin: number;
+  estimatedMax: number;
+  // Commission fields (calculated server-side only)
+  commissionPercent?: number;
+  commissionAmount?: number;
+  driverEarning?: number;
+}
+
+// Settings interface for unified ride pricing
+export interface UnifiedRidePricingSettings {
+  base_fare: number;
+  per_mile_rate: number;
+  per_minute_rate: number;
+  minimum_fare: number;
+  booking_fee: number;
+  service_fee_percent?: number;
+}
+
 export interface EatsPriceBreakdown {
   subtotal: number;
   deliveryFee: number;
@@ -160,6 +189,58 @@ export function calculateRideFare(
     estimatedMin,
     estimatedMax,
     zoneCode: zone.zone_code,
+  };
+}
+
+/**
+ * Calculate unified ride fare based on DB settings
+ * This is the new DB-driven pricing function
+ */
+export function calculateUnifiedRideFare(
+  settings: UnifiedRidePricingSettings,
+  distanceMiles: number,
+  durationMinutes: number,
+  rideTypeMultiplier: number,
+  surgeMultiplier: number = 1.0
+): UnifiedRidePriceBreakdown {
+  // 1. Calculate base components
+  const baseFare = settings.base_fare;
+  const distanceFee = distanceMiles * settings.per_mile_rate;
+  const timeFee = durationMinutes * settings.per_minute_rate;
+  const bookingFee = settings.booking_fee;
+  
+  // 2. Calculate subtotal before multipliers
+  let subtotal = baseFare + distanceFee + timeFee;
+  
+  // 3. Apply multipliers
+  subtotal *= rideTypeMultiplier;
+  subtotal *= surgeMultiplier;
+  
+  // 4. Enforce minimum fare
+  const minimumApplied = subtotal < settings.minimum_fare;
+  if (minimumApplied) {
+    subtotal = settings.minimum_fare;
+  }
+  
+  // 5. Add booking fee to get total
+  const total = subtotal + bookingFee;
+  
+  // Calculate estimate range (±10%)
+  const estimatedMin = Math.floor(total * 0.9);
+  const estimatedMax = Math.ceil(total * 1.1);
+
+  return {
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    rideTypeMultiplier,
+    surgeMultiplier,
+    minimumApplied,
+    total: round(total),
+    estimatedMin,
+    estimatedMax,
   };
 }
 
