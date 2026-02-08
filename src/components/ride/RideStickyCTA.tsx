@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "./RideCard";
-import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
+import { TripDetails } from "@/lib/tripCalculator";
+import { useRideQuote } from "@/hooks/useRideQuote";
 
 interface RideStickyCTAProps {
   selectedRide: RideOption | null;
@@ -11,16 +12,32 @@ interface RideStickyCTAProps {
   tripDetails: TripDetails | null;
   onConfirm: () => void;
   surgeMultiplier?: number;
+  pickupCoords?: { lat: number; lng: number } | null;
 }
 
-const RideStickyCTA = ({ selectedRide, pickup, destination, tripDetails, onConfirm, surgeMultiplier = 1.0 }: RideStickyCTAProps) => {
+const RideStickyCTA = ({ 
+  selectedRide, 
+  pickup, 
+  destination, 
+  tripDetails, 
+  onConfirm, 
+  surgeMultiplier = 1.0,
+  pickupCoords 
+}: RideStickyCTAProps) => {
   const isDisabled = !selectedRide || !pickup.trim() || !destination.trim();
   const needsDestination = selectedRide && (!pickup.trim() || !destination.trim());
 
-  // Calculate dynamic price with surge
-  const displayPrice = tripDetails && selectedRide
-    ? calculateRidePrice(selectedRide.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
-    : selectedRide?.price || 0;
+  // Use Supabase pricing engine for accurate quote
+  const { quote, isLoading } = useRideQuote({
+    rideType: selectedRide?.id || "standard",
+    pickupCoords: pickupCoords || null,
+    routeMiles: tripDetails?.distance || null,
+    routeMinutes: tripDetails?.duration || null,
+    enabled: !!selectedRide && !!pickupCoords && !!tripDetails,
+  });
+
+  // Use quote price or fallback to ride.price
+  const displayPrice = quote?.final ?? selectedRide?.price ?? 0;
 
   return (
     <motion.div
@@ -44,8 +61,17 @@ const RideStickyCTA = ({ selectedRide, pickup, destination, tripDetails, onConfi
           "ENTER DESTINATION"
         ) : selectedRide ? (
           <>
-            SELECT {selectedRide.name.toUpperCase()} (${displayPrice.toFixed(2)})
-            <ArrowRight className="w-4 h-4" />
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                CALCULATING...
+              </>
+            ) : (
+              <>
+                SELECT {selectedRide.name.toUpperCase()} (${displayPrice.toFixed(2)})
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </>
         ) : (
           "SELECT A RIDE"

@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SurgeLevel } from "@/lib/surge";
+import { RideQuoteResult } from "@/lib/quoteRidePrice";
 
 export interface RideOption {
   id: string;
@@ -22,9 +23,23 @@ interface RideCardProps {
   surgeActive?: boolean;
   surgeMultiplier?: number;
   surgeLevel?: SurgeLevel;
+  quote?: RideQuoteResult | null;
+  showDebug?: boolean;
+  isLoading?: boolean;
 }
 
-const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive, surgeMultiplier, surgeLevel }: RideCardProps) => {
+const RideCard = ({ 
+  ride, 
+  isSelected, 
+  onSelect, 
+  calculatedPrice, 
+  surgeActive, 
+  surgeMultiplier, 
+  surgeLevel,
+  quote,
+  showDebug = false,
+  isLoading = false,
+}: RideCardProps) => {
   const displayPrice = calculatedPrice ?? ride.price;
   
   return (
@@ -62,7 +77,11 @@ const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive, su
         
         {/* Price Badge */}
         <div className="absolute top-2 right-2 bg-primary/90 backdrop-blur-sm px-2 py-1 rounded-full">
-          <span className="text-xs font-bold text-white">${displayPrice.toFixed(2)}</span>
+          {isLoading ? (
+            <Loader2 className="w-3 h-3 text-white animate-spin" />
+          ) : (
+            <span className="text-xs font-bold text-white">${displayPrice.toFixed(2)}</span>
+          )}
         </div>
       </div>
 
@@ -74,6 +93,48 @@ const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive, su
           <Clock className="w-3 h-3" />
           <span className="text-[11px]">{ride.eta} min</span>
         </div>
+        
+        {/* Debug Panel - only shown when ?debug=1 */}
+        {showDebug && quote && (
+          <div className="mt-2 pt-2 border-t border-white/10 text-[9px] text-white/40 space-y-0.5">
+            <div className="flex justify-between">
+              <span>Zone:</span>
+              <span className="text-white/60">{quote.zoneName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Base:</span>
+              <span>${quote.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>× Time:</span>
+              <span>{quote.multipliers.time.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>× Surge:</span>
+              <span>{quote.multipliers.surge.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>× Event:</span>
+              <span>{quote.multipliers.event.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>× LongTrip:</span>
+              <span>{quote.multipliers.longTrip.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>+ Insurance:</span>
+              <span>${quote.insurance_fee.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>+ Booking:</span>
+              <span>${quote.booking_fee.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-white/70">
+              <span>= Final:</span>
+              <span>${quote.final.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Selection Indicator */}

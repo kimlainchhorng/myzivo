@@ -205,6 +205,7 @@ const RidePage = () => {
             tripDetails={tripDetails}
             surgeMultiplier={surgeMultiplier}
             surgeLevel={surgeLevel}
+            pickupCoords={pickupCoords}
           />
 
           {/* Trip Info Pill */}
@@ -244,6 +245,7 @@ const RidePage = () => {
         tripDetails={tripDetails}
         onConfirm={handleConfirm}
         surgeMultiplier={surgeMultiplier}
+        pickupCoords={pickupCoords}
       />
 
       {/* Bottom Nav */}

@@ -5,7 +5,7 @@ import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Na
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
-import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
+import { TripDetails } from "@/lib/tripCalculator";
 import { useRideStore } from "@/stores/rideStore";
 import { createRideInDb, SupabaseErrorInfo, categorizeError } from "@/lib/supabaseRide";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 import { usePromoCode } from "@/hooks/usePromoCode";
 import { incrementPromoCodeUse } from "@/lib/promoCodeService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRideQuote } from "@/hooks/useRideQuote";
 
 // Payments app URL for checkout redirect
 const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
@@ -100,10 +101,20 @@ const RideConfirmPage = () => {
   const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords, surgeMultiplier = 1.0, surgeLevel } = state;
   const surgeActive = surgeMultiplier > 1.0;
 
-  // Calculate dynamic price with surge
-  const baseDisplayPrice = tripDetails
-    ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
-    : ride.price;
+  // Check for debug mode
+  const showDebug = typeof window !== "undefined" && 
+    new URLSearchParams(window.location.search).get("debug") === "1";
+
+  // Use Supabase pricing engine for accurate quote
+  const { quote, isLoading: isQuoteLoading } = useRideQuote({
+    rideType: ride.id,
+    pickupCoords: pickupCoords || null,
+    routeMiles: tripDetails?.distance || null,
+    routeMinutes: tripDetails?.duration || null,
+  });
+
+  // Use quote price or fallback to ride.price
+  const baseDisplayPrice = quote?.final ?? ride.price;
 
   // Promo code hook
   const {
@@ -201,8 +212,14 @@ const RideConfirmPage = () => {
           distance: tripDetails?.distance || 0,
           duration: tripDetails?.duration || 0,
           initialStatus: useUnpaidStatus ? "requested_unpaid" : "requested",
-          surgeMultiplier,
+          surgeMultiplier: quote?.multipliers.surge || surgeMultiplier,
           surgeLevel,
+          // Quote-based pricing data
+          insuranceFee: quote?.insurance_fee,
+          bookingFee: quote?.booking_fee,
+          zoneName: quote?.zoneName,
+          zoneId: quote?.zoneId,
+          multipliers: quote?.multipliers,
         },
         {
           enableRetry: true,
@@ -370,11 +387,11 @@ const RideConfirmPage = () => {
             )}
 
             {/* Surge Indicator */}
-            {surgeActive && (
+            {(surgeActive || (quote && quote.multipliers.surge > 1)) && (
               <div className="flex items-center justify-center gap-2 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg mt-2">
                 <TrendingUp className="w-4 h-4 text-amber-500" />
                 <span className="text-sm text-amber-400">
-                  Prices are higher due to high demand ({surgeMultiplier}x)
+                  Prices are higher due to high demand ({quote?.multipliers.surge.toFixed(2) || surgeMultiplier}x)
                 </span>
               </div>
             )}
@@ -395,7 +412,11 @@ const RideConfirmPage = () => {
                   </p>
                 )}
                 <p className="text-2xl font-bold text-primary">
-                  ${finalPrice.toFixed(2)}
+                  {isQuoteLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin inline" />
+                  ) : (
+                    `$${finalPrice.toFixed(2)}`
+                  )}
                 </p>
               </div>
             </div>
@@ -407,6 +428,63 @@ const RideConfirmPage = () => {
                 <span className="text-sm text-green-400">
                   Promo {promoCode.code}: -${discountAmount.toFixed(2)} off
                 </span>
+              </div>
+            )}
+
+            {/* Debug Breakdown - only shown when ?debug=1 */}
+            {showDebug && quote && (
+              <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-white/40">Zone:</span>
+                  <span>{quote.zoneName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/40">Distance:</span>
+                  <span>{quote.miles.toFixed(1)} mi ({quote.minutes} min)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/40">Base subtotal:</span>
+                  <span>${quote.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="h-px bg-white/10 my-1" />
+                <div className="flex justify-between">
+                  <span>× Ride type:</span>
+                  <span>{quote.multipliers.rideType.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>× Time:</span>
+                  <span>{quote.multipliers.time.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>× Weather:</span>
+                  <span>{quote.multipliers.weather.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>× Surge:</span>
+                  <span>{quote.multipliers.surge.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>× Event:</span>
+                  <span>{quote.multipliers.event.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>× Long trip:</span>
+                  <span>{quote.multipliers.longTrip.toFixed(2)}</span>
+                </div>
+                <div className="h-px bg-white/10 my-1" />
+                <div className="flex justify-between">
+                  <span>+ Insurance:</span>
+                  <span>${quote.insurance_fee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>+ Booking fee:</span>
+                  <span>${quote.booking_fee.toFixed(2)}</span>
+                </div>
+                <div className="h-px bg-white/10 my-1" />
+                <div className="flex justify-between font-bold text-white">
+                  <span>= Final:</span>
+                  <span>${quote.final.toFixed(2)}</span>
+                </div>
               </div>
             )}
           </div>
