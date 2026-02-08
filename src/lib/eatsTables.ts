@@ -11,6 +11,8 @@ export const EATS_TABLES = {
   reviews: "eats_reviews",
   promoCodes: "promo_codes",
   drivers: "drivers",
+  addresses: "saved_locations",
+  notifications: "notifications",
 } as const;
 
 // Merchant dashboard URL (separate Lovable project)

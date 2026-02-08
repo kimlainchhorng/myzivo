@@ -28678,6 +28678,7 @@ export type Database = {
         | "confirmed"
         | "in_progress"
         | "ready_for_pickup"
+        | "out_for_delivery"
         | "completed"
         | "cancelled"
         | "refunded"
@@ -29004,6 +29005,7 @@ export const Constants = {
         "confirmed",
         "in_progress",
         "ready_for_pickup",
+        "out_for_delivery",
         "completed",
         "cancelled",
         "refunded",

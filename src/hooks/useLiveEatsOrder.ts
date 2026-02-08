@@ -5,7 +5,7 @@
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { EATS_TABLES } from "@/config/eatsTables";
+import { EATS_TABLES } from "@/lib/eatsTables";
 
 export interface LiveEatsOrder {
   id: string;

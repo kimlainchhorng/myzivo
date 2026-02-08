@@ -53,7 +53,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
-import { MERCHANT_APP_URL } from "@/config/eatsTables";
+import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal("")),
