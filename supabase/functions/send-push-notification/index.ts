@@ -1,6 +1,6 @@
 /**
  * Send Push Notification Edge Function
- * Handles push notifications for iOS, Android, and Web
+ * Handles push notifications for iOS, Android, and Web (VAPID)
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -41,7 +41,7 @@ serve(async (req) => {
       );
     }
 
-    // Get device tokens
+    // Get device tokens from device_tokens table
     let tokens: any[] = [];
     
     if (device_token_id) {
@@ -63,7 +63,20 @@ serve(async (req) => {
       tokens = userTokens || [];
     }
 
-    if (tokens.length === 0) {
+    // Also get web push subscriptions from push_subscriptions table
+    let webSubscriptions: any[] = [];
+    if (user_id) {
+      const { data: subs } = await supabase
+        .from("push_subscriptions")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("is_active", true)
+        .eq("platform", "web");
+      
+      webSubscriptions = subs || [];
+    }
+
+    if (tokens.length === 0 && webSubscriptions.length === 0) {
       return new Response(
         JSON.stringify({ success: false, message: "No active device tokens found" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -72,72 +85,86 @@ serve(async (req) => {
 
     const results: any[] = [];
 
+    // Send to device tokens (mobile apps)
     for (const token of tokens) {
-      // Create log entry
-      const { data: log, error: logError } = await supabase
-        .from("push_notification_logs")
-        .insert({
-          user_id: token.user_id,
-          device_token_id: token.id,
-          notification_type,
-          title,
-          body,
-          data: data || {},
-          status: "pending",
-        })
-        .select()
-        .single();
-
-      if (logError) {
-        console.error("Failed to create log:", logError);
-        continue;
-      }
+      const log = await createNotificationLog(supabase, {
+        user_id: token.user_id,
+        device_token_id: token.id,
+        notification_type,
+        title,
+        body,
+        data,
+      });
 
       try {
-        // Send based on platform
         let sendResult: { success: boolean; error?: string } = { success: false };
 
         if (token.platform === "web") {
-          // Web Push (would use VAPID keys)
+          // Legacy web tokens - use web push
           sendResult = await sendWebPush(token.token, { title, body, data });
         } else if (token.platform === "ios") {
-          // APNs
           sendResult = await sendAPNS(token.token, { title, body, data });
         } else if (token.platform === "android") {
-          // FCM
           sendResult = await sendFCM(token.token, { title, body, data });
         }
 
-        // Update log status
-        await supabase
-          .from("push_notification_logs")
-          .update({
-            status: sendResult.success ? "sent" : "failed",
-            sent_at: sendResult.success ? new Date().toISOString() : null,
-            error_message: sendResult.error,
-          })
-          .eq("id", log.id);
-
-        results.push({
-          token_id: token.id,
-          platform: token.platform,
-          ...sendResult,
-        });
-
+        await updateNotificationLog(supabase, log?.id, sendResult);
+        results.push({ token_id: token.id, platform: token.platform, ...sendResult });
       } catch (sendError) {
         console.error("Push send error:", sendError);
-        
-        await supabase
-          .from("push_notification_logs")
-          .update({
-            status: "failed",
-            error_message: sendError instanceof Error ? sendError.message : "Unknown error",
-          })
-          .eq("id", log.id);
-
+        await updateNotificationLog(supabase, log?.id, { 
+          success: false, 
+          error: sendError instanceof Error ? sendError.message : "Unknown error" 
+        });
         results.push({
           token_id: token.id,
           platform: token.platform,
+          success: false,
+          error: sendError instanceof Error ? sendError.message : "Unknown error",
+        });
+      }
+    }
+
+    // Send to web push subscriptions (VAPID)
+    for (const sub of webSubscriptions) {
+      const log = await createNotificationLog(supabase, {
+        user_id: sub.user_id,
+        notification_type,
+        title,
+        body,
+        data,
+      });
+
+      try {
+        const subscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          },
+        };
+
+        const sendResult = await sendVAPIDWebPush(subscription, { title, body, data });
+        
+        // If subscription is expired, mark as inactive
+        if (!sendResult.success && sendResult.expired) {
+          await supabase
+            .from("push_subscriptions")
+            .update({ is_active: false })
+            .eq("id", sub.id);
+        }
+
+        await updateNotificationLog(supabase, log?.id, sendResult);
+        results.push({ subscription_id: sub.id, platform: "web", ...sendResult });
+      } catch (sendError) {
+        console.error("Web push error:", sendError);
+        await updateNotificationLog(supabase, log?.id, { 
+          success: false, 
+          error: sendError instanceof Error ? sendError.message : "Unknown error" 
+        });
+        results.push({
+          subscription_id: sub.id,
+          platform: "web",
           success: false,
           error: sendError instanceof Error ? sendError.message : "Unknown error",
         });
@@ -165,14 +192,111 @@ serve(async (req) => {
   }
 });
 
-// Web Push implementation (VAPID)
+// Helper: Create notification log
+async function createNotificationLog(
+  supabase: any,
+  data: {
+    user_id: string;
+    device_token_id?: string;
+    notification_type: string;
+    title: string;
+    body?: string;
+    data?: Record<string, unknown>;
+  }
+) {
+  const { data: log, error } = await supabase
+    .from("push_notification_logs")
+    .insert({
+      user_id: data.user_id,
+      device_token_id: data.device_token_id,
+      notification_type: data.notification_type,
+      title: data.title,
+      body: data.body,
+      data: data.data || {},
+      status: "pending",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Failed to create log:", error);
+    return null;
+  }
+  return log;
+}
+
+// Helper: Update notification log
+async function updateNotificationLog(
+  supabase: any,
+  logId: string | undefined,
+  result: { success: boolean; error?: string }
+) {
+  if (!logId) return;
+  
+  await supabase
+    .from("push_notification_logs")
+    .update({
+      status: result.success ? "sent" : "failed",
+      sent_at: result.success ? new Date().toISOString() : null,
+      error_message: result.error,
+    })
+    .eq("id", logId);
+}
+
+// VAPID Web Push implementation
+async function sendVAPIDWebPush(
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+  payload: { title: string; body?: string; data?: Record<string, unknown> }
+): Promise<{ success: boolean; error?: string; expired?: boolean }> {
+  const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+  const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+  const vapidSubject = Deno.env.get("VAPID_SUBJECT");
+
+  if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
+    console.log("[WebPush] VAPID keys not configured, skipping");
+    return { success: true }; // Don't fail if not configured yet
+  }
+
+  try {
+    // Import web-push dynamically
+    const webpush = await import("npm:web-push@3.6.7");
+    
+    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+    const pushPayload = JSON.stringify({
+      title: payload.title,
+      body: payload.body || "",
+      icon: "/pwa-icons/icon-192x192.png",
+      badge: "/pwa-icons/icon-192x192.png",
+      data: payload.data || {},
+      tag: payload.data?.type || "default",
+    });
+
+    await webpush.sendNotification(subscription, pushPayload);
+    
+    console.log(`[WebPush] Sent to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("[WebPush] Send error:", error);
+    
+    // Check if subscription is expired (410 Gone)
+    if (error?.statusCode === 410 || error?.statusCode === 404) {
+      return { success: false, error: "Subscription expired", expired: true };
+    }
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Web push failed" 
+    };
+  }
+}
+
+// Legacy web push (placeholder)
 async function sendWebPush(
   token: string,
   payload: { title: string; body?: string; data?: Record<string, unknown> }
 ): Promise<{ success: boolean; error?: string }> {
-  // In production, use web-push library with VAPID keys
-  // For now, return placeholder
-  console.log("[WebPush] Would send to:", token, payload);
+  console.log("[WebPush Legacy] Would send to:", token.substring(0, 30), payload.title);
   return { success: true };
 }
 
@@ -188,11 +312,10 @@ async function sendAPNS(
 
   if (!apnsKey || !apnsKeyId || !apnsTeamId || !apnsBundleId) {
     console.log("[APNs] Missing credentials, skipping");
-    return { success: true }; // Don't fail if not configured
+    return { success: true };
   }
 
-  // APNs implementation would go here
-  console.log("[APNs] Would send to:", token, payload);
+  console.log("[APNs] Would send to:", token.substring(0, 20), payload.title);
   return { success: true };
 }
 
@@ -205,7 +328,7 @@ async function sendFCM(
 
   if (!fcmKey) {
     console.log("[FCM] Missing server key, skipping");
-    return { success: true }; // Don't fail if not configured
+    return { success: true };
   }
 
   try {

@@ -31,13 +31,19 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "public",
+      filename: "sw.js",
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
       manifest: {
-        name: "ZIVO - Travel & More",
-        short_name: "ZIVO",
+        name: "hiZIVO",
+        short_name: "hiZIVO",
         description: "One app for every journey. Flights, hotels, cars, rides, and food delivery - all in one place.",
-        theme_color: "#0D0D0F",
-        background_color: "#0D0D0F",
+        background_color: "#000000",
         display: "standalone",
         orientation: "portrait",
         scope: "/",

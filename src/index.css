@@ -247,13 +247,22 @@
 }
 
 @layer components {
-  /* Safe area support for mobile apps */
+  /* Safe area support for mobile apps & PWA */
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
 
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Enhanced safe area with fallback for bottom nav */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 20px);
   }
 
   /* Premium Card Styles */

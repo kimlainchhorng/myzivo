@@ -128,6 +128,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          created_at: string | null
+          id: string
+          restaurant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string | null
+          id?: string
+          restaurant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string | null
+          id?: string
+          restaurant_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          created_at: string | null
+          id: string
+          restaurant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string | null
+          id?: string
+          restaurant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string | null
+          id?: string
+          restaurant_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_actions: {
         Row: {
           action_type: string
@@ -18356,29 +18404,32 @@ export type Database = {
         Row: {
           auth: string
           created_at: string
-          driver_id: string
+          driver_id: string | null
           endpoint: string
           id: string
           p256dh: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           auth: string
           created_at?: string
-          driver_id: string
+          driver_id?: string | null
           endpoint: string
           id?: string
           p256dh: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           auth?: string
           created_at?: string
-          driver_id?: string
+          driver_id?: string | null
           endpoint?: string
           id?: string
           p256dh?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -19522,6 +19573,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_ads: {
+        Row: {
+          cost_per_click: number
+          created_at: string | null
+          daily_budget: number
+          end_date: string | null
+          id: string
+          restaurant_id: string
+          start_date: string | null
+          status: string | null
+        }
+        Insert: {
+          cost_per_click: number
+          created_at?: string | null
+          daily_budget: number
+          end_date?: string | null
+          id?: string
+          restaurant_id: string
+          start_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          cost_per_click?: number
+          created_at?: string | null
+          daily_budget?: number
+          end_date?: string | null
+          id?: string
+          restaurant_id?: string
+          start_date?: string | null
+          status?: string | null
+        }
+        Relationships: []
       }
       restaurant_analytics_daily: {
         Row: {
