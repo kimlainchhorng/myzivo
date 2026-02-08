@@ -2,15 +2,18 @@
  * RealDriverMarkers Component
  * 
  * Shows ONLY real online drivers from the database on the map.
- * Replaces the fake NearbyCars animation with actual driver positions.
+ * Supports debug overlay (localStorage toggle) and bounds-based filtering.
  */
 
 import { OverlayViewF, OverlayView } from "@react-google-maps/api";
 import { useOnlineDrivers } from "@/hooks/useOnlineDrivers";
+import { useMemo } from "react";
 
 interface RealDriverMarkersProps {
   center?: google.maps.LatLngLiteral;
   radiusMiles?: number;
+  bounds?: google.maps.LatLngBoundsLiteral | null;
+  filterMode?: "radius" | "bounds";
 }
 
 // Uber-style white car SVG
@@ -40,7 +43,7 @@ function CarSvg({ rotation = 0 }: { rotation?: number }) {
   );
 }
 
-// Calculate distance between two coordinates in miles
+// Calculate distance between two coordinates in miles (Haversine formula)
 function getDistanceMiles(
   lat1: number, lng1: number, 
   lat2: number, lng2: number
@@ -56,32 +59,153 @@ function getDistanceMiles(
   return R * c;
 }
 
+// Check if a point is within bounds
+function isWithinBounds(
+  lat: number, 
+  lng: number, 
+  bounds: google.maps.LatLngBoundsLiteral
+): boolean {
+  return (
+    lat >= bounds.south &&
+    lat <= bounds.north &&
+    lng >= bounds.west &&
+    lng <= bounds.east
+  );
+}
+
+// Debug overlay component
+function DriverDebugOverlay({
+  center,
+  radiusMiles,
+  totalOnline,
+  nearbyCount,
+  closestDriver,
+  closestDistance,
+  filterMode,
+  hasBounds,
+}: {
+  center: google.maps.LatLngLiteral;
+  radiusMiles: number;
+  totalOnline: number;
+  nearbyCount: number;
+  closestDriver: { lat: number; lng: number } | null;
+  closestDistance: number | null;
+  filterMode: "radius" | "bounds";
+  hasBounds: boolean;
+}) {
+  return (
+    <div 
+      className="absolute top-2 left-2 z-50 bg-black/80 text-white text-xs p-3 rounded-lg font-mono max-w-xs pointer-events-none"
+      style={{ backdropFilter: "blur(4px)" }}
+    >
+      <div className="font-bold text-yellow-400 mb-2">🚗 Driver Debug</div>
+      <div className="space-y-1">
+        <div>Center: {center.lat.toFixed(4)}, {center.lng.toFixed(4)}</div>
+        <div>Filter Mode: <span className="text-blue-300">{filterMode}</span></div>
+        {filterMode === "radius" && <div>Radius: {radiusMiles} mi</div>}
+        {filterMode === "bounds" && <div>Bounds: {hasBounds ? "✓" : "✗ (none)"}</div>}
+        <div className="border-t border-white/20 my-2 pt-2">
+          <div>Online drivers: <span className="text-green-400">{totalOnline}</span></div>
+          <div>Nearby/visible: <span className={nearbyCount > 0 ? "text-green-400" : "text-red-400"}>{nearbyCount}</span></div>
+        </div>
+        {closestDriver && closestDistance !== null && (
+          <div className="border-t border-white/20 my-2 pt-2">
+            <div>Closest driver:</div>
+            <div className="text-gray-300 pl-2">
+              {closestDistance.toFixed(1)} mi away
+            </div>
+            <div className="text-gray-300 pl-2">
+              ({closestDriver.lat.toFixed(4)}, {closestDriver.lng.toFixed(4)})
+            </div>
+          </div>
+        )}
+        {totalOnline > 0 && nearbyCount === 0 && (
+          <div className="border-t border-white/20 my-2 pt-2 text-yellow-300">
+            ⚠️ Driver is far away. Pan/zoom to them or update driver GPS.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function RealDriverMarkers({ 
   center, 
-  radiusMiles = 10 
+  radiusMiles = 10,
+  bounds,
+  filterMode = "radius",
 }: RealDriverMarkersProps) {
   const { data: drivers, isLoading } = useOnlineDrivers(true);
+  
+  // Check debug mode from localStorage
+  const isDebug = typeof window !== "undefined" && 
+    localStorage.getItem("zivo_debug_drivers") === "true";
 
-  if (isLoading || !drivers || !center) {
-    return null;
-  }
+  // Calculate nearby drivers and closest driver
+  const { nearbyDrivers, closestDriver, closestDistance, totalOnline } = useMemo(() => {
+    if (!drivers || !center) {
+      return { nearbyDrivers: [], closestDriver: null, closestDistance: null, totalOnline: 0 };
+    }
 
-  // Filter drivers within radius of center
-  const nearbyDrivers = drivers.filter(driver => {
-    if (!driver.current_lat || !driver.current_lng) return false;
-    const distance = getDistanceMiles(
-      center.lat, center.lng,
-      driver.current_lat, driver.current_lng
-    );
-    return distance <= radiusMiles;
-  });
+    const totalOnline = drivers.length;
+    let closestDriver: { lat: number; lng: number } | null = null;
+    let closestDistance: number | null = null;
 
-  if (nearbyDrivers.length === 0) {
+    // Find closest driver and compute distances
+    drivers.forEach(driver => {
+      if (!driver.current_lat || !driver.current_lng) return;
+      
+      const distance = getDistanceMiles(
+        center.lat, center.lng,
+        driver.current_lat, driver.current_lng
+      );
+      
+      if (closestDistance === null || distance < closestDistance) {
+        closestDistance = distance;
+        closestDriver = { lat: driver.current_lat, lng: driver.current_lng };
+      }
+    });
+
+    // Filter drivers based on mode
+    const nearbyDrivers = drivers.filter(driver => {
+      if (!driver.current_lat || !driver.current_lng) return false;
+      
+      if (filterMode === "bounds" && bounds) {
+        return isWithinBounds(driver.current_lat, driver.current_lng, bounds);
+      }
+      
+      // Default: radius mode
+      const distance = getDistanceMiles(
+        center.lat, center.lng,
+        driver.current_lat, driver.current_lng
+      );
+      return distance <= radiusMiles;
+    });
+
+    return { nearbyDrivers, closestDriver, closestDistance, totalOnline };
+  }, [drivers, center, radiusMiles, bounds, filterMode]);
+
+  if (isLoading || !center) {
     return null;
   }
 
   return (
     <>
+      {/* Debug overlay - only visible when localStorage toggle is on */}
+      {isDebug && (
+        <DriverDebugOverlay
+          center={center}
+          radiusMiles={radiusMiles}
+          totalOnline={totalOnline}
+          nearbyCount={nearbyDrivers.length}
+          closestDriver={closestDriver}
+          closestDistance={closestDistance}
+          filterMode={filterMode}
+          hasBounds={!!bounds}
+        />
+      )}
+
+      {/* Render nearby driver markers */}
       {nearbyDrivers.map((driver) => {
         if (!driver.current_lat || !driver.current_lng) return null;
         

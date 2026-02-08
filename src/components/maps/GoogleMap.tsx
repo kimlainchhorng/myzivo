@@ -101,6 +101,9 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   // Directions state for route rendering
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [directionsRequested, setDirectionsRequested] = useState(false);
+  
+  // Track map bounds for driver filtering
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
 
   // Reset directions when pickup/dropoff change
   useEffect(() => {
@@ -160,7 +163,23 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         map.fitBounds(bounds, 50);
       }
     }
+    
+    // Initialize bounds
+    const b = map.getBounds();
+    if (b) {
+      setMapBounds(b.toJSON());
+    }
   }, [markers, pickup, dropoff, fitBounds]);
+
+  // Handle bounds change for driver filtering
+  const handleBoundsChanged = useCallback(() => {
+    if (mapRef.current) {
+      const b = mapRef.current.getBounds();
+      if (b) {
+        setMapBounds(b.toJSON());
+      }
+    }
+  }, []);
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (e.latLng && onMapClick) {
@@ -191,6 +210,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         options={options}
         onLoad={onLoad}
         onClick={handleMapClick}
+        onBoundsChanged={handleBoundsChanged}
       >
         {/* Google Directions Service for route */}
         {pickup && dropoff && !directionsRequested && (
@@ -225,7 +245,12 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         )}
 
         {/* Real online drivers from database */}
-        <RealDriverMarkers center={pickup ?? center} radiusMiles={10} />
+        <RealDriverMarkers 
+          center={pickup ?? center} 
+          radiusMiles={10} 
+          bounds={mapBounds}
+          filterMode="bounds"
+        />
 
         {/* Pickup marker with premium pulsing effect */}
         <ZivoPickupMarker position={pickup ?? center} />
