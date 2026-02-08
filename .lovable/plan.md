@@ -1,8 +1,9 @@
 
-# Smart Dispatch System for Eats Deliveries
+
+# Real-Time Driver Tracking for Eats Orders
 
 ## Overview
-Implement an automatic driver dispatch system that assigns the best available driver to food orders when they become ready, using distance-based prioritization, driver load management, and ETA calculations.
+Implement live driver location tracking on the customer order page with a moving map marker, ETA countdown, and stale location fallback handling.
 
 ---
 
@@ -11,331 +12,319 @@ Implement an automatic driver dispatch system that assigns the best available dr
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `drivers` table | ✅ Complete | Has `is_online`, `current_lat`, `current_lng`, `eats_enabled`, `last_active_at`, `status` |
-| `food_orders` table | ✅ Complete | Has `driver_id`, `assigned_at`, `eta_pickup`, `eta_dropoff`, `eta_minutes`, `needs_driver` |
-| `order_offers` table | ✅ Exists | Track offers sent to drivers (status, expires_at, distance_miles) |
-| `auto-dispatch` edge function | ✅ Exists | For rides/trips — can adapt for Eats |
-| `manual-dispatch` edge function | ✅ Exists | Admin manual assignment with distance calc |
-| `send-driver-notification` | ✅ Exists | Push notifications to drivers |
-| Haversine distance calculation | ✅ Exists | In both dispatch functions |
-| Driver location updates | ✅ Exists | 15-20 second interval via `update-driver-location` |
-| `useDispatchDrivers` hook | ✅ Exists | Fetches drivers with realtime updates |
-| `useDispatchOrders` hook | ✅ Exists | Fetches orders with realtime updates |
-| Driver online toggle | ✅ Exists | `useToggleDriverOnline` mutation |
+| `drivers` table | ✅ Complete | Has `current_lat`, `current_lng`, `is_online`, `last_active_at` |
+| `driver_locations` table | ✅ Exists | Columns: `driver_id`, `lat`, `lng`, `heading`, `speed`, `updated_at` (one row per driver) |
+| `update-driver-location` edge function | ✅ Complete | GPS spoof detection, updates `drivers.current_lat/lng` and `driver_location_history` |
+| `useDriverLocationTracking` hook | ✅ Complete | Tracks location via watchPosition, 5-second interval |
+| `useEatsDriver` hook | ✅ Complete | Fetches driver info + subscribes to realtime updates on `drivers` table |
+| `DeliveryMap` component | ✅ Complete | Google Maps with driver marker, delivery marker, bounds fitting |
+| `DriverInfoCard` component | ✅ Complete | Shows driver name, rating, vehicle, call button |
+| `EatsOrderDetail` page | ✅ Complete | Already shows map, driver card, and ETA from order |
+| `EatsOrderCard` (driver) | ✅ Complete | Has Google Maps navigation button |
+| Google Maps Provider | ✅ Complete | Central provider with API key management |
+| `food_orders.eta_minutes` | ✅ Exists | Set by dispatch function |
 
-### Missing
+### Missing / Needs Enhancement
 | Feature | Status |
 |---------|--------|
-| Eats-specific auto-dispatch function | ❌ Need `eats-auto-dispatch` edge function |
-| Active order count check | ❌ `max_active_orders` logic not implemented |
-| Dispatch trigger on "ready" status | ❌ No database trigger or webhook |
-| ETA calculation service | ❌ Need `eta_pickup_minutes`, `eta_delivery_minutes` calculation |
-| Driver rejection/offline fallback | ❌ Re-dispatch logic not implemented |
-| Customer ETA display | ❌ Not shown in `EatsOrderDetail` |
-| Driver new order notification (Eats) | ❌ Driver app doesn't receive Eats order alerts |
-| Merchant driver assignment display | ❌ Merchant dashboard doesn't show assigned driver |
+| Driver location upsert to `driver_locations` | ❌ Edge function only updates `drivers` table, not `driver_locations` |
+| Realtime subscription on `driver_locations` | ❌ `useEatsDriver` subscribes to `drivers` table, should use `driver_locations` for faster updates |
+| ETA countdown component | ❌ No arrival countdown timer on order page |
+| Dynamic ETA recalculation | ❌ ETA is static once set, doesn't update based on live position |
+| Stale location indicator | ❌ No "Updating location..." fallback message |
+| Driver location update frequency | ⚠️ Currently uses watchPosition (variable); need 10-15 second throttle |
+| Status-based subscription control | ⚠️ Subscription runs always; should only run for `out_for_delivery` status |
 
 ---
 
 ## Implementation Plan
 
-### A) Create `eats-auto-dispatch` Edge Function
+### A) Update Edge Function to Write to `driver_locations`
 
-A new edge function specifically for Eats order dispatch.
+Modify `update-driver-location` to also upsert the `driver_locations` table with latest position.
 
-**File to Create:** `supabase/functions/eats-auto-dispatch/index.ts`
+**File to Modify:** `supabase/functions/update-driver-location/index.ts`
 
-**Logic Flow:**
+**Changes:**
+```typescript
+// After updating drivers table, also upsert driver_locations for realtime tracking
+await supabaseAdmin
+  .from("driver_locations")
+  .upsert({
+    driver_id: driverId,
+    lat,
+    lng,
+    heading: heading ?? null,
+    speed: speed ?? null,
+    updated_at: nowISO(),
+  }, { onConflict: "driver_id" });
+```
+
+This ensures one row per driver with their latest location, enabling efficient realtime subscriptions.
+
+### B) Create `useLiveDriverLocation` Hook
+
+A dedicated hook for real-time driver location tracking with stale detection.
+
+**File to Create:** `src/hooks/useLiveDriverLocation.ts`
+
+**Features:**
+- Subscribe to `driver_locations` table filtered by `driver_id`
+- Track `lastUpdatedAt` timestamp
+- Detect stale location (> 60 seconds since last update)
+- Only subscribe when order status is `out_for_delivery`
+- Return `{ lat, lng, heading, isStale, lastUpdatedAt }`
+
+**Implementation:**
+```typescript
+export function useLiveDriverLocation(
+  driverId: string | null | undefined,
+  orderStatus: string | undefined
+) {
+  const [location, setLocation] = useState<DriverLocation | null>(null);
+  const [isStale, setIsStale] = useState(false);
+  
+  // Only track when order is out_for_delivery
+  const shouldTrack = driverId && orderStatus === "out_for_delivery";
+  
+  useEffect(() => {
+    if (!shouldTrack) {
+      setLocation(null);
+      return;
+    }
+    
+    // Initial fetch
+    const fetchLocation = async () => {
+      const { data } = await supabase
+        .from("driver_locations")
+        .select("lat, lng, heading, speed, updated_at")
+        .eq("driver_id", driverId)
+        .maybeSingle();
+      
+      if (data) setLocation(data);
+    };
+    fetchLocation();
+    
+    // Realtime subscription
+    const channel = supabase
+      .channel(`driver-location-${driverId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "driver_locations",
+          filter: `driver_id=eq.${driverId}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            setLocation(payload.new as DriverLocation);
+            setIsStale(false);
+          }
+        }
+      )
+      .subscribe();
+    
+    // Stale detection interval (check every 10 seconds)
+    const staleInterval = setInterval(() => {
+      if (location?.updated_at) {
+        const age = Date.now() - new Date(location.updated_at).getTime();
+        setIsStale(age > 60000); // > 60 seconds
+      }
+    }, 10000);
+    
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(staleInterval);
+    };
+  }, [driverId, shouldTrack]);
+  
+  return { location, isStale };
+}
+```
+
+### C) Create ETA Countdown Component
+
+A countdown timer that shows minutes until arrival, updating every minute.
+
+**File to Create:** `src/components/eats/EtaCountdown.tsx`
+
+**Features:**
+- Display minutes remaining based on `eta_dropoff` timestamp
+- Update every minute
+- Show "Arriving soon!" when under 2 minutes
+- Animate countdown changes
+- Optional: Recalculate based on live driver distance
+
+**UI:**
 ```text
-1. Receive order_id (triggered when order becomes "ready")
-2. Validate order:
-   - status = "ready_for_pickup" AND driver_id IS NULL
-   - needs_driver = true (for delivery orders)
-3. Fetch restaurant location (lat, lng from restaurants table)
-4. Find eligible drivers:
-   - is_online = true
-   - eats_enabled = true (or not false)
-   - is_suspended = false
-   - status = "verified"
-   - current_lat/lng NOT NULL
-   - Active order count < max_active_orders (default: 2)
-5. Sort by distance to restaurant (Haversine)
-6. Either:
-   a) Direct assign closest driver, OR
-   b) Send offers to top 3 drivers
-7. Update order:
-   - driver_id
-   - assigned_at
-   - status = "out_for_delivery" (or "assigned")
-   - eta_pickup, eta_dropoff, eta_minutes
-8. Send push notification to assigned driver
-9. Log dispatch event in order_status_events
+┌─────────────────────────────────────┐
+│ 🕐 Arriving in                      │
+│                                     │
+│         12 min                      │
+│                                     │
+│ Updated 30 seconds ago              │
+└─────────────────────────────────────┘
 ```
 
-**Key Algorithm:**
+**Props:**
 ```typescript
-// Haversine formula (existing)
-function calculateDistance(lat1, lng1, lat2, lng2): number
-
-// Eligibility filter
-const eligibleDrivers = drivers.filter(d => 
-  d.is_online && 
-  d.eats_enabled !== false &&
-  !d.is_suspended &&
-  d.status === "verified" &&
-  d.current_lat && d.current_lng &&
-  d.active_order_count < MAX_ACTIVE_ORDERS
-);
-
-// ETA calculation (MVP: 2 min/km average)
-const etaPickupMinutes = Math.ceil(distanceToRestaurant * 2);
-const etaDeliveryMinutes = Math.ceil(distanceToCustomer * 2);
-const totalEtaMinutes = etaPickupMinutes + etaDeliveryMinutes;
-```
-
-### B) Create Database Trigger for Auto-Dispatch
-
-A PostgreSQL trigger that fires when order status changes to "ready_for_pickup".
-
-**Migration to Create:**
-```sql
--- Function to call edge function
-CREATE OR REPLACE FUNCTION trigger_eats_auto_dispatch()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Only trigger if status changed to ready_for_pickup and no driver assigned
-  IF NEW.status = 'ready_for_pickup' 
-     AND OLD.status != 'ready_for_pickup'
-     AND NEW.driver_id IS NULL 
-     AND NEW.needs_driver = true THEN
-    -- Use pg_net to call edge function asynchronously
-    PERFORM net.http_post(
-      url := current_setting('app.settings.supabase_url') || '/functions/v1/eats-auto-dispatch',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
-      ),
-      body := jsonb_build_object('order_id', NEW.id)
-    );
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger on food_orders
-CREATE TRIGGER trg_eats_auto_dispatch
-AFTER UPDATE ON food_orders
-FOR EACH ROW
-EXECUTE FUNCTION trigger_eats_auto_dispatch();
-```
-
-### C) Add Driver Load Check (Active Orders Query)
-
-To prevent overloading drivers, check their current active order count.
-
-**Query in eats-auto-dispatch:**
-```sql
-SELECT d.*, 
-  (SELECT COUNT(*) FROM food_orders 
-   WHERE driver_id = d.id 
-   AND status IN ('confirmed', 'ready_for_pickup', 'in_progress')
-  ) as active_order_count
-FROM drivers d
-WHERE d.is_online = true
-  AND d.eats_enabled != false
-  AND d.is_suspended != true
-  AND d.status = 'verified'
-  AND d.current_lat IS NOT NULL
-  AND d.current_lng IS NOT NULL
-```
-
-**Configurable constant:**
-```typescript
-const MAX_ACTIVE_ORDERS = 2; // Can be per-driver or global config
-```
-
-### D) Create Offer-Based Dispatch (Optional Mode)
-
-Instead of direct assignment, send offers to top N drivers.
-
-**File to Modify:** Add offer mode to `eats-auto-dispatch`
-
-**Logic:**
-```typescript
-if (dispatchMode === 'offer') {
-  const topDrivers = sortedDrivers.slice(0, 3);
-  
-  // Create offers with expiration
-  const offers = topDrivers.map(driver => ({
-    order_id: orderId,
-    driver_id: driver.id,
-    distance_miles: driver.distance_km / 1.60934,
-    status: 'pending',
-    expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // 60 sec
-  }));
-  
-  await supabase.from('order_offers').insert(offers);
-  
-  // Send push to each driver
-  for (const driver of topDrivers) {
-    await sendDriverNotification(driver.id, ...);
-  }
+interface EtaCountdownProps {
+  etaDropoff: string | null;  // ISO timestamp when driver should arrive
+  driverLat?: number | null;  // For dynamic recalculation
+  driverLng?: number | null;
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
+  className?: string;
 }
 ```
 
-### E) Driver Accept/Reject Offer Hook
+### D) Enhance DeliveryMap with Live Tracking
 
-**File to Create:** `src/hooks/useDriverOffers.ts`
+Update the `DeliveryMap` component for smoother live tracking.
 
+**File to Modify:** `src/components/eats/DeliveryMap.tsx`
+
+**Changes:**
+1. Add restaurant marker (third marker type)
+2. Add stale location indicator overlay
+3. Smooth marker animation using CSS/Framer Motion
+4. Add driver heading rotation to marker
+
+**Props Update:**
 ```typescript
-export function useDriverOffers(driverId: string | undefined) {
-  // Query pending offers for this driver
-  const offers = useQuery(...)
-  
-  // Accept offer mutation
-  const acceptOffer = useMutation(...)
-  
-  // Reject offer mutation
-  const rejectOffer = useMutation(...)
-  
-  return { offers, acceptOffer, rejectOffer };
+interface DeliveryMapProps {
+  // Existing
+  driverLat?: number | null;
+  driverLng?: number | null;
+  deliveryLat?: number;
+  deliveryLng?: number;
+  // New
+  restaurantLat?: number;
+  restaurantLng?: number;
+  driverHeading?: number | null;
+  isLocationStale?: boolean;
+  className?: string;
 }
 ```
 
-### F) Re-dispatch on Driver Rejection/Offline
+**New Features:**
+- Restaurant marker (orange/red)
+- Driver heading rotation on arrow marker
+- Stale overlay: "Updating location..." when `isLocationStale` is true
 
-**Logic in eats-auto-dispatch:**
-```typescript
-// When driver goes offline or rejects
-async function handleDriverRejection(orderId: string) {
-  // Clear driver assignment
-  await supabase
-    .from('food_orders')
-    .update({
-      driver_id: null,
-      assigned_at: null,
-      status: 'ready_for_pickup'
-    })
-    .eq('id', orderId);
-  
-  // Re-run dispatch
-  await triggerAutoDispatch(orderId);
-}
-```
+### E) Update EatsOrderDetail Page
 
-### G) ETA Display in Customer Order Page
+Integrate live tracking and countdown into the order detail page.
 
 **File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
-Add ETA display section:
+**Changes:**
+1. Import and use `useLiveDriverLocation` hook
+2. Add `EtaCountdown` component to hero section
+3. Pass live location to `DeliveryMap`
+4. Add stale location warning banner
+5. Only show map when status is active (`confirmed` through `out_for_delivery`)
+
+**Integration:**
 ```typescript
-// After driver assignment
-{order.driver_id && order.eta_minutes && (
-  <motion.div className="...">
-    <div className="flex items-center gap-3">
-      <Clock className="w-5 h-5 text-orange-500" />
-      <div>
-        <p className="font-bold text-lg">{order.eta_minutes} min</p>
-        <p className="text-xs text-zinc-500">Estimated delivery time</p>
-      </div>
-    </div>
-  </motion.div>
-)}
+// Use live driver location instead of static driver query
+const { location: driverLocation, isStale } = useLiveDriverLocation(
+  order?.driver_id,
+  order?.status
+);
 
-// Show "Driver assigned automatically" message
-{order.driver_id && order.assigned_at && (
-  <p className="text-xs text-emerald-400">
-    Driver assigned automatically
-  </p>
-)}
-```
+// Pass to DeliveryMap
+<DeliveryMap
+  driverLat={driverLocation?.lat}
+  driverLng={driverLocation?.lng}
+  driverHeading={driverLocation?.heading}
+  restaurantLat={order?.restaurants?.lat}
+  restaurantLng={order?.restaurants?.lng}
+  deliveryLat={order?.delivery_lat}
+  deliveryLng={order?.delivery_lng}
+  isLocationStale={isStale}
+/>
 
-### H) Driver App Updates
-
-**File to Modify:** `src/pages/driver/DriverHomePage.tsx`
-
-Add Eats order section:
-```typescript
-// Fetch active Eats orders for this driver
-const { data: eatsOrders } = useQuery({
-  queryKey: ['driver-eats-orders', driverId],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('food_orders')
-      .select('*, restaurants:restaurant_id(name, address, lat, lng)')
-      .eq('driver_id', driverId)
-      .in('status', ['confirmed', 'ready_for_pickup', 'in_progress'])
-      .order('created_at', { ascending: true });
-    return data;
-  },
-  enabled: !!driverId,
-  refetchInterval: 30000,
-});
-
-// Display active Eats deliveries
-{eatsOrders?.map(order => (
-  <EatsOrderCard 
-    key={order.id} 
-    order={order}
-    onStatusUpdate={handleStatusUpdate}
+// Show ETA countdown when driver is assigned
+{order.driver_id && order.eta_dropoff && (
+  <EtaCountdown
+    etaDropoff={order.eta_dropoff}
+    driverLat={driverLocation?.lat}
+    driverLng={driverLocation?.lng}
+    deliveryLat={order.delivery_lat}
+    deliveryLng={order.delivery_lng}
   />
-))}
-```
+)}
 
-**New Component:** `src/components/driver/EatsOrderCard.tsx`
-- Show pickup address (restaurant)
-- Show delivery address
-- Show payout amount
-- Action buttons: Navigate, Picked Up, Delivered
-
-### I) Merchant Dashboard Driver Display
-
-Add assigned driver info to merchant order view.
-
-**File to Modify:** Merchant app (separate project) or dispatch panel
-
-In dispatch panel (`src/components/dispatch/OrderCard.tsx`):
-```typescript
-// Already shows driver badge - enhance with ETA
-{order.driver && (
-  <div className="flex items-center gap-2">
-    <Badge variant="secondary" className="flex items-center gap-1">
-      <User className="h-3 w-3" />
-      {order.driver.full_name}
-    </Badge>
-    {order.eta_minutes && (
-      <span className="text-xs text-zinc-500">
-        ETA: {order.eta_minutes} min
-      </span>
-    )}
+// Stale warning banner
+{isStale && order.status === "out_for_delivery" && (
+  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+    <p className="text-sm text-yellow-400">
+      Updating driver location...
+    </p>
   </div>
 )}
 ```
 
-### J) Create Scheduled Dispatch Worker
+### F) Throttle Driver Location Updates
 
-Edge function that runs periodically to catch any unassigned ready orders.
+Ensure driver app sends location updates every 10-15 seconds (not more frequently).
 
-**File to Create:** `supabase/functions/eats-dispatch-worker/index.ts`
+**File to Modify:** `src/hooks/useDriverApp.ts`
 
+The current `useDriverLocationTracking` uses `navigator.geolocation.watchPosition` which can fire very frequently. Add throttling:
+
+**Changes:**
 ```typescript
-// Runs every 30-60 seconds via cron
-serve(async (req) => {
-  // Find unassigned ready orders
-  const { data: unassignedOrders } = await supabase
-    .from('food_orders')
-    .select('id')
-    .eq('status', 'ready_for_pickup')
-    .is('driver_id', null)
-    .eq('needs_driver', true)
-    .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString());
-  
-  // Dispatch each
-  for (const order of unassignedOrders || []) {
-    await dispatchOrder(order.id);
-  }
-});
+// Add throttle ref
+const lastUpdateRef = useRef<number>(0);
+const UPDATE_INTERVAL_MS = 12000; // 12 seconds
+
+// In watchPosition callback
+const id = navigator.geolocation.watchPosition(
+  (position) => {
+    const now = Date.now();
+    
+    // Throttle to every 12 seconds
+    if (now - lastUpdateRef.current < UPDATE_INTERVAL_MS) {
+      return;
+    }
+    lastUpdateRef.current = now;
+    
+    updateLocation({
+      driverId,
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      heading: position.coords.heading,
+      speed: position.coords.speed,
+      accuracy: position.coords.accuracy,
+    });
+  },
+  // ... error handler
+);
 ```
+
+### G) Add Dynamic ETA Recalculation (Optional Enhancement)
+
+Calculate updated ETA based on live driver distance.
+
+**Logic (client-side):**
+```typescript
+// Haversine distance calculation
+function calculateDistanceMiles(lat1, lng1, lat2, lng2): number
+
+// ETA calculation
+const AVG_SPEED_MILES_PER_MIN = 0.5; // ~30 mph
+
+const remainingDistance = calculateDistanceMiles(
+  driverLat, driverLng,
+  deliveryLat, deliveryLng
+);
+const dynamicEtaMinutes = Math.ceil(remainingDistance / AVG_SPEED_MILES_PER_MIN);
+```
+
+This can be shown alongside or instead of the static `eta_dropoff` timestamp.
 
 ---
 
@@ -344,117 +333,73 @@ serve(async (req) => {
 ### New Files
 | File | Purpose |
 |------|---------|
-| `supabase/functions/eats-auto-dispatch/index.ts` | Main auto-dispatch logic for Eats orders |
-| `supabase/functions/eats-dispatch-worker/index.ts` | Scheduled worker for missed dispatches |
-| `src/hooks/useDriverOffers.ts` | Driver offer accept/reject mutations |
-| `src/hooks/useDriverEatsOrders.ts` | Fetch active Eats orders for driver |
-| `src/components/driver/EatsOrderCard.tsx` | Driver view of Eats order with actions |
+| `src/hooks/useLiveDriverLocation.ts` | Realtime subscription to driver_locations with stale detection |
+| `src/components/eats/EtaCountdown.tsx` | Arrival countdown timer component |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/pages/EatsOrderDetail.tsx` | Add ETA display and "Driver assigned automatically" message |
-| `src/pages/driver/DriverHomePage.tsx` | Add Eats orders section |
-| `src/components/dispatch/OrderCard.tsx` | Add ETA display next to driver badge |
-| `src/hooks/useLiveEatsOrder.ts` | Add `eta_pickup`, `eta_dropoff`, `eta_minutes` to interface |
-
-### Database Migrations
-| Migration | Purpose |
-|-----------|---------|
-| Add trigger `trg_eats_auto_dispatch` | Auto-dispatch on status = ready_for_pickup |
-| Add function `trigger_eats_auto_dispatch()` | Calls edge function via pg_net |
+| `supabase/functions/update-driver-location/index.ts` | Add upsert to `driver_locations` table |
+| `src/components/eats/DeliveryMap.tsx` | Add restaurant marker, heading rotation, stale overlay |
+| `src/pages/EatsOrderDetail.tsx` | Integrate live location hook, ETA countdown, stale warning |
+| `src/hooks/useDriverApp.ts` | Add 12-second throttle to location updates |
 
 ---
 
-## ETA Calculation Logic (MVP)
-
-Simple distance-based estimation:
-
-```typescript
-// Constants
-const AVG_SPEED_KM_PER_MIN = 0.5; // ~30 km/h in city traffic
-
-// Calculation
-function calculateETA(
-  driverLat: number, driverLng: number,
-  restaurantLat: number, restaurantLng: number,
-  customerLat: number, customerLng: number
-) {
-  const distanceToRestaurant = calculateDistance(driverLat, driverLng, restaurantLat, restaurantLng);
-  const distanceToCustomer = calculateDistance(restaurantLat, restaurantLng, customerLat, customerLng);
-  
-  const etaPickupMinutes = Math.ceil(distanceToRestaurant / AVG_SPEED_KM_PER_MIN);
-  const etaDeliveryMinutes = Math.ceil(distanceToCustomer / AVG_SPEED_KM_PER_MIN);
-  
-  return {
-    eta_pickup: new Date(Date.now() + etaPickupMinutes * 60 * 1000).toISOString(),
-    eta_dropoff: new Date(Date.now() + (etaPickupMinutes + etaDeliveryMinutes) * 60 * 1000).toISOString(),
-    eta_minutes: etaPickupMinutes + etaDeliveryMinutes,
-  };
-}
-```
-
----
-
-## Dispatch Flow Diagram
+## Data Flow
 
 ```text
-Merchant marks order "ready"
+Driver App
     ↓
-Trigger fires: trg_eats_auto_dispatch
+watchPosition() fires (browser GPS)
     ↓
-Calls eats-auto-dispatch edge function
+Throttle check (12 seconds since last)
     ↓
-Query eligible drivers:
-  - is_online=true, eats_enabled=true
-  - status=verified, not suspended
-  - active_orders < max_active_orders
+Call update-driver-location edge function
     ↓
-Calculate distance to restaurant for each
+Edge function updates:
+  1. drivers.current_lat/lng
+  2. driver_location_history (insert)
+  3. driver_locations (upsert) ← NEW
     ↓
-Sort by distance (nearest first)
+Supabase Realtime fires on driver_locations
     ↓
-┌─────────────────────────────────────┐
-│ Dispatch Mode                       │
-├─────────────────────────────────────┤
-│ DIRECT: Assign nearest driver       │
-│ OFFER: Send offers to top 3         │
-└─────────────────────────────────────┘
+Customer's useLiveDriverLocation receives update
     ↓
-Update food_orders:
-  - driver_id
-  - assigned_at = now()
-  - status = "out_for_delivery"
-  - eta_pickup, eta_dropoff, eta_minutes
+DeliveryMap re-renders with new marker position
     ↓
-Send push notification to driver
-    ↓
-Log event to order_status_events
-    ↓
-Customer sees: "Driver assigned automatically"
-               "ETA: X minutes"
+EtaCountdown recalculates remaining time
 ```
 
 ---
 
-## Safety: Driver Rejection/Offline Handling
+## Stale Location Handling
 
 ```text
-Driver goes offline OR rejects order
+Last location update received
     ↓
-Check: is order.driver_id = this driver?
+Start 10-second check interval
     ↓
-Yes → Update order:
-  - driver_id = NULL
-  - assigned_at = NULL
-  - status = "ready_for_pickup"
+If (now - updated_at) > 60 seconds:
+  - Set isStale = true
+  - Show "Updating location..." overlay on map
+  - Keep showing last known position
     ↓
-Trigger fires again → re-dispatch
-    ↓
-Exclude this driver from candidates
-    ↓
-Assign next best driver
+When new location arrives:
+  - Set isStale = false
+  - Hide overlay
+  - Update marker
 ```
+
+---
+
+## Performance Considerations
+
+1. **Throttling**: Driver updates limited to every 12 seconds to reduce database writes and realtime traffic
+2. **Conditional Subscription**: Only subscribe to realtime when `status = "out_for_delivery"`
+3. **Single Row Table**: `driver_locations` uses upsert with one row per driver, making queries O(1)
+4. **Client-side ETA**: Calculate remaining time client-side to avoid server roundtrips
+5. **Cleanup**: Properly unsubscribe from realtime channels on unmount
 
 ---
 
@@ -462,11 +407,11 @@ Assign next best driver
 
 This implementation adds:
 
-1. **eats-auto-dispatch Edge Function**: Core dispatch logic with distance sorting, load checking, ETA calculation
-2. **Database Trigger**: Fires on `status = 'ready_for_pickup'` to auto-dispatch
-3. **ETA Calculation**: Simple distance-based estimate displayed to customer, driver, and merchant
-4. **Driver Load Management**: Check active order count before assignment (max 2)
-5. **Customer UX**: Show "Driver assigned automatically" and ETA in order detail
-6. **Driver UX**: See assigned Eats orders with pickup/delivery actions
-7. **Fallback**: Scheduled worker catches any missed orders every 30-60s
-8. **Safety**: Re-dispatch if driver rejects or goes offline
+1. **Live Location Streaming**: Driver positions upserted to `driver_locations` every 12 seconds
+2. **Realtime Subscription**: Customer order page subscribes to driver location updates
+3. **ETA Countdown**: Minutes-remaining timer that updates based on time and optionally recalculates from distance
+4. **Stale Detection**: Shows "Updating location..." if no update received in 60 seconds
+5. **Enhanced Map**: Restaurant marker, driver heading rotation, stale overlay
+6. **Throttled Updates**: Driver app limited to one update per 12 seconds for performance
+7. **Conditional Tracking**: Only track when order status is `out_for_delivery`
+
