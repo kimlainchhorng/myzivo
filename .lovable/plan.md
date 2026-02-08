@@ -1,39 +1,49 @@
 
-
-# Unified Ride Price Calculation
+# Price by City and Ride Type
 
 ## Summary
-Create a centralized ride pricing system that:
-1. Fetches pricing settings from `pricing_settings` table (service_type = 'rides')
-2. Calculates fare using the formula: base_fare + (distance × per_mile) + (duration × per_minute) + booking_fee
-3. Enforces minimum fare
-4. Applies surge multiplier when active
-5. Calculates commission/driver earnings and saves to ride_requests
-6. Displays a detailed price breakdown to the rider
+Implement city-specific and ride-type-specific pricing by:
+1. Detecting the city from the pickup address
+2. Looking up pricing in the `city_pricing` table by city + ride_type
+3. Calculating fare using city-specific rates
+4. Falling back to global `pricing_settings` if no city match
+5. Server-side validation in the edge function
 
 ---
 
 ## Current State
 
-| Component | Location | Status |
-|-----------|----------|--------|
-| `pricing_settings` table | Database | Has rides settings (base_fare: $3.50, per_mile: $1.75, per_minute: $0.35, booking_fee: $2.50, minimum_fare: $7.00) |
-| `commission_settings` table | Database | Has per-vehicle-type commission (25% for all ride types) |
-| `ride_requests` table | Database | Missing `commission_amount`, `driver_earning` columns |
-| `calculateFare` function | `src/pages/Rides.tsx` line 86 | Hardcoded values, no DB fetch |
-| Edge function | `create-ride-payment-intent` | Uses passed `estimated_fare`, doesn't calculate server-side |
-| `RidePriceBreakdown` component | Exists but not used | Ready for integration |
+| Component | Status |
+|-----------|--------|
+| `city_pricing` table | Exists with columns: city, ride_type, base_fare, per_mile, per_minute, booking_fee, minimum_fare - **Currently empty** |
+| `pricing_settings` table | Has global ride settings (used as fallback) |
+| `useRidePricingSettings` | Fetches global settings only |
+| Rides.tsx | Uses global pricing, no city detection |
+| Edge function | Uses global `pricing_settings` only |
 
 ---
 
 ## Database Changes
 
-Add new columns to `ride_requests` table:
-
+### 1. Add `is_active` column to `city_pricing`
 ```sql
-ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS commission_amount NUMERIC(10,2);
-ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(10,2);
-ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(4,2);
+ALTER TABLE city_pricing 
+  ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+```
+
+### 2. Seed initial city pricing data
+```sql
+INSERT INTO city_pricing (city, ride_type, base_fare, per_mile, per_minute, booking_fee, minimum_fare, is_active) VALUES
+-- Baton Rouge (home market)
+('Baton Rouge', 'standard', 3.00, 1.50, 0.30, 2.00, 6.00, true),
+('Baton Rouge', 'comfort', 4.50, 2.25, 0.45, 2.50, 9.00, true),
+('Baton Rouge', 'black', 8.00, 4.00, 0.80, 3.00, 15.00, true),
+-- New Orleans (premium market)
+('New Orleans', 'standard', 3.50, 1.75, 0.35, 2.50, 7.00, true),
+('New Orleans', 'comfort', 5.00, 2.50, 0.50, 3.00, 10.00, true),
+('New Orleans', 'black', 9.00, 4.50, 0.90, 3.50, 18.00, true),
+-- Default fallback
+('default', 'standard', 3.50, 1.75, 0.35, 2.50, 7.00, true);
 ```
 
 ---
@@ -42,42 +52,48 @@ ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         PRICING FLOW                                │
+│                    CITY-BASED PRICING FLOW                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  1. User selects ride type                                          │
+│  1. User selects pickup location                                    │
 │         │                                                           │
 │         ▼                                                           │
-│  ┌─────────────────────┐                                            │
-│  │ useRidePricing hook │ ← Fetches pricing_settings (service=rides) │
-│  └─────────────────────┘                                            │
+│  ┌─────────────────────────────────┐                                │
+│  │ extractCityFromAddress()       │                                 │
+│  │ Parse city from address string │                                 │
+│  │ e.g. "123 Main St, Baton Rouge,│                                 │
+│  │       LA 70801" → "Baton Rouge"│                                 │
+│  └─────────────────────────────────┘                                │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌─────────────────────────────────┐                                │
+│  │ useCityPricing(city, rideType) │                                 │
+│  │ Query: SELECT * FROM           │                                 │
+│  │   city_pricing WHERE           │                                 │
+│  │   city = ? AND ride_type = ?   │                                 │
+│  └─────────────────────────────────┘                                │
+│         │                                                           │
+│    Found? ─────────No──────▶ Use global pricing_settings            │
+│         │                                                           │
+│        Yes                                                          │
 │         │                                                           │
 │         ▼                                                           │
 │  ┌─────────────────────────────────────────────┐                    │
-│  │ calculateUnifiedRideFare()                  │                    │
-│  │ - base_fare + (miles × per_mile)            │                    │
-│  │ - + (minutes × per_minute)                  │                    │
-│  │ - + booking_fee                             │                    │
-│  │ - × ride_type_multiplier                    │                    │
-│  │ - × surge_multiplier                        │                    │
-│  │ - enforce minimum_fare                       │                    │
-│  └─────────────────────────────────────────────┘                    │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌─────────────────────────────────────────────┐                    │
-│  │ RidePriceBreakdownCard (UI Component)       │                    │
-│  │ - Shows: Base, Distance, Time, Booking fee  │                    │
-│  │ - Surge indicator if active                 │                    │
-│  │ - Total with estimate range                 │                    │
+│  │ calculateCityRideFare()                     │                    │
+│  │ fare = base_fare                            │                    │
+│  │      + (distance * per_mile)                │                    │
+│  │      + (duration * per_minute)              │                    │
+│  │      + booking_fee                          │                    │
+│  │ Apply minimum_fare, surge multiplier        │                    │
 │  └─────────────────────────────────────────────┘                    │
 │         │                                                           │
 │         ▼                                                           │
 │  ┌─────────────────────────────────────────────┐                    │
 │  │ Edge Function: create-ride-payment-intent   │                    │
-│  │ - Re-calculates server-side                 │                    │
-│  │ - Fetches commission from commission_settings│                    │
-│  │ - Saves: price_total, commission_amount,    │                    │
-│  │          driver_earning to ride_requests    │                    │
+│  │ 1. Extract city from pickup_address         │                    │
+│  │ 2. Query city_pricing for city + ride_type  │                    │
+│  │ 3. Calculate fare server-side               │                    │
+│  │ 4. Fall back to pricing_settings if needed  │                    │
 │  └─────────────────────────────────────────────┘                    │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -87,86 +103,113 @@ ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(
 
 ## Implementation Steps
 
-### 1. Database Migration
-Add commission/earning columns to `ride_requests`:
-
-```sql
-ALTER TABLE ride_requests 
-  ADD COLUMN IF NOT EXISTS commission_amount NUMERIC(10,2),
-  ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(10,2),
-  ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(4,2);
-
-COMMENT ON COLUMN ride_requests.commission_amount IS 'Platform commission = price_total * commission_percent';
-COMMENT ON COLUMN ride_requests.driver_earning IS 'Driver payout = price_total - commission_amount';
-```
-
-### 2. Create `useRidePricingSettings` Hook
-New file: `src/hooks/useRidePricingSettings.ts`
+### 1. City Extraction Utility
+New file: `src/lib/cityUtils.ts`
 
 ```typescript
-// Fetches pricing_settings where service_type = 'rides'
-// Returns: { base_fare, per_mile_rate, per_minute_rate, minimum_fare, booking_fee, multipliers }
-// Cached with TanStack Query (5 min stale time)
+/**
+ * Extract city name from a formatted address
+ * Handles formats like:
+ * - "123 Main St, Baton Rouge, LA 70801"
+ * - "875 Florida Blvd, Baton Rouge, LA"
+ */
+export function extractCityFromAddress(address: string): string | null {
+  if (!address) return null;
+  
+  // Split by comma and look for city pattern
+  const parts = address.split(',').map(p => p.trim());
+  
+  // Usually: [street, city, state+zip] or [place, street, city, state+zip]
+  // City is typically the second-to-last segment before state
+  if (parts.length >= 2) {
+    // Check second-to-last part (before state/zip)
+    const potentialCity = parts[parts.length - 2];
+    // Remove any numbers (zip codes that may be attached)
+    const cleaned = potentialCity.replace(/\d+/g, '').trim();
+    if (cleaned && cleaned.length > 1) {
+      return cleaned;
+    }
+  }
+  
+  return null;
+}
+```
+
+### 2. City Pricing Hook
+New file: `src/hooks/useCityPricing.ts`
+
+```typescript
+/**
+ * Fetch city-specific pricing for a ride type
+ * Falls back to global pricing_settings if no city match
+ */
+export function useCityPricing(
+  city: string | null,
+  rideType: string
+) {
+  return useQuery({
+    queryKey: ["city-pricing", city, rideType],
+    queryFn: async () => {
+      if (!city) return null;
+      
+      // Query city_pricing table
+      const { data } = await supabase
+        .from("city_pricing")
+        .select("*")
+        .eq("city", city)
+        .eq("ride_type", rideType)
+        .eq("is_active", true)
+        .single();
+      
+      return data;
+    },
+    enabled: !!city && !!rideType,
+  });
+}
 ```
 
 ### 3. Update `src/lib/pricing.ts`
-Add new unified calculation function:
+Add city-specific calculation function:
 
 ```typescript
-export interface UnifiedRidePriceBreakdown {
-  baseFare: number;
-  distanceFee: number;
-  timeFee: number;
-  bookingFee: number;
-  subtotal: number;
-  rideTypeMultiplier: number;
-  surgeMultiplier: number;
-  minimumApplied: boolean;
-  total: number;
-  estimatedMin: number;
-  estimatedMax: number;
-  // Commission fields (calculated server-side only)
-  commissionPercent?: number;
-  commissionAmount?: number;
-  driverEarning?: number;
+export interface CityPricing {
+  city: string;
+  ride_type: string;
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  booking_fee: number;
+  minimum_fare: number;
 }
 
-export function calculateUnifiedRideFare(
-  settings: RidePricingSettings,
+export function calculateCityRideFare(
+  cityPricing: CityPricing,
   distanceMiles: number,
   durationMinutes: number,
-  rideTypeMultiplier: number,
   surgeMultiplier: number = 1.0
 ): UnifiedRidePriceBreakdown {
-  // 1. Calculate base components
-  const baseFare = settings.base_fare;
-  const distanceFee = distanceMiles * settings.per_mile_rate;
-  const timeFee = durationMinutes * settings.per_minute_rate;
-  const bookingFee = settings.booking_fee;
+  const baseFare = cityPricing.base_fare;
+  const distanceFee = distanceMiles * cityPricing.per_mile;
+  const timeFee = durationMinutes * cityPricing.per_minute;
+  const bookingFee = cityPricing.booking_fee;
   
-  // 2. Calculate subtotal before multipliers
   let subtotal = baseFare + distanceFee + timeFee;
-  
-  // 3. Apply multipliers
-  subtotal *= rideTypeMultiplier;
   subtotal *= surgeMultiplier;
   
-  // 4. Enforce minimum fare
-  const minimumApplied = subtotal < settings.minimum_fare;
+  const minimumApplied = subtotal < cityPricing.minimum_fare;
   if (minimumApplied) {
-    subtotal = settings.minimum_fare;
+    subtotal = cityPricing.minimum_fare;
   }
   
-  // 5. Add booking fee to get total
   const total = subtotal + bookingFee;
   
   return {
-    baseFare,
-    distanceFee,
-    timeFee,
-    bookingFee,
-    subtotal,
-    rideTypeMultiplier,
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    rideTypeMultiplier: 1.0, // Already baked into city pricing
     surgeMultiplier,
     minimumApplied,
     total: round(total),
@@ -178,146 +221,155 @@ export function calculateUnifiedRideFare(
 
 ### 4. Update `src/pages/Rides.tsx`
 
-Replace hardcoded `calculateFare` function with:
-- Import and use `useRidePricingSettings` hook
-- Use `calculateUnifiedRideFare` for price calculation
-- Pass breakdown to UI component
-
 ```typescript
-// Replace line 86-92:
-const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
-  const baseFare = 2.00;
-  // ...hardcoded
-};
+// Add city extraction state
+const [pickupCity, setPickupCity] = useState<string | null>(null);
 
-// With:
-const { data: pricingSettings } = useRidePricingSettings();
-const breakdown = calculateUnifiedRideFare(
-  pricingSettings,
-  estimatedDistance,
-  estimatedDuration,
-  selectedOption?.multiplier || 1.0,
-  surgeMultiplier
+// Extract city when pickup changes
+useEffect(() => {
+  if (pickup) {
+    const city = extractCityFromAddress(pickup);
+    setPickupCity(city);
+  }
+}, [pickup]);
+
+// Use city pricing hook
+const { data: cityPricing } = useCityPricing(
+  pickupCity,
+  selectedOption?.id || "standard"
 );
+
+// Calculate fare using city pricing if available
+const currentBreakdown = useMemo(() => {
+  if (!selectedOption) return null;
+  
+  if (cityPricing) {
+    // Use city-specific pricing
+    return calculateCityRideFare(
+      cityPricing,
+      estimatedDistance,
+      estimatedDuration,
+      1.0 // surge
+    );
+  }
+  
+  // Fall back to global pricing
+  return calculateUnifiedRideFare(
+    pricing,
+    estimatedDistance,
+    estimatedDuration,
+    selectedOption.multiplier || 1.0,
+    1.0
+  );
+}, [cityPricing, pricing, selectedOption, estimatedDistance, estimatedDuration]);
 ```
 
 ### 5. Update Edge Function
 Modify `supabase/functions/create-ride-payment-intent/index.ts`:
 
 ```typescript
-// 1. Fetch pricing_settings from DB
-const { data: settings } = await supabase
-  .from('pricing_settings')
-  .select('setting_key, setting_value')
-  .eq('service_type', 'rides');
+// Add city extraction function
+function extractCityFromAddress(address: string): string | null {
+  const parts = address.split(',').map(p => p.trim());
+  if (parts.length >= 2) {
+    const potentialCity = parts[parts.length - 2];
+    return potentialCity.replace(/\d+/g, '').trim() || null;
+  }
+  return null;
+}
 
-// 2. Calculate fare server-side (source of truth)
-const breakdown = calculateServerRideFare(settings, distance, duration, multiplier, surge);
+// In the handler:
+const pickupCity = extractCityFromAddress(pickup_address);
 
-// 3. Fetch commission rate from commission_settings
-const { data: commission } = await supabase
-  .from('commission_settings')
-  .select('commission_percentage')
-  .eq('service_type', 'rides')
-  .eq('vehicle_type', vehicleType)
+// Try city_pricing first
+const { data: cityPricing } = await supabase
+  .from("city_pricing")
+  .select("*")
+  .eq("city", pickupCity || "")
+  .eq("ride_type", ride_type)
+  .eq("is_active", true)
   .single();
 
-const commissionPercent = commission?.commission_percentage || 15;
-const commissionAmount = breakdown.total * (commissionPercent / 100);
-const driverEarning = breakdown.total - commissionAmount;
+let breakdown: PriceBreakdown;
 
-// 4. Save to ride_requests with all breakdown fields
-await supabase.from('ride_requests').insert({
-  // ... existing fields
-  quoted_base_fare: breakdown.baseFare,
-  quoted_distance_fee: breakdown.distanceFee,
-  quoted_time_fee: breakdown.timeFee,
-  quoted_booking_fee: breakdown.bookingFee,
-  quoted_surge_multiplier: breakdown.surgeMultiplier,
-  quoted_total: breakdown.total,
-  ride_type_multiplier: breakdown.rideTypeMultiplier,
-  payment_amount: breakdown.total,
-  commission_amount: commissionAmount,
-  driver_earning: driverEarning,
-});
-```
-
-### 6. Add Price Breakdown UI
-Update the confirm step in `Rides.tsx` to show `RidePriceBreakdown`:
-
-```tsx
-{step === "confirm" && breakdown && (
-  <div className="space-y-4">
-    <RidePriceBreakdown
-      breakdown={breakdown}
-      rideType={mapToRideType(selectedOption.id)}
-      distance={estimatedDistance}
-      duration={estimatedDuration}
-      showEstimateNote={true}
-    />
-  </div>
-)}
+if (cityPricing) {
+  // Use city-specific rates
+  breakdown = calculateCityFare(cityPricing, distance_miles, duration_minutes, surge_multiplier);
+} else {
+  // Fall back to global pricing_settings
+  breakdown = calculateServerFare(pricingSettings, distance_miles, duration_minutes, ride_type_multiplier, surge_multiplier);
+}
 ```
 
 ---
 
-## Files Modified
+## Price Calculation Flow
+
+```text
+User selects:
+  Pickup: "875 Florida Blvd, Baton Rouge, LA"
+  Ride Type: "comfort"
+  Distance: 10 miles
+  Duration: 20 minutes
+
+1. Extract city: "Baton Rouge"
+
+2. Query city_pricing:
+   SELECT * FROM city_pricing 
+   WHERE city = 'Baton Rouge' AND ride_type = 'comfort'
+   
+   Result: base_fare=4.50, per_mile=2.25, per_minute=0.45, 
+           booking_fee=2.50, minimum_fare=9.00
+
+3. Calculate:
+   base_fare    = $4.50
+   distance_fee = 10 * $2.25 = $22.50
+   time_fee     = 20 * $0.45 = $9.00
+   ─────────────────────────────────
+   subtotal     = $36.00 (no minimum needed)
+   booking_fee  = $2.50
+   ─────────────────────────────────
+   TOTAL        = $38.50
+
+4. If no city match, fall back to global pricing with multiplier
+```
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useRidePricingSettings.ts` | **NEW** - Hook to fetch rides pricing from DB |
-| `src/lib/pricing.ts` | Add `calculateUnifiedRideFare` function |
-| `src/pages/Rides.tsx` | Replace hardcoded pricing with DB-driven calculation, add breakdown UI |
-| `supabase/functions/create-ride-payment-intent/index.ts` | Server-side price calculation, commission split |
-| Database migration | Add `commission_amount`, `driver_earning`, `ride_type_multiplier` columns |
+| `src/lib/cityUtils.ts` | **NEW** - City extraction utility |
+| `src/hooks/useCityPricing.ts` | **NEW** - Hook to fetch city-specific pricing |
+| `src/lib/pricing.ts` | Add `CityPricing` interface and `calculateCityRideFare` function |
+| `src/pages/Rides.tsx` | Integrate city detection and city pricing |
+| `supabase/functions/create-ride-payment-intent/index.ts` | Server-side city pricing lookup |
+| Database migration | Add `is_active` column and seed data |
 
 ---
 
-## Price Breakdown Display (UI Mock)
+## Fallback Strategy
 
 ```text
-┌───────────────────────────────────────┐
-│ 📋 Fare Breakdown                     │
-├───────────────────────────────────────┤
-│ Base fare                    $3.50    │
-│ Distance (15.1 mi)          $26.43    │
-│ Time (~21 min)               $7.35    │
-│ ─────────────────────────────────     │
-│ Subtotal                    $37.28    │
-│ Booking fee                  $2.50    │
-├───────────────────────────────────────┤
-│ Total                       $39.78    │
-│                                       │
-│ ⚠️ Estimated range: $35-$44           │
-└───────────────────────────────────────┘
-```
+Priority order:
+1. city_pricing (city + ride_type match) → Use city-specific rates
+2. city_pricing (city + 'default' ride_type) → City default
+3. city_pricing ('default' + ride_type) → Global default by type
+4. pricing_settings → Global settings with multiplier
 
-With surge active:
-```text
-│ ⚡ 1.5x surge pricing in effect       │
-│ Surge applied                 +50%    │
+This ensures pricing always works, even for new cities.
 ```
 
 ---
 
-## Technical Notes
+## UI Display
 
-### Why Server-Side Recalculation?
-- Client-side calculations can be tampered with
-- Server is source of truth for payment amounts
-- Ensures commission/driver splits are accurate
+The existing `RidePriceBreakdown` component will display:
+- Base fare (city-specific)
+- Distance fee (city-specific per_mile rate)
+- Time fee (city-specific per_minute rate)
+- Booking fee
+- Total
 
-### Commission Formula
-```
-commission_amount = price_total × (commission_percent / 100)
-driver_earning = price_total - commission_amount
-```
-
-Default commission: 25% (from `commission_settings` table)
-Driver earning: 75%
-
-### Surge Integration
-- `useSurgePricing` hook already provides `multiplier`
-- Pass to calculation function
-- Display surge badge in breakdown
-
+No UI changes needed - just different underlying values.
