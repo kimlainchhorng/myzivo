@@ -31,6 +31,7 @@ import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { getPlaceDetails } from "@/services/mapsApi";
 import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
+import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -50,45 +51,7 @@ interface RideOption {
   tag?: RideTag;
 }
 
-// Premium car image thumbnail (Uber-style)
-function RideImage({ type }: { type?: string }) {
-  return (
-    <div className="w-14 h-10 bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-lg flex items-center justify-center shrink-0">
-      <CarFront className="w-7 h-5 text-zinc-600" />
-    </div>
-  );
-}
-
-// Tag pill component with colored dot badges
-function TagPill({ tag }: { tag?: RideTag }) {
-  if (!tag) return null;
-  
-  const tagMap: Record<RideTag, { dotClass: string; label: string; bgClass: string }> = {
-    wait_save: { dotClass: "bg-blue-400", label: "Save", bgClass: "bg-blue-100 text-blue-700" },
-    standard: { dotClass: "bg-yellow-400", label: "", bgClass: "" },
-    green: { dotClass: "bg-emerald-400", label: "Eco", bgClass: "bg-emerald-100 text-emerald-700" },
-    priority: { dotClass: "bg-orange-400", label: "Fast", bgClass: "bg-orange-100 text-orange-700" },
-    lux: { dotClass: "bg-purple-400", label: "Elite", bgClass: "bg-purple-100 text-purple-700" },
-  };
-  
-  const item = tagMap[tag];
-  
-  // Standard shows only the dot indicator, no label pill
-  if (!item.label) {
-    return (
-      <span className="inline-flex items-center">
-        <span className={`w-2 h-2 rounded-full ${item.dotClass}`} />
-      </span>
-    );
-  }
-  
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.bgClass}`}>
-      <span className={`w-2 h-2 rounded-full ${item.dotClass}`} />
-      {item.label}
-    </span>
-  );
-}
+// RideImage and TagPill components moved to UberLikeRideRow.tsx
 
 type CategoryKey = "Economy" | "Premium" | "Elite";
 
@@ -852,36 +815,19 @@ function RidesInner() {
 
               {/* Ride Options List */}
               <div className="space-y-2">
-                {rideCategories[activeTab].map((ride) => {
-                  const isSelected = selectedOption?.id === ride.id;
-                  return (
-                    <button
-                      key={ride.id}
-                      onClick={() => handleSelectOption(ride)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                        isSelected 
-                          ? "bg-zinc-50 border-2 border-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]" 
-                          : "border border-transparent hover:bg-zinc-50"
-                      }`}
-                    >
-                      <RideImage type={ride.id} />
-                      <div className="flex-1 min-w-0 text-left">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-zinc-900">{ride.name}</span>
-                          <TagPill tag={ride.tag} />
-                          <span className="text-xs text-zinc-500 flex items-center gap-0.5">
-                            <UserRound className="w-3 h-3" />
-                            {ride.seats}
-                          </span>
-                        </div>
-                        <div className="text-sm text-zinc-500">
-                          {getPickupTime(ride.eta || 5)} · {ride.eta} min
-                        </div>
-                      </div>
-                      <span className="text-base font-bold text-zinc-900">{getFareFixed(ride)}</span>
-                    </button>
-                  );
-                })}
+                {rideCategories[activeTab].map((ride) => (
+                  <UberLikeRideRow
+                    key={ride.id}
+                    selected={selectedOption?.id === ride.id}
+                    name={ride.name}
+                    tag={ride.tag}
+                    seats={ride.seats || 4}
+                    time={getPickupTime(ride.eta || 5)}
+                    eta={`${ride.eta} min`}
+                    price={getFareFixed(ride)}
+                    onClick={() => handleSelectOption(ride)}
+                  />
+                ))}
               </div>
 
               {/* Confirm Button */}
@@ -926,7 +872,9 @@ function RidesInner() {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-xl">
-                <RideImage type={selectedOption.id} />
+                <div className="w-14 h-10 bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-lg flex items-center justify-center shrink-0">
+                  <CarFront className="w-7 h-5 text-zinc-600" />
+                </div>
                 <div className="flex-1">
                   <span className="font-semibold text-zinc-900">{selectedOption.name}</span>
                   <div className="text-sm text-zinc-500">{selectedOption.eta} min away</div>
