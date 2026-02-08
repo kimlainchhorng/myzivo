@@ -1,304 +1,119 @@
 
-# ZIVO Eats 3 — Real Payment, Dispatch, Reviews & Receipts
+
+# hiZIVO Eats + Merchant Integration Plan
 
 ## Overview
-Upgrade ZIVO Eats to production-ready with real Stripe payments (card + cash options), driver dispatch system, live tracking, ratings/reviews, and receipt generation. All features will use existing Supabase tables and maintain the 2026 dark glass UI.
+Integrate the ZIVO Eats customer app with the existing Merchant project by sharing Supabase tables. Create a centralized table mapping config, ensure proper RLS filtering, and add role-based navigation for merchants.
 
 ---
 
 ## Current State Analysis
 
 ### Existing Infrastructure (Verified)
+| Feature | Table | Key Columns |
+|---------|-------|-------------|
+| Restaurants | `restaurants` | id, owner_id, name, cuisine_type, is_open, status, rating |
+| Menu Items | `menu_items` | id, restaurant_id, name, price, category, is_available |
+| Food Orders | `food_orders` | id, customer_id, restaurant_id, items (JSONB), status, total_amount |
+| User Roles | `user_roles` | id, user_id, role (includes "merchant" in app_role enum) |
+| Profiles | `profiles` | id, user_id, full_name, email, phone |
 
-| Feature | Table/File | Key Details |
-|---------|-----------|-------------|
-| Food Orders | `food_orders` | Has `payment_status`, `stripe_payment_id`, `driver_id`, `rating` columns |
-| Drivers | `drivers` | Has `current_lat/lng`, `is_online`, `rating`, `avatar_url`, `full_name` |
-| Stripe Checkout | `create-eats-checkout` edge function | Already creates checkout session |
-| Stripe Webhook | `stripe-webhook` | Already handles `eats` type payments |
-| Stripe Key | `src/lib/stripe.ts` | Publishable key configured |
-| Reviews Model | `p2p_reviews` | Existing review schema (can use as reference) |
-
-### Missing Infrastructure (Need to Create)
-
-| Feature | Required Table |
-|---------|---------------|
-| Eats Reviews | `eats_reviews` (new table) |
-| Payment Type | Add `payment_type` column to `food_orders` |
+### Existing Code Assets
+- `src/hooks/useEatsOrders.ts` — Restaurants, menu items, order creation hooks
+- `src/hooks/useLiveEatsOrder.ts` — Realtime order subscription
+- `src/contexts/CartContext.tsx` — Cart state management with localStorage
+- `src/pages/Profile.tsx` — User profile page (add merchant link here)
 
 ---
 
 ## Implementation Details
 
-### 1. Payment Type Selection (Card vs Cash)
+### 1. Create Table Mapping Config (eatsTables.ts)
 
-**Update `food_orders` table:**
-Add new columns via migration:
-- `payment_type` (text) — "card" or "cash"
-- `paid_at` (timestamp) — When payment confirmed
+Create a single source of truth for table names that both customer and merchant apps can reference.
 
-**Files to Create:**
-- `src/components/eats/PaymentTypeSelector.tsx` — Card/Cash toggle component
+**File to Create:**
+- `src/config/eatsTables.ts`
+
+**Contents:**
+```typescript
+// Central mapping for Eats tables
+// Used by both customer app and merchant app
+export const EATS_TABLES = {
+  restaurants: "restaurants",
+  menuItems: "menu_items",
+  orders: "food_orders",
+  orderItems: null, // Items stored as JSONB in food_orders.items
+  reviews: "eats_reviews",
+  promoCodes: "promo_codes",
+} as const;
+
+export const MERCHANT_APP_URL = "https://zivorestaurant.lovable.app";
+```
+
+### 2. Update Hooks to Use Table Config
+
+Modify existing hooks to import table names from config (currently hardcoded table names already match, so this is mainly for documentation and future-proofing).
 
 **Files to Modify:**
-- `src/pages/EatsCart.tsx` — Add payment type selection before checkout
-- `src/components/eats/PaymentMethodModal.tsx` — Add cash option
-- `src/hooks/useEatsOrders.ts` — Include `payment_type` in order creation
+- `src/hooks/useEatsOrders.ts` — Add import and use config
+- `src/hooks/useLiveEatsOrder.ts` — Add import and use config
 
-**UI Flow:**
-```text
-+----------------------------------+
-|  💳 Payment Method               |
-+----------------------------------+
-|  [Card - Pay Now]     [Selected] |
-|  Visa •••• 4242                  |
-+----------------------------------+
-|  [Cash - Pay on Delivery]        |
-+----------------------------------+
-```
+### 3. Order Creation Flow
 
-### 2. Stripe PaymentIntent Integration (Card Payments)
+The current order creation already:
+- Inserts into `food_orders` table
+- Uses `customer_id` from auth session
+- Sets `status` to "pending"
 
-**Create Edge Function:**
-- `supabase/functions/create-eats-payment-intent/index.ts`
-
-This function will:
-- Create order in `food_orders` with status="pending_payment"
-- Create Stripe PaymentIntent (not checkout session)
-- Return `client_secret` for Stripe Elements
-- Include order_id in metadata for webhook handling
-
-**Files to Create:**
-- `src/components/eats/StripePaymentSheet.tsx` — Stripe Elements card form
-- `src/hooks/useEatsPayment.ts` — Hook for payment intent creation + confirmation
+**Enhancement needed:**
+- Ensure `status = "placed"` on successful order (currently "pending")
+- The merchant app will query `food_orders` WHERE `restaurant_id = their_restaurant`
 
 **Files to Modify:**
-- `src/pages/EatsCart.tsx` — Integrate Stripe Elements for card flow
-- `supabase/functions/stripe-webhook/index.ts` — Handle PaymentIntent success for eats
+- `src/hooks/useEatsOrders.ts` — Change initial status to "placed" after successful payment/checkout
 
-**Card Payment Flow:**
-```text
-1. User selects "Card" payment
-2. Clicks "Place Order"
-3. Call create-eats-payment-intent (creates order + PaymentIntent)
-4. Show Stripe Elements sheet
-5. User enters card details
-6. Confirm payment via Stripe SDK
-7. On success: Update order to "placed" status
-8. Redirect to /eats/orders/{id}
-```
+### 4. Realtime Order Updates (Already Implemented)
 
-**Cash Payment Flow:**
-```text
-1. User selects "Cash" payment
-2. Clicks "Place Order"
-3. Insert order directly with status="placed", payment_status="pending"
-4. payment_type = "cash"
-5. Redirect to /eats/orders/{id}
-```
+The `useLiveEatsOrder.ts` hook already subscribes to realtime changes on `food_orders` table:
+- Subscribes via `supabase.channel().on("postgres_changes")`
+- Filters by `id=eq.${orderId}`
+- Updates state when order changes
 
-### 3. Basic Driver Dispatch
+No changes needed - merchant updates will automatically reflect in customer view.
 
-**MVP Approach:**
-Use existing `drivers` table and `food_orders.driver_id` FK.
+### 5. Role-Based Merchant Dashboard Link
+
+Add a link to the merchant dashboard in the Profile page for users with `role = "merchant"`.
 
 **Files to Create:**
-- `src/hooks/useEatsDriver.ts` — Fetch assigned driver info for an order
+- `src/hooks/useMerchantRole.ts` — Check if user is a merchant
 
 **Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Show driver card when assigned
-- `src/hooks/useLiveEatsOrder.ts` — Include driver join in query
+- `src/pages/Profile.tsx` — Add conditional merchant dashboard link
 
-**Order Detail Driver Card:**
-```text
-+----------------------------------+
-|  👤 Your Driver                  |
-|  [Avatar] John D.                |
-|  ⭐ 4.9 · 🚗 Honda Civic         |
-|  ETA: 12 min                     |
-|  [📞 Call] [💬 Message]          |
-+----------------------------------+
+**Logic:**
+```typescript
+// Check user_roles table for merchant role
+const { data } = await supabase
+  .from("user_roles")
+  .select("role")
+  .eq("user_id", userId)
+  .eq("role", "merchant")
+  .maybeSingle();
+
+// If merchant role exists, show dashboard link
 ```
 
-**Admin Assignment:**
-The dispatch command center (`/dispatch`) already exists and can assign `driver_id` to `food_orders`. The order detail page will reactively show driver info when assigned via realtime subscription.
+### 6. RLS Safety Verification
 
-### 4. Live Map Tracking (MVP UI)
+Current RLS patterns in the codebase already filter by `auth.uid()`:
+- `useMyEatsOrders()` — filters by `customer_id = userId`
+- `useSingleEatsOrder()` — fetches by order ID (RLS should verify ownership)
 
-**MVP Approach:**
-Add map placeholder to order detail. Use existing driver `current_lat/lng` columns.
-
-**Files to Create:**
-- `src/components/eats/DeliveryMap.tsx` — Map component with driver marker
-
-**Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Add map section when driver assigned
-
-**Map UI:**
-```text
-+----------------------------------+
-|  [Google Map]                    |
-|  📍 Driver location (live)       |
-|  🏠 Delivery address             |
-+----------------------------------+
-|  Driver 2.3 miles away           |
-|  ETA: 8 minutes                  |
-+----------------------------------+
-```
-
-**Driver Tracking Logic:**
-- Show map only when `status = "out_for_delivery"` and `driver_id` is set
-- Subscribe to driver location updates via realtime
-- If no driver assigned, show: "Tracking will appear when driver is assigned"
-
-### 5. Ratings & Reviews
-
-**Create Reviews Table (Migration):**
-```sql
-CREATE TABLE eats_reviews (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID REFERENCES food_orders(id) NOT NULL,
-  user_id UUID NOT NULL,
-  restaurant_id UUID REFERENCES restaurants(id) NOT NULL,
-  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  food_rating INTEGER CHECK (food_rating >= 1 AND food_rating <= 5),
-  delivery_rating INTEGER CHECK (delivery_rating >= 1 AND delivery_rating <= 5),
-  comment TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-**Files to Create:**
-- `src/components/eats/RatingModal.tsx` — Post-delivery rating prompt
-- `src/hooks/useEatsReviews.ts` — Review CRUD + restaurant avg rating
-
-**Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Show rating prompt when status="delivered"
-- `src/components/eats/MobileEatsPremium.tsx` — Show avg rating from reviews
-
-**Rating Flow:**
-```text
-Order delivered
-    ↓
-Show rating modal after 3 second delay
-    ↓
-User rates: Overall (1-5 stars)
-           Food quality (optional)
-           Delivery speed (optional)
-           Comment (optional)
-    ↓
-Insert into eats_reviews
-    ↓
-Update restaurant avg rating (view or trigger)
-```
-
-**Rating Modal UI:**
-```text
-+----------------------------------+
-|  How was your order?             |
-|                                  |
-|  ⭐⭐⭐⭐☆  4/5                  |
-|                                  |
-|  [Food Quality] [Delivery Speed] |
-|                                  |
-|  [Leave a comment...]            |
-|                                  |
-|  [Skip]       [Submit Review]    |
-+----------------------------------+
-```
-
-### 6. Receipt Section & Download
-
-**Files to Create:**
-- `src/components/eats/OrderReceipt.tsx` — Receipt component (printable)
-- `src/pages/EatsReceipt.tsx` — Full-page receipt view (print-friendly)
-
-**Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Add "View Receipt" button
-- `src/App.tsx` — Add `/eats/orders/:id/receipt` route
-
-**Receipt Contents:**
-```text
-+----------------------------------+
-|  ZIVO EATS RECEIPT               |
-|  Order #ABC12345                 |
-|  Feb 8, 2026 · 7:45 PM           |
-+----------------------------------+
-|  Sakura Sushi Bar                |
-|  123 Restaurant Ave              |
-+----------------------------------+
-|  2x Dragon Roll         $33.98   |
-|  1x Miso Soup            $4.99   |
-+----------------------------------+
-|  Subtotal               $38.97   |
-|  Delivery Fee            $3.99   |
-|  Service Fee             $1.95   |
-|  Tax                     $3.51   |
-|  Discount (SUMMER20)    -$5.00   |
-+----------------------------------+
-|  TOTAL                  $43.42   |
-|  Payment: Visa ••4242            |
-+----------------------------------+
-|  [Download PDF] [Print]          |
-+----------------------------------+
-```
-
-### 7. Error Handling & Polish
-
-**Duplicate Submission Prevention:**
-- Add `isSubmitting` lock in EatsCart
-- Disable button immediately on click
-- Show loading spinner
-- Prevent navigation during submission
-
-**Error States:**
-- Payment failed → Show error modal with retry option
-- Network error → Toast with retry button
-- Order creation failed → Clear error message
-
-**Loading Skeletons:**
-- Already implemented in most pages
-- Verify coverage on new components
-
----
-
-## Database Migration
-
-```sql
--- Add payment_type column to food_orders
-ALTER TABLE food_orders 
-ADD COLUMN IF NOT EXISTS payment_type TEXT DEFAULT 'card' 
-CHECK (payment_type IN ('card', 'cash'));
-
--- Add paid_at timestamp
-ALTER TABLE food_orders 
-ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
-
--- Create eats_reviews table
-CREATE TABLE IF NOT EXISTS eats_reviews (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID REFERENCES food_orders(id) NOT NULL,
-  user_id UUID NOT NULL,
-  restaurant_id UUID REFERENCES restaurants(id) NOT NULL,
-  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  food_rating INTEGER CHECK (food_rating >= 1 AND food_rating <= 5),
-  delivery_rating INTEGER CHECK (delivery_rating >= 1 AND delivery_rating <= 5),
-  comment TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- RLS for eats_reviews
-ALTER TABLE eats_reviews ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view all reviews" ON eats_reviews
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can create own reviews" ON eats_reviews
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own reviews" ON eats_reviews
-  FOR UPDATE USING (auth.uid() = user_id);
-```
+**Verification needed:**
+- Ensure `food_orders` has RLS policy: `customer_id = auth.uid()` for SELECT
+- Ensure merchants can only see their restaurant's orders via `restaurant_id` FK
 
 ---
 
@@ -307,88 +122,76 @@ CREATE POLICY "Users can update own reviews" ON eats_reviews
 ### New Files
 | File | Purpose |
 |------|---------|
-| `supabase/functions/create-eats-payment-intent/index.ts` | Stripe PaymentIntent for embedded checkout |
-| `src/components/eats/PaymentTypeSelector.tsx` | Card/Cash toggle |
-| `src/components/eats/StripePaymentSheet.tsx` | Stripe Elements card form |
-| `src/hooks/useEatsPayment.ts` | Payment intent creation + confirmation |
-| `src/hooks/useEatsDriver.ts` | Fetch driver for order |
-| `src/hooks/useEatsReviews.ts` | Review CRUD + avg ratings |
-| `src/components/eats/DeliveryMap.tsx` | Live driver tracking map |
-| `src/components/eats/RatingModal.tsx` | Post-delivery rating prompt |
-| `src/components/eats/OrderReceipt.tsx` | Printable receipt component |
-| `src/pages/EatsReceipt.tsx` | Full-page receipt view |
+| `src/config/eatsTables.ts` | Central table name mapping + merchant app URL |
+| `src/hooks/useMerchantRole.ts` | Check if current user has merchant role |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/pages/EatsCart.tsx` | Add payment type selection, Stripe Elements flow |
-| `src/pages/EatsOrderDetail.tsx` | Add driver card, map, rating prompt, receipt link |
-| `src/components/eats/PaymentMethodModal.tsx` | Add cash option |
-| `src/hooks/useEatsOrders.ts` | Include payment_type in order creation |
-| `src/hooks/useLiveEatsOrder.ts` | Include driver join |
-| `supabase/functions/stripe-webhook/index.ts` | Handle PaymentIntent succeeded for eats |
-| `src/App.tsx` | Add receipt route |
-
----
-
-## Implementation Order
-
-1. **Database Migration** — Add payment_type, paid_at columns + eats_reviews table
-2. **PaymentTypeSelector Component** — Card/Cash toggle UI
-3. **Update PaymentMethodModal** — Add cash payment option
-4. **create-eats-payment-intent Edge Function** — Stripe PaymentIntent creation
-5. **StripePaymentSheet Component** — Stripe Elements integration
-6. **Update EatsCart** — Full payment flow (card + cash)
-7. **Update stripe-webhook** — Handle PaymentIntent for eats
-8. **useEatsDriver Hook** — Driver info for orders
-9. **Update EatsOrderDetail** — Driver card + map placeholder
-10. **DeliveryMap Component** — Live tracking UI
-11. **eats_reviews Table + RLS** — Reviews infrastructure
-12. **RatingModal Component** — Post-delivery rating
-13. **Update EatsOrderDetail** — Rating prompt on delivered
-14. **OrderReceipt Component** — Receipt display
-15. **EatsReceipt Page** — Print-friendly receipt
-16. **Polish** — Error handling, loading states, duplicate prevention
+| `src/hooks/useEatsOrders.ts` | Import table config, ensure "placed" status on order creation |
+| `src/hooks/useLiveEatsOrder.ts` | Import table config for consistency |
+| `src/pages/Profile.tsx` | Add "Open Merchant Dashboard" link for merchant users |
 
 ---
 
 ## Data Flow
 
 ```text
-Cart (/eats/cart)
-    ├── Select Payment Type (Card / Cash)
-    │
-    ├── CASH PATH:
-    │   └── Insert order (status=placed, payment_status=pending)
-    │       └── Redirect to order detail
-    │
-    └── CARD PATH:
-        ├── Call create-eats-payment-intent
-        │   └── Returns client_secret
-        ├── Show Stripe Elements sheet
-        ├── User enters card → confirm payment
-        ├── On success: Order status → placed
-        └── Redirect to order detail
+Customer App (hiZIVO)
+    ├── Browse restaurants (reads from `restaurants` table)
+    ├── View menu items (reads from `menu_items` table)
+    ├── Add to cart (local state via CartContext)
+    ├── Place order (inserts into `food_orders` with status="placed")
+    └── Track order (subscribes to realtime updates on `food_orders`)
 
-Order Detail (/eats/orders/:id)
-    ├── Status timeline with realtime updates
-    ├── Driver card (when assigned)
-    ├── Live map (when out_for_delivery)
-    ├── Receipt link
-    └── Rating prompt (when delivered)
+Merchant App (separate project)
+    ├── View incoming orders (reads `food_orders` WHERE restaurant_id = own_restaurant)
+    ├── Update order status (updates `food_orders.status`)
+    └── Manage menu (CRUD on `menu_items` for own restaurant)
+
+Shared Supabase Backend
+    ├── `restaurants` — shared read by customer, write by merchant
+    ├── `menu_items` — shared read by customer, write by merchant
+    ├── `food_orders` — insert by customer, read/update by merchant
+    └── `user_roles` — determines access level (customer vs merchant)
 ```
+
+---
+
+## Profile Page Enhancement
+
+**New Quick Link for Merchants:**
+```text
++----------------------------------+
+|  👨‍🍳 Merchant Dashboard            |
+|  Manage your restaurant          |
+|                          [>]     |
++----------------------------------+
+```
+
+This link only appears if the user has `role = "merchant"` in `user_roles` table.
+
+---
+
+## Implementation Order
+
+1. **Create eatsTables.ts config** — Central table mapping
+2. **Create useMerchantRole hook** — Check merchant role
+3. **Update Profile.tsx** — Add conditional merchant dashboard link
+4. **Update useEatsOrders.ts** — Ensure "placed" status on order creation
+5. **Update useLiveEatsOrder.ts** — Import config for consistency
+6. **Verify RLS policies** — Ensure proper access control
 
 ---
 
 ## Summary
 
-This update transforms ZIVO Eats into a production-ready ordering platform:
+This integration connects the ZIVO Eats customer app with the Merchant project:
 
-- **Dual Payment**: Card (Stripe) + Cash on delivery
-- **Real Stripe**: PaymentIntent with embedded Elements (not redirect)
-- **Driver Dispatch**: Shows assigned driver info from existing drivers table
-- **Live Tracking**: Map with driver location (MVP ready)
-- **Ratings & Reviews**: 5-star rating with optional comments
-- **Receipts**: Printable order receipts
-- **2026 UI**: Consistent dark glass design throughout
-- **Production Quality**: Error handling, duplicate prevention, loading states
+- **Shared Tables**: Both apps read/write to same `restaurants`, `menu_items`, `food_orders` tables
+- **Table Config**: Single `eatsTables.ts` file maps all table names
+- **Order Flow**: Customer creates order → Merchant sees it → Updates status → Customer sees update in realtime
+- **Role-Based Access**: Merchants see "Open Merchant Dashboard" link in their profile
+- **RLS Safe**: All queries filter by `auth.uid()` for proper access control
+- **No Merchant Pages**: Customer app only handles ordering, not restaurant management
+
