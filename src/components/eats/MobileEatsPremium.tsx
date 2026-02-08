@@ -7,10 +7,12 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, Clock, Star, Flame, ShoppingBag, 
-  MapPin, Plus, Zap, ArrowLeft, Loader2, Package
+  MapPin, Plus, Zap, ArrowLeft, Loader2, Package, Heart, Bell
 } from "lucide-react";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { useCart } from "@/contexts/CartContext";
+import { useEatsAlerts } from "@/hooks/useEatsAlerts";
+import { FavoriteButton } from "./FavoriteButton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
@@ -21,6 +23,7 @@ export default function MobileEatsPremium() {
   const navigate = useNavigate();
   const { data: restaurants, isLoading, error } = useRestaurants();
   const { getItemCount } = useCart();
+  const { unreadCount } = useEatsAlerts();
   
   const cartCount = getItemCount();
 
@@ -115,7 +118,36 @@ export default function MobileEatsPremium() {
           </div>
           <span className="font-medium text-sm">My Orders</span>
         </button>
+        <button
+          onClick={() => navigate("/eats/favorites")}
+          className="flex-1 bg-zinc-900/80 border border-white/10 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+        >
+          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+            <Heart className="w-5 h-5 text-red-500" />
+          </div>
+          <span className="font-medium text-sm">Favorites</span>
+        </button>
       </div>
+
+      {/* Alerts Quick Link */}
+      {unreadCount > 0 && (
+        <div className="px-6 mb-6">
+          <button
+            onClick={() => navigate("/eats/alerts")}
+            className="w-full bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center relative">
+              <Bell className="w-5 h-5 text-orange-500" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-[10px] font-bold">
+                {unreadCount}
+              </div>
+            </div>
+            <span className="font-medium text-sm text-orange-400">
+              {unreadCount} new notification{unreadCount > 1 ? 's' : ''}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* 3. LOADING STATE */}
       {isLoading && (
@@ -167,8 +199,9 @@ export default function MobileEatsPremium() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
 
-              {/* Floating Time Badge */}
-              <div className="absolute top-6 right-6">
+              {/* Floating Time Badge & Favorite */}
+              <div className="absolute top-6 right-6 flex items-center gap-2">
+                <FavoriteButton restaurant={restaurant} size="sm" />
                 <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
                   <Clock className="w-3 h-3 text-orange-400" />
                   <span className="text-xs font-bold">

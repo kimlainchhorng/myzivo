@@ -670,6 +670,58 @@ export type Database = {
         }
         Relationships: []
       }
+      alerts: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          order_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          order_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          order_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_aggregations: {
         Row: {
           avg_value: number | null
@@ -1761,6 +1813,13 @@ export type Database = {
             foreignKeyName: "batch_stops_food_order_id_fkey"
             columns: ["food_order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_stops_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -2455,6 +2514,13 @@ export type Database = {
             foreignKeyName: "call_logs_related_order_id_fkey"
             columns: ["related_order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -3118,6 +3184,13 @@ export type Database = {
             foreignKeyName: "chat_messages_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -3444,6 +3517,51 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_reminders: {
+        Row: {
+          created_at: string | null
+          document_id: string
+          document_table: string
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          id: string
+          method: string | null
+          remind_at: string
+          remind_days_before: number
+          sent: boolean | null
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_id: string
+          document_table?: string
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          method?: string | null
+          remind_at: string
+          remind_days_before: number
+          sent?: boolean | null
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string
+          document_table?: string
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          method?: string | null
+          remind_at?: string
+          remind_days_before?: number
+          sent?: boolean | null
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
       compliance_requirements: {
         Row: {
           category_id: string | null
@@ -3601,6 +3719,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -4239,6 +4364,13 @@ export type Database = {
             foreignKeyName: "customer_wallet_transactions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -4733,6 +4865,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "dispute_cases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dispute_cases_order_id_fkey"
             columns: ["order_id"]
@@ -5345,14 +5484,19 @@ export type Database = {
           document_type: string
           driver_id: string
           expires_at: string | null
+          expires_status: string | null
           expiry_notified_at: string | null
           file_name: string
           file_path: string
           file_size: number | null
           id: string
+          is_required: boolean | null
           mime_type: string | null
           notes: string | null
           rejection_reason: string | null
+          renewal_requested: boolean | null
+          renewal_requested_at: string | null
+          renewal_requested_by: string | null
           reviewed_at: string | null
           status: string
           uploaded_at: string
@@ -5363,14 +5507,19 @@ export type Database = {
           document_type: string
           driver_id: string
           expires_at?: string | null
+          expires_status?: string | null
           expiry_notified_at?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           id?: string
+          is_required?: boolean | null
           mime_type?: string | null
           notes?: string | null
           rejection_reason?: string | null
+          renewal_requested?: boolean | null
+          renewal_requested_at?: string | null
+          renewal_requested_by?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
@@ -5381,14 +5530,19 @@ export type Database = {
           document_type?: string
           driver_id?: string
           expires_at?: string | null
+          expires_status?: string | null
           expiry_notified_at?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           id?: string
+          is_required?: boolean | null
           mime_type?: string | null
           notes?: string | null
           rejection_reason?: string | null
+          renewal_requested?: boolean | null
+          renewal_requested_at?: string | null
+          renewal_requested_by?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
@@ -5954,6 +6108,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_penalties_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -6826,6 +6987,7 @@ export type Database = {
           cancel_count: number
           city: string | null
           completion_rate: number | null
+          compliance_status: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -6867,6 +7029,7 @@ export type Database = {
           referral_code: string
           region_id: string | null
           rejection_reason: string | null
+          restricted_reason: string | null
           reviewer_notes: string | null
           rides_enabled: boolean | null
           state: string | null
@@ -6907,6 +7070,7 @@ export type Database = {
           cancel_count?: number
           city?: string | null
           completion_rate?: number | null
+          compliance_status?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -6948,6 +7112,7 @@ export type Database = {
           referral_code?: string
           region_id?: string | null
           rejection_reason?: string | null
+          restricted_reason?: string | null
           reviewer_notes?: string | null
           rides_enabled?: boolean | null
           state?: string | null
@@ -6988,6 +7153,7 @@ export type Database = {
           cancel_count?: number
           city?: string | null
           completion_rate?: number | null
+          compliance_status?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -7029,6 +7195,7 @@ export type Database = {
           referral_code?: string
           region_id?: string | null
           rejection_reason?: string | null
+          restricted_reason?: string | null
           reviewer_notes?: string | null
           rides_enabled?: boolean | null
           state?: string | null
@@ -7111,6 +7278,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "eats_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eats_reviews_order_id_fkey"
             columns: ["order_id"]
@@ -7952,6 +8126,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -12102,14 +12283,19 @@ export type Database = {
           approved_by: string | null
           document_type: string
           expires_at: string | null
+          expires_status: string | null
           file_name: string
           file_path: string
           file_size: number | null
           id: string
+          is_required: boolean | null
           merchant_id: string
           mime_type: string | null
           notes: string | null
           rejection_reason: string | null
+          renewal_requested: boolean | null
+          renewal_requested_at: string | null
+          renewal_requested_by: string | null
           status: string
           uploaded_at: string
         }
@@ -12118,14 +12304,19 @@ export type Database = {
           approved_by?: string | null
           document_type: string
           expires_at?: string | null
+          expires_status?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           id?: string
+          is_required?: boolean | null
           merchant_id: string
           mime_type?: string | null
           notes?: string | null
           rejection_reason?: string | null
+          renewal_requested?: boolean | null
+          renewal_requested_at?: string | null
+          renewal_requested_by?: string | null
           status?: string
           uploaded_at?: string
         }
@@ -12134,14 +12325,19 @@ export type Database = {
           approved_by?: string | null
           document_type?: string
           expires_at?: string | null
+          expires_status?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           id?: string
+          is_required?: boolean | null
           merchant_id?: string
           mime_type?: string | null
           notes?: string | null
           rejection_reason?: string | null
+          renewal_requested?: boolean | null
+          renewal_requested_at?: string | null
+          renewal_requested_by?: string | null
           status?: string
           uploaded_at?: string
         }
@@ -12211,6 +12407,13 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "merchant_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "merchant_earnings_order_id_fkey"
             columns: ["order_id"]
@@ -12741,6 +12944,13 @@ export type Database = {
             foreignKeyName: "ops_alerts_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_alerts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -12953,6 +13163,13 @@ export type Database = {
             foreignKeyName: "order_actions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_actions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -13025,6 +13242,13 @@ export type Database = {
             foreignKeyName: "order_disputes_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -13066,6 +13290,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_events_order_id_fkey"
             columns: ["order_id"]
@@ -13140,6 +13371,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -13232,6 +13470,13 @@ export type Database = {
             foreignKeyName: "order_ratings_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -13308,6 +13553,13 @@ export type Database = {
             foreignKeyName: "order_status_events_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -13346,6 +13598,13 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_timers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_timers_order_id_fkey"
             columns: ["order_id"]
@@ -15172,6 +15431,13 @@ export type Database = {
             foreignKeyName: "payment_disputes_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -15515,6 +15781,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -16428,6 +16701,13 @@ export type Database = {
             foreignKeyName: "promotion_usage_food_order_id_fkey"
             columns: ["food_order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_usage_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -17196,6 +17476,13 @@ export type Database = {
             foreignKeyName: "refund_requests_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -17249,6 +17536,13 @@ export type Database = {
           stripe_refund_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "refunds_order_id_fkey"
             columns: ["order_id"]
@@ -18083,6 +18377,13 @@ export type Database = {
             foreignKeyName: "restaurant_ledger_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -18279,6 +18580,7 @@ export type Database = {
           city: string | null
           closed_reason: string | null
           commission_rate: number | null
+          compliance_status: string | null
           cover_image_url: string | null
           created_at: string | null
           cuisine_type: string
@@ -18313,6 +18615,7 @@ export type Database = {
           rating_count: number | null
           ratings_count: number | null
           region_id: string | null
+          restricted_reason: string | null
           service_fee_percent: number | null
           state: string | null
           status: Database["public"]["Enums"]["partner_status"] | null
@@ -18344,6 +18647,7 @@ export type Database = {
           city?: string | null
           closed_reason?: string | null
           commission_rate?: number | null
+          compliance_status?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type: string
@@ -18378,6 +18682,7 @@ export type Database = {
           rating_count?: number | null
           ratings_count?: number | null
           region_id?: string | null
+          restricted_reason?: string | null
           service_fee_percent?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
@@ -18409,6 +18714,7 @@ export type Database = {
           city?: string | null
           closed_reason?: string | null
           commission_rate?: number | null
+          compliance_status?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type?: string
@@ -18443,6 +18749,7 @@ export type Database = {
           rating_count?: number | null
           ratings_count?: number | null
           region_id?: string | null
+          restricted_reason?: string | null
           service_fee_percent?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
@@ -19070,6 +19377,13 @@ export type Database = {
             foreignKeyName: "risk_events_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -19382,10 +19696,12 @@ export type Database = {
           id: string
           incident_type: string
           location: string | null
+          photo_url: string | null
           photos_count: number | null
           resolution_notes: string | null
           resolved_at: string | null
           status: string
+          trip_id: string | null
           updated_at: string
         }
         Insert: {
@@ -19396,10 +19712,12 @@ export type Database = {
           id?: string
           incident_type: string
           location?: string | null
+          photo_url?: string | null
           photos_count?: number | null
           resolution_notes?: string | null
           resolved_at?: string | null
           status?: string
+          trip_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -19410,10 +19728,12 @@ export type Database = {
           id?: string
           incident_type?: string
           location?: string | null
+          photo_url?: string | null
           photos_count?: number | null
           resolution_notes?: string | null
           resolved_at?: string | null
           status?: string
+          trip_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -19429,6 +19749,116 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_messages_queue: {
+        Row: {
+          contact_name: string | null
+          contact_phone: string
+          created_at: string
+          driver_id: string
+          error_message: string | null
+          id: string
+          message: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          contact_name?: string | null
+          contact_phone: string
+          created_at?: string
+          driver_id: string
+          error_message?: string | null
+          id?: string
+          message: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          contact_name?: string | null
+          contact_phone?: string
+          created_at?: string
+          driver_id?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      safety_share_links: {
+        Row: {
+          created_at: string
+          driver_id: string
+          driver_name: string | null
+          expires_at: string
+          id: string
+          last_location_lat: number | null
+          last_location_lng: number | null
+          last_updated_at: string | null
+          token: string
+          trip_id: string | null
+          trip_status: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          driver_name?: string | null
+          expires_at?: string
+          id?: string
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          last_updated_at?: string | null
+          token: string
+          trip_id?: string | null
+          trip_status?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          driver_name?: string | null
+          expires_at?: string
+          id?: string
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          last_updated_at?: string | null
+          token?: string
+          trip_id?: string | null
+          trip_status?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_share_links_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_share_links_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -20098,6 +20528,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "customer_orders_view"
             referencedColumns: ["id"]
           },
           {
@@ -22493,6 +22930,13 @@ export type Database = {
             foreignKeyName: "transactions_food_order_id_fkey"
             columns: ["food_order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -24833,6 +25277,13 @@ export type Database = {
             foreignKeyName: "wallet_transactions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "food_orders"
             referencedColumns: ["id"]
           },
@@ -26931,6 +27382,92 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_orders_view: {
+        Row: {
+          created_at: string | null
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_lat: number | null
+          delivery_lng: number | null
+          discount: number | null
+          id: string | null
+          items: Json | null
+          restaurant_id: string | null
+          special_instructions: string | null
+          status: string | null
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          discount?: never
+          id?: string | null
+          items?: Json | null
+          restaurant_id?: string | null
+          special_instructions?: string | null
+          status?: never
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          discount?: never
+          id?: string | null
+          items?: Json | null
+          restaurant_id?: string | null
+          special_instructions?: string | null
+          status?: never
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
