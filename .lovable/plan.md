@@ -1,205 +1,262 @@
 
 
-# Fix Rides Page: Uber-Style Layout with Proper Layering
+# Unified Ride Price Calculation
 
 ## Summary
-Refactor the Rides page to properly separate the map (full screen background), floating location bubbles (over map), and a fixed bottom sheet with internal scrolling. This fixes the current layout issues where elements overlap incorrectly.
+Create a centralized ride pricing system that:
+1. Fetches pricing settings from `pricing_settings` table (service_type = 'rides')
+2. Calculates fare using the formula: base_fare + (distance × per_mile) + (duration × per_minute) + booking_fee
+3. Enforces minimum fare
+4. Applies surge multiplier when active
+5. Calculates commission/driver earnings and saves to ride_requests
+6. Displays a detailed price breakdown to the rider
 
 ---
 
-## Current Problems
+## Current State
 
-| Issue | Description |
-|-------|-------------|
-| **Sheet height calculation** | Using `dvh` with animate doesn't work reliably |
-| **Drag constraints** | Complex relative positioning breaks snap behavior |
-| **Scroll bleeding** | Page body can scroll, not just sheet content |
-| **Absolute vs fixed** | Sheet using `absolute` but should be `fixed` |
-| **CTA positioning** | Using `absolute` inside scrollable content - breaks layout |
+| Component | Location | Status |
+|-----------|----------|--------|
+| `pricing_settings` table | Database | Has rides settings (base_fare: $3.50, per_mile: $1.75, per_minute: $0.35, booking_fee: $2.50, minimum_fare: $7.00) |
+| `commission_settings` table | Database | Has per-vehicle-type commission (25% for all ride types) |
+| `ride_requests` table | Database | Missing `commission_amount`, `driver_earning` columns |
+| `calculateFare` function | `src/pages/Rides.tsx` line 86 | Hardcoded values, no DB fetch |
+| Edge function | `create-ride-payment-intent` | Uses passed `estimated_fare`, doesn't calculate server-side |
+| `RidePriceBreakdown` component | Exists but not used | Ready for integration |
 
 ---
 
-## Architecture (User's Pattern)
+## Database Changes
+
+Add new columns to `ride_requests` table:
+
+```sql
+ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS commission_amount NUMERIC(10,2);
+ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(10,2);
+ALTER TABLE ride_requests ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(4,2);
+```
+
+---
+
+## Architecture
 
 ```text
-┌─────────────────────────────────────────┐
-│  [FULL SCREEN MAP - z-0]                │
-│                                         │
-│  ┌──────────────────┐                   │
-│  │ Pickup Card      │ ← Floating z-10   │
-│  └──────────────────┘                   │
-│                                         │
-│            🚗    📍                      │
-│       🚗                                │
-│                                         │
-│  ┌──────────────────┐                   │
-│  │ Dropoff Card     │ ← Floating z-10   │
-│  └──────────────────┘                   │
-│                                         │
-├─────────────────────────────────────────┤
-│  ═══════════════════ (handle)           │ ← Fixed Sheet z-50
-│  Where to?                              │
-│  ┌─────────────────────────────────┐    │
-│  │ [Scrollable Content Area]       │    │ ← overflow-y-auto
-│  │ - Inputs                        │    │
-│  │ - Tabs                          │    │
-│  │ - Ride Cards                    │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ [CTA Button - sticky bottom]    │    │ ← sticky, not absolute
-│  └─────────────────────────────────┘    │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         PRICING FLOW                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. User selects ride type                                          │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌─────────────────────┐                                            │
+│  │ useRidePricing hook │ ← Fetches pricing_settings (service=rides) │
+│  └─────────────────────┘                                            │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌─────────────────────────────────────────────┐                    │
+│  │ calculateUnifiedRideFare()                  │                    │
+│  │ - base_fare + (miles × per_mile)            │                    │
+│  │ - + (minutes × per_minute)                  │                    │
+│  │ - + booking_fee                             │                    │
+│  │ - × ride_type_multiplier                    │                    │
+│  │ - × surge_multiplier                        │                    │
+│  │ - enforce minimum_fare                       │                    │
+│  └─────────────────────────────────────────────┘                    │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌─────────────────────────────────────────────┐                    │
+│  │ RidePriceBreakdownCard (UI Component)       │                    │
+│  │ - Shows: Base, Distance, Time, Booking fee  │                    │
+│  │ - Surge indicator if active                 │                    │
+│  │ - Total with estimate range                 │                    │
+│  └─────────────────────────────────────────────┘                    │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌─────────────────────────────────────────────┐                    │
+│  │ Edge Function: create-ride-payment-intent   │                    │
+│  │ - Re-calculates server-side                 │                    │
+│  │ - Fetches commission from commission_settings│                    │
+│  │ - Saves: price_total, commission_amount,    │                    │
+│  │          driver_earning to ride_requests    │                    │
+│  └─────────────────────────────────────────────┘                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Changes
+## Implementation Steps
 
-### 1. Prevent Body Scroll (Uber-style app behavior)
-**File: `src/pages/Rides.tsx`**
+### 1. Database Migration
+Add commission/earning columns to `ride_requests`:
 
-Add useEffect to lock body scroll:
+```sql
+ALTER TABLE ride_requests 
+  ADD COLUMN IF NOT EXISTS commission_amount NUMERIC(10,2),
+  ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(10,2),
+  ADD COLUMN IF NOT EXISTS ride_type_multiplier NUMERIC(4,2);
 
-```tsx
-useEffect(() => {
-  const prev = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
-  return () => {
-    document.body.style.overflow = prev;
+COMMENT ON COLUMN ride_requests.commission_amount IS 'Platform commission = price_total * commission_percent';
+COMMENT ON COLUMN ride_requests.driver_earning IS 'Driver payout = price_total - commission_amount';
+```
+
+### 2. Create `useRidePricingSettings` Hook
+New file: `src/hooks/useRidePricingSettings.ts`
+
+```typescript
+// Fetches pricing_settings where service_type = 'rides'
+// Returns: { base_fare, per_mile_rate, per_minute_rate, minimum_fare, booking_fee, multipliers }
+// Cached with TanStack Query (5 min stale time)
+```
+
+### 3. Update `src/lib/pricing.ts`
+Add new unified calculation function:
+
+```typescript
+export interface UnifiedRidePriceBreakdown {
+  baseFare: number;
+  distanceFee: number;
+  timeFee: number;
+  bookingFee: number;
+  subtotal: number;
+  rideTypeMultiplier: number;
+  surgeMultiplier: number;
+  minimumApplied: boolean;
+  total: number;
+  estimatedMin: number;
+  estimatedMax: number;
+  // Commission fields (calculated server-side only)
+  commissionPercent?: number;
+  commissionAmount?: number;
+  driverEarning?: number;
+}
+
+export function calculateUnifiedRideFare(
+  settings: RidePricingSettings,
+  distanceMiles: number,
+  durationMinutes: number,
+  rideTypeMultiplier: number,
+  surgeMultiplier: number = 1.0
+): UnifiedRidePriceBreakdown {
+  // 1. Calculate base components
+  const baseFare = settings.base_fare;
+  const distanceFee = distanceMiles * settings.per_mile_rate;
+  const timeFee = durationMinutes * settings.per_minute_rate;
+  const bookingFee = settings.booking_fee;
+  
+  // 2. Calculate subtotal before multipliers
+  let subtotal = baseFare + distanceFee + timeFee;
+  
+  // 3. Apply multipliers
+  subtotal *= rideTypeMultiplier;
+  subtotal *= surgeMultiplier;
+  
+  // 4. Enforce minimum fare
+  const minimumApplied = subtotal < settings.minimum_fare;
+  if (minimumApplied) {
+    subtotal = settings.minimum_fare;
+  }
+  
+  // 5. Add booking fee to get total
+  const total = subtotal + bookingFee;
+  
+  return {
+    baseFare,
+    distanceFee,
+    timeFee,
+    bookingFee,
+    subtotal,
+    rideTypeMultiplier,
+    surgeMultiplier,
+    minimumApplied,
+    total: round(total),
+    estimatedMin: Math.floor(total * 0.9),
+    estimatedMax: Math.ceil(total * 1.1),
   };
-}, []);
+}
 ```
 
-### 2. Simplify Container Structure
-**File: `src/pages/Rides.tsx`**
+### 4. Update `src/pages/Rides.tsx`
 
-Change from:
-```tsx
-<div className="fixed inset-0 bg-zinc-100 overflow-hidden">
-```
+Replace hardcoded `calculateFare` function with:
+- Import and use `useRidePricingSettings` hook
+- Use `calculateUnifiedRideFare` for price calculation
+- Pass breakdown to UI component
 
-To cleaner stacking:
-```tsx
-<div className="fixed inset-0 overflow-hidden bg-[#e5e3df]">
-  {/* Map: absolute full screen, z-0 */}
-  <div className="absolute inset-0 z-0">
-    <RidesMapView ... />
-  </div>
-  
-  {/* Bottom Sheet: fixed, z-50 */}
-  <div className="fixed bottom-0 left-0 right-0 z-50 ...">
-```
-
-### 3. Replace Dynamic Height with Fixed Height + Snap
-**File: `src/pages/Rides.tsx`**
-
-Remove problematic `animate={{ height: getSheetHeight() }}` and use CSS-based heights:
-
-```tsx
-// Remove animate height - use fixed height based on step
-const sheetHeight = step === "request" 
-  ? "h-[55%]" 
-  : step === "options" 
-    ? "h-[60%]" 
-    : "h-[75%]";
-
-<motion.div
-  className={`fixed bottom-0 left-0 right-0 ${sheetHeight} rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-50`}
-  // Remove animate={{ height }} - use className instead
->
-```
-
-### 4. Move Floating Cards Outside Sheet
-**File: `src/pages/Rides.tsx`**
-
-Currently pickup/dropoff cards are inside `RidesMapView`. They should be positioned as siblings for proper z-indexing:
-
-```tsx
-<div className="fixed inset-0 overflow-hidden bg-[#e5e3df]">
-  {/* Map */}
-  <div className="absolute inset-0 z-0">
-    <RidesMapView ... /> {/* Remove floating cards from here */}
-  </div>
-  
-  {/* Floating Pickup Card - z-10 */}
-  {pickup && (
-    <button className="fixed top-4 left-4 z-10 ...">
-      ...
-    </button>
-  )}
-  
-  {/* Floating Dropoff Card - z-10 */}
-  {dropoff && (
-    <button className="fixed bottom-[calc(55%+16px)] left-4 z-10 ...">
-      ...
-    </button>
-  )}
-  
-  {/* Bottom Sheet - z-50 */}
-  <div className="fixed bottom-0 ... z-50">
-```
-
-### 5. Fix CTA Button Positioning
-**File: `src/pages/Rides.tsx`**
-
-Change CTA from `absolute` to `sticky`:
-
-```tsx
-// Before (broken)
-<div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t ...">
-
-// After (works with scroll)
-<div className="sticky bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/90 pt-4">
-```
-
-### 6. Proper Internal Scroll Container
-**File: `src/pages/Rides.tsx`**
-
-Wrap sheet content in proper scroll container:
-
-```tsx
-<motion.div className="fixed bottom-0 left-0 right-0 h-[55%] ... flex flex-col">
-  {/* Handle - flex-shrink-0 */}
-  <div className="flex-shrink-0 ...">
-    <div className="w-12 h-1.5 bg-zinc-300 rounded-full" />
-  </div>
-  
-  {/* Scrollable Content - flex-1 overflow-y-auto */}
-  <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-20">
-    {/* Inputs, tabs, ride cards */}
-  </div>
-  
-  {/* CTA - sticky at bottom of scroll container */}
-  {selectedOption && (
-    <div className="sticky bottom-0 p-4 bg-gradient-to-t from-white via-white to-white/80">
-      <Button ...>Choose {selectedOption.name}</Button>
-    </div>
-  )}
-</motion.div>
-```
-
-### 7. Simplify Drag Logic
-**File: `src/pages/Rides.tsx`**
-
-Replace complex snap calculation with simpler approach:
-
-```tsx
-// Simplified snap: just 2 positions (collapsed/expanded)
-const [isExpanded, setIsExpanded] = useState(false);
-
-const handleDragEnd = (event: any, info: { offset: { y: number }; velocity: { y: number } }) => {
-  // If dragged up fast or far, expand
-  if (info.offset.y < -50 || info.velocity.y < -500) {
-    setIsExpanded(true);
-  }
-  // If dragged down fast or far, collapse
-  else if (info.offset.y > 50 || info.velocity.y > 500) {
-    setIsExpanded(false);
-  }
+```typescript
+// Replace line 86-92:
+const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
+  const baseFare = 2.00;
+  // ...hardcoded
 };
 
-// Height based on state
-const sheetHeightClass = isExpanded ? "h-[85%]" : "h-[55%]";
+// With:
+const { data: pricingSettings } = useRidePricingSettings();
+const breakdown = calculateUnifiedRideFare(
+  pricingSettings,
+  estimatedDistance,
+  estimatedDuration,
+  selectedOption?.multiplier || 1.0,
+  surgeMultiplier
+);
+```
+
+### 5. Update Edge Function
+Modify `supabase/functions/create-ride-payment-intent/index.ts`:
+
+```typescript
+// 1. Fetch pricing_settings from DB
+const { data: settings } = await supabase
+  .from('pricing_settings')
+  .select('setting_key, setting_value')
+  .eq('service_type', 'rides');
+
+// 2. Calculate fare server-side (source of truth)
+const breakdown = calculateServerRideFare(settings, distance, duration, multiplier, surge);
+
+// 3. Fetch commission rate from commission_settings
+const { data: commission } = await supabase
+  .from('commission_settings')
+  .select('commission_percentage')
+  .eq('service_type', 'rides')
+  .eq('vehicle_type', vehicleType)
+  .single();
+
+const commissionPercent = commission?.commission_percentage || 15;
+const commissionAmount = breakdown.total * (commissionPercent / 100);
+const driverEarning = breakdown.total - commissionAmount;
+
+// 4. Save to ride_requests with all breakdown fields
+await supabase.from('ride_requests').insert({
+  // ... existing fields
+  quoted_base_fare: breakdown.baseFare,
+  quoted_distance_fee: breakdown.distanceFee,
+  quoted_time_fee: breakdown.timeFee,
+  quoted_booking_fee: breakdown.bookingFee,
+  quoted_surge_multiplier: breakdown.surgeMultiplier,
+  quoted_total: breakdown.total,
+  ride_type_multiplier: breakdown.rideTypeMultiplier,
+  payment_amount: breakdown.total,
+  commission_amount: commissionAmount,
+  driver_earning: driverEarning,
+});
+```
+
+### 6. Add Price Breakdown UI
+Update the confirm step in `Rides.tsx` to show `RidePriceBreakdown`:
+
+```tsx
+{step === "confirm" && breakdown && (
+  <div className="space-y-4">
+    <RidePriceBreakdown
+      breakdown={breakdown}
+      rideType={mapToRideType(selectedOption.id)}
+      distance={estimatedDistance}
+      duration={estimatedDuration}
+      showEstimateNote={true}
+    />
+  </div>
+)}
 ```
 
 ---
@@ -208,23 +265,59 @@ const sheetHeightClass = isExpanded ? "h-[85%]" : "h-[55%]";
 
 | File | Changes |
 |------|---------|
-| `src/pages/Rides.tsx` | Body scroll lock, simplified stacking, fixed heights, proper scroll container, sticky CTA, simplified drag |
+| `src/hooks/useRidePricingSettings.ts` | **NEW** - Hook to fetch rides pricing from DB |
+| `src/lib/pricing.ts` | Add `calculateUnifiedRideFare` function |
+| `src/pages/Rides.tsx` | Replace hardcoded pricing with DB-driven calculation, add breakdown UI |
+| `supabase/functions/create-ride-payment-intent/index.ts` | Server-side price calculation, commission split |
+| Database migration | Add `commission_amount`, `driver_earning`, `ride_type_multiplier` columns |
+
+---
+
+## Price Breakdown Display (UI Mock)
+
+```text
+┌───────────────────────────────────────┐
+│ 📋 Fare Breakdown                     │
+├───────────────────────────────────────┤
+│ Base fare                    $3.50    │
+│ Distance (15.1 mi)          $26.43    │
+│ Time (~21 min)               $7.35    │
+│ ─────────────────────────────────     │
+│ Subtotal                    $37.28    │
+│ Booking fee                  $2.50    │
+├───────────────────────────────────────┤
+│ Total                       $39.78    │
+│                                       │
+│ ⚠️ Estimated range: $35-$44           │
+└───────────────────────────────────────┘
+```
+
+With surge active:
+```text
+│ ⚡ 1.5x surge pricing in effect       │
+│ Surge applied                 +50%    │
+```
 
 ---
 
 ## Technical Notes
 
-### Why Fixed Heights Over Dynamic
-- `animate={{ height }}` with `dvh` units causes layout thrashing
-- Fixed percentage heights are more predictable across devices
-- Two-state (collapsed/expanded) is simpler and matches Uber UX
+### Why Server-Side Recalculation?
+- Client-side calculations can be tampered with
+- Server is source of truth for payment amounts
+- Ensures commission/driver splits are accurate
 
-### Why `fixed` Over `absolute` for Sheet
-- `absolute` is relative to nearest positioned ancestor
-- `fixed` is relative to viewport - guarantees bottom positioning
-- Sheet must always be at viewport bottom, not container bottom
+### Commission Formula
+```
+commission_amount = price_total × (commission_percent / 100)
+driver_earning = price_total - commission_amount
+```
 
-### Safe Area Handling
-- Use `pb-safe` utility for notched phones
-- CTA gradient ensures content doesn't hide under button
+Default commission: 25% (from `commission_settings` table)
+Driver earning: 75%
+
+### Surge Integration
+- `useSurgePricing` hook already provides `multiplier`
+- Pass to calculation function
+- Display surge badge in breakdown
 
