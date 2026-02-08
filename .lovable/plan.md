@@ -1,248 +1,304 @@
 
-
-# ZIVO Eats 2 — Production Checkout Flow
+# ZIVO Eats 3 — Real Payment, Dispatch, Reviews & Receipts
 
 ## Overview
-Upgrade the ZIVO Eats MVP to a production-ready checkout experience with delivery addresses, promo codes, payment method selection, and real-time order tracking. All features will use existing Supabase tables and maintain the 2026 dark glass UI.
+Upgrade ZIVO Eats to production-ready with real Stripe payments (card + cash options), driver dispatch system, live tracking, ratings/reviews, and receipt generation. All features will use existing Supabase tables and maintain the 2026 dark glass UI.
 
 ---
 
-## Existing Infrastructure (Detected)
+## Current State Analysis
 
-### Supabase Tables to Reuse
-| Feature | Table | Key Columns |
-|---------|-------|-------------|
-| Saved Addresses | `saved_locations` | id, user_id, label, address, lat, lng, icon |
-| Promo Codes | `promo_codes` | id, code, discount_type, discount_value, expires_at, is_active, max_uses, uses, min_fare |
-| Food Orders | `food_orders` | customer_id, restaurant_id, items, subtotal, delivery_fee, total_amount, delivery_address, status, promo_code (add), discount_amount (add) |
-| Restaurants | `restaurants` | is_open, opening_hours (JSON), hours (JSON) |
-| Profiles | `profiles` | stripe_customer_id |
+### Existing Infrastructure (Verified)
 
-### Existing Code Assets
-- `src/hooks/useSavedLocations.ts` — Full CRUD hooks for saved addresses
-- `src/lib/promoCodeService.ts` — Promo validation + discount calculation
-- `src/contexts/CartContext.tsx` — Cart state with localStorage persistence
-- `src/pages/EatsCart.tsx` — Current cart UI (needs promo + address additions)
-- `src/pages/EatsCheckout.tsx` — Form-based checkout (needs payment step)
-- `src/pages/EatsOrderDetail.tsx` — Order detail with static status
-- `src/components/eats/StatusTimeline.tsx` — Order progress visualization
+| Feature | Table/File | Key Details |
+|---------|-----------|-------------|
+| Food Orders | `food_orders` | Has `payment_status`, `stripe_payment_id`, `driver_id`, `rating` columns |
+| Drivers | `drivers` | Has `current_lat/lng`, `is_online`, `rating`, `avatar_url`, `full_name` |
+| Stripe Checkout | `create-eats-checkout` edge function | Already creates checkout session |
+| Stripe Webhook | `stripe-webhook` | Already handles `eats` type payments |
+| Stripe Key | `src/lib/stripe.ts` | Publishable key configured |
+| Reviews Model | `p2p_reviews` | Existing review schema (can use as reference) |
+
+### Missing Infrastructure (Need to Create)
+
+| Feature | Required Table |
+|---------|---------------|
+| Eats Reviews | `eats_reviews` (new table) |
+| Payment Type | Add `payment_type` column to `food_orders` |
 
 ---
 
 ## Implementation Details
 
-### 1. Delivery Address Management
+### 1. Payment Type Selection (Card vs Cash)
 
-**New Page: `/eats/address`**
-- List user's saved addresses from `saved_locations` table
-- Default address indicator (use `icon = "default"` pattern)
-- Add/Edit address modal with:
-  - Label (Home, Work, Other, custom)
-  - Full address (text input + geocoding)
-  - Delivery notes
-  - Set as default checkbox
-- Delete address option
+**Update `food_orders` table:**
+Add new columns via migration:
+- `payment_type` (text) — "card" or "cash"
+- `paid_at` (timestamp) — When payment confirmed
 
 **Files to Create:**
-- `src/pages/EatsAddress.tsx` — Address management page
+- `src/components/eats/PaymentTypeSelector.tsx` — Card/Cash toggle component
 
 **Files to Modify:**
-- `src/pages/EatsCart.tsx` — Add address selector section
-- `src/contexts/CartContext.tsx` — Add `selectedAddressId` + `selectedAddress` state
-- `src/App.tsx` — Add `/eats/address` route
+- `src/pages/EatsCart.tsx` — Add payment type selection before checkout
+- `src/components/eats/PaymentMethodModal.tsx` — Add cash option
+- `src/hooks/useEatsOrders.ts` — Include `payment_type` in order creation
 
-**Cart Integration:**
-```text
-+----------------------------------+
-|  📍 Deliver to                   |
-|  Home · 123 Main St, Apt 4B      |
-|                       [Change >] |
-+----------------------------------+
-```
-
-### 2. Promo Code System
-
-**Reuse Existing Infrastructure:**
-- `promo_codes` table already supports:
-  - `discount_type` (percent/fixed)
-  - `discount_value`
-  - `min_fare` (minimum subtotal)
-  - `expires_at`
-  - `is_active`
-  - `max_uses` / `uses`
-
-**Files to Create:**
-- `src/hooks/useEatsPromo.ts` — Eats-specific promo validation hook
-
-**Files to Modify:**
-- `src/pages/EatsCart.tsx` — Add promo code input section
-- `src/contexts/CartContext.tsx` — Add `appliedPromo`, `discountAmount` state
-
-**Cart UI Addition:**
-```text
-+----------------------------------+
-|  🏷️ Promo Code                   |
-|  [SUMMER20        ] [Apply]      |
-+----------------------------------+
-|  ✓ SUMMER20 applied              |
-|  -$5.00 discount                 |
-+----------------------------------+
-```
-
-**Promo Validation Flow:**
-1. User enters code → call `validatePromoCode(code)` from existing service
-2. Check `min_fare` against cart subtotal
-3. Calculate discount using existing `calculateDiscount()` function
-4. Display discount line item in price breakdown
-5. Save `promo_code` and `discount_amount` in order
-
-### 3. Payment Method Selection (UI First, Stripe-Ready)
-
-**Payment Modal Component:**
-- List saved payment methods (via Stripe API through edge function)
-- Highlight default method
-- "Add new card" option (links to Stripe-managed flow)
-- Apple Pay / Google Pay options (visual only for MVP)
-
-**Files to Create:**
-- `src/components/eats/PaymentMethodModal.tsx` — Payment selection modal
-- `src/hooks/usePaymentMethods.ts` — Fetch customer's Stripe payment methods
-
-**Files to Modify:**
-- `src/pages/EatsCart.tsx` — Add payment method section + "Place Order" flow
-
-**Payment Section UI:**
+**UI Flow:**
 ```text
 +----------------------------------+
 |  💳 Payment Method               |
-|  •••• 4242 (Visa)        [Edit]  |
++----------------------------------+
+|  [Card - Pay Now]     [Selected] |
+|  Visa •••• 4242                  |
++----------------------------------+
+|  [Cash - Pay on Delivery]        |
 +----------------------------------+
 ```
 
-**Edge Function (Optional for Full Implementation):**
-- `supabase/functions/list-payment-methods` — Fetch customer's saved cards via Stripe
+### 2. Stripe PaymentIntent Integration (Card Payments)
 
-### 4. Enhanced Order Creation
+**Create Edge Function:**
+- `supabase/functions/create-eats-payment-intent/index.ts`
 
-**Modify Order Submission:**
-Update `useCreateFoodOrder` hook to include:
-- `address_id` — Reference to saved_locations
-- `promo_code` — Applied promo code string
-- `discount_amount` — Calculated discount value
-- `payment_method_id` — Stripe payment method ID (for future use)
-
-**Files to Modify:**
-- `src/hooks/useEatsOrders.ts` — Extend `CreateFoodOrderInput` interface
-- `src/pages/EatsCart.tsx` — Submit order with all new fields
-
-**Database Column Additions Needed:**
-The `food_orders` table may need these columns (check if already present):
-- `promo_code` (text, nullable)
-- `discount_amount` (numeric, nullable)
-- `address_id` (uuid, nullable, FK to saved_locations)
-- `payment_method_id` (text, nullable)
-
-### 5. Real-Time Order Status Updates
-
-**Implement Supabase Realtime Subscription:**
-Use the provided `useLiveOrder` pattern adapted for `food_orders` table.
+This function will:
+- Create order in `food_orders` with status="pending_payment"
+- Create Stripe PaymentIntent (not checkout session)
+- Return `client_secret` for Stripe Elements
+- Include order_id in metadata for webhook handling
 
 **Files to Create:**
-- `src/hooks/useLiveEatsOrder.ts` — Real-time order subscription hook
+- `src/components/eats/StripePaymentSheet.tsx` — Stripe Elements card form
+- `src/hooks/useEatsPayment.ts` — Hook for payment intent creation + confirmation
 
 **Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Replace static query with live subscription
-- `src/components/eats/StatusTimeline.tsx` — Add timestamp display for each status
+- `src/pages/EatsCart.tsx` — Integrate Stripe Elements for card flow
+- `supabase/functions/stripe-webhook/index.ts` — Handle PaymentIntent success for eats
 
-**Live Order Hook:**
-```typescript
-export function useLiveEatsOrder(orderId: string) {
-  const [order, setOrder] = useState<FoodOrder | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Initial fetch
-    supabase
-      .from("food_orders")
-      .select("*, restaurants:restaurant_id(name, logo_url, phone)")
-      .eq("id", orderId)
-      .single()
-      .then(({ data }) => {
-        setOrder(data);
-        setLoading(false);
-      });
-
-    // Real-time subscription
-    const channel = supabase
-      .channel(`eats-order-${orderId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "food_orders", filter: `id=eq.${orderId}` },
-        (payload) => setOrder(payload.new as FoodOrder)
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [orderId]);
-
-  return { order, loading };
-}
+**Card Payment Flow:**
+```text
+1. User selects "Card" payment
+2. Clicks "Place Order"
+3. Call create-eats-payment-intent (creates order + PaymentIntent)
+4. Show Stripe Elements sheet
+5. User enters card details
+6. Confirm payment via Stripe SDK
+7. On success: Update order to "placed" status
+8. Redirect to /eats/orders/{id}
 ```
 
-**Add Help Modal:**
-- "Need Help?" button opens support modal
-- Options: Contact support, Report issue, Request refund
+**Cash Payment Flow:**
+```text
+1. User selects "Cash" payment
+2. Clicks "Place Order"
+3. Insert order directly with status="placed", payment_status="pending"
+4. payment_type = "cash"
+5. Redirect to /eats/orders/{id}
+```
 
-### 6. Restaurant Hours & Open/Closed Status
+### 3. Basic Driver Dispatch
 
-**Use Existing Fields:**
-The `restaurants` table already has:
-- `is_open` (boolean) — Quick open/closed flag
-- `opening_hours` (jsonb) — Detailed schedule
-- `hours` (jsonb) — Alternative hours field
+**MVP Approach:**
+Use existing `drivers` table and `food_orders.driver_id` FK.
+
+**Files to Create:**
+- `src/hooks/useEatsDriver.ts` — Fetch assigned driver info for an order
 
 **Files to Modify:**
-- `src/components/eats/MobileEatsPremium.tsx` — Add Open/Closed badges
-- `src/pages/EatsRestaurantMenu.tsx` — Show status banner + disable checkout if closed
-- `src/hooks/useEatsOrders.ts` — Update `useRestaurants` to include all restaurants (not just open ones)
+- `src/pages/EatsOrderDetail.tsx` — Show driver card when assigned
+- `src/hooks/useLiveEatsOrder.ts` — Include driver join in query
 
-**Restaurant Card Badge:**
+**Order Detail Driver Card:**
 ```text
 +----------------------------------+
-|  [Cover Image]                   |
-|  🟢 Open Now  |  🔴 Closed       |
-|  Sakura Sushi Bar                |
-|  Japanese · ⭐4.8 · 25 min       |
+|  👤 Your Driver                  |
+|  [Avatar] John D.                |
+|  ⭐ 4.9 · 🚗 Honda Civic         |
+|  ETA: 12 min                     |
+|  [📞 Call] [💬 Message]          |
 +----------------------------------+
 ```
 
-**Closed Restaurant Handling:**
-- Gray overlay on closed restaurants
-- "Opens at 11:00 AM" text (parse from hours JSON)
-- Disable "Add to Cart" on menu page
-- Show banner: "This restaurant is currently closed"
+**Admin Assignment:**
+The dispatch command center (`/dispatch`) already exists and can assign `driver_id` to `food_orders`. The order detail page will reactively show driver info when assigned via realtime subscription.
 
-### 7. Polish & UX Improvements
+### 4. Live Map Tracking (MVP UI)
 
-**Skeleton Loaders:**
-Add to all data-fetching pages:
-- Restaurant list
-- Menu items
-- Order history
-- Order detail
+**MVP Approach:**
+Add map placeholder to order detail. Use existing driver `current_lat/lng` columns.
 
-**Empty States:**
-- No saved addresses → "Add your first address"
-- No orders → "You haven't placed any orders yet"
-- Empty cart → Already implemented
+**Files to Create:**
+- `src/components/eats/DeliveryMap.tsx` — Map component with driver marker
 
-**Consistent 2026 Dark Glass UI:**
-All new components will use:
-- `bg-zinc-950` background
-- `bg-zinc-900/80 backdrop-blur-xl border border-white/10` cards
-- `text-white` / `text-zinc-400` typography
-- `bg-orange-500` / `from-orange-500 to-orange-600` CTAs
-- Framer Motion animations
+**Files to Modify:**
+- `src/pages/EatsOrderDetail.tsx` — Add map section when driver assigned
+
+**Map UI:**
+```text
++----------------------------------+
+|  [Google Map]                    |
+|  📍 Driver location (live)       |
+|  🏠 Delivery address             |
++----------------------------------+
+|  Driver 2.3 miles away           |
+|  ETA: 8 minutes                  |
++----------------------------------+
+```
+
+**Driver Tracking Logic:**
+- Show map only when `status = "out_for_delivery"` and `driver_id` is set
+- Subscribe to driver location updates via realtime
+- If no driver assigned, show: "Tracking will appear when driver is assigned"
+
+### 5. Ratings & Reviews
+
+**Create Reviews Table (Migration):**
+```sql
+CREATE TABLE eats_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES food_orders(id) NOT NULL,
+  user_id UUID NOT NULL,
+  restaurant_id UUID REFERENCES restaurants(id) NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  food_rating INTEGER CHECK (food_rating >= 1 AND food_rating <= 5),
+  delivery_rating INTEGER CHECK (delivery_rating >= 1 AND delivery_rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+**Files to Create:**
+- `src/components/eats/RatingModal.tsx` — Post-delivery rating prompt
+- `src/hooks/useEatsReviews.ts` — Review CRUD + restaurant avg rating
+
+**Files to Modify:**
+- `src/pages/EatsOrderDetail.tsx` — Show rating prompt when status="delivered"
+- `src/components/eats/MobileEatsPremium.tsx` — Show avg rating from reviews
+
+**Rating Flow:**
+```text
+Order delivered
+    ↓
+Show rating modal after 3 second delay
+    ↓
+User rates: Overall (1-5 stars)
+           Food quality (optional)
+           Delivery speed (optional)
+           Comment (optional)
+    ↓
+Insert into eats_reviews
+    ↓
+Update restaurant avg rating (view or trigger)
+```
+
+**Rating Modal UI:**
+```text
++----------------------------------+
+|  How was your order?             |
+|                                  |
+|  ⭐⭐⭐⭐☆  4/5                  |
+|                                  |
+|  [Food Quality] [Delivery Speed] |
+|                                  |
+|  [Leave a comment...]            |
+|                                  |
+|  [Skip]       [Submit Review]    |
++----------------------------------+
+```
+
+### 6. Receipt Section & Download
+
+**Files to Create:**
+- `src/components/eats/OrderReceipt.tsx` — Receipt component (printable)
+- `src/pages/EatsReceipt.tsx` — Full-page receipt view (print-friendly)
+
+**Files to Modify:**
+- `src/pages/EatsOrderDetail.tsx` — Add "View Receipt" button
+- `src/App.tsx` — Add `/eats/orders/:id/receipt` route
+
+**Receipt Contents:**
+```text
++----------------------------------+
+|  ZIVO EATS RECEIPT               |
+|  Order #ABC12345                 |
+|  Feb 8, 2026 · 7:45 PM           |
++----------------------------------+
+|  Sakura Sushi Bar                |
+|  123 Restaurant Ave              |
++----------------------------------+
+|  2x Dragon Roll         $33.98   |
+|  1x Miso Soup            $4.99   |
++----------------------------------+
+|  Subtotal               $38.97   |
+|  Delivery Fee            $3.99   |
+|  Service Fee             $1.95   |
+|  Tax                     $3.51   |
+|  Discount (SUMMER20)    -$5.00   |
++----------------------------------+
+|  TOTAL                  $43.42   |
+|  Payment: Visa ••4242            |
++----------------------------------+
+|  [Download PDF] [Print]          |
++----------------------------------+
+```
+
+### 7. Error Handling & Polish
+
+**Duplicate Submission Prevention:**
+- Add `isSubmitting` lock in EatsCart
+- Disable button immediately on click
+- Show loading spinner
+- Prevent navigation during submission
+
+**Error States:**
+- Payment failed → Show error modal with retry option
+- Network error → Toast with retry button
+- Order creation failed → Clear error message
+
+**Loading Skeletons:**
+- Already implemented in most pages
+- Verify coverage on new components
+
+---
+
+## Database Migration
+
+```sql
+-- Add payment_type column to food_orders
+ALTER TABLE food_orders 
+ADD COLUMN IF NOT EXISTS payment_type TEXT DEFAULT 'card' 
+CHECK (payment_type IN ('card', 'cash'));
+
+-- Add paid_at timestamp
+ALTER TABLE food_orders 
+ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+
+-- Create eats_reviews table
+CREATE TABLE IF NOT EXISTS eats_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES food_orders(id) NOT NULL,
+  user_id UUID NOT NULL,
+  restaurant_id UUID REFERENCES restaurants(id) NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  food_rating INTEGER CHECK (food_rating >= 1 AND food_rating <= 5),
+  delivery_rating INTEGER CHECK (delivery_rating >= 1 AND delivery_rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS for eats_reviews
+ALTER TABLE eats_reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view all reviews" ON eats_reviews
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can create own reviews" ON eats_reviews
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own reviews" ON eats_reviews
+  FOR UPDATE USING (auth.uid() = user_id);
+```
 
 ---
 
@@ -251,88 +307,88 @@ All new components will use:
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/pages/EatsAddress.tsx` | Delivery address management page |
-| `src/components/eats/PaymentMethodModal.tsx` | Payment selection modal |
-| `src/components/eats/AddressSelector.tsx` | Address display + change button |
-| `src/components/eats/PromoCodeInput.tsx` | Promo code entry component |
-| `src/components/eats/HelpModal.tsx` | Order support modal |
-| `src/hooks/useEatsPromo.ts` | Promo validation for Eats |
-| `src/hooks/useLiveEatsOrder.ts` | Real-time order subscription |
-| `src/hooks/usePaymentMethods.ts` | Fetch Stripe payment methods |
+| `supabase/functions/create-eats-payment-intent/index.ts` | Stripe PaymentIntent for embedded checkout |
+| `src/components/eats/PaymentTypeSelector.tsx` | Card/Cash toggle |
+| `src/components/eats/StripePaymentSheet.tsx` | Stripe Elements card form |
+| `src/hooks/useEatsPayment.ts` | Payment intent creation + confirmation |
+| `src/hooks/useEatsDriver.ts` | Fetch driver for order |
+| `src/hooks/useEatsReviews.ts` | Review CRUD + avg ratings |
+| `src/components/eats/DeliveryMap.tsx` | Live driver tracking map |
+| `src/components/eats/RatingModal.tsx` | Post-delivery rating prompt |
+| `src/components/eats/OrderReceipt.tsx` | Printable receipt component |
+| `src/pages/EatsReceipt.tsx` | Full-page receipt view |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/pages/EatsCart.tsx` | Add address selector, promo input, payment section, enhanced checkout |
-| `src/pages/EatsOrderDetail.tsx` | Use live subscription, add help button |
-| `src/contexts/CartContext.tsx` | Add selectedAddressId, appliedPromo, discountAmount |
-| `src/hooks/useEatsOrders.ts` | Extend order creation with new fields |
-| `src/components/eats/MobileEatsPremium.tsx` | Add open/closed badges |
-| `src/pages/EatsRestaurantMenu.tsx` | Add closed state handling |
-| `src/App.tsx` | Add `/eats/address` route |
+| `src/pages/EatsCart.tsx` | Add payment type selection, Stripe Elements flow |
+| `src/pages/EatsOrderDetail.tsx` | Add driver card, map, rating prompt, receipt link |
+| `src/components/eats/PaymentMethodModal.tsx` | Add cash option |
+| `src/hooks/useEatsOrders.ts` | Include payment_type in order creation |
+| `src/hooks/useLiveEatsOrder.ts` | Include driver join |
+| `supabase/functions/stripe-webhook/index.ts` | Handle PaymentIntent succeeded for eats |
+| `src/App.tsx` | Add receipt route |
 
 ---
 
 ## Implementation Order
 
-1. **Cart Context Enhancement** — Add address/promo/discount state
-2. **Address Selector Component** — Create `AddressSelector.tsx`
-3. **Address Page** — Create `EatsAddress.tsx` with CRUD modal
-4. **Promo Code Input** — Create `PromoCodeInput.tsx` + `useEatsPromo.ts`
-5. **Update EatsCart.tsx** — Integrate address + promo + price recalculation
-6. **Payment Method Modal** — Create placeholder with card display
-7. **Enhanced Order Creation** — Update hook + cart submission
-8. **Live Order Hook** — Create `useLiveEatsOrder.ts`
-9. **Update Order Detail** — Use real-time subscription + help modal
-10. **Restaurant Open/Closed** — Add badges + closed state handling
-11. **Skeleton Loaders** — Add to all pages
-12. **Routes Update** — Add `/eats/address` to App.tsx
-13. **Final Polish** — Animations, transitions, empty states
+1. **Database Migration** — Add payment_type, paid_at columns + eats_reviews table
+2. **PaymentTypeSelector Component** — Card/Cash toggle UI
+3. **Update PaymentMethodModal** — Add cash payment option
+4. **create-eats-payment-intent Edge Function** — Stripe PaymentIntent creation
+5. **StripePaymentSheet Component** — Stripe Elements integration
+6. **Update EatsCart** — Full payment flow (card + cash)
+7. **Update stripe-webhook** — Handle PaymentIntent for eats
+8. **useEatsDriver Hook** — Driver info for orders
+9. **Update EatsOrderDetail** — Driver card + map placeholder
+10. **DeliveryMap Component** — Live tracking UI
+11. **eats_reviews Table + RLS** — Reviews infrastructure
+12. **RatingModal Component** — Post-delivery rating
+13. **Update EatsOrderDetail** — Rating prompt on delivered
+14. **OrderReceipt Component** — Receipt display
+15. **EatsReceipt Page** — Print-friendly receipt
+16. **Polish** — Error handling, loading states, duplicate prevention
 
 ---
 
 ## Data Flow
 
 ```text
-User browses restaurants (MobileEatsPremium)
-    ↓ sees open/closed badges
-    ↓ taps restaurant
-Restaurant Menu (EatsRestaurantMenu)
-    ↓ if closed, show banner
-    ↓ if open, add items to cart
-    ↓
-Cart (EatsCart)
-    ├── Select delivery address (AddressSelector)
-    │   └── Change → /eats/address
-    ├── Enter promo code (PromoCodeInput)
-    │   └── Apply → validate → show discount
-    ├── Price breakdown with discount
-    ├── Select payment method (PaymentMethodModal)
-    └── Place Order
-        ↓
-Order Created in Supabase (food_orders)
-    ├── status = "pending"
-    ├── promo_code + discount_amount saved
-    ├── address_id linked
-    └── payment_method_id saved
-        ↓
-Redirect to Order Detail (EatsOrderDetail)
-    ├── Real-time status updates via Supabase
-    ├── Status timeline with timestamps
-    └── Help button → HelpModal
+Cart (/eats/cart)
+    ├── Select Payment Type (Card / Cash)
+    │
+    ├── CASH PATH:
+    │   └── Insert order (status=placed, payment_status=pending)
+    │       └── Redirect to order detail
+    │
+    └── CARD PATH:
+        ├── Call create-eats-payment-intent
+        │   └── Returns client_secret
+        ├── Show Stripe Elements sheet
+        ├── User enters card → confirm payment
+        ├── On success: Order status → placed
+        └── Redirect to order detail
+
+Order Detail (/eats/orders/:id)
+    ├── Status timeline with realtime updates
+    ├── Driver card (when assigned)
+    ├── Live map (when out_for_delivery)
+    ├── Receipt link
+    └── Rating prompt (when delivered)
 ```
 
 ---
 
 ## Summary
 
-This update transforms ZIVO Eats into a production-ready ordering system:
+This update transforms ZIVO Eats into a production-ready ordering platform:
 
-- **Delivery Addresses**: Full CRUD using existing `saved_locations` table
-- **Promo Codes**: Validation + discount using existing `promo_codes` table
-- **Payment Methods**: UI-first approach with Stripe integration ready
-- **Real-time Tracking**: Supabase subscriptions for instant status updates
-- **Open/Closed Logic**: Uses existing restaurant fields (`is_open`, `hours`)
-- **Consistent UI**: 2026 dark glass aesthetic throughout
-- **Mobile-First**: Touch-friendly, smooth animations, skeleton loaders
-
+- **Dual Payment**: Card (Stripe) + Cash on delivery
+- **Real Stripe**: PaymentIntent with embedded Elements (not redirect)
+- **Driver Dispatch**: Shows assigned driver info from existing drivers table
+- **Live Tracking**: Map with driver location (MVP ready)
+- **Ratings & Reviews**: 5-star rating with optional comments
+- **Receipts**: Printable order receipts
+- **2026 UI**: Consistent dark glass design throughout
+- **Production Quality**: Error handling, duplicate prevention, loading states
