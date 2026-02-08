@@ -363,12 +363,28 @@ export default function EatsOrderDetail() {
             <span className="text-zinc-400">Delivery Fee</span>
             <span>${order.delivery_fee?.toFixed(2) || "0.00"}</span>
           </div>
-          {order.tax && order.tax > 0 && (
+          
+          {order.service_fee != null && order.service_fee > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Service Fee</span>
+              <span>${order.service_fee.toFixed(2)}</span>
+            </div>
+          )}
+          
+          {order.tax != null && order.tax > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-zinc-400">Tax</span>
               <span>${order.tax.toFixed(2)}</span>
             </div>
           )}
+          
+          {order.tip_amount != null && order.tip_amount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Tip</span>
+              <span>${order.tip_amount.toFixed(2)}</span>
+            </div>
+          )}
+          
           <div className="border-t border-white/10 pt-3">
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>

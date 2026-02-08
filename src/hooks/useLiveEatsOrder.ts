@@ -19,7 +19,9 @@ export interface LiveEatsOrder {
   items: any[];
   subtotal: number;
   delivery_fee: number;
+  service_fee?: number | null;
   tax: number | null;
+  tip_amount?: number | null;
   total_amount: number;
   delivery_address: string | null;
   delivery_lat?: number | null;
