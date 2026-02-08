@@ -11567,6 +11567,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ledger_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          entry_type: string
+          id: string
+          meta_json: Json | null
+          order_id: string | null
+          payee_id: string | null
+          payee_type: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          entry_type: string
+          id?: string
+          meta_json?: Json | null
+          order_id?: string | null
+          payee_id?: string | null
+          payee_type?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          entry_type?: string
+          id?: string
+          meta_json?: Json | null
+          order_id?: string | null
+          payee_id?: string | null
+          payee_type?: string | null
+        }
+        Relationships: []
+      }
       legal_audit_log: {
         Row: {
           action_type: string
@@ -15846,6 +15882,27 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_settings: {
+        Row: {
+          hold_days: number
+          id: number
+          min_payout_amount: number
+          updated_at: string
+        }
+        Insert: {
+          hold_days?: number
+          id?: number
+          min_payout_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          hold_days?: number
+          id?: number
+          min_payout_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
@@ -15860,6 +15917,9 @@ export type Database = {
           reference_id: string | null
           restaurant_id: string | null
           status: string | null
+          status_detail: string | null
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -15875,6 +15935,9 @@ export type Database = {
           reference_id?: string | null
           restaurant_id?: string | null
           status?: string | null
+          status_detail?: string | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -15890,6 +15953,9 @@ export type Database = {
           reference_id?: string | null
           restaurant_id?: string | null
           status?: string | null
+          status_detail?: string | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -16813,6 +16879,7 @@ export type Database = {
           email_verified: boolean | null
           full_name: string | null
           id: string
+          payout_hold: boolean
           phone: string | null
           setup_complete: boolean | null
           status: string | null
@@ -16826,6 +16893,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          payout_hold?: boolean
           phone?: string | null
           setup_complete?: boolean | null
           status?: string | null
@@ -16839,6 +16907,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          payout_hold?: boolean
           phone?: string | null
           setup_complete?: boolean | null
           status?: string | null
@@ -21603,6 +21672,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_connect_accounts: {
+        Row: {
+          charges_enabled: boolean | null
+          created_at: string
+          details_submitted: boolean | null
+          id: string
+          payee_id: string
+          payee_type: string
+          payouts_enabled: boolean | null
+          stripe_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          charges_enabled?: boolean | null
+          created_at?: string
+          details_submitted?: boolean | null
+          id?: string
+          payee_id: string
+          payee_type: string
+          payouts_enabled?: boolean | null
+          stripe_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          charges_enabled?: boolean | null
+          created_at?: string
+          details_submitted?: boolean | null
+          id?: string
+          payee_id?: string
+          payee_type?: string
+          payouts_enabled?: boolean | null
+          stripe_account_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stripe_event_log: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+        }
+        Relationships: []
       }
       supplier_payouts: {
         Row: {

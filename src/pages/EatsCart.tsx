@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats — Enhanced Cart Page
- * Full checkout flow with address, promo, payment
+ * Full checkout flow with address, promo, payment, tip
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { CartProvider, useCart } from "@/contexts/CartContext";
 import { AddressSelector } from "@/components/eats/AddressSelector";
 import { PromoCodeInput } from "@/components/eats/PromoCodeInput";
 import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/components/eats/PaymentMethodModal";
+import { TipSelector } from "@/components/eats/TipSelector";
 import { useEatsPromo } from "@/hooks/useEatsPromo";
 import { useSavedLocations, type SavedLocation } from "@/hooks/useSavedLocations";
 import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
@@ -34,6 +35,7 @@ function EatsCartContent() {
   });
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tipAmount, setTipAmount] = useState(0);
 
   // Hooks
   const { data: addresses } = useSavedLocations(userId);
@@ -64,9 +66,9 @@ function EatsCartContent() {
 
   // Price calculations
   const deliveryFee = 3.99;
-  const serviceFee = subtotal * 0.05;
-  const tax = (subtotal - promo.discountAmount) * 0.08;
-  const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax;
+  const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
+  const tax = Math.round((subtotal - promo.discountAmount) * 0.08 * 100) / 100;
+  const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax + tipAmount;
 
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
   const restaurantId = items.length > 0 ? items[0].restaurantId : "";
@@ -109,6 +111,9 @@ function EatsCartContent() {
         items: orderItems,
         subtotal,
         delivery_fee: deliveryFee,
+        service_fee: serviceFee,
+        tax: tax,
+        tip_amount: tipAmount,
         total: total,
       });
 
@@ -279,6 +284,13 @@ function EatsCartContent() {
           onClick={() => setPaymentModalOpen(true)}
         />
 
+        {/* Tip Selector */}
+        <TipSelector
+          subtotal={subtotal}
+          tipAmount={tipAmount}
+          onTipChange={setTipAmount}
+        />
+
         {/* Price Breakdown */}
         <div className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between text-sm">
@@ -305,6 +317,12 @@ function EatsCartContent() {
             <span className="text-zinc-400">Tax</span>
             <span>${tax.toFixed(2)}</span>
           </div>
+          {tipAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Tip</span>
+              <span>${tipAmount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="border-t border-white/10 pt-3">
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>

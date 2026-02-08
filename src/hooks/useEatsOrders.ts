@@ -55,6 +55,9 @@ export interface CreateFoodOrderInput {
   items: FoodOrderItem[];
   subtotal: number;
   delivery_fee: number;
+  service_fee?: number;
+  tax?: number;
+  tip_amount?: number;
   total: number;
 }
 
@@ -193,6 +196,9 @@ export function useCreateFoodOrder() {
           items: itemsJson,
           subtotal: input.subtotal,
           delivery_fee: input.delivery_fee,
+          service_fee: input.service_fee || 0,
+          tax: input.tax || 0,
+          tip_amount: input.tip_amount || 0,
           total_amount: input.total,
           delivery_address: input.delivery_address,
           delivery_lat: 0, // Will be geocoded later
