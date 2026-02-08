@@ -150,41 +150,44 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
       change_request: 'Change Request',
       technical_issue: 'Technical Issue',
       general_inquiry: 'General Inquiry',
+      eats: 'Eats Order',
     };
     return labels[category || ''] || category || 'General';
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="font-mono text-sm text-muted-foreground">{ticket.ticket_number}</span>
-              <TicketStatusBadge status={ticket.status || 'open'} />
-              {ticket.priority === 'urgent' || ticket.priority === 'high' ? (
-                <TicketPriorityBadge priority={ticket.priority} showLabel={false} />
-              ) : null}
+    <Link to={`/support/tickets/${ticket.id}`}>
+      <Card className="overflow-hidden hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="font-mono text-sm text-muted-foreground">{ticket.ticket_number}</span>
+                <TicketStatusBadge status={ticket.status || 'open'} />
+                {ticket.priority === 'urgent' || ticket.priority === 'high' ? (
+                  <TicketPriorityBadge priority={ticket.priority} showLabel={false} />
+                ) : null}
+              </div>
+              <h3 className="font-medium mb-1 truncate">{ticket.subject}</h3>
+              <p className="text-sm text-muted-foreground">{getCategoryLabel(ticket.category)}</p>
             </div>
-            <h3 className="font-medium mb-1 truncate">{ticket.subject}</h3>
-            <p className="text-sm text-muted-foreground">{getCategoryLabel(ticket.category)}</p>
+            <div className="text-right shrink-0">
+              <p className="text-xs text-muted-foreground">
+                {ticket.created_at && formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+              </p>
+              {ticket.first_response_at && (
+                <p className="text-xs text-emerald-500 mt-1">Responded</p>
+              )}
+            </div>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs text-muted-foreground">
-              {ticket.created_at && formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
-            </p>
-            {ticket.first_response_at && (
-              <p className="text-xs text-emerald-500 mt-1">Responded</p>
-            )}
-          </div>
-        </div>
 
-        {ticket.description && (
-          <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-            {ticket.description}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          {ticket.description && (
+            <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
+              {ticket.description}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
