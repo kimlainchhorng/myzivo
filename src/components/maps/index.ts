@@ -11,6 +11,7 @@ export type { GoogleMapProps, GoogleMapRef, MapMarker, MapRoute } from "./Google
 
 // Custom markers
 export { default as ZivoPickupMarker } from "./ZivoPickupMarker";
+export { default as DriverDots } from "./DriverDots";
 
 // Mapbox (legacy fallback)
 export { default as MapboxMap } from "./MapboxMap";

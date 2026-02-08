@@ -9,6 +9,7 @@ import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef } from "r
 import { GoogleMap as GMap, MarkerF, PolylineF } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
 import ZivoPickupMarker from "./ZivoPickupMarker";
+import DriverDots from "./DriverDots";
 
 // ZIVO Dark map theme - premium, removes "Google look"
 const ZIVO_MAP_STYLE: google.maps.MapTypeStyle[] = [
@@ -170,6 +171,9 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         onLoad={onLoad}
         onClick={handleMapClick}
       >
+        {/* Animated nearby driver dots */}
+        <DriverDots center={pickup ?? center} count={20} radiusMeters={1000} />
+
         {/* Pickup marker with premium pulsing effect - always show, fall back to center */}
         <ZivoPickupMarker position={pickup ?? center} />
 
