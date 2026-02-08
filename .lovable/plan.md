@@ -1,8 +1,8 @@
 
-# ZIVO Eats Integration #2 — Unified API Layer, Alerts, Favorites & Polish
+# Customer Order Tracking Enhancement — Driver Display, Live Map & Timestamps
 
 ## Overview
-Complete the Eats customer experience with a unified API layer, real alerts integration, order accuracy improvements, "Order Again" functionality, favorites system, and 2026-quality polish.
+Enhance the `/eats/orders/[id]` page with real-time driver tracking, live map display, timeline timestamps, and automated order status notifications.
 
 ---
 
@@ -11,193 +11,222 @@ Complete the Eats customer experience with a unified API layer, real alerts inte
 ### Already Implemented
 | Feature | Status | Location |
 |---------|--------|----------|
-| Table mapping | ✅ Complete | `src/lib/eatsTables.ts` |
-| Restaurant fetching | ✅ Working | `useRestaurants()` |
-| Menu items | ✅ Working | `useMenuItems()` |
-| Order creation | ✅ Sets `status="placed"` | `useCreateFoodOrder()` |
-| My orders | ✅ Filters by `customer_id` | `useMyEatsOrders()` |
-| Real-time order tracking | ✅ Working | `useLiveEatsOrder()` |
-| Notifications hook | ✅ Working | `useNotifications()` — fetches from `notifications` table |
-| Notifications table | ✅ Exists | Has `user_id`, `is_read`, `title`, `body`, etc. |
-| User favorites table | ✅ Exists | `user_favorites` with `item_type`, `item_id`, `item_data` |
-| Order receipt | ✅ Created | `OrderReceipt.tsx`, `EatsReceipt.tsx` |
-| MobileAlerts page | ✅ Exists | But shows **price alerts**, not order notifications |
+| Order realtime subscription | ✅ Working | `useLiveEatsOrder.ts` |
+| Driver fetching hook | ✅ Working | `useEatsDriver.ts` — fetches from `drivers` table |
+| Delivery map component | ✅ Exists | `DeliveryMap.tsx` — shows driver + destination markers |
+| Status timeline | ⚠️ Partial | `StatusTimeline.tsx` — no timestamps shown |
+| Order detail page | ✅ Exists | `EatsOrderDetail.tsx` — missing driver card |
+| Notifications table | ✅ Exists | Has `order_id`, `user_id`, `title`, `body`, etc. |
+| Eats alerts hook | ✅ Working | `useEatsAlerts.ts` — realtime subscription |
 
-### Missing / Needs Work
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Unified `eatsApi.ts` | ❌ Missing | All queries scattered in hooks |
-| Order notifications in alerts | ❌ Missing | Current `/alerts` shows price alerts only |
-| Badge count in nav | ❌ Missing | Bottom nav has no unread indicator |
-| Tax/service fee saved to orders | ⚠️ Partial | Cart calculates but doesn't save `tax`, `service_fee` |
-| Order Again button | ❌ Missing | No reorder functionality |
-| Restaurant favorites | ❌ Missing | Heart icon + favorites page |
+### Database Schema Findings
+
+**`food_orders` Table — Has Timestamps:**
+```text
+- placed_at           (when order was placed)
+- accepted_at         (when restaurant confirmed)
+- prepared_at         (when food was ready)
+- picked_up_at        (when driver picked up)
+- delivered_at        (when delivered)
+- ready_at            (ready for pickup)
+- assigned_at         (driver assigned)
+- cancelled_at
+```
+
+**`drivers` Table:**
+```text
+- id, full_name, phone, avatar_url, rating
+- current_lat, current_lng (live location)
+- vehicle_type, vehicle_model, vehicle_plate
+```
+
+**No `driver_locations` table exists** — Driver location is stored directly in `drivers.current_lat/lng`
 
 ---
 
 ## Implementation Details
 
-### 1. Create Unified Eats API (`src/lib/eatsApi.ts`)
+### 1. Extend LiveEatsOrder Interface with Timestamps
 
-Consolidate all Eats-related queries into a single API file for consistency and reusability.
+Update `useLiveEatsOrder.ts` to fetch all timestamp columns for the timeline.
+
+**File to Modify:**
+- `src/hooks/useLiveEatsOrder.ts`
+
+**Add Fields:**
+```typescript
+interface LiveEatsOrder {
+  // ... existing fields ...
+  placed_at: string | null;
+  accepted_at: string | null;
+  prepared_at: string | null;
+  ready_at: string | null;
+  picked_up_at: string | null;
+  delivered_at: string | null;
+  assigned_at: string | null;
+}
+```
+
+### 2. Create Driver Info Card Component
+
+Create a reusable card to display assigned driver info (similar to ride tracking).
 
 **File to Create:**
-- `src/lib/eatsApi.ts`
-
-**Contents:**
-```typescript
-import { supabase } from "@/integrations/supabase/client";
-import { EATS_TABLES, INITIAL_ORDER_STATUS } from "./eatsTables";
-
-export const eatsApi = {
-  // Restaurants
-  getRestaurants: async (onlyOpen = false) => { ... },
-  getRestaurant: async (id: string) => { ... },
-  
-  // Menu
-  getMenu: async (restaurantId: string) => { ... },
-  
-  // Orders
-  createOrderFromCart: async (params: CreateOrderParams) => { ... },
-  getMyOrders: async () => { ... },
-  getOrder: async (orderId: string) => { ... },
-  subscribeToOrder: (orderId: string, callback: Function) => { ... },
-  
-  // Alerts/Notifications
-  getAlerts: async () => { ... },
-  markAlertRead: async (alertId: string) => { ... },
-  markAllAlertsRead: async () => { ... },
-  getUnreadCount: async () => { ... },
-  
-  // Favorites
-  getFavorites: async () => { ... },
-  addFavorite: async (restaurantId: string, restaurantData: any) => { ... },
-  removeFavorite: async (restaurantId: string) => { ... },
-  isFavorite: async (restaurantId: string) => { ... },
-};
-```
-
-### 2. Create Eats-Specific Alerts Page
-
-The current `/alerts` page shows **price alerts** (for flights). We need a separate Eats notifications page or integrate into the existing alerts.
-
-**Option A (Recommended):** Create `/eats/alerts` page for order notifications
-**Option B:** Add "Orders" tab to existing `/alerts` page
-
-**Files to Create:**
-- `src/pages/EatsAlerts.tsx` — Order status notifications page
+- `src/components/eats/DriverInfoCard.tsx`
 
 **Features:**
-- Show notifications filtered by `category = 'transactional'` AND `metadata.type = 'eats'`
-- "Mark all as read" button
-- Tap notification → navigate to order detail
+- Driver avatar, name, rating
+- Vehicle type/model
+- Phone button to call driver
+- Animated "arriving" indicator when out for delivery
 
-### 3. Add Badge Count to Eats Bottom Navigation
-
-Create an Eats-specific bottom nav (or modify existing) to show unread notifications badge.
-
-**Files to Create:**
-- `src/components/eats/EatsBottomNav.tsx` — With Home, Orders, Cart, Alerts, Account tabs
-
-**Features:**
-- Badge on Alerts icon showing unread count
-- Use existing `useNotifications()` hook for count
-- Consistent with 2026 dark glass aesthetic
-
-### 4. Save Complete Order Totals
-
-Currently the cart calculates `subtotal`, `delivery_fee`, `service_fee`, `tax`, `discount` but only some are saved to the order.
-
-**Files to Modify:**
-- `src/pages/EatsCart.tsx` — Pass all breakdown values
-- `src/hooks/useEatsOrders.ts` — Save `tax`, `service_fee`, `tip` to order
-
-**Current Order Insert (needs expansion):**
+**Props:**
 ```typescript
-// Add these fields to the insert
-tax: tax,
-service_fee: serviceFee,
-tip: tipAmount,
-promo_code: promo.promoCode?.code,
-discount_amount: promo.discountAmount,
+interface DriverInfoCardProps {
+  driver: EatsDriver;
+  isDelivering: boolean;
+  onCall?: () => void;
+}
 ```
 
-**Note:** Check if `food_orders` table has these columns. If not, add migration.
+### 3. Enhance StatusTimeline with Timestamps
 
-### 5. Add "Order Again" Feature
+Update the timeline to show actual timestamps for each completed step.
 
-Allow users to quickly reorder from a previous order.
+**File to Modify:**
+- `src/components/eats/StatusTimeline.tsx`
 
-**Files to Modify:**
-- `src/pages/EatsOrderDetail.tsx` — Add "Order Again" button
-- `src/contexts/CartContext.tsx` — Add `rebuildFromOrder()` method
+**Add Props:**
+```typescript
+interface StatusTimelineProps {
+  currentStatus: string;
+  timestamps?: {
+    placed_at?: string | null;
+    accepted_at?: string | null;
+    prepared_at?: string | null;
+    ready_at?: string | null;
+    picked_up_at?: string | null;
+    delivered_at?: string | null;
+  };
+  className?: string;
+}
+```
+
+**Display:**
+```text
+✓ Order Placed         10:32 AM
+✓ Confirmed           10:35 AM
+● Preparing           In progress...
+○ On the Way
+○ Delivered
+```
+
+### 4. Integrate Driver + Map into Order Detail
+
+Update `EatsOrderDetail.tsx` to:
+- Fetch driver info when `driver_id` exists
+- Show `DriverInfoCard` component
+- Show `DeliveryMap` with live driver location
+- Subscribe to driver location updates
+
+**File to Modify:**
+- `src/pages/EatsOrderDetail.tsx`
 
 **Logic:**
 ```typescript
-const handleOrderAgain = () => {
-  // Clear current cart
-  clearCart();
-  
-  // Rebuild from order items
-  const orderItems = order.items as any[];
-  orderItems.forEach(item => {
-    addItem({
-      id: item.menu_item_id,
-      restaurantId: order.restaurant_id,
-      restaurantName: order.restaurants?.name || "",
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      notes: item.notes,
-    });
-  });
-  
-  // Navigate to cart
-  navigate("/eats/cart");
-};
+// Fetch driver when assigned
+const { driver } = useEatsDriver(order?.driver_id);
+
+// Show map when order is out for delivery
+const showMap = ["confirmed", "ready_for_pickup", "out_for_delivery"].includes(order.status);
 ```
 
-### 6. Add Restaurant Favorites
+### 5. Create Order Status Alert Trigger
 
-Use existing `user_favorites` table with `item_type = 'restaurant'`.
+Create a database trigger to automatically insert notifications when order status changes.
 
-**Files to Create:**
-- `src/hooks/useEatsFavorites.ts` — CRUD for restaurant favorites
-- `src/pages/EatsFavorites.tsx` — Favorites list page
-- `src/components/eats/FavoriteButton.tsx` — Heart toggle component
-
-**Files to Modify:**
-- `src/components/eats/RestaurantCard.tsx` — Add heart icon
-- `src/components/eats/MobileEatsPremium.tsx` — Add heart to restaurant cards
-- `src/App.tsx` — Add `/eats/favorites` route
-
-**Database Query:**
-```typescript
-// Add favorite
-await supabase.from("user_favorites").insert({
-  user_id: userId,
-  item_type: "restaurant",
-  item_id: restaurantId,
-  item_data: { name, logo_url, cuisine_type, rating }
-});
-
-// Get favorites
-await supabase.from("user_favorites")
-  .select("*")
-  .eq("user_id", userId)
-  .eq("item_type", "restaurant");
-```
-
-### 7. Database Migration (if needed)
-
-Check if `food_orders` needs additional columns:
-
+**Database Migration — Create Trigger:**
 ```sql
--- Add columns if missing
-ALTER TABLE food_orders 
-ADD COLUMN IF NOT EXISTS tax DECIMAL(10,2) DEFAULT 0,
-ADD COLUMN IF NOT EXISTS service_fee DECIMAL(10,2) DEFAULT 0,
-ADD COLUMN IF NOT EXISTS tip DECIMAL(10,2) DEFAULT 0;
+-- Function to create notification on order status change
+CREATE OR REPLACE FUNCTION notify_customer_order_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  notification_title TEXT;
+  notification_body TEXT;
+  action_link TEXT;
+BEGIN
+  -- Only notify on specific status changes
+  IF OLD.status IS DISTINCT FROM NEW.status THEN
+    action_link := '/eats/orders/' || NEW.id;
+    
+    CASE NEW.status
+      WHEN 'confirmed' THEN
+        notification_title := 'Order Confirmed';
+        notification_body := 'Your order has been accepted and is being prepared';
+      WHEN 'preparing' THEN
+        notification_title := 'Preparing Your Order';
+        notification_body := 'The restaurant is now preparing your food';
+      WHEN 'ready_for_pickup' THEN
+        notification_title := 'Order Ready';
+        notification_body := 'Your order is ready and waiting for pickup';
+      WHEN 'out_for_delivery' THEN
+        notification_title := 'Driver On The Way';
+        notification_body := 'Your order is on its way to you!';
+      WHEN 'delivered' THEN
+        notification_title := 'Order Delivered';
+        notification_body := 'Enjoy your meal! Rate your experience';
+        action_link := '/eats/orders/' || NEW.id || '?rate=true';
+      ELSE
+        RETURN NEW;
+    END CASE;
+    
+    -- Insert in-app notification
+    INSERT INTO notifications (
+      user_id, order_id, channel, category, template,
+      title, body, action_url, status, metadata
+    ) VALUES (
+      NEW.customer_id,
+      NEW.id,
+      'in_app',
+      'transactional',
+      'order_status_update',
+      notification_title,
+      notification_body,
+      action_link,
+      'sent',
+      jsonb_build_object('status', NEW.status, 'type', 'eats')
+    );
+    
+    -- Also notify when driver is assigned
+    IF OLD.driver_id IS NULL AND NEW.driver_id IS NOT NULL THEN
+      INSERT INTO notifications (
+        user_id, order_id, channel, category, template,
+        title, body, action_url, status, metadata
+      ) VALUES (
+        NEW.customer_id,
+        NEW.id,
+        'in_app',
+        'transactional',
+        'driver_assigned',
+        'Driver Assigned',
+        'A driver has been assigned to your order',
+        '/eats/orders/' || NEW.id,
+        'sent',
+        jsonb_build_object('driver_id', NEW.driver_id, 'type', 'eats')
+      );
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS on_food_order_status_change ON food_orders;
+CREATE TRIGGER on_food_order_status_change
+  AFTER UPDATE ON food_orders
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_customer_order_status();
 ```
 
 ---
@@ -207,124 +236,131 @@ ADD COLUMN IF NOT EXISTS tip DECIMAL(10,2) DEFAULT 0;
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/lib/eatsApi.ts` | Unified API layer for all Eats queries |
-| `src/pages/EatsAlerts.tsx` | Order notifications page |
-| `src/pages/EatsFavorites.tsx` | Favorites list page |
-| `src/components/eats/EatsBottomNav.tsx` | Bottom nav with badge |
-| `src/components/eats/FavoriteButton.tsx` | Heart toggle component |
-| `src/hooks/useEatsFavorites.ts` | Restaurant favorites CRUD |
-| `src/hooks/useEatsAlerts.ts` | Eats-specific notifications |
+| `src/components/eats/DriverInfoCard.tsx` | Driver display card with avatar, info, call button |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/pages/EatsCart.tsx` | Save all pricing fields, disable during submit |
-| `src/pages/EatsOrderDetail.tsx` | Add "Order Again" button |
-| `src/hooks/useEatsOrders.ts` | Use `eatsApi`, save tax/service_fee/tip |
-| `src/contexts/CartContext.tsx` | Add `rebuildFromOrder()` method |
-| `src/components/eats/MobileEatsPremium.tsx` | Add favorite hearts + alerts link |
-| `src/App.tsx` | Add `/eats/favorites`, `/eats/alerts` routes |
+| `src/hooks/useLiveEatsOrder.ts` | Add timestamp fields to interface and select |
+| `src/components/eats/StatusTimeline.tsx` | Add timestamp prop, display times for completed steps |
+| `src/pages/EatsOrderDetail.tsx` | Integrate useEatsDriver, show DriverInfoCard + DeliveryMap |
+
+### Database Migration
+| Change | Purpose |
+|--------|---------|
+| `notify_customer_order_status()` function | Auto-create notifications on status change |
+| `on_food_order_status_change` trigger | Fire function after order updates |
+
+---
+
+## UI Layout
+
+### Order Detail Page (Enhanced)
+```text
++----------------------------------+
+| [← Back]  Order Details  [?]     |
++----------------------------------+
+| [Live Status Banner]             |
+| "Driver is on the way!"          |
++----------------------------------+
+|                                  |
+|        [LIVE MAP]                |
+|    Driver ▸         📍 You       |
+|    "3 min away"                  |
+|                                  |
++----------------------------------+
+| Driver Info Card                 |
+| +------------------------------+ |
+| | 👤 John D.    ★ 4.9    📞    | |
+| | Toyota Prius • ABC-1234      | |
+| +------------------------------+ |
++----------------------------------+
+| Order Status                     |
+| ✓ Placed          10:32 AM      |
+| ✓ Confirmed       10:35 AM      |
+| ✓ Preparing       10:40 AM      |
+| ● On the Way      10:55 AM      |
+| ○ Delivered                      |
++----------------------------------+
+| Restaurant Info                  |
+| ...                              |
++----------------------------------+
+| Items Ordered                    |
+| ...                              |
++----------------------------------+
+```
 
 ---
 
 ## Data Flow
 
 ```text
-/eats (Discover)
-├── useRestaurants() via eatsApi.getRestaurants()
-├── FavoriteButton on each card → useEatsFavorites
-└── Bottom nav with badge → useEatsAlerts().unreadCount
+Order Status Change (Merchant/Driver App)
+    │
+    ▼
+food_orders UPDATE
+    │
+    ├──▶ Trigger: notify_customer_order_status()
+    │       └──▶ INSERT into notifications
+    │               └──▶ Realtime push to customer app
+    │                       └──▶ useEatsAlerts() catches new alert
+    │                              └──▶ Toast notification + badge
+    │
+    └──▶ Realtime: useLiveEatsOrder() catches update
+            └──▶ UI updates status banner + timeline
 
-/eats/restaurant/[id]
-├── eatsApi.getRestaurant(id)
-├── eatsApi.getMenu(id)
-├── FavoriteButton in header
-└── Add-to-cart works
-
-/eats/cart
-├── CartContext manages items
-├── Calculates: subtotal, delivery_fee, service_fee, tax, discount, total
-├── On place order → saves ALL fields to food_orders
-└── Disables button while submitting (isSubmitting state)
-
-/eats/orders/[id]
-├── eatsApi.getOrder(id)
-├── eatsApi.subscribeToOrder(id) for realtime
-├── "Order Again" button → rebuildFromOrder() → /eats/cart
-└── Receipt shows saved breakdown
-
-/eats/alerts
-├── useEatsAlerts() → notifications WHERE category='transactional', metadata.type='eats'
-├── Mark all as read
-└── Tap → navigate to order
-
-/eats/favorites
-├── useEatsFavorites() → user_favorites WHERE item_type='restaurant'
-├── Tap card → /eats/restaurant/[id]
-└── Empty state if no favorites
-```
-
----
-
-## UI Components
-
-### Eats Bottom Nav
-```text
-+--------------------------------------------------+
-| 🏠 Home    🍴 Orders    🛒 Cart    🔔 Alerts   👤 |
-|                                    [3] ← badge    |
-+--------------------------------------------------+
-```
-
-### Order Again Button
-```text
-+----------------------------------+
-| [← Back]  Order Details          |
-+----------------------------------+
-| ...order info...                 |
-+----------------------------------+
-| [🔄 Order Again]                 |
-+----------------------------------+
-```
-
-### Favorite Heart
-```text
-Restaurant Card:
-+---------------------------+
-| [image]              ♡    | ← unfilled = not favorite
-| Sakura Sushi ★ 4.8        |
-+---------------------------+
+Driver Location Update
+    │
+    ▼
+drivers UPDATE (current_lat, current_lng)
+    │
+    └──▶ Realtime: useEatsDriver() catches update
+            └──▶ DeliveryMap marker moves
 ```
 
 ---
 
 ## Implementation Order
 
-1. **Check/Add DB columns** — Verify `food_orders` has `tax`, `service_fee`, `tip`
-2. **Create `eatsApi.ts`** — Unified API layer
-3. **Update `EatsCart.tsx`** — Save all pricing, prevent double-submit
-4. **Create `useEatsFavorites.ts`** — Favorites CRUD
-5. **Create `FavoriteButton.tsx`** — Heart toggle
-6. **Add hearts to restaurant cards** — MobileEatsPremium, RestaurantCard
-7. **Create `EatsFavorites.tsx`** — Favorites page
-8. **Create `useEatsAlerts.ts`** — Eats-specific notifications
-9. **Create `EatsBottomNav.tsx`** — With badge count
-10. **Create `EatsAlerts.tsx`** — Order notifications page
-11. **Update `EatsOrderDetail.tsx`** — Add "Order Again" button
-12. **Update `CartContext.tsx`** — Add `rebuildFromOrder()`
-13. **Update `App.tsx`** — Add routes
-14. **Polish** — Skeletons, empty states, error handling
+1. **Update `useLiveEatsOrder.ts`** — Add timestamp fields
+2. **Update `StatusTimeline.tsx`** — Add timestamp display
+3. **Create `DriverInfoCard.tsx`** — Driver display component
+4. **Update `EatsOrderDetail.tsx`** — Integrate driver card + map
+5. **Create database trigger** — Auto-notify on status changes
+
+---
+
+## Technical Notes
+
+### Driver Location Source
+- Location stored in `drivers.current_lat` and `drivers.current_lng`
+- `useEatsDriver` hook already subscribes to realtime updates
+- `DeliveryMap` component already handles driver markers
+
+### Timestamp Mapping
+| Status | Timestamp Column |
+|--------|------------------|
+| placed | `placed_at` or `created_at` |
+| confirmed | `accepted_at` |
+| preparing | `prepared_at` |
+| ready | `ready_at` |
+| out_for_delivery | `picked_up_at` |
+| delivered | `delivered_at` |
+
+### Map Display Conditions
+Show map when:
+- `order.status` is `confirmed`, `ready_for_pickup`, or `out_for_delivery`
+- `order.driver_id` is not null
+- `order.delivery_lat` and `order.delivery_lng` are set
 
 ---
 
 ## Summary
 
-This update completes the ZIVO Eats customer experience:
+This update enhances order tracking with:
 
-- **Unified API Layer**: Single `eatsApi.ts` for all queries
-- **Real Alerts**: Order notifications with badge count
-- **Accurate Totals**: Tax, service fee, tip saved to orders
-- **Order Again**: Quick reorder from history
-- **Favorites**: Heart icon + favorites page
-- **2026 Polish**: Skeleton loaders, empty states, duplicate prevention
-
+- **Driver Card**: Shows assigned driver info (photo, name, vehicle, rating, call button)
+- **Live Map**: Real-time driver location on map with destination marker
+- **Timestamped Timeline**: Each status step shows when it happened
+- **Automatic Alerts**: Database trigger creates notifications on status changes (driver assigned, picked up, delivered)
+- **Real-time Updates**: All changes sync instantly via Supabase Realtime
