@@ -1561,6 +1561,82 @@ export type Database = {
           },
         ]
       }
+      background_checks: {
+        Row: {
+          adjudication: string | null
+          admin_override: boolean
+          admin_override_at: string | null
+          admin_override_by: string | null
+          admin_override_note: string | null
+          application_id: string
+          checkr_candidate_id: string | null
+          checkr_report_id: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          provider: string
+          raw: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          adjudication?: string | null
+          admin_override?: boolean
+          admin_override_at?: string | null
+          admin_override_by?: string | null
+          admin_override_note?: string | null
+          application_id: string
+          checkr_candidate_id?: string | null
+          checkr_report_id?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          provider?: string
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          adjudication?: string | null
+          admin_override?: boolean
+          admin_override_at?: string | null
+          admin_override_by?: string | null
+          admin_override_note?: string | null
+          application_id?: string
+          checkr_candidate_id?: string | null
+          checkr_report_id?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          provider?: string
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "background_checks_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "background_checks_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "background_checks_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_logs: {
         Row: {
           backup_target: string
