@@ -1,200 +1,187 @@
 
-
-# ZIVO Rides - New Brand Design System
+# ZIVO Eats MVP - Complete Implementation Plan
 
 ## Overview
-Create a distinctive ZIVO brand identity for the Rides page that moves away from the current Uber-inspired design. The new design will emphasize ZIVO's premium, modern aesthetic with a unique visual language.
+Build a fully functional food ordering experience with 2026 dark glass UI, real Supabase data, and smooth mobile-first design. The project already has restaurants, menu items, and the food_orders table in Supabase - we'll wire everything together into a polished MVP.
 
 ---
 
-## Current State (Uber-like)
-- White bottom sheet with gray/zinc accents
-- Black/white category pills
-- Simple row-based ride selection with inline car SVGs
-- Blue pickup dot, black dropoff square (Uber standard)
-- Zinc-900 CTA buttons
-- Minimal color differentiation
+## Current State Analysis
+
+### Existing Supabase Tables (Verified)
+| Table | Key Columns | Status |
+|-------|-------------|--------|
+| `restaurants` | id, name, cuisine_type, cover_image_url, rating, is_open, status, avg_prep_time, delivery_fee_cents | Has data |
+| `menu_items` | id, restaurant_id, name, description, price, category, image_url, is_available | Has data |
+| `food_orders` | id, customer_id, restaurant_id, status, items (JSONB), subtotal, delivery_fee, total_amount, created_at | Empty |
+
+### Existing Code Assets
+- `src/hooks/useEatsOrders.ts` - Hooks for restaurants, menu items, order creation
+- `src/contexts/CartContext.tsx` - Cart state management with localStorage persistence
+- `src/pages/Eats.tsx` - Landing page (redirects to external driver app)
+- `src/pages/EatsRestaurants.tsx` - Restaurant listing (functional)
+- `src/pages/EatsRestaurantMenu.tsx` - Menu view with add-to-cart
+- `src/pages/EatsCheckout.tsx` - Order submission form
+- `src/components/eats/MobileEatsPremium.tsx` - Premium mobile design (static data)
+
+### Design Pattern Reference
+The mobile home (`src/pages/app/AppHome.tsx`) uses:
+- Dark zinc-950 background
+- Glass morphism cards (bg-zinc-900/80 backdrop-blur)
+- White/zinc text hierarchy
+- Orange accents for Eats
+- Framer Motion animations
 
 ---
 
-## New ZIVO Design Philosophy
+## Pages to Build/Update
 
-### Brand Personality
-- **Premium but Approachable**: Not intimidating luxury, but confident quality
-- **Vibrant Energy**: Dynamic colors that feel alive
-- **Distinct Identity**: Immediately recognizable as ZIVO, not a clone
+### 1. `/eats` - Discover Page (Mobile Redesign)
+Transform `MobileEatsPremium.tsx` from static showcase to real data-driven discovery.
 
-### Color Palette (ZIVO Rides)
-| Element | Current | New ZIVO |
-|---------|---------|----------|
-| Primary Accent | Black/Zinc-900 | Emerald-500 (#10B981) |
-| Background | White | Cream/Off-white (#FFFBF5) with soft gradients |
-| Cards | White + gray border | Soft cream with emerald accents |
-| CTA Buttons | Black | Gradient emerald-to-teal |
-| Pickup Marker | Blue dot | Emerald ring with pulse |
-| Dropoff Marker | Black square | Teal location pin |
-| Surge | Amber/Red | Coral accent (#FF6B6B) |
+**Features:**
+- Top search bar with AI-style placeholder
+- Category chips: Pizza, Burger, Sushi, Coffee, Healthy, Dessert (tap to filter)
+- Restaurant cards from Supabase with live data
+- Sort options: Recommended / Fastest / Rating
+- Bottom navigation integration
 
----
-
-## Component Updates
-
-### 1. Bottom Sheet Redesign
-**File: `src/pages/Rides.tsx`**
-
-Current:
-```
-bg-white rounded-t-[28px]
-```
-
-New ZIVO:
-```
-bg-gradient-to-b from-[#FFFBF5] to-white 
-rounded-t-[32px] 
-border-t border-emerald-100/50
-```
-
-- Warmer, cream-tinted background
-- Subtle emerald accent on border
-- Larger corner radius for softer feel
-
-### 2. Address Input Field Styling
-**File: `src/pages/Rides.tsx`**
-
-Current:
-```
-bg-zinc-100 rounded-xl
-Blue dot for pickup, Black square for dropoff
-```
-
-New ZIVO:
-```
-bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-100
-Emerald ring for pickup, Teal filled circle for dropoff
-Soft shadow: shadow-[0_4px_20px_rgba(16,185,129,0.08)]
-```
-
-### 3. Category Tabs
-**File: `src/pages/Rides.tsx` (inline tabs)**
-
-Current:
-```
-bg-zinc-900 text-white (active)
-bg-zinc-100 text-zinc-600 (inactive)
-```
-
-New ZIVO:
-```
-bg-gradient-to-r from-emerald-500 to-teal-500 text-white (active)
-bg-white border border-emerald-200 text-emerald-700 (inactive)
-```
-
-- Gradient active state for brand recognition
-- Emerald-tinted inactive states
-
-### 4. Ride Row Cards
-**File: `src/components/ride/UberLikeRideRow.tsx` → Rename to `ZivoRideRow.tsx`**
-
-Current:
-```
-- White background, black border when selected
-- Generic inline car SVG
-- Tag pills with colored dots
-```
-
-New ZIVO Design:
-```
-- Cream background (#FFFBF5) with soft border
-- Selected: emerald gradient border + soft glow
-- ZIVO-branded car silhouette SVG (more stylized, less generic)
-- Tag pills: emerald/teal themed badges
-- Price: bold emerald color when surge-free
-```
-
-Visual Structure:
+**UI Components:**
 ```text
-┌─────────────────────────────────────────────────┐
-│  🚗 ──────────── Economy Standard              │
-│  [car icon]     1:42 PM · 4 min    👤4   $8.50 │
-│                                        ⚡1.2× │
-└─────────────────────────────────────────────────┘
++----------------------------------+
+|  [<] ZIVO Eats         [Cart]   |
++----------------------------------+
+|  [🔍 Search restaurants...]      |
++----------------------------------+
+|  [Pizza] [Burger] [Sushi] ...   |
++----------------------------------+
+|  [Sort: Recommended ▼]          |
++----------------------------------+
+|  +----------------------------+ |
+|  | [Image]                    | |
+|  | Sakura Sushi Bar           | |
+|  | Japanese · ⭐4.8 · 25 min  | |
+|  | Free Delivery              | |
+|  +----------------------------+ |
+|  ...                            |
++----------------------------------+
 ```
 
-### 5. CTA Buttons
-**File: `src/pages/Rides.tsx`**
+### 2. `/eats/restaurant/[id]` - Restaurant Menu
+Update existing `EatsRestaurantMenu.tsx` with 2026 dark glass styling.
 
-Current:
-```
-bg-zinc-900 hover:bg-zinc-800 text-white
-```
+**Features:**
+- Restaurant header with cover image, open/closed badge
+- Sticky category tabs at top (Appetizers, Mains, Desserts, etc.)
+- Menu items list with Add button (opens modal)
+- Add item modal: quantity picker + notes field
+- Floating cart button with total
 
-New ZIVO:
-```
-bg-gradient-to-r from-emerald-500 to-teal-500 
-hover:from-emerald-600 hover:to-teal-600 
-text-white font-bold
-shadow-lg shadow-emerald-500/25
-```
-
-- Branded gradient buttons
-- Glow effect for premium feel
-
-### 6. Surge Banner
-**File: `src/components/ride/SurgeBanner.tsx`**
-
-Current:
-```
-Amber/red gradient with lightning icon
-```
-
-New ZIVO:
-```
-Coral (#FF6B6B) to rose gradient
-Custom ZIVO surge icon (stylized wave/pulse)
-Text: "High demand pricing" instead of "Busy time pricing"
+**UI Components:**
+```text
++----------------------------------+
+|  [<] Back       [Open Now 🟢]   |
++----------------------------------+
+|  [Restaurant Cover Image]        |
+|  Sakura Sushi Bar               |
+|  Japanese · ⭐4.8 · 25-35 min    |
++----------------------------------+
+|  [Appetizers] [Mains] [Desserts] |  <- sticky
++----------------------------------+
+|  Dragon Roll                     |
+|  Fresh salmon, avocado... $16.99 |
+|                         [+ Add]  |
++----------------------------------+
+|       [🛒 View Cart · $32.98]   |  <- floating
++----------------------------------+
 ```
 
-### 7. Location Markers (Map)
-**File: `src/components/maps/GoogleMap.tsx` (marker updates)**
+### 3. `/eats/cart` - Cart Page (New)
+Create dedicated cart page before checkout.
 
-Current:
-- Blue pulsing circle (pickup)
-- Black square with white center (dropoff)
+**Features:**
+- Cart items list with quantity +/- controls
+- Remove item option
+- Price breakdown: subtotal, delivery fee, tax, total
+- Checkout button -> navigates to checkout or creates order directly
 
-New ZIVO:
-- Emerald pulsing ring with white center (pickup)
-- Teal filled pin with subtle shadow (dropoff)
-- Route line: emerald (#10B981) instead of gray
-
-### 8. Floating Address Cards (Map overlay)
-**File: `src/pages/Rides.tsx` (RidesMapView)**
-
-Current:
-```
-bg-white rounded-lg shadow-lg
-Black time badge
-```
-
-New ZIVO:
-```
-bg-[#FFFBF5] rounded-2xl 
-border border-emerald-100
-Emerald gradient time badge
-```
-
-### 9. Success State
-**File: `src/pages/Rides.tsx`**
-
-Current:
-```
-Emerald-100 background with emerald checkmark
+**UI Components:**
+```text
++----------------------------------+
+|  [<] Your Cart                   |
++----------------------------------+
+|  Sakura Sushi Bar               |
++----------------------------------+
+|  Dragon Roll              $16.99 |
+|  [-] 2 [+]                       |
+|  California Roll          $9.99  |
+|  [-] 1 [+]                       |
++----------------------------------+
+|  Subtotal                 $43.97 |
+|  Delivery Fee              $3.99 |
+|  Tax                       $3.52 |
+|  ─────────────────────────────── |
+|  Total                    $51.48 |
++----------------------------------+
+|  [Proceed to Checkout]           |
++----------------------------------+
 ```
 
-Keep this (already aligns with new ZIVO emerald theme), but enhance:
+### 4. `/eats/orders` - My Orders List (New)
+Show user's order history.
+
+**Features:**
+- List all user orders (where customer_id = auth.uid())
+- Each row: restaurant name, status badge, total, created time
+- Tap to view order details
+- Loading skeleton + empty state
+
+**UI Components:**
+```text
++----------------------------------+
+|  [<] My Orders                   |
++----------------------------------+
+|  Sakura Sushi Bar               |
+|  [Delivered ✓] · $51.48          |
+|  Today, 2:45 PM                  |
++----------------------------------+
+|  Burger Palace                   |
+|  [Preparing 🍳] · $28.99        |
+|  Yesterday, 7:30 PM              |
++----------------------------------+
 ```
-Add confetti animation
-Gradient background pulse
-"Ride Confirmed" with ZIVO branding
+
+### 5. `/eats/orders/[id]` - Order Detail (New)
+Show order status timeline and details.
+
+**Features:**
+- Order status timeline: placed → confirmed → preparing → out_for_delivery → delivered
+- Restaurant info
+- Items ordered with quantities
+- Price breakdown
+- Real-time status from Supabase
+
+**UI Components:**
+```text
++----------------------------------+
+|  [<] Order #ABC123               |
++----------------------------------+
+|  Status Timeline:                |
+|  ✓ Placed         2:30 PM       |
+|  ✓ Confirmed      2:32 PM       |
+|  → Preparing      2:35 PM       |
+|  ○ Out for Delivery              |
+|  ○ Delivered                     |
++----------------------------------+
+|  Sakura Sushi Bar               |
+|  2x Dragon Roll           $33.98 |
+|  1x California Roll        $9.99 |
++----------------------------------+
+|  Subtotal                 $43.97 |
+|  Delivery Fee              $3.99 |
+|  Tax                       $3.52 |
+|  Total                    $51.48 |
++----------------------------------+
 ```
 
 ---
@@ -202,52 +189,179 @@ Gradient background pulse
 ## Technical Implementation
 
 ### New Files to Create
-1. `src/components/ride/ZivoRideRow.tsx` - New branded ride row component
-2. Update `src/index.css` - Add ZIVO rides-specific CSS variables
+
+1. **`src/pages/EatsCart.tsx`** - Cart page with price breakdown
+2. **`src/pages/EatsOrders.tsx`** - Order history list
+3. **`src/pages/EatsOrderDetail.tsx`** - Single order with timeline
+4. **`src/components/eats/EatsBottomNav.tsx`** - Eats-specific navigation (optional)
+5. **`src/components/eats/StatusTimeline.tsx`** - Order status visualization
+6. **`src/components/eats/MenuItemModal.tsx`** - Add item dialog with qty/notes
+7. **`src/hooks/useMyEatsOrders.ts`** - Fetch user's food orders
 
 ### Files to Modify
-1. `src/pages/Rides.tsx` - Main page styling overhaul
-2. `src/components/ride/SurgeBanner.tsx` - ZIVO surge styling
-3. `src/components/maps/GoogleMap.tsx` - Marker colors
-4. `src/components/ride/UberLikeRideRow.tsx` - Deprecate or refactor
 
-### New CSS Variables
-```css
-/* ZIVO Rides Brand Colors */
---zivo-rides-primary: 160 84% 39%;  /* Emerald-500 */
---zivo-rides-secondary: 174 72% 40%; /* Teal-500 */
---zivo-rides-cream: 35 100% 98%;     /* Warm cream */
---zivo-rides-surge: 0 100% 71%;      /* Coral */
---zivo-rides-glow: 0 0 30px rgba(16, 185, 129, 0.15);
+1. **`src/pages/Eats.tsx`** - Replace external redirect with real discover experience
+2. **`src/components/eats/MobileEatsPremium.tsx`** - Wire to real Supabase data
+3. **`src/pages/EatsRestaurants.tsx`** - Apply 2026 dark glass styling
+4. **`src/pages/EatsRestaurantMenu.tsx`** - Add modal, improve styling
+5. **`src/pages/EatsCheckout.tsx`** - Improve styling, add order redirect
+6. **`src/contexts/CartContext.tsx`** - Minor enhancements (already good)
+7. **`src/hooks/useEatsOrders.ts`** - Add useMyEatsOrders hook
+8. **`src/App.tsx`** - Add new routes
+
+### New Routes in App.tsx
+```typescript
+<Route path="/eats" element={<Eats />} />
+<Route path="/eats/restaurants" element={<EatsRestaurants />} />
+<Route path="/eats/restaurant/:id" element={<EatsRestaurantMenu />} />
+<Route path="/eats/cart" element={<EatsCart />} />
+<Route path="/eats/checkout" element={<EatsCheckout />} />
+<Route path="/eats/orders" element={<EatsOrders />} />
+<Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
+```
+
+### Hook: useMyEatsOrders
+```typescript
+// Fetch orders for current user
+export function useMyEatsOrders() {
+  return useQuery({
+    queryKey: ["my-eats-orders"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) return [];
+
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select("*, restaurants:restaurant_id(name, logo_url)")
+        .eq("customer_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+```
+
+### Hook: useSingleEatsOrder
+```typescript
+// Fetch single order by ID
+export function useSingleEatsOrder(orderId: string | undefined) {
+  return useQuery({
+    queryKey: ["eats-order", orderId],
+    queryFn: async () => {
+      if (!orderId) return null;
+
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select("*, restaurants:restaurant_id(name, logo_url, phone)")
+        .eq("id", orderId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!orderId,
+  });
+}
 ```
 
 ---
 
-## Summary of Visual Changes
+## 2026 Dark Glass UI System
 
-| Element | Before (Uber-like) | After (ZIVO) |
-|---------|-------------------|--------------|
-| Bottom sheet | Pure white | Cream gradient |
-| Primary color | Black/zinc | Emerald/teal gradient |
-| Pickup marker | Blue circle | Emerald ring |
-| Dropoff marker | Black square | Teal pin |
-| CTA buttons | Solid black | Gradient emerald |
-| Category tabs | Black active | Emerald gradient |
-| Surge indicator | Amber/orange | Coral/rose |
-| Cards | White + shadow | Cream + emerald accent |
-| Route line | Gray | Emerald |
+### Color Palette
+| Element | Value |
+|---------|-------|
+| Background | `bg-zinc-950` |
+| Card | `bg-zinc-900/80 backdrop-blur-xl border border-white/10` |
+| Text Primary | `text-white` |
+| Text Secondary | `text-zinc-400` |
+| Eats Accent | `text-orange-500`, `bg-orange-500` |
+| Success | `text-emerald-400` |
+
+### Component Patterns
+```text
+Card:        bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl
+Button CTA:  bg-orange-500 hover:bg-orange-600 text-white rounded-xl
+Badge:       bg-orange-500/20 text-orange-400 border border-orange-500/30
+Input:       bg-white/10 border border-white/10 text-white placeholder-zinc-500
+```
+
+### Status Badge Colors
+| Status | Style |
+|--------|-------|
+| pending | `bg-zinc-500/20 text-zinc-400` |
+| confirmed | `bg-blue-500/20 text-blue-400` |
+| preparing | `bg-amber-500/20 text-amber-400` |
+| out_for_delivery | `bg-purple-500/20 text-purple-400` |
+| delivered | `bg-emerald-500/20 text-emerald-400` |
+| cancelled | `bg-red-500/20 text-red-400` |
+
+---
+
+## Data Flow
+
+```text
+Discover (/eats)
+    ↓ tap restaurant
+Restaurant Menu (/eats/restaurant/:id)
+    ↓ add items to cart (context)
+Cart (/eats/cart)
+    ↓ proceed to checkout
+Checkout (/eats/checkout)
+    ↓ submit order → INSERT into food_orders
+Order Detail (/eats/orders/:id)
+    ↓ shows timeline + details
+
+My Orders (/eats/orders)
+    ← list all user orders
+```
 
 ---
 
 ## Implementation Order
-1. Add new CSS variables for ZIVO Rides brand
-2. Update bottom sheet and background styling
-3. Create new ZivoRideRow component
-4. Update CTA buttons with gradient
-5. Restyle category tabs
-6. Update address input styling
-7. Modify map markers and route colors
-8. Update surge banner to ZIVO style
-9. Polish floating map cards
-10. Final QA pass on all states
 
+1. **Create useMyEatsOrders hook** in `src/hooks/useEatsOrders.ts`
+2. **Create EatsCart page** with price breakdown
+3. **Create EatsOrders page** for order history
+4. **Create EatsOrderDetail page** with status timeline
+5. **Create StatusTimeline component** for order progress
+6. **Create MenuItemModal component** for adding items
+7. **Update MobileEatsPremium** to use real data
+8. **Update Eats.tsx** to show MobileEatsPremium for mobile
+9. **Update EatsRestaurantMenu** with modal + dark styling
+10. **Update EatsCheckout** with redirect to order detail
+11. **Add routes to App.tsx**
+12. **Polish animations and loading states**
+
+---
+
+## Loading/Empty States
+
+All pages will include:
+- **Loading skeleton**: Animated placeholder cards
+- **Empty state**: Icon + message + CTA button
+- **Error state**: Retry button
+
+Example empty state for Orders:
+```text
+[🍽️ Icon]
+No orders yet
+Start exploring restaurants!
+[Browse Restaurants]
+```
+
+---
+
+## Summary
+
+This plan transforms ZIVO Eats from a static preview into a working MVP:
+
+- **5 pages**: Discover, Restaurant Menu, Cart, Orders List, Order Detail
+- **Real data**: Restaurants, menu items, orders from Supabase
+- **User scoping**: Orders filtered by auth.uid()
+- **2026 UI**: Dark glass design matching the home screen
+- **Mobile-first**: Touch-friendly, smooth animations
+- **Persistent cart**: LocalStorage backed via CartContext
