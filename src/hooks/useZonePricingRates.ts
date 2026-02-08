@@ -96,9 +96,10 @@ export function useZonePricingRates(
       return finalFallback as ZonePricingRate | null;
     },
     enabled: !!zoneId && !!rideType,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000, // Cache for 60 seconds
+    gcTime: 2 * 60 * 1000, // Keep in memory for 2 minutes
+    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    refetchOnWindowFocus: true,
   });
 
   return {
@@ -127,7 +128,9 @@ export function useAllZoneRates(zoneId: string | null | undefined) {
       return data as ZonePricingRate[];
     },
     enabled: !!zoneId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000, // Cache for 60 seconds
+    refetchInterval: 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -145,7 +148,7 @@ export function useAllZoneRates(zoneId: string | null | undefined) {
 export function useAllZoneRatesMap(zoneId: string | null | undefined) {
   const DEFAULT_ZONE_ID = "00000000-0000-0000-0000-000000000001";
   
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, dataUpdatedAt, isRefetching } = useQuery({
     queryKey: ["zone-pricing-rates-map", zoneId],
     queryFn: async () => {
       const ratesMap = new Map<string, ZonePricingRate>();
@@ -186,14 +189,17 @@ export function useAllZoneRatesMap(zoneId: string | null | undefined) {
       return ratesMap;
     },
     enabled: true, // Always enabled since we have a default fallback
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000, // Cache for 60 seconds
+    gcTime: 2 * 60 * 1000, // Keep in memory for 2 minutes
+    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    refetchOnWindowFocus: true,
   });
 
   return {
     ratesMap: data ?? new Map<string, ZonePricingRate>(),
     isLoading,
     error: error as Error | null,
+    dataUpdatedAt, // Timestamp of last successful fetch
+    isRefetching, // True when background refetch in progress
   };
 }
