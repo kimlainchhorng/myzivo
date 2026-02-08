@@ -5824,6 +5824,51 @@ export type Database = {
           },
         ]
       }
+      driver_locations: {
+        Row: {
+          driver_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          speed: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          driver_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          speed?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          speed?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_notification_logs: {
         Row: {
           body: string | null
@@ -9478,6 +9523,7 @@ export type Database = {
           is_scheduled: boolean | null
           items: Json
           merchant_coupon_id: string | null
+          needs_driver: boolean | null
           paid_at: string | null
           payment_status: string | null
           payment_type: string | null
@@ -9609,6 +9655,7 @@ export type Database = {
           is_scheduled?: boolean | null
           items: Json
           merchant_coupon_id?: string | null
+          needs_driver?: boolean | null
           paid_at?: string | null
           payment_status?: string | null
           payment_type?: string | null
@@ -9740,6 +9787,7 @@ export type Database = {
           is_scheduled?: boolean | null
           items?: Json
           merchant_coupon_id?: string | null
+          needs_driver?: boolean | null
           paid_at?: string | null
           payment_status?: string | null
           payment_type?: string | null

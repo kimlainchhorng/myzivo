@@ -21,10 +21,21 @@ export interface LiveEatsOrder {
   tax: number | null;
   total_amount: number;
   delivery_address: string | null;
+  delivery_lat?: number | null;
+  delivery_lng?: number | null;
   promo_code?: string | null;
   discount_amount?: number | null;
   created_at: string;
   updated_at: string;
+  // Timestamp fields for timeline
+  placed_at?: string | null;
+  accepted_at?: string | null;
+  prepared_at?: string | null;
+  ready_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
+  assigned_at?: string | null;
+  cancelled_at?: string | null;
   restaurants?: {
     name: string;
     logo_url: string | null;
