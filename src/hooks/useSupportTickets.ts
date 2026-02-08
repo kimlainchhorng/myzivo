@@ -413,6 +413,33 @@ export function useAddTicketMessage() {
           })
           .eq('id', ticketId)
           .is('first_response_at', null);
+        
+        // Send push notification to ticket owner (customer)
+        const { data: ticket } = await supabase
+          .from('support_tickets')
+          .select('user_id, subject')
+          .eq('id', ticketId)
+          .single();
+        
+        if (ticket?.user_id) {
+          try {
+            await supabase.functions.invoke('send-push-notification', {
+              body: {
+                user_id: ticket.user_id,
+                notification_type: 'support_reply',
+                title: 'Support Team Replied 💬',
+                body: `Re: ${ticket.subject?.substring(0, 50) || 'Your ticket'}`,
+                data: { 
+                  type: 'support_reply', 
+                  ticket_id: ticketId,
+                },
+              },
+            });
+            console.log('[useAddTicketMessage] Push sent to ticket owner');
+          } catch (pushErr) {
+            console.warn('[useAddTicketMessage] Failed to send push:', pushErr);
+          }
+        }
       }
 
       return data;

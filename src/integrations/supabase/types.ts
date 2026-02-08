@@ -19044,7 +19044,9 @@ export type Database = {
           driver_id: string | null
           endpoint: string
           id: string
+          is_active: boolean | null
           p256dh: string
+          platform: string | null
           updated_at: string
           user_id: string | null
         }
@@ -19054,7 +19056,9 @@ export type Database = {
           driver_id?: string | null
           endpoint: string
           id?: string
+          is_active?: boolean | null
           p256dh: string
+          platform?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -19064,7 +19068,9 @@ export type Database = {
           driver_id?: string | null
           endpoint?: string
           id?: string
+          is_active?: boolean | null
           p256dh?: string
+          platform?: string | null
           updated_at?: string
           user_id?: string | null
         }

@@ -128,9 +128,14 @@ self.addEventListener('notificationclick', (event) => {
     case 'booking_update':
       urlToOpen = `/trips/${data.booking_id}`;
       break;
+    case 'support_reply':
+      urlToOpen = `/support/tickets/${data.ticket_id}`;
+      break;
+    case 'test':
+      urlToOpen = data.url || '/account';
+      break;
     default:
       urlToOpen = data?.url || '/';
-  }
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
