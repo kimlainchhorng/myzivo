@@ -1,163 +1,123 @@
 
+# Fix: All Ride Cards Showing Same Price
 
-# Use Zone-Based Pricing (USA Default) + Fix Unit Conversions
+## Problem
 
-## Summary
+All ride types (Wait & Save, Standard, Green, Priority, Pet) are displaying **$154.31** because the pricing logic fetches rates for only one ride type at a time.
 
-The pricing system already uses zone-based pricing, but there are issues with unit conversions and the current implementation has complexity that can be simplified. The request asks for a cleaner single function approach with proper unit handling.
-
-## Current State Analysis
-
-| Component | Status | Issue |
-|-----------|--------|-------|
-| Zone lookup | Working | Multiple duplicate zones exist in DB |
-| Zone rates | Working | "USA Default Pricing" zone has all ride types |
-| Unit conversion | Already correct | Edge function returns miles/minutes directly |
-| Debug panel | Exists | Uses localStorage toggle, not URL param |
-| Formula | Working | But formula includes unnecessary multipliers |
-
-### Key Observations
-
-1. **Unit conversion is already correct**: The `maps-route` edge function already converts meters to miles and seconds to minutes before returning data
-2. **Route data format**: `routeData.distance` = miles, `routeData.duration` = minutes (already converted)
-3. **Multiple pricing zones with duplicates**: Database has duplicate "Default US", "Baton Rouge", and "New Orleans" zones
-4. **Zone selection working**: Code prefers smallest bounding box (most specific zone)
-5. **Current formula is complex**: Uses multiple separate multipliers (rideType, zone, surge, longTrip, rate) when the zone rates already include ride-type-specific multipliers
-
-## Proposed Changes
-
-### 1. Simplify Pricing Formula
-**File**: `src/lib/pricing.ts`
-
-The current formula applies too many multipliers. Simplify to match the user's specification:
-
+**Current Flow (Broken):**
 ```text
-Current (complex):
-  final = subtotal × rateMultiplier × rideTypeMultiplier × surgeMultiplier × zoneMultiplier × longTripMultiplier
-
-Simplified (per spec):
-  subtotal = base_fare + (miles × per_mile) + (minutes × per_minute) + booking_fee
-  subtotal = max(subtotal, minimum_fare)
-  final = subtotal × multiplier
+1. User selects pickup → zone detected
+2. useZonePricingRates(zoneId, selectedOption?.id ?? "standard")
+   → Fetches rates for ONE ride type only
+3. getQuoteForOption(option) called for each card
+   → All use the SAME zoneRates.multiplier
+   → All show same price
 ```
 
-The `multiplier` from `zone_pricing_rates` already includes the ride-type adjustment, so we remove redundant `RIDE_TYPE_MULTIPLIERS`.
+## Root Cause
 
-### 2. Create Simplified Quote Function
-**File**: `src/lib/pricing.ts`
+| Issue | Location | Details |
+|-------|----------|---------|
+| Single fetch | `Rides.tsx` line 317 | `useZonePricingRates(zone, selectedOption?.id)` fetches rates for only the selected ride type |
+| Shared multiplier | `Rides.tsx` line 385 | All ride cards use `zoneRates?.multiplier` from that single fetch |
 
-Add a new streamlined function `quoteZoneRidePrice()` that:
-- Takes distance in meters (optional raw input) or miles
-- Takes duration in seconds (optional raw input) or minutes
-- Handles unit conversion internally if needed
-- Uses zone rates directly
-- Returns final price with minimal complexity
+## Solution
 
-### 3. Add URL-Based Debug Toggle
+Fetch rates for **all ride types** in the zone, then use each ride type's specific rates when calculating that card's price.
+
+### Step 1: Create New Hook `useAllZoneRatesMap`
+**File**: `src/hooks/useZonePricingRates.ts`
+
+Add a hook that fetches all ride-type rates for a zone and returns them as a Map for quick lookup:
+
+```text
+useAllZoneRatesMap(zoneId) → Map<ride_type, ZonePricingRate>
+
+Query: SELECT * FROM zone_pricing_rates WHERE zone_id = ?
+Returns: { "standard" → rates, "wait_save" → rates, "green" → rates, ... }
+```
+
+### Step 2: Update Pricing Logic in Rides.tsx
 **File**: `src/pages/Rides.tsx`
 
-Add support for `?debug=1` URL parameter alongside existing localStorage toggle:
-- Check `searchParams.get("debug") === "1"` OR localStorage
-- Show debug panel with: miles, minutes, subtotal, multiplier, final
+1. Replace single-rate fetch with all-rates fetch
+2. Update `getQuoteForOption(option)` to look up the correct rate for each option's `id`
+3. Fall back to "standard" rate if ride type not found
 
-### 4. Update Debug Panel
-**File**: `src/components/ride/PricingDebugPanel.tsx`
+```text
+// Before
+const { rates: zoneRates } = useZonePricingRates(zone?.id, selectedOption?.id);
+const multiplier = zoneRates?.multiplier ?? 1.0; // Same for all
 
-Simplify to show exactly what the user requested:
-- miles
-- minutes
-- subtotal
-- multiplier
-- final
+// After
+const { ratesMap } = useAllZoneRatesMap(zone?.id);
+const getQuoteForOption = (option) => {
+  const rates = ratesMap.get(option.id) ?? ratesMap.get("standard");
+  const multiplier = rates?.multiplier ?? RIDE_TYPE_MULTIPLIERS[option.id];
+  // Now each card gets its own multiplier
+}
+```
 
-### 5. Ensure Zone Lookup Prefers "USA Default Pricing"
-**File**: `src/hooks/usePricingZone.ts`
+### Step 3: Keep Per-Ride-Type Rates Intact
+The pricing formula stays the same, but now uses the correct rates per ride type:
 
-Currently the code prefers the smallest bounding box. If multiple US zones match, we should also consider the zone name as a tiebreaker, preferring "USA Default Pricing" as the fallback.
+```text
+subtotal = base_fare + (miles × per_mile) + (minutes × per_minute) + booking_fee
+subtotal = max(subtotal, minimum_fare)
+final = round(subtotal × multiplier, 2)
+```
 
-Actually, the current logic is correct - "USA Default Pricing" has the widest bounds, so more specific zones (cities) will be selected first. Only if no city matches will the default be used.
+## Expected Outcome
 
-## File Changes
+| Ride Type | Current (Broken) | Expected (Fixed) |
+|-----------|------------------|------------------|
+| Wait & Save | $154.31 | ~$142 (0.92×) |
+| Standard | $154.31 | ~$154 (1.00×) |
+| Green | $154.31 | ~$157 (1.02×) |
+| Priority | $154.31 | ~$173 (1.12×) |
+| Pet | $154.31 | ~$177 (1.15×) |
 
-### File 1: `src/lib/pricing.ts`
-- Add new `quoteZoneRidePrice(rideType, distanceMiles, durationMinutes, zoneRates)` function
-- Simplified formula: `final = max(base + dist + time + booking, minimum) × multiplier`
-- Remove unnecessary `rideTypeMultiplier` when zone rates provide it
-- Keep existing functions for backwards compatibility
+## Files to Modify
+
+### File 1: `src/hooks/useZonePricingRates.ts`
+- Add `useAllZoneRatesMap(zoneId)` hook
+- Returns `Map<string, ZonePricingRate>` for quick lookup by ride type
+- Fallback to Default US zone if local zone has no rates
 
 ### File 2: `src/pages/Rides.tsx`
-- Add URL param check for debug: `searchParams.get("debug") === "1"`
-- Update `showDebugPanel` to check both localStorage AND URL param
-- Update `getQuoteForOption` to use simplified pricing function
-- Ensure all ride cards display only the final price from quote
+- Replace `useZonePricingRates()` with `useAllZoneRatesMap()`
+- Update `getQuoteForOption()` to fetch rates from the map using `option.id`
+- Update `pricingQuoteSettings` to be dynamic per option
 
-### File 3: `src/components/ride/PricingDebugPanel.tsx`
-- Add zone name display
-- Add subtotal display (before multiplier)
-- Show the single multiplier from zone rates
-- Cleaner layout matching user's spec
+### File 3: `src/lib/pricing.ts`
+- Add fallback constant `RIDE_TYPE_MULTIPLIERS` usage when zone doesn't have specific ride-type rates
+- Ensure `quoteRidePrice` works correctly with per-ride settings
 
-### File 4: `src/hooks/useZonePricingRates.ts`
-- No changes needed - already fetches ride-type-specific rates correctly
+## Technical Details
 
-### File 5: `src/hooks/usePricingZone.ts`
-- No changes needed - already prefers smallest bounding box
+### Database Rate Lookup Priority
+1. Zone + exact ride_type match
+2. Zone + "standard" (if ride_type not found)
+3. Default US zone + ride_type
+4. Default US zone + "standard"
 
-## Pricing Formula (Final)
-
+### Available Rates in DB
 ```text
-Input:
-  distanceMeters → (if provided, convert) → miles = distanceMeters / 1609.344
-  durationSeconds → (if provided, convert) → minutes = durationSeconds / 60
-
-From zone_pricing_rates (for zone + ride_type):
-  base_fare, per_mile, per_minute, booking_fee, minimum_fare, multiplier
-
-Calculation:
-  subtotal = base_fare + (miles × per_mile) + (minutes × per_minute) + booking_fee
-  subtotal = max(subtotal, minimum_fare)
-  final = round(subtotal × multiplier, 2)
+USA Default Pricing zone:
+- wait_save: multiplier 0.92
+- standard: multiplier 1.00
+- green: multiplier 1.02
+- priority: multiplier 1.12
+- xl: multiplier 1.45
+- premium: multiplier 1.65
+- elite: multiplier 2.10
 ```
 
-## Debug Panel Display (with ?debug=1)
-
-```text
-┌─────────────────────────┐
-│ 🔧 Pricing Debug        │
-├─────────────────────────┤
-│ Zone: USA Default Pricing│
-│ Ride: standard          │
-├─────────────────────────┤
-│ Miles:     5.2          │
-│ Minutes:   15           │
-├─────────────────────────┤
-│ Base:      $2.50        │
-│ Distance:  $6.50        │
-│ Time:      $3.30        │
-│ Booking:   $1.50        │
-├─────────────────────────┤
-│ Subtotal:  $13.80       │
-│ × Mult:    1.00         │
-├─────────────────────────┤
-│ Final:     $13.80       │
-└─────────────────────────┘
-```
-
-## Database Cleanup (Recommended, Optional)
-
-Remove duplicate zones without linked rates to simplify zone selection. Currently there are:
-- 2× "Baton Rouge" zones (one with rates, one without)
-- 2× "Default US" zones (one is the UUID-based fallback)
-- 2× "New Orleans" zones (one with rates, one without)
-
-This is not blocking but would simplify debugging.
-
-## Testing Steps
+## Verification Steps
 
 1. Navigate to `/rides?debug=1`
-2. Enter pickup location (should detect "USA Default Pricing" zone)
-3. Enter destination
-4. Verify debug panel shows: miles, minutes, subtotal, multiplier, final
-5. Select different ride types and verify prices update with correct multipliers
-6. Confirm ride card prices match debug panel final values
-
+2. Enter pickup (e.g., Baton Rouge address)
+3. Enter destination (~70 miles away)
+4. Verify each ride card shows different price
+5. Select different ride types and verify debug panel shows correct multiplier
