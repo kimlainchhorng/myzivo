@@ -1,67 +1,33 @@
 
-# Fix: Remove Nested GoogleMapProvider from RidesMapBackground
 
-## Problem
+# Update Google Maps API Key in Supabase Secrets
 
-The Google Maps loader is being initialized twice with **different API keys**:
+## What Needs to Be Done
 
-| Source | Key Used |
-|--------|----------|
-| Global `App.tsx` | `VITE_GOOGLE_MAPS_API_KEY` or edge function (`GOOGLE_MAPS_API_KEY`) |
-| Nested `RidesMapBackground.tsx` | Tries to initialize again with a different key |
-
-The error message shows two different API keys:
-- `AIzaSyD3TbqysJh0bBhlRof_2OPyiQeAVuxJRoc`
-- `AIzaSyCopQIlsMaRJhK6evC6G5XUMgrRvQFioAE`
-
-This happens because `RidesMapBackground.tsx` still has its own `<GoogleMapProvider>` wrapper, which conflicts with the global provider in `App.tsx`.
-
-## Solution
-
-Remove the `GoogleMapProvider` wrapper from `RidesMapBackground.tsx` - just like we already did for:
-- `DriverMapView.tsx`
-- `TripMapView.tsx`
-- `Rides.tsx`
-
-The global provider in `App.tsx` already wraps the entire app, so all map components should use that single instance.
-
-## File Change
-
-**`src/components/ride/RidesMapBackground.tsx`**
-
-```text
-Before:
-├─ import { GoogleMapProvider }
-├─ RidesMapBackgroundInner component
-└─ RidesMapBackground wraps Inner in GoogleMapProvider
-
-After:
-├─ Remove GoogleMapProvider import
-├─ Rename RidesMapBackgroundInner → RidesMapBackground
-└─ Export directly (no wrapper)
+You've provided the new Google Maps API key:
+```
+AIzaSyCopQIlsMaRJhK6evC6G5XUMgrRvQFioAE
 ```
 
-## Code Changes
+I'll update both secrets that use this key:
 
-```typescript
-// Remove this import:
-import { GoogleMapProvider } from "@/components/maps/GoogleMapProvider";
+| Secret Name | Purpose |
+|-------------|---------|
+| `GOOGLE_MAPS_API_KEY` | Used by Edge Functions (maps-autocomplete, maps-place-details, maps-route, maps-api-key) |
+| `VITE_GOOGLE_MAPS_API_KEY` | Used by the frontend React app for client-side map rendering |
 
-// Remove the wrapper function (lines 53-59):
-const RidesMapBackground = (props: RidesMapBackgroundProps) => {
-  return (
-    <GoogleMapProvider>
-      <RidesMapBackgroundInner {...props} />
-    </GoogleMapProvider>
-  );
-};
+## Steps
 
-// Rename RidesMapBackgroundInner to RidesMapBackground
-```
+1. Update `GOOGLE_MAPS_API_KEY` secret with the new key
+2. Update `VITE_GOOGLE_MAPS_API_KEY` secret with the new key
+3. Test the Rides page to confirm the map loads correctly
 
-## Result
+## Reminder: Domain Restrictions
 
-After this fix:
-- Only one `GoogleMapProvider` exists (in `App.tsx`)
-- All map components use the same API key instance
-- No more "Loader must not be called again with different options" error
+Make sure this API key has the following website restrictions in Google Cloud Console:
+
+- `*.lovableproject.com/*`
+- `*.lovable.app/*`  
+- `https://hizovo.com/*`
+- `https://www.hizovo.com/*`
+
