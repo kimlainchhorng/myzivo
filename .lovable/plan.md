@@ -1,99 +1,138 @@
 
-# Update Surge and Weather Pricing Logic
+
+# Dynamic Surge Pricing from Database
 
 ## Overview
-Update the surge pricing tiers and weather multipliers to match your new specifications.
+Implement dynamic surge pricing that fetches the multiplier directly from the `surge_multipliers` table (zone='GLOBAL') instead of calculating it from demand/supply ratios. This provides admin control over surge pricing with a max cap of 2.5x.
 
 ---
 
-## Changes Summary
+## Current State
 
-### 1. New Surge Pricing Tiers
+The system currently calculates surge based on demand/supply ratio:
+- Counts active rides in last 5 minutes
+- Counts online drivers in last 2 minutes
+- Applies tiered multipliers (1.0x → 2.0x)
 
-| Demand Ratio | Current Multiplier | New Multiplier |
-|--------------|-------------------|----------------|
-| < 1.0        | 1.0x              | 1.0x           |
-| 1.0 – 1.5    | 1.12x             | 1.1x           |
-| 1.5 – 2.0    | 1.25x             | 1.25x          |
-| 2.0 – 3.0    | 1.35x (capped)    | 1.5x           |
-| > 3.0        | 1.35x (capped)    | 2.0x           |
-| No drivers   | 1.35x             | 2.0x           |
+**Database:** `surge_multipliers` table exists with a GLOBAL row:
+```
+zone: GLOBAL, multiplier: 1.0, reason: normal
+```
 
-### 2. Weather Multipliers
+---
 
-| Condition   | Current | New   |
-|-------------|---------|-------|
-| Clear       | 1.0x    | 1.0x  |
-| Rain        | 1.1x    | 1.1x  |
-| Heavy Rain  | 1.2x    | 1.2x  |
-| Snow        | 1.25x   | 1.3x  |
+## New Behavior
+
+1. **Fetch multiplier** from `surge_multipliers` where `zone='GLOBAL'`
+2. **Apply cap:** `min(multiplier, 2.5)`
+3. **Calculate:** `final_price = base_price × multiplier`
+4. **UI Badge:** When multiplier > 1, show: `"Busy time pricing ×{multiplier}"`
 
 ---
 
 ## Files to Update
 
-### File 1: `src/lib/surge.ts`
-Update the `calculateSurge` function with new tiers:
+### 1. `src/lib/quoteRidePrice.ts`
+Update `getSurgeMultiplier()` to fetch from database:
 
 ```text
-if demand_ratio < 1     → 1.0x (Low)
-if demand_ratio 1–1.5   → 1.1x (Medium)
-if demand_ratio 1.5–2   → 1.25x (Medium)
-if demand_ratio 2–3     → 1.5x (High)
-if demand_ratio > 3     → 2.0x (High)
-if no drivers           → 2.0x (High)
+async function getSurgeMultiplier(): Promise<number> {
+  1. Query surge_multipliers where zone = 'GLOBAL'
+  2. Get multiplier value (default to 1.0 if not found)
+  3. Apply cap: min(multiplier, 2.5)
+  4. Return the capped value
+}
 ```
 
-### File 2: `src/lib/quoteRidePrice.ts`
-Update `getSurgeMultiplier` function with matching logic:
+### 2. `src/lib/surge.ts`
+Add new function to fetch from database:
 
 ```text
-if drivers <= 0         → 2.0x
-if ratio > 3            → 2.0x
-if ratio >= 2           → 1.5x
-if ratio >= 1.5         → 1.25x
-if ratio >= 1           → 1.1x
-else                    → 1.0x
+async function fetchGlobalSurgeMultiplier(): Promise<number> {
+  1. Query surge_multipliers table
+  2. Filter by zone = 'GLOBAL'
+  3. Return multiplier (capped at 2.5)
+}
 ```
 
-Also update `getWeatherMultiplier` to fetch from the `weather_multipliers` database table instead of returning 1.0.
+Update `calculateSurge` to optionally accept a database override.
 
-### File 3: `src/hooks/useZoneSurgePricing.ts`
-Update comment documentation to reflect new tiers.
+### 3. `src/hooks/useSurgePricing.ts`
+Update to fetch from `surge_multipliers` table:
 
-### File 4: `src/hooks/useSurgePricing.ts`
-Update comment documentation to reflect new tiers.
-
-### Database Update
-Update the snow multiplier in `weather_multipliers` table:
-```sql
-UPDATE weather_multipliers 
-SET multiplier = 1.30 
-WHERE weather_key = 'snow';
+```text
+- Replace demand-based calculation with database fetch
+- Query surge_multipliers where zone = 'GLOBAL'
+- Cap at 2.5x
+- Return multiplier, level, and label
 ```
+
+### 4. `src/hooks/useZoneSurgePricing.ts`
+Update to use database multiplier:
+
+```text
+- Fetch from surge_multipliers (zone='GLOBAL' or zone-specific)
+- Apply 2.5x cap
+- Return surge info for UI
+```
+
+### 5. `src/components/ride/RideCard.tsx`
+Update badge text from "Busy now" to dynamic text:
+
+```text
+Current (line 68-72):
+  <span>🔥</span>
+  <span>Busy now</span>
+
+New:
+  <span>🔥</span>
+  <span>Busy time pricing ×{multiplier.toFixed(1)}</span>
+```
+
+### 6. `src/components/ride/UberLikeRideRow.tsx`
+Already shows multiplier correctly with `×{surgeMultiplier.toFixed(1)}`, but update label context.
+
+### 7. `src/components/ride/SurgeBanner.tsx`
+Update text to use "Busy time pricing" terminology.
 
 ---
 
 ## Technical Details
 
-### Weather Integration
-The `getWeatherMultiplier` function will be updated to:
-1. Query the `weather_multipliers` table for the matching `weather_key`
-2. Support zone-specific overrides (if `zone_id` is set)
-3. Fallback to global multipliers (where `zone_id` is null)
-
-### Surge Formula
-```
-demand_ratio = ride_requests_last_5min / available_drivers
-price = base_price × surge_multiplier
+### Database Query
+```sql
+SELECT multiplier FROM surge_multipliers 
+WHERE zone = 'GLOBAL' 
+LIMIT 1;
 ```
 
-### Cap Removal
-The 1.35x cap is being removed to allow the full 2.0x multiplier during extreme demand.
+### Max Cap Constant
+```typescript
+const MAX_SURGE_MULTIPLIER = 2.5;
+```
+
+### Level Mapping
+| Multiplier | Level | Label |
+|------------|-------|-------|
+| 1.0 | Low | (no badge) |
+| 1.1-1.5 | Medium | Busy time pricing ×1.x |
+| 1.5+ | High | Busy time pricing ×1.x |
+
+---
+
+## Surge Level Logic
+```text
+multiplier = 1.0       → Low (no badge shown)
+multiplier 1.01-1.5    → Medium
+multiplier > 1.5       → High
+```
 
 ---
 
 ## Testing Checklist
-- Verify surge displays correctly at each ratio tier
-- Confirm weather multipliers apply when fetched
-- Check final price reflects both surge and weather multipliers
+- Verify surge fetches from `surge_multipliers` table
+- Confirm 2.5x cap is enforced
+- Check "Busy time pricing ×X.X" badge appears when multiplier > 1
+- Verify no badge when multiplier = 1.0
+- Test admin can update multiplier in database and see changes
+
