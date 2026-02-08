@@ -293,6 +293,39 @@ export type Database = {
           },
         ]
       }
+      admin_login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          failure_reason: string | null
+          id: string
+          ip_address: unknown
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_security_alerts: {
         Row: {
           alert_type: string
@@ -354,6 +387,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      admin_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown
+          last_activity_at: string
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          last_activity_at?: string
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          last_activity_at?: string
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       affiliate_click_logs: {
         Row: {
@@ -1845,6 +1911,30 @@ export type Database = {
           status?: string
           storage_location?: string | null
           triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      backup_runs: {
+        Row: {
+          backup_type: string
+          created_at: string | null
+          file_url: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          backup_type: string
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          status: string
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -10166,6 +10256,7 @@ export type Database = {
           pin_attempts: number | null
           placed_at: string | null
           platform_fee: number | null
+          points_awarded_at: string | null
           prep_minutes: number | null
           prepared_at: string | null
           pricing_breakdown: Json | null
@@ -10306,6 +10397,7 @@ export type Database = {
           pin_attempts?: number | null
           placed_at?: string | null
           platform_fee?: number | null
+          points_awarded_at?: string | null
           prep_minutes?: number | null
           prepared_at?: string | null
           pricing_breakdown?: Json | null
@@ -10446,6 +10538,7 @@ export type Database = {
           pin_attempts?: number | null
           placed_at?: string | null
           platform_fee?: number | null
+          points_awarded_at?: string | null
           prep_minutes?: number | null
           prepared_at?: string | null
           pricing_breakdown?: Json | null
@@ -12692,6 +12785,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      loyalty_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
       }
       loyalty_transactions: {
         Row: {
@@ -17465,6 +17585,54 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_rewards: {
+        Row: {
+          created_at: string | null
+          current_redemptions: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_redemptions: number | null
+          name: string
+          points_required: number
+          reward_type: string
+          reward_value: number | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_redemptions?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_redemptions?: number | null
+          name: string
+          points_required: number
+          reward_type: string
+          reward_value?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_redemptions?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_redemptions?: number | null
+          name?: string
+          points_required?: number
+          reward_type?: string
+          reward_value?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           description: string | null
@@ -17489,6 +17657,45 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      points_ledger: {
+        Row: {
+          balance_after: number
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          points_amount: number
+          reference_id: string | null
+          source: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_amount: number
+          reference_id?: string | null
+          source?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_amount?: number
+          reference_id?: string | null
+          source?: string | null
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -18078,6 +18285,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_2fa_enabled: boolean | null
+          admin_2fa_secret: string | null
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
@@ -18089,6 +18298,7 @@ export type Database = {
           kyc_rejection_reason: string | null
           kyc_status: string
           kyc_verified_at: string | null
+          last_admin_login: string | null
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null
@@ -18103,6 +18313,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admin_2fa_enabled?: boolean | null
+          admin_2fa_secret?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
@@ -18114,6 +18326,7 @@ export type Database = {
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
+          last_admin_login?: string | null
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -18128,6 +18341,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admin_2fa_enabled?: boolean | null
+          admin_2fa_secret?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
@@ -18139,6 +18354,7 @@ export type Database = {
           kyc_rejection_reason?: string | null
           kyc_status?: string
           kyc_verified_at?: string | null
+          last_admin_login?: string | null
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -20558,6 +20774,50 @@ export type Database = {
             columns: ["backup_id"]
             isOneToOne: false
             referencedRelation: "backup_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_redemptions: {
+        Row: {
+          applied_at: string | null
+          applied_to_order_id: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          points_spent: number
+          reward_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_to_order_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          points_spent: number
+          reward_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_to_order_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          points_spent?: number
+          reward_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "platform_rewards"
             referencedColumns: ["id"]
           },
         ]
@@ -30547,6 +30807,7 @@ export type Database = {
         Args: { p_order_id: string; p_service_type?: string }
         Returns: Json
       }
+      award_order_points: { Args: { p_order_id: string }; Returns: Json }
       calculate_clv_tier: { Args: { p_clv_score: number }; Returns: string }
       calculate_order_price: {
         Args: {
@@ -30816,6 +31077,13 @@ export type Database = {
         }
         Returns: string
       }
+      get_failed_login_ips: {
+        Args: { hours: number; min_attempts: number }
+        Returns: {
+          attempt_count: number
+          ip_address: unknown
+        }[]
+      }
       get_merchant_orders: {
         Args: { p_limit?: number; p_restaurant_id: string; p_status?: string }
         Returns: {
@@ -30941,6 +31209,7 @@ export type Database = {
         Args: { p_date_from?: string; p_date_to?: string; p_tenant_id: string }
         Returns: Json
       }
+      get_tier_from_points: { Args: { lifetime_pts: number }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
         Returns: {
