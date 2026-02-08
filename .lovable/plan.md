@@ -1,125 +1,245 @@
 
-# Fix Missing Map Elements: Pickup Marker, Driver Cars, and Route Line
 
-## Problems Identified
+# Uber-Style Map Experience: Route Line, Markers & Cars
 
-Looking at your screenshot compared to the Uber reference, three major elements are missing or broken:
-
-| Element | Expected | Current Issue |
-|---------|----------|---------------|
-| **Pickup Marker** | Pulsing blue circle | Still showing Google's blue dot (or hidden) |
-| **Driver Dots** | Car icons around pickup | Dots are 8px dark gray on dark map = invisible |
-| **Route Line** | Blue line from A to B | Not rendering (polyline decode may be wrong) |
+## Summary
+Transform the map to match Uber's polish with:
+1. Google Directions-powered route line (reliable, styled)
+2. Custom pickup/dropoff markers (Uber-style pins)
+3. Car icons replacing driver dots (more realistic)
+4. Black CTA button matching Uber's design
 
 ---
 
-## Root Causes
+## Changes
 
-### 1. DriverDots Are Invisible
-The current styling:
-```tsx
-className="w-2 h-2 rounded-full bg-zinc-800 border border-zinc-600"
-```
-- **8px dark gray circles on a dark navy map** = completely invisible
-- Uber shows actual **car icons**, not tiny dots
+### 1. Add Directions Service to GoogleMap.tsx
+Replace the manual polyline with Google's DirectionsService/DirectionsRenderer for reliable route rendering.
 
-### 2. ZivoPickupMarker Uses Invisible Colors
-The current pulsing rings:
-```tsx
-className="bg-primary/30 animate-ping"  // primary with 30% opacity
-className="bg-primary/20 animate-pulse" // even more transparent
-```
-- On a dark map, `bg-primary` (blue at 20-30% opacity) is nearly invisible
-- The rings may be rendering but you can't see them
+**File: `src/components/maps/GoogleMap.tsx`**
 
-### 3. Route Polyline Decoding Order
-The code has:
-```tsx
-decodePolyline(routeData.polyline).map(([lng, lat]) => ({ lat, lng }))
+```typescript
+// Add to imports
+import { DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
+import { useState, useEffect } from "react";
+
+// Add state inside component
+const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+const [directionsRequested, setDirectionsRequested] = useState(false);
+
+// Reset when pickup/dropoff change
+useEffect(() => {
+  if (!pickup || !dropoff) {
+    setDirections(null);
+    setDirectionsRequested(false);
+  } else {
+    setDirectionsRequested(false); // Allow new request
+  }
+}, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
+
+// Inside <GMap>...</GMap> render:
+{pickup && dropoff && !directionsRequested && (
+  <DirectionsService
+    options={{
+      origin: pickup,
+      destination: dropoff,
+      travelMode: google.maps.TravelMode.DRIVING,
+    }}
+    callback={(result, status) => {
+      setDirectionsRequested(true);
+      if (status === "OK" && result) {
+        setDirections(result);
+      }
+    }}
+  />
+)}
+
+{directions && (
+  <DirectionsRenderer
+    directions={directions}
+    options={{
+      suppressMarkers: true, // We use custom markers
+      polylineOptions: {
+        strokeColor: "#111827", // Dark gray like Uber
+        strokeOpacity: 0.9,
+        strokeWeight: 6,
+      },
+    }}
+  />
+)}
 ```
-But `decodePolyline` typically returns `[lat, lng]` pairs, not `[lng, lat]`. This would plot the route in the wrong hemisphere.
 
 ---
 
-## Fixes
+### 2. Create Uber-Style Dropoff Marker
+**File: `src/components/maps/ZivoDropoffMarker.tsx`** (NEW)
 
-### Fix 1: Make Driver Dots Visible with Car Icons
-**File: `src/components/maps/DriverDots.tsx`**
+```typescript
+import { OverlayViewF, OverlayView } from "@react-google-maps/api";
 
-Replace tiny invisible dots with visible car-like shapes:
-- Larger size: `w-4 h-4` (16px) minimum
-- High-contrast color: white or light gray on dark map
-- Car-like appearance: rounded rectangle with direction indicator
+interface ZivoDropoffMarkerProps {
+  position: google.maps.LatLngLiteral;
+}
 
-```tsx
-<div 
-  className="w-4 h-4 bg-white/90 rounded shadow-md flex items-center justify-center"
-  style={{ 
-    transform: `translate(-50%, -50%) rotate(${dot.rotation}deg)`,
-  }}
+export default function ZivoDropoffMarker({ position }: ZivoDropoffMarkerProps) {
+  return (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_LAYER}>
+      <div 
+        className="flex flex-col items-center -translate-x-1/2 -translate-y-full"
+        style={{ zIndex: 90 }}
+      >
+        {/* Black square destination marker (Uber style) */}
+        <div className="w-5 h-5 bg-black rounded-sm shadow-lg border-2 border-white" />
+        {/* Pin stem */}
+        <div className="w-0.5 h-3 bg-black" />
+      </div>
+    </OverlayViewF>
+  );
+}
+```
+
+---
+
+### 3. Create NearbyCars Component (Uber-style cars)
+**File: `src/components/maps/NearbyCars.tsx`** (NEW)
+
+Replaces DriverDots with more realistic car icons:
+
+```typescript
+import { useState, useEffect } from "react";
+import { OverlayViewF, OverlayView } from "@react-google-maps/api";
+
+interface NearbyCarsProps {
+  center: google.maps.LatLngLiteral;
+  count?: number;
+}
+
+// Car SVG icon (simple top-down view)
+function CarSvg({ rotation }: { rotation: number }) {
+  return (
+    <svg 
+      width="20" 
+      height="28" 
+      viewBox="0 0 20 28" 
+      style={{ transform: `rotate(${rotation}deg)` }}
+    >
+      <rect x="4" y="2" width="12" height="24" rx="3" fill="#1a1a1a" />
+      <rect x="5" y="4" width="10" height="6" rx="1" fill="#4a4a4a" />
+      <rect x="5" y="18" width="10" height="4" rx="1" fill="#4a4a4a" />
+    </svg>
+  );
+}
+
+export default function NearbyCars({ center, count = 10 }: NearbyCarsProps) {
+  const [cars, setCars] = useState(() => generateCars(center, count));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCars(prev => prev.map(car => driftCar(car, center)));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [center.lat, center.lng]);
+
+  useEffect(() => {
+    setCars(generateCars(center, count));
+  }, [Math.round(center.lat * 1000), Math.round(center.lng * 1000), count]);
+
+  return (
+    <>
+      {cars.map((car, i) => (
+        <OverlayViewF key={i} position={car} mapPaneName={OverlayView.OVERLAY_LAYER}>
+          <div className="-translate-x-1/2 -translate-y-1/2">
+            <CarSvg rotation={car.rot} />
+          </div>
+        </OverlayViewF>
+      ))}
+    </>
+  );
+}
+
+// Helper functions for random car positions
+function generateCars(center, count) { ... }
+function driftCar(car, center) { ... }
+```
+
+---
+
+### 4. Update GoogleMap.tsx to Use New Components
+
+```typescript
+// Replace DriverDots with NearbyCars
+import NearbyCars from "./NearbyCars";
+import ZivoDropoffMarker from "./ZivoDropoffMarker";
+
+// In render:
+<NearbyCars center={pickup ?? center} count={12} />
+
+{pickup && <ZivoPickupMarker position={pickup} />}
+{dropoff && <ZivoDropoffMarker position={dropoff} />}
+
+// Remove the old MarkerF for dropoff - use custom overlay instead
+```
+
+---
+
+### 5. Update CTA Button to Black (Uber style)
+**File: `src/pages/Rides.tsx`**
+
+Find the "Choose" / confirm button and update:
+
+```typescript
+<Button
+  className="w-full bg-black hover:bg-zinc-900 text-white h-14 text-base font-semibold"
+  disabled={!selectedOption}
+  onClick={handleConfirm}
 >
-  {/* Small car indicator */}
-  <div className="w-2 h-1.5 bg-zinc-700 rounded-sm" />
-</div>
+  Choose {selectedOption?.name}
+</Button>
 ```
-
-### Fix 2: Fix ZivoPickupMarker Visibility
-**File: `src/components/maps/ZivoPickupMarker.tsx`**
-
-Use solid, high-contrast colors that show on dark background:
-- Outer ring: `bg-blue-400/40` (more visible than primary/30)
-- Inner pulse: `bg-blue-400/30` 
-- Center: Keep `bg-blue-500` with white border (this is correct)
-
-### Fix 3: Fix Polyline Coordinate Order
-**File: `src/pages/Rides.tsx`**
-
-Check and fix the decode order:
-```tsx
-// If decodePolyline returns [lat, lng] pairs (standard):
-decodePolyline(routeData.polyline).map(([lat, lng]) => ({ lat, lng }))
-
-// If decodePolyline returns [lng, lat] pairs (GeoJSON style):
-decodePolyline(routeData.polyline).map(([lng, lat]) => ({ lat, lng }))
-```
-
-Need to verify which format `decodePolyline` uses.
-
-### Fix 4: Ensure Route is Passed to Map
-**File: `src/pages/Rides.tsx`**
-
-Verify the `routePath` is being passed correctly to `GoogleMap` and that the component is receiving valid coordinates.
 
 ---
 
-## Files to Modify
+## Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/components/maps/DriverDots.tsx` | Increase size to 16px, use white/light colors, add car-like shape |
-| `src/components/maps/ZivoPickupMarker.tsx` | Use brighter blue colors with higher opacity for visibility |
-| `src/pages/Rides.tsx` | Verify/fix polyline decode coordinate order |
-| `src/services/googleMaps.ts` | Check `decodePolyline` return format |
+| `src/components/maps/GoogleMap.tsx` | Add DirectionsService/DirectionsRenderer, integrate NearbyCars, ZivoDropoffMarker |
+| `src/components/maps/ZivoDropoffMarker.tsx` | NEW - Uber-style black square destination marker |
+| `src/components/maps/NearbyCars.tsx` | NEW - Realistic car icons replacing dots |
+| `src/components/maps/index.ts` | Export new components |
+| `src/pages/Rides.tsx` | Update CTA button to black |
 
 ---
 
-## Visual Target
+## Visual Result
 
-After these fixes:
-- **Pickup marker**: Pulsing blue rings clearly visible at pickup location
-- **Driver dots**: ~20 small white/light car-shaped icons scattered around pickup
-- **Route line**: Thick blue line from pickup to destination when both are set
-- **No Google blue dot**: Your custom marker replaces it completely
+| Element | Before | After |
+|---------|--------|-------|
+| Route Line | Missing/broken polyline | Thick dark gray line via DirectionsRenderer |
+| Pickup Marker | Pulsing blue circle | Pulsing blue circle (keep) |
+| Dropoff Marker | Basic black dot | Black square with pin stem |
+| Driver Dots | 16px white boxes | Realistic car SVG icons |
+| CTA Button | Primary color | Black (Uber style) |
 
 ---
 
 ## Technical Notes
 
-### DriverDots Visibility Formula
-On a dark map (`#0b1220` background):
-- Dark colors (`zinc-800`) = invisible
-- White/light colors = highly visible
-- Minimum 12-16px size for visibility on mobile
+### Why DirectionsService is Better
+- Automatically handles routing errors
+- Returns pre-styled polyline
+- Works with Google's styling engine
+- No coordinate order confusion
 
-### Polyline Standard
-Google's encoded polyline format returns coordinates as `[lat, lng]` pairs when decoded. The current code swaps them to `[lng, lat]` which would be correct only if using GeoJSON conventions.
+### SVG Car Icon
+Simple top-down car shape:
+- Dark body with lighter windows
+- Rotates based on heading
+- 20x28px optimal for map visibility
+
+### Marker Z-Index Order
+1. Route line (base)
+2. NearbyCars (z-index: 50)
+3. ZivoDropoffMarker (z-index: 90)
+4. ZivoPickupMarker (z-index: 100)
+
