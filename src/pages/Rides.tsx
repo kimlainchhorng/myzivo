@@ -516,21 +516,37 @@ function RidesInner() {
     return `$${fare.toFixed(2)}`;
   };
 
-  // Sheet snap handling
-  const snapToPosition = (expanded: boolean) => {
-    const target = expanded ? -window.innerHeight * 0.45 : 0;
-    animate(y, target, { type: "spring", stiffness: 400, damping: 40 });
-    setSheetExpanded(expanded);
+  // Sheet snap handling - supports collapsed, expanded, and full states
+  const snapToPosition = (state: 'collapsed' | 'expanded' | 'full') => {
+    const targets = {
+      collapsed: 0,
+      expanded: -window.innerHeight * 0.35,
+      full: -window.innerHeight * 0.85, // Almost full screen
+    };
+    animate(y, targets[state], { type: "spring", stiffness: 400, damping: 40 });
+    setSheetExpanded(state !== 'collapsed');
   };
 
   const handleDragEnd = () => {
     const currentY = y.get();
-    const threshold = -window.innerHeight * 0.2;
-    snapToPosition(currentY < threshold);
+    const fullThreshold = -window.innerHeight * 0.5;
+    const expandThreshold = -window.innerHeight * 0.15;
+    
+    if (currentY < fullThreshold) {
+      snapToPosition('full');
+    } else if (currentY < expandThreshold) {
+      snapToPosition('expanded');
+    } else {
+      snapToPosition('collapsed');
+    }
   };
 
-  // Calculate sheet height based on step - using dvh for true mobile viewport
+  // Calculate sheet height based on step and expansion - using dvh for true mobile viewport
   const getSheetHeight = () => {
+    // When fully expanded, take almost full screen
+    if (sheetExpanded && y.get() < -window.innerHeight * 0.5) {
+      return "95dvh";
+    }
     if (step === "request") return "min(52dvh, 420px)";
     if (step === "options") return "min(50dvh, 400px)";
     return "min(65dvh, 520px)";
@@ -576,8 +592,8 @@ function RidesInner() {
         drag="y"
         dragControls={dragControls}
         dragListener={false}
-        dragConstraints={{ top: -window.innerHeight * 0.7, bottom: window.innerHeight * 0.3 }}
-        dragElastic={0.15}
+        dragConstraints={{ top: -window.innerHeight * 0.9, bottom: window.innerHeight * 0.2 }}
+        dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ y }}
         className="relative rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col"
@@ -592,8 +608,8 @@ function RidesInner() {
           <div className="w-12 h-1.5 bg-zinc-300/80 rounded-full" />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-hidden px-3 pb-16">
+        {/* Content - scrollable when fully expanded */}
+        <div className={`flex-1 px-3 pb-16 ${sheetExpanded ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}>
           {/* Request Step */}
           {step === "request" && (
             <div className="space-y-3">
