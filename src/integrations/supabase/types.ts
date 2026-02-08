@@ -4523,6 +4523,42 @@ export type Database = {
           },
         ]
       }
+      demand_zones: {
+        Row: {
+          created_at: string | null
+          demand_level: string
+          drivers_count: number | null
+          id: string
+          latitude: number
+          longitude: number
+          orders_count: number | null
+          radius_meters: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          demand_level: string
+          drivers_count?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          orders_count?: number | null
+          radius_meters?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          demand_level?: string
+          drivers_count?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          orders_count?: number | null
+          radius_meters?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       device_sessions: {
         Row: {
           created_at: string | null
@@ -27818,6 +27854,10 @@ export type Database = {
           p_pickup_lng: number
         }
         Returns: number
+      }
+      seed_demand_zones: {
+        Args: { p_center_lat: number; p_center_lng: number }
+        Returns: undefined
       }
       set_order_sla_targets: { Args: { p_order_id: string }; Returns: Json }
       start_batch: {
