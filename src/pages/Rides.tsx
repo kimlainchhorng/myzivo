@@ -822,6 +822,15 @@ function RidesInner() {
                 ))}
               </div>
 
+              {/* Trip Info - show when route is available */}
+              {routeData && dropoff && (
+                <div className="flex items-center gap-3 text-sm text-zinc-500 bg-zinc-50 rounded-lg px-3 py-2">
+                  <span className="font-medium text-zinc-700">{estimatedDistance.toFixed(1)} mi</span>
+                  <span className="text-zinc-300">•</span>
+                  <span>{estimatedDuration} min</span>
+                </div>
+              )}
+
               {/* Ride Options List */}
               <div className="space-y-1.5">
                 {rideCategories[activeTab].map((ride) => (
