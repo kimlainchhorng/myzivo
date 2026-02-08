@@ -3175,6 +3175,35 @@ export type Database = {
           },
         ]
       }
+      chat_members: {
+        Row: {
+          chat_id: string
+          created_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "order_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           attachment_url: string | null
@@ -3243,6 +3272,32 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reads: {
+        Row: {
+          chat_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reads_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "order_chats"
             referencedColumns: ["id"]
           },
         ]
@@ -4360,14 +4415,17 @@ export type Database = {
         Row: {
           assigned_chef: string | null
           created_at: string
+          credit_used_amount: number
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          discount_amount: number
           estimated_prep_minutes: number | null
           id: string
           notes: string | null
           prep_started_at: string | null
           priority: string | null
+          promo_code: string | null
           restaurant_id: string
           status: string
           table_id: string | null
@@ -4378,14 +4436,17 @@ export type Database = {
         Insert: {
           assigned_chef?: string | null
           created_at?: string
+          credit_used_amount?: number
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
           prep_started_at?: string | null
           priority?: string | null
+          promo_code?: string | null
           restaurant_id: string
           status?: string
           table_id?: string | null
@@ -4396,14 +4457,17 @@ export type Database = {
         Update: {
           assigned_chef?: string | null
           created_at?: string
+          credit_used_amount?: number
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
           prep_started_at?: string | null
           priority?: string | null
+          promo_code?: string | null
           restaurant_id?: string
           status?: string
           table_id?: string | null
@@ -8297,6 +8361,8 @@ export type Database = {
           driver_base_pay: number
           driver_per_mile: number | null
           id: number
+          min_payout_threshold: number | null
+          payout_hold_days: number | null
           platform_commission_percent: number
           service_fee: number
           service_fee_percent: number | null
@@ -8306,6 +8372,8 @@ export type Database = {
           driver_base_pay?: number
           driver_per_mile?: number | null
           id?: number
+          min_payout_threshold?: number | null
+          payout_hold_days?: number | null
           platform_commission_percent?: number
           service_fee?: number
           service_fee_percent?: number | null
@@ -8315,6 +8383,8 @@ export type Database = {
           driver_base_pay?: number
           driver_per_mile?: number | null
           id?: number
+          min_payout_threshold?: number | null
+          payout_hold_days?: number | null
           platform_commission_percent?: number
           service_fee?: number
           service_fee_percent?: number | null
@@ -9689,6 +9759,7 @@ export type Database = {
           commission_percent: number | null
           created_at: string | null
           credit_applied_cents: number | null
+          credit_used_amount: number
           customer_email: string | null
           customer_id: string
           customer_name: string | null
@@ -9726,12 +9797,14 @@ export type Database = {
           membership_applied: boolean | null
           membership_discount_cents: number | null
           merchant_coupon_id: string | null
+          merchant_earnings_cents: number | null
           needs_driver: boolean | null
           paid_at: string | null
           payment_status: string | null
           payment_type: string | null
           payout_at: string | null
           payout_driver: number | null
+          payout_eligible_at: string | null
           payout_error: string | null
           payout_hold: boolean | null
           payout_hold_reason: string | null
@@ -9823,6 +9896,7 @@ export type Database = {
           commission_percent?: number | null
           created_at?: string | null
           credit_applied_cents?: number | null
+          credit_used_amount?: number
           customer_email?: string | null
           customer_id: string
           customer_name?: string | null
@@ -9860,12 +9934,14 @@ export type Database = {
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
+          merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
           paid_at?: string | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
           payout_driver?: number | null
+          payout_eligible_at?: string | null
           payout_error?: string | null
           payout_hold?: boolean | null
           payout_hold_reason?: string | null
@@ -9957,6 +10033,7 @@ export type Database = {
           commission_percent?: number | null
           created_at?: string | null
           credit_applied_cents?: number | null
+          credit_used_amount?: number
           customer_email?: string | null
           customer_id?: string
           customer_name?: string | null
@@ -9994,12 +10071,14 @@ export type Database = {
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
+          merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
           paid_at?: string | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
           payout_driver?: number | null
+          payout_eligible_at?: string | null
           payout_error?: string | null
           payout_hold?: boolean | null
           payout_hold_reason?: string | null
@@ -11641,6 +11720,8 @@ export type Database = {
           order_id: string | null
           payee_id: string | null
           payee_type: string | null
+          payout_item_id: string | null
+          payout_run_id: string | null
         }
         Insert: {
           amount: number
@@ -11652,6 +11733,8 @@ export type Database = {
           order_id?: string | null
           payee_id?: string | null
           payee_type?: string | null
+          payout_item_id?: string | null
+          payout_run_id?: string | null
         }
         Update: {
           amount?: number
@@ -11663,6 +11746,8 @@ export type Database = {
           order_id?: string | null
           payee_id?: string | null
           payee_type?: string | null
+          payout_item_id?: string | null
+          payout_run_id?: string | null
         }
         Relationships: []
       }
@@ -12923,8 +13008,10 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
+          order_id: string | null
           restaurant_id: string | null
           run_id: string | null
+          skip_reason: string | null
           status: string | null
           stripe_transfer_id: string | null
         }
@@ -12933,8 +13020,10 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          order_id?: string | null
           restaurant_id?: string | null
           run_id?: string | null
+          skip_reason?: string | null
           status?: string | null
           stripe_transfer_id?: string | null
         }
@@ -12943,12 +13032,35 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          order_id?: string | null
           restaurant_id?: string | null
           run_id?: string | null
+          skip_reason?: string | null
           status?: string | null
           stripe_transfer_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "merchant_payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "merchant_payout_run_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -13751,6 +13863,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_chats: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: []
       }
       order_disputes: {
         Row: {
@@ -16158,7 +16288,9 @@ export type Database = {
           driver_id: string
           error_message: string | null
           id: string
+          order_id: string | null
           run_id: string
+          skip_reason: string | null
           status: string
           stripe_transfer_id: string | null
         }
@@ -16168,7 +16300,9 @@ export type Database = {
           driver_id: string
           error_message?: string | null
           id?: string
+          order_id?: string | null
           run_id: string
+          skip_reason?: string | null
           status?: string
           stripe_transfer_id?: string | null
         }
@@ -16178,7 +16312,9 @@ export type Database = {
           driver_id?: string
           error_message?: string | null
           id?: string
+          order_id?: string | null
           run_id?: string
+          skip_reason?: string | null
           status?: string
           stripe_transfer_id?: string | null
         }
@@ -16195,6 +16331,27 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_run_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
           {
@@ -16215,6 +16372,7 @@ export type Database = {
           drivers_processed: number
           error_message: string | null
           id: string
+          payee_type: string | null
           run_type: string
           started_at: string
           status: string
@@ -16229,6 +16387,7 @@ export type Database = {
           drivers_processed?: number
           error_message?: string | null
           id?: string
+          payee_type?: string | null
           run_type?: string
           started_at?: string
           status?: string
@@ -16243,6 +16402,7 @@ export type Database = {
           drivers_processed?: number
           error_message?: string | null
           id?: string
+          payee_type?: string | null
           run_type?: string
           started_at?: string
           status?: string
@@ -24075,7 +24235,9 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           created_at: string
+          credit_used_amount: number
           currency: string
+          discount_amount: number
           fees: number
           flagged_for_review: boolean | null
           flagged_reason: string | null
@@ -24084,6 +24246,7 @@ export type Database = {
           holder_phone: string | null
           id: string
           order_number: string
+          promo_code: string | null
           provider: string
           status: string
           stripe_checkout_session_id: string | null
@@ -24101,7 +24264,9 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string
+          credit_used_amount?: number
           currency?: string
+          discount_amount?: number
           fees?: number
           flagged_for_review?: boolean | null
           flagged_reason?: string | null
@@ -24110,6 +24275,7 @@ export type Database = {
           holder_phone?: string | null
           id?: string
           order_number: string
+          promo_code?: string | null
           provider?: string
           status?: string
           stripe_checkout_session_id?: string | null
@@ -24127,7 +24293,9 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string
+          credit_used_amount?: number
           currency?: string
+          discount_amount?: number
           fees?: number
           flagged_for_review?: boolean | null
           flagged_reason?: string | null
@@ -24136,6 +24304,7 @@ export type Database = {
           holder_phone?: string | null
           id?: string
           order_number?: string
+          promo_code?: string | null
           provider?: string
           status?: string
           stripe_checkout_session_id?: string | null

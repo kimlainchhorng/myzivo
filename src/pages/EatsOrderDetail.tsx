@@ -207,7 +207,7 @@ export default function EatsOrderDetail() {
                 ? "bg-red-500"
                 : "bg-orange-500 animate-pulse"
             }`} />
-            <div>
+            <div className="flex-1">
               <p className={`font-bold text-sm ${
                 order.status === "delivered" 
                   ? "text-emerald-400" 
@@ -220,7 +220,18 @@ export default function EatsOrderDetail() {
               <p className="text-xs text-zinc-400 mt-0.5">
                 {order.status !== "delivered" && order.status !== "cancelled" && "Updates in real-time"}
               </p>
+              {/* Driver assigned automatically indicator */}
+              {order.driver_id && order.assigned_at && order.status !== "delivered" && order.status !== "cancelled" && (
+                <p className="text-xs text-emerald-400 mt-1">Driver assigned automatically</p>
+              )}
             </div>
+            {/* ETA Display */}
+            {order.driver_id && (order as any).eta_minutes && order.status !== "delivered" && order.status !== "cancelled" && (
+              <div className="text-right">
+                <p className="text-lg font-bold text-white">{(order as any).eta_minutes} min</p>
+                <p className="text-xs text-zinc-500">ETA</p>
+              </div>
+            )}
           </div>
         </motion.div>
 

@@ -1,18 +1,20 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2, Settings } from "lucide-react";
+import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2, Settings, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import DriverOnlineToggle from "@/components/driver/DriverOnlineToggle";
 import DriverNotificationBell from "@/components/driver/DriverNotificationBell";
+import { EatsOrderCard } from "@/components/driver/EatsOrderCard";
 import { 
   useDriverProfile, 
   useUpdateDriverStatus,
   useDriverLocationTracking,
   useDriverActiveTrip 
 } from "@/hooks/useDriverApp";
+import { useDriverEatsOrders } from "@/hooks/useDriverEatsOrders";
 import { supabase } from "@/integrations/supabase/client";
 
 const DriverHomePage = () => {
@@ -20,6 +22,12 @@ const DriverHomePage = () => {
   const { data: driver, isLoading: isLoadingDriver, error } = useDriverProfile();
   const updateStatus = useUpdateDriverStatus();
   const { data: activeTrip } = useDriverActiveTrip(driver?.id);
+  const { 
+    orders: eatsOrders, 
+    markPickedUp, 
+    markDelivered, 
+    unassignOrder 
+  } = useDriverEatsOrders(driver?.id);
 
   // Start location tracking when online
   useDriverLocationTracking(driver?.id, driver?.is_online ?? false);
@@ -207,6 +215,30 @@ const DriverHomePage = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Active Eats Deliveries */}
+        {driver.is_online && eatsOrders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <UtensilsCrossed className="w-5 h-5 text-orange-500" />
+              <h2 className="font-bold text-white">Active Deliveries</h2>
+            </div>
+            {eatsOrders.map((order) => (
+              <EatsOrderCard
+                key={order.id}
+                order={order}
+                onPickedUp={(id) => markPickedUp.mutate(id)}
+                onDelivered={(id) => markDelivered.mutate(id)}
+                onUnassign={(id) => unassignOrder.mutate(id)}
+                isLoading={markPickedUp.isPending || markDelivered.isPending || unassignOrder.isPending}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {/* View Requests Button */}
         {driver.is_online && (
