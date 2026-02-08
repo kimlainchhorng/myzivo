@@ -1,107 +1,162 @@
 
-## Goal
-Drivers are “online” in the database, but no car appears on the rider map. We will make the live driver markers easier to debug and harder to “silently” disappear, while still showing **only real online drivers**.
 
-## What I found (likely root cause)
-- Your frontend query is working and returns 1 online + verified driver with valid coordinates.
-- That driver’s coordinates are **lat 11.5564, lng 104.9282** (Cambodia).
-- The rider map `/rides` is centered around pickup/user/default (often **Baton Rouge: 30.4515, -91.1871** when no location/pickup is set).
-- `RealDriverMarkers` filters drivers to **radiusMiles=10** around the map center. A driver in Cambodia will never be within 10 miles of a US-centered map, so nothing renders.
+# Automatic Pricing by Pickup Location (Geo-Zone Lookup)
 
-So the markers are not “broken”; they are being filtered out due to a **location mismatch**.
+## Overview
+Replace the current city-name-based pricing with a precise geo-coordinate lookup using the `pricing_zones` and `zone_pricing_rates` tables. When a rider selects a pickup location, the system will use the pickup's latitude/longitude to find the matching pricing zone and apply zone-specific rates.
 
-## Implementation approach
-We will do two things:
-1) Add a lightweight **Driver Debug Overlay** (behind a localStorage toggle) to show exactly why markers aren’t appearing (counts, center, closest driver distance).
-2) Improve marker filtering to be more “map-correct” by optionally filtering by **current map viewport bounds** (best UX for maps), while keeping the “only online verified drivers” requirement.
+## Current vs New Approach
 
-This keeps production behavior clean while giving you a reliable way to validate that realtime + coordinates are correct.
+| Current | New |
+|---------|-----|
+| Parse city name from pickup address text | Use pickup coordinates (lat/lng) |
+| Query `city_pricing` by city name string | Query `pricing_zones` by bounding box |
+| Fallback to global `pricing_settings` | Fallback to "Default US" zone |
+
+## Changes Required
+
+### 1. New Hook: `usePricingZone`
+**File:** `src/hooks/usePricingZone.ts` (new)
+
+Create a hook that:
+- Takes pickup coordinates (lat, lng) as input
+- Queries `pricing_zones` where:
+  - `is_active = true`
+  - `pickupLat BETWEEN min_lat AND max_lat`
+  - `pickupLng BETWEEN min_lng AND max_lng`
+- If multiple zones match, select the smallest box (most specific/local zone)
+- If no match, return "Default US" zone
+- Returns the zone ID and zone metadata
+
+### 2. New Hook: `useZonePricingRates`
+**File:** `src/hooks/useZonePricingRates.ts` (new)
+
+Create a hook that:
+- Takes zone ID and ride type as input
+- Queries `zone_pricing_rates` where:
+  - `zone_id` matches the selected zone
+  - `ride_type` matches the selected ride type
+- Returns the rates: `base_fare`, `per_mile`, `per_minute`, `booking_fee`, `minimum_fare`, `multiplier`
+- Falls back to default rates if no match
+
+### 3. Utility Function: `findPricingZone`
+**File:** `src/lib/pricing.ts` (add to existing)
+
+```text
+function findPricingZone(zones, pickupLat, pickupLng):
+  matches = zones.filter(zone =>
+    pickupLat >= zone.min_lat AND pickupLat <= zone.max_lat AND
+    pickupLng >= zone.min_lng AND pickupLng <= zone.max_lng
+  )
+  
+  if matches.length == 0:
+    return defaultZone
+  
+  if matches.length == 1:
+    return matches[0]
+  
+  // Multiple matches: prefer smallest bounding box
+  return matches.sort((a, b) =>
+    (a.max_lat - a.min_lat) * (a.max_lng - a.min_lng) -
+    (b.max_lat - b.min_lat) * (b.max_lng - b.min_lng)
+  )[0]
+```
+
+### 4. Update Pricing Formula
+**File:** `src/lib/pricing.ts` (modify `quoteRidePrice`)
+
+Update the formula to match the specification:
+
+```text
+miles = distanceMeters / 1609.344
+minutes = durationSeconds / 60
+subtotal = base_fare + (miles * per_mile) + (minutes * per_minute) + booking_fee
+subtotal = max(subtotal, minimum_fare)
+final = subtotal * multiplier * surgeMult * zoneMult * longTripMult
+return round(final, 2)
+```
+
+The `multiplier` from `zone_pricing_rates` is the ride-type-specific multiplier for that zone.
+
+### 5. Update Rides.tsx Integration
+**File:** `src/pages/Rides.tsx`
+
+Replace:
+- Current `useCityPricing(pickupCity, "standard")` hook usage
+- City extraction logic (`extractCityFromAddress`)
+
+With:
+- `usePricingZone(pickupCoords?.lat, pickupCoords?.lng)`
+- `useZonePricingRates(zoneId, selectedOption?.id)`
+- Pass zone rates directly to `quoteRidePrice()`
+
+### 6. Update Edge Function (Server-Side)
+**File:** `supabase/functions/create-ride-payment-intent/index.ts`
+
+Mirror the client-side changes:
+- Accept `pickup_lat` and `pickup_lng` in request
+- Query `pricing_zones` by bounding box
+- Query `zone_pricing_rates` for the matched zone + ride_type
+- Use zone rates for fare calculation
+- Fall back to Default US zone if no match
+
+### 7. Seed Default Data
+Ensure the database has:
+- A "Default US" zone in `pricing_zones` with wide bounding box
+- Default rates in `zone_pricing_rates` for common ride types
+
+## Data Flow
+
+```text
+1. User selects pickup location
+   ↓
+2. pickupCoords = { lat: 30.4515, lng: -91.1871 }
+   ↓
+3. usePricingZone(30.4515, -91.1871)
+   → Query: SELECT * FROM pricing_zones 
+            WHERE is_active = true 
+            AND 30.4515 BETWEEN min_lat AND max_lat
+            AND -91.1871 BETWEEN min_lng AND max_lng
+   → Result: Baton Rouge zone (id: "abc-123")
+   ↓
+4. useZonePricingRates("abc-123", "standard")
+   → Query: SELECT * FROM zone_pricing_rates
+            WHERE zone_id = "abc-123" AND ride_type = "standard"
+   → Result: { base_fare: 3.00, per_mile: 1.50, ... }
+   ↓
+5. quoteRidePrice(zoneRates, distance, duration, rideType, options)
+   → Final price displayed on ride cards
+```
+
+## UI Impact
+- Ride cards display the final calculated price only (no extra math visible)
+- Price breakdown modal shows zone-based rates
+- No visible change to user experience, just more accurate zone-based pricing
+
+## Files Modified
+1. `src/hooks/usePricingZone.ts` - NEW
+2. `src/hooks/useZonePricingRates.ts` - NEW
+3. `src/lib/pricing.ts` - Add `findPricingZone()`, update types
+4. `src/pages/Rides.tsx` - Replace city pricing with zone pricing hooks
+5. `supabase/functions/create-ride-payment-intent/index.ts` - Update server-side pricing
+
+## Database Requirements
+The `pricing_zones` table must have at least one "Default US" fallback zone with a wide bounding box. The `zone_pricing_rates` table must have rates for each ride type for the default zone.
 
 ---
 
-## Changes (frontend)
+## Technical Details
 
-### A) Enhance `RealDriverMarkers` with debug + better filtering
-**File:** `src/components/maps/RealDriverMarkers.tsx`
+### Zone Selection Logic (Smallest Box First)
+When multiple zones match (e.g., a city zone inside a state zone), we calculate the area of each bounding box and select the smallest one. This ensures local/city pricing takes precedence over regional pricing.
 
-Add:
-- Compute:
-  - `totalOnlineDrivers` (returned from `useOnlineDrivers`)
-  - `nearbyDrivers` (within radius as today)
-  - `closestDriver` and `closestDistanceMiles` from `center`
-- Add a debug toggle:
-  - `localStorage.getItem("zivo_debug_drivers") === "true"`
-- If `debug` is on, render a small overlay (non-click-blocking) on the map:
-  - Center lat/lng
-  - Radius miles
-  - Total online drivers returned
-  - Nearby drivers count
-  - Closest driver distance + its lat/lng
-  - A hint: “Driver is far away. Pan/zoom to them or update driver GPS.”
+### Fallback Chain
+1. Try exact zone match by coordinates
+2. If no match, use "Default US" zone
+3. If Default US zone has no rates for ride type, use hardcoded defaults
 
-Optional improvement (recommended):
-- Accept an additional prop like `filterMode?: "radius" | "bounds"`:
-  - `"radius"` = current behavior
-  - `"bounds"` = show drivers inside map viewport bounds (more intuitive than a fixed 10mi)
-- To support bounds mode, `GoogleMap` will pass current map bounds into `RealDriverMarkers`.
+### Caching Strategy
+- Zone data cached for 5 minutes (zones don't change often)
+- Rates cached for 5 minutes
+- Coordinates trigger refetch when pickup location changes
 
-Why this helps:
-- You can immediately see “online drivers exist, but none are within radius; closest is 8,000 miles away”.
-
-### B) Pass map bounds (optional but recommended)
-**File:** `src/components/maps/GoogleMap.tsx`
-
-Add:
-- Track `bounds` via `onBoundsChanged` and store:
-  - `const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null)`
-- Pass it down:
-  - `<RealDriverMarkers center={...} radiusMiles={10} bounds={bounds} filterMode="bounds" />`
-
-### C) Add “how to enable debug” note (dev-only)
-No UI clutter by default; only if you set:
-- `localStorage.setItem("zivo_debug_drivers", "true")` and refresh.
-
----
-
-## Changes (backend / data) — verification steps (no code required, but important)
-To actually *see* a driver near the rider, the driver must have GPS coordinates near the rider center.
-
-We’ll verify the driver update loop is working by checking:
-- Driver app is calling `updateLocationWithRetry(driverId, lat, lng)`
-- Driver row `current_lat/current_lng` updates every few seconds when online
-- The rider pickup/user location is in the same general region
-
-If needed for testing, we can provide a safe SQL snippet to place a test driver near your current pickup location (only in Test env).
-
----
-
-## Acceptance criteria
-1) On `/rides`, if an online driver exists but is far away, the map still shows no car (correct), but in debug mode it clearly states:
-   - “Online drivers: 1, Nearby: 0, Closest: XXXX miles”
-2) If a driver is online and within radius/bounds of the map center, the car marker appears.
-3) Optional bounds mode: panning/zooming the map causes drivers in view to appear/disappear naturally.
-
----
-
-## Step-by-step rollout
-1) Implement debug overlay + closest-driver calculation in `RealDriverMarkers`.
-2) Add optional bounds filtering plumbing in `GoogleMap` and `RealDriverMarkers`.
-3) Test:
-   - With `zivo_debug_drivers=true` and your current dataset (Cambodia driver), confirm overlay explains why not showing.
-   - Update driver coordinates (via driver app GPS or test SQL) near your pickup center; confirm marker appears.
-4) Confirm realtime updates: move driver, ensure marker moves (Supabase realtime invalidation already exists).
-
----
-
-## Risks / notes
-- This does not weaken the “only real online drivers” requirement; it only improves observability and filtering behavior.
-- If you later enable stricter RLS on `drivers`, rider visibility may break unless we expose a minimal public view (id + lat/lng + is_online + status) via a secured view or an edge function. For now, your REST request shows status 200 with data, so visibility is currently allowed.
-
----
-
-## Quick test commands
-Enable debug:
-- `localStorage.setItem("zivo_debug_drivers", "true"); location.reload();`
-
-Disable debug:
-- `localStorage.removeItem("zivo_debug_drivers"); location.reload();`
