@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2 } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -15,6 +15,7 @@ import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HelpModal } from "@/components/eats/HelpModal";
+import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
@@ -290,10 +291,21 @@ export default function EatsOrderDetail() {
 
         {/* Driver Info Card */}
         {driver && (
-          <DriverInfoCard
-            driver={driver}
-            isDelivering={isDelivering}
-          />
+          <div className="space-y-3">
+            <DriverInfoCard
+              driver={driver}
+              isDelivering={isDelivering}
+            />
+            {/* Chat button for active orders */}
+            {order.status !== "delivered" && order.status !== "cancelled" && (
+              <OrderChatButton
+                orderId={order.id}
+                basePath="/eats/orders"
+                className="w-full"
+                showLabel
+              />
+            )}
+          </div>
         )}
 
         {/* Status Timeline */}

@@ -4307,30 +4307,53 @@ export type Database = {
       }
       credit_ledger: {
         Row: {
+          admin_id: string | null
           amount: number
           created_at: string
+          credit_type: string | null
+          expires_at: string | null
           id: string
+          notes: string | null
           order_id: string | null
           reason: string
+          referral_id: string | null
           user_id: string
         }
         Insert: {
+          admin_id?: string | null
           amount: number
           created_at?: string
+          credit_type?: string | null
+          expires_at?: string | null
           id?: string
+          notes?: string | null
           order_id?: string | null
           reason: string
+          referral_id?: string | null
           user_id: string
         }
         Update: {
+          admin_id?: string | null
           amount?: number
           created_at?: string
+          credit_type?: string | null
+          expires_at?: string | null
           id?: string
+          notes?: string | null
           order_id?: string | null
           reason?: string
+          referral_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_ledger_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cross_app_tokens: {
         Row: {
@@ -18415,6 +18438,7 @@ export type Database = {
       }
       referral_settings: {
         Row: {
+          cooldown_days: number | null
           credit_expiry_days: number | null
           customer_referee_credit_cents: number | null
           customer_referrer_credit_cents: number | null
@@ -18423,10 +18447,15 @@ export type Database = {
           enabled: boolean | null
           id: string
           max_credit_apply_percent: number | null
+          max_referrals_per_user: number | null
+          merchant_referee_credit_cents: number | null
+          merchant_referrer_credit_cents: number | null
           min_order_total_cents: number | null
+          require_first_order: boolean | null
           updated_at: string | null
         }
         Insert: {
+          cooldown_days?: number | null
           credit_expiry_days?: number | null
           customer_referee_credit_cents?: number | null
           customer_referrer_credit_cents?: number | null
@@ -18435,10 +18464,15 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           max_credit_apply_percent?: number | null
+          max_referrals_per_user?: number | null
+          merchant_referee_credit_cents?: number | null
+          merchant_referrer_credit_cents?: number | null
           min_order_total_cents?: number | null
+          require_first_order?: boolean | null
           updated_at?: string | null
         }
         Update: {
+          cooldown_days?: number | null
           credit_expiry_days?: number | null
           customer_referee_credit_cents?: number | null
           customer_referrer_credit_cents?: number | null
@@ -18447,7 +18481,11 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           max_credit_apply_percent?: number | null
+          max_referrals_per_user?: number | null
+          merchant_referee_credit_cents?: number | null
+          merchant_referrer_credit_cents?: number | null
           min_order_total_cents?: number | null
+          require_first_order?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -18455,26 +18493,56 @@ export type Database = {
       referrals: {
         Row: {
           created_at: string
+          device_fingerprint: string | null
           earned_at: string | null
+          first_order_at: string | null
+          first_order_id: string | null
+          fraud_flags: Json | null
           id: string
+          ip_address: unknown
+          referee_credit_cents: number | null
+          referee_type: string | null
           referee_user_id: string
+          referrer_credit_cents: number | null
+          referrer_type: string | null
           referrer_user_id: string
+          reward_released_at: string | null
           status: string
         }
         Insert: {
           created_at?: string
+          device_fingerprint?: string | null
           earned_at?: string | null
+          first_order_at?: string | null
+          first_order_id?: string | null
+          fraud_flags?: Json | null
           id?: string
+          ip_address?: unknown
+          referee_credit_cents?: number | null
+          referee_type?: string | null
           referee_user_id: string
+          referrer_credit_cents?: number | null
+          referrer_type?: string | null
           referrer_user_id: string
+          reward_released_at?: string | null
           status?: string
         }
         Update: {
           created_at?: string
+          device_fingerprint?: string | null
           earned_at?: string | null
+          first_order_at?: string | null
+          first_order_id?: string | null
+          fraud_flags?: Json | null
           id?: string
+          ip_address?: unknown
+          referee_credit_cents?: number | null
+          referee_type?: string | null
           referee_user_id?: string
+          referrer_credit_cents?: number | null
+          referrer_type?: string | null
           referrer_user_id?: string
+          reward_released_at?: string | null
           status?: string
         }
         Relationships: []
@@ -22577,6 +22645,76 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_internal_notes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          note: string
+          ticket_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          note: string
+          ticket_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_internal_notes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          id: string
+          message_text: string | null
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          id?: string
+          message_text?: string | null
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          id?: string
+          message_text?: string | null
+          sender_id?: string
+          sender_role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
             referencedColumns: ["id"]
           },
         ]
@@ -29366,6 +29504,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_credit_balances: {
+        Row: {
+          available_balance: number | null
+          total_earned: number | null
+          total_spent: number | null
+          transaction_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       v_my_restaurant_rank: {
         Row: {
