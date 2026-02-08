@@ -92,6 +92,11 @@ interface RidePaymentRequest {
   distance_miles?: number;
   duration_minutes?: number;
   surge_multiplier?: number;
+  // Promo code fields
+  promo_code?: string;
+  promo_id?: string;
+  promo_discount?: number;
+  price_before_discount?: number;
 }
 
 interface PricingSettings {
@@ -285,6 +290,11 @@ serve(async (req) => {
       distance_miles = 5,
       duration_minutes = 15,
       surge_multiplier = 1.0,
+      // Promo code fields
+      promo_code,
+      promo_id,
+      promo_discount,
+      price_before_discount,
     } = body;
 
     // Validate required fields
@@ -382,7 +392,38 @@ serve(async (req) => {
       zoneName: breakdown!.zoneName,
     });
 
-    // 4. Fetch commission rate from commission_settings
+    // 4. Handle promo code if provided
+    let validatedPromoId: string | null = null;
+    let validatedPromoDiscount = 0;
+    let finalTotal = breakdown!.total;
+    const originalTotal = breakdown!.total;
+
+    if (promo_code && promo_id) {
+      console.log("[create-ride-payment-intent] Validating promo code:", promo_code);
+      
+      // Re-validate promo server-side for security
+      const { data: promoData, error: promoError } = await supabase.rpc('validate_ride_promo', {
+        p_code: promo_code.toUpperCase(),
+        p_user_id: null, // We don't have user context in this endpoint
+        p_pickup_city: null,
+        p_fare_amount: originalTotal,
+      });
+
+      if (!promoError && promoData?.valid) {
+        validatedPromoId = promoData.promo_id;
+        validatedPromoDiscount = Math.min(promoData.discount_amount || 0, originalTotal);
+        finalTotal = Math.max(0, originalTotal - validatedPromoDiscount);
+        console.log("[create-ride-payment-intent] Promo validated:", { 
+          promoId: validatedPromoId, 
+          discount: validatedPromoDiscount, 
+          finalTotal 
+        });
+      } else {
+        console.log("[create-ride-payment-intent] Promo validation failed, proceeding without discount");
+      }
+    }
+
+    // 5. Fetch commission rate from commission_settings (based on final total)
     const { data: commissionData } = await supabase
       .from("commission_settings")
       .select("commission_percentage")
@@ -392,12 +433,12 @@ serve(async (req) => {
       .single();
 
     const commissionPercent = commissionData?.commission_percentage ?? 25;
-    const commissionAmount = Math.round(breakdown!.total * (commissionPercent / 100) * 100) / 100;
-    const driverEarning = Math.round((breakdown!.total - commissionAmount) * 100) / 100;
+    const commissionAmount = Math.round(finalTotal * (commissionPercent / 100) * 100) / 100;
+    const driverEarning = Math.round((finalTotal - commissionAmount) * 100) / 100;
 
     console.log("[create-ride-payment-intent] Commission:", { commissionPercent, commissionAmount, driverEarning });
 
-    // 5. Create ride request with all breakdown fields
+    // 6. Create ride request with all breakdown fields including promo
     const { data: rideRequest, error: rideError } = await supabase
       .from("ride_requests")
       .insert({
@@ -415,13 +456,13 @@ serve(async (req) => {
         notes: notes || null,
         status: "pending_payment",
         payment_status: "pending",
-        payment_amount: breakdown!.total,
+        payment_amount: finalTotal,
         payment_currency: "usd",
-        estimated_fare_min: Math.floor(breakdown!.total * 0.9),
-        estimated_fare_max: Math.ceil(breakdown!.total * 1.1),
+        estimated_fare_min: Math.floor(originalTotal * 0.9),
+        estimated_fare_max: Math.ceil(originalTotal * 1.1),
         distance_miles: distance_miles || null,
         duration_minutes: duration_minutes || null,
-        // New breakdown fields
+        // Breakdown fields
         quoted_base_fare: breakdown!.baseFare,
         quoted_distance_fee: breakdown!.distanceFee,
         quoted_time_fee: breakdown!.timeFee,
@@ -430,6 +471,11 @@ serve(async (req) => {
         ride_type_multiplier: breakdown!.rideTypeMultiplier,
         commission_amount: commissionAmount,
         driver_earning: driverEarning,
+        // Promo fields
+        price_before_discount: validatedPromoId ? originalTotal : null,
+        promo_code: validatedPromoId ? promo_code : null,
+        promo_id: validatedPromoId,
+        promo_discount: validatedPromoId ? validatedPromoDiscount : null,
       })
       .select()
       .single();
@@ -444,8 +490,8 @@ serve(async (req) => {
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Create PaymentIntent
-    const amountInCents = Math.round(breakdown!.total * 100);
+    // Create PaymentIntent with final (discounted) amount
+    const amountInCents = Math.round(finalTotal * 100);
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
@@ -468,8 +514,14 @@ serve(async (req) => {
         commission_amount: commissionAmount.toString(),
         driver_earning: driverEarning.toString(),
         zone_name: breakdown!.zoneName || "Default US",
+        ...(validatedPromoId && {
+          promo_code: promo_code,
+          promo_discount: validatedPromoDiscount.toString(),
+        }),
       },
-      description: `ZIVO Ride - ${ride_type}: ${pickup_address} → ${dropoff_address}`,
+      description: validatedPromoId 
+        ? `ZIVO Ride - ${ride_type}: ${pickup_address} → ${dropoff_address} (Promo: ${promo_code})`
+        : `ZIVO Ride - ${ride_type}: ${pickup_address} → ${dropoff_address}`,
       receipt_email: customer_email || undefined,
     });
 
@@ -483,18 +535,42 @@ serve(async (req) => {
       })
       .eq("id", rideRequest.id);
 
+    // 7. Create promo redemption record if promo was applied
+    if (validatedPromoId) {
+      const { error: redemptionError } = await supabase
+        .from("promo_redemptions")
+        .insert({
+          promo_id: validatedPromoId,
+          order_id: rideRequest.id,
+          user_id: null, // Guest checkout, no user context
+          discount_amount: validatedPromoDiscount,
+          final_amount: finalTotal,
+          status: "pending", // Will be updated when payment succeeds
+        });
+
+      if (redemptionError) {
+        console.error("[create-ride-payment-intent] Error creating promo redemption:", redemptionError);
+        // Don't fail the request, just log the error
+      } else {
+        console.log("[create-ride-payment-intent] Promo redemption created for promo:", validatedPromoId);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id,
         requestId: rideRequest.id,
-        amount: breakdown!.total,
+        amount: finalTotal,
         breakdown: {
           baseFare: breakdown!.baseFare,
           distanceFee: breakdown!.distanceFee,
           timeFee: breakdown!.timeFee,
           bookingFee: breakdown!.bookingFee,
-          total: breakdown!.total,
+          total: finalTotal,
+          originalTotal: validatedPromoId ? originalTotal : undefined,
+          promoDiscount: validatedPromoId ? validatedPromoDiscount : undefined,
+          promoCode: validatedPromoId ? promo_code : undefined,
           minimumApplied: breakdown!.minimumApplied,
           zoneName: breakdown!.zoneName,
         },

@@ -14742,6 +14742,106 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_run_items: {
+        Row: {
+          amount: number
+          created_at: string
+          driver_id: string
+          error_message: string | null
+          id: string
+          run_id: string
+          status: string
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          driver_id: string
+          error_message?: string | null
+          id?: string
+          run_id: string
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          driver_id?: string
+          error_message?: string | null
+          id?: string
+          run_id?: string
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_run_items_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_run_items_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_run_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "payout_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          drivers_failed: number
+          drivers_paid: number
+          drivers_processed: number
+          error_message: string | null
+          id: string
+          run_type: string
+          started_at: string
+          status: string
+          total_amount: number
+          triggered_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          drivers_failed?: number
+          drivers_paid?: number
+          drivers_processed?: number
+          error_message?: string | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          status?: string
+          total_amount?: number
+          triggered_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          drivers_failed?: number
+          drivers_paid?: number
+          drivers_processed?: number
+          error_message?: string | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          status?: string
+          total_amount?: number
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
@@ -15738,6 +15838,7 @@ export type Database = {
       }
       promo_codes: {
         Row: {
+          city: string | null
           code: string
           created_at: string | null
           discount_type: string
@@ -15745,10 +15846,15 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean | null
+          max_discount: number | null
           max_uses: number | null
+          max_uses_per_user: number | null
+          min_fare: number | null
+          start_at: string | null
           uses: number | null
         }
         Insert: {
+          city?: string | null
           code: string
           created_at?: string | null
           discount_type: string
@@ -15756,10 +15862,15 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          max_discount?: number | null
           max_uses?: number | null
+          max_uses_per_user?: number | null
+          min_fare?: number | null
+          start_at?: string | null
           uses?: number | null
         }
         Update: {
+          city?: string | null
           code?: string
           created_at?: string | null
           discount_type?: string
@@ -15767,7 +15878,11 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          max_discount?: number | null
           max_uses?: number | null
+          max_uses_per_user?: number | null
+          min_fare?: number | null
+          start_at?: string | null
           uses?: number | null
         }
         Relationships: []
@@ -18047,6 +18162,10 @@ export type Database = {
           pickup_address: string
           pickup_lat: number | null
           pickup_lng: number | null
+          price_before_discount: number | null
+          promo_code: string | null
+          promo_discount: number | null
+          promo_id: string | null
           quoted_base_fare: number | null
           quoted_booking_fee: number | null
           quoted_distance_fee: number | null
@@ -18092,6 +18211,10 @@ export type Database = {
           pickup_address: string
           pickup_lat?: number | null
           pickup_lng?: number | null
+          price_before_discount?: number | null
+          promo_code?: string | null
+          promo_discount?: number | null
+          promo_id?: string | null
           quoted_base_fare?: number | null
           quoted_booking_fee?: number | null
           quoted_distance_fee?: number | null
@@ -18137,6 +18260,10 @@ export type Database = {
           pickup_address?: string
           pickup_lat?: number | null
           pickup_lng?: number | null
+          price_before_discount?: number | null
+          promo_code?: string | null
+          promo_discount?: number | null
+          promo_id?: string | null
           quoted_base_fare?: number | null
           quoted_booking_fee?: number | null
           quoted_distance_fee?: number | null
@@ -18169,6 +18296,13 @@ export type Database = {
             columns: ["assigned_driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_requests_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
         ]
@@ -18256,6 +18390,9 @@ export type Database = {
           pickup_lng: number | null
           pickup_text: string | null
           price: number | null
+          price_before_discount: number | null
+          promo_code: string | null
+          promo_discount: number | null
           refund_amount: number | null
           refund_status: string | null
           ride_type: string | null
@@ -18289,6 +18426,9 @@ export type Database = {
           pickup_lng?: number | null
           pickup_text?: string | null
           price?: number | null
+          price_before_discount?: number | null
+          promo_code?: string | null
+          promo_discount?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           ride_type?: string | null
@@ -18322,6 +18462,9 @@ export type Database = {
           pickup_lng?: number | null
           pickup_text?: string | null
           price?: number | null
+          price_before_discount?: number | null
+          promo_code?: string | null
+          promo_discount?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           ride_type?: string | null
@@ -27951,6 +28094,15 @@ export type Database = {
             }
             Returns: Json
           }
+      validate_ride_promo: {
+        Args: {
+          p_code: string
+          p_fare_amount?: number
+          p_pickup_city?: string
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       validate_withdrawal: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
