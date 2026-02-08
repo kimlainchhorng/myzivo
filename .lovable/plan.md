@@ -1,8 +1,8 @@
 
-# Masked Phone Calling System for Eats Orders
+# Get Help Button & Support Flow Enhancement
 
 ## Overview
-Implement privacy-protected calling between Customer, Driver, and Merchant during active Eats orders using Twilio Programmable Voice with proxy numbers.
+Enhance the order detail help flow to create tickets and redirect to the ticket detail page for real-time conversation with support.
 
 ---
 
@@ -11,424 +11,220 @@ Implement privacy-protected calling between Customer, Driver, and Merchant durin
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Twilio SMS integration | ✅ Complete | `send-notification`, `process-order-notifications` edge functions |
-| Twilio credentials pattern | ✅ Available | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` |
-| Rate limiter | ✅ Complete | `supabase/functions/rate-limiter/index.ts` |
-| Direct call buttons | ✅ Exists | `DriverInfoCard`, `EatsOrderCard` use `tel:` links |
-| Phone fields | ✅ Available | `profiles.phone`, `drivers.phone`, `restaurants.phone`, `food_orders.customer_phone` |
-| Edge function patterns | ✅ Established | CORS headers, service role client, error handling |
-| Order status tracking | ✅ Complete | `food_orders.status` with full lifecycle |
+| `support_tickets` table | ✅ Complete | Has `order_id`, `ticket_type`, `subject`, `category`, `status` |
+| `ticket_replies` table | ✅ Complete | Messages with `ticket_id`, `user_id`, `message`, `is_admin` |
+| Ticket creation hook | ✅ Complete | `useCreateEatsTicket` in `src/hooks/useEatsSupport.ts` |
+| User tickets list | ✅ Complete | `UserSupportTicketsPage` at `/support/tickets` |
+| Ticket detail page | ✅ Complete | `TicketDetailPage` at `/support/tickets/:id` |
+| Realtime chat | ✅ Complete | `useTicketChatRealtime` subscribes to `ticket_replies` |
+| Help modal on order | ✅ Exists | `HelpModal` on `EatsOrderDetail.tsx` |
+| My tickets hook | ✅ Complete | `useMyTickets` filters by `user_id` |
 
-### Missing
+### Missing / Needs Update
 | Feature | Status |
 |---------|--------|
-| `call_sessions` table | ❌ Need to create |
-| `call_logs` table | ❌ Need to create |
-| Twilio Voice edge functions | ❌ Need `eats-call-start`, `eats-twilio-voice`, `eats-twilio-status` |
-| Proxy number management | ❌ Need `TWILIO_PROXY_NUMBER_POOL` secret |
-| `useOrderCall` hook | ❌ Client-side call initiation |
-| `MaskedCallButton` component | ❌ Replace direct `tel:` links |
-| Rate limiting for calls | ❌ Max 3 calls per 5 min per order |
+| Redirect after ticket creation | ❌ `HelpModal` shows success but doesn't redirect |
+| Clickable ticket cards | ❌ `UserSupportTicketsPage` cards not linked to detail |
+| "Get Help" button prominence | ⚠️ Currently just icon in header |
 
 ---
 
 ## Implementation Plan
 
-### A) Database Schema
+### A) Update HelpModal to Redirect After Ticket Creation
 
-**New Tables:**
+Modify the success flow to navigate to the ticket detail page.
 
-**1. `call_sessions`** — One per order, manages proxy number allocation
-```sql
-CREATE TABLE call_sessions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id uuid UNIQUE NOT NULL REFERENCES food_orders(id) ON DELETE CASCADE,
-  customer_user_id uuid NOT NULL REFERENCES auth.users(id),
-  driver_user_id uuid REFERENCES auth.users(id),
-  merchant_user_id uuid NOT NULL REFERENCES auth.users(id),
-  customer_phone text,
-  driver_phone text,
-  merchant_phone text,
-  twilio_proxy_number text NOT NULL,
-  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'ended')),
-  expires_at timestamptz NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-```
+**File to Modify:** `src/components/eats/HelpModal.tsx`
 
-**2. `call_logs`** — Track each call attempt
-```sql
-CREATE TABLE call_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  call_session_id uuid NOT NULL REFERENCES call_sessions(id) ON DELETE CASCADE,
-  order_id uuid NOT NULL REFERENCES food_orders(id),
-  from_role text NOT NULL CHECK (from_role IN ('customer', 'driver', 'merchant')),
-  to_role text NOT NULL CHECK (to_role IN ('customer', 'driver', 'merchant')),
-  from_user_id uuid NOT NULL REFERENCES auth.users(id),
-  to_user_id uuid REFERENCES auth.users(id),
-  twilio_call_sid text,
-  status text NOT NULL DEFAULT 'initiated' CHECK (status IN ('initiated', 'ringing', 'in_progress', 'completed', 'failed', 'busy', 'no_answer')),
-  duration_seconds integer,
-  created_at timestamptz DEFAULT now(),
-  ended_at timestamptz
-);
-```
-
-**RLS Policies:**
-- Participants can read their own call sessions/logs
-- Only service role can insert/update call logs
-
-### B) Secrets Required
-
-| Secret | Purpose |
-|--------|---------|
-| `TWILIO_ACCOUNT_SID` | Already exists (SMS) |
-| `TWILIO_AUTH_TOKEN` | Already exists (SMS) |
-| `TWILIO_PROXY_NUMBER_POOL` | Comma-separated list of Twilio phone numbers for masking (e.g., `+14155551234,+14155555678`) |
-
-### C) Edge Function: `eats-call-session`
-
-Get or create a call session for an order.
-
-**File:** `supabase/functions/eats-call-session/index.ts`
-
-**Endpoint:** `POST /functions/v1/eats-call-session`
-
-**Request:**
-```json
-{ "order_id": "uuid" }
-```
-
-**Logic:**
-1. Validate user is order participant (customer, assigned driver, or restaurant owner)
-2. Check order status is active (`confirmed`, `preparing`, `ready_for_pickup`, `out_for_delivery`)
-3. Check for existing active session
-4. If none, create new session:
-   - Pick proxy number from pool (round-robin or least-recently-used)
-   - Set `expires_at` = 2 hours from now
-   - Populate participant user IDs and phone numbers
-5. Return session with proxy number
-
-**Response:**
-```json
-{
-  "session_id": "uuid",
-  "proxy_number": "+14155551234",
-  "expires_at": "2026-02-08T23:00:00Z",
-  "participants": {
-    "customer": { "has_phone": true },
-    "driver": { "has_phone": true },
-    "merchant": { "has_phone": true }
-  }
-}
-```
-
-### D) Edge Function: `eats-call-start`
-
-Initiate a masked call between two participants.
-
-**File:** `supabase/functions/eats-call-start/index.ts`
-
-**Endpoint:** `POST /functions/v1/eats-call-start`
-
-**Request:**
-```json
-{
-  "order_id": "uuid",
-  "from_role": "customer",
-  "to_role": "driver"
-}
-```
-
-**Logic:**
-1. Validate session exists and is active
-2. Rate limit: max 3 calls per 5 minutes per order
-3. Get caller's phone and callee's phone from session
-4. Create call_log with status `initiated`
-5. Use Twilio REST API to create call:
-   - From: Proxy number
-   - To: Caller's phone
-   - URL: Webhook URL for TwiML (connects to callee)
-6. Return call status
-
-**Twilio Call Creation:**
-```typescript
-const call = await twilioClient.calls.create({
-  from: proxyNumber,
-  to: callerPhone,
-  url: `${FUNCTION_BASE_URL}/eats-twilio-voice?session=${sessionId}&to_role=${toRole}`,
-  statusCallback: `${FUNCTION_BASE_URL}/eats-twilio-status`,
-  statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
-});
-```
-
-### E) Edge Function: `eats-twilio-voice`
-
-Twilio webhook that returns TwiML to connect the call.
-
-**File:** `supabase/functions/eats-twilio-voice/index.ts`
-
-**Endpoint:** `POST /functions/v1/eats-twilio-voice`
-
-**Query Params:** `session`, `to_role`
-
-**Logic:**
-1. Validate request signature (Twilio security)
-2. Look up session and get target phone
-3. Return TwiML to dial the target
-
-**TwiML Response:**
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say>Connecting you now. Your phone number is private.</Say>
-  <Dial callerId="+14155551234" timeout="30">
-    <Number>+1XXXXXXXXXX</Number>
-  </Dial>
-</Response>
-```
-
-### F) Edge Function: `eats-twilio-status`
-
-Twilio status callback to update call_logs.
-
-**File:** `supabase/functions/eats-twilio-status/index.ts`
-
-**Endpoint:** `POST /functions/v1/eats-twilio-status`
-
-**Logic:**
-1. Parse Twilio callback data (`CallSid`, `CallStatus`, `CallDuration`)
-2. Update call_log status
-3. Handle completed/failed states
-
-### G) Client Hook: `useOrderCall`
-
-**File:** `src/hooks/useOrderCall.ts`
-
-**Features:**
-- Get or create call session on mount
-- `startCall(toRole)` mutation
-- Track call status
-- Rate limit feedback
-- Error handling
+**Changes:**
+1. After ticket creation success, add a "View Ticket" button
+2. Auto-close modal and navigate to `/support/tickets/:ticketId`
 
 ```typescript
-export function useOrderCall(orderId: string | undefined, myRole: 'customer' | 'driver' | 'merchant') {
-  const [session, setSession] = useState<CallSession | null>(null);
-  const [isCallActive, setIsCallActive] = useState(false);
-  
-  // Get or create session
-  const sessionQuery = useQuery({...});
-  
-  // Start call mutation
-  const startCallMutation = useMutation({
-    mutationFn: async (toRole: string) => {
-      const { data, error } = await supabase.functions.invoke('eats-call-start', {
-        body: { order_id: orderId, from_role: myRole, to_role: toRole }
-      });
-      if (error) throw error;
-      return data;
-    },
-  });
-  
-  return {
-    session,
-    startCall: startCallMutation.mutate,
-    isStarting: startCallMutation.isPending,
-    canCallCustomer: session?.participants.customer.has_phone,
-    canCallDriver: session?.participants.driver?.has_phone,
-    canCallMerchant: session?.participants.merchant.has_phone,
-  };
-}
+// In the success state, add navigation
+<Button
+  onClick={() => {
+    handleClose();
+    navigate(`/support/tickets/${createdTicketId}`);
+  }}
+  className="w-full h-12 rounded-xl bg-orange-500..."
+>
+  View Ticket
+</Button>
 ```
 
-### H) Component: `MaskedCallButton`
+### B) Add Ticket ID to Creation Response
 
-**File:** `src/components/eats/MaskedCallButton.tsx`
+Update `useCreateEatsTicket` to store the ticket ID for navigation.
 
-Replace direct `tel:` links with masked calling.
+**File to Modify:** `src/components/eats/HelpModal.tsx`
 
-**Props:**
+**Changes:**
+1. Store `createdTicketId` (already have `createdTicketNumber`)
+2. Use the returned ticket data's `id` field
+
+### C) Make Ticket Cards Clickable on List Page
+
+Update `UserSupportTicketsPage` to link tickets to their detail page.
+
+**File to Modify:** `src/pages/support/UserSupportTicketsPage.tsx`
+
+**Changes:**
+1. Wrap `TicketCard` with `Link` to `/support/tickets/:id`
+2. Add hover states and cursor pointer
+
 ```typescript
-interface MaskedCallButtonProps {
-  orderId: string;
-  myRole: 'customer' | 'driver' | 'merchant';
-  targetRole: 'customer' | 'driver' | 'merchant';
-  variant?: 'default' | 'icon';
-  className?: string;
-}
+<Link to={`/support/tickets/${ticket.id}`}>
+  <TicketCard ticket={ticket} />
+</Link>
 ```
 
-**UI:**
-- Phone icon button
-- Loading state while initiating
-- Toast feedback for call status
-- Disabled state if no phone or order inactive
+### D) Add Prominent "Get Help" Button to Order Detail
 
-### I) UI Integration Points
+Add a visible button in the order actions area (not just header icon).
 
-**1. Customer Order Detail (`EatsOrderDetail.tsx`):**
-- Replace restaurant phone `tel:` with `<MaskedCallButton targetRole="merchant" />`
-- Replace driver call in `DriverInfoCard` with `<MaskedCallButton targetRole="driver" />`
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
-**2. Driver Order Card (`EatsOrderCard.tsx`):**
-- Replace customer call button with `<MaskedCallButton targetRole="customer" />`
-- Replace restaurant call button with `<MaskedCallButton targetRole="merchant" />`
+**Changes:**
+1. Add "Get Help" button below order items or in actions section
+2. Use the `HelpCircle` icon with clear label
+3. Style consistent with 2026 dark theme
 
-**3. Merchant Orders (`RestaurantOrders.tsx`):**
-- Add `<MaskedCallButton targetRole="customer" />` to order cards
-- Add `<MaskedCallButton targetRole="driver" />` when driver assigned
-
-### J) Rate Limiting
-
-**In `eats-call-start`:**
+**New Button Location (after price breakdown):**
 ```typescript
-// Check rate limit: max 3 calls per 5 min per order
-const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-
-const { count } = await supabase
-  .from('call_logs')
-  .select('*', { count: 'exact', head: true })
-  .eq('order_id', orderId)
-  .gte('created_at', fiveMinAgo);
-
-if (count && count >= 3) {
-  throw new Error('Rate limit: Maximum 3 calls per 5 minutes');
-}
+{/* Help Actions */}
+<motion.div className="bg-zinc-900/80...">
+  <Button 
+    variant="outline"
+    onClick={() => setHelpModalOpen(true)}
+    className="w-full h-12 rounded-xl border-orange-500/30 text-orange-400"
+  >
+    <HelpCircle className="w-5 h-5 mr-2" />
+    Get Help with This Order
+  </Button>
+</motion.div>
 ```
 
-### K) Session Expiration & Cleanup
+### E) Enhance HelpModal with Better Flow
 
-**Automatic Expiration:**
-- Sessions expire 2 hours after creation
-- Sessions end when order status becomes `delivered` or `cancelled`
+Update the modal to provide smoother UX.
 
-**Cleanup Trigger:**
-```sql
-CREATE OR REPLACE FUNCTION expire_call_sessions()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.status IN ('delivered', 'cancelled') AND OLD.status != NEW.status THEN
-    UPDATE call_sessions
-    SET status = 'ended', updated_at = now()
-    WHERE order_id = NEW.id AND status = 'active';
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+**File to Modify:** `src/components/eats/HelpModal.tsx`
 
-CREATE TRIGGER trg_expire_call_sessions
-AFTER UPDATE ON food_orders
-FOR EACH ROW
-EXECUTE FUNCTION expire_call_sessions();
-```
+**Changes:**
+1. Store ticket ID from response
+2. On success, show "View Ticket" and "Done" buttons
+3. "View Ticket" navigates to `/support/tickets/:id`
+4. Auto-redirect after 3 seconds (optional)
+
+### F) Verify Realtime Already Working
+
+The existing infrastructure handles realtime:
+- `useTicketChatRealtime` in `src/hooks/useSupportChat.ts` subscribes to `ticket_replies`
+- `TicketChat` component uses this for live updates
+- New messages trigger toast notifications
+
+No changes needed — already functional.
 
 ---
 
 ## File Changes Summary
 
-### New Files
-| File | Purpose |
-|------|---------|
-| `supabase/functions/eats-call-session/index.ts` | Get/create call session |
-| `supabase/functions/eats-call-start/index.ts` | Initiate masked call |
-| `supabase/functions/eats-twilio-voice/index.ts` | TwiML webhook |
-| `supabase/functions/eats-twilio-status/index.ts` | Call status callback |
-| `src/hooks/useOrderCall.ts` | Client call management |
-| `src/components/eats/MaskedCallButton.tsx` | Privacy-protected call button |
-
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/pages/EatsOrderDetail.tsx` | Replace `tel:` links with MaskedCallButton |
-| `src/components/eats/DriverInfoCard.tsx` | Replace call button with MaskedCallButton |
-| `src/components/driver/EatsOrderCard.tsx` | Replace call buttons with MaskedCallButton |
-| `src/components/restaurant/RestaurantOrders.tsx` | Add call buttons for customer/driver |
-| `supabase/config.toml` | Add new function configs with `verify_jwt = false` for webhooks |
-
-### Database Migrations
-| Migration | Purpose |
-|-----------|---------|
-| Create `call_sessions` table | Track proxy number allocation |
-| Create `call_logs` table | Log call attempts |
-| Add RLS policies | Participant access control |
-| Add cleanup trigger | End sessions on order completion |
+| `src/components/eats/HelpModal.tsx` | Add ticket ID storage, redirect to detail page |
+| `src/pages/support/UserSupportTicketsPage.tsx` | Make ticket cards clickable links |
+| `src/pages/EatsOrderDetail.tsx` | Add prominent "Get Help" button below order content |
 
 ---
 
-## Security Considerations
-
-1. **Phone Number Privacy**: Real phone numbers never exposed to other parties
-2. **Session Validation**: Only order participants can initiate calls
-3. **Status-Based Access**: Calls only allowed during active order statuses
-4. **Rate Limiting**: Prevent abuse with 3 calls per 5 min limit
-5. **Webhook Validation**: Validate Twilio request signatures
-6. **Expiration**: Sessions auto-expire after 2 hours or order completion
-7. **RLS Policies**: Database-level access control
-
----
-
-## Call Flow Diagram
+## User Flow
 
 ```text
-Customer taps "Call Driver"
+User views order at /eats/orders/:id
     ↓
-useOrderCall.startCall("driver")
+Clicks "Get Help with This Order" button
     ↓
-POST /eats-call-start
+HelpModal opens with issue categories
     ↓
-Validate: session active, rate limit OK, phones available
+Selects category (e.g., "Missing Item")
     ↓
-Create call_logs entry (status: initiated)
+Enters optional description
     ↓
-Twilio API: Create call
-  - From: +14155551234 (proxy)
-  - To: Customer's phone
-  - URL: /eats-twilio-voice?to_role=driver
+Clicks "Submit"
     ↓
-Twilio calls Customer's phone
+useCreateEatsTicket inserts to support_tickets
     ↓
-Customer answers → Twilio hits /eats-twilio-voice
+Success: Ticket created
     ↓
-Return TwiML: <Dial> to Driver's phone (from proxy)
+Clicks "View Ticket"
     ↓
-Driver's phone rings → shows +14155551234 (proxy)
+Navigates to /support/tickets/:ticket_id
     ↓
-Driver answers → connected!
+TicketDetailPage loads with TicketChat
     ↓
-/eats-twilio-status updates call_logs
+User can send messages, receives realtime replies
+```
+
+---
+
+## Support List Page Flow
+
+```text
+User navigates to /support/tickets
+    ↓
+UserSupportTicketsPage loads
+    ↓
+useMyTickets fetches tickets WHERE user_id = auth.uid()
+    ↓
+Displays tickets with status badges
+    ↓
+User clicks a ticket card
+    ↓
+Navigates to /support/tickets/:id
+    ↓
+Live chat with support team
 ```
 
 ---
 
 ## Technical Notes
 
-### Twilio Setup Required
-1. Purchase 1+ Twilio phone numbers with Voice capability
-2. Configure webhook URLs in Twilio console (or use dynamic TwiML)
-3. Note: Twilio Proxy API is an alternative but more complex
+### Realtime Already Configured
+The `useTicketChatRealtime` hook subscribes to:
+```typescript
+supabase.channel(`ticket-chat-${ticketId}`)
+  .on("postgres_changes", {
+    event: "INSERT",
+    schema: "public",
+    table: "ticket_replies",
+    filter: `ticket_id=eq.${ticketId}`,
+  }, ...)
+```
 
-### Proxy Number Pool Strategy
-- Start with 1-3 numbers for MVP
-- Use round-robin selection
-- Each active session occupies a number
-- Numbers can be reused after session ends
+### Ticket Creation Fields
+Current `useCreateEatsTicket` inserts:
+- `ticket_number`: ZE-XXXXXX
+- `user_id`: Current user
+- `order_id`: The food order ID
+- `subject`: Category label + restaurant name
+- `description`: User's message
+- `category`: "eats"
+- `priority`: "high" for refunds, "normal" otherwise
+- `status`: "open"
 
-### Fallback Behavior
-- If Twilio unavailable: Show error toast, don't expose raw numbers
-- If no phone on file: Disable call button with "No phone number" tooltip
+Can add `ticket_type` if needed for filtering.
 
 ---
 
 ## Summary
 
-This implementation adds:
+This implementation:
 
-1. **Database Infrastructure**: `call_sessions` and `call_logs` tables with proper RLS
-2. **Edge Functions**: Session management, call initiation, Twilio webhooks
-3. **Client Hook**: `useOrderCall` for managing call state
-4. **UI Component**: `MaskedCallButton` replacing direct `tel:` links
-5. **Rate Limiting**: Max 3 calls per 5 minutes per order
-6. **Auto-Expiration**: Sessions end on order completion or after 2 hours
-7. **Privacy Protection**: Real phone numbers never exposed between parties
+1. **Redirects to ticket detail** after creating from order page
+2. **Makes ticket cards clickable** to navigate to detail view
+3. **Adds prominent "Get Help" button** on order detail page
+4. **Leverages existing realtime** chat infrastructure
+5. **Maintains consistent UX** with 2026 dark glass theme
