@@ -87,6 +87,9 @@ interface EventZone {
 // Maximum total multiplier cap to stay cheaper than competitors
 const MAX_TOTAL_MULTIPLIER = 1.60;
 
+// Maximum surge multiplier cap (admin abuse prevention)
+const MAX_SURGE_MULTIPLIER = 2.5;
+
 // Default rate card (fallback if no zone match)
 const DEFAULT_RATE: ZoneRate = {
   base_fare: 2.00,
@@ -262,49 +265,30 @@ export async function getWeatherMultiplier(zoneId: string, weatherKey?: string):
 }
 
 /**
- * Calculate surge multiplier based on demand/supply ratio
- * 
- * Surge tiers:
- * - ratio < 1.0: 1.0x
- * - ratio 1.0–1.5: 1.1x
- * - ratio 1.5–2.0: 1.25x
- * - ratio 2.0–3.0: 1.5x
- * - ratio > 3.0 or no drivers: 2.0x
+ * Fetch surge multiplier from surge_multipliers table (zone='GLOBAL')
+ * Admin-controlled dynamic pricing with max cap of 2.5x
  */
 export async function getSurgeMultiplier(): Promise<number> {
-  const now = new Date();
-  const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
-  const twoMinAgo = new Date(now.getTime() - 2 * 60 * 1000);
+  try {
+    const { data, error } = await supabase
+      .from("surge_multipliers")
+      .select("multiplier")
+      .eq("zone", "GLOBAL")
+      .single();
 
-  // Count active rides in last 5 minutes
-  const { count: requestedCount } = await supabase
-    .from("trips")
-    .select("*", { count: "exact", head: true })
-    .in("status", ["requested", "accepted", "en_route"])
-    .gte("created_at", fiveMinAgo.toISOString());
+    if (error || !data) {
+      console.warn("[getSurgeMultiplier] No GLOBAL surge found, defaulting to 1.0");
+      return 1.0;
+    }
 
-  // Count online drivers active in last 2 minutes
-  const { count: driversCount } = await supabase
-    .from("drivers")
-    .select("*", { count: "exact", head: true })
-    .eq("is_online", true)
-    .eq("status", "verified")
-    .gte("updated_at", twoMinAgo.toISOString());
-
-  const rides = requestedCount || 0;
-  const drivers = driversCount || 0;
-
-  // Surge rules
-  if (drivers <= 0) return 2.0;
-  
-  const ratio = rides / Math.max(1, drivers);
-  
-  if (ratio > 3.0) return 2.0;
-  if (ratio >= 2.0) return 1.5;
-  if (ratio >= 1.5) return 1.25;
-  if (ratio >= 1.0) return 1.1;
-  
-  return 1.0;
+    const multiplier = Number(data.multiplier) || 1.0;
+    
+    // Apply max cap to prevent abuse
+    return Math.min(multiplier, MAX_SURGE_MULTIPLIER);
+  } catch (err) {
+    console.warn("[getSurgeMultiplier] Error fetching surge:", err);
+    return 1.0;
+  }
 }
 
 /**

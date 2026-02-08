@@ -63,11 +63,11 @@ const RideCard = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        {/* Surge Badge - "Busy now" */}
+        {/* Surge Badge - "Busy time pricing" */}
         {quote?.multipliers?.surge && quote.multipliers.surge > 1.0 && (
           <div className="absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-amber-500/90 flex items-center gap-1">
             <span className="text-[10px]">🔥</span>
-            <span className="text-[10px] font-bold text-white">Busy now</span>
+            <span className="text-[10px] font-bold text-white">Busy time pricing ×{quote.multipliers.surge.toFixed(1)}</span>
           </div>
         )}
         
