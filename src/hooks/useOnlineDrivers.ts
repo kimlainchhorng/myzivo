@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type OnlineDriver = {
@@ -16,7 +17,34 @@ export type OnlineDriver = {
   phone: string;
 };
 
-export const useOnlineDrivers = () => {
+export const useOnlineDrivers = (enableRealtime: boolean = true) => {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime driver updates
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    const channel = supabase
+      .channel("online-drivers-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "drivers",
+        },
+        () => {
+          // Invalidate and refetch on any driver change
+          queryClient.invalidateQueries({ queryKey: ["online-drivers"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enableRealtime, queryClient]);
+
   return useQuery({
     queryKey: ["online-drivers"],
     queryFn: async () => {
@@ -36,7 +64,33 @@ export const useOnlineDrivers = () => {
 };
 
 // Fetch all drivers with location for admin map view (regardless of online status)
-export const useAllDriversWithLocation = () => {
+export const useAllDriversWithLocation = (enableRealtime: boolean = true) => {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime driver updates
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    const channel = supabase
+      .channel("all-drivers-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "drivers",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["all-drivers-location"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enableRealtime, queryClient]);
+
   return useQuery({
     queryKey: ["all-drivers-location"],
     queryFn: async () => {
@@ -53,7 +107,33 @@ export const useAllDriversWithLocation = () => {
   });
 };
 
-export const useActiveTripsWithLocations = () => {
+export const useActiveTripsWithLocations = (enableRealtime: boolean = true) => {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime trip updates
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    const channel = supabase
+      .channel("active-trips-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "trips",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["active-trips-locations"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enableRealtime, queryClient]);
+
   return useQuery({
     queryKey: ["active-trips-locations"],
     queryFn: async () => {

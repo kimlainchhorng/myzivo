@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, MessageCircle, X, Star, Clock, Car } from "lucide-react";
+import { Phone, MessageCircle, X, Star, Clock, Car, Navigation, WifiOff, Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
-import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
+import { useLiveDriverTracking } from "@/hooks/useLiveDriverTracking";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 
@@ -21,25 +21,11 @@ import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
 const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
 
-// Haversine formula to calculate distance in miles
-const haversineMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-  const R = 3958.8; // Earth radius in miles
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2 + 
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const ASSUMED_SPEED_MPH = 30;
-
 const RideDriverPage = () => {
   const navigate = useNavigate();
   const { state, updateEta, setStatus, startTrip, cancelRide } = useRideStore();
   const [isCancelling, setIsCancelling] = useState(false);
   const [isStartingTrip, setIsStartingTrip] = useState(false);
-  const [realTimeDriverLocation, setRealTimeDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Subscribe to realtime updates
   const { isDemoMode } = useRideRealtime({
@@ -57,27 +43,36 @@ const RideDriverPage = () => {
   const pickupLocation = state.pickupCoords || DEFAULT_PICKUP;
   const routeCoordinates = state.routeCoordinates || [];
 
-  // Handle driver location updates from realtime subscription
-  const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
-    setRealTimeDriverLocation({ lat, lng });
-    
-    // Calculate ETA based on distance to pickup
-    const distanceMiles = haversineMiles(lat, lng, pickupLocation.lat, pickupLocation.lng);
-    
-    // If very close (< 0.1 miles), set ETA to minimum
-    if (distanceMiles < 0.1) {
-      updateEta(30); // 30 seconds
-    } else {
-      const etaMinutes = Math.ceil((distanceMiles / ASSUMED_SPEED_MPH) * 60);
-      updateEta(Math.max(30, etaMinutes * 60)); // Convert to seconds, minimum 30 seconds
-    }
-  }, [pickupLocation, updateEta]);
+  // Use comprehensive live driver tracking
+  const {
+    driverLocation: liveDriverLocation,
+    etaSeconds: liveEtaSeconds,
+    distanceToPickup,
+    hasArrived: liveHasArrived,
+    isConnected,
+    isReconnecting,
+    formatETA,
+  } = useLiveDriverTracking({
+    tripId: state.tripId,
+    driverId: isDemoMode ? undefined : driverId,
+    pickupLocation,
+    arrivalThresholdMiles: 0.1,
+  });
 
-  // Subscribe to driver location updates (only if we have a driver ID and not in demo mode)
-  useDriverLocationRealtime(
-    isDemoMode ? undefined : driverId,
-    handleDriverLocationUpdate
-  );
+  // Update store ETA from live tracking
+  useEffect(() => {
+    if (liveEtaSeconds > 0 && !isDemoMode) {
+      updateEta(liveEtaSeconds);
+    }
+  }, [liveEtaSeconds, updateEta, isDemoMode]);
+
+  // Update status when driver arrives
+  useEffect(() => {
+    if (liveHasArrived && state.status !== 'arrived' && !isDemoMode) {
+      setStatus('arrived');
+      toast.success("Driver has arrived!");
+    }
+  }, [liveHasArrived, state.status, setStatus, isDemoMode]);
 
   // Redirect if no active ride
   useEffect(() => {
@@ -95,14 +90,14 @@ const RideDriverPage = () => {
     : [[DEFAULT_DRIVER_START.lng, DEFAULT_DRIVER_START.lat], [pickupLocation.lng, pickupLocation.lat]];
 
   // Calculate driver position - use realtime location if available, otherwise interpolate
-  const driverLocation = realTimeDriverLocation 
-    ? { lat: realTimeDriverLocation.lat, lng: realTimeDriverLocation.lng }
+  const driverLocation = liveDriverLocation 
+    ? { lat: liveDriverLocation.lat, lng: liveDriverLocation.lng }
     : interpolateRoutePosition(driverRouteToPickup, driverProgress);
 
   // ETA countdown timer (fallback for demo mode or when no realtime updates)
   useEffect(() => {
     // Skip countdown if we have realtime driver location (ETA is calculated from distance)
-    if (!isDemoMode && driverId && realTimeDriverLocation) return;
+    if (!isDemoMode && driverId && liveDriverLocation) return;
     
     if (state.eta <= 0 || state.status === 'arrived') return;
 
@@ -117,11 +112,11 @@ const RideDriverPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state.eta, state.status, updateEta, setStatus, isDemoMode, driverId, realTimeDriverLocation]);
+  }, [state.eta, state.status, updateEta, setStatus, isDemoMode, driverId, liveDriverLocation]);
 
   // Format ETA for display
   const etaMinutes = Math.ceil(state.eta / 60);
-  const hasArrived = state.status === 'arrived' || state.eta === 0;
+  const hasArrived = state.status === 'arrived' || state.eta === 0 || liveHasArrived;
   const isArrivingSoon = state.eta > 0 && state.eta < 60; // Less than 1 minute
 
   const handleCall = () => {
@@ -190,6 +185,27 @@ const RideDriverPage = () => {
         />
       )}
 
+      {/* Connection Status */}
+      {(!isConnected || isReconnecting) && !isDemoMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-amber-500/90 backdrop-blur-sm px-4 py-2 rounded-full"
+        >
+          {isReconnecting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+              <span className="text-sm font-medium text-white">Reconnecting...</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="w-4 h-4 text-white" />
+              <span className="text-sm font-medium text-white">Connection lost</span>
+            </>
+          )}
+        </motion.div>
+      )}
+
       {/* Demo Mode Banner */}
       {isDemoMode && <DemoModeBanner />}
 
@@ -255,6 +271,20 @@ const RideDriverPage = () => {
                 <p className="font-mono font-bold text-primary">{driver.plate}</p>
               </div>
             </div>
+
+            {/* Live Distance Tracking */}
+            {!hasArrived && distanceToPickup > 0 && !isDemoMode && (
+              <div className="flex items-center gap-2 text-sm text-white/60">
+                <Navigation className="w-4 h-4" />
+                <span>{distanceToPickup.toFixed(1)} miles away</span>
+                <motion.div
+                  className="w-1.5 h-1.5 bg-green-500 rounded-full ml-auto"
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <span className="text-xs text-green-500">Live</span>
+              </div>
+            )}
 
             {/* ETA Display */}
             {!hasArrived && (
