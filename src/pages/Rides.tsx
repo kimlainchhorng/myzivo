@@ -313,7 +313,8 @@ function RidesInner() {
   
   // Zone-based pricing using pickup coordinates
   const { zone: pricingZone } = usePricingZone(pickupCoords?.lat, pickupCoords?.lng);
-  const { rates: zoneRates } = useZonePricingRates(pricingZone?.id, "standard");
+  // Fetch ride-type-specific rates (or fallback to "standard")
+  const { rates: zoneRates } = useZonePricingRates(pricingZone?.id, selectedOption?.id ?? "standard");
   
   // Log zone detection for debugging
   useEffect(() => {

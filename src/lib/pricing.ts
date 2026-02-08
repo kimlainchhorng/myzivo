@@ -454,9 +454,13 @@ export function quoteRidePrice(
 ): RidePriceQuote {
   const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
   const zoneMultiplier = options?.zoneMultiplier ?? 1.0;
-  const rateMultiplier = options?.rateMultiplier ?? 1.0; // Zone rate multiplier
-  const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
+  const rateMultiplier = options?.rateMultiplier ?? 1.0; // Zone rate multiplier (from zone_pricing_rates.multiplier)
   const longTripMultiplier = getLongTripMultiplier(distanceMiles);
+  
+  // When rateMultiplier is provided (from ride-type-specific zone rates), it already 
+  // includes the ride type adjustment. Only apply RIDE_TYPE_MULTIPLIERS as fallback
+  // when using generic "standard" rates (rateMultiplier = 1.0).
+  const rideTypeMultiplier = rateMultiplier !== 1.0 ? 1.0 : (RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0);
   
   // 1. Calculate base components
   const baseFare = settings.base_fare;
@@ -464,7 +468,7 @@ export function quoteRidePrice(
   const timeFee = durationMinutes * settings.per_minute;
   const bookingFee = settings.booking_fee;
   
-  // 2. Calculate subtotal (NEW: include booking_fee in subtotal before multipliers)
+  // 2. Calculate subtotal (include booking_fee in subtotal before multipliers)
   let subtotal = baseFare + distanceFee + timeFee + bookingFee;
   
   // 3. Enforce minimum fare BEFORE multipliers
