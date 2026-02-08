@@ -1,152 +1,188 @@
 
 
-# ✅ Add Surge Pricing Indicators for Zone-Based Demand (COMPLETE)
+# Admin Panel for Zone Pricing Rates
 
 ## Overview
 
-Add real-time surge pricing indicators that display when demand is high in the user's pickup zone. The surge multiplier will be calculated based on live demand (active ride requests) vs supply (online drivers) in the detected pricing zone, and visually communicated to users throughout the booking flow.
+Create a dedicated admin page to manage the `zone_pricing_rates` table without requiring direct database access. Admins will be able to view, edit, create, and delete pricing rates for each ride type within each pricing zone.
 
 ## Current State
 
 | Component | Status |
 |-----------|--------|
-| `useSurgePricing` hook | Exists but fetches global metrics (not zone-specific) |
-| `calculateSurge` function | Works correctly with ratio-based rules |
-| Zone detection | Working via `usePricingZone` hook |
-| Surge UI in RideCard | Exists but not connected |
-| Surge in Rides.tsx | Marked as TODO on line 570 |
+| `zone_pricing_rates` table | 15+ rate entries across multiple zones |
+| `pricing_zones` table | 7 zones including Default US, Baton Rouge, New Orleans |
+| Admin pattern | Existing `AdminPricingControls` uses `usePricing` hook pattern |
+| Settings integration | `SettingsHub.tsx` has Fees & Pricing tab |
 
 ## Implementation Plan
 
-### Step 1: Create Zone-Specific Surge Hook
-**File**: `src/hooks/useZoneSurgePricing.ts` (NEW)
+### Step 1: Create Zone Pricing Rates Hook
+**File**: `src/hooks/useZonePricingAdmin.ts` (NEW)
 
-Create a new hook that calculates surge based on demand in the specific pickup zone:
+Create a hook with CRUD operations:
+- `useZonePricingRates(zoneId)` - Fetch rates for a zone
+- `useAllZones()` - Fetch all pricing zones
+- `useUpdateZonePricingRate()` - Update a rate
+- `useCreateZonePricingRate()` - Add new rate
+- `useDeleteZonePricingRate()` - Remove a rate
 
-```text
-useZoneSurgePricing(zoneId: string | null, pickupCoords: {lat, lng} | null)
-  → { multiplier, level, label, isActive, isLoading }
-```
-
-The hook will:
-- Query trips in "requested/accepted/en_route" status within the zone's bounding box
-- Query online drivers within the zone's bounding box
-- Calculate surge using existing `calculateSurge()` function
-- Refresh every 15 seconds
-
-### Step 2: Add Surge Banner Component
-**File**: `src/components/ride/SurgeBanner.tsx` (NEW)
-
-A reusable banner that displays surge status:
-
-```text
-+--------------------------------------------------+
-|  ⚡ High demand in this area • Prices are 1.6x   |
-+--------------------------------------------------+
-```
+### Step 2: Create Admin Page Component
+**File**: `src/pages/admin/ZonePricingRatesPage.tsx` (NEW)
 
 Features:
-- Animates in/out based on surge state
-- Color coding: amber for Medium, red for High
-- Shows zone name and multiplier
-- Dismissible with "Got it" button
+- Zone selector dropdown (filter by zone)
+- Table showing all rates for selected zone
+- Inline editing for rate values
+- Add new ride type button
+- Delete rate with confirmation
+- Quick stats cards (zone count, rate count, avg multiplier)
+- Fare calculator preview
 
-### Step 3: Update UberLikeRideRow with Surge Indicator
-**File**: `src/components/ride/UberLikeRideRow.tsx`
+### Step 3: Add Route to App.tsx
+**File**: `src/App.tsx`
 
-Add optional surge props:
-- `surgeMultiplier?: number`
-- `surgeLevel?: SurgeLevel`
-- `surgeActive?: boolean`
-
-When surge is active, show a small lightning bolt icon and adjusted price styling.
-
-### Step 4: Integrate Surge into Rides.tsx
-**File**: `src/pages/Rides.tsx`
-
-1. Import and use `useZoneSurgePricing(pricingZone?.id, pickupCoords)`
-2. Add `<SurgeBanner>` above the ride options list when surge is active
-3. Pass surge data to `UberLikeRideRow` components
-4. Include `surge_multiplier` in the payment intent request (line 570)
-5. Update `getQuoteForOption` to include surge in price calculation
-
-### Step 5: Update Pricing Calculation
-**File**: `src/lib/pricing.ts`
-
-Ensure `quoteRidePrice` accepts and applies surge multiplier on top of ride-type multiplier:
-
+Add route:
 ```text
-finalMultiplier = rideTypeMultiplier × surgeMultiplier
+/admin/zone-pricing → ZonePricingRatesPage
 ```
 
-## Visual Design
+### Step 4: Link from Settings Hub
+**File**: `src/pages/admin/settings/SettingsHub.tsx`
 
-### Surge Banner (above ride options)
+Add navigation card in "Fees & Pricing" tab linking to the new page.
+
+## UI Design
+
+### Header
 ```text
-┌─────────────────────────────────────────────────┐
-│  ⚡ High demand near Baton Rouge                │
-│     Prices are currently 1.6× higher            │
-│                                        [Got it] │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  📍 Zone Pricing Rates                                          │
+│  Manage ride pricing by geographic zone                          │
+│                                                                   │
+│  [Zone: Default US ▼]              [+ Add Rate] [Bulk Import]    │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Surge on Ride Row
+### Stats Cards
 ```text
-┌─────────────────────────────────────────────────┐
-│  🚗  Standard                    👤 4    $45.00 │
-│       4:15 PM · 4 min          ⚡1.6x           │
-└─────────────────────────────────────────────────┘
+┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│ Total Zones   │ │ Rates in Zone │ │ Lowest Base   │ │ Highest Multi │
+│      7        │ │      15       │ │    $2.50      │ │    4.00×      │
+└───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
 ```
 
-## Database Query (Zone-Specific)
-
-The zone-specific demand metrics query:
-
-```sql
--- Rides in zone (last 5 min)
-SELECT COUNT(*) FROM trips
-WHERE status IN ('requested', 'accepted', 'en_route')
-  AND pickup_lat BETWEEN zone.min_lat AND zone.max_lat
-  AND pickup_lng BETWEEN zone.min_lng AND zone.max_lng
-  AND created_at >= NOW() - INTERVAL '5 minutes'
-
--- Drivers in zone (active in last 2 min)
-SELECT COUNT(*) FROM drivers
-WHERE is_online = true
-  AND status = 'verified'
-  AND current_lat BETWEEN zone.min_lat AND zone.max_lat
-  AND current_lng BETWEEN zone.min_lng AND zone.max_lng
-  AND updated_at >= NOW() - INTERVAL '2 minutes'
+### Rates Table
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ Ride Type │ Base  │ /Mile │ /Min  │ Booking │ Min Fare │ Multi │
+├───────────────────────────────────────────────────────────────────┤
+│ standard  │ $3.50 │ $1.75 │ $0.35 │  $2.50  │  $7.00   │ 1.00× │ [✏️][🗑️]
+│ black     │ $5.00 │ $2.30 │ $0.38 │  $2.50  │ $14.00   │ 1.65× │ [✏️][🗑️]
+│ lux       │$15.00 │ $6.00 │ $1.00 │  $5.00  │ $75.00   │ 3.50× │ [✏️][🗑️]
+│ secure    │$25.00 │ $8.00 │ $1.25 │ $10.00  │$100.00   │ 4.00× │ [✏️][🗑️]
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Surge Rules (Unchanged)
+### Edit Dialog
+```text
+┌──────────────────────────────────────┐
+│  Edit Rate: Black                    │
+├──────────────────────────────────────┤
+│  Base Fare ($)      [5.00      ]     │
+│  Per Mile ($)       [2.30      ]     │
+│  Per Minute ($)     [0.38      ]     │
+│  Booking Fee ($)    [2.50      ]     │
+│  Minimum Fare ($)   [14.00     ]     │
+│  Multiplier         [1.65      ]     │
+│                                      │
+│  Preview: 10mi / 25min = $66.00      │
+├──────────────────────────────────────┤
+│           [Cancel]    [Save]         │
+└──────────────────────────────────────┘
+```
 
-| Condition | Multiplier | Level |
-|-----------|------------|-------|
-| No drivers available | 2.0× | High |
-| Ratio >= 2.0 | 2.0× | High |
-| Ratio >= 1.5 | 1.6× | High |
-| Ratio >= 1.0 | 1.3× | Medium |
-| Ratio < 1.0 | 1.0× | Low |
+### Add New Rate Dialog
+```text
+┌──────────────────────────────────────┐
+│  Add New Ride Type Rate              │
+├──────────────────────────────────────┤
+│  Ride Type ID     [___________]      │
+│  (e.g., economy, black, lux)         │
+│                                      │
+│  [Copy from existing ▼]              │
+│                                      │
+│  Base Fare ($)      [3.50      ]     │
+│  Per Mile ($)       [1.75      ]     │
+│  Per Minute ($)     [0.35      ]     │
+│  Booking Fee ($)    [2.50      ]     │
+│  Minimum Fare ($)   [7.00      ]     │
+│  Multiplier         [1.00      ]     │
+├──────────────────────────────────────┤
+│           [Cancel]    [Create]       │
+└──────────────────────────────────────┘
+```
 
 ## Files to Create/Modify
 
-| File | Action |
-|------|--------|
-| `src/hooks/useZoneSurgePricing.ts` | Create |
-| `src/components/ride/SurgeBanner.tsx` | Create |
-| `src/components/ride/UberLikeRideRow.tsx` | Modify |
-| `src/pages/Rides.tsx` | Modify |
-| `src/lib/pricing.ts` | Modify (ensure surge × type multiplier) |
-| `src/lib/surge.ts` | Modify (add zone-aware metrics function) |
+| File | Action | Description |
+|------|--------|-------------|
+| `src/hooks/useZonePricingAdmin.ts` | Create | CRUD hooks for zone pricing rates |
+| `src/pages/admin/ZonePricingRatesPage.tsx` | Create | Main admin page component |
+| `src/App.tsx` | Modify | Add route for new page |
+| `src/pages/admin/settings/SettingsHub.tsx` | Modify | Add link to new page |
+
+## Technical Details
+
+### Hook API
+
+```text
+// Fetch all zones for dropdown
+useAllZones() → { zones: PricingZone[], isLoading, error }
+
+// Fetch rates for a specific zone
+useZoneRates(zoneId) → { rates: ZonePricingRate[], isLoading, error }
+
+// Update a rate
+useUpdateZoneRate() → { mutate: (rate) => void, isPending }
+
+// Create a new rate
+useCreateZoneRate() → { mutate: (rate) => void, isPending }
+
+// Delete a rate
+useDeleteZoneRate() → { mutate: (id) => void, isPending }
+```
+
+### Validation Rules
+
+- Base fare: 0-100
+- Per mile: 0-50
+- Per minute: 0-10
+- Booking fee: 0-25
+- Minimum fare: 0-200
+- Multiplier: 0.5-10.0
+- Ride type: lowercase, alphanumeric, underscores only
+
+### Fare Preview Calculator
+
+Live preview calculation:
+```text
+preview = max(
+  (base + (miles × per_mile) + (mins × per_minute) + booking_fee),
+  minimum_fare
+) × multiplier
+```
+
+Default preview: 10 miles, 25 minutes
 
 ## Testing Checklist
 
-1. Navigate to `/rides`
-2. Enter pickup address in a zone with active trips
-3. Verify surge banner appears when demand is high
-4. Verify each ride card shows surge indicator
-5. Verify prices include surge multiplier
-6. Confirm payment request includes correct surge_multiplier
-7. Verify surge refreshes every 15 seconds
+1. Navigate to `/admin/zone-pricing`
+2. Select different zones from dropdown
+3. Verify rates load correctly for each zone
+4. Edit a rate and verify changes persist
+5. Add a new rate for a zone
+6. Delete a rate with confirmation
+7. Verify fare preview updates live
+8. Test validation for invalid inputs
 
