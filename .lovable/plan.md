@@ -1,8 +1,9 @@
 
-# ZIVO+ Membership System with Stripe Subscriptions
+
+# Customer Referrals + Credit Wallet
 
 ## Overview
-Implement a complete subscription-based membership system enabling customers to subscribe monthly for reduced fees, free delivery, and priority support.
+Implement a customer referrals dashboard, a credit wallet page, and integrate wallet credits at Eats checkout with the ability to apply credits to orders.
 
 ---
 
@@ -11,357 +12,296 @@ Implement a complete subscription-based membership system enabling customers to 
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `zivo_subscriptions` table | ✅ Exists | Has `user_id`, `plan_id`, `status`, `stripe_subscription_id`, `current_period_end` |
-| `zivo_subscription_plans` table | ✅ Exists | Has `name`, `price_monthly`, `fee_reduction_pct`, `priority_support`, `benefits` (JSONB) |
-| `ZivoPlusBadge` component | ✅ Exists | Badge UI for Plus members |
-| `ZivoPlus` landing page | ✅ Exists | `/zivo-plus` marketing page |
-| Stripe webhook handler | ✅ Exists | `stripe-webhook` edge function |
-| STRIPE_SECRET_KEY | ✅ Configured | Available in secrets |
+| `useReferrals` hook | ✅ Complete | Fetches code, referrals list, tiers, share functions |
+| `ReferralCard` component | ✅ Exists | Share UI with copy/email/WhatsApp |
+| `customer_wallets` table | ✅ Exists | `balance_cents`, `lifetime_credits_cents` columns |
+| `customer_wallet_transactions` table | ✅ Exists | `amount_cents`, `balance_after_cents`, `type`, `order_id`, `is_redeemed` |
+| `apply_wallet_credit` RPC | ✅ Exists | `(p_amount_cents, p_order_id, p_user_id)` → JSON |
+| `credit_customer_wallet` RPC | ✅ Exists | For adding credits |
+| `credit_applied_cents` column | ✅ Exists | On `food_orders` table |
+| `zivo_referrals` table | ✅ Exists | Has `status` (pending/qualified/credited/expired) |
+| `zivo_referral_codes` table | ✅ Exists | User's personal referral code |
+| ZIVO Points config | ✅ Exists | `src/config/zivoPoints.ts` with referral rules |
 
 ### Missing
 | Feature | Status |
 |---------|--------|
-| `useMembership` hook | ❌ No hook to check membership status |
-| Stripe subscription checkout edge function | ❌ Need `create-membership-checkout` |
-| Subscription webhook events handling | ❌ `invoice.paid`, `subscription.deleted`, etc. |
-| Membership page (`/membership`) | ❌ Customer-facing subscription management |
-| Eats checkout integration | ❌ No fee reduction applied |
-| Admin membership dashboard | ❌ `/admin/membership` |
-| Membership columns in `food_orders` | ❌ Need to track membership savings |
-| `membership_usage` table | ❌ Track benefit usage per order |
+| `/account/referrals` page | ❌ No dedicated referrals dashboard |
+| `/account/wallet` page | ❌ No wallet page in account section |
+| `useCustomerWallet` hook | ❌ No hook to fetch wallet + transactions |
+| Credit toggle in Eats cart | ❌ Not integrated |
+| `credit_applied_cents` in order creation | ❌ Not passed in mutation |
+| Wallet deduction after order | ❌ RPC not called |
+| Credit savings toast | ❌ Not shown |
 
 ---
 
 ## Implementation Plan
 
-### A) Database Updates
+### A) Create Customer Wallet Hook
 
-#### 1. Add Columns to `zivo_subscription_plans`
-The existing table already has `fee_reduction_pct`, but we need to add Eats-specific fields:
+**File: `src/hooks/useCustomerWallet.ts`**
 
-```sql
-ALTER TABLE zivo_subscription_plans ADD COLUMN IF NOT EXISTS delivery_fee_discount_pct NUMERIC DEFAULT 100;
-ALTER TABLE zivo_subscription_plans ADD COLUMN IF NOT EXISTS service_fee_discount_pct NUMERIC DEFAULT 50;
-ALTER TABLE zivo_subscription_plans ADD COLUMN IF NOT EXISTS free_delivery_min_order NUMERIC DEFAULT 15;
-ALTER TABLE zivo_subscription_plans ADD COLUMN IF NOT EXISTS stripe_price_id_monthly TEXT;
-ALTER TABLE zivo_subscription_plans ADD COLUMN IF NOT EXISTS stripe_price_id_yearly TEXT;
-```
-
-#### 2. Add Columns to `food_orders`
-Track membership savings per order:
-
-```sql
-ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS membership_discount_cents INTEGER DEFAULT 0;
-ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS membership_applied BOOLEAN DEFAULT false;
-```
-
-#### 3. Create `membership_usage` Table
-Track which benefits were used on each order:
-
-```sql
-CREATE TABLE IF NOT EXISTS membership_usage (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  order_id UUID REFERENCES food_orders(id),
-  benefit_type TEXT NOT NULL, -- 'free_delivery', 'reduced_service_fee', 'priority_driver'
-  saved_amount_cents INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-### B) Create Membership Hook
-
-**File: `src/hooks/useMembership.ts`**
+Manages wallet balance and transaction history.
 
 ```typescript
-export interface MembershipPlan {
+export interface CustomerWallet {
   id: string;
-  name: string;
-  slug: string;
-  price_monthly: number;
-  price_yearly: number | null;
-  delivery_fee_discount_pct: number;
-  service_fee_discount_pct: number;
-  free_delivery_min_order: number;
-  priority_support: boolean;
-  benefits: Record<string, any>;
-  stripe_price_id_monthly: string;
-  stripe_price_id_yearly: string;
+  user_id: string;
+  balance_cents: number;
+  lifetime_credits_cents: number;
 }
 
-export interface Membership {
+export interface WalletTransaction {
   id: string;
-  plan_id: string;
-  status: 'active' | 'trialing' | 'past_due' | 'cancelled';
-  current_period_end: string;
-  stripe_subscription_id: string | null;
-  plan: MembershipPlan;
+  amount_cents: number;
+  balance_after_cents: number;
+  type: string; // 'referral', 'order', 'redemption', 'promo', 'refund'
+  description: string | null;
+  order_id: string | null;
+  is_redeemed: boolean;
+  created_at: string;
 }
 
-export function useMembership() {
-  // Query active membership for current user
-  const membership = useQuery(...)
+export function useCustomerWallet() {
+  const { user } = useAuth();
   
-  // Derived state
-  const isActive = membership?.status === 'active' || membership?.status === 'trialing';
-  const isPastDue = membership?.status === 'past_due';
+  // Fetch wallet (or create if not exists)
+  const wallet = useQuery(...)
+  
+  // Fetch transaction history
+  const transactions = useQuery(...)
+  
+  // Apply credit to order (calls apply_wallet_credit RPC)
+  const applyCredit = useMutation(...)
   
   return { 
-    membership, 
-    isActive, 
-    isPastDue, 
+    wallet, 
+    transactions, 
+    balanceDollars: (wallet?.balance_cents || 0) / 100,
+    applyCredit,
     isLoading 
   };
 }
-
-export function useMembershipPlans() {
-  // Query all active plans
-  return useQuery(...);
-}
-
-export function useCreateMembershipCheckout() {
-  // Call edge function to create Stripe subscription checkout
-  return useMutation(...);
-}
-
-export function useCancelMembership() {
-  // Call edge function to cancel subscription
-  return useMutation(...);
-}
 ```
 
-### C) Edge Functions
+**Data Flow:**
+1. Query `customer_wallets` for current user
+2. Query `customer_wallet_transactions` ordered by `created_at desc`
+3. `applyCredit` calls `apply_wallet_credit` RPC which:
+   - Deducts from balance
+   - Creates transaction record
+   - Links to order_id
 
-#### 1. Create `create-membership-checkout` Edge Function
+### B) Create Account Referrals Page
 
-Creates a Stripe Checkout session in subscription mode.
+**File: `src/pages/account/ReferralsPage.tsx`**
 
-```typescript
-// supabase/functions/create-membership-checkout/index.ts
-
-// 1. Get authenticated user
-// 2. Lookup or create Stripe customer
-// 3. Get plan and price ID from request
-// 4. Create checkout.sessions.create with mode: 'subscription'
-// 5. Return checkout URL
-
-const session = await stripe.checkout.sessions.create({
-  customer: customerId,
-  mode: 'subscription',
-  line_items: [{ price: priceId, quantity: 1 }],
-  success_url: `${origin}/membership?success=true`,
-  cancel_url: `${origin}/membership?cancelled=true`,
-  metadata: {
-    type: 'membership',
-    user_id: user.id,
-    plan_id: planId,
-  },
-});
-```
-
-#### 2. Create `cancel-membership` Edge Function
-
-```typescript
-// supabase/functions/cancel-membership/index.ts
-
-// 1. Get authenticated user
-// 2. Find their active subscription
-// 3. Call stripe.subscriptions.cancel()
-// 4. Update zivo_subscriptions status = 'cancelled'
-```
-
-#### 3. Create `customer-portal-membership` Edge Function
-
-Allows users to manage their subscription via Stripe Customer Portal.
-
-```typescript
-// supabase/functions/customer-portal-membership/index.ts
-
-// 1. Get authenticated user
-// 2. Find Stripe customer
-// 3. Create billing portal session
-// 4. Return portal URL
-```
-
-#### 4. Update `stripe-webhook` to Handle Subscription Events
-
-Add these event handlers to the existing webhook:
-
-```typescript
-case "customer.subscription.created":
-case "customer.subscription.updated": {
-  const subscription = event.data.object as Stripe.Subscription;
-  if (subscription.metadata?.type === 'membership') {
-    await supabase.from("zivo_subscriptions")
-      .upsert({
-        user_id: subscription.metadata.user_id,
-        plan_id: subscription.metadata.plan_id,
-        status: subscription.status, // 'active', 'trialing', 'past_due'
-        stripe_subscription_id: subscription.id,
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      }, { onConflict: 'user_id' });
-  }
-  break;
-}
-
-case "customer.subscription.deleted": {
-  const subscription = event.data.object as Stripe.Subscription;
-  if (subscription.metadata?.type === 'membership') {
-    await supabase.from("zivo_subscriptions")
-      .update({ 
-        status: 'cancelled',
-        cancelled_at: new Date().toISOString(),
-      })
-      .eq("stripe_subscription_id", subscription.id);
-  }
-  break;
-}
-
-case "invoice.paid": {
-  const invoice = event.data.object as Stripe.Invoice;
-  const subscriptionId = invoice.subscription;
-  if (subscriptionId && invoice.metadata?.type === 'membership') {
-    await supabase.from("zivo_subscriptions")
-      .update({ status: 'active' })
-      .eq("stripe_subscription_id", subscriptionId);
-  }
-  break;
-}
-
-case "invoice.payment_failed": {
-  const invoice = event.data.object as Stripe.Invoice;
-  if (invoice.subscription && invoice.metadata?.type === 'membership') {
-    await supabase.from("zivo_subscriptions")
-      .update({ status: 'past_due' })
-      .eq("stripe_subscription_id", invoice.subscription);
-  }
-  break;
-}
-```
-
-### D) Customer Pages
-
-#### 1. Create `/membership` Page
-
-**File: `src/pages/MembershipPage.tsx`**
+**Route:** `/account/referrals`
 
 **Sections:**
-1. **Hero** — ZIVO+ branding and current status
-2. **Plan Card** — Price, benefits list, Join/Cancel button
-3. **Savings Calculator** — Example order showing savings
-4. **Benefits Grid** — Visual benefits with icons
-5. **Billing Info** — Next billing date, manage subscription link
+1. **Invite Code Card** — Large code display with copy button and share link
+2. **How It Works** — 3-step visual guide
+3. **Referral Progress** — Table/list showing all referrals with status badges
+4. **Tier Progress** — Current tier, next tier unlock, bonus tracker
 
-**UI States:**
-- **Not subscribed**: Show plan card with "Join ZIVO+" button
-- **Active subscriber**: Show "You're a ZIVO+ member" with billing info and cancel option
-- **Past due**: Show warning and prompt to update payment
-- **Processing**: Loading state after checkout return
+**UI Layout:**
+```text
+┌────────────────────────────────────────┐
+│ 🔗 Your Invite Code                    │
+│                                        │
+│     ZIVO-ABC123      [Copy] [Share]    │
+│                                        │
+│ hizivo.com/signup?ref=ZIVO-ABC123      │
+└────────────────────────────────────────┘
 
-#### 2. Update Account Page (`/app/account` or `/profile`)
+┌────────────────────────────────────────┐
+│ How It Works                           │
+│                                        │
+│ 1️⃣ Share your link with friends        │
+│ 2️⃣ They sign up and get 500 points     │
+│ 3️⃣ You earn 1000 points when they book │
+└────────────────────────────────────────┘
 
-Add membership status section:
-- Show `ZivoPlusBadge` if active
-- Link to `/membership` for management
-- Show next billing date
-
-### E) Eats Checkout Integration
-
-#### 1. Update `EatsCart.tsx`
-
-Add membership discount logic:
-
-```typescript
-const { membership, isActive } = useMembership();
-
-// Calculate membership discounts
-const membershipSavings = useMemo(() => {
-  if (!isActive || !membership?.plan) return { deliverySavings: 0, serviceSavings: 0 };
-  
-  const plan = membership.plan;
-  
-  // Free delivery if order meets minimum
-  let deliverySavings = 0;
-  if (subtotal >= plan.free_delivery_min_order) {
-    deliverySavings = deliveryFee; // 100% off
-  } else if (plan.delivery_fee_discount_pct > 0) {
-    deliverySavings = deliveryFee * (plan.delivery_fee_discount_pct / 100);
-  }
-  
-  // Reduced service fee
-  const serviceSavings = serviceFee * (plan.service_fee_discount_pct / 100);
-  
-  return { deliverySavings, serviceSavings };
-}, [isActive, membership, subtotal, deliveryFee, serviceFee]);
-
-// Update totals
-const effectiveDeliveryFee = deliveryFee - membershipSavings.deliverySavings;
-const effectiveServiceFee = serviceFee - membershipSavings.serviceSavings;
-const total = subtotal - promo.discountAmount + effectiveDeliveryFee + effectiveServiceFee + tax + tipAmount;
+┌────────────────────────────────────────┐
+│ Your Referrals                         │
+│                                        │
+│ friend1@email.com   🟡 Pending         │
+│ friend2@email.com   🟢 Credited  +1000 │
+│ friend3@email.com   🔵 Qualified       │
+└────────────────────────────────────────┘
 ```
 
-#### 2. Create `MembershipSavingsBadge` Component
+**Status Badges:**
+| Status | Color | Label |
+|--------|-------|-------|
+| `pending` | Yellow | Signed up |
+| `qualified` | Blue | First booking |
+| `credited` | Green | Points earned |
+| `expired` | Gray | Expired |
 
-Show savings inline in cart:
+### C) Create Account Wallet Page
 
-```typescript
-{isActive && (membershipSavings.deliverySavings > 0 || membershipSavings.serviceSavings > 0) && (
-  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-    <Crown className="w-4 h-4 text-amber-500" />
-    <span className="text-sm text-amber-400">
-      ZIVO+ savings: ${(membershipSavings.deliverySavings + membershipSavings.serviceSavings).toFixed(2)}
-    </span>
-  </div>
-)}
+**File: `src/pages/account/WalletPage.tsx`**
+
+**Route:** `/account/wallet`
+
+**Sections:**
+1. **Balance Card** — Large balance display with "Available Credit" label
+2. **Transaction History** — List of credits earned and spent with timestamps
+3. **How to Earn** — Quick links to referrals, tips on earning
+
+**UI Layout:**
+```text
+┌────────────────────────────────────────┐
+│ 💰 Your Credit Balance                 │
+│                                        │
+│           $15.00                       │
+│       Available Credit                 │
+│                                        │
+│   Lifetime Earned: $45.00              │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│ Transaction History                    │
+│                                        │
+│ + $5.00   Referral Bonus    2 days ago │
+│ - $3.00   Order #ZE-12345   Yesterday  │
+│ + $10.00  Welcome Credit    Last week  │
+│ + $5.00   Promo Code        Last week  │
+└────────────────────────────────────────┘
 ```
 
-#### 3. Update Order Creation
+**Transaction Types Display:**
+| Type | Icon | Color |
+|------|------|-------|
+| `referral` | Users | Green |
+| `promo` | Tag | Green |
+| `refund` | RotateCcw | Green |
+| `order` | ShoppingBag | Red |
+| `redemption` | Gift | Red |
 
-Pass membership savings to order:
+### D) Create Credit Selector Component
 
+**File: `src/components/eats/CreditSelector.tsx`**
+
+Reusable component for applying credits at checkout.
+
+**Props:**
 ```typescript
-const order = await createOrder.mutateAsync({
-  // ... existing fields ...
-  membership_applied: isActive,
-  membership_discount_cents: Math.round((membershipSavings.deliverySavings + membershipSavings.serviceSavings) * 100),
-});
-
-// Log membership usage
-if (isActive) {
-  await supabase.from("membership_usage").insert([
-    {
-      user_id: userId,
-      order_id: order.id,
-      benefit_type: 'reduced_delivery_fee',
-      saved_amount_cents: Math.round(membershipSavings.deliverySavings * 100),
-    },
-    {
-      user_id: userId,
-      order_id: order.id,
-      benefit_type: 'reduced_service_fee',
-      saved_amount_cents: Math.round(membershipSavings.serviceSavings * 100),
-    },
-  ]);
+interface CreditSelectorProps {
+  availableBalanceCents: number;
+  orderTotalCents: number;
+  creditAppliedCents: number;
+  onCreditChange: (creditCents: number) => void;
+  maxPerOrder?: number; // Default 2500 (= $25)
 }
 ```
 
-### F) Admin Dashboard
+**Business Logic:**
+```typescript
+const MAX_CREDIT_PER_ORDER = 2500; // $25.00
 
-#### Create `/admin/membership` Page
+const creditToApply = Math.min(
+  orderTotalCents,
+  availableBalanceCents,
+  MAX_CREDIT_PER_ORDER
+);
+```
 
-**File: `src/pages/admin/MembershipDashboard.tsx`**
+**UI:**
+```text
+┌────────────────────────────────────────┐
+│ ✨ Use Credits                         │
+│                                        │
+│ [Toggle: ON/OFF]                       │
+│ Apply $5.00 credit                     │
+│ Balance: $15.00                        │
+│                                        │
+│ Max $25 per order                      │
+└────────────────────────────────────────┘
+```
 
-**Tabs:**
-1. **Overview**: Active subscribers count, MRR, churn rate
-2. **Plans**: Create/edit plans with pricing and benefits
-3. **Subscribers**: List of all subscribers with status filter
-4. **Revenue**: Monthly revenue chart from subscriptions
+### E) Integrate Credits in Eats Cart
 
-**Key Metrics Cards:**
-- Active Subscribers
-- Monthly Recurring Revenue (MRR)
-- Average Savings per Order
-- Churn Rate (30-day)
+**File to Modify:** `src/pages/EatsCart.tsx`
+
+**Changes:**
+1. Import and use `useCustomerWallet` hook
+2. Add `useCredits` toggle state (default: false)
+3. Add `creditAppliedCents` state
+4. Calculate applicable credit amount
+5. Update total when credits applied
+6. Pass `credit_applied_cents` to order creation
+7. Call wallet deduction after order success
+8. Show success toast with savings
+
+**Integration Points:**
+```typescript
+// 1. Get wallet data
+const { wallet, applyCredit, balanceDollars } = useCustomerWallet();
+
+// 2. Credit toggle state
+const [useCredits, setUseCredits] = useState(false);
+
+// 3. Calculate credit to apply
+const totalCents = Math.round(total * 100);
+const creditAppliedCents = useCredits 
+  ? Math.min(totalCents, wallet?.balance_cents || 0, MAX_CREDIT_PER_ORDER)
+  : 0;
+const creditAppliedDollars = creditAppliedCents / 100;
+
+// 4. Update total display
+const finalTotal = total - creditAppliedDollars;
+
+// 5. In handlePlaceOrder:
+const order = await createOrder.mutateAsync({
+  // ... existing fields ...
+  credit_applied_cents: creditAppliedCents,
+});
+
+// 6. Apply wallet deduction
+if (creditAppliedCents > 0) {
+  await applyCredit.mutateAsync({
+    amount_cents: creditAppliedCents,
+    order_id: order.id,
+  });
+  
+  toast.success(`You saved $${creditAppliedDollars.toFixed(2)} with credits!`);
+}
+```
+
+### F) Update Order Creation
+
+**File to Modify:** `src/hooks/useEatsOrders.ts`
+
+**Changes to `CreateFoodOrderInput`:**
+```typescript
+export interface CreateFoodOrderInput {
+  // ... existing fields ...
+  credit_applied_cents?: number;
+}
+```
+
+**Changes to Insert:**
+```typescript
+credit_applied_cents: input.credit_applied_cents || 0,
+```
+
+### G) Add Routes to App.tsx
+
+**File to Modify:** `src/App.tsx`
+
+Add lazy imports and routes:
+```typescript
+// Imports
+const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
+const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
+
+// Routes
+<Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
+<Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
+```
 
 ---
 
@@ -370,90 +310,108 @@ if (isActive) {
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/hooks/useMembership.ts` | Membership status and plan hooks |
-| `src/pages/MembershipPage.tsx` | Customer membership page |
-| `src/pages/admin/MembershipDashboard.tsx` | Admin dashboard for plans and subscribers |
-| `src/components/membership/MembershipCard.tsx` | Plan display with pricing |
-| `src/components/membership/MembershipSavingsBadge.tsx` | Savings indicator in cart |
-| `supabase/functions/create-membership-checkout/index.ts` | Stripe subscription checkout |
-| `supabase/functions/cancel-membership/index.ts` | Cancel subscription |
-| `supabase/functions/customer-portal-membership/index.ts` | Stripe billing portal |
+| `src/hooks/useCustomerWallet.ts` | Wallet balance + transactions + apply credit |
+| `src/pages/account/ReferralsPage.tsx` | Customer referrals dashboard |
+| `src/pages/account/WalletPage.tsx` | Credit wallet page |
+| `src/components/eats/CreditSelector.tsx` | Credit toggle component |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `supabase/functions/stripe-webhook/index.ts` | Add subscription event handlers |
-| `src/pages/EatsCart.tsx` | Apply membership discounts |
-| `src/hooks/useEatsOrders.ts` | Add `membership_applied`, `membership_discount_cents` |
-| `src/pages/EatsOrderDetail.tsx` | Show "ZIVO+ savings" in receipt |
-| `src/contexts/AuthContext.tsx` | Optionally add `isMember` flag |
-| `src/App.tsx` | Add `/membership`, `/admin/membership` routes |
-| `src/pages/ZivoPlus.tsx` | Connect "Join" button to checkout |
-
-### Database Migrations
-| Migration | Purpose |
-|-----------|---------|
-| Add plan columns | `delivery_fee_discount_pct`, `service_fee_discount_pct`, `free_delivery_min_order`, Stripe price IDs |
-| Add order columns | `membership_applied`, `membership_discount_cents` on `food_orders` |
-| Create `membership_usage` table | Track benefit usage per order |
-| Seed default plan | Insert "ZIVO+" plan with $9.99/month pricing |
+| `src/App.tsx` | Add routes `/account/referrals` and `/account/wallet` |
+| `src/pages/EatsCart.tsx` | Add credit toggle, calculate savings, apply wallet credit |
+| `src/hooks/useEatsOrders.ts` | Add `credit_applied_cents` to input and insert |
 
 ---
 
-## Stripe Setup Requirements
-
-Before implementation, create products in Stripe:
-
-1. **Product**: "ZIVO+ Membership"
-2. **Prices**:
-   - Monthly: $9.99/month (recurring)
-   - Yearly: $79.99/year (recurring)
-
-Store the `price_*` IDs in `zivo_subscription_plans.stripe_price_id_monthly/yearly`.
-
----
-
-## Checkout Flow
+## Credit Application Flow
 
 ```text
-User clicks "Join ZIVO+"
+User opens /eats/cart
     ↓
-Call create-membership-checkout edge function
+useCustomerWallet() fetches balance
     ↓
-Redirect to Stripe Checkout (subscription mode)
+If balance > 0, show CreditSelector:
+  "Apply $X.XX credit" [Toggle]
+  Balance: $XX.XX
     ↓
-User enters payment details
+Toggle ON → Recalculate total:
+  Subtotal: $50.00
+  Delivery: $3.99
+  Tax: $4.00
+  Credit: -$5.00  ← Applied
+  Total: $52.99   ← Reduced
     ↓
-Stripe processes subscription
+Place Order
     ↓
-Webhook: customer.subscription.created
+Order created with credit_applied_cents = 500
     ↓
-Insert/update zivo_subscriptions with status='active'
+apply_wallet_credit RPC called:
+  - Deducts 500 cents from balance
+  - Creates transaction record
+  - Links to order_id
     ↓
-Redirect to /membership?success=true
+Toast: "You saved $5.00 with credits!"
     ↓
-Show success toast + membership benefits
+Navigate to order detail
 ```
 
 ---
 
-## Eats Discount Logic
+## Referrals Page Flow
 
 ```text
-Customer opens /eats/cart
+User navigates to /account/referrals
     ↓
-useMembership() checks active subscription
+useReferrals() fetches:
+  - referralCode
+  - referrals list
+  - tiers
     ↓
-If active:
-  - Check if subtotal >= free_delivery_min_order
-    - Yes → delivery_fee = $0
-    - No → delivery_fee * (1 - delivery_fee_discount_pct/100)
-  - service_fee * (1 - service_fee_discount_pct/100)
-    ↓
-Display badge: "ZIVO+ savings: $X.XX applied"
-    ↓
-Place order with membership_discount_cents logged
+Display:
+  - Invite code with copy/share buttons
+  - "How it works" steps
+  - Referral list with status badges
+  - Tier progress (if applicable)
 ```
+
+---
+
+## Wallet Page Flow
+
+```text
+User navigates to /account/wallet
+    ↓
+useCustomerWallet() fetches:
+  - wallet balance
+  - transaction history
+    ↓
+Display:
+  - Balance card ($XX.XX available)
+  - Lifetime earned total
+  - Transaction list (green = earned, red = spent)
+  - Link to /account/referrals to earn more
+```
+
+---
+
+## Technical Notes
+
+1. **Credit Deduction Timing**: Credits are deducted immediately after order creation (not after delivery) because:
+   - The `apply_wallet_credit` RPC is transactional
+   - Simpler UX — user sees savings immediately
+   - Refunds can restore credits if order is cancelled
+
+2. **Max Credit Per Order**: Capped at $25 (2500 cents) to prevent abuse and ensure sustainable economics.
+
+3. **Wallet Creation**: If no wallet exists for user, the hook will create one with 0 balance.
+
+4. **Transaction Types**:
+   - `referral` — Earned from referral program
+   - `promo` — Promotional credit
+   - `order` — Spent on order
+   - `refund` — Refunded from cancelled order
+   - `redemption` — Points redemption
 
 ---
 
@@ -461,11 +419,11 @@ Place order with membership_discount_cents logged
 
 This implementation adds:
 
-1. **Membership Hook** (`useMembership`): Check subscription status anywhere in app
-2. **Stripe Subscription Checkout**: Edge function for subscription mode checkout
-3. **Webhook Handlers**: `subscription.created/updated/deleted`, `invoice.paid/failed`
-4. **Customer Page** (`/membership`): Join, manage, cancel subscription
-5. **Eats Integration**: Auto-apply fee discounts at checkout
-6. **Admin Dashboard** (`/admin/membership`): Plan management, subscriber list, revenue
-7. **Savings UX**: Badge showing savings, receipts highlighting membership discounts
-8. **Benefit Tracking**: Log usage per order for analytics
+1. **Account Referrals Page** (`/account/referrals`): Invite code, share buttons, referral progress list with status badges
+2. **Account Wallet Page** (`/account/wallet`): Credit balance, transaction history (earned/spent)
+3. **Customer Wallet Hook**: Fetch balance, transactions, apply credit RPC call
+4. **Credit Selector Component**: Toggle to apply credits at checkout
+5. **Eats Checkout Integration**: Apply up to `min(total, balance, $25)` at checkout
+6. **Credit Tracking**: `credit_applied_cents` saved on order, wallet balance deducted via RPC
+7. **Success UX**: Toast showing "You saved $X.XX with credits!"
+
