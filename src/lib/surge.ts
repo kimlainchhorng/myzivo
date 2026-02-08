@@ -1,10 +1,10 @@
 /**
  * Surge Pricing Calculation Module
  * 
- * Implements demand-based surge pricing matching Analytics rules:
- * - ratio >= 2.0 or no drivers: 2.0x (High)
- * - ratio >= 1.5: 1.6x (High)
- * - ratio >= 1.0: 1.3x (Medium)
+ * Implements demand-based surge pricing (capped at 1.35x to stay cheaper than Uber/Lyft):
+ * - ratio >= 2.0 or no drivers: 1.35x (High)
+ * - ratio >= 1.5: 1.25x (High)
+ * - ratio >= 1.0: 1.12x (Medium)
  * - ratio < 1.0: 1.0x (Low)
  * 
  * Where ratio = requestedCount / max(1, availableDrivers)
@@ -30,7 +30,7 @@ export interface DemandMetrics {
  */
 /**
  * Calculate surge pricing based on demand vs supply ratio
- * CAPPED at 1.5x to stay cheaper than competitors
+ * CAPPED at 1.35x to stay cheaper than competitors (Uber/Lyft)
  */
 export function calculateSurge({
   requestedCount,
@@ -45,19 +45,19 @@ export function calculateSurge({
   let level: SurgeLevel = "Low";
 
   if (availableDrivers <= 0) {
-    multiplier = 1.5; // Capped from 2.0
+    multiplier = 1.35; // Capped at 1.35x
     level = "High";
   } else {
     const ratio = requestedCount / Math.max(1, availableDrivers);
 
     if (ratio >= 2.0) {
-      multiplier = 1.5; // Capped from 2.0
+      multiplier = 1.35; // Capped at 1.35x
       level = "High";
     } else if (ratio >= 1.5) {
-      multiplier = 1.3; // Capped from 1.6
+      multiplier = 1.25;
       level = "High";
     } else if (ratio >= 1.0) {
-      multiplier = 1.15; // Capped from 1.3
+      multiplier = 1.12;
       level = "Medium";
     }
     // ratio < 1.0 remains at 1.0x, "Low"

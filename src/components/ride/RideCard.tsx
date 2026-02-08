@@ -63,15 +63,22 @@ const RideCard = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        {/* Surge Badge - Shows level and multiplier */}
-        {surgeActive && surgeLevel && surgeLevel !== "Low" && (
+        {/* Surge Badge - "Busy now" */}
+        {quote?.multipliers?.surge && quote.multipliers.surge > 1.0 && (
+          <div className="absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-amber-500/90 flex items-center gap-1">
+            <span className="text-[10px]">🔥</span>
+            <span className="text-[10px] font-bold text-white">Busy now</span>
+          </div>
+        )}
+        
+        {/* Event Badge - "Event pricing" */}
+        {quote?.multipliers?.event && quote.multipliers.event > 1.0 && (
           <div className={cn(
-            "absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full",
-            surgeLevel === "High" ? "bg-amber-500/90" : "bg-yellow-500/80"
+            "absolute left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-violet-500/90 flex items-center gap-1",
+            quote?.multipliers?.surge && quote.multipliers.surge > 1.0 ? "top-8" : "top-2"
           )}>
-            <span className="text-[10px] font-bold text-white">
-              {surgeLevel} demand{surgeMultiplier && surgeMultiplier > 1 ? ` • ${surgeMultiplier}x` : ""}
-            </span>
+            <span className="text-[10px]">🎫</span>
+            <span className="text-[10px] font-bold text-white">Event pricing</span>
           </div>
         )}
         
@@ -105,17 +112,27 @@ const RideCard = ({
               <span>Route:</span>
               <span>{quote.miles.toFixed(1)} mi / {quote.minutes} min</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between border-t border-white/5 pt-1 mt-1">
               <span>Subtotal:</span>
               <span>${quote.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span>× Combined:</span>
-              <span>{quote.multipliers.combined.toFixed(2)}</span>
+              <span>× Surge:</span>
+              <span className={quote.multipliers.surge > 1 ? "text-amber-400" : ""}>{quote.multipliers.surge.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>× Event:</span>
+              <span className={quote.multipliers.event > 1 ? "text-violet-400" : ""}>{quote.multipliers.event.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>× LongTrip:</span>
-              <span>{quote.multipliers.longTrip.toFixed(2)}</span>
+              <span className={quote.multipliers.longTrip < 1 ? "text-green-400" : ""}>{quote.multipliers.longTrip.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between border-t border-white/5 pt-1 mt-1">
+              <span>× Total:</span>
+              <span className={quote.multipliers.combined >= 1.6 ? "text-orange-400" : "text-white/60"}>
+                {quote.multipliers.combined.toFixed(2)}{quote.multipliers.combined >= 1.6 ? " (cap)" : ""}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>+ Insurance:</span>
@@ -125,7 +142,7 @@ const RideCard = ({
               <span>+ Booking:</span>
               <span>${quote.booking_fee.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold text-white/70">
+            <div className="flex justify-between font-bold text-white/70 border-t border-white/5 pt-1 mt-1">
               <span>= Final:</span>
               <span>${quote.final.toFixed(2)}</span>
             </div>

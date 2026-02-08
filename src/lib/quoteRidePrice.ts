@@ -84,6 +84,9 @@ interface EventZone {
 
 // ============= Constants =============
 
+// Maximum total multiplier cap to stay cheaper than competitors
+const MAX_TOTAL_MULTIPLIER = 1.60;
+
 // Default rate card (fallback if no zone match)
 const DEFAULT_RATE: ZoneRate = {
   base_fare: 2.00,
@@ -216,7 +219,7 @@ export async function getWeatherMultiplier(_zoneId: string): Promise<number> {
 
 /**
  * Calculate surge multiplier based on demand/supply ratio
- * CAPPED at 1.5x to stay cheaper than competitors
+ * CAPPED at 1.35x to stay cheaper than competitors
  */
 export async function getSurgeMultiplier(): Promise<number> {
   const now = new Date();
@@ -241,14 +244,14 @@ export async function getSurgeMultiplier(): Promise<number> {
   const rides = requestedCount || 0;
   const drivers = driversCount || 0;
 
-  // Surge rules (capped at 1.5x)
-  if (drivers <= 0) return 1.5;
+  // Surge rules (capped at 1.35x to stay cheaper than Uber/Lyft)
+  if (drivers <= 0) return 1.35;
   
   const ratio = rides / Math.max(1, drivers);
   
-  if (ratio >= 2.0) return 1.5;
-  if (ratio >= 1.5) return 1.3;
-  if (ratio >= 1.0) return 1.15;
+  if (ratio >= 2.0) return 1.35;
+  if (ratio >= 1.5) return 1.25;
+  if (ratio >= 1.0) return 1.12;
   
   return 1.0;
 }
@@ -356,8 +359,11 @@ export async function quoteRidePrice(input: QuoteInput): Promise<RideQuoteResult
   const rawSubtotal = rate.base_fare + (miles * rate.per_mile) + (minutes * rate.per_minute);
   const subtotal = Math.max(rawSubtotal, rate.minimum_fare);
 
-  // 5. Calculate combined multiplier
-  const combinedMult = rate.ride_type_multiplier * timeMult * weatherMult * surgeMult * eventMult * longTripMult;
+  // 5. Calculate combined multiplier (capped at MAX_TOTAL_MULTIPLIER)
+  let combinedMult = rate.ride_type_multiplier * timeMult * weatherMult * surgeMult * eventMult * longTripMult;
+  if (combinedMult > MAX_TOTAL_MULTIPLIER) {
+    combinedMult = MAX_TOTAL_MULTIPLIER;
+  }
 
   // 6. Calculate insurance
   const insurance = calculateInsurance(minutes, weatherMult, surgeMult);
