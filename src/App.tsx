@@ -290,6 +290,8 @@ const Security = lazy(() => import("./pages/Security"));
 const PrivacySecurity = lazy(() => import("./pages/PrivacySecurity"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
+const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
+const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
 const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const ScaleProtection = lazy(() => import("./pages/security/ScaleProtection"));
@@ -847,6 +849,8 @@ const App = () => (
                 <Route path="/privacy-security" element={<PrivacySecurity />} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
+                <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
+                <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />

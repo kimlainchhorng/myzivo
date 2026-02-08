@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats — Enhanced Cart Page
- * Full checkout flow with address, promo, payment, tip, and ZIVO+ discounts
+ * Full checkout flow with address, promo, payment, tip, ZIVO+ discounts, and wallet credits
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,10 +12,12 @@ import { PromoCodeInput } from "@/components/eats/PromoCodeInput";
 import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/components/eats/PaymentMethodModal";
 import { TipSelector } from "@/components/eats/TipSelector";
 import { MembershipSavingsBadge } from "@/components/membership/MembershipSavingsBadge";
+import { CreditSelector } from "@/components/eats/CreditSelector";
 import { useEatsPromo } from "@/hooks/useEatsPromo";
 import { useSavedLocations, type SavedLocation } from "@/hooks/useSavedLocations";
 import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
 import { useMembership, calculateMembershipSavings } from "@/hooks/useMembership";
+import { useCustomerWallet, useAppliedCredit } from "@/hooks/useCustomerWallet";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
@@ -38,12 +40,14 @@ function EatsCartContent() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
+  const [useCredits, setUseCredits] = useState(false);
 
   // Hooks
   const { data: addresses } = useSavedLocations(userId);
   const promo = useEatsPromo();
   const createOrder = useCreateFoodOrder();
   const { membership, isActive: isMember } = useMembership();
+  const { wallet, balanceCents, applyCredit } = useCustomerWallet();
 
   // Get current user
   useEffect(() => {
@@ -83,7 +87,20 @@ function EatsCartContent() {
   const deliveryFee = Math.max(0, deliveryFeeBase - membershipSavings.deliverySavings);
   const serviceFee = Math.max(0, serviceFeeBase - membershipSavings.serviceSavings);
   const tax = Math.round((subtotal - promo.discountAmount) * 0.08 * 100) / 100;
-  const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax + tipAmount;
+  
+  // Calculate total before credits
+  const totalBeforeCredits = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax + tipAmount;
+  const totalBeforeCreditsCents = Math.round(totalBeforeCredits * 100);
+  
+  // Calculate credit to apply
+  const { creditAppliedCents, creditAppliedDollars } = useAppliedCredit(
+    useCredits,
+    totalBeforeCreditsCents,
+    balanceCents
+  );
+  
+  // Final total
+  const total = totalBeforeCredits - creditAppliedDollars;
 
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
   const restaurantId = items.length > 0 ? items[0].restaurantId : "";
@@ -133,7 +150,23 @@ function EatsCartContent() {
         // Membership tracking
         membership_applied: isMember,
         membership_discount_cents: Math.round(membershipSavings.total * 100),
+        // Credit tracking
+        credit_applied_cents: creditAppliedCents,
       });
+
+      // Apply wallet credit deduction if credits were used
+      if (creditAppliedCents > 0) {
+        try {
+          await applyCredit.mutateAsync({
+            amount_cents: creditAppliedCents,
+            order_id: order.id,
+          });
+          toast.success(`You saved $${creditAppliedDollars.toFixed(2)} with credits!`);
+        } catch (creditError) {
+          console.warn("Credit deduction failed:", creditError);
+          // Order still went through, just credit wasn't deducted
+        }
+      }
 
       clearCart();
       toast.success("Order placed successfully!");
@@ -313,6 +346,17 @@ function EatsCartContent() {
         {isMember && membershipSavings.total > 0 && (
           <MembershipSavingsBadge totalSavings={membershipSavings.total} />
         )}
+
+        {/* Credit Selector */}
+        <CreditSelector
+          availableBalanceCents={balanceCents}
+          orderTotalCents={totalBeforeCreditsCents}
+          creditAppliedCents={creditAppliedCents}
+          useCredits={useCredits}
+          onToggle={setUseCredits}
+        />
+
+        {/* Order Summary */}
         <div className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Subtotal</span>
@@ -342,6 +386,12 @@ function EatsCartContent() {
             <div className="flex justify-between text-sm">
               <span className="text-zinc-400">Tip</span>
               <span>${tipAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {creditAppliedCents > 0 && (
+            <div className="flex justify-between text-sm text-emerald-400">
+              <span>Credit Applied</span>
+              <span>-${creditAppliedDollars.toFixed(2)}</span>
             </div>
           )}
           <div className="border-t border-white/10 pt-3">
