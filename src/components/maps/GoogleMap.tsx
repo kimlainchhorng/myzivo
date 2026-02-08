@@ -94,6 +94,9 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
     fullscreenControl: false,
     gestureHandling: "greedy",
     tilt: 0,
+    // Disable Google's blue location dot
+    myLocationButton: false,
+    scrollwheel: true,
   }), [darkMode, showControls]);
 
   // Expose methods via ref
