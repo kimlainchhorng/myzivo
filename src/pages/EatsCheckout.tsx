@@ -72,7 +72,7 @@ function EatsCheckoutContent() {
     }
 
     try {
-      await createOrder.mutateAsync({
+      const order = await createOrder.mutateAsync({
         customer_name: data.customer_name,
         customer_phone: data.customer_phone,
         customer_email: data.customer_email,
@@ -93,8 +93,14 @@ function EatsCheckoutContent() {
         total,
       });
 
-      setOrderSubmitted(true);
       clearCart();
+      toast.success("Order placed successfully!");
+      // Redirect to order detail page
+      if (order?.id) {
+        navigate(`/eats/orders/${order.id}`);
+      } else {
+        setOrderSubmitted(true);
+      }
     } catch (error) {
       // Error handled in hook
     }

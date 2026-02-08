@@ -5198,7 +5198,22 @@ export type Database = {
           stripe_payout_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_cashouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_cashouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_certifications: {
         Row: {
@@ -5872,7 +5887,22 @@ export type Database = {
           status?: string | null
           week_start?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_penalties: {
         Row: {
@@ -6692,7 +6722,22 @@ export type Database = {
           updated_at?: string | null
           week_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_weekly_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_weekly_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_withdrawals: {
         Row: {
@@ -18414,6 +18459,36 @@ export type Database = {
           },
         ]
       }
+      ride_offers: {
+        Row: {
+          driver_id: string
+          expires_at: string
+          id: string
+          offered_at: string | null
+          responded_at: string | null
+          ride_id: string
+          status: string | null
+        }
+        Insert: {
+          driver_id: string
+          expires_at: string
+          id?: string
+          offered_at?: string | null
+          responded_at?: string | null
+          ride_id: string
+          status?: string | null
+        }
+        Update: {
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          offered_at?: string | null
+          responded_at?: string | null
+          ride_id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       ride_quotes: {
         Row: {
           created_at: string | null
@@ -24513,6 +24588,7 @@ export type Database = {
         Row: {
           available: number | null
           driver_id: string
+          lifetime_earnings: number | null
           paid_out: number | null
           pending: number | null
           updated_at: string | null
@@ -24520,6 +24596,7 @@ export type Database = {
         Insert: {
           available?: number | null
           driver_id: string
+          lifetime_earnings?: number | null
           paid_out?: number | null
           pending?: number | null
           updated_at?: string | null
@@ -24527,6 +24604,7 @@ export type Database = {
         Update: {
           available?: number | null
           driver_id?: string
+          lifetime_earnings?: number | null
           paid_out?: number | null
           pending?: number | null
           updated_at?: string | null
@@ -27967,6 +28045,7 @@ export type Database = {
             Returns: {
               distance_miles: number
               driver_id: string
+              performance_score: number
               priority_score: number
             }[]
           }
@@ -28443,6 +28522,7 @@ export type Database = {
           success: boolean
         }[]
       }
+      user_phone_matches: { Args: { phone_to_check: string }; Returns: boolean }
       validate_merchant_coupon: {
         Args: {
           p_code: string
