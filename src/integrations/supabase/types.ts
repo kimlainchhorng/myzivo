@@ -9974,6 +9974,7 @@ export type Database = {
           pickup_lng: number | null
           pickup_window_end: string | null
           pickup_window_start: string | null
+          pin_attempts: number | null
           placed_at: string | null
           platform_fee: number | null
           prep_minutes: number | null
@@ -10113,6 +10114,7 @@ export type Database = {
           pickup_lng?: number | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
+          pin_attempts?: number | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -10252,6 +10254,7 @@ export type Database = {
           pickup_lng?: number | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
+          pin_attempts?: number | null
           placed_at?: string | null
           platform_fee?: number | null
           prep_minutes?: number | null
@@ -30503,6 +30506,13 @@ export type Database = {
         }
         Returns: string
       }
+      log_wrong_pin_attempt: {
+        Args: { p_driver_id: string; p_order_id: string }
+        Returns: {
+          attempts: number
+          is_locked: boolean
+        }[]
+      }
       merchant_fee_percent: {
         Args: { p_restaurant_id: string }
         Returns: number
@@ -30657,6 +30667,14 @@ export type Database = {
       validate_withdrawal: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
+      }
+      verify_delivery_pin: {
+        Args: { p_driver_id: string; p_order_id: string; p_pin: string }
+        Returns: {
+          attempts_remaining: number
+          error_message: string
+          success: boolean
+        }[]
       }
     }
     Enums: {

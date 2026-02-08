@@ -43,6 +43,10 @@ export interface LiveEatsOrder {
   eta_pickup?: string | null;
   eta_dropoff?: string | null;
   eta_minutes?: number | null;
+  // Delivery PIN fields
+  delivery_pin?: string | null;
+  delivery_pin_verified?: boolean | null;
+  pin_attempts?: number | null;
   restaurants?: {
     name: string;
     logo_url: string | null;

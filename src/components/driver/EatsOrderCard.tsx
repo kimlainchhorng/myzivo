@@ -1,6 +1,7 @@
 /**
  * EatsOrderCard Component
  * Driver view of an assigned Eats delivery order with actions
+ * Includes PIN verification for delivery confirmation
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +16,8 @@ import {
   ChevronDown,
   ChevronUp,
   Store,
-  MessageCircle
+  MessageCircle,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +33,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
+import { DeliveryPinDialog } from "./DeliveryPinDialog";
 import type { DriverEatsOrder } from "@/hooks/useDriverEatsOrders";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EatsOrderCardProps {
   order: DriverEatsOrder;
@@ -39,6 +43,7 @@ interface EatsOrderCardProps {
   onDelivered: (orderId: string) => void;
   onUnassign: (orderId: string) => void;
   isLoading?: boolean;
+  driverId?: string;
 }
 
 export function EatsOrderCard({
@@ -47,13 +52,17 @@ export function EatsOrderCard({
   onDelivered,
   onUnassign,
   isLoading = false,
+  driverId,
 }: EatsOrderCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [expanded, setExpanded] = useState(true);
   const [confirmUnassign, setConfirmUnassign] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
   const payout = order.driver_payout_cents ? (order.driver_payout_cents / 100).toFixed(2) : null;
   const isPickedUp = order.picked_up_at != null || order.status === "in_progress";
+  const effectiveDriverId = driverId || user?.id || "";
   
   // Open navigation to address
   const handleNavigate = (address: string | null, lat?: number | null, lng?: number | null) => {
@@ -235,11 +244,11 @@ export function EatsOrderCard({
                   <div className="flex gap-2 w-full">
                     <Button
                       className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                      onClick={() => onDelivered(order.id)}
+                      onClick={() => setPinDialogOpen(true)}
                       disabled={isLoading}
                     >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Delivered
+                      <Lock className="w-4 h-4 mr-2" />
+                      Enter PIN to Deliver
                     </Button>
                     <Button
                       variant="outline"
@@ -278,6 +287,15 @@ export function EatsOrderCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delivery PIN Dialog */}
+      <DeliveryPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        orderId={order.id}
+        driverId={effectiveDriverId}
+        onSuccess={() => onDelivered(order.id)}
+      />
     </>
   );
 }
