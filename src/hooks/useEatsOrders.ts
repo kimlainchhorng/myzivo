@@ -62,6 +62,8 @@ export interface CreateFoodOrderInput {
   // Membership fields
   membership_applied?: boolean;
   membership_discount_cents?: number;
+  // Credit fields
+  credit_applied_cents?: number;
 }
 
 // Fetch all active restaurants (including closed ones for display)
@@ -213,6 +215,8 @@ export function useCreateFoodOrder() {
           // Membership tracking
           membership_applied: input.membership_applied || false,
           membership_discount_cents: input.membership_discount_cents || 0,
+          // Credit tracking
+          credit_applied_cents: input.credit_applied_cents || 0,
         })
         .select()
         .single();

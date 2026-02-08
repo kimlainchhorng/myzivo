@@ -6911,6 +6911,30 @@ export type Database = {
           },
         ]
       }
+      driver_statuses: {
+        Row: {
+          current_lat: number | null
+          current_lng: number | null
+          driver_id: string
+          is_online: boolean | null
+          last_seen_at: string | null
+        }
+        Insert: {
+          current_lat?: number | null
+          current_lng?: number | null
+          driver_id: string
+          is_online?: boolean | null
+          last_seen_at?: string | null
+        }
+        Update: {
+          current_lat?: number | null
+          current_lng?: number | null
+          driver_id?: string
+          is_online?: boolean | null
+          last_seen_at?: string | null
+        }
+        Relationships: []
+      }
       driver_stripe: {
         Row: {
           created_at: string | null
@@ -12893,6 +12917,117 @@ export type Database = {
           },
         ]
       }
+      merchant_payout_run_items: {
+        Row: {
+          amount: number
+          created_at: string | null
+          error_message: string | null
+          id: string
+          restaurant_id: string | null
+          run_id: string | null
+          status: string | null
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          restaurant_id?: string | null
+          run_id?: string | null
+          status?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          restaurant_id?: string | null
+          run_id?: string | null
+          status?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_payout_run_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payout_run_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_payout_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_payout_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          merchants_failed: number | null
+          merchants_paid: number | null
+          merchants_processed: number | null
+          run_type: string
+          started_at: string | null
+          status: string
+          total_amount: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          merchants_failed?: number | null
+          merchants_paid?: number | null
+          merchants_processed?: number | null
+          run_type?: string
+          started_at?: string | null
+          status?: string
+          total_amount?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          merchants_failed?: number | null
+          merchants_paid?: number | null
+          merchants_processed?: number | null
+          run_type?: string
+          started_at?: string | null
+          status?: string
+          total_amount?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       merchant_plans: {
         Row: {
           active: boolean | null
@@ -16145,8 +16280,11 @@ export type Database = {
           driver_id: string | null
           fee_amount: number
           id: string
+          locked_at: string | null
+          locked_by: string | null
           net_amount: number
           notes: string | null
+          paid_at: string | null
           payout_method: string | null
           payout_speed: string | null
           processed_at: string | null
@@ -16166,8 +16304,11 @@ export type Database = {
           driver_id?: string | null
           fee_amount?: number
           id?: string
+          locked_at?: string | null
+          locked_by?: string | null
           net_amount?: number
           notes?: string | null
+          paid_at?: string | null
           payout_method?: string | null
           payout_speed?: string | null
           processed_at?: string | null
@@ -16187,8 +16328,11 @@ export type Database = {
           driver_id?: string | null
           fee_amount?: number
           id?: string
+          locked_at?: string | null
+          locked_by?: string | null
           net_amount?: number
           notes?: string | null
+          paid_at?: string | null
           payout_method?: string | null
           payout_speed?: string | null
           processed_at?: string | null
@@ -19252,6 +19396,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_details_submitted: boolean | null
           stripe_last_sync: string | null
+          stripe_onboarding_complete: boolean | null
           stripe_payouts_enabled: boolean | null
           stripe_subscription_id: string | null
           subscription_status: string | null
@@ -19319,6 +19464,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_last_sync?: string | null
+          stripe_onboarding_complete?: boolean | null
           stripe_payouts_enabled?: boolean | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -19386,6 +19532,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_last_sync?: string | null
+          stripe_onboarding_complete?: boolean | null
           stripe_payouts_enabled?: boolean | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
