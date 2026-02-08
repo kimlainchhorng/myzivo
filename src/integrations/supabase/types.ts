@@ -3181,6 +3181,39 @@ export type Database = {
           },
         ]
       }
+      compliance_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          document_id: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_resolved: boolean
+          message: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          document_id?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_resolved?: boolean
+          message: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          document_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_resolved?: boolean
+          message?: string
+        }
+        Relationships: []
+      }
       compliance_audit_logs: {
         Row: {
           action: string
@@ -4925,6 +4958,8 @@ export type Database = {
       }
       driver_documents: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           document_type: string
           driver_id: string
           expires_at: string | null
@@ -4935,11 +4970,14 @@ export type Database = {
           id: string
           mime_type: string | null
           notes: string | null
+          rejection_reason: string | null
           reviewed_at: string | null
           status: string
           uploaded_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           document_type: string
           driver_id: string
           expires_at?: string | null
@@ -4950,11 +4988,14 @@ export type Database = {
           id?: string
           mime_type?: string | null
           notes?: string | null
+          rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           document_type?: string
           driver_id?: string
           expires_at?: string | null
@@ -4965,6 +5006,7 @@ export type Database = {
           id?: string
           mime_type?: string | null
           notes?: string | null
+          rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
@@ -6642,6 +6684,56 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_zones: {
+        Row: {
+          center_lat: number
+          center_lng: number
+          created_at: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          multiplier: number | null
+          name: string
+          radius_km: number | null
+          start_time: string
+          zone_id: string | null
+        }
+        Insert: {
+          center_lat: number
+          center_lng: number
+          created_at?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number | null
+          name: string
+          radius_km?: number | null
+          start_time: string
+          zone_id?: string | null
+        }
+        Update: {
+          center_lat?: number
+          center_lng?: number
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number | null
+          name?: string
+          radius_km?: number | null
+          start_time?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_zones_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -11150,6 +11242,86 @@ export type Database = {
           {
             foreignKeyName: "merchant_coupons_restaurant_id_fkey"
             columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          document_type: string
+          expires_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          merchant_id: string
+          mime_type: string | null
+          notes: string | null
+          rejection_reason: string | null
+          status: string
+          uploaded_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          document_type: string
+          expires_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          merchant_id: string
+          mime_type?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          document_type?: string
+          expires_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          merchant_id?: string
+          mime_type?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
@@ -17149,6 +17321,7 @@ export type Database = {
           delivery_polygon: Json | null
           delivery_radius_miles: number | null
           description: string | null
+          documents_verified: boolean
           email: string
           hours: Json | null
           id: string
@@ -17211,6 +17384,7 @@ export type Database = {
           delivery_polygon?: Json | null
           delivery_radius_miles?: number | null
           description?: string | null
+          documents_verified?: boolean
           email: string
           hours?: Json | null
           id?: string
@@ -17273,6 +17447,7 @@ export type Database = {
           delivery_polygon?: Json | null
           delivery_radius_miles?: number | null
           description?: string | null
+          documents_verified?: boolean
           email?: string
           hours?: Json | null
           id?: string
@@ -17392,6 +17567,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ride_quotes: {
+        Row: {
+          created_at: string | null
+          dest_lat: number | null
+          dest_lng: number | null
+          final_price: number | null
+          id: string
+          insurance_fee: number | null
+          miles: number | null
+          minutes: number | null
+          multipliers: Json | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ride_type: string | null
+          subtotal: number | null
+          tolls_fee: number | null
+          user_id: string | null
+          zone_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dest_lat?: number | null
+          dest_lng?: number | null
+          final_price?: number | null
+          id?: string
+          insurance_fee?: number | null
+          miles?: number | null
+          minutes?: number | null
+          multipliers?: Json | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ride_type?: string | null
+          subtotal?: number | null
+          tolls_fee?: number | null
+          user_id?: string | null
+          zone_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dest_lat?: number | null
+          dest_lng?: number | null
+          final_price?: number | null
+          id?: string
+          insurance_fee?: number | null
+          miles?: number | null
+          minutes?: number | null
+          multipliers?: Json | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ride_type?: string | null
+          subtotal?: number | null
+          tolls_fee?: number | null
+          user_id?: string | null
+          zone_name?: string | null
+        }
+        Relationships: []
       }
       ride_requests: {
         Row: {
@@ -20868,6 +21100,44 @@ export type Database = {
           },
         ]
       }
+      time_multipliers: {
+        Row: {
+          created_at: string | null
+          day_mask: number | null
+          end_hour: number
+          id: string
+          multiplier: number | null
+          start_hour: number
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_mask?: number | null
+          end_hour: number
+          id?: string
+          multiplier?: number | null
+          start_hour: number
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_mask?: number | null
+          end_hour?: number
+          id?: string
+          multiplier?: number | null
+          start_hour?: number
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_multipliers_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tip_allocations: {
         Row: {
           amount: number
@@ -23724,6 +23994,38 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      weather_multipliers: {
+        Row: {
+          created_at: string | null
+          id: string
+          multiplier: number | null
+          weather_key: string
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          multiplier?: number | null
+          weather_key: string
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          multiplier?: number | null
+          weather_key?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_multipliers_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       withdrawal_rate_limits: {
         Row: {
@@ -26744,6 +27046,7 @@ export type Database = {
         }[]
       }
       generate_all_forecasts: { Args: never; Returns: number }
+      generate_compliance_alerts: { Args: never; Returns: undefined }
       generate_referral_code: { Args: never; Returns: string }
       generate_zone_forecast: {
         Args: {

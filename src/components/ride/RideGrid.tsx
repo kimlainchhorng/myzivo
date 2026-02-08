@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import RideCard, { RideOption } from "./RideCard";
-import { calculateRidePrice } from "@/lib/tripCalculator";
+import { useMultiRideQuotes } from "@/hooks/useRideQuote";
 import { SurgeLevel } from "@/lib/surge";
 
 export interface TripDetails {
@@ -15,10 +15,35 @@ interface RideGridProps {
   tripDetails: TripDetails | null;
   surgeMultiplier?: number;
   surgeLevel?: SurgeLevel;
+  pickupCoords?: { lat: number; lng: number } | null;
 }
 
-const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMultiplier = 1.0, surgeLevel }: RideGridProps) => {
+const RideGrid = ({ 
+  rides, 
+  selectedRideId, 
+  onSelectRide, 
+  tripDetails, 
+  surgeMultiplier = 1.0, 
+  surgeLevel,
+  pickupCoords 
+}: RideGridProps) => {
   const surgeActive = surgeMultiplier > 1.0;
+  
+  // Get ride types for multi-quote fetch
+  const rideTypes = rides.map(r => r.id);
+  
+  // Fetch all quotes from Supabase pricing engine
+  const { quotes, isLoading } = useMultiRideQuotes({
+    rideTypes,
+    pickupCoords: pickupCoords || null,
+    routeMiles: tripDetails?.distance || null,
+    routeMinutes: tripDetails?.duration || null,
+    enabled: !!tripDetails && !!pickupCoords,
+  });
+
+  // Check for debug mode
+  const showDebug = typeof window !== "undefined" && 
+    new URLSearchParams(window.location.search).get("debug") === "1";
   
   return (
     <motion.div
@@ -28,9 +53,9 @@ const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMulti
     >
       <AnimatePresence mode="popLayout">
         {rides.map((ride, index) => {
-          const calculatedPrice = tripDetails 
-            ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
-            : undefined;
+          // Get quote from Supabase pricing engine
+          const quote = quotes.get(ride.id);
+          const calculatedPrice = quote?.final;
           
           return (
             <motion.div
@@ -46,8 +71,11 @@ const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMulti
                 onSelect={() => onSelectRide(ride)}
                 calculatedPrice={calculatedPrice}
                 surgeActive={surgeActive}
-                surgeMultiplier={surgeMultiplier}
+                surgeMultiplier={quote?.multipliers.surge || surgeMultiplier}
                 surgeLevel={surgeLevel}
+                quote={quote}
+                showDebug={showDebug}
+                isLoading={isLoading && !quote}
               />
             </motion.div>
           );

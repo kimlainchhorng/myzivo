@@ -66,6 +66,20 @@ export interface CreateRideDbPayload {
   initialStatus?: "requested" | "requested_unpaid"; // NEW - allows creating unpaid rides
   surgeMultiplier?: number;
   surgeLevel?: string;
+  // Quote-based pricing data
+  insuranceFee?: number;
+  bookingFee?: number;
+  zoneName?: string;
+  zoneId?: string;
+  multipliers?: {
+    rideType: number;
+    time: number;
+    weather: number;
+    surge: number;
+    event: number;
+    longTrip: number;
+    combined: number;
+  };
 }
 
 // Result type for createRideInDb with full error info
@@ -126,9 +140,14 @@ export const createRideInDb = async (
       status: initialStatus,
       customer_name: payload.customerName,
       customer_phone: payload.customerPhone,
-      // Surge pricing fields - saved to trips table
-      surge_multiplier: payload.surgeMultiplier || 1,
+      // Surge pricing fields
+      surge_multiplier: payload.surgeMultiplier || payload.multipliers?.surge || 1,
       surged_fare: payload.price, // finalPrice already includes surge
+      // Quote-based pricing data
+      insurance_fee: payload.insuranceFee || 0,
+      zone_id: payload.zoneId || null,
+      // Commission: 15% of price
+      commission_amount: Math.round(payload.price * 0.15 * 100) / 100,
     };
 
     const { data, error } = await supabase
