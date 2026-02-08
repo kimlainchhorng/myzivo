@@ -970,6 +970,44 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          tenant_id: string | null
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          tenant_id?: string | null
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -4350,6 +4388,7 @@ export type Database = {
           last_used_at: string | null
           os_version: string | null
           platform: string
+          tenant_id: string | null
           token: string
           updated_at: string | null
           user_id: string
@@ -4363,6 +4402,7 @@ export type Database = {
           last_used_at?: string | null
           os_version?: string | null
           platform: string
+          tenant_id?: string | null
           token: string
           updated_at?: string | null
           user_id: string
@@ -4376,11 +4416,20 @@ export type Database = {
           last_used_at?: string | null
           os_version?: string | null
           platform?: string
+          tenant_id?: string | null
           token?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dispute_audit_logs: {
         Row: {
@@ -26715,6 +26764,22 @@ export type Database = {
           region: string
         }[]
       }
+      get_active_driver_state: {
+        Args: { p_driver_id: string }
+        Returns: {
+          active_order_id: string
+          active_order_status: string
+          active_trip_id: string
+          active_trip_status: string
+          current_lat: number
+          current_lng: number
+          earnings_today: number
+          is_online: boolean
+          orders_today: number
+          trips_today: number
+          updated_at: string
+        }[]
+      }
       get_active_happy_hour: {
         Args: {
           p_delivery_fee_cents?: number
@@ -26753,6 +26818,19 @@ export type Database = {
           restaurant_name: string
         }[]
       }
+      get_driver_orders: {
+        Args: { p_driver_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          completed_at: string
+          dropoff_address: string
+          fare_amount: number
+          id: string
+          order_type: string
+          pickup_address: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_experiment_variant: {
         Args: {
           p_experiment_id: string
@@ -26760,6 +26838,20 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      get_merchant_orders: {
+        Args: { p_limit?: number; p_restaurant_id: string; p_status?: string }
+        Returns: {
+          created_at: string
+          customer_name: string
+          delivery_address: string
+          id: string
+          items_count: number
+          special_instructions: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }[]
       }
       get_my_tenant_permissions: {
         Args: { p_tenant_id: string }
@@ -26790,6 +26882,22 @@ export type Database = {
           driver_name: string
           driver_vehicle_type: string
           last_updated: string
+        }[]
+      }
+      get_order_tracking_public: {
+        Args: { p_tracking_code: string }
+        Returns: {
+          driver_lat: number
+          driver_lng: number
+          driver_name: string
+          dropoff_address: string
+          eta_minutes: number
+          order_id: string
+          order_type: string
+          pickup_address: string
+          restaurant_name: string
+          status: string
+          updated_at: string
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
@@ -27057,6 +27165,30 @@ export type Database = {
       update_notification_updated_at: {
         Args: { notification_id: string }
         Returns: undefined
+      }
+      update_order_status_idempotent: {
+        Args: {
+          p_client_timestamp?: string
+          p_new_status: string
+          p_order_id: string
+        }
+        Returns: {
+          current_status: string
+          message: string
+          success: boolean
+        }[]
+      }
+      update_trip_status_idempotent: {
+        Args: {
+          p_client_timestamp?: string
+          p_new_status: string
+          p_trip_id: string
+        }
+        Returns: {
+          current_status: string
+          message: string
+          success: boolean
+        }[]
       }
       validate_merchant_coupon: {
         Args: {

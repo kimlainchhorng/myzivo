@@ -158,3 +158,9 @@ verify_jwt = false
 
 [functions.maps-api-key]
 verify_jwt = false
+
+[functions.register-push-token]
+verify_jwt = false
+
+[functions.sync-offline-actions]
+verify_jwt = false
