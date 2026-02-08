@@ -5,7 +5,6 @@
  * Falls back to static image if Maps fails to load.
  */
 
-import { GoogleMapProvider } from "@/components/maps/GoogleMapProvider";
 import GoogleMap from "@/components/maps/GoogleMap";
 
 interface RidesMapBackgroundProps {
@@ -15,7 +14,7 @@ interface RidesMapBackgroundProps {
   routeCoordinates?: [number, number][];
 }
 
-const RidesMapBackgroundInner = ({ 
+const RidesMapBackground = ({ 
   userLocation,
   pickupCoords,
   dropoffCoords,
@@ -47,14 +46,6 @@ const RidesMapBackgroundInner = ({
       {/* Extra bottom fade behind sheet */}
       <div className="pointer-events-none absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/80 to-transparent" />
     </div>
-  );
-};
-
-const RidesMapBackground = (props: RidesMapBackgroundProps) => {
-  return (
-    <GoogleMapProvider>
-      <RidesMapBackgroundInner {...props} />
-    </GoogleMapProvider>
   );
 };
 
