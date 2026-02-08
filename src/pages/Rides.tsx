@@ -31,7 +31,7 @@ import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { getPlaceDetails } from "@/services/mapsApi";
 import { decodePolyline } from "@/services/googleMaps";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
-import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
+import { ZivoRideRow } from "@/components/ride/ZivoRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
 import { usePricingZone, DEFAULT_US_ZONE } from "@/hooks/usePricingZone";
 import { useAllZoneRatesMap, DEFAULT_ZONE_RATES, type ZonePricingRate } from "@/hooks/useZonePricingRates";
@@ -227,42 +227,42 @@ function RidesMapView({
         </>
       )}
       
-      {/* Floating Pickup Card - Top Right */}
+      {/* Floating Pickup Card - Top Right - ZIVO Brand */}
       {pickup && (
         <button
           onClick={onPickupClick}
-          className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+          className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-[#FFFBF5] rounded-xl shadow-lg border border-emerald-100 px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
         >
-          <div className="bg-zinc-900 text-white px-2 py-1.5 rounded text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[40px]">
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white px-2 py-1.5 rounded-lg text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[40px]">
             <div>{etaMinutes ? `${etaMinutes}-${etaMinutes + 10}` : "5-10"}</div>
-            <div className="text-[8px] font-medium text-zinc-400">MIN</div>
+            <div className="text-[8px] font-medium text-white/70">MIN</div>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-zinc-900 truncate">{pickup.split(',')[0]}</div>
+            <div className="text-sm font-semibold text-zinc-800 truncate">{pickup.split(',')[0]}</div>
             {pickup.split(',').length > 1 && (
               <div className="text-xs text-zinc-500 truncate">{pickup.split(',').slice(1, 2).join(',').trim()}</div>
             )}
           </div>
-          <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-emerald-500 flex-shrink-0" />
         </button>
       )}
       
-      {/* Floating Dropoff Card - Bottom Right */}
+      {/* Floating Dropoff Card - Bottom Right - ZIVO Brand */}
       {dropoff && (
         <button
           onClick={onDropoffClick}
-          className="absolute bottom-16 right-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
+          className="absolute bottom-16 right-4 z-10 flex items-center gap-2 bg-[#FFFBF5] rounded-xl shadow-lg border border-emerald-100 px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
         >
-          <div className="w-8 h-8 bg-zinc-900 rounded flex items-center justify-center flex-shrink-0">
-            <div className="w-2.5 h-2.5 bg-white rounded-sm" />
+          <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-2.5 h-2.5 bg-white rounded-full" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-zinc-900 truncate">{dropoff.split(',')[0]}</div>
+            <div className="text-sm font-semibold text-zinc-800 truncate">{dropoff.split(',')[0]}</div>
             {dropoff.split(',').length > 1 && (
               <div className="text-xs text-zinc-500 truncate">{dropoff.split(',').slice(1, 2).join(',').trim()}</div>
             )}
           </div>
-          <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-teal-500 flex-shrink-0" />
         </button>
       )}
 
@@ -734,14 +734,14 @@ function RidesInner() {
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.2}
         onDragEnd={handleDragEnd}
-        className={`fixed bottom-0 left-0 right-0 ${getSheetHeightClass()} rounded-t-[28px] bg-white shadow-[0_-18px_40px_rgba(0,0,0,0.18)] flex flex-col z-50 transition-[height] duration-300 ease-out`}
+        className={`fixed bottom-0 left-0 right-0 ${getSheetHeightClass()} rounded-t-[32px] bg-gradient-to-b from-[#FFFBF5] to-white border-t border-emerald-100/50 shadow-[0_-18px_40px_rgba(16,185,129,0.12)] flex flex-col z-50 transition-[height] duration-300 ease-out`}
       >
-        {/* Drag Handle */}
+        {/* Drag Handle - ZIVO emerald accent */}
         <div
           onPointerDown={(e) => dragControls.start(e)}
           className="flex justify-center py-3 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
         >
-          <div className="w-12 h-1.5 bg-zinc-300/80 rounded-full" />
+          <div className="w-12 h-1.5 bg-emerald-200 rounded-full" />
         </div>
 
         {/* Content - scrollable when expanded */}
@@ -757,12 +757,13 @@ function RidesInner() {
               </div>
               
               {/* Pickup & Dropoff Inputs */}
-              <div className="relative bg-zinc-100 rounded-xl p-1">
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-1 border border-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.08)]">
                 {/* Pickup Input */}
                 <div className="relative">
                     <div className="flex items-center gap-2 px-3 py-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <div className="w-2 h-2 bg-white rounded-full" />
+                    {/* ZIVO emerald pickup ring */}
+                    <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                     </div>
                     <input
                       value={pickup}
@@ -891,7 +892,8 @@ function RidesInner() {
                 {/* Dropoff Input */}
                 <div className="relative">
                   <div className="flex items-center gap-2 px-3 py-2">
-                    <div className="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0">
+                    {/* ZIVO teal dropoff marker */}
+                    <div className="w-6 h-6 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <div className="w-2 h-2 bg-white rounded-sm" />
                     </div>
                     <input
@@ -952,16 +954,16 @@ function RidesInner() {
                 </button>
               )}
 
-              {/* Category Tabs */}
+              {/* Category Tabs - ZIVO Brand */}
               <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
                 {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setActiveTab(cat)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                       activeTab === cat 
-                        ? "bg-zinc-900 text-white" 
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25" 
+                        : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                     }`}
                   >
                     {cat}
@@ -969,12 +971,12 @@ function RidesInner() {
                 ))}
               </div>
 
-              {/* Trip Info - show when route is available */}
+              {/* Trip Info - ZIVO styled */}
               {routeData && dropoff && (
-                <div className="flex items-center gap-3 text-sm text-zinc-500 bg-zinc-50 rounded-lg px-3 py-2">
-                  <span className="font-medium text-zinc-700">{estimatedDistance.toFixed(1)} mi</span>
-                  <span className="text-zinc-300">•</span>
-                  <span>{estimatedDuration} min</span>
+                <div className="flex items-center gap-3 text-sm text-zinc-600 bg-emerald-50 rounded-xl px-3 py-2 border border-emerald-100">
+                  <span className="font-medium text-emerald-700">{estimatedDistance.toFixed(1)} mi</span>
+                  <span className="text-emerald-300">•</span>
+                  <span className="text-emerald-600">{estimatedDuration} min</span>
                 </div>
               )}
 
@@ -986,10 +988,10 @@ function RidesInner() {
                 zoneName={surge.zoneName}
               />
 
-              {/* Ride Options List */}
-              <div className="space-y-1.5">
+              {/* Ride Options List - using ZivoRideRow */}
+              <div className="space-y-2">
                 {rideCategories[activeTab].map((ride) => (
-                  <UberLikeRideRow
+                  <ZivoRideRow
                     key={ride.id}
                     selected={selectedOption?.id === ride.id}
                     name={ride.name}
@@ -1015,49 +1017,51 @@ function RidesInner() {
           {/* Options Step - Confirm selection */}
           {step === "options" && selectedOption && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-zinc-900">Confirm your ride</h2>
+              <h2 className="text-xl font-bold text-zinc-800">Confirm your ride</h2>
               
-              <div className="bg-zinc-100 rounded-xl p-4 space-y-2">
+              {/* ZIVO styled route summary */}
+              <div className="bg-emerald-50 rounded-xl p-4 space-y-2 border border-emerald-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                  <span className="text-sm text-zinc-900 truncate">{pickup}</span>
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                  <span className="text-sm text-zinc-800 truncate">{pickup}</span>
                 </div>
                 {stops.map((stop, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-zinc-400 rounded-full" />
+                    <div className="w-2 h-2 bg-teal-400 rounded-full" />
                     <span className="text-sm text-zinc-600 truncate">{stop.address}</span>
                   </div>
                 ))}
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-zinc-900 rounded-full" />
-                  <span className="text-sm text-zinc-900 truncate">{dropoff}</span>
+                  <div className="w-2 h-2 bg-teal-600 rounded-full" />
+                  <span className="text-sm text-zinc-800 truncate">{dropoff}</span>
                 </div>
-                <div className="flex gap-4 mt-3 pt-3 border-t border-zinc-200 text-sm text-zinc-500">
+                <div className="flex gap-4 mt-3 pt-3 border-t border-emerald-200 text-sm text-emerald-700">
                   <span>~{estimatedDistance.toFixed(1)} mi</span>
                   <span>~{estimatedDuration} min</span>
                   {stops.length > 0 && <span>{stops.length} stop{stops.length > 1 ? 's' : ''}</span>}
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-xl">
-                <div className="w-14 h-10 bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-lg flex items-center justify-center shrink-0">
-                  <CarFront className="w-7 h-5 text-zinc-600" />
+              {/* ZIVO styled selected ride card */}
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+                <div className="w-14 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center shrink-0">
+                  <CarFront className="w-7 h-5 text-emerald-600" />
                 </div>
                 <div className="flex-1">
-                  <span className="font-semibold text-zinc-900">{selectedOption.name}</span>
-                  <div className="text-sm text-zinc-500">{selectedOption.eta} min away</div>
+                  <span className="font-semibold text-zinc-800">{selectedOption.name}</span>
+                  <div className="text-sm text-emerald-600">{selectedOption.eta} min away</div>
                 </div>
-                <span className="text-lg font-bold text-zinc-900">{getFareDisplay(selectedOption)}</span>
+                <span className="text-lg font-bold text-emerald-600">{getFareDisplay(selectedOption)}</span>
               </div>
 
-              {/* Final Price Only */}
+              {/* Total - ZIVO styled */}
               {currentQuote && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#FFFBF5] border border-emerald-100">
                   <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-zinc-500" />
+                    <Receipt className="w-4 h-4 text-emerald-500" />
                     <span className="text-sm font-medium text-zinc-700">Total</span>
                   </div>
-                  <span className="text-lg font-bold text-zinc-900">{formatCurrency(currentQuote.total)}</span>
+                  <span className="text-lg font-bold text-emerald-600">{formatCurrency(currentQuote.total)}</span>
                 </div>
               )}
 
@@ -1135,12 +1139,12 @@ function RidesInner() {
                 />
               </div>
 
-              {/* Final Price Only */}
+              {/* Total - ZIVO styled */}
               {currentQuote && (
-                <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                <div className="p-3 rounded-xl bg-[#FFFBF5] border border-emerald-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Receipt className="w-4 h-4 text-zinc-500" />
+                      <Receipt className="w-4 h-4 text-emerald-500" />
                       <span className="text-sm font-medium text-zinc-700">Total</span>
                     </div>
                     <div className="text-right">
@@ -1150,7 +1154,7 @@ function RidesInner() {
                           <span className="text-lg font-bold text-emerald-600">{formatCurrency(Math.max(0, currentQuote.total - appliedPromo.discount_amount))}</span>
                         </div>
                       ) : (
-                        <span className="text-lg font-bold text-zinc-900">{formatCurrency(currentQuote.total)}</span>
+                        <span className="text-lg font-bold text-emerald-600">{formatCurrency(currentQuote.total)}</span>
                       )}
                     </div>
                   </div>
@@ -1184,26 +1188,26 @@ function RidesInner() {
             </div>
           )}
 
-          {/* Success Step */}
+          {/* Success Step - ZIVO Brand */}
           {step === "success" && (
             <div className="py-8 text-center space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-zinc-900">Payment Received!</h2>
+                <h2 className="text-2xl font-bold text-zinc-800">Payment Received!</h2>
                 <p className="text-zinc-500 mt-2">Your ride request has been submitted.</p>
               </div>
               {requestId && (
-                <div className="py-3 px-5 rounded-xl bg-zinc-100 inline-block">
-                  <p className="text-xs text-zinc-500">Request ID</p>
-                  <p className="font-mono font-bold text-zinc-900">{requestId.slice(0, 8).toUpperCase()}</p>
+                <div className="py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-100 inline-block">
+                  <p className="text-xs text-emerald-600">Request ID</p>
+                  <p className="font-mono font-bold text-emerald-700">{requestId.slice(0, 8).toUpperCase()}</p>
                 </div>
               )}
               <Button
                 variant="outline"
                 onClick={handleReset}
-                className="rounded-xl"
+                className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
               >
                 Request Another Ride
               </Button>
@@ -1212,12 +1216,12 @@ function RidesInner() {
           </div>
         </div>
 
-        {/* Sticky CTA Buttons - positioned at bottom of sheet */}
+        {/* Sticky CTA Buttons - ZIVO emerald gradient */}
         {step === "request" && selectedOption && dropoff && (
-          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-[#FFFBF5] via-[#FFFBF5] to-[#FFFBF5]/90 border-t border-emerald-100">
             <Button
               onClick={handleFindRides}
-              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25"
             >
               Choose {selectedOption.name}
             </Button>
@@ -1225,10 +1229,10 @@ function RidesInner() {
         )}
 
         {step === "options" && selectedOption && (
-          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-[#FFFBF5] via-[#FFFBF5] to-[#FFFBF5]/90 border-t border-emerald-100">
             <Button
               onClick={handleConfirmRide}
-              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25"
             >
               Continue
             </Button>
@@ -1236,11 +1240,11 @@ function RidesInner() {
         )}
 
         {step === "confirm" && selectedOption && (
-          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-white via-white to-white/90 border-t border-zinc-100">
+          <div className="flex-shrink-0 p-4 bg-gradient-to-t from-[#FFFBF5] via-[#FFFBF5] to-[#FFFBF5]/90 border-t border-emerald-100">
             <Button
               onClick={handleStartCheckout}
               disabled={!contactInfo.name || !contactInfo.phone || isSubmitting}
-              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl gap-2"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl gap-2 shadow-lg shadow-emerald-500/25 disabled:from-zinc-300 disabled:to-zinc-400 disabled:shadow-none"
             >
               <CreditCard className="w-4 h-4" />
               Continue to Payment

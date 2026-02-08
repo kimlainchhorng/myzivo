@@ -6764,12 +6764,16 @@ export type Database = {
           allowed_regions: string[] | null
           apns_token: string | null
           application_id: string | null
+          application_submitted_at: string | null
+          approved_at: string | null
+          approved_by: string | null
           approved_for_blacklux: boolean | null
           avatar_url: string | null
           avg_delay_minutes: number | null
           bank_connected: boolean | null
           can_go_online: boolean
           cancel_count: number
+          city: string | null
           completion_rate: number | null
           created_at: string
           current_lat: number | null
@@ -6798,7 +6802,9 @@ export type Database = {
           longest_streak: number | null
           move_enabled: boolean | null
           on_time_rate: number | null
+          onboarding_completed_at: string | null
           onboarding_status: string
+          onboarding_step: number | null
           performance_score: number | null
           phone: string
           prev_lat: number | null
@@ -6809,9 +6815,13 @@ export type Database = {
           rating_count: number | null
           referral_code: string
           region_id: string | null
+          rejection_reason: string | null
+          reviewer_notes: string | null
           rides_enabled: boolean | null
+          state: string | null
           status: Database["public"]["Enums"]["driver_status"] | null
           streak_days: number | null
+          street_address: string | null
           stripe_account_id: string | null
           stripe_charges_enabled: boolean | null
           stripe_details_submitted: boolean | null
@@ -6827,6 +6837,7 @@ export type Database = {
           vehicle_model: string | null
           vehicle_plate: string
           vehicle_type: string
+          zip_code: string | null
         }
         Insert: {
           acceptance_count?: number
@@ -6834,12 +6845,16 @@ export type Database = {
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null
+          application_submitted_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
           can_go_online?: boolean
           cancel_count?: number
+          city?: string | null
           completion_rate?: number | null
           created_at?: string
           current_lat?: number | null
@@ -6868,7 +6883,9 @@ export type Database = {
           longest_streak?: number | null
           move_enabled?: boolean | null
           on_time_rate?: number | null
+          onboarding_completed_at?: string | null
           onboarding_status?: string
+          onboarding_step?: number | null
           performance_score?: number | null
           phone: string
           prev_lat?: number | null
@@ -6879,9 +6896,13 @@ export type Database = {
           rating_count?: number | null
           referral_code?: string
           region_id?: string | null
+          rejection_reason?: string | null
+          reviewer_notes?: string | null
           rides_enabled?: boolean | null
+          state?: string | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           streak_days?: number | null
+          street_address?: string | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
@@ -6897,6 +6918,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_plate: string
           vehicle_type: string
+          zip_code?: string | null
         }
         Update: {
           acceptance_count?: number
@@ -6904,12 +6926,16 @@ export type Database = {
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null
+          application_submitted_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
           can_go_online?: boolean
           cancel_count?: number
+          city?: string | null
           completion_rate?: number | null
           created_at?: string
           current_lat?: number | null
@@ -6938,7 +6964,9 @@ export type Database = {
           longest_streak?: number | null
           move_enabled?: boolean | null
           on_time_rate?: number | null
+          onboarding_completed_at?: string | null
           onboarding_status?: string
+          onboarding_step?: number | null
           performance_score?: number | null
           phone?: string
           prev_lat?: number | null
@@ -6949,9 +6977,13 @@ export type Database = {
           rating_count?: number | null
           referral_code?: string
           region_id?: string | null
+          rejection_reason?: string | null
+          reviewer_notes?: string | null
           rides_enabled?: boolean | null
+          state?: string | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           streak_days?: number | null
+          street_address?: string | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
@@ -6967,6 +6999,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_plate?: string
           vehicle_type?: string
+          zip_code?: string | null
         }
         Relationships: [
           {
@@ -10499,6 +10532,79 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      identity_verifications: {
+        Row: {
+          admin_override: boolean | null
+          admin_override_at: string | null
+          admin_override_by: string | null
+          admin_override_note: string | null
+          application_id: string
+          created_at: string | null
+          driver_id: string
+          id: string
+          last_error: string | null
+          provider: string | null
+          raw: Json | null
+          status: string | null
+          stripe_verification_session_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_override?: boolean | null
+          admin_override_at?: string | null
+          admin_override_by?: string | null
+          admin_override_note?: string | null
+          application_id: string
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          last_error?: string | null
+          provider?: string | null
+          raw?: Json | null
+          status?: string | null
+          stripe_verification_session_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_override?: boolean | null
+          admin_override_at?: string | null
+          admin_override_by?: string | null
+          admin_override_note?: string | null
+          application_id?: string
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          last_error?: string | null
+          provider?: string | null
+          raw?: Json | null
+          status?: string | null
+          stripe_verification_session_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_verifications_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_verifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_verifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incident_logs: {
         Row: {
