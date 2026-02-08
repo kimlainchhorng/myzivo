@@ -5406,6 +5406,35 @@ export type Database = {
         }
         Relationships: []
       }
+      document_reminders: {
+        Row: {
+          document_id: string
+          id: string
+          reminder_type: string
+          sent_at: string
+        }
+        Insert: {
+          document_id: string
+          id?: string
+          reminder_type: string
+          sent_at?: string
+        }
+        Update: {
+          document_id?: string
+          id?: string
+          reminder_type?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_reminders_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "user_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dr_active_incidents: {
         Row: {
           affected_services: string[] | null
@@ -11846,6 +11875,75 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          event_type: string
+          id: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kyc_submissions: {
+        Row: {
+          data_json: Json | null
+          document_urls_json: Json | null
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by_admin_id: string | null
+          role: string
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          data_json?: Json | null
+          document_urls_json?: Json | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by_admin_id?: string | null
+          role: string
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          data_json?: Json | null
+          document_urls_json?: Json | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by_admin_id?: string | null
+          role?: string
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       launch_monitoring_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -13704,6 +13802,42 @@ export type Database = {
           provider_id?: string | null
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      notification_audit: {
+        Row: {
+          channel: string
+          created_at: string
+          destination: string | null
+          error: string | null
+          event_type: string | null
+          id: string
+          provider_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          destination?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          provider_id?: string | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          destination?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          provider_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -17830,42 +17964,75 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          background_check_reason: string | null
+          background_check_status: string
           created_at: string | null
           email: string | null
           email_verified: boolean | null
           full_name: string | null
           id: string
+          kyc_rejection_reason: string | null
+          kyc_status: string
+          kyc_verified_at: string | null
           payout_hold: boolean
           phone: string | null
+          phone_e164: string | null
+          phone_verified: boolean
+          phone_verified_at: string | null
           setup_complete: boolean | null
+          sms_consent: boolean
+          sms_opted_out: boolean
+          sms_opted_out_at: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           avatar_url?: string | null
+          background_check_reason?: string | null
+          background_check_status?: string
           created_at?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          kyc_rejection_reason?: string | null
+          kyc_status?: string
+          kyc_verified_at?: string | null
           payout_hold?: boolean
           phone?: string | null
+          phone_e164?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
           setup_complete?: boolean | null
+          sms_consent?: boolean
+          sms_opted_out?: boolean
+          sms_opted_out_at?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           avatar_url?: string | null
+          background_check_reason?: string | null
+          background_check_status?: string
           created_at?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          kyc_rejection_reason?: string | null
+          kyc_status?: string
+          kyc_verified_at?: string | null
           payout_hold?: boolean
           phone?: string | null
+          phone_e164?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
           setup_complete?: boolean | null
+          sms_consent?: boolean
+          sms_opted_out?: boolean
+          sms_opted_out_at?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -25667,6 +25834,42 @@ export type Database = {
           onesignal_player_id?: string
           role?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          expires_at: string | null
+          file_url: string
+          id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          expires_at?: string | null
+          file_url: string
+          id?: string
+          role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          expires_at?: string | null
+          file_url?: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

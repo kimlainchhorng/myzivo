@@ -6,13 +6,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, ArrowLeft, DollarSign, Truck, Clock, TrendingUp, Loader2 } from "lucide-react";
+import { BarChart3, ArrowLeft, DollarSign, Truck, Clock, TrendingUp, Loader2, Sparkles, MapPin, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { useDriverProfile } from "@/hooks/useDriverApp";
 import { useDriverEarningsByDay, useDriverStats } from "@/hooks/useDriverAnalytics";
+import { useDriverInsights } from "@/hooks/useInsights";
 import {
   ResponsiveContainer,
   BarChart,
@@ -35,6 +37,7 @@ const DriverAnalyticsPage = () => {
   const { data: driver, isLoading: driverLoading } = useDriverProfile();
   const { data: earningsByDay, isLoading: earningsLoading } = useDriverEarningsByDay(driver?.id, days);
   const { data: stats, isLoading: statsLoading } = useDriverStats(driver?.id);
+  const { data: insights, isLoading: insightsLoading } = useDriverInsights(driver?.id);
 
   if (driverLoading) {
     return (
@@ -251,11 +254,84 @@ const DriverAnalyticsPage = () => {
           </Card>
         </motion.div>
 
-        {/* Total Earnings Summary */}
+        {/* AI Insights - Best Hours */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-gradient-to-br from-primary/10 to-purple-500/5 border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Best Hours to Go Online
+              </CardTitle>
+              <CardDescription className="text-white/40">Based on your earning history</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {insightsLoading ? (
+                <Skeleton className="h-20 w-full bg-white/10" />
+              ) : insights?.bestHours && insights.bestHours.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {insights.bestHours.slice(0, 4).map((hour, i) => (
+                    <div key={hour.hour} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-white font-medium">{hour.label}</span>
+                        {i === 0 && <Badge className="bg-primary/20 text-primary text-xs">Peak</Badge>}
+                      </div>
+                      <p className="text-lg font-bold text-green-400">${hour.avgEarnings.toFixed(0)}/hr</p>
+                      <p className="text-xs text-white/40">{hour.avgDeliveries.toFixed(1)} deliveries avg</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-white/40 text-sm">Complete more deliveries to see insights</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Hot Zones */}
+        {insights?.hotZones && insights.hotZones.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="bg-zinc-900/80 border-white/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-amber-400" />
+                  Hot Zones Now
+                </CardTitle>
+                <CardDescription className="text-white/40">High demand, low competition</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {insights.hotZones.slice(0, 3).map((zone) => (
+                  <div key={zone.zoneId} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div>
+                      <p className="text-white font-medium">{zone.zoneName}</p>
+                      <p className="text-xs text-white/40">{zone.expectedOrders} orders expected</p>
+                    </div>
+                    <Badge className={
+                      zone.competition === "low" 
+                        ? "bg-green-500/20 text-green-400" 
+                        : "bg-amber-500/20 text-amber-400"
+                    }>
+                      {zone.competition} competition
+                    </Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Total Earnings Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
         >
           <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/20">
             <CardContent className="p-5">

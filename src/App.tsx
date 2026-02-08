@@ -95,6 +95,9 @@ const AnalyticsRevenue = lazy(() => import("./pages/admin/analytics/AnalyticsRev
 const AnalyticsDrivers = lazy(() => import("./pages/admin/analytics/AnalyticsDrivers"));
 const AnalyticsMerchants = lazy(() => import("./pages/admin/analytics/AnalyticsMerchants"));
 
+// Admin AI Insights Page
+const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
+
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
@@ -926,6 +929,9 @@ const App = () => (
                 <Route path="/admin/analytics/revenue" element={<ProtectedRoute requireAdmin><AnalyticsRevenue /></ProtectedRoute>} />
                 <Route path="/admin/analytics/drivers" element={<ProtectedRoute requireAdmin><AnalyticsDrivers /></ProtectedRoute>} />
                 <Route path="/admin/analytics/merchants" element={<ProtectedRoute requireAdmin><AnalyticsMerchants /></ProtectedRoute>} />
+                
+                {/* Admin AI Insights */}
+                <Route path="/admin/insights" element={<ProtectedRoute requireAdmin><AdminInsightsPage /></ProtectedRoute>} />
                 
                 {/* Driver Analytics */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
