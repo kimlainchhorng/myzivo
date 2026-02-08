@@ -1,189 +1,330 @@
 
+# ZIVO Eats Integration #2 — Unified API Layer, Alerts, Favorites & Polish
 
-# hiZIVO Eats Merchant Table Integration — Verification & Refinement
+## Overview
+Complete the Eats customer experience with a unified API layer, real alerts integration, order accuracy improvements, "Order Again" functionality, favorites system, and 2026-quality polish.
+
+---
 
 ## Current State Analysis
 
-After thorough exploration, the integration between the hiZIVO Eats customer app and Merchant tables is **already substantially complete**. Here's what exists:
-
 ### Already Implemented
+| Feature | Status | Location |
+|---------|--------|----------|
+| Table mapping | ✅ Complete | `src/lib/eatsTables.ts` |
+| Restaurant fetching | ✅ Working | `useRestaurants()` |
+| Menu items | ✅ Working | `useMenuItems()` |
+| Order creation | ✅ Sets `status="placed"` | `useCreateFoodOrder()` |
+| My orders | ✅ Filters by `customer_id` | `useMyEatsOrders()` |
+| Real-time order tracking | ✅ Working | `useLiveEatsOrder()` |
+| Notifications hook | ✅ Working | `useNotifications()` — fetches from `notifications` table |
+| Notifications table | ✅ Exists | Has `user_id`, `is_read`, `title`, `body`, etc. |
+| User favorites table | ✅ Exists | `user_favorites` with `item_type`, `item_id`, `item_data` |
+| Order receipt | ✅ Created | `OrderReceipt.tsx`, `EatsReceipt.tsx` |
+| MobileAlerts page | ✅ Exists | But shows **price alerts**, not order notifications |
 
-| Feature | File | Status |
-|---------|------|--------|
-| Table mapping config | `src/config/eatsTables.ts` | ✅ Complete |
-| Fetch restaurants | `useRestaurants()` in `useEatsOrders.ts` | ✅ Working |
-| Fetch menu items | `useMenuItems()` in `useEatsOrders.ts` | ✅ Filters by `is_available` |
-| Create orders | `useCreateFoodOrder()` | ✅ Sets `status="placed"` |
-| List my orders | `useMyEatsOrders()` | ✅ Filters by `customer_id = userId` |
-| Real-time tracking | `useLiveEatsOrder()` | ✅ Subscribes to order changes |
-| Notifications table | `notifications` in Supabase | ✅ Exists with `is_read`, `user_id`, etc. |
-| Notifications hook | `useNotifications()` | ✅ Real-time with unread count |
-| Merchant role check | `useMerchantRole()` | ✅ Checks `user_roles` table |
-| Merchant dashboard link | `Profile.tsx` | ✅ Shows link for merchants |
+### Missing / Needs Work
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Unified `eatsApi.ts` | ❌ Missing | All queries scattered in hooks |
+| Order notifications in alerts | ❌ Missing | Current `/alerts` shows price alerts only |
+| Badge count in nav | ❌ Missing | Bottom nav has no unread indicator |
+| Tax/service fee saved to orders | ⚠️ Partial | Cart calculates but doesn't save `tax`, `service_fee` |
+| Order Again button | ❌ Missing | No reorder functionality |
+| Restaurant favorites | ❌ Missing | Heart icon + favorites page |
 
-### Current Table Mapping
+---
 
+## Implementation Details
+
+### 1. Create Unified Eats API (`src/lib/eatsApi.ts`)
+
+Consolidate all Eats-related queries into a single API file for consistency and reusability.
+
+**File to Create:**
+- `src/lib/eatsApi.ts`
+
+**Contents:**
 ```typescript
-// src/config/eatsTables.ts (existing)
-export const EATS_TABLES = {
-  restaurants: "restaurants",
-  menuItems: "menu_items",
-  orders: "food_orders",
-  orderItems: null, // Items stored as JSONB in food_orders.items
-  reviews: "eats_reviews",
-  promoCodes: "promo_codes",
-  drivers: "drivers",
-} as const;
+import { supabase } from "@/integrations/supabase/client";
+import { EATS_TABLES, INITIAL_ORDER_STATUS } from "./eatsTables";
 
-export const MERCHANT_APP_URL = "https://zivorestaurant.lovable.app";
-export const INITIAL_ORDER_STATUS = "placed" as const;
+export const eatsApi = {
+  // Restaurants
+  getRestaurants: async (onlyOpen = false) => { ... },
+  getRestaurant: async (id: string) => { ... },
+  
+  // Menu
+  getMenu: async (restaurantId: string) => { ... },
+  
+  // Orders
+  createOrderFromCart: async (params: CreateOrderParams) => { ... },
+  getMyOrders: async () => { ... },
+  getOrder: async (orderId: string) => { ... },
+  subscribeToOrder: (orderId: string, callback: Function) => { ... },
+  
+  // Alerts/Notifications
+  getAlerts: async () => { ... },
+  markAlertRead: async (alertId: string) => { ... },
+  markAllAlertsRead: async () => { ... },
+  getUnreadCount: async () => { ... },
+  
+  // Favorites
+  getFavorites: async () => { ... },
+  addFavorite: async (restaurantId: string, restaurantData: any) => { ... },
+  removeFavorite: async (restaurantId: string) => { ... },
+  isFavorite: async (restaurantId: string) => { ... },
+};
+```
+
+### 2. Create Eats-Specific Alerts Page
+
+The current `/alerts` page shows **price alerts** (for flights). We need a separate Eats notifications page or integrate into the existing alerts.
+
+**Option A (Recommended):** Create `/eats/alerts` page for order notifications
+**Option B:** Add "Orders" tab to existing `/alerts` page
+
+**Files to Create:**
+- `src/pages/EatsAlerts.tsx` — Order status notifications page
+
+**Features:**
+- Show notifications filtered by `category = 'transactional'` AND `metadata.type = 'eats'`
+- "Mark all as read" button
+- Tap notification → navigate to order detail
+
+### 3. Add Badge Count to Eats Bottom Navigation
+
+Create an Eats-specific bottom nav (or modify existing) to show unread notifications badge.
+
+**Files to Create:**
+- `src/components/eats/EatsBottomNav.tsx` — With Home, Orders, Cart, Alerts, Account tabs
+
+**Features:**
+- Badge on Alerts icon showing unread count
+- Use existing `useNotifications()` hook for count
+- Consistent with 2026 dark glass aesthetic
+
+### 4. Save Complete Order Totals
+
+Currently the cart calculates `subtotal`, `delivery_fee`, `service_fee`, `tax`, `discount` but only some are saved to the order.
+
+**Files to Modify:**
+- `src/pages/EatsCart.tsx` — Pass all breakdown values
+- `src/hooks/useEatsOrders.ts` — Save `tax`, `service_fee`, `tip` to order
+
+**Current Order Insert (needs expansion):**
+```typescript
+// Add these fields to the insert
+tax: tax,
+service_fee: serviceFee,
+tip: tipAmount,
+promo_code: promo.promoCode?.code,
+discount_amount: promo.discountAmount,
+```
+
+**Note:** Check if `food_orders` table has these columns. If not, add migration.
+
+### 5. Add "Order Again" Feature
+
+Allow users to quickly reorder from a previous order.
+
+**Files to Modify:**
+- `src/pages/EatsOrderDetail.tsx` — Add "Order Again" button
+- `src/contexts/CartContext.tsx` — Add `rebuildFromOrder()` method
+
+**Logic:**
+```typescript
+const handleOrderAgain = () => {
+  // Clear current cart
+  clearCart();
+  
+  // Rebuild from order items
+  const orderItems = order.items as any[];
+  orderItems.forEach(item => {
+    addItem({
+      id: item.menu_item_id,
+      restaurantId: order.restaurant_id,
+      restaurantName: order.restaurants?.name || "",
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      notes: item.notes,
+    });
+  });
+  
+  // Navigate to cart
+  navigate("/eats/cart");
+};
+```
+
+### 6. Add Restaurant Favorites
+
+Use existing `user_favorites` table with `item_type = 'restaurant'`.
+
+**Files to Create:**
+- `src/hooks/useEatsFavorites.ts` — CRUD for restaurant favorites
+- `src/pages/EatsFavorites.tsx` — Favorites list page
+- `src/components/eats/FavoriteButton.tsx` — Heart toggle component
+
+**Files to Modify:**
+- `src/components/eats/RestaurantCard.tsx` — Add heart icon
+- `src/components/eats/MobileEatsPremium.tsx` — Add heart to restaurant cards
+- `src/App.tsx` — Add `/eats/favorites` route
+
+**Database Query:**
+```typescript
+// Add favorite
+await supabase.from("user_favorites").insert({
+  user_id: userId,
+  item_type: "restaurant",
+  item_id: restaurantId,
+  item_data: { name, logo_url, cuisine_type, rating }
+});
+
+// Get favorites
+await supabase.from("user_favorites")
+  .select("*")
+  .eq("user_id", userId)
+  .eq("item_type", "restaurant");
+```
+
+### 7. Database Migration (if needed)
+
+Check if `food_orders` needs additional columns:
+
+```sql
+-- Add columns if missing
+ALTER TABLE food_orders 
+ADD COLUMN IF NOT EXISTS tax DECIMAL(10,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS service_fee DECIMAL(10,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS tip DECIMAL(10,2) DEFAULT 0;
 ```
 
 ---
 
-## Refinements Needed
+## File Summary
 
-The core integration is complete. Only minor refinements are needed for consistency:
+### New Files
+| File | Purpose |
+|------|---------|
+| `src/lib/eatsApi.ts` | Unified API layer for all Eats queries |
+| `src/pages/EatsAlerts.tsx` | Order notifications page |
+| `src/pages/EatsFavorites.tsx` | Favorites list page |
+| `src/components/eats/EatsBottomNav.tsx` | Bottom nav with badge |
+| `src/components/eats/FavoriteButton.tsx` | Heart toggle component |
+| `src/hooks/useEatsFavorites.ts` | Restaurant favorites CRUD |
+| `src/hooks/useEatsAlerts.ts` | Eats-specific notifications |
 
-### 1. Move Config to `/lib/` Directory
-
-Move `src/config/eatsTables.ts` to `src/lib/eatsTables.ts` as requested, then update all imports.
-
-### 2. Add Missing Mappings to Config
-
-Extend the config to include:
-- `addresses: "saved_locations"` — for delivery addresses
-- `notifications: "notifications"` — for order alerts
-
-Updated config:
-```typescript
-export const EATS_TABLES = {
-  restaurants: "restaurants",
-  menuItems: "menu_items",
-  orders: "food_orders",
-  orderItems: null, // JSONB in food_orders.items
-  reviews: "eats_reviews",
-  promoCodes: "promo_codes",
-  drivers: "drivers",
-  addresses: "saved_locations",
-  notifications: "notifications",
-} as const;
-```
-
-### 3. Ensure Consistent Config Usage
-
-Update hooks to use the centralized config for all table references:
-- `useEatsOrders.ts` — Replace hardcoded `"restaurants"`, `"menu_items"`, `"food_orders"` strings
-- `useLiveEatsOrder.ts` — Already uses `EATS_TABLES.orders` ✅
+### Modified Files
+| File | Changes |
+|------|---------|
+| `src/pages/EatsCart.tsx` | Save all pricing fields, disable during submit |
+| `src/pages/EatsOrderDetail.tsx` | Add "Order Again" button |
+| `src/hooks/useEatsOrders.ts` | Use `eatsApi`, save tax/service_fee/tip |
+| `src/contexts/CartContext.tsx` | Add `rebuildFromOrder()` method |
+| `src/components/eats/MobileEatsPremium.tsx` | Add favorite hearts + alerts link |
+| `src/App.tsx` | Add `/eats/favorites`, `/eats/alerts` routes |
 
 ---
 
-## File Changes Summary
-
-### File to Move/Rename
-| From | To |
-|------|-----|
-| `src/config/eatsTables.ts` | `src/lib/eatsTables.ts` |
-
-### Files to Update Imports
-
-All files that import from `@/config/eatsTables` need updated import paths:
-
-1. `src/hooks/useEatsOrders.ts`
-2. `src/hooks/useLiveEatsOrder.ts`
-3. `src/pages/Profile.tsx`
-
-### Files to Update Table References
-
-**`src/hooks/useEatsOrders.ts`** — Replace hardcoded strings:
-
-```typescript
-// Before
-.from("restaurants")
-.from("menu_items")
-.from("food_orders")
-
-// After
-.from(EATS_TABLES.restaurants)
-.from(EATS_TABLES.menuItems)
-.from(EATS_TABLES.orders)
-```
-
----
-
-## Data Flow Verification
-
-The existing implementation already handles:
+## Data Flow
 
 ```text
 /eats (Discover)
-└── useRestaurants() → reads "restaurants" table ✅
-    
+├── useRestaurants() via eatsApi.getRestaurants()
+├── FavoriteButton on each card → useEatsFavorites
+└── Bottom nav with badge → useEatsAlerts().unreadCount
+
 /eats/restaurant/[id]
-├── useRestaurant(id) → reads single restaurant ✅
-└── useMenuItems(id) → reads "menu_items" WHERE restaurant_id = id ✅
+├── eatsApi.getRestaurant(id)
+├── eatsApi.getMenu(id)
+├── FavoriteButton in header
+└── Add-to-cart works
 
-/eats/cart (Checkout)
-└── useCreateFoodOrder() → inserts into "food_orders" ✅
-    └── status = "placed" (from INITIAL_ORDER_STATUS) ✅
-    └── customer_id = auth.uid() ✅
-    └── items = JSONB array (no separate order_items table) ✅
-
-/eats/orders
-└── useMyEatsOrders() → "food_orders" WHERE customer_id = auth.uid() ✅
+/eats/cart
+├── CartContext manages items
+├── Calculates: subtotal, delivery_fee, service_fee, tax, discount, total
+├── On place order → saves ALL fields to food_orders
+└── Disables button while submitting (isSubmitting state)
 
 /eats/orders/[id]
-└── useLiveEatsOrder() → subscribes to realtime changes ✅
-    └── Status timeline: placed → confirmed → preparing → out_for_delivery → delivered ✅
+├── eatsApi.getOrder(id)
+├── eatsApi.subscribeToOrder(id) for realtime
+├── "Order Again" button → rebuildFromOrder() → /eats/cart
+└── Receipt shows saved breakdown
 
-Notifications
-└── useNotifications() → reads "notifications" WHERE user_id = auth.uid() ✅
-    └── Real-time subscription for new notifications ✅
-    └── Badge count from unreadCount ✅
+/eats/alerts
+├── useEatsAlerts() → notifications WHERE category='transactional', metadata.type='eats'
+├── Mark all as read
+└── Tap → navigate to order
 
-/account (Profile)
-└── useMerchantRole() → checks "user_roles" for merchant role ✅
-    └── Shows "Merchant Dashboard" link → MERCHANT_APP_URL ✅
+/eats/favorites
+├── useEatsFavorites() → user_favorites WHERE item_type='restaurant'
+├── Tap card → /eats/restaurant/[id]
+└── Empty state if no favorites
+```
+
+---
+
+## UI Components
+
+### Eats Bottom Nav
+```text
++--------------------------------------------------+
+| 🏠 Home    🍴 Orders    🛒 Cart    🔔 Alerts   👤 |
+|                                    [3] ← badge    |
++--------------------------------------------------+
+```
+
+### Order Again Button
+```text
++----------------------------------+
+| [← Back]  Order Details          |
++----------------------------------+
+| ...order info...                 |
++----------------------------------+
+| [🔄 Order Again]                 |
++----------------------------------+
+```
+
+### Favorite Heart
+```text
+Restaurant Card:
++---------------------------+
+| [image]              ♡    | ← unfilled = not favorite
+| Sakura Sushi ★ 4.8        |
++---------------------------+
 ```
 
 ---
 
 ## Implementation Order
 
-1. **Create `src/lib/eatsTables.ts`** — Move and extend existing config
-2. **Delete `src/config/eatsTables.ts`** — Remove old file
-3. **Update imports** in `useEatsOrders.ts`, `useLiveEatsOrder.ts`, `Profile.tsx`
-4. **Update `useEatsOrders.ts`** — Use config constants for table names
-5. **Verify RLS** — Confirm all queries filter by `auth.uid()`
-
----
-
-## RLS Security Verification
-
-Current RLS patterns are safe:
-
-| Hook | Filter | RLS Safe |
-|------|--------|----------|
-| `useMyEatsOrders()` | `customer_id = userId` | ✅ |
-| `useLiveEatsOrder()` | `id = orderId` | ⚠️ Relies on RLS policy |
-| `useNotifications()` | `user_id = userId` | ✅ |
-| `useMerchantRole()` | `user_id = userId` | ✅ |
-
-The `food_orders` table should have an RLS policy like:
-```sql
-CREATE POLICY "Users can view own orders" ON food_orders
-  FOR SELECT USING (customer_id = auth.uid());
-```
+1. **Check/Add DB columns** — Verify `food_orders` has `tax`, `service_fee`, `tip`
+2. **Create `eatsApi.ts`** — Unified API layer
+3. **Update `EatsCart.tsx`** — Save all pricing, prevent double-submit
+4. **Create `useEatsFavorites.ts`** — Favorites CRUD
+5. **Create `FavoriteButton.tsx`** — Heart toggle
+6. **Add hearts to restaurant cards** — MobileEatsPremium, RestaurantCard
+7. **Create `EatsFavorites.tsx`** — Favorites page
+8. **Create `useEatsAlerts.ts`** — Eats-specific notifications
+9. **Create `EatsBottomNav.tsx`** — With badge count
+10. **Create `EatsAlerts.tsx`** — Order notifications page
+11. **Update `EatsOrderDetail.tsx`** — Add "Order Again" button
+12. **Update `CartContext.tsx`** — Add `rebuildFromOrder()`
+13. **Update `App.tsx`** — Add routes
+14. **Polish** — Skeletons, empty states, error handling
 
 ---
 
 ## Summary
 
-**The integration is 95% complete.** The refinements are:
+This update completes the ZIVO Eats customer experience:
 
-1. Move config file from `/config/` to `/lib/` (as requested)
-2. Add `addresses` and `notifications` mappings
-3. Replace hardcoded table strings with config constants
-
-The core functionality — reading restaurants/menus, creating orders with `status="placed"`, real-time tracking, notifications, and merchant dashboard link — is all working correctly.
+- **Unified API Layer**: Single `eatsApi.ts` for all queries
+- **Real Alerts**: Order notifications with badge count
+- **Accurate Totals**: Tax, service fee, tip saved to orders
+- **Order Again**: Quick reorder from history
+- **Favorites**: Heart icon + favorites page
+- **2026 Polish**: Skeleton loaders, empty states, duplicate prevention
 
