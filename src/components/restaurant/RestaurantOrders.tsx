@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Check, Package, Sparkles, MapPin, Phone, ChefHat, AlertCircle } from "lucide-react";
+import { Clock, Check, Package, Sparkles, MapPin, ChefHat, AlertCircle, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,10 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
 
 const RestaurantOrders = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pending");
 
   // Fetch restaurant
@@ -272,7 +275,7 @@ const RestaurantOrders = () => {
                                   )}
                                 </div>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right flex flex-col items-end">
                                 <p className="font-bold text-xl">${order.total_amount?.toFixed(2) || "0.00"}</p>
                                 <div className="flex gap-2 mt-3">
                                   {order.status === "pending" && (
@@ -304,6 +307,25 @@ const RestaurantOrders = () => {
                                     >
                                       Mark Ready
                                     </Button>
+                                  )}
+                                  {/* Call & Chat buttons for active orders */}
+                                  {!["completed", "cancelled"].includes(order.status) && (
+                                    <>
+                                      <MaskedCallButton
+                                        orderId={order.id}
+                                        myRole="merchant"
+                                        targetRole="customer"
+                                        variant="icon"
+                                        size="sm"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => navigate(`/merchant/orders/${order.id}/chat`)}
+                                      >
+                                        <MessageCircle className="w-4 h-4" />
+                                      </Button>
+                                    </>
                                   )}
                                 </div>
                               </div>
