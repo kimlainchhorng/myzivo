@@ -5872,7 +5872,22 @@ export type Database = {
           status?: string | null
           week_start?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_penalties: {
         Row: {
@@ -6692,7 +6707,22 @@ export type Database = {
           updated_at?: string | null
           week_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_weekly_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_weekly_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_withdrawals: {
         Row: {
