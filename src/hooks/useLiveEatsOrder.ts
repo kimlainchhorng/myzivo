@@ -1,9 +1,11 @@
 /**
  * Real-time Eats Order Hook
  * Subscribes to Supabase realtime updates for order status
+ * Uses shared tables with Merchant app
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { EATS_TABLES } from "@/config/eatsTables";
 
 export interface LiveEatsOrder {
   id: string;
@@ -49,7 +51,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
       setLoading(true);
       try {
         const { data, error: fetchError } = await supabase
-          .from("food_orders")
+          .from(EATS_TABLES.orders)
           .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
           .eq("id", orderId)
           .single();
@@ -67,7 +69,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
 
     fetchOrder();
 
-    // Real-time subscription
+    // Real-time subscription - listens for merchant status updates
     channel = supabase
       .channel(`eats-order-${orderId}`)
       .on(
@@ -75,7 +77,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
         {
           event: "*",
           schema: "public",
-          table: "food_orders",
+          table: EATS_TABLES.orders,
           filter: `id=eq.${orderId}`,
         },
         (payload) => {
