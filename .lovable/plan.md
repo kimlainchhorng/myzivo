@@ -1,144 +1,193 @@
 
-# Admin Interoperability: Support & Deep Links
+# Tips + Receipt Breakdown Enhancement
 
 ## Overview
-Add support ticket creation directly from order detail, log order placement events, and provide shareable order links for support scenarios.
+Add tip selection to the cart page and display a complete receipt breakdown on order details.
 
 ---
 
 ## Current State Analysis
 
-### Already Implemented
+### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| HelpModal | ✅ Exists | `src/components/eats/HelpModal.tsx` — redirects to `/support` page |
-| Support Tickets | ✅ Exists | `support_tickets` table with `order_id` column |
-| useCreateTicket | ✅ Exists | `src/hooks/useSupportTickets.ts` — creates tickets with `order_id` |
-| order_events table | ✅ Exists | Has `order_id`, `type`, `actor_id`, `actor_role`, `data` columns |
-| Order mutations logging | ✅ Status changes logged | `useEatsOrderMutations.ts` logs status updates |
-| EatsOrderDetail page | ✅ Exists | Has "Get Help" button → opens HelpModal |
+| `tip_amount` column | ✅ Exists | `food_orders` table |
+| `service_fee` column | ✅ Exists | `food_orders` table |
+| `EatsPriceBreakdown` component | ✅ Exists | Has tip selector built in (uses fixed dollar amounts) |
+| `calculateEatsFare()` pricing | ✅ Exists | `lib/pricing.ts` accepts `tipAmount` parameter |
+| Cart price breakdown | ⚠️ Partial | Shows fees but no tip selector |
+| Order detail breakdown | ⚠️ Partial | Shows subtotal, delivery, tax — missing service_fee, tip |
 
-### Missing
+### What's Missing
 | Feature | Status |
 |---------|--------|
-| Quick ticket creation from order page | ❌ HelpModal redirects away, doesn't create inline |
-| `order_placed` event logging | ❌ Order creation doesn't log to `order_events` |
-| Share order link button | ❌ No copy-to-clipboard functionality |
+| Tip selector in `/eats/cart` | ❌ Not integrated |
+| Custom tip input | ❌ Only fixed values in existing component |
+| `tip_amount` saved on order | ❌ Not included in `useCreateFoodOrder` |
+| `service_fee` saved on order | ❌ Not included in order creation |
+| Service fee shown on order detail | ❌ Missing from receipt |
+| Tip shown on order detail | ❌ Missing from receipt |
 
 ---
 
 ## Implementation Plan
 
-### 1. Enhance HelpModal with Quick Ticket Creation
+### 1. Create Standalone TipSelector Component
 
-Currently the HelpModal just navigates to `/support`. Add an option to create a quick support ticket inline with pre-filled order context.
+Create a reusable tip selector with percentage-based and custom options.
 
-**File to Modify:**
-- `src/components/eats/HelpModal.tsx`
+**File to Create:**
+- `src/components/eats/TipSelector.tsx`
 
-**Changes:**
-- Add a quick issue submission form (optional text input)
-- Create ticket directly using `useCreateTicket` hook
-- Pre-fill `order_id` and `category: "eats"` 
-- Show success confirmation and ticket number
-
-**New Props:**
+**Props:**
 ```typescript
-interface HelpModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  orderId: string;
-  restaurantPhone?: string | null;
-  restaurantName?: string;
-  customerId?: string;
+interface TipSelectorProps {
+  subtotal: number;
+  tipAmount: number;
+  onTipChange: (amount: number) => void;
+  className?: string;
 }
 ```
 
-### 2. Add "Share Order Link" Button
+**Preset Options:**
+- 0% (No tip)
+- 5%
+- 10%
+- 15%
+- Custom
 
-Add a button to copy order deep link to clipboard for customer support or sharing.
+**Features:**
+- Calculate percentage from subtotal
+- Custom amount input with modal/inline input
+- Visual feedback for selected option
+- Show calculated dollar amount
+
+### 2. Add Tip State to EatsCart Page
+
+Update cart page to manage tip selection and include in order creation.
+
+**File to Modify:**
+- `src/pages/EatsCart.tsx`
+
+**Changes:**
+1. Add `tipAmount` state (default 0)
+2. Add `serviceFee` calculation (already exists as variable, just needs to be saved)
+3. Integrate `TipSelector` component below promo code or payment method
+4. Update total calculation to include tip
+5. Pass `tip_amount` and `service_fee` to order creation
+
+**Price Calculations Update:**
+```typescript
+const serviceFee = subtotal * 0.05; // 5% service fee
+const tax = (subtotal - promo.discountAmount) * 0.08;
+const tipAmount = tipState; // From selector
+const total = subtotal - promo.discountAmount + deliveryFee + serviceFee + tax + tipAmount;
+```
+
+### 3. Update Order Creation to Include Tip + Service Fee
+
+Extend `CreateFoodOrderInput` interface and mutation.
+
+**File to Modify:**
+- `src/hooks/useEatsOrders.ts`
+
+**Interface Update:**
+```typescript
+export interface CreateFoodOrderInput {
+  // ... existing fields ...
+  service_fee?: number;
+  tip_amount?: number;
+  tax?: number;
+}
+```
+
+**Insert Update:**
+Add to the `.insert()` call:
+```typescript
+service_fee: input.service_fee || 0,
+tip_amount: input.tip_amount || 0,
+tax: input.tax || 0,
+```
+
+### 4. Update LiveEatsOrder Interface
+
+Ensure tip and service fee are included in realtime order data.
+
+**File to Modify:**
+- `src/hooks/useLiveEatsOrder.ts`
+
+**Add to Interface:**
+```typescript
+export interface LiveEatsOrder {
+  // ... existing fields ...
+  tip_amount?: number | null;
+  service_fee?: number | null;
+}
+```
+
+### 5. Enhance Order Detail Receipt Breakdown
+
+Show complete breakdown: subtotal, discount, delivery, service fee, tax, tip, total.
 
 **File to Modify:**
 - `src/pages/EatsOrderDetail.tsx`
 
-**Add:**
-- Share button in header (next to help button)
-- Uses `navigator.clipboard.writeText()` with toast confirmation
-- Link format: `https://hizivo.com/eats/orders/{id}`
-
-**UI Location:**
-```text
-+----------------------------------+
-| [← Back]  Order Details  [↗][?] |
-+----------------------------------+
-```
-The `↗` share icon copies the link.
-
-### 3. Log `order_placed` Event on Order Creation
-
-When customer places order, insert a row to `order_events` for audit trail.
-
-**File to Modify:**
-- `src/hooks/useEatsOrders.ts` — in `useCreateFoodOrder` mutation
-
-**Add after successful insert:**
+**Update Price Breakdown Section:**
 ```typescript
-// Log order_placed event
-await supabase.from("order_events").insert({
-  order_id: order.id,
-  type: "order_placed",
-  actor_id: customerId,
-  actor_role: "customer",
-  data: {
-    restaurant_id: input.restaurant_id,
-    total_amount: input.total,
-    item_count: input.items.length,
-  },
-});
-```
-
-### 4. Create Quick Support Ticket Hook
-
-Create a simplified hook specifically for Eats order support.
-
-**File to Create:**
-- `src/hooks/useEatsSupport.ts`
-
-**Contents:**
-```typescript
-export function useCreateEatsTicket() {
-  return useMutation({
-    mutationFn: async ({ 
-      orderId, 
-      message, 
-      category 
-    }: { 
-      orderId: string; 
-      message: string; 
-      category: "order_issue" | "refund" | "missing_item" | "other" 
-    }) => {
-      const ticketNumber = `ZE-${Date.now().toString().slice(-6)}`;
-      
-      const { data, error } = await supabase
-        .from("support_tickets")
-        .insert({
-          ticket_number: ticketNumber,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          order_id: orderId,
-          subject: `Order Issue - ${category}`,
-          description: message,
-          category: "eats",
-          priority: category === "refund" ? "high" : "normal",
-          status: "open",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
-}
+{/* Price Breakdown */}
+<div className="space-y-3">
+  {/* Subtotal */}
+  <div className="flex justify-between text-sm">
+    <span className="text-zinc-400">Subtotal</span>
+    <span>${order.subtotal?.toFixed(2)}</span>
+  </div>
+  
+  {/* Discount (if any) */}
+  {order.discount_amount > 0 && (
+    <div className="flex justify-between text-sm text-emerald-400">
+      <span>Discount {order.promo_code && `(${order.promo_code})`}</span>
+      <span>-${order.discount_amount.toFixed(2)}</span>
+    </div>
+  )}
+  
+  {/* Delivery Fee */}
+  <div className="flex justify-between text-sm">
+    <span className="text-zinc-400">Delivery Fee</span>
+    <span>${order.delivery_fee?.toFixed(2)}</span>
+  </div>
+  
+  {/* Service Fee (NEW) */}
+  {order.service_fee > 0 && (
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Service Fee</span>
+      <span>${order.service_fee.toFixed(2)}</span>
+    </div>
+  )}
+  
+  {/* Tax */}
+  {order.tax > 0 && (
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Tax</span>
+      <span>${order.tax.toFixed(2)}</span>
+    </div>
+  )}
+  
+  {/* Tip (NEW) */}
+  {order.tip_amount > 0 && (
+    <div className="flex justify-between text-sm">
+      <span className="text-zinc-400">Tip</span>
+      <span>${order.tip_amount.toFixed(2)}</span>
+    </div>
+  )}
+  
+  {/* Total */}
+  <div className="border-t border-white/10 pt-3">
+    <div className="flex justify-between font-bold text-lg">
+      <span>Total</span>
+      <span className="text-orange-400">${order.total_amount?.toFixed(2)}</span>
+    </div>
+  </div>
+</div>
 ```
 
 ---
@@ -148,76 +197,64 @@ export function useCreateEatsTicket() {
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/hooks/useEatsSupport.ts` | Quick ticket creation hook for Eats orders |
+| `src/components/eats/TipSelector.tsx` | Percentage-based tip selector with custom input |
 
 ### Modified Files
 | File | Changes |
 |------|---------|
-| `src/components/eats/HelpModal.tsx` | Add quick ticket creation form, use `useCreateEatsTicket` |
-| `src/pages/EatsOrderDetail.tsx` | Add share button to copy order link |
-| `src/hooks/useEatsOrders.ts` | Log `order_placed` event in `useCreateFoodOrder` |
+| `src/pages/EatsCart.tsx` | Add tip state, integrate TipSelector, pass tip to order creation |
+| `src/hooks/useEatsOrders.ts` | Add `tip_amount`, `service_fee`, `tax` to order insert |
+| `src/hooks/useLiveEatsOrder.ts` | Add `tip_amount`, `service_fee` to interface |
+| `src/pages/EatsOrderDetail.tsx` | Add service fee and tip to receipt breakdown |
 
 ---
 
-## UI/UX Flow
+## UI Design
 
-### Share Order Link
+### Cart Page — Tip Selector
 ```text
-User taps share icon (↗) in header
-    ↓
-Copy "https://hizivo.com/eats/orders/{id}" to clipboard
-    ↓
-Toast: "Order link copied to clipboard"
+┌────────────────────────────────────────┐
+│ Add a tip                              │
+│                                        │
+│ ┌──────┬──────┬──────┬──────┬───────┐ │
+│ │ None │  5%  │ 10%  │ 15%  │ Other │ │
+│ │      │$2.50 │$5.00 │$7.50 │       │ │
+│ └──────┴──────┴──────┴──────┴───────┘ │
+│                                        │
+│ 100% of tip goes to your driver        │
+└────────────────────────────────────────┘
 ```
 
-### Quick Support Ticket
+### Order Detail — Full Receipt
 ```text
-User taps "?" help icon
-    ↓
-HelpModal opens with options:
-  - Report an Issue → Shows text input
-  - Request Refund → Shows text input
-  - Contact Support → Navigate to /support
-  - Call Restaurant → tel: link
-    ↓
-User types message and taps Submit
-    ↓
-Ticket created with pre-filled order_id
-    ↓
-Toast: "Ticket ZE-123456 created. We'll get back to you soon."
-```
-
-### Order Placed Event
-```text
-Customer taps "Place Order"
-    ↓
-Order inserted to food_orders
-    ↓
-order_events row inserted:
-  {
-    order_id: "{order_id}",
-    type: "order_placed",
-    actor_id: "{customer_id}",
-    actor_role: "customer",
-    data: {
-      restaurant_id: "...",
-      total_amount: 45.99,
-      item_count: 3
-    }
-  }
+┌────────────────────────────────────────┐
+│ Subtotal                      $50.00   │
+│ Discount (SAVE10)            -$5.00   │
+│ Delivery Fee                   $3.99   │
+│ Service Fee                    $2.50   │
+│ Tax                            $3.60   │
+│ Tip                            $5.00   │
+│ ────────────────────────────────────   │
+│ Total                         $60.09   │
+└────────────────────────────────────────┘
 ```
 
 ---
 
-## Deep Link Format
+## Tip Calculation Logic
 
-The shareable deep link uses the production domain:
+```typescript
+const TIP_PERCENTAGES = [0, 5, 10, 15] as const;
 
+function calculateTipFromPercentage(subtotal: number, percentage: number): number {
+  return Math.round(subtotal * (percentage / 100) * 100) / 100;
+}
+
+// Example for $50 subtotal:
+// 5%  → $2.50
+// 10% → $5.00
+// 15% → $7.50
 ```
-https://hizivo.com/eats/orders/{order_id}
-```
-
-This works because the route `/eats/orders/:id` already exists and handles the `EatsOrderDetail` page.
 
 ---
 
@@ -225,11 +262,8 @@ This works because the route `/eats/orders/:id` already exists and handles the `
 
 This update adds:
 
-1. **Quick Ticket Creation**: HelpModal can create support tickets inline with order context
-2. **Order Event Logging**: `order_placed` event recorded for audit trail when customer places order
-3. **Share Order Link**: Copy button for support scenarios with `https://hizivo.com/eats/orders/{id}`
-
-These features enable admin support teams to:
-- View order history via deep links
-- See full audit trail in `order_events` table
-- Receive tickets with `order_id` pre-linked
+1. **TipSelector Component**: Percentage-based options (0%, 5%, 10%, 15%) plus custom amount
+2. **Cart Integration**: Tip selection before placing order, included in totals
+3. **Order Storage**: `tip_amount`, `service_fee`, `tax` saved to `food_orders`
+4. **Receipt Breakdown**: Complete line-item receipt on order detail page showing all fees
+5. **Driver Message**: "100% of tip goes to your driver" for transparency
