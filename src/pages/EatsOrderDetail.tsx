@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats — Order Detail Page
- * Real-time status updates with Supabase subscription
+ * Real-time status updates with driver tracking and live map
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,7 +8,10 @@ import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
+import { useEatsDriver } from "@/hooks/useEatsDriver";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
+import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
+import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
@@ -20,8 +23,13 @@ export default function EatsOrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { order, loading, error } = useLiveEatsOrder(id);
+  const { driver } = useEatsDriver(order?.driver_id);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
+
+  // Determine if we should show the map
+  const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
+  const isDelivering = order?.status === "out_for_delivery";
 
   // Order Again handler
   const handleOrderAgain = () => {
@@ -95,6 +103,17 @@ export default function EatsOrderDetail() {
   const items = (order.items as any[]) || [];
   const createdAt = new Date(order.created_at);
 
+  // Prepare timestamps for timeline
+  const timestamps = {
+    placed_at: order.placed_at,
+    created_at: order.created_at,
+    accepted_at: order.accepted_at,
+    prepared_at: order.prepared_at,
+    ready_at: order.ready_at,
+    picked_up_at: order.picked_up_at,
+    delivered_at: order.delivered_at,
+  };
+
   // Get status-specific messaging
   const getStatusMessage = () => {
     switch (order.status) {
@@ -104,7 +123,7 @@ export default function EatsOrderDetail() {
         return "Restaurant is preparing your order";
       case "preparing":
         return "Your food is being prepared";
-      case "ready":
+      case "ready_for_pickup":
         return "Order ready for pickup";
       case "out_for_delivery":
         return "Driver is on the way!";
@@ -184,6 +203,31 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
+        {/* Live Delivery Map */}
+        {showMap && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <DeliveryMap
+              driverLat={driver?.current_lat}
+              driverLng={driver?.current_lng}
+              deliveryAddress={order.delivery_address || undefined}
+              deliveryLat={order.delivery_lat || undefined}
+              deliveryLng={order.delivery_lng || undefined}
+              className="h-48"
+            />
+          </motion.div>
+        )}
+
+        {/* Driver Info Card */}
+        {driver && (
+          <DriverInfoCard
+            driver={driver}
+            isDelivering={isDelivering}
+          />
+        )}
+
         {/* Status Timeline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -194,7 +238,7 @@ export default function EatsOrderDetail() {
             <Clock className="w-4 h-4 text-orange-500" />
             Order Status
           </h2>
-          <StatusTimeline currentStatus={order.status} />
+          <StatusTimeline currentStatus={order.status} timestamps={timestamps} />
         </motion.div>
 
         {/* Restaurant Info */}
