@@ -10,10 +10,12 @@ import {
   MapPin, Plus, Zap, ArrowLeft, Loader2, Package, Heart, Bell
 } from "lucide-react";
 import { useRestaurants } from "@/hooks/useEatsOrders";
+import { useSponsoredRestaurants } from "@/hooks/useRestaurantAds";
 import { useCart } from "@/contexts/CartContext";
 import { useEatsAlerts } from "@/hooks/useEatsAlerts";
 import { FavoriteButton } from "./FavoriteButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
 
 const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
 
@@ -22,6 +24,7 @@ export default function MobileEatsPremium() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { data: restaurants, isLoading, error } = useRestaurants();
+  const { data: sponsoredRestaurants } = useSponsoredRestaurants("homepage");
   const { getItemCount } = useCart();
   const { unreadCount } = useEatsAlerts();
   
@@ -149,7 +152,26 @@ export default function MobileEatsPremium() {
         </div>
       )}
 
-      {/* 3. LOADING STATE */}
+      {/* 3. SPONSORED RESTAURANTS */}
+      {sponsoredRestaurants && sponsoredRestaurants.length > 0 && !searchQuery && (
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500 bg-amber-500/10 px-2 py-1 rounded">Sponsored</span>
+            <span className="text-xs text-zinc-500">Featured restaurants</span>
+          </div>
+          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
+            {sponsoredRestaurants.map((restaurant) => (
+              <SponsoredRestaurantCard
+                key={restaurant.id}
+                restaurant={restaurant}
+                variant="carousel"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. LOADING STATE */}
       {isLoading && (
         <div className="px-6 pb-32 space-y-8">
           {[1, 2, 3].map((i) => (

@@ -128,6 +128,82 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_billing_events: {
+        Row: {
+          ad_id: string
+          amount_cents: number
+          balance_after_cents: number
+          click_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          restaurant_id: string
+        }
+        Insert: {
+          ad_id: string
+          amount_cents: number
+          balance_after_cents: number
+          click_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          restaurant_id: string
+        }
+        Update: {
+          ad_id?: string
+          amount_cents?: number
+          balance_after_cents?: number
+          click_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_billing_events_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_billing_events_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "ad_clicks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_billing_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_billing_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_billing_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_billing_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_clicks: {
         Row: {
           ad_id: string
@@ -151,6 +227,69 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      ad_conversions: {
+        Row: {
+          ad_id: string
+          click_id: string
+          created_at: string | null
+          id: string
+          order_id: string
+          revenue_cents: number
+        }
+        Insert: {
+          ad_id: string
+          click_id: string
+          created_at?: string | null
+          id?: string
+          order_id: string
+          revenue_cents: number
+        }
+        Update: {
+          ad_id?: string
+          click_id?: string
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          revenue_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_conversions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_conversions_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "ad_clicks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_conversions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_conversions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_conversions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ad_impressions: {
         Row: {
@@ -20074,34 +20213,64 @@ export type Database = {
       }
       restaurant_ads: {
         Row: {
+          clicks: number | null
           cost_per_click: number
           created_at: string | null
+          created_by: string | null
           daily_budget: number
           end_date: string | null
           id: string
+          impressions: number | null
+          is_approved: boolean | null
+          name: string | null
+          orders_from_ads: number | null
+          paused_at: string | null
+          placement: string | null
           restaurant_id: string
+          spent: number | null
           start_date: string | null
           status: string | null
+          total_budget: number | null
         }
         Insert: {
+          clicks?: number | null
           cost_per_click: number
           created_at?: string | null
+          created_by?: string | null
           daily_budget: number
           end_date?: string | null
           id?: string
+          impressions?: number | null
+          is_approved?: boolean | null
+          name?: string | null
+          orders_from_ads?: number | null
+          paused_at?: string | null
+          placement?: string | null
           restaurant_id: string
+          spent?: number | null
           start_date?: string | null
           status?: string | null
+          total_budget?: number | null
         }
         Update: {
+          clicks?: number | null
           cost_per_click?: number
           created_at?: string | null
+          created_by?: string | null
           daily_budget?: number
           end_date?: string | null
           id?: string
+          impressions?: number | null
+          is_approved?: boolean | null
+          name?: string | null
+          orders_from_ads?: number | null
+          paused_at?: string | null
+          placement?: string | null
           restaurant_id?: string
+          spent?: number | null
           start_date?: string | null
           status?: string | null
+          total_budget?: number | null
         }
         Relationships: []
       }
@@ -30932,6 +31101,10 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: boolean
       }
+      deduct_merchant_balance: {
+        Args: { p_amount_cents: number; p_restaurant_id: string }
+        Returns: boolean
+      }
       evaluate_sla_status: {
         Args: never
         Returns: {
@@ -31210,6 +31383,7 @@ export type Database = {
         Returns: Json
       }
       get_tier_from_points: { Args: { lifetime_pts: number }; Returns: string }
+      get_today_ad_spend: { Args: { p_ad_id: string }; Returns: number }
       get_user_security_summary: {
         Args: { p_user_id: string }
         Returns: {
