@@ -6839,6 +6839,102 @@ export type Database = {
           },
         ]
       }
+      finance_ledger: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          driver_id: string | null
+          event_type: string
+          id: string
+          meta: Json | null
+          occurred_at: string
+          order_id: string | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          driver_id?: string | null
+          event_type: string
+          id?: string
+          meta?: Json | null
+          occurred_at: string
+          order_id?: string | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          driver_id?: string | null
+          event_type?: string
+          id?: string
+          meta?: Json | null
+          occurred_at?: string
+          order_id?: string | null
+          restaurant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_ledger_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fleet_owner_profiles: {
         Row: {
           address: string | null
@@ -11016,6 +11112,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      monthly_reports: {
+        Row: {
+          delivery_fees_cents: number
+          driver_paid_cents: number
+          generated_at: string
+          generated_by: string | null
+          gross_cents: number
+          id: string
+          month: string
+          net_cents: number
+          order_count: number
+          platform_fee_cents: number
+          refunds_cents: number
+          restaurant_paid_cents: number
+          service_fees_cents: number
+          tips_cents: number
+        }
+        Insert: {
+          delivery_fees_cents?: number
+          driver_paid_cents?: number
+          generated_at?: string
+          generated_by?: string | null
+          gross_cents?: number
+          id?: string
+          month: string
+          net_cents?: number
+          order_count?: number
+          platform_fee_cents?: number
+          refunds_cents?: number
+          restaurant_paid_cents?: number
+          service_fees_cents?: number
+          tips_cents?: number
+        }
+        Update: {
+          delivery_fees_cents?: number
+          driver_paid_cents?: number
+          generated_at?: string
+          generated_by?: string | null
+          gross_cents?: number
+          id?: string
+          month?: string
+          net_cents?: number
+          order_count?: number
+          platform_fee_cents?: number
+          refunds_cents?: number
+          restaurant_paid_cents?: number
+          service_fees_cents?: number
+          tips_cents?: number
+        }
+        Relationships: []
       }
       notification_attempts: {
         Row: {
@@ -26795,7 +26942,27 @@ export type Database = {
         | "cancelled"
     }
     CompositeTypes: {
-      [_ in never]: never
+      restaurant_rank_row: {
+        id: string | null
+        name: string | null
+        address: string | null
+        lat: number | null
+        lng: number | null
+        is_open: boolean | null
+        cuisine_type: string | null
+        description: string | null
+        logo_url: string | null
+        cover_image_url: string | null
+        rating: number | null
+        rating_count: number | null
+        avg_prep_time: number | null
+        cancel_rate: number | null
+        plan_code: string | null
+        status: Database["public"]["Enums"]["partner_status"] | null
+        phone: string | null
+        opening_hours: Json | null
+        placement_boost: number | null
+      }
     }
   }
 }

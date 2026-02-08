@@ -1,9 +1,11 @@
 /**
  * UberLikeRideRow - Premium Uber-style ride selection row
- * Features inline SVG car thumbnail, tag pills, and polished selection states
+ * Features inline SVG car thumbnail, tag pills, surge indicators, and polished selection states
  */
 
 import { cn } from "@/lib/utils";
+import { Zap } from "lucide-react";
+import type { SurgeLevel } from "@/lib/surge";
 
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
 
@@ -17,6 +19,10 @@ interface UberLikeRideRowProps {
   price: string;
   onClick?: () => void;
   compact?: boolean;
+  // Surge pricing props
+  surgeMultiplier?: number;
+  surgeLevel?: SurgeLevel;
+  surgeActive?: boolean;
 }
 
 // Inline SVG car thumbnail (Uber-style, no external assets)
@@ -109,7 +115,13 @@ export function UberLikeRideRow({
   price,
   onClick,
   compact = false,
+  surgeMultiplier,
+  surgeLevel,
+  surgeActive = false,
 }: UberLikeRideRowProps) {
+  const showSurge = surgeActive && surgeMultiplier && surgeMultiplier > 1.0;
+  const isHighSurge = surgeLevel === "High";
+
   return (
     <button
       type="button"
@@ -147,19 +159,34 @@ export function UberLikeRideRow({
           </div>
 
           <div className={cn(
-            "mt-0.5 text-zinc-500",
+            "mt-0.5 flex items-center gap-1.5",
             compact ? "text-[12px]" : "text-[13px]"
           )}>
-            {time} · {eta}
+            <span className="text-zinc-500">{time} · {eta}</span>
+            {/* Surge indicator */}
+            {showSurge && (
+              <span className={cn(
+                "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold",
+                isHighSurge
+                  ? "bg-red-100 text-red-700"
+                  : "bg-amber-100 text-amber-700"
+              )}>
+                <Zap className="w-2.5 h-2.5 fill-current" />
+                {surgeMultiplier.toFixed(1)}×
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Price */}
-        <div className={cn(
-          "font-bold text-zinc-900 tabular-nums shrink-0",
-          compact ? "text-[15px]" : "text-[17px]"
-        )}>
-          {price}
+        {/* Price with surge styling */}
+        <div className="flex flex-col items-end shrink-0">
+          <span className={cn(
+            "font-bold tabular-nums",
+            compact ? "text-[15px]" : "text-[17px]",
+            showSurge ? (isHighSurge ? "text-red-600" : "text-amber-600") : "text-zinc-900"
+          )}>
+            {price}
+          </span>
         </div>
       </div>
     </button>

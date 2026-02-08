@@ -35,6 +35,7 @@ import { UberLikeRideRow } from "@/components/ride/UberLikeRideRow";
 import { useRidePricingSettings, DEFAULT_RIDE_PRICING } from "@/hooks/useRidePricingSettings";
 import { usePricingZone, DEFAULT_US_ZONE } from "@/hooks/usePricingZone";
 import { useAllZoneRatesMap, DEFAULT_ZONE_RATES, type ZonePricingRate } from "@/hooks/useZonePricingRates";
+import { useZoneSurgePricing } from "@/hooks/useZoneSurgePricing";
 import { RIDE_TYPE_MULTIPLIERS } from "@/lib/pricing";
 import { 
   quoteRidePrice, 
@@ -45,6 +46,7 @@ import {
 } from "@/lib/pricing";
 import { PricingDebugPanel } from "@/components/ride/PricingDebugPanel";
 import { LiveDriverIndicator } from "@/components/ride/LiveDriverIndicator";
+import { SurgeBanner } from "@/components/ride/SurgeBanner";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -317,12 +319,18 @@ function RidesInner() {
   // Fetch ALL ride-type rates for the zone (for per-card pricing)
   const { ratesMap: zoneRatesMap } = useAllZoneRatesMap(pricingZone?.id);
   
+  // Zone-specific surge pricing
+  const surge = useZoneSurgePricing(pricingZone);
+  
   // Log zone detection for debugging
   useEffect(() => {
     if (pricingZone && pickupCoords) {
       console.log(`[Rides] Detected pricing zone: ${pricingZone.name} (${pricingZone.id}), rates loaded: ${zoneRatesMap.size} types`);
+      if (surge.isActive) {
+        console.log(`[Rides] Surge active: ${surge.multiplier}x (${surge.level}) - ${surge.requestedCount} requests / ${surge.availableDrivers} drivers`);
+      }
     }
-  }, [pricingZone, pickupCoords, zoneRatesMap.size]);
+  }, [pricingZone, pickupCoords, zoneRatesMap.size, surge.isActive, surge.multiplier, surge.level, surge.requestedCount, surge.availableDrivers]);
   
   // Debug panel toggle: ?debug=1 URL param OR localStorage
   const showDebugPanel = useMemo(() => {
@@ -367,7 +375,7 @@ function RidesInner() {
   }, [zoneRatesMap]);
 
   // Single price quote function - used everywhere (SINGLE SOURCE OF TRUTH)
-  // Now uses per-ride-type rates from the Map
+  // Now uses per-ride-type rates from the Map + surge multiplier
   const getQuoteForOption = useCallback((option: RideOption): RidePriceQuote | null => {
     if (!routeValidation.valid) return null;
     
@@ -399,10 +407,11 @@ function RidesInner() {
       option.id,
       {
         multiplier,
+        surgeMultiplier: surge.multiplier, // Apply surge multiplier
         zoneName: pricingZone?.name,
       }
     );
-  }, [routeValidation.valid, getRatesForRideType, estimatedDistance, estimatedDuration, pricingZone?.name]);
+  }, [routeValidation.valid, getRatesForRideType, estimatedDistance, estimatedDuration, pricingZone?.name, surge.multiplier]);
 
   // Current quote for selected option (for debug panel)
   const currentQuote = useMemo(() => {
@@ -567,7 +576,7 @@ function RidesInner() {
           estimated_fare: quote?.total ?? 0, // Client estimate for comparison
           distance_miles: estimatedDistance,
           duration_minutes: estimatedDuration,
-          surge_multiplier: 1.0, // TODO: integrate with useSurgePricing
+          surge_multiplier: surge.multiplier, // Zone-specific surge multiplier
         },
       });
       
@@ -934,6 +943,14 @@ function RidesInner() {
                 </div>
               )}
 
+              {/* Surge Banner */}
+              <SurgeBanner
+                isActive={surge.isActive}
+                multiplier={surge.multiplier}
+                level={surge.level}
+                zoneName={surge.zoneName}
+              />
+
               {/* Ride Options List */}
               <div className="space-y-1.5">
                 {rideCategories[activeTab].map((ride) => (
@@ -948,6 +965,9 @@ function RidesInner() {
                     price={getFareDisplay(ride)}
                     onClick={() => handleSelectOption(ride)}
                     compact
+                    surgeMultiplier={surge.multiplier}
+                    surgeLevel={surge.level}
+                    surgeActive={surge.isActive}
                   />
                 ))}
               </div>

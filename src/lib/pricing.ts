@@ -439,11 +439,16 @@ export function quoteRidePrice(
   rideType: string,
   options?: {
     multiplier?: number; // From zone_pricing_rates.multiplier
+    surgeMultiplier?: number; // Surge pricing multiplier (1.0 = no surge)
     zoneName?: string;
   }
 ): RidePriceQuote {
   // Single multiplier from zone_pricing_rates (already includes ride-type adjustment)
-  const multiplier = options?.multiplier ?? 1.0;
+  const zoneMultiplier = options?.multiplier ?? 1.0;
+  const surgeMultiplier = options?.surgeMultiplier ?? 1.0;
+  
+  // Combined multiplier: zone rate × surge
+  const combinedMultiplier = zoneMultiplier * surgeMultiplier;
   
   // 1. Calculate base components
   const baseFare = settings.base_fare;
@@ -460,8 +465,8 @@ export function quoteRidePrice(
     subtotal = settings.minimum_fare;
   }
   
-  // 4. Apply single multiplier to get final price
-  const total = round(subtotal * multiplier);
+  // 4. Apply combined multiplier (zone × surge) to get final price
+  const total = round(subtotal * combinedMultiplier);
   
   return {
     baseFare: round(baseFare),
@@ -470,7 +475,7 @@ export function quoteRidePrice(
     bookingFee: round(bookingFee),
     subtotal: round(subtotal),
     total,
-    multiplier,
+    multiplier: combinedMultiplier,
     minimumApplied,
     estimatedMin: Math.floor(total * 0.9),
     estimatedMax: Math.ceil(total * 1.1),
