@@ -109,6 +109,14 @@ const AnalyticsHub = () => {
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
+    {
+      title: "AI Insights",
+      description: "Demand forecasts, predictions & anomalies",
+      href: "/admin/insights",
+      icon: TrendingUp,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
   ];
 
   return (
