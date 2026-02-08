@@ -5,7 +5,6 @@
  * Uses @react-google-maps/api for declarative rendering.
  */
 
-import { GoogleMapProvider } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker } from "@/components/maps/GoogleMap";
 
 interface DriverMapViewProps {
@@ -15,7 +14,7 @@ interface DriverMapViewProps {
   routeCoordinates?: [number, number][];
 }
 
-const DriverMapViewInner = ({ 
+const DriverMapView = ({ 
   pickupLocation, 
   driverLocation, 
   hasArrived,
@@ -52,16 +51,8 @@ const DriverMapViewInner = ({
         showControls={false}
         darkMode={true}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none" />
     </div>
-  );
-};
-
-const DriverMapView = (props: DriverMapViewProps) => {
-  return (
-    <GoogleMapProvider>
-      <DriverMapViewInner {...props} />
-    </GoogleMapProvider>
   );
 };
 

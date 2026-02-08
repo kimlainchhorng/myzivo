@@ -1008,6 +1008,86 @@ export type Database = {
           },
         ]
       }
+      application_events: {
+        Row: {
+          actor_user_id: string | null
+          application_id: string
+          created_at: string
+          event_type: string
+          id: string
+          meta: Json | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          application_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          meta?: Json | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          application_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          meta?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applications: {
+        Row: {
+          applicant_user_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          assigned_to: string | null
+          checklist: Json
+          created_at: string
+          current_step: number
+          id: string
+          rejection_reason: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_user_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_to?: string | null
+          checklist?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          rejection_reason?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_user_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_to?: string | null
+          checklist?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          rejection_reason?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -4839,6 +4919,27 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_balances: {
+        Row: {
+          available_balance: number | null
+          driver_id: string
+          pending_balance: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          available_balance?: number | null
+          driver_id: string
+          pending_balance?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          available_balance?: number | null
+          driver_id?: string
+          pending_balance?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       driver_cash_collections: {
         Row: {
           amount: number
@@ -4892,6 +4993,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_cashouts: {
+        Row: {
+          amount: number
+          created_at: string | null
+          driver_id: string
+          id: string
+          method: string | null
+          note: string | null
+          status: string | null
+          stripe_payout_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          status?: string | null
+          stripe_payout_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          status?: string | null
+          stripe_payout_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       driver_certifications: {
         Row: {
@@ -5477,6 +5614,39 @@ export type Database = {
           },
         ]
       }
+      driver_payouts: {
+        Row: {
+          amount: number
+          created_at: string | null
+          driver_id: string
+          id: string
+          paid_at: string | null
+          payout_type: string | null
+          status: string | null
+          week_start: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          paid_at?: string | null
+          payout_type?: string | null
+          status?: string | null
+          week_start?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          paid_at?: string | null
+          payout_type?: string | null
+          status?: string | null
+          week_start?: string | null
+        }
+        Relationships: []
+      }
       driver_penalties: {
         Row: {
           amount_cents: number | null
@@ -6013,6 +6183,33 @@ export type Database = {
           },
         ]
       }
+      driver_stripe: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          onboarding_completed: boolean | null
+          payouts_enabled: boolean | null
+          stripe_account_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       driver_training_progress: {
         Row: {
           completed_at: string | null
@@ -6116,6 +6313,48 @@ export type Database = {
           },
         ]
       }
+      driver_weekly_earnings: {
+        Row: {
+          adjustment_due: number | null
+          adjustment_paid: number | null
+          driver_earnings_total: number | null
+          driver_id: string
+          external_fees_total: number | null
+          guarantee_percent: number | null
+          guaranteed_minimum: number | null
+          id: string
+          passenger_total: number | null
+          updated_at: string | null
+          week_start: string
+        }
+        Insert: {
+          adjustment_due?: number | null
+          adjustment_paid?: number | null
+          driver_earnings_total?: number | null
+          driver_id: string
+          external_fees_total?: number | null
+          guarantee_percent?: number | null
+          guaranteed_minimum?: number | null
+          id?: string
+          passenger_total?: number | null
+          updated_at?: string | null
+          week_start: string
+        }
+        Update: {
+          adjustment_due?: number | null
+          adjustment_paid?: number | null
+          driver_earnings_total?: number | null
+          driver_id?: string
+          external_fees_total?: number | null
+          guarantee_percent?: number | null
+          guaranteed_minimum?: number | null
+          id?: string
+          passenger_total?: number | null
+          updated_at?: string | null
+          week_start?: string
+        }
+        Relationships: []
+      }
       driver_withdrawals: {
         Row: {
           amount: number
@@ -6185,10 +6424,12 @@ export type Database = {
           acceptance_rate: number | null
           allowed_regions: string[] | null
           apns_token: string | null
+          application_id: string | null
           approved_for_blacklux: boolean | null
           avatar_url: string | null
           avg_delay_minutes: number | null
           bank_connected: boolean | null
+          can_go_online: boolean
           cancel_count: number
           completion_rate: number | null
           created_at: string
@@ -6208,14 +6449,17 @@ export type Database = {
           is_suspended: boolean | null
           is_verified: boolean | null
           last_active_at: string | null
+          last_active_date: string | null
           last_heading: number | null
           last_performance_calc: string | null
           last_speed: number | null
           level: string | null
           license_number: string
           location_suspicious: boolean | null
+          longest_streak: number | null
           move_enabled: boolean | null
           on_time_rate: number | null
+          onboarding_status: string
           performance_score: number | null
           phone: string
           prev_lat: number | null
@@ -6228,6 +6472,7 @@ export type Database = {
           region_id: string | null
           rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
+          streak_days: number | null
           stripe_account_id: string | null
           stripe_charges_enabled: boolean | null
           stripe_details_submitted: boolean | null
@@ -6249,10 +6494,12 @@ export type Database = {
           acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
+          application_id?: string | null
           approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
+          can_go_online?: boolean
           cancel_count?: number
           completion_rate?: number | null
           created_at?: string
@@ -6272,14 +6519,17 @@ export type Database = {
           is_suspended?: boolean | null
           is_verified?: boolean | null
           last_active_at?: string | null
+          last_active_date?: string | null
           last_heading?: number | null
           last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
           license_number: string
           location_suspicious?: boolean | null
+          longest_streak?: number | null
           move_enabled?: boolean | null
           on_time_rate?: number | null
+          onboarding_status?: string
           performance_score?: number | null
           phone: string
           prev_lat?: number | null
@@ -6292,6 +6542,7 @@ export type Database = {
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
+          streak_days?: number | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
@@ -6313,10 +6564,12 @@ export type Database = {
           acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
+          application_id?: string | null
           approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
+          can_go_online?: boolean
           cancel_count?: number
           completion_rate?: number | null
           created_at?: string
@@ -6336,14 +6589,17 @@ export type Database = {
           is_suspended?: boolean | null
           is_verified?: boolean | null
           last_active_at?: string | null
+          last_active_date?: string | null
           last_heading?: number | null
           last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
           license_number?: string
           location_suspicious?: boolean | null
+          longest_streak?: number | null
           move_enabled?: boolean | null
           on_time_rate?: number | null
+          onboarding_status?: string
           performance_score?: number | null
           phone?: string
           prev_lat?: number | null
@@ -6356,6 +6612,7 @@ export type Database = {
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
+          streak_days?: number | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
@@ -6373,6 +6630,13 @@ export type Database = {
           vehicle_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "drivers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "drivers_region_id_fkey"
             columns: ["region_id"]
@@ -17307,6 +17571,7 @@ export type Database = {
           accepts_delivery: boolean | null
           accepts_pickup: boolean | null
           address: string
+          application_id: string | null
           auto_accept_orders: boolean | null
           avg_prep_time: number | null
           avg_rating: number | null
@@ -17338,6 +17603,7 @@ export type Database = {
           min_order_cents: number | null
           name: string
           onboarding_completed_at: string | null
+          onboarding_status: string
           onboarding_step: number | null
           opening_hours: Json | null
           owner_id: string | null
@@ -17370,6 +17636,7 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address: string
+          application_id?: string | null
           auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
           avg_rating?: number | null
@@ -17401,6 +17668,7 @@ export type Database = {
           min_order_cents?: number | null
           name: string
           onboarding_completed_at?: string | null
+          onboarding_status?: string
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
@@ -17433,6 +17701,7 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address?: string
+          application_id?: string | null
           auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
           avg_rating?: number | null
@@ -17464,6 +17733,7 @@ export type Database = {
           min_order_cents?: number | null
           name?: string
           onboarding_completed_at?: string | null
+          onboarding_status?: string
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
@@ -17493,6 +17763,13 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurants_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "restaurants_region_id_fkey"
             columns: ["region_id"]
@@ -27296,6 +27573,7 @@ export type Database = {
           trusted_devices_count: number
         }[]
       }
+      get_week_start: { Args: { d: string }; Returns: string }
       get_zone_stats: { Args: { p_region_id: string }; Returns: Json }
       get_zone_surge_multiplier: {
         Args: { p_region_id: string }
