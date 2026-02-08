@@ -103,6 +103,12 @@ const MarketingHub = lazy(() => import("./pages/admin/marketing/MarketingHub"));
 const CampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
 const CampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
 
+// Admin Loyalty
+const AdminLoyaltyPage = lazy(() => import("./pages/admin/AdminLoyaltyPage"));
+
+// Customer Loyalty
+const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
+
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
@@ -784,6 +790,10 @@ const App = () => (
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
                 
+                {/* Loyalty Routes */}
+                <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
+                <Route path="/admin/loyalty" element={<ProtectedRoute><AdminLoyaltyPage /></ProtectedRoute>} />
+
                 {/* P2P Car Rental - Owner Routes */}
                 <Route path="/list-your-car" element={<ListYourCar />} />
                 <Route path="/owner/apply" element={<ProtectedRoute><OwnerApply /></ProtectedRoute>} />
