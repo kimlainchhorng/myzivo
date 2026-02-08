@@ -529,11 +529,11 @@ function RidesInner() {
     snapToPosition(currentY < threshold);
   };
 
-  // Calculate sheet height based on step
+  // Calculate sheet height based on step - using dvh for true mobile viewport
   const getSheetHeight = () => {
-    if (step === "request") return "55vh";
-    if (step === "options") return "60vh";
-    return "70vh";
+    if (step === "request") return "min(52dvh, 420px)";
+    if (step === "options") return "min(50dvh, 400px)";
+    return "min(65dvh, 520px)";
   };
 
   return (
@@ -580,7 +580,7 @@ function RidesInner() {
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ y }}
-        className="rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col"
+        className="relative rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col"
         animate={{ height: getSheetHeight() }}
         transition={{ type: "spring", stiffness: 300, damping: 35 }}
       >
@@ -593,18 +593,18 @@ function RidesInner() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-24">
+        <div className="flex-1 overflow-hidden px-3 pb-16">
           {/* Request Step */}
           {step === "request" && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Title */}
-              <h1 className="text-xl font-bold text-zinc-900">Where to?</h1>
+              <h1 className="text-lg font-bold text-zinc-900">Where to?</h1>
               
               {/* Pickup & Dropoff Inputs */}
               <div className="relative bg-zinc-100 rounded-xl p-1">
                 {/* Pickup Input */}
                 <div className="relative">
-                  <div className="flex items-center gap-3 px-3 py-3">
+                    <div className="flex items-center gap-2 px-3 py-2">
                     <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                       <div className="w-2 h-2 bg-white rounded-full" />
                     </div>
@@ -668,7 +668,7 @@ function RidesInner() {
                 {stops.map((stop, index) => (
                   <div key={index}>
                     <div className="relative">
-                      <div className="flex items-center gap-3 px-3 py-3">
+                      <div className="flex items-center gap-2 px-3 py-2">
                         <div className="w-6 h-6 bg-zinc-400 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-[10px] font-bold text-white">{index + 1}</span>
                         </div>
@@ -734,7 +734,7 @@ function RidesInner() {
                 
                 {/* Dropoff Input */}
                 <div className="relative">
-                  <div className="flex items-center gap-3 px-3 py-3">
+                  <div className="flex items-center gap-2 px-3 py-2">
                     <div className="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0">
                       <div className="w-2 h-2 bg-white rounded-sm" />
                     </div>
@@ -797,12 +797,12 @@ function RidesInner() {
               )}
 
               {/* Category Tabs */}
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
+              <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
                 {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setActiveTab(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                       activeTab === cat 
                         ? "bg-zinc-900 text-white" 
                         : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
@@ -814,7 +814,7 @@ function RidesInner() {
               </div>
 
               {/* Ride Options List */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {rideCategories[activeTab].map((ride) => (
                   <UberLikeRideRow
                     key={ride.id}
@@ -826,16 +826,17 @@ function RidesInner() {
                     eta={`${ride.eta} min`}
                     price={getFareFixed(ride)}
                     onClick={() => handleSelectOption(ride)}
+                    compact
                   />
                 ))}
               </div>
 
               {/* Confirm Button */}
               {selectedOption && dropoff && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-zinc-200">
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
                   <Button
                     onClick={handleFindRides}
-                    className="w-full h-14 bg-black hover:bg-zinc-900 text-white font-bold text-base rounded-xl"
+                    className="w-full h-12 bg-black hover:bg-zinc-900 text-white font-bold text-sm rounded-xl"
                   >
                     Choose {selectedOption.name}
                   </Button>
@@ -882,10 +883,10 @@ function RidesInner() {
                 <span className="text-lg font-bold text-zinc-900">{getFareFixed(selectedOption)}</span>
               </div>
 
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-zinc-200">
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
                 <Button
                   onClick={handleConfirmRide}
-                  className="w-full h-14 bg-black hover:bg-zinc-900 text-white font-bold text-base rounded-xl"
+                  className="w-full h-12 bg-black hover:bg-zinc-900 text-white font-bold text-sm rounded-xl"
                 >
                   Continue
                 </Button>
@@ -952,13 +953,13 @@ function RidesInner() {
                 </div>
               </div>
 
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-zinc-200">
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-white/80">
                 <Button
                   onClick={handleStartCheckout}
                   disabled={!contactInfo.name || !contactInfo.phone || isSubmitting}
-                  className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-base rounded-xl gap-2"
+                  className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm rounded-xl gap-2"
                 >
-                  <CreditCard className="w-5 h-5" />
+                  <CreditCard className="w-4 h-4" />
                   Continue to Payment
                 </Button>
               </div>

@@ -16,15 +16,19 @@ interface UberLikeRideRowProps {
   eta: string;
   price: string;
   onClick?: () => void;
+  compact?: boolean;
 }
 
 // Inline SVG car thumbnail (Uber-style, no external assets)
-function CarThumbnail() {
+function CarThumbnail({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="w-16 h-10 flex items-center justify-center shrink-0">
+    <div className={cn(
+      "flex items-center justify-center shrink-0",
+      compact ? "w-12 h-8" : "w-16 h-10"
+    )}>
       <svg
-        width="60"
-        height="36"
+        width={compact ? "48" : "60"}
+        height={compact ? "28" : "36"}
         viewBox="0 0 120 72"
         xmlns="http://www.w3.org/2000/svg"
         className="drop-shadow-sm"
@@ -104,6 +108,7 @@ export function UberLikeRideRow({
   eta,
   price,
   onClick,
+  compact = false,
 }: UberLikeRideRowProps) {
   return (
     <button
@@ -111,37 +116,49 @@ export function UberLikeRideRow({
       onClick={onClick}
       className={cn(
         "w-full text-left",
-        "rounded-2xl px-4 py-3",
-        "bg-white",
+        "rounded-2xl bg-white",
         "transition-all active:scale-[0.99]",
+        compact ? "px-3 py-2" : "px-4 py-3",
         selected
           ? "border-2 border-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
           : "border border-black/5 shadow-[0_6px_16px_rgba(0,0,0,0.06)] hover:bg-zinc-50/50"
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className={cn("flex items-center", compact ? "gap-2" : "gap-3")}>
         {/* Car thumbnail (Uber feel) */}
-        <CarThumbnail />
+        <CarThumbnail compact={compact} />
 
         {/* Text content */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="truncate text-[15px] font-semibold text-zinc-900">
+            <span className={cn(
+              "truncate font-semibold text-zinc-900",
+              compact ? "text-[14px]" : "text-[15px]"
+            )}>
               {name}
             </span>
             <TagPill tag={tag} />
-            <span className="ml-auto inline-flex items-center gap-0.5 text-[12px] font-medium text-zinc-500 shrink-0">
-              <span aria-hidden className="text-[11px]">👤</span> {seats}
+            <span className={cn(
+              "ml-auto inline-flex items-center gap-0.5 font-medium text-zinc-500 shrink-0",
+              compact ? "text-[11px]" : "text-[12px]"
+            )}>
+              <span aria-hidden className={compact ? "text-[10px]" : "text-[11px]"}>👤</span> {seats}
             </span>
           </div>
 
-          <div className="mt-0.5 text-[13px] text-zinc-500">
+          <div className={cn(
+            "mt-0.5 text-zinc-500",
+            compact ? "text-[12px]" : "text-[13px]"
+          )}>
             {time} · {eta}
           </div>
         </div>
 
         {/* Price */}
-        <div className="text-[17px] font-bold text-zinc-900 tabular-nums shrink-0">
+        <div className={cn(
+          "font-bold text-zinc-900 tabular-nums shrink-0",
+          compact ? "text-[15px]" : "text-[17px]"
+        )}>
           {price}
         </div>
       </div>
