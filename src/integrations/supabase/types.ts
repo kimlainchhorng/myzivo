@@ -8241,6 +8241,30 @@ export type Database = {
           },
         ]
       }
+      fee_settings: {
+        Row: {
+          driver_base_pay: number
+          id: number
+          platform_commission_percent: number
+          service_fee: number
+          updated_at: string
+        }
+        Insert: {
+          driver_base_pay?: number
+          id?: number
+          platform_commission_percent?: number
+          service_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          driver_base_pay?: number
+          id?: number
+          platform_commission_percent?: number
+          service_fee?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       finance_ledger: {
         Row: {
           amount_cents: number
@@ -13498,6 +13522,51 @@ export type Database = {
           },
         ]
       }
+      order_financials: {
+        Row: {
+          created_at: string
+          currency: string
+          delivery_fee: number
+          discount_amount: number
+          driver_earnings: number
+          merchant_net: number
+          order_id: string
+          platform_fee: number
+          subtotal: number
+          tax: number
+          tip_amount: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          delivery_fee?: number
+          discount_amount?: number
+          driver_earnings?: number
+          merchant_net?: number
+          order_id: string
+          platform_fee?: number
+          subtotal?: number
+          tax?: number
+          tip_amount?: number
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          delivery_fee?: number
+          discount_amount?: number
+          driver_earnings?: number
+          merchant_net?: number
+          order_id?: string
+          platform_fee?: number
+          subtotal?: number
+          tax?: number
+          tip_amount?: number
+          total?: number
+        }
+        Relationships: []
+      }
       order_offers: {
         Row: {
           created_at: string | null
@@ -15617,6 +15686,38 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          order_id: string
+          payout_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          order_id: string
+          payout_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
             referencedColumns: ["id"]
           },
         ]

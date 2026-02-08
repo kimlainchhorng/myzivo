@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -30,6 +30,18 @@ export default function EatsOrderDetail() {
   // Determine if we should show the map
   const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
   const isDelivering = order?.status === "out_for_delivery";
+
+  // Copy order link to clipboard for support/sharing
+  const handleShareOrderLink = async () => {
+    const orderLink = `https://hizivo.com/eats/orders/${id}`;
+    try {
+      await navigator.clipboard.writeText(orderLink);
+      toast.success("Order link copied to clipboard");
+    } catch (err) {
+      // Fallback for older browsers
+      toast.error("Failed to copy link");
+    }
+  };
 
   // Order Again handler
   const handleOrderAgain = () => {
@@ -156,12 +168,21 @@ export default function EatsOrderDetail() {
             <h1 className="font-bold text-lg">Order Details</h1>
             <p className="text-xs text-zinc-500">#{order.id.slice(0, 8).toUpperCase()}</p>
           </div>
-          <button
-            onClick={() => setHelpModalOpen(true)}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShareOrderLink}
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+              title="Copy order link"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setHelpModalOpen(true)}
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -396,6 +417,7 @@ export default function EatsOrderDetail() {
         onOpenChange={setHelpModalOpen}
         orderId={order.id}
         restaurantPhone={restaurantPhone}
+        restaurantName={restaurantName}
       />
     </div>
   );
