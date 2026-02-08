@@ -3,13 +3,15 @@
  * 
  * Declarative Google Maps component using @react-google-maps/api.
  * Supports ZIVO dark theme, markers, routes, and custom styling.
+ * Uses DirectionsService for reliable route rendering.
  */
 
-import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef } from "react";
-import { GoogleMap as GMap, MarkerF, PolylineF } from "@react-google-maps/api";
+import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
+import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
 import ZivoPickupMarker from "./ZivoPickupMarker";
-import DriverDots from "./DriverDots";
+import ZivoDropoffMarker from "./ZivoDropoffMarker";
+import NearbyCars from "./NearbyCars";
 
 // ZIVO Dark map theme - premium, removes "Google look"
 const ZIVO_MAP_STYLE: google.maps.MapTypeStyle[] = [
@@ -81,6 +83,21 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   dropoff,
 }, ref) => {
   const mapRef = useRef<google.maps.Map | null>(null);
+  
+  // Directions state for route rendering
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [directionsRequested, setDirectionsRequested] = useState(false);
+
+  // Reset directions when pickup/dropoff change
+  useEffect(() => {
+    if (!pickup || !dropoff) {
+      setDirections(null);
+      setDirectionsRequested(false);
+    } else {
+      // Allow new request when coordinates change
+      setDirectionsRequested(false);
+    }
+  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
 
   // Map options
   const options = useMemo<google.maps.MapOptions>(() => ({
@@ -137,17 +154,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
     }
   }, [onMapClick]);
 
-  // Dropoff marker icon
-  const dropoffIcon = useMemo(() => ({
-    path: google.maps.SymbolPath.CIRCLE,
-    scale: 8,
-    fillColor: "#000000",
-    fillOpacity: 1,
-    strokeColor: "#ffffff",
-    strokeWeight: 2,
-  }), []);
-
-  // Driver marker icon
+  // Driver marker icon (for legacy markers)
   const driverIcon = useMemo(() => ({
     path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
     fillColor: "#f59e0b",
@@ -161,9 +168,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   // Determine effective center
   const effectiveCenter = pickup || center;
 
-  // Build route path for polyline
-  const polylinePath = routePath || (route ? undefined : undefined);
-
   return (
     <div className={cn("relative", className)}>
       <GMap
@@ -174,24 +178,51 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         onLoad={onLoad}
         onClick={handleMapClick}
       >
-        {/* Animated nearby driver dots */}
-        <DriverDots center={pickup ?? center} count={20} radiusMeters={1000} />
-
-        {/* Pickup marker with premium pulsing effect - always show, fall back to center */}
-        <ZivoPickupMarker position={pickup ?? center} />
-
-        {/* Dropoff marker */}
-        {dropoff && (
-          <MarkerF
-            position={dropoff}
-            icon={dropoffIcon}
+        {/* Google Directions Service for route */}
+        {pickup && dropoff && !directionsRequested && (
+          <DirectionsService
+            options={{
+              origin: pickup,
+              destination: dropoff,
+              travelMode: google.maps.TravelMode.DRIVING,
+            }}
+            callback={(result, status) => {
+              setDirectionsRequested(true);
+              if (status === "OK" && result) {
+                setDirections(result);
+              }
+            }}
           />
         )}
 
-        {/* Legacy markers support - skip pickup types as they're rendered above */}
+        {/* Render route with Uber-style dark polyline */}
+        {directions && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true, // We use custom markers
+              polylineOptions: {
+                strokeColor: "#111827", // Dark gray like Uber
+                strokeOpacity: 0.9,
+                strokeWeight: 6,
+              },
+            }}
+          />
+        )}
+
+        {/* Uber-style animated nearby cars */}
+        <NearbyCars center={pickup ?? center} count={12} radiusMeters={900} />
+
+        {/* Pickup marker with premium pulsing effect */}
+        <ZivoPickupMarker position={pickup ?? center} />
+
+        {/* Uber-style dropoff marker */}
+        {dropoff && <ZivoDropoffMarker position={dropoff} />}
+
+        {/* Legacy markers support - skip pickup/dropoff types as they're rendered above */}
         {markers.map(marker => {
-          // Skip pickup type - already rendered above with ZivoPickupMarker
-          if (marker.type === "pickup") {
+          // Skip pickup/dropoff types - already rendered with custom overlays
+          if (marker.type === "pickup" || marker.type === "dropoff") {
             return null;
           }
 
@@ -204,8 +235,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
               scaledSize: new google.maps.Size(size, size),
               anchor: new google.maps.Point(size / 2, size / 2),
             };
-          } else if (marker.type === "dropoff") {
-            icon = dropoffIcon;
           } else if (marker.type === "driver") {
             icon = driverIcon;
           }
@@ -226,18 +255,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
             />
           );
         })}
-
-        {/* Route polyline */}
-        {polylinePath && polylinePath.length > 0 && (
-          <PolylineF
-            path={polylinePath}
-            options={{
-              strokeColor: route?.color || "#3b82f6",
-              strokeOpacity: 0.9,
-              strokeWeight: 5,
-            }}
-          />
-        )}
       </GMap>
 
       {/* ZIVO gradient overlay for premium look */}

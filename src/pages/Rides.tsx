@@ -889,7 +889,7 @@ function RidesInner() {
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-zinc-200">
                   <Button
                     onClick={handleFindRides}
-                    className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-base rounded-xl"
+                    className="w-full h-14 bg-black hover:bg-zinc-900 text-white font-bold text-base rounded-xl"
                   >
                     Choose {selectedOption.name}
                   </Button>
@@ -937,7 +937,7 @@ function RidesInner() {
               <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-zinc-200">
                 <Button
                   onClick={handleConfirmRide}
-                  className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-base rounded-xl"
+                  className="w-full h-14 bg-black hover:bg-zinc-900 text-white font-bold text-base rounded-xl"
                 >
                   Continue
                 </Button>
