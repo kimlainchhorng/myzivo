@@ -2,6 +2,8 @@
  * Create Ride Payment Intent
  * Creates a Stripe PaymentIntent for embedded checkout (Stripe Elements)
  * Uses unified DB-driven pricing with server-side calculation
+ * 
+ * IMPORTANT: Pricing logic must match client-side quoteRidePrice() in src/lib/pricing.ts
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -11,6 +13,43 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// ==================== RIDE TYPE MULTIPLIERS (must match client-side) ====================
+
+const RIDE_TYPE_MULTIPLIERS: Record<string, number> = {
+  wait_save: 0.92,
+  standard: 1.00,
+  green: 1.02,
+  priority: 1.12,
+  pet: 1.15,
+  comfort: 1.45,
+  xl: 1.45,
+  black: 1.65,
+  black_suv: 2.10,
+  xxl: 2.10,
+  premium: 1.65,
+  elite: 2.10,
+  lux: 3.50,
+  sprinter: 2.50,
+  secure: 4.00,
+};
+
+// ==================== ROUTE LIMITS (sanity checks) ====================
+
+const ROUTE_LIMITS = {
+  MAX_DISTANCE_MILES: 300,
+  MAX_DURATION_MINUTES: 600,
+};
+
+// ==================== LONG-TRIP DISCOUNT ====================
+
+function getLongTripMultiplier(distanceMiles: number): number {
+  if (distanceMiles > 50) return 0.88;  // 12% discount
+  if (distanceMiles > 25) return 0.92;  // 8% discount
+  return 1.0;
+}
+
+// ==================== TYPES ====================
 
 interface RidePaymentRequest {
   customer_name: string;
@@ -28,7 +67,6 @@ interface RidePaymentRequest {
   estimated_fare: number; // Client estimate for comparison
   distance_miles?: number;
   duration_minutes?: number;
-  ride_type_multiplier?: number;
   surge_multiplier?: number;
 }
 
@@ -59,7 +97,16 @@ interface PriceBreakdown {
   subtotal: number;
   total: number;
   minimumApplied: boolean;
+  rideTypeMultiplier: number;
+  longTripMultiplier: number;
+  surgeMultiplier: number;
   city?: string;
+}
+
+// ==================== UTILITIES ====================
+
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 // Extract city from address
@@ -90,11 +137,17 @@ function normalizeCityName(city: string | null): string | null {
   return variations[lowerCity] || city;
 }
 
-// Calculate fare using city pricing (preferred)
+// ==================== PRICING FUNCTIONS ====================
+
+/**
+ * Calculate fare using city pricing (preferred)
+ * Uses RIDE_TYPE_MULTIPLIERS for ride type adjustments
+ */
 function calculateCityFare(
   cityPricing: CityPricing,
   distanceMiles: number,
   durationMinutes: number,
+  rideType: string,
   surgeMultiplier: number
 ): PriceBreakdown {
   const baseFare = cityPricing.base_fare;
@@ -102,34 +155,45 @@ function calculateCityFare(
   const timeFee = durationMinutes * cityPricing.per_minute;
   const bookingFee = cityPricing.booking_fee;
   
+  const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
+  const longTripMultiplier = getLongTripMultiplier(distanceMiles);
+  
   let subtotal = baseFare + distanceFee + timeFee;
+  subtotal *= rideTypeMultiplier;
   subtotal *= surgeMultiplier;
+  subtotal *= longTripMultiplier;
   
   const minimumApplied = subtotal < cityPricing.minimum_fare;
   if (minimumApplied) {
     subtotal = cityPricing.minimum_fare;
   }
   
-  const total = subtotal + bookingFee;
+  const total = round(subtotal + bookingFee);
   
   return {
-    baseFare: Math.round(baseFare * 100) / 100,
-    distanceFee: Math.round(distanceFee * 100) / 100,
-    timeFee: Math.round(timeFee * 100) / 100,
-    bookingFee: Math.round(bookingFee * 100) / 100,
-    subtotal: Math.round(subtotal * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    total,
     minimumApplied,
+    rideTypeMultiplier,
+    longTripMultiplier,
+    surgeMultiplier,
     city: cityPricing.city,
   };
 }
 
-// Server-side fare calculation using global settings (fallback)
+/**
+ * Server-side fare calculation using global settings (fallback)
+ * Uses RIDE_TYPE_MULTIPLIERS for ride type adjustments
+ */
 function calculateServerFare(
   settings: PricingSettings,
   distanceMiles: number,
   durationMinutes: number,
-  rideTypeMultiplier: number,
+  rideType: string,
   surgeMultiplier: number
 ): PriceBreakdown {
   const baseFare = settings.base_fare;
@@ -137,25 +201,32 @@ function calculateServerFare(
   const timeFee = durationMinutes * settings.per_minute;
   const bookingFee = settings.booking_fee;
   
+  const rideTypeMultiplier = RIDE_TYPE_MULTIPLIERS[rideType] ?? 1.0;
+  const longTripMultiplier = getLongTripMultiplier(distanceMiles);
+  
   let subtotal = baseFare + distanceFee + timeFee;
   subtotal *= rideTypeMultiplier;
   subtotal *= surgeMultiplier;
+  subtotal *= longTripMultiplier;
   
   const minimumApplied = subtotal < settings.minimum_fare;
   if (minimumApplied) {
     subtotal = settings.minimum_fare;
   }
   
-  const total = subtotal + bookingFee;
+  const total = round(subtotal + bookingFee);
   
   return {
-    baseFare: Math.round(baseFare * 100) / 100,
-    distanceFee: Math.round(distanceFee * 100) / 100,
-    timeFee: Math.round(timeFee * 100) / 100,
-    bookingFee: Math.round(bookingFee * 100) / 100,
-    subtotal: Math.round(subtotal * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    baseFare: round(baseFare),
+    distanceFee: round(distanceFee),
+    timeFee: round(timeFee),
+    bookingFee: round(bookingFee),
+    subtotal: round(subtotal),
+    total,
     minimumApplied,
+    rideTypeMultiplier,
+    longTripMultiplier,
+    surgeMultiplier,
   };
 }
 
@@ -188,7 +259,6 @@ serve(async (req) => {
       notes,
       distance_miles = 5,
       duration_minutes = 15,
-      ride_type_multiplier = 1.0,
       surge_multiplier = 1.0,
     } = body;
 
@@ -197,7 +267,19 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
+    // SANITY CHECK: Validate route data
+    if (distance_miles > ROUTE_LIMITS.MAX_DISTANCE_MILES) {
+      throw new Error(`Invalid route data: distance ${distance_miles} miles exceeds maximum of ${ROUTE_LIMITS.MAX_DISTANCE_MILES}`);
+    }
+    if (duration_minutes > ROUTE_LIMITS.MAX_DURATION_MINUTES) {
+      throw new Error(`Invalid route data: duration ${duration_minutes} min exceeds maximum of ${ROUTE_LIMITS.MAX_DURATION_MINUTES}`);
+    }
+    if (distance_miles < 0 || duration_minutes < 0) {
+      throw new Error("Invalid route data: negative values");
+    }
+
     console.log("[create-ride-payment-intent] Processing ride for:", pickup_address);
+    console.log("[create-ride-payment-intent] Route data:", { distance_miles, duration_minutes, ride_type, surge_multiplier });
 
     // 1. Extract city from pickup address for city-specific pricing
     const rawCity = extractCityFromAddress(pickup_address);
@@ -209,11 +291,12 @@ serve(async (req) => {
     let usedCityPricing = false;
 
     if (pickupCity) {
+      // First try exact city + standard ride type (base pricing)
       const { data: cityPricingData, error: cityError } = await supabase
         .from("city_pricing")
         .select("*")
         .eq("city", pickupCity)
-        .eq("ride_type", ride_type)
+        .eq("ride_type", "standard")  // Always use standard as base, multipliers handle the rest
         .eq("is_active", true)
         .single();
 
@@ -223,16 +306,17 @@ serve(async (req) => {
           cityPricingData as CityPricing,
           distance_miles,
           duration_minutes,
+          ride_type,
           surge_multiplier
         );
         usedCityPricing = true;
       } else {
-        // Try default city pricing for ride_type
+        // Try default city pricing
         const { data: defaultCityPricing } = await supabase
           .from("city_pricing")
           .select("*")
           .eq("city", "default")
-          .eq("ride_type", ride_type)
+          .eq("ride_type", "standard")
           .eq("is_active", true)
           .single();
 
@@ -242,6 +326,7 @@ serve(async (req) => {
             defaultCityPricing as CityPricing,
             distance_miles,
             duration_minutes,
+            ride_type,
             surge_multiplier
           );
           usedCityPricing = true;
@@ -282,12 +367,16 @@ serve(async (req) => {
         pricingSettings,
         distance_miles,
         duration_minutes,
-        ride_type_multiplier,
+        ride_type,
         surge_multiplier
       );
     }
 
-    console.log("[create-ride-payment-intent] Final breakdown:", breakdown!);
+    console.log("[create-ride-payment-intent] Final breakdown:", {
+      ...breakdown!,
+      rideTypeMultiplier: breakdown!.rideTypeMultiplier,
+      longTripMultiplier: breakdown!.longTripMultiplier,
+    });
 
     // 4. Fetch commission rate from commission_settings
     const { data: commissionData } = await supabase
@@ -333,8 +422,8 @@ serve(async (req) => {
         quoted_distance_fee: breakdown!.distanceFee,
         quoted_time_fee: breakdown!.timeFee,
         quoted_booking_fee: breakdown!.bookingFee,
-        quoted_surge_multiplier: surge_multiplier,
-        ride_type_multiplier: ride_type_multiplier,
+        quoted_surge_multiplier: breakdown!.surgeMultiplier,
+        ride_type_multiplier: breakdown!.rideTypeMultiplier,
         commission_amount: commissionAmount,
         driver_earning: driverEarning,
       })
