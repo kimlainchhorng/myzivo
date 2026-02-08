@@ -16,11 +16,12 @@ export interface SurgePricingInfo {
 /**
  * Hook to calculate surge pricing based on demand vs supply ratio.
  * 
- * Surge rules (matching Analytics):
- * - ratio >= 2.0 or no drivers: 2.0x (High)
- * - ratio >= 1.5: 1.6x (High)
- * - ratio >= 1.0: 1.3x (Medium)
+ * Surge tiers:
  * - ratio < 1.0: 1.0x (Low)
+ * - ratio 1.0–1.5: 1.1x (Medium)
+ * - ratio 1.5–2.0: 1.25x (Medium)
+ * - ratio 2.0–3.0: 1.5x (High)
+ * - ratio > 3.0 or no drivers: 2.0x (High)
  * 
  * Where ratio = requestedCount / max(1, availableDrivers)
  * 

@@ -209,17 +209,67 @@ export async function getTimeMultiplier(zoneId: string): Promise<number> {
 }
 
 /**
- * Get weather multiplier (placeholder - returns 1.0 until weather API is integrated)
+ * Get weather multiplier from database
+ * Supports zone-specific overrides with fallback to global multipliers
+ * 
+ * Weather keys: 'clear', 'rain', 'heavy_rain', 'snow'
+ * Multipliers: clear=1.0, rain=1.1, heavy_rain=1.2, snow=1.3
  */
-export async function getWeatherMultiplier(_zoneId: string): Promise<number> {
-  // TODO: Integrate weather API (e.g., OpenWeatherMap)
-  // For now, always return 1.0 (clear weather)
-  return 1.0;
+export async function getWeatherMultiplier(zoneId: string, weatherKey?: string): Promise<number> {
+  // If no weather key provided, default to clear (1.0)
+  if (!weatherKey) return 1.0;
+
+  try {
+    // First try zone-specific multiplier using REST API to avoid type issues
+    const url = `${(supabase as unknown as { supabaseUrl: string }).supabaseUrl}/rest/v1/weather_multipliers?weather_key=eq.${weatherKey}&zone_id=eq.${zoneId}&is_active=eq.true&select=multiplier&limit=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'apikey': (supabase as unknown as { supabaseKey: string }).supabaseKey,
+        'Authorization': `Bearer ${(supabase as unknown as { supabaseKey: string }).supabaseKey}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data?.[0]?.multiplier) {
+        return Number(data[0].multiplier);
+      }
+    }
+
+    // Fallback to global multiplier (zone_id is null)
+    const globalUrl = `${(supabase as unknown as { supabaseUrl: string }).supabaseUrl}/rest/v1/weather_multipliers?weather_key=eq.${weatherKey}&zone_id=is.null&is_active=eq.true&select=multiplier&limit=1`;
+    
+    const globalResponse = await fetch(globalUrl, {
+      headers: {
+        'apikey': (supabase as unknown as { supabaseKey: string }).supabaseKey,
+        'Authorization': `Bearer ${(supabase as unknown as { supabaseKey: string }).supabaseKey}`,
+      },
+    });
+
+    if (globalResponse.ok) {
+      const globalData = await globalResponse.json();
+      if (globalData?.[0]?.multiplier) {
+        return Number(globalData[0].multiplier);
+      }
+    }
+
+    return 1.0;
+  } catch (err) {
+    console.warn("[getWeatherMultiplier] Error fetching weather multiplier:", err);
+    return 1.0;
+  }
 }
 
 /**
  * Calculate surge multiplier based on demand/supply ratio
- * CAPPED at 1.35x to stay cheaper than competitors
+ * 
+ * Surge tiers:
+ * - ratio < 1.0: 1.0x
+ * - ratio 1.0–1.5: 1.1x
+ * - ratio 1.5–2.0: 1.25x
+ * - ratio 2.0–3.0: 1.5x
+ * - ratio > 3.0 or no drivers: 2.0x
  */
 export async function getSurgeMultiplier(): Promise<number> {
   const now = new Date();
@@ -244,14 +294,15 @@ export async function getSurgeMultiplier(): Promise<number> {
   const rides = requestedCount || 0;
   const drivers = driversCount || 0;
 
-  // Surge rules (capped at 1.35x to stay cheaper than Uber/Lyft)
-  if (drivers <= 0) return 1.35;
+  // Surge rules
+  if (drivers <= 0) return 2.0;
   
   const ratio = rides / Math.max(1, drivers);
   
-  if (ratio >= 2.0) return 1.35;
+  if (ratio > 3.0) return 2.0;
+  if (ratio >= 2.0) return 1.5;
   if (ratio >= 1.5) return 1.25;
-  if (ratio >= 1.0) return 1.12;
+  if (ratio >= 1.0) return 1.1;
   
   return 1.0;
 }
