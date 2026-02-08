@@ -297,6 +297,16 @@ export function useFoodOrders(statusFilterOrOptions?: string | UseFoodOrdersOpti
   });
 }
 
+// Status messages for push notifications
+const ORDER_STATUS_PUSH_MESSAGES: Record<string, { title: string; body: string }> = {
+  confirmed: { title: "Order Confirmed ✅", body: "Your order has been confirmed and will be prepared soon!" },
+  preparing: { title: "Preparing Your Order 👨‍🍳", body: "The restaurant is now preparing your order." },
+  ready_for_pickup: { title: "Order Ready! 🎉", body: "Your order is ready for pickup." },
+  out_for_delivery: { title: "On The Way! 🚗", body: "Your order is out for delivery." },
+  completed: { title: "Order Delivered ✅", body: "Your order has been delivered. Enjoy!" },
+  cancelled: { title: "Order Cancelled", body: "Your order has been cancelled." },
+};
+
 // Admin: Update food order
 export function useUpdateFoodOrder() {
   const queryClient = useQueryClient();
@@ -309,6 +319,13 @@ export function useUpdateFoodOrder() {
       id: string;
       updates: { status?: BookingStatus; driver_id?: string | null; admin_notes?: string };
     }) => {
+      // Get current order to find customer_id for push notification
+      const { data: currentOrder } = await supabase
+        .from(EATS_TABLES.orders)
+        .select("customer_id, status")
+        .eq("id", id)
+        .single();
+
       const { data, error } = await supabase
         .from(EATS_TABLES.orders)
         .update(updates as never)
@@ -317,6 +334,31 @@ export function useUpdateFoodOrder() {
         .single();
 
       if (error) throw error;
+
+      // Send push notification for status changes
+      if (updates.status && currentOrder?.customer_id && updates.status !== currentOrder.status) {
+        const pushMessage = ORDER_STATUS_PUSH_MESSAGES[updates.status];
+        if (pushMessage) {
+          try {
+            await supabase.functions.invoke("send-push-notification", {
+              body: {
+                user_id: currentOrder.customer_id,
+                notification_type: "order_status",
+                title: pushMessage.title,
+                body: pushMessage.body,
+                data: { 
+                  type: "order_status", 
+                  order_id: id,
+                  status: updates.status,
+                },
+              },
+            });
+            console.log(`[useUpdateFoodOrder] Push sent for status: ${updates.status}`);
+          } catch (pushErr) {
+            console.warn("[useUpdateFoodOrder] Failed to send push:", pushErr);
+          }
+        }
+      }
 
       // Send driver notification if driver was assigned
       if (updates.driver_id) {

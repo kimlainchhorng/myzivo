@@ -1,8 +1,8 @@
 /**
  * useWebPush Hook
- * Manages Web Push notification subscriptions
+ * Manages Web Push notification subscriptions with full server-side integration
  * 
- * Note: VAPID keys must be configured as secrets for push to work:
+ * Requires VAPID secrets configured in Supabase Edge Functions:
  * - VAPID_PUBLIC_KEY
  * - VAPID_PRIVATE_KEY
  * - VAPID_SUBJECT
@@ -12,8 +12,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-// VAPID public key - will be set when secrets are configured
-// This should match the VAPID_PUBLIC_KEY secret on the server
+// VAPID public key - must match server-side VAPID_PUBLIC_KEY secret
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
 
 // Convert base64 string to Uint8Array for VAPID key
@@ -164,6 +163,7 @@ export function useWebPush() {
         isLoading: false,
       }));
 
+      console.log("[useWebPush] Successfully subscribed to push notifications");
       return subscription;
     } catch (err) {
       console.error("[useWebPush] Subscribe error:", err);
@@ -174,7 +174,7 @@ export function useWebPush() {
       }));
       return null;
     }
-  }, [state.isSupported, user]);
+  }, [state.isSupported]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async (): Promise<boolean> => {
@@ -185,11 +185,21 @@ export function useWebPush() {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      const endpoint = state.subscription.endpoint;
+      
       // Unsubscribe from browser
       await state.subscription.unsubscribe();
 
-      // Remove from backend (optional - server will handle expired subscriptions)
-      // Could call an edge function here to remove the subscription
+      // Remove from backend
+      try {
+        await supabase.functions.invoke("unregister-web-push", {
+          body: { endpoint },
+        });
+        console.log("[useWebPush] Subscription removed from server");
+      } catch (serverErr) {
+        console.warn("[useWebPush] Failed to remove from server:", serverErr);
+        // Continue anyway - browser is unsubscribed
+      }
 
       setState(prev => ({
         ...prev,
@@ -209,20 +219,51 @@ export function useWebPush() {
     }
   }, [state.subscription]);
 
-  // Test notification (for development)
+  // Send test notification via server (real end-to-end test)
   const sendTestNotification = useCallback(async () => {
-    if (Notification.permission !== "granted") {
+    if (!user?.id) {
+      // Fallback to local notification if not logged in
+      if (Notification.permission === "granted") {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("hiZIVO Test", {
+          body: "Push notifications are working! 🎉",
+          icon: "/pwa-icons/icon-192x192.png",
+          badge: "/pwa-icons/icon-192x192.png",
+          tag: "test",
+        });
+      }
       return;
     }
 
-    const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification("hiZIVO Test", {
-      body: "Push notifications are working! 🎉",
-      icon: "/pwa-icons/icon-192x192.png",
-      badge: "/pwa-icons/icon-192x192.png",
-      tag: "test",
-    });
-  }, []);
+    // Send real push via edge function (end-to-end test)
+    try {
+      const { error } = await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_id: user.id,
+          notification_type: "test",
+          title: "hiZIVO Push Test 🔔",
+          body: "Push notifications are working end-to-end!",
+          data: { type: "test", url: "/account" },
+        },
+      });
+
+      if (error) {
+        console.error("[useWebPush] Test notification error:", error);
+        // Fallback to local
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("hiZIVO Test", {
+          body: "Push notifications are working locally! 🎉",
+          icon: "/pwa-icons/icon-192x192.png",
+          badge: "/pwa-icons/icon-192x192.png",
+          tag: "test",
+        });
+      } else {
+        console.log("[useWebPush] Test notification sent via server");
+      }
+    } catch (err) {
+      console.error("[useWebPush] Test notification failed:", err);
+    }
+  }, [user]);
 
   return {
     ...state,
