@@ -22,7 +22,9 @@ import {
   Lock,
   Plane,
   Gift,
-  Wallet
+  Wallet,
+  Store,
+  ExternalLink
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
@@ -50,6 +52,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useMerchantRole } from "@/hooks/useMerchantRole";
+import { MERCHANT_APP_URL } from "@/config/eatsTables";
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal("")),
@@ -62,6 +66,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { data: merchantData } = useMerchantRole();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -306,6 +311,41 @@ const Profile = () => {
                 ))}
               </div>
             </div>
+
+            {/* Merchant Dashboard Link - only shown if user has merchant role */}
+            {merchantData?.isMerchant && (
+              <a 
+                href={MERCHANT_APP_URL} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Card className="relative border-0 bg-gradient-to-br from-orange-500/10 to-amber-500/10 shadow-xl overflow-hidden hover:shadow-2xl transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/5" />
+                  <CardContent className="p-4 sm:p-5 relative">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                          <Store className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm sm:text-base">Merchant Dashboard</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Manage your restaurant & orders
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-500 border-orange-500/30 font-semibold px-2 sm:px-3 py-1 text-xs">
+                          Partner
+                        </Badge>
+                        <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
+            )}
 
             {/* Account Status */}
             <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { EATS_TABLES, INITIAL_ORDER_STATUS } from "@/config/eatsTables";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -199,7 +200,7 @@ export function useCreateFoodOrder() {
           special_instructions: input.delivery_instructions 
             ? `${input.delivery_instructions}\n\n---\nCustomer Info: ${customerInfo}`
             : `Customer Info: ${customerInfo}`,
-          status: "pending" as BookingStatus,
+          status: INITIAL_ORDER_STATUS as BookingStatus,
         })
         .select()
         .single();

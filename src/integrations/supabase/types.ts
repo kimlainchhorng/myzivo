@@ -3081,6 +3081,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          attachment_url: string | null
           created_at: string
           id: string
           is_read: boolean | null
@@ -3091,6 +3092,7 @@ export type Database = {
           trip_id: string | null
         }
         Insert: {
+          attachment_url?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
@@ -3101,6 +3103,7 @@ export type Database = {
           trip_id?: string | null
         }
         Update: {
+          attachment_url?: string | null
           created_at?: string
           id?: string
           is_read?: boolean | null
@@ -23113,6 +23116,7 @@ export type Database = {
           customer_email: string | null
           customer_lat: number | null
           customer_lng: number | null
+          customer_masked_phone: string | null
           customer_name: string | null
           customer_phone: string | null
           customer_total: number | null
@@ -23121,6 +23125,7 @@ export type Database = {
           driver_id: string | null
           driver_lat: number | null
           driver_lng: number | null
+          driver_masked_phone: string | null
           driver_payout_cents: number | null
           dropoff_address: string
           dropoff_lat: number
@@ -23169,6 +23174,7 @@ export type Database = {
           customer_email?: string | null
           customer_lat?: number | null
           customer_lng?: number | null
+          customer_masked_phone?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_total?: number | null
@@ -23177,6 +23183,7 @@ export type Database = {
           driver_id?: string | null
           driver_lat?: number | null
           driver_lng?: number | null
+          driver_masked_phone?: string | null
           driver_payout_cents?: number | null
           dropoff_address: string
           dropoff_lat: number
@@ -23225,6 +23232,7 @@ export type Database = {
           customer_email?: string | null
           customer_lat?: number | null
           customer_lng?: number | null
+          customer_masked_phone?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_total?: number | null
@@ -23233,6 +23241,7 @@ export type Database = {
           driver_id?: string | null
           driver_lat?: number | null
           driver_lng?: number | null
+          driver_masked_phone?: string | null
           driver_payout_cents?: number | null
           dropoff_address?: string
           dropoff_lat?: number
