@@ -16472,11 +16472,13 @@ export type Database = {
           admin_override_reason: string | null
           admin_price_override: number | null
           assigned_driver_id: string | null
+          commission_amount: number | null
           created_at: string
           customer_email: string | null
           customer_name: string
           customer_phone: string
           distance_miles: number | null
+          driver_earning: number | null
           dropoff_address: string
           dropoff_lat: number | null
           dropoff_lng: number | null
@@ -16501,6 +16503,7 @@ export type Database = {
           refund_status: string | null
           refunded_at: string | null
           ride_type: string
+          ride_type_multiplier: number | null
           scheduled_at: string | null
           status: string
           stripe_checkout_session_id: string | null
@@ -16514,11 +16517,13 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          commission_amount?: number | null
           created_at?: string
           customer_email?: string | null
           customer_name: string
           customer_phone: string
           distance_miles?: number | null
+          driver_earning?: number | null
           dropoff_address: string
           dropoff_lat?: number | null
           dropoff_lng?: number | null
@@ -16543,6 +16548,7 @@ export type Database = {
           refund_status?: string | null
           refunded_at?: string | null
           ride_type?: string
+          ride_type_multiplier?: number | null
           scheduled_at?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
@@ -16556,11 +16562,13 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          commission_amount?: number | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string
           distance_miles?: number | null
+          driver_earning?: number | null
           dropoff_address?: string
           dropoff_lat?: number | null
           dropoff_lng?: number | null
@@ -16585,6 +16593,7 @@ export type Database = {
           refund_status?: string | null
           refunded_at?: string | null
           ride_type?: string
+          ride_type_multiplier?: number | null
           scheduled_at?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
