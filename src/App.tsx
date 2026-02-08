@@ -58,6 +58,7 @@ const SuppliersStatusPage = lazy(() => import("./pages/admin/travel/SuppliersSta
 const AdminJobsPage = lazy(() => import("./pages/admin/JobsPage"));
 const SettingsHub = lazy(() => import("./pages/admin/settings/SettingsHub"));
 const InviteManagement = lazy(() => import("./pages/admin/settings/InviteManagement"));
+const ZonePricingRatesPage = lazy(() => import("./pages/admin/ZonePricingRatesPage"));
 // ZIVO Admin Dashboard - Rides Operations
 const RidesHubPage = lazy(() => import("./pages/admin/rides/RidesHubPage"));
 const DriversHubPage = lazy(() => import("./pages/admin/drivers/DriversHubPage"));
@@ -1068,6 +1069,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <SellerOfTravelSettings />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Zone Pricing Rates Admin */}
+                <Route
+                  path="/admin/zone-pricing"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <ZonePricingRatesPage />
                     </ProtectedRoute>
                   }
                 />
