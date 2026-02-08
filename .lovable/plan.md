@@ -1,200 +1,174 @@
 
 
-# Uber-Style Map Experience: Route Line, Markers & Cars
+# Premium Light Map + Uber-Style UI Transformation
 
 ## Summary
-Transform the map to match Uber's polish with:
-1. Google Directions-powered route line (reliable, styled)
-2. Custom pickup/dropoff markers (Uber-style pins)
-3. Car icons replacing driver dots (more realistic)
-4. Black CTA button matching Uber's design
+Transform ZIVO Rides from dark theme to a clean, premium light map (like Uber) with enhanced markers, car icons, and a polished bottom sheet with blur/shadows.
+
+---
+
+## Current State vs Target
+
+| Element | Current | Target |
+|---------|---------|--------|
+| **Map Style** | Dark navy (`#0b1220`) | Clean light gray/cream (`#f5f6f7`) |
+| **Route Line** | Dark gray | Dark gray (keep - Uber style) |
+| **POI/Transit** | Hidden | Hidden (keep) |
+| **Water** | Dark blue | Light blue (`#dbeafe`) |
+| **Roads** | Dark gray | White with subtle borders |
+| **Bottom Sheet** | White, basic shadow | Frosted glass blur with premium shadow |
+| **Ride Cards** | Small icon circle | Car image thumbnail (Uber style) |
+| **CTA Button** | Black | Black (keep - correct) |
 
 ---
 
 ## Changes
 
-### 1. Add Directions Service to GoogleMap.tsx
-Replace the manual polyline with Google's DirectionsService/DirectionsRenderer for reliable route rendering.
-
+### 1. Add Light Map Style (Uber-inspired)
 **File: `src/components/maps/GoogleMap.tsx`**
 
-```typescript
-// Add to imports
-import { DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
-import { useState, useEffect } from "react";
+Add a new light map style alongside the dark style:
 
-// Add state inside component
-const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-const [directionsRequested, setDirectionsRequested] = useState(false);
-
-// Reset when pickup/dropoff change
-useEffect(() => {
-  if (!pickup || !dropoff) {
-    setDirections(null);
-    setDirectionsRequested(false);
-  } else {
-    setDirectionsRequested(false); // Allow new request
-  }
-}, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
-
-// Inside <GMap>...</GMap> render:
-{pickup && dropoff && !directionsRequested && (
-  <DirectionsService
-    options={{
-      origin: pickup,
-      destination: dropoff,
-      travelMode: google.maps.TravelMode.DRIVING,
-    }}
-    callback={(result, status) => {
-      setDirectionsRequested(true);
-      if (status === "OK" && result) {
-        setDirections(result);
-      }
-    }}
-  />
-)}
-
-{directions && (
-  <DirectionsRenderer
-    directions={directions}
-    options={{
-      suppressMarkers: true, // We use custom markers
-      polylineOptions: {
-        strokeColor: "#111827", // Dark gray like Uber
-        strokeOpacity: 0.9,
-        strokeWeight: 6,
-      },
-    }}
-  />
-)}
+```text
+┌──────────────────────────────────────────┐
+│ ZIVO_LIGHT_MAP_STYLE                     │
+├──────────────────────────────────────────┤
+│ geometry:        #f5f6f7 (cream/gray)    │
+│ labels.text:     #111827 (dark gray)     │
+│ roads:           #ffffff (white)         │
+│ road.stroke:     #e5e7eb (light border)  │
+│ water:           #dbeafe (soft blue)     │
+│ poi/transit:     off (hidden)            │
+└──────────────────────────────────────────┘
 ```
 
----
+Update the `options` to conditionally use light or dark:
+- When `darkMode={false}` → use `ZIVO_LIGHT_MAP_STYLE`
+- When `darkMode={true}` → use existing `ZIVO_MAP_STYLE`
 
-### 2. Create Uber-Style Dropoff Marker
-**File: `src/components/maps/ZivoDropoffMarker.tsx`** (NEW)
-
-```typescript
-import { OverlayViewF, OverlayView } from "@react-google-maps/api";
-
-interface ZivoDropoffMarkerProps {
-  position: google.maps.LatLngLiteral;
-}
-
-export default function ZivoDropoffMarker({ position }: ZivoDropoffMarkerProps) {
-  return (
-    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_LAYER}>
-      <div 
-        className="flex flex-col items-center -translate-x-1/2 -translate-y-full"
-        style={{ zIndex: 90 }}
-      >
-        {/* Black square destination marker (Uber style) */}
-        <div className="w-5 h-5 bg-black rounded-sm shadow-lg border-2 border-white" />
-        {/* Pin stem */}
-        <div className="w-0.5 h-3 bg-black" />
-      </div>
-    </OverlayViewF>
-  );
-}
-```
-
----
-
-### 3. Create NearbyCars Component (Uber-style cars)
-**File: `src/components/maps/NearbyCars.tsx`** (NEW)
-
-Replaces DriverDots with more realistic car icons:
-
-```typescript
-import { useState, useEffect } from "react";
-import { OverlayViewF, OverlayView } from "@react-google-maps/api";
-
-interface NearbyCarsProps {
-  center: google.maps.LatLngLiteral;
-  count?: number;
-}
-
-// Car SVG icon (simple top-down view)
-function CarSvg({ rotation }: { rotation: number }) {
-  return (
-    <svg 
-      width="20" 
-      height="28" 
-      viewBox="0 0 20 28" 
-      style={{ transform: `rotate(${rotation}deg)` }}
-    >
-      <rect x="4" y="2" width="12" height="24" rx="3" fill="#1a1a1a" />
-      <rect x="5" y="4" width="10" height="6" rx="1" fill="#4a4a4a" />
-      <rect x="5" y="18" width="10" height="4" rx="1" fill="#4a4a4a" />
-    </svg>
-  );
-}
-
-export default function NearbyCars({ center, count = 10 }: NearbyCarsProps) {
-  const [cars, setCars] = useState(() => generateCars(center, count));
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCars(prev => prev.map(car => driftCar(car, center)));
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [center.lat, center.lng]);
-
-  useEffect(() => {
-    setCars(generateCars(center, count));
-  }, [Math.round(center.lat * 1000), Math.round(center.lng * 1000), count]);
-
-  return (
-    <>
-      {cars.map((car, i) => (
-        <OverlayViewF key={i} position={car} mapPaneName={OverlayView.OVERLAY_LAYER}>
-          <div className="-translate-x-1/2 -translate-y-1/2">
-            <CarSvg rotation={car.rot} />
-          </div>
-        </OverlayViewF>
-      ))}
-    </>
-  );
-}
-
-// Helper functions for random car positions
-function generateCars(center, count) { ... }
-function driftCar(car, center) { ... }
-```
-
----
-
-### 4. Update GoogleMap.tsx to Use New Components
-
-```typescript
-// Replace DriverDots with NearbyCars
-import NearbyCars from "./NearbyCars";
-import ZivoDropoffMarker from "./ZivoDropoffMarker";
-
-// In render:
-<NearbyCars center={pickup ?? center} count={12} />
-
-{pickup && <ZivoPickupMarker position={pickup} />}
-{dropoff && <ZivoDropoffMarker position={dropoff} />}
-
-// Remove the old MarkerF for dropoff - use custom overlay instead
-```
-
----
-
-### 5. Update CTA Button to Black (Uber style)
+### 2. Update Rides.tsx to Use Light Map
 **File: `src/pages/Rides.tsx`**
 
-Find the "Choose" / confirm button and update:
+Change the GoogleMap prop from `darkMode={true}` to `darkMode={false}`:
 
 ```typescript
-<Button
-  className="w-full bg-black hover:bg-zinc-900 text-white h-14 text-base font-semibold"
-  disabled={!selectedOption}
-  onClick={handleConfirm}
->
-  Choose {selectedOption?.name}
-</Button>
+<GoogleMap
+  // ...other props
+  darkMode={false}  // Changed from true
+/>
+```
+
+Update gradient overlay from dark to subtle light vignette:
+```typescript
+// Before
+<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+
+// After
+<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.03)_100%)]" />
+```
+
+### 3. Premium Bottom Sheet Styling
+**File: `src/pages/Rides.tsx`**
+
+Update the bottom sheet container for glassmorphism:
+
+```typescript
+// Before
+className="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
+
+// After
+className="rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)]"
+```
+
+Update handle bar styling:
+```typescript
+// Before
+<div className="w-10 h-1 bg-zinc-300 rounded-full" />
+
+// After
+<div className="w-12 h-1.5 bg-zinc-300/80 rounded-full" />
+```
+
+### 4. Ride Cards with Car Thumbnails
+**File: `src/pages/Rides.tsx`**
+
+Replace the `CarIcon` component with actual car image thumbnails:
+
+```typescript
+// Before - Generic icon circle
+function CarIcon() {
+  return (
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 shrink-0">
+      <CarFront className="h-5 w-5 text-zinc-700" />
+    </div>
+  );
+}
+
+// After - Car thumbnail image
+function RideImage({ type }: { type: string }) {
+  // Use different car images based on type
+  const imageMap: Record<string, string> = {
+    wait_save: "/images/rides/standard.png",
+    standard: "/images/rides/standard.png",
+    green: "/images/rides/green.png",
+    priority: "/images/rides/priority.png",
+    comfort: "/images/rides/comfort.png",
+    black: "/images/rides/black.png",
+    black_suv: "/images/rides/suv.png",
+    // ... etc
+  };
+  
+  return (
+    <img 
+      src={imageMap[type] || "/images/rides/standard.png"}
+      alt="Vehicle"
+      className="w-14 h-10 object-contain shrink-0"
+    />
+  );
+}
+```
+
+If no actual car images exist, use a premium styled fallback:
+```typescript
+function RideImage({ type }: { type: string }) {
+  return (
+    <div className="w-14 h-10 bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-lg flex items-center justify-center shrink-0">
+      <CarFront className="w-6 h-4 text-zinc-600" />
+    </div>
+  );
+}
+```
+
+### 5. Selected Ride Card Styling (Premium)
+**File: `src/pages/Rides.tsx`**
+
+Update selected state from ring to thick border with shadow:
+
+```typescript
+// Before
+className={`... ${isSelected ? "bg-zinc-100 ring-2 ring-zinc-900" : "hover:bg-zinc-50"}`}
+
+// After
+className={`... ${
+  isSelected 
+    ? "bg-zinc-50 border-2 border-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]" 
+    : "border border-transparent hover:bg-zinc-50"
+}`}
+```
+
+### 6. Update Gradient Overlay in GoogleMap.tsx
+**File: `src/components/maps/GoogleMap.tsx`**
+
+For light mode, use subtle vignette instead of dark gradient:
+
+```typescript
+{/* ZIVO gradient overlay for premium look */}
+<div className={cn(
+  "pointer-events-none absolute inset-0",
+  darkMode 
+    ? "bg-gradient-to-b from-black/20 via-transparent to-black/60"
+    : "bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.04)_100%)]"
+)} />
 ```
 
 ---
@@ -203,43 +177,47 @@ Find the "Choose" / confirm button and update:
 
 | File | Changes |
 |------|---------|
-| `src/components/maps/GoogleMap.tsx` | Add DirectionsService/DirectionsRenderer, integrate NearbyCars, ZivoDropoffMarker |
-| `src/components/maps/ZivoDropoffMarker.tsx` | NEW - Uber-style black square destination marker |
-| `src/components/maps/NearbyCars.tsx` | NEW - Realistic car icons replacing dots |
-| `src/components/maps/index.ts` | Export new components |
-| `src/pages/Rides.tsx` | Update CTA button to black |
+| `src/components/maps/GoogleMap.tsx` | Add `ZIVO_LIGHT_MAP_STYLE`, update overlay for light mode |
+| `src/pages/Rides.tsx` | Switch to `darkMode={false}`, premium bottom sheet blur/shadow, car thumbnails, selected card styling |
 
 ---
 
-## Visual Result
+## Visual Comparison
 
-| Element | Before | After |
-|---------|--------|-------|
-| Route Line | Missing/broken polyline | Thick dark gray line via DirectionsRenderer |
-| Pickup Marker | Pulsing blue circle | Pulsing blue circle (keep) |
-| Dropoff Marker | Basic black dot | Black square with pin stem |
-| Driver Dots | 16px white boxes | Realistic car SVG icons |
-| CTA Button | Primary color | Black (Uber style) |
+```text
+BEFORE (Dark Theme):                    AFTER (Light Theme):
+┌──────────────────────┐               ┌──────────────────────┐
+│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │               │  ░░░░░░░░░░░░░░░░░░  │
+│  ▓▓▓ Dark Map  ▓▓▓▓  │               │  ░░░ Light Map ░░░░  │
+│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │               │  ░░░░░░░░░░░░░░░░░░  │
+│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │               │  ░░░░░░░░░░░░░░░░░░  │
+├──────────────────────┤               ├──────────────────────┤
+│ ████ White Sheet ████│               │ ▒▒▒▒ Glass Sheet ▒▒▒▒│
+│                      │               │   (blur + shadow)    │
+│  [○] Standard  $24   │               │  [🚗] Standard  $24  │
+│  [○] Priority  $32   │               │  [🚗] Priority  $32  │
+│                      │               │                      │
+│ [ Choose Standard ]  │               │ [ Choose Standard ]  │
+└──────────────────────┘               └──────────────────────┘
+```
 
 ---
 
 ## Technical Notes
 
-### Why DirectionsService is Better
-- Automatically handles routing errors
-- Returns pre-styled polyline
-- Works with Google's styling engine
-- No coordinate order confusion
+### Light Map Style Rationale
+- Uber uses `#f5f6f7` (very light gray) for base geometry
+- Roads are pure white `#ffffff` with subtle gray stroke
+- Water is soft blue `#dbeafe` (matches Tailwind blue-100)
+- All POIs and transit hidden for cleaner look
 
-### SVG Car Icon
-Simple top-down car shape:
-- Dark body with lighter windows
-- Rotates based on heading
-- 20x28px optimal for map visibility
+### Glassmorphism Bottom Sheet
+- `backdrop-blur-xl` creates iOS-style frosted glass effect
+- `bg-white/95` allows background to subtly show through
+- `shadow-[0_-18px_40px_rgba(0,0,0,0.18)]` creates premium depth
 
-### Marker Z-Index Order
-1. Route line (base)
-2. NearbyCars (z-index: 50)
-3. ZivoDropoffMarker (z-index: 90)
-4. ZivoPickupMarker (z-index: 100)
+### Car Thumbnails
+- Larger than current icon (56x40px vs 40x40px)
+- Horizontal aspect ratio matches actual car silhouettes
+- Can be replaced with actual vehicle images later
 
