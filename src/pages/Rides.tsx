@@ -1050,50 +1050,14 @@ function RidesInner() {
                 <span className="text-lg font-bold text-zinc-900">{getFareDisplay(selectedOption)}</span>
               </div>
 
-              {/* Price Breakdown */}
+              {/* Final Price Only */}
               {currentQuote && (
-                <div className="space-y-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-200">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                  <div className="flex items-center gap-2">
                     <Receipt className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm font-medium text-zinc-700">Fare Breakdown</span>
+                    <span className="text-sm font-medium text-zinc-700">Total</span>
                   </div>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Base fare</span>
-                      <span className="text-zinc-900">{formatCurrency(currentQuote.baseFare)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Distance ({estimatedDistance.toFixed(1)} mi)</span>
-                      <span className="text-zinc-900">{formatCurrency(currentQuote.distanceFee)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Time (~{estimatedDuration} min)</span>
-                      <span className="text-zinc-900">{formatCurrency(currentQuote.timeFee)}</span>
-                    </div>
-                    {currentQuote.multiplier !== 1 && (
-                      <div className="flex justify-between text-zinc-400 text-xs">
-                        <span>{selectedOption.name} ({currentQuote.multiplier}x)</span>
-                        <span>applied</span>
-                      </div>
-                    )}
-                    {currentQuote.minimumApplied && (
-                      <div className="flex justify-between text-zinc-400 text-xs italic">
-                        <span>Minimum fare applied</span>
-                        <span>{formatCurrency(currentQuote.subtotal)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Booking fee</span>
-                      <span className="text-zinc-900">{formatCurrency(currentQuote.bookingFee)}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-zinc-200 font-bold">
-                    <span className="text-zinc-900">Total</span>
-                    <span className="text-zinc-900">{formatCurrency(currentQuote.total)}</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-400 pt-1">
-                    Estimated range: ${currentQuote.estimatedMin}-${currentQuote.estimatedMax}. Final price may vary based on route and traffic.
-                  </p>
+                  <span className="text-lg font-bold text-zinc-900">{formatCurrency(currentQuote.total)}</span>
                 </div>
               )}
 
