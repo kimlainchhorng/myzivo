@@ -548,19 +548,25 @@ function RidesInner() {
         description="Book a ride with ZIVO. Fast, reliable, and safe rides with verified drivers."
       />
       
-      {/* Back button for non-request steps */}
-      {step !== "request" && step !== "success" && (
-        <button
-          onClick={() => {
-            if (step === "options") setStep("request");
-            else if (step === "confirm") setStep("options");
-            else if (step === "checkout") setStep("confirm");
-          }}
-          className="absolute top-4 left-4 z-50 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95"
-        >
-          <ChevronLeft className="w-5 h-5 text-zinc-700" />
-        </button>
-      )}
+      {/* Back button - always visible */}
+      <button
+        onClick={() => {
+          if (step === "request") {
+            navigate(-1); // Go back to previous page
+          } else if (step === "options") {
+            setStep("request");
+          } else if (step === "confirm") {
+            setStep("options");
+          } else if (step === "checkout") {
+            setStep("confirm");
+          } else if (step === "success") {
+            handleReset();
+          }
+        }}
+        className="absolute top-4 left-4 z-50 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
+      >
+        <ChevronLeft className="w-5 h-5 text-zinc-700" />
+      </button>
       
       {/* Full-height Map - Takes remaining space above sheet */}
       <div className="absolute inset-0">
