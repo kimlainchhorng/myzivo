@@ -1,8 +1,8 @@
 
-# Analytics Dashboards Implementation Plan
+# AI Insights and Demand Forecasting Implementation Plan
 
 ## Overview
-Build comprehensive analytics dashboards for Admin, Merchant, and Driver roles using existing Supabase data. Create a centralized analytics library for reusable data fetching functions with caching and performance optimization.
+Enhance the analytics system with AI-powered actionable insights including demand prediction, driver staffing recommendations, merchant promotional suggestions, and anomaly detection. This builds on the existing analytics infrastructure and demand forecasting tables.
 
 ---
 
@@ -11,431 +11,455 @@ Build comprehensive analytics dashboards for Admin, Merchant, and Driver roles u
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Dispatch Analytics | ✅ Complete | `/dispatch/analytics` with KPIs, charts, exports |
-| `useDispatchAnalytics` hook | ✅ Complete | Orders, revenue, top drivers/merchants |
-| Travel Analytics | ✅ Complete | `/admin/analytics` with mock data |
-| Restaurant Analytics | ⚠️ Mock data | `RestaurantAnalytics.tsx` - needs real DB queries |
-| Driver Earnings hook | ✅ Partial | `useDriverEarnings.ts` - earnings by day |
-| AdminHeatmapView | ✅ Complete | Mapbox heatmap with mock zones |
-| Revenue Analytics lib | ✅ Complete | `src/lib/revenueAnalytics.ts` for affiliate |
-| Recharts components | ✅ Ready | Line, Bar, Pie, Area charts used throughout |
+| `demand_forecasts` table | Available | Database with zone-level predictions |
+| `demand_snapshots` table | Available | Historical order data by hour/zone |
+| `risk_events` table | Available | Fraud/anomaly event logging |
+| `fraud_signals` table | Available | Detailed signal tracking |
+| `useDemandForecast` hook | Complete | Zone forecasts, at-risk zones, heatmap |
+| `check-fraud-signals` edge function | Complete | Refund/cancel/velocity detection |
+| `src/lib/analytics.ts` | Complete | Core analytics functions |
+| `getPeakHours()` function | Complete | Hourly order aggregation |
+| DispatchDemand page | Complete | `/dispatch/demand` with forecasts |
 
 ### Missing
 | Feature | Status |
 |---------|--------|
-| Admin analytics sub-pages | ❌ Orders, Revenue, Drivers, Merchants pages |
-| Centralized analytics lib | ❌ `/lib/analytics.ts` with reusable functions |
-| Eats-based heatmap | ❌ Real delivery location clustering |
-| Real merchant analytics | ❌ Connect to food_orders by restaurant_id |
-| Driver analytics page | ❌ `/driver/analytics` with earnings charts |
-| Average delivery time KPI | ❌ Calculate from timestamps |
-| Peak hours analysis | ❌ Hourly order aggregation |
-| Query caching | ❌ React Query stale time optimization |
+| Admin AI Insights page | `/admin/insights` with actionable cards |
+| Insights data library | `src/lib/insights.ts` with prediction functions |
+| Insights hooks | React Query hooks for insights data |
+| Merchant insights section | Promo timing and demand recommendations |
+| Driver best hours UI | Optimal shift suggestions |
+| Anomaly detection dashboard | Risk events and fraud signal viewer |
+| Declining restaurants detection | Trend analysis for merchants |
 
 ---
 
 ## Implementation Plan
 
-### A) Centralized Analytics Library
+### A) Insights Data Library
 
-Create a single source of truth for analytics data fetching with TypeScript interfaces and caching.
+Create a new library for AI-powered insights that uses historical data to generate predictions.
 
-**File to Create:** `src/lib/analytics.ts`
+**File to Create:** `src/lib/insights.ts`
 
 ```typescript
 // Interfaces
-export interface AnalyticsKPIs {
-  totalOrders: number;
-  deliveredOrders: number;
-  cancelledOrders: number;
-  gmv: number; // Gross Merchandise Value (sum of totals)
-  platformRevenue: number; // Sum of platform_fee
-  avgDeliveryTime: number; // Minutes from accepted_at to delivered_at
+export interface DemandForecast {
+  peakHours: { start: string; end: string; expectedOrders: number }[];
+  suggestedDrivers: number;
+  confidence: number;
+  trend: "increasing" | "stable" | "decreasing";
+  basedOnDays: number;
 }
 
-export interface OrdersTrend {
-  date: string;
-  orders: number;
-  delivered: number;
-  cancelled: number;
+export interface ZoneDemandGap {
+  zoneCode: string;
+  expectedOrders: number;
+  driversOnline: number;
+  driversNeeded: number;
+  shortage: number;
+  urgency: "critical" | "warning" | "ok";
 }
 
-export interface RevenueTrend {
-  date: string;
-  gmv: number;
-  platformRevenue: number;
-  tips: number;
+export interface DecliningMerchant {
+  restaurantId: string;
+  restaurantName: string;
+  currentWeekOrders: number;
+  previousWeekOrders: number;
+  changePercent: number;
+  avgRating: number;
 }
 
-export interface PeakHoursData {
-  hour: number;
-  label: string;
-  orders: number;
-  revenue: number;
-}
-
-export interface TopRestaurant {
+export interface AnomalySignal {
   id: string;
-  name: string;
-  orders: number;
-  revenue: number;
-  avgPrepTime: number;
-  rating: number;
+  userId: string | null;
+  driverId: string | null;
+  eventType: string;
+  severity: number;
+  score: number;
+  details: Record<string, any>;
+  createdAt: string;
+  isResolved: boolean;
 }
 
-export interface TopDriver {
-  id: string;
-  name: string;
-  deliveries: number;
-  earnings: number;
-  avgDeliveryTime: number;
-  rating: number;
+export interface MerchantInsight {
+  bestPromoTimes: { day: string; hour: number; expectedLift: number }[];
+  lowDemandHours: { hour: number; avgOrders: number }[];
+  topItems: { id: string; name: string; orders: number; revenue: number }[];
+  recommendations: string[];
+}
+
+export interface DriverInsight {
+  bestHours: { hour: number; avgEarnings: number; avgDeliveries: number }[];
+  hotZones: { zoneCode: string; expectedOrders: number; competition: "low" | "medium" | "high" }[];
+  optimalShift: { start: number; end: number; expectedEarnings: number };
 }
 
 // Functions
-export async function getKpis(dateRange: DateRange): Promise<AnalyticsKPIs>
-export async function getOrdersTrend(dateRange: DateRange): Promise<OrdersTrend[]>
-export async function getRevenueTrend(dateRange: DateRange): Promise<RevenueTrend[]>
-export async function getPeakHours(dateRange: DateRange): Promise<PeakHoursData[]>
-export async function getTopRestaurants(dateRange: DateRange, limit?: number): Promise<TopRestaurant[]>
-export async function getTopDrivers(dateRange: DateRange, limit?: number): Promise<TopDriver[]>
-export async function getOrdersByStatus(dateRange: DateRange): Promise<StatusBreakdown[]>
+export async function getDemandForecast(): Promise<DemandForecast>
+export async function getZoneDemandGaps(): Promise<ZoneDemandGap[]>
+export async function getDecliningMerchants(limit?: number): Promise<DecliningMerchant[]>
+export async function getAnomalySignals(limit?: number): Promise<AnomalySignal[]>
+export async function getMerchantInsights(restaurantId: string): Promise<MerchantInsight>
+export async function getDriverInsights(driverId: string): Promise<DriverInsight>
 ```
 
-Key queries:
-- **Average delivery time**: `AVG(delivered_at - accepted_at)` for completed orders
-- **Peak hours**: Group by `EXTRACT(HOUR FROM created_at)`
-- **GMV**: `SUM(total_amount)` for all orders
-- **Platform revenue**: `SUM(platform_fee)` for delivered orders
+**Key Algorithms:**
 
-### B) Admin Analytics Hub
+1. **Peak Hours Prediction (Moving Average)**
+   - Query last 7-14 days of orders grouped by hour
+   - Calculate weighted average (recent days weighted higher)
+   - Identify hours with > 1.5x average as peak hours
+   - Calculate suggested drivers: `peakOrders / avgDeliveriesPerDriver`
 
-Create the main admin analytics page with navigation to sub-pages.
+2. **Zone Demand Gaps**
+   - Query `demand_forecasts` for next 2-3 hours
+   - Compare `predicted_drivers_needed` vs `current_drivers_online`
+   - Calculate shortage and urgency level
 
-**File to Create:** `src/pages/admin/analytics/AnalyticsHub.tsx`
+3. **Declining Merchants**
+   - Compare current week orders vs previous week
+   - Flag restaurants with > 20% decline
+   - Include rating trend
 
-**Route:** `/admin/analytics`
+4. **Anomaly Detection**
+   - Query `risk_events` with severity >= 2
+   - Include unresolved events from last 7 days
+   - Aggregate by user/driver
+
+### B) Insights Hooks
+
+**File to Create:** `src/hooks/useInsights.ts`
+
+```typescript
+// Hooks with caching
+export function useDemandForecast()
+export function useZoneDemandGaps()
+export function useDecliningMerchants(limit?: number)
+export function useAnomalySignals(limit?: number)
+export function useMerchantInsights(restaurantId: string | undefined)
+export function useDriverInsights(driverId: string | undefined)
+```
+
+### C) Admin AI Insights Page
+
+**File to Create:** `src/pages/admin/AdminInsightsPage.tsx`
+
+**Route:** `/admin/insights`
+
+**Layout:**
+
+```text
++----------------------------------------------------------+
+|  AI Insights                          [Last 7 days ▼]     |
++----------------------------------------------------------+
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | PREDICTED PEAK   |  | DRIVER SHORTAGE  |               |
+|  | 6pm - 8pm        |  | 3 zones at risk  |               |
+|  | ~45 orders       |  | Need 12 drivers  |               |
+|  | Suggest: 12 drv  |  | [View Zones]     |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | DECLINING MERCH  |  | ANOMALY ALERTS   |               |
+|  | 2 restaurants    |  | 5 unresolved     |               |
+|  | >20% drop        |  | 2 critical       |               |
+|  | [View List]      |  | [View Signals]   |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  24-Hour Demand Forecast Chart                            |
+|  [AreaChart showing predicted orders by hour]             |
+|                                                           |
+|  Anomaly Timeline                                         |
+|  [Timeline of recent risk events with severity badges]    |
+|                                                           |
++----------------------------------------------------------+
+```
 
 **Features:**
-- KPI cards: Total Orders, Delivered, Cancelled, GMV, Platform Revenue, Avg Delivery Time
-- Tab navigation to sub-sections (Orders, Revenue, Drivers, Merchants)
-- Date range picker (Today, 7 days, 30 days, custom)
-- Real-time refresh with React Query
-- Export to CSV button
+- KPI cards with AI-generated insights
+- 24-hour demand forecast visualization
+- Zone shortage map/list with driver recommendations
+- Declining merchants table with week-over-week comparison
+- Anomaly signals timeline with severity indicators
+- Explanatory text: "Based on last 30 days of orders..."
 
-### C) Admin Analytics Sub-Pages
+### D) Zone Demand Gaps Panel
 
-#### 1. Orders Analytics
-**File:** `src/pages/admin/analytics/AnalyticsOrders.tsx`
-**Route:** `/admin/analytics/orders`
+**File to Create:** `src/components/insights/ZoneDemandPanel.tsx`
 
-**Charts:**
-- Orders per day (line chart)
-- Orders by status (pie chart)
-- Orders by zone (bar chart)
-- Peak hours heatmap grid
+- List zones with driver shortage
+- Color-coded urgency (critical/warning/ok)
+- Show: zone code, expected orders, drivers online/needed
+- Link to dispatch reposition page
 
-#### 2. Revenue Analytics
-**File:** `src/pages/admin/analytics/AnalyticsRevenue.tsx`
-**Route:** `/admin/analytics/revenue`
+### E) Declining Merchants Table
 
-**Charts:**
-- Revenue per day (area chart with GMV + Platform Revenue)
-- Revenue by payment status (pie chart)
-- Tips trend (line chart)
-- Revenue by zone (bar chart)
+**File to Create:** `src/components/insights/DecliningMerchantsTable.tsx`
 
-#### 3. Drivers Analytics
-**File:** `src/pages/admin/analytics/AnalyticsDrivers.tsx`
-**Route:** `/admin/analytics/drivers`
+- Table with: Restaurant name, This Week, Last Week, Change %, Rating
+- Sortable columns
+- Link to merchant analytics
+- Suggest outreach actions
 
-**Tables/Charts:**
-- Top 20 drivers by deliveries (table with ranking)
-- Top 20 drivers by earnings (table)
-- Driver activity heatmap (hourly)
-- Average delivery time by driver (bar chart)
+### F) Anomaly Signals Panel
 
-#### 4. Merchants Analytics
-**File:** `src/pages/admin/analytics/AnalyticsMerchants.tsx`
-**Route:** `/admin/analytics/merchants`
+**File to Create:** `src/components/insights/AnomalySignalsPanel.tsx`
 
-**Tables/Charts:**
-- Top 20 restaurants by orders (table)
-- Top 20 restaurants by revenue (table)
-- Average prep time by restaurant (bar chart)
-- Cancellation rate by restaurant (bar chart)
+- Timeline view of recent risk events
+- Filter by: type, severity, resolved status
+- Details: user/driver ID, event type, score, timestamp
+- Actions: Mark as resolved, View profile, Block user
 
-### D) Analytics Hooks
+### G) Enhanced Merchant Analytics
 
-**File to Create:** `src/hooks/useAdminAnalytics.ts`
+**File to Modify:** `src/pages/merchant/MerchantDashboard.tsx` or create new section
 
-```typescript
-// Main KPIs hook
-export function useAdminKPIs(dateRange: DateRange) {
-  return useQuery({
-    queryKey: ["admin-analytics-kpis", dateRange.start, dateRange.end],
-    queryFn: () => getKpis(dateRange),
-    staleTime: 60000, // Cache for 1 minute
-    refetchInterval: 60000,
-  });
-}
+**Add Insights Card:**
+- "Best Time to Run Promotions" - based on low-demand hours
+- "Top Selling Items" - already exists, enhance with trends
+- "Low Demand Hours" - suggest promotional opportunities
+- "Recommendations" - AI-generated text suggestions
 
-// Orders trend hook
-export function useOrdersTrend(dateRange: DateRange) {
-  return useQuery({
-    queryKey: ["admin-analytics-orders-trend", dateRange.start, dateRange.end],
-    queryFn: () => getOrdersTrend(dateRange),
-    staleTime: 120000, // Cache for 2 minutes
-  });
-}
-
-// Revenue trend hook
-export function useRevenueTrend(dateRange: DateRange)
-
-// Peak hours hook
-export function usePeakHours(dateRange: DateRange)
-
-// Top restaurants hook
-export function useTopRestaurants(dateRange: DateRange, limit = 20)
-
-// Top drivers hook
-export function useTopDrivers(dateRange: DateRange, limit = 20)
+**UI:**
+```text
++------------------------------------------+
+| AI Insights                               |
++------------------------------------------+
+| Best Time for Promotions                  |
+| Tuesday 2pm-4pm: Expected 15% lift        |
+| Wednesday 3pm-5pm: Expected 12% lift      |
++------------------------------------------+
+| Low Demand Hours                          |
+| 2pm-4pm: Only 3 orders avg                |
+| Consider running a 20% off promo          |
++------------------------------------------+
 ```
 
-### E) Delivery Heatmap
+### H) Enhanced Driver Analytics
 
-Create a basic heatmap showing restaurant and delivery locations.
+**File to Modify:** `src/pages/driver/DriverAnalyticsPage.tsx`
 
-**File to Create:** `src/components/analytics/DeliveryHeatmap.tsx`
+**Add Best Hours Section:**
+- "Best Hours to Go Online" - when earnings are highest
+- "Hot Zones" - areas with high demand, low competition
+- "Optimal Shift" - suggested start/end time for max earnings
+- Hour-by-hour earnings heatmap
 
-**Features:**
-- Use Mapbox (already configured in project)
-- Data source: `food_orders` with `pickup_lat/lng` and `delivery_lat/lng`
-- Cluster points using Mapbox clustering or heatmap layer
-- Toggle between: Pickup locations, Delivery locations, Both
-- Filter by date range
-- Color intensity by order density
-
-**Data Query:**
-```typescript
-const { data: locations } = await supabase
-  .from("food_orders")
-  .select("pickup_lat, pickup_lng, delivery_lat, delivery_lng")
-  .eq("status", "completed")
-  .gte("created_at", startDate)
-  .lte("created_at", endDate);
+**UI:**
+```text
++------------------------------------------+
+| Suggested Best Hours                      |
++------------------------------------------+
+| 11am - 1pm: $18/hr avg                    |
+| 6pm - 9pm: $22/hr avg  [Peak]             |
++------------------------------------------+
+| Hot Zones Now                             |
+| Downtown: 15 orders expected, low comp    |
+| University: 12 orders expected, med comp  |
++------------------------------------------+
 ```
 
-### F) Merchant Analytics (Real Data)
+### I) Anomaly Detection Enhancement
 
-Update the existing `RestaurantAnalytics.tsx` to use real data.
+The existing `check-fraud-signals` edge function already handles:
+- High refund rate (>=5 in 30 days)
+- High cancellation rate (>=3 in 7 days)
+- Wrong PIN attempts
+- Order velocity spikes (>=10 in 1 hour)
 
-**File to Modify:** `src/components/restaurant/RestaurantAnalytics.tsx`
+**Enhancements to add:**
+1. Query `risk_events` for admin dashboard display
+2. Add severity-based filtering
+3. Create resolution workflow
 
-**Hook to Create:** `src/hooks/useMerchantAnalytics.ts`
+**File to Modify:** `src/lib/insights.ts`
 
 ```typescript
-export function useMerchantAnalytics(restaurantId: string | undefined) {
-  // Revenue by day for the past 7 days
-  const { data: revenueByDay } = useQuery({
-    queryKey: ["merchant-revenue-daily", restaurantId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("food_orders")
-        .select("total_amount, platform_fee, created_at")
-        .eq("restaurant_id", restaurantId)
-        .eq("status", "completed")
-        .gte("created_at", sevenDaysAgo);
-      // Aggregate by day
-      return aggregateByDay(data);
-    },
-    enabled: !!restaurantId,
-  });
+export async function getAnomalySignals(limit: number = 50) {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Top selling items from orders.items JSONB
-  const { data: topItems } = useQuery({...});
+  const { data } = await supabase
+    .from("risk_events")
+    .select("*")
+    .gte("created_at", sevenDaysAgo.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(limit);
 
-  // Orders count and average prep time
-  const { data: orderStats } = useQuery({...});
-
-  return { revenueByDay, topItems, orderStats };
+  return data?.map(event => ({
+    id: event.id,
+    userId: event.user_id,
+    driverId: event.driver_id,
+    eventType: event.event_type,
+    severity: event.severity,
+    score: event.score,
+    details: event.details,
+    createdAt: event.created_at,
+    isResolved: event.is_resolved,
+  }));
 }
 ```
 
-**Top Selling Items Query:**
-Extract from `items` JSONB column:
-```sql
-SELECT 
-  item->>'id' as item_id,
-  item->>'name' as item_name,
-  COUNT(*) as order_count,
-  SUM((item->>'price')::numeric * (item->>'quantity')::int) as revenue
-FROM food_orders, jsonb_array_elements(items) as item
-WHERE restaurant_id = ? AND status = 'completed'
-GROUP BY item->>'id', item->>'name'
-ORDER BY order_count DESC
-LIMIT 10
-```
-
-### G) Driver Analytics Page
-
-**File to Create:** `src/pages/driver/DriverAnalyticsPage.tsx`
-
-**Route:** `/driver/analytics`
-
-**Features:**
-- Earnings by day chart (bar chart for last 7 days)
-- Deliveries count by day (line chart)
-- Average delivery duration trend
-- Breakdown by service type (Eats, Rides, Move)
-- Period selector: Today, This Week, This Month
-
-**Hook to Create:** `src/hooks/useDriverAnalytics.ts`
-
-```typescript
-export function useDriverAnalytics(driverId: string | undefined) {
-  // Earnings by day
-  const { data: earningsByDay } = useQuery({
-    queryKey: ["driver-analytics-earnings", driverId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("food_orders")
-        .select("driver_earnings_cents, delivered_at")
-        .eq("driver_id", driverId)
-        .eq("status", "completed")
-        .gte("delivered_at", thirtyDaysAgo);
-      return aggregateByDay(data);
-    },
-    enabled: !!driverId,
-  });
-
-  // Deliveries count
-  const { data: deliveriesCount } = useQuery({...});
-
-  // Average delivery duration
-  const { data: avgDuration } = useQuery({
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("food_orders")
-        .select("accepted_at, delivered_at")
-        .eq("driver_id", driverId)
-        .eq("status", "completed");
-      // Calculate average minutes
-      return calculateAvgDuration(data);
-    }
-  });
-
-  return { earningsByDay, deliveriesCount, avgDuration };
-}
-```
-
-### H) Performance Optimization
-
-#### 1. React Query Caching
-Configure stale time and cache time for analytics queries:
-
-```typescript
-// In each analytics hook
-const queryConfig = {
-  staleTime: 60000,      // 1 minute - data considered fresh
-  cacheTime: 300000,     // 5 minutes - keep in cache
-  refetchInterval: 60000, // Auto-refresh every minute
-  refetchOnWindowFocus: false, // Don't refetch on tab switch
-};
-```
-
-#### 2. Lazy Loading Charts
-Wrap chart components in `React.lazy()` for code splitting:
-
-```typescript
-const OrdersChart = lazy(() => import("./charts/OrdersChart"));
-const RevenueChart = lazy(() => import("./charts/RevenueChart"));
-const PeakHoursChart = lazy(() => import("./charts/PeakHoursChart"));
-```
-
-#### 3. Pagination for Tables
-For top drivers/merchants tables:
-
-```typescript
-const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-  queryKey: ["top-drivers-paginated"],
-  queryFn: ({ pageParam = 0 }) => fetchDriversPage(pageParam, 20),
-  getNextPageParam: (lastPage, pages) => 
-    lastPage.length === 20 ? pages.length * 20 : undefined,
-});
-```
-
-#### 4. Database Indexes
-Ensure indexes exist for common query patterns (may need migration):
-
-```sql
--- Composite index for date range queries
-CREATE INDEX IF NOT EXISTS idx_food_orders_status_created 
-ON food_orders(status, created_at);
-
--- Index for restaurant analytics
-CREATE INDEX IF NOT EXISTS idx_food_orders_restaurant_status 
-ON food_orders(restaurant_id, status);
-
--- Index for driver analytics
-CREATE INDEX IF NOT EXISTS idx_food_orders_driver_status 
-ON food_orders(driver_id, status);
-```
-
-### I) Routes Configuration
+### J) Routes Configuration
 
 **File to Modify:** `src/App.tsx`
 
-Add routes:
 ```typescript
-// Admin Analytics Routes
-const AnalyticsHub = lazy(() => import("./pages/admin/analytics/AnalyticsHub"));
-const AnalyticsOrders = lazy(() => import("./pages/admin/analytics/AnalyticsOrders"));
-const AnalyticsRevenue = lazy(() => import("./pages/admin/analytics/AnalyticsRevenue"));
-const AnalyticsDrivers = lazy(() => import("./pages/admin/analytics/AnalyticsDrivers"));
-const AnalyticsMerchants = lazy(() => import("./pages/admin/analytics/AnalyticsMerchants"));
+const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
 
-// Driver Analytics
-const DriverAnalyticsPage = lazy(() => import("./pages/driver/DriverAnalyticsPage"));
-
-// Routes
-<Route path="/admin/analytics" element={<AdminProtectedRoute><AnalyticsHub /></AdminProtectedRoute>} />
-<Route path="/admin/analytics/orders" element={<AdminProtectedRoute><AnalyticsOrders /></AdminProtectedRoute>} />
-<Route path="/admin/analytics/revenue" element={<AdminProtectedRoute><AnalyticsRevenue /></AdminProtectedRoute>} />
-<Route path="/admin/analytics/drivers" element={<AdminProtectedRoute><AnalyticsDrivers /></AdminProtectedRoute>} />
-<Route path="/admin/analytics/merchants" element={<AdminProtectedRoute><AnalyticsMerchants /></AdminProtectedRoute>} />
-
-<Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
-
-// Merchant analytics is already at /merchant (via RestaurantDashboard tabs)
+// Route
+<Route path="/admin/insights" element={<ProtectedRoute requireAdmin><AdminInsightsPage /></ProtectedRoute>} />
 ```
+
+**Add Link to Analytics Hub:**
+
+**File to Modify:** `src/pages/admin/analytics/AnalyticsHub.tsx`
+
+Add navigation card for AI Insights page.
 
 ---
 
 ## File Summary
 
-### New Files (12)
+### New Files (6)
 | File | Purpose |
 |------|---------|
-| `src/lib/analytics.ts` | Centralized analytics data functions |
-| `src/hooks/useAdminAnalytics.ts` | Admin analytics React Query hooks |
-| `src/hooks/useMerchantAnalytics.ts` | Merchant analytics hooks |
-| `src/hooks/useDriverAnalytics.ts` | Driver analytics hooks |
-| `src/pages/admin/analytics/AnalyticsHub.tsx` | Main admin analytics page |
-| `src/pages/admin/analytics/AnalyticsOrders.tsx` | Orders sub-page |
-| `src/pages/admin/analytics/AnalyticsRevenue.tsx` | Revenue sub-page |
-| `src/pages/admin/analytics/AnalyticsDrivers.tsx` | Drivers sub-page |
-| `src/pages/admin/analytics/AnalyticsMerchants.tsx` | Merchants sub-page |
-| `src/pages/driver/DriverAnalyticsPage.tsx` | Driver analytics page |
-| `src/components/analytics/DeliveryHeatmap.tsx` | Mapbox heatmap component |
-| `src/components/analytics/PeakHoursGrid.tsx` | Hourly peak visualization |
+| `src/lib/insights.ts` | AI insights data functions |
+| `src/hooks/useInsights.ts` | React Query hooks for insights |
+| `src/pages/admin/AdminInsightsPage.tsx` | Main AI insights dashboard |
+| `src/components/insights/ZoneDemandPanel.tsx` | Zone shortage display |
+| `src/components/insights/DecliningMerchantsTable.tsx` | Merchant trend table |
+| `src/components/insights/AnomalySignalsPanel.tsx` | Risk event timeline |
 
 ### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add analytics routes |
-| `src/components/restaurant/RestaurantAnalytics.tsx` | Replace mock data with real queries |
-| `src/pages/driver/DriverHomePage.tsx` | Add link to analytics page |
+| `src/App.tsx` | Add `/admin/insights` route |
+| `src/pages/admin/analytics/AnalyticsHub.tsx` | Add AI Insights nav card |
+| `src/pages/driver/DriverAnalyticsPage.tsx` | Add best hours and hot zones section |
+
+---
+
+## Prediction Algorithm Details
+
+### Peak Hours Prediction (MVP)
+
+```typescript
+async function predictPeakHours(): Promise<PeakHourPrediction[]> {
+  // Get last 7 days of orders grouped by hour
+  const { data } = await supabase
+    .from("food_orders")
+    .select("created_at")
+    .gte("created_at", sevenDaysAgo);
+
+  // Count orders per hour
+  const hourCounts = new Array(24).fill(0);
+  const hourDays = new Array(24).fill(0);
+
+  data?.forEach(order => {
+    const hour = new Date(order.created_at).getHours();
+    hourCounts[hour]++;
+    // Track unique days for averaging
+  });
+
+  // Calculate average per hour
+  const avgByHour = hourCounts.map((count, hour) => ({
+    hour,
+    avgOrders: count / 7, // Divide by days
+  }));
+
+  // Find peak hours (> 1.5x overall average)
+  const overallAvg = avgByHour.reduce((s, h) => s + h.avgOrders, 0) / 24;
+  const peaks = avgByHour.filter(h => h.avgOrders > overallAvg * 1.5);
+
+  // Group consecutive hours into ranges
+  const ranges = groupConsecutiveHours(peaks);
+
+  // Calculate suggested drivers
+  const avgDeliveriesPerDriverPerHour = 3; // Configurable
+  const suggestedDrivers = Math.ceil(
+    Math.max(...peaks.map(p => p.avgOrders)) / avgDeliveriesPerDriverPerHour
+  );
+
+  return {
+    peakHours: ranges,
+    suggestedDrivers,
+    confidence: 0.85, // Based on data quality
+    trend: calculateTrend(data),
+    basedOnDays: 7,
+  };
+}
+```
+
+### Merchant Low-Demand Detection
+
+```typescript
+async function getMerchantLowDemandHours(restaurantId: string) {
+  // Get orders by hour for this restaurant
+  const { data } = await supabase
+    .from("food_orders")
+    .select("created_at")
+    .eq("restaurant_id", restaurantId)
+    .gte("created_at", thirtyDaysAgo);
+
+  // Calculate average orders per hour
+  const hourCounts = new Array(24).fill(0);
+  data?.forEach(order => {
+    const hour = new Date(order.created_at).getHours();
+    hourCounts[hour]++;
+  });
+
+  const avgByHour = hourCounts.map((count, hour) => ({
+    hour,
+    avgOrders: count / 30,
+  }));
+
+  // Find low-demand hours (< 0.5x average, during business hours)
+  const overallAvg = avgByHour
+    .filter(h => h.hour >= 10 && h.hour <= 22) // Business hours
+    .reduce((s, h) => s + h.avgOrders, 0) / 12;
+
+  return avgByHour
+    .filter(h => h.hour >= 10 && h.hour <= 22 && h.avgOrders < overallAvg * 0.5)
+    .map(h => ({
+      hour: h.hour,
+      avgOrders: Math.round(h.avgOrders * 10) / 10,
+      suggestion: `Run a promo at ${formatHour(h.hour)} to boost orders`,
+    }));
+}
+```
+
+---
+
+## UI Design Patterns
+
+### Insight Cards
+
+Each insight card follows this pattern:
+- Icon + Title
+- Key metric (large, prominent)
+- Supporting text (smaller, muted)
+- Action button or link
+- Explanatory footer: "Based on last X days..."
+
+### Color Coding
+
+| Level | Color | Use |
+|-------|-------|-----|
+| Critical | Red | Shortage >50%, severity 4-5 |
+| Warning | Amber | Shortage 20-50%, severity 2-3 |
+| Good | Green | No issues, positive trends |
+| Neutral | Gray | Informational |
+
+### Dark Theme Consistency
+
+All components follow the existing dark dashboard style:
+- `bg-zinc-950` / `bg-zinc-900/80` backgrounds
+- `border-white/10` borders
+- `text-white/60` for muted text
+- Gradient accents for emphasis
 
 ---
 
@@ -443,137 +467,55 @@ const DriverAnalyticsPage = lazy(() => import("./pages/driver/DriverAnalyticsPag
 
 ```text
 Supabase Tables
-    ├── food_orders (primary source)
-    │   ├── total_amount → GMV
-    │   ├── platform_fee → Platform Revenue
-    │   ├── accepted_at/delivered_at → Avg Delivery Time
-    │   ├── created_at → Orders Trend, Peak Hours
-    │   ├── items (JSONB) → Top Selling Items
-    │   ├── pickup_lat/lng → Heatmap Pickups
-    │   └── delivery_lat/lng → Heatmap Dropoffs
-    │
-    ├── restaurants
-    │   ├── name → Restaurant names
-    │   └── rating → Restaurant ratings
-    │
-    └── drivers
-        ├── full_name → Driver names
-        └── rating → Driver ratings
+    ├── food_orders → Peak hours, merchant trends
+    ├── demand_forecasts → Zone predictions
+    ├── demand_snapshots → Historical patterns
+    ├── risk_events → Anomaly signals
+    ├── drivers → Online status, ratings
+    └── restaurants → Merchant details
 
 ↓
 
-src/lib/analytics.ts (Query Functions)
-    ├── getKpis()
-    ├── getOrdersTrend()
-    ├── getRevenueTrend()
-    ├── getPeakHours()
-    ├── getTopRestaurants()
-    └── getTopDrivers()
+src/lib/insights.ts (Prediction Functions)
+    ├── getDemandForecast() → 7-day moving average
+    ├── getZoneDemandGaps() → Forecast vs reality
+    ├── getDecliningMerchants() → Week-over-week comparison
+    ├── getAnomalySignals() → Risk event aggregation
+    ├── getMerchantInsights() → Promo timing
+    └── getDriverInsights() → Optimal shift
 
 ↓
 
-React Query Hooks (with caching)
-    ├── useAdminKPIs()
-    ├── useOrdersTrend()
-    ├── useMerchantAnalytics()
-    └── useDriverAnalytics()
+React Query Hooks (with 2-minute caching)
+    ├── useDemandForecast()
+    ├── useZoneDemandGaps()
+    ├── useMerchantInsights()
+    └── useDriverInsights()
 
 ↓
 
-Dashboard Components
-    ├── Admin: AnalyticsHub + sub-pages
-    ├── Merchant: RestaurantAnalytics (updated)
-    └── Driver: DriverAnalyticsPage
+UI Components
+    ├── AdminInsightsPage → Full dashboard
+    ├── ZoneDemandPanel → Shortage alerts
+    ├── DecliningMerchantsTable → Trend analysis
+    ├── AnomalySignalsPanel → Risk timeline
+    ├── DriverAnalyticsPage → Best hours section
+    └── MerchantDashboard → Promo suggestions
 ```
-
----
-
-## KPI Calculations
-
-| KPI | Formula | Source |
-|-----|---------|--------|
-| Total Orders | `COUNT(*)` | `food_orders` |
-| Delivered Orders | `COUNT(*) WHERE status = 'completed'` | `food_orders` |
-| Cancelled Orders | `COUNT(*) WHERE status = 'cancelled'` | `food_orders` |
-| GMV | `SUM(total_amount)` | `food_orders` |
-| Platform Revenue | `SUM(platform_fee) WHERE status = 'completed'` | `food_orders` |
-| Avg Delivery Time | `AVG(delivered_at - accepted_at)` | `food_orders` (completed) |
-| Avg Prep Time | `AVG(ready_at - accepted_at)` | `food_orders` (completed) |
-| Peak Hours | `GROUP BY HOUR(created_at)` | `food_orders` |
-
----
-
-## Heatmap Implementation
-
-Using Mapbox GL with heatmap layer:
-
-```typescript
-// Query locations
-const locations = await supabase
-  .from("food_orders")
-  .select("pickup_lat, pickup_lng, delivery_lat, delivery_lng")
-  .eq("status", "completed")
-  .gte("created_at", dateRange.start);
-
-// Transform to GeoJSON
-const geoJSON = {
-  type: "FeatureCollection",
-  features: locations.flatMap(order => [
-    // Pickup point
-    order.pickup_lat && {
-      type: "Feature",
-      properties: { type: "pickup", weight: 1 },
-      geometry: { type: "Point", coordinates: [order.pickup_lng, order.pickup_lat] }
-    },
-    // Delivery point
-    order.delivery_lat && {
-      type: "Feature",
-      properties: { type: "delivery", weight: 1 },
-      geometry: { type: "Point", coordinates: [order.delivery_lng, order.delivery_lat] }
-    }
-  ]).filter(Boolean)
-};
-
-// Add to Mapbox as heatmap layer
-map.addLayer({
-  id: "orders-heatmap",
-  type: "heatmap",
-  source: "orders-data",
-  paint: {
-    "heatmap-weight": 1,
-    "heatmap-intensity": 1,
-    "heatmap-color": [
-      "interpolate", ["linear"], ["heatmap-density"],
-      0, "rgba(0,0,255,0)",
-      0.5, "rgba(255,255,0,0.7)",
-      1, "rgba(255,0,0,0.9)"
-    ],
-    "heatmap-radius": 20
-  }
-});
-```
-
----
-
-## Security Considerations
-
-1. **Admin routes protected**: All `/admin/analytics/*` routes use `AdminProtectedRoute`
-2. **Restaurant data scoped**: Merchant analytics filtered by `restaurant_id` of logged-in owner
-3. **Driver data scoped**: Driver analytics filtered by driver's own ID
-4. **No PII exposed**: Analytics show aggregated data, not individual customer info
-5. **Rate limiting**: React Query prevents excessive API calls with staleTime
 
 ---
 
 ## Summary
 
-This implementation creates a comprehensive analytics system:
+This implementation adds:
 
-1. **Centralized library** (`/lib/analytics.ts`) with reusable query functions
-2. **Admin dashboard** with hub + 4 sub-pages for orders, revenue, drivers, merchants
-3. **Delivery heatmap** using Mapbox with real order locations
-4. **Merchant analytics** with real revenue, top items, prep time data
-5. **Driver analytics page** with earnings, deliveries, and duration tracking
-6. **Performance optimizations**: Query caching, lazy loading, pagination
-7. **Proper routing** integrated into existing app structure
+1. **Insights Library** (`/lib/insights.ts`) with prediction algorithms for demand, gaps, and anomalies
+2. **Admin AI Dashboard** at `/admin/insights` with actionable insight cards
+3. **Demand Forecasting** using 7-day moving average to predict peak hours and driver needs
+4. **Zone Shortage Detection** comparing forecasts to actual driver availability
+5. **Merchant Recommendations** for optimal promo timing based on low-demand hours
+6. **Driver Best Hours** showing when to go online for maximum earnings
+7. **Anomaly Detection UI** displaying risk events with severity filtering
+8. **Declining Merchants** week-over-week comparison for proactive outreach
 
+All insights include explanatory text ("Based on last 30 days...") and follow the existing dark dashboard styling.
