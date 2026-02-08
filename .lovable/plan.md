@@ -1,105 +1,152 @@
 
 
-# Fix: Wrong Prices for Missing Ride Types
+# Add Surge Pricing Indicators for Zone-Based Demand
 
-## Problem
+## Overview
 
-Many ride types show incorrect prices because the database is missing rate entries for them.
+Add real-time surge pricing indicators that display when demand is high in the user's pickup zone. The surge multiplier will be calculated based on live demand (active ride requests) vs supply (online drivers) in the detected pricing zone, and visually communicated to users throughout the booking flow.
 
-| Ride Type | Has DB Rates? | Current Behavior |
-|-----------|--------------|------------------|
-| wait_save | Yes | Correct |
-| standard | Yes | Correct |
-| green | Yes | Correct |
-| priority | Yes | Correct |
-| pet | No | Falls back to standard rates + 1.15x multiplier |
-| comfort | No | Falls back to standard rates + 1.45x multiplier |
-| black | No | Falls back to standard rates + 1.65x multiplier |
-| black_suv | No | Falls back to standard rates + 2.10x multiplier |
-| xxl | No | Falls back to standard rates (but xl exists) + 2.10x |
-| lux | No | Falls back to standard rates + 3.50x |
-| sprinter | No | Falls back to standard rates + 2.50x |
-| secure | No | Falls back to standard rates + 4.00x |
+## Current State
 
-**The core issue**: When a ride type is missing from the database, the code correctly applies the multiplier from `RIDE_TYPE_MULTIPLIERS`, but uses the wrong **base rates** (standard economy rates instead of appropriate premium base rates).
+| Component | Status |
+|-----------|--------|
+| `useSurgePricing` hook | Exists but fetches global metrics (not zone-specific) |
+| `calculateSurge` function | Works correctly with ratio-based rules |
+| Zone detection | Working via `usePricingZone` hook |
+| Surge UI in RideCard | Exists but not connected |
+| Surge in Rides.tsx | Marked as TODO on line 570 |
 
-## Solution
+## Implementation Plan
 
-Add all missing ride types to the `zone_pricing_rates` table in the USA Default zone (`00000000-0000-0000-0000-000000000001`).
+### Step 1: Create Zone-Specific Surge Hook
+**File**: `src/hooks/useZoneSurgePricing.ts` (NEW)
 
-### Rate Tiers (Based on Existing Data)
+Create a new hook that calculates surge based on demand in the specific pickup zone:
 
-| Tier | Ride Types | Base Fare | Per Mile | Per Minute | Booking Fee | Min Fare | Multiplier |
-|------|------------|-----------|----------|------------|-------------|----------|------------|
-| Economy | wait_save | $2.50 | $1.15 | $0.20 | $1.50 | $6.50 | 0.92 |
-| Economy | standard | $3.50 | $1.75 | $0.35 | $2.50 | $7.00 | 1.00 |
-| Economy | green | $2.50 | $1.28 | $0.22 | $1.50 | $6.50 | 1.02 |
-| Economy | priority | $2.50 | $1.25 | $0.22 | $1.50 | $6.50 | 1.12 |
-| Economy | **pet** (NEW) | $2.50 | $1.28 | $0.22 | $1.50 | $6.50 | 1.15 |
-| Premium | xl | $3.50 | $1.75 | $0.28 | $2.00 | $9.00 | 1.45 |
-| Premium | **comfort** (NEW) | $3.50 | $1.75 | $0.28 | $2.00 | $9.00 | 1.45 |
-| Premium | **xxl** (NEW) | $4.00 | $1.90 | $0.32 | $2.25 | $10.00 | 1.75 |
-| Premium | premium | $5.00 | $2.30 | $0.38 | $2.50 | $14.00 | 1.65 |
-| Premium | **black** (NEW) | $5.00 | $2.30 | $0.38 | $2.50 | $14.00 | 1.65 |
-| Premium | **black_suv** (NEW) | $6.00 | $2.75 | $0.45 | $2.75 | $18.00 | 2.10 |
-| Elite | elite | $8.00 | $3.20 | $0.52 | $3.00 | $25.00 | 2.10 |
-| Elite | **sprinter** (NEW) | $12.00 | $4.50 | $0.75 | $5.00 | $45.00 | 2.50 |
-| Elite | **lux** (NEW) | $15.00 | $6.00 | $1.00 | $5.00 | $75.00 | 3.50 |
-| Elite | **secure** (NEW) | $25.00 | $8.00 | $1.25 | $10.00 | $100.00 | 4.00 |
-
-### Changes Required
-
-**Database INSERT statements** to add missing ride types:
-
-```sql
-INSERT INTO zone_pricing_rates (zone_id, ride_type, base_fare, per_mile, per_minute, booking_fee, minimum_fare, multiplier)
-VALUES
-  -- Economy: pet
-  ('00000000-0000-0000-0000-000000000001', 'pet', 2.50, 1.28, 0.22, 1.50, 6.50, 1.15),
-  
-  -- Premium tier
-  ('00000000-0000-0000-0000-000000000001', 'comfort', 3.50, 1.75, 0.28, 2.00, 9.00, 1.45),
-  ('00000000-0000-0000-0000-000000000001', 'black', 5.00, 2.30, 0.38, 2.50, 14.00, 1.65),
-  ('00000000-0000-0000-0000-000000000001', 'black_suv', 6.00, 2.75, 0.45, 2.75, 18.00, 2.10),
-  ('00000000-0000-0000-0000-000000000001', 'xxl', 4.00, 1.90, 0.32, 2.25, 10.00, 1.75),
-  
-  -- Elite tier
-  ('00000000-0000-0000-0000-000000000001', 'sprinter', 12.00, 4.50, 0.75, 5.00, 45.00, 2.50),
-  ('00000000-0000-0000-0000-000000000001', 'lux', 15.00, 6.00, 1.00, 5.00, 75.00, 3.50),
-  ('00000000-0000-0000-0000-000000000001', 'secure', 25.00, 8.00, 1.25, 10.00, 100.00, 4.00);
+```text
+useZoneSurgePricing(zoneId: string | null, pickupCoords: {lat, lng} | null)
+  → { multiplier, level, label, isActive, isLoading }
 ```
 
-### No Code Changes Required
+The hook will:
+- Query trips in "requested/accepted/en_route" status within the zone's bounding box
+- Query online drivers within the zone's bounding box
+- Calculate surge using existing `calculateSurge()` function
+- Refresh every 15 seconds
 
-The existing code logic is correct:
-1. `useAllZoneRatesMap` fetches all rates for the zone
-2. `getRatesForRideType` looks up rates by ride type ID
-3. Falls back to standard if not found (but this is only for truly unknown ride types)
-4. `quoteRidePrice` calculates correctly with the provided rates and multiplier
+### Step 2: Add Surge Banner Component
+**File**: `src/components/ride/SurgeBanner.tsx` (NEW)
 
-Once the database has all ride types, each card will use its proper rates.
+A reusable banner that displays surge status:
 
-## Testing
+```text
++--------------------------------------------------+
+|  ⚡ High demand in this area • Prices are 1.6x   |
++--------------------------------------------------+
+```
 
-After inserting the rates:
-1. Navigate to `/rides?debug=1`
-2. Enter pickup and destination
-3. Verify each ride type shows different prices
-4. Check the debug panel shows the correct multiplier for each ride type
+Features:
+- Animates in/out based on surge state
+- Color coding: amber for Medium, red for High
+- Shows zone name and multiplier
+- Dismissible with "Got it" button
 
-## Example Price Calculation
+### Step 3: Update UberLikeRideRow with Surge Indicator
+**File**: `src/components/ride/UberLikeRideRow.tsx`
 
-For a 10-mile, 25-minute trip:
+Add optional surge props:
+- `surgeMultiplier?: number`
+- `surgeLevel?: SurgeLevel`
+- `surgeActive?: boolean`
 
-**Standard (Economy)**:
-- Subtotal = $3.50 + (10 × $1.75) + (25 × $0.35) + $2.50 = $32.25
-- Total = $32.25 × 1.00 = **$32.25**
+When surge is active, show a small lightning bolt icon and adjusted price styling.
 
-**Black (Premium)**:
-- Subtotal = $5.00 + (10 × $2.30) + (25 × $0.38) + $2.50 = $40.00
-- Total = $40.00 × 1.65 = **$66.00**
+### Step 4: Integrate Surge into Rides.tsx
+**File**: `src/pages/Rides.tsx`
 
-**Lux (Elite)**:
-- Subtotal = $15.00 + (10 × $6.00) + (25 × $1.00) + $5.00 = $100.00
-- Total = $100.00 × 3.50 = **$350.00**
+1. Import and use `useZoneSurgePricing(pricingZone?.id, pickupCoords)`
+2. Add `<SurgeBanner>` above the ride options list when surge is active
+3. Pass surge data to `UberLikeRideRow` components
+4. Include `surge_multiplier` in the payment intent request (line 570)
+5. Update `getQuoteForOption` to include surge in price calculation
+
+### Step 5: Update Pricing Calculation
+**File**: `src/lib/pricing.ts`
+
+Ensure `quoteRidePrice` accepts and applies surge multiplier on top of ride-type multiplier:
+
+```text
+finalMultiplier = rideTypeMultiplier × surgeMultiplier
+```
+
+## Visual Design
+
+### Surge Banner (above ride options)
+```text
+┌─────────────────────────────────────────────────┐
+│  ⚡ High demand near Baton Rouge                │
+│     Prices are currently 1.6× higher            │
+│                                        [Got it] │
+└─────────────────────────────────────────────────┘
+```
+
+### Surge on Ride Row
+```text
+┌─────────────────────────────────────────────────┐
+│  🚗  Standard                    👤 4    $45.00 │
+│       4:15 PM · 4 min          ⚡1.6x           │
+└─────────────────────────────────────────────────┘
+```
+
+## Database Query (Zone-Specific)
+
+The zone-specific demand metrics query:
+
+```sql
+-- Rides in zone (last 5 min)
+SELECT COUNT(*) FROM trips
+WHERE status IN ('requested', 'accepted', 'en_route')
+  AND pickup_lat BETWEEN zone.min_lat AND zone.max_lat
+  AND pickup_lng BETWEEN zone.min_lng AND zone.max_lng
+  AND created_at >= NOW() - INTERVAL '5 minutes'
+
+-- Drivers in zone (active in last 2 min)
+SELECT COUNT(*) FROM drivers
+WHERE is_online = true
+  AND status = 'verified'
+  AND current_lat BETWEEN zone.min_lat AND zone.max_lat
+  AND current_lng BETWEEN zone.min_lng AND zone.max_lng
+  AND updated_at >= NOW() - INTERVAL '2 minutes'
+```
+
+## Surge Rules (Unchanged)
+
+| Condition | Multiplier | Level |
+|-----------|------------|-------|
+| No drivers available | 2.0× | High |
+| Ratio >= 2.0 | 2.0× | High |
+| Ratio >= 1.5 | 1.6× | High |
+| Ratio >= 1.0 | 1.3× | Medium |
+| Ratio < 1.0 | 1.0× | Low |
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/hooks/useZoneSurgePricing.ts` | Create |
+| `src/components/ride/SurgeBanner.tsx` | Create |
+| `src/components/ride/UberLikeRideRow.tsx` | Modify |
+| `src/pages/Rides.tsx` | Modify |
+| `src/lib/pricing.ts` | Modify (ensure surge × type multiplier) |
+| `src/lib/surge.ts` | Modify (add zone-aware metrics function) |
+
+## Testing Checklist
+
+1. Navigate to `/rides`
+2. Enter pickup address in a zone with active trips
+3. Verify surge banner appears when demand is high
+4. Verify each ride card shows surge indicator
+5. Verify prices include surge multiplier
+6. Confirm payment request includes correct surge_multiplier
+7. Verify surge refreshes every 15 seconds
 
