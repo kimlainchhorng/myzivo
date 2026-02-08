@@ -245,6 +245,21 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
+        {/* Delivery PIN Display - Customer sees PIN when order is out for delivery */}
+        {order.status === "out_for_delivery" && order.delivery_pin && !order.delivery_pin_verified && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-emerald-500/20 to-zinc-900 border border-emerald-500/30 rounded-2xl p-5 text-center"
+          >
+            <p className="text-sm text-zinc-400 mb-2">Give this PIN to your driver</p>
+            <div className="text-4xl font-mono font-bold tracking-[0.5em] text-white">
+              {order.delivery_pin}
+            </div>
+            <p className="text-xs text-zinc-500 mt-2">Driver must enter this to complete delivery</p>
+          </motion.div>
+        )}
+
         {/* ETA Countdown for active deliveries */}
         {order.driver_id && order.eta_dropoff && order.status !== "delivered" && order.status !== "cancelled" && (
           <EtaCountdown

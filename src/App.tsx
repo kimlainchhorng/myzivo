@@ -406,6 +406,8 @@ const DispatchAlerts = lazy(() => import("./pages/dispatch/DispatchAlerts"));
 const DispatchSLA = lazy(() => import("./pages/dispatch/DispatchSLA"));
 const DispatchSafety = lazy(() => import("./pages/dispatch/DispatchSafety"));
 const DispatchDevices = lazy(() => import("./pages/dispatch/DispatchDevices"));
+// Admin Safety Dashboard
+const AdminSafetyDashboard = lazy(() => import("./pages/admin/AdminSafetyDashboard"));
 // Driver batch page
 const DriverBatchPage = lazy(() => import("./pages/driver/DriverBatchPage"));
 // Accept Invitation
@@ -1194,6 +1196,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminSetupPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/safety"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminSafetyDashboard />
                     </ProtectedRoute>
                   }
                 />
