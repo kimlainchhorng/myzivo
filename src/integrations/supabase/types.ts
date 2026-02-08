@@ -5052,6 +5052,64 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_bonus_history: {
+        Row: {
+          bonus_amount: number
+          bonus_date: string
+          bonus_type: string
+          created_at: string | null
+          credited: boolean | null
+          driver_id: string
+          goal_id: string | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          bonus_amount: number
+          bonus_date?: string
+          bonus_type: string
+          created_at?: string | null
+          credited?: boolean | null
+          driver_id: string
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          bonus_amount?: number
+          bonus_date?: string
+          bonus_type?: string
+          created_at?: string | null
+          credited?: boolean | null
+          driver_id?: string
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_bonus_history_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_bonus_history_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_bonus_history_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "driver_daily_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_cash_collections: {
         Row: {
           amount: number
@@ -5204,6 +5262,63 @@ export type Database = {
           trips_required?: number
         }
         Relationships: []
+      }
+      driver_daily_goals: {
+        Row: {
+          bonus_earned: number | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          driver_id: string
+          goal_date: string
+          goal_target: number
+          goal_type: string
+          id: string
+          progress: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bonus_earned?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          driver_id: string
+          goal_date?: string
+          goal_target: number
+          goal_type: string
+          id?: string
+          progress?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bonus_earned?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          driver_id?: string
+          goal_date?: string
+          goal_target?: number
+          goal_type?: string
+          id?: string
+          progress?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_daily_goals_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_daily_goals_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_documents: {
         Row: {
@@ -5881,12 +5996,16 @@ export type Database = {
       }
       driver_referrals: {
         Row: {
+          approved_at: string | null
           bonus_earned: number | null
           completed_at: string | null
           completed_orders: number | null
           created_at: string
           credited_at: string | null
           id: string
+          milestone_1_credited: boolean | null
+          milestone_10_credited: boolean | null
+          milestone_50_credited: boolean | null
           referee_email: string | null
           referee_name: string
           referral_code: string | null
@@ -5901,12 +6020,16 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          approved_at?: string | null
           bonus_earned?: number | null
           completed_at?: string | null
           completed_orders?: number | null
           created_at?: string
           credited_at?: string | null
           id?: string
+          milestone_1_credited?: boolean | null
+          milestone_10_credited?: boolean | null
+          milestone_50_credited?: boolean | null
           referee_email?: string | null
           referee_name: string
           referral_code?: string | null
@@ -5921,12 +6044,16 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          approved_at?: string | null
           bonus_earned?: number | null
           completed_at?: string | null
           completed_orders?: number | null
           created_at?: string
           credited_at?: string | null
           id?: string
+          milestone_1_credited?: boolean | null
+          milestone_10_credited?: boolean | null
+          milestone_50_credited?: boolean | null
           referee_email?: string | null
           referee_name?: string
           referral_code?: string | null
@@ -6048,6 +6175,100 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_reward_history: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          note: string | null
+          points: number
+          referral_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          note?: string | null
+          points: number
+          referral_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          note?: string | null
+          points?: number
+          referral_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_reward_history_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_reward_history_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_reward_history_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "driver_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_reward_points: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          lifetime_points: number
+          points_total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          lifetime_points?: number
+          points_total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          lifetime_points?: number
+          points_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_reward_points_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_reward_points_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
         ]
@@ -20835,6 +21056,30 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_multipliers: {
+        Row: {
+          id: string
+          multiplier: number | null
+          reason: string | null
+          updated_at: string | null
+          zone: string | null
+        }
+        Insert: {
+          id?: string
+          multiplier?: number | null
+          reason?: string | null
+          updated_at?: string | null
+          zone?: string | null
+        }
+        Update: {
+          id?: string
+          multiplier?: number | null
+          reason?: string | null
+          updated_at?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
       surge_overrides: {
         Row: {
           created_at: string | null
@@ -27406,6 +27651,16 @@ export type Database = {
         Args: { p_accepted: boolean; p_recommendation_id: string }
         Returns: Json
       }
+      add_driver_points: {
+        Args: {
+          p_driver_id: string
+          p_note?: string
+          p_points: number
+          p_referral_id?: string
+          p_type: string
+        }
+        Returns: number
+      }
       admin_assign_driver: {
         Args: { p_driver_id: string; p_order_id: string; p_tenant_id: string }
         Returns: Json
@@ -27709,6 +27964,13 @@ export type Database = {
           pickup_address: string
           status: string
           updated_at: string
+        }[]
+      }
+      get_driver_points: {
+        Args: { p_driver_id: string }
+        Returns: {
+          lifetime_points: number
+          points_total: number
         }[]
       }
       get_experiment_variant: {
