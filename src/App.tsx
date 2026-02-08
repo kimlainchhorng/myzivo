@@ -98,6 +98,11 @@ const AnalyticsMerchants = lazy(() => import("./pages/admin/analytics/AnalyticsM
 // Admin AI Insights Page
 const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
 
+// Admin Marketing Pages
+const MarketingHub = lazy(() => import("./pages/admin/marketing/MarketingHub"));
+const CampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
+const CampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
+
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
@@ -932,6 +937,11 @@ const App = () => (
                 
                 {/* Admin AI Insights */}
                 <Route path="/admin/insights" element={<ProtectedRoute requireAdmin><AdminInsightsPage /></ProtectedRoute>} />
+                
+                {/* Admin Marketing */}
+                <Route path="/admin/marketing" element={<ProtectedRoute requireAdmin><MarketingHub /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin><CampaignsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns/:id" element={<ProtectedRoute requireAdmin><CampaignDetailPage /></ProtectedRoute>} />
                 
                 {/* Driver Analytics */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
