@@ -127,11 +127,14 @@ export default function DriverDots({
           mapPaneName={OverlayView.OVERLAY_LAYER}
         >
           <div 
-            className="w-2 h-2 rounded-full bg-zinc-800 border border-zinc-600 shadow-sm transition-transform duration-1000 ease-out"
+            className="w-4 h-4 bg-white/90 rounded shadow-md flex items-center justify-center transition-transform duration-1000 ease-out"
             style={{ 
               transform: `translate(-50%, -50%) rotate(${dot.rotation}deg)`,
             }}
-          />
+          >
+            {/* Car indicator */}
+            <div className="w-2 h-1.5 bg-zinc-700 rounded-sm" />
+          </div>
         </OverlayViewF>
       ))}
     </>
