@@ -86,6 +86,14 @@ const DriverAccountPage = lazy(
   () => import("./pages/driver/DriverAccountPage")
 );
 const DriverOrderChatPage = lazy(() => import("./pages/driver/DriverOrderChatPage"));
+const DriverAnalyticsPage = lazy(() => import("./pages/driver/DriverAnalyticsPage"));
+
+// Admin Analytics Pages
+const AnalyticsHub = lazy(() => import("./pages/admin/analytics/AnalyticsHub"));
+const AnalyticsOrders = lazy(() => import("./pages/admin/analytics/AnalyticsOrders"));
+const AnalyticsRevenue = lazy(() => import("./pages/admin/analytics/AnalyticsRevenue"));
+const AnalyticsDrivers = lazy(() => import("./pages/admin/analytics/AnalyticsDrivers"));
+const AnalyticsMerchants = lazy(() => import("./pages/admin/analytics/AnalyticsMerchants"));
 
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
@@ -911,6 +919,16 @@ const App = () => (
                 {/* Rewards / Loyalty */}
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/rewards/redeem" element={<RewardsPage />} />
+                
+                {/* Eats Analytics Routes */}
+                <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AnalyticsHub /></ProtectedRoute>} />
+                <Route path="/admin/analytics/orders" element={<ProtectedRoute requireAdmin><AnalyticsOrders /></ProtectedRoute>} />
+                <Route path="/admin/analytics/revenue" element={<ProtectedRoute requireAdmin><AnalyticsRevenue /></ProtectedRoute>} />
+                <Route path="/admin/analytics/drivers" element={<ProtectedRoute requireAdmin><AnalyticsDrivers /></ProtectedRoute>} />
+                <Route path="/admin/analytics/merchants" element={<ProtectedRoute requireAdmin><AnalyticsMerchants /></ProtectedRoute>} />
+                
+                {/* Driver Analytics */}
+                <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
                 
                 <Route
                   path="/admin"
