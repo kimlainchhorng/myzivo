@@ -576,8 +576,8 @@ function RidesInner() {
         drag="y"
         dragControls={dragControls}
         dragListener={false}
-        dragConstraints={{ top: -window.innerHeight * 0.5, bottom: 0 }}
-        dragElastic={0.1}
+        dragConstraints={{ top: -window.innerHeight * 0.7, bottom: window.innerHeight * 0.3 }}
+        dragElastic={0.15}
         onDragEnd={handleDragEnd}
         style={{ y }}
         className="relative rounded-t-[28px] bg-white/95 backdrop-blur-xl shadow-[0_-18px_40px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col"
