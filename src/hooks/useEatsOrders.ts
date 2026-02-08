@@ -207,6 +207,24 @@ export function useCreateFoodOrder() {
 
       if (orderError) throw orderError;
 
+      // Log order_placed event for audit trail
+      try {
+        await supabase.from("order_events").insert({
+          order_id: order.id,
+          type: "order_placed",
+          actor_id: customerId || null,
+          actor_role: "customer",
+          data: {
+            restaurant_id: input.restaurant_id,
+            total_amount: input.total,
+            item_count: input.items.length,
+          },
+        });
+      } catch (eventError) {
+        // Don't fail the order if event logging fails
+        console.warn("Failed to log order_placed event:", eventError);
+      }
+
       return order;
     },
     onSuccess: () => {
