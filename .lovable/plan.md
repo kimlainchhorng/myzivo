@@ -1,167 +1,88 @@
 
 
-# Fix Pricing: Correct Rates and Apply Long-Trip Discount
+# Make ZIVO Pricing Cheaper Than Uber/Lyft
 
-## Problem Summary
+## Industry Comparison
 
-The current pricing for a 71.3 mi / 67 min trip is showing $308.59 (Standard) which is too high. Two issues:
+| Component | Uber/Lyft Avg | Current ZIVO | Target ZIVO | Savings |
+|-----------|---------------|--------------|-------------|---------|
+| Base fare | $2.75 | $2.50 | $1.99 | -28% |
+| Per-mile | $1.80 | $1.25 | $0.89 | -51% |
+| Per-minute | $0.35 | $0.25 | $0.18 | -49% |
+| Booking fee | $0.85 | $1.50 | $0.75 | -12% |
+| Minimum fare | $6.50 | $6.50 | $4.99 | -23% |
 
-1. **Long-trip discount not applied** - The 12% discount for trips over 50 miles is defined but never used
-2. **Database rates are above industry standard** - Per-mile, per-minute, and booking fees need adjustment
+## Price Example: 10 miles / 20 minutes trip
 
-## Current vs Expected Pricing
+| Service | Calculation | Total |
+|---------|-------------|-------|
+| **Uber (avg)** | $2.75 + (10 × $1.80) + (20 × $0.35) + $0.85 | **$28.60** |
+| **ZIVO current** | $2.50 + (10 × $1.25) + (20 × $0.25) + $1.50 | **$21.50** |
+| **ZIVO new** | $1.99 + (10 × $0.89) + (20 × $0.18) + $0.75 | **$15.44** |
 
-| Ride Type | Current Price | Expected Price | Difference |
-|-----------|---------------|----------------|------------|
-| Wait & Save | $283.90 | ~$145 | -49% |
-| Standard | $308.59 | ~$155 | -50% |
-| Green | $314.76 | ~$158 | -50% |
-| Priority | $345.62 | ~$174 | -50% |
-| Black | $509.17 | ~$256 | -50% |
-
-## Root Cause Analysis
-
-### Issue 1: Long-Trip Discount Not Applied
-The `getLongTripMultiplier()` function exists but is never called in `quoteRidePrice()`:
-
-```text
-Current formula:
-  total = subtotal × multiplier × surge
-
-Should be:
-  total = subtotal × multiplier × surge × longTripDiscount
-```
-
-For 71.3 miles, the discount should be 0.88 (12% off).
-
-### Issue 2: Database Rates Too High
-
-Current rates vs industry average:
-
-| Component | Current | Industry Avg | Recommended |
-|-----------|---------|--------------|-------------|
-| base_fare | $3.50 | $2.75 | $2.50 |
-| per_mile | $1.75 | $1.25 | $1.25 |
-| per_minute | $0.35 | $0.25 | $0.25 |
-| booking_fee | $2.50 | $0.85 | $1.50 |
-| minimum_fare | $7.00 | $6.50 | $6.50 |
+ZIVO new pricing will be ~46% cheaper than Uber average!
 
 ## Implementation Plan
 
-### Step 1: Apply Long-Trip Discount in quoteRidePrice()
+### Step 1: Update Database Rates
+
+Update the `zone_pricing_rates` table with competitive rates:
+
+```text
+ride_type    | base_fare | per_mile | per_min | booking | min_fare | multi
+-------------|-----------|----------|---------|---------|----------|------
+wait_save    | 1.49      | 0.69     | 0.12    | 0.50    | 3.99     | 0.92
+standard     | 1.99      | 0.89     | 0.18    | 0.75    | 4.99     | 1.00
+green        | 1.99      | 0.85     | 0.16    | 0.75    | 4.99     | 1.02
+priority     | 1.99      | 0.85     | 0.16    | 0.75    | 4.99     | 1.12
+pet          | 1.99      | 0.85     | 0.16    | 0.75    | 4.99     | 1.15
+comfort      | 2.49      | 1.10     | 0.22    | 1.00    | 6.49     | 1.45
+xl           | 2.49      | 1.10     | 0.22    | 1.00    | 6.49     | 1.45
+black        | 3.49      | 1.60     | 0.28    | 1.25    | 9.99     | 1.65
+black_suv    | 4.49      | 2.00     | 0.35    | 1.50    | 12.99    | 2.10
+xxl          | 2.99      | 1.35     | 0.24    | 1.25    | 7.49     | 1.75
+premium      | 3.49      | 1.60     | 0.28    | 1.25    | 9.99     | 1.65
+elite        | 5.49      | 2.40     | 0.42    | 1.75    | 17.99    | 2.10
+lux          | 10.99     | 4.25     | 0.75    | 3.50    | 54.99    | 3.50
+sprinter     | 8.99      | 3.50     | 0.60    | 3.00    | 34.99    | 2.50
+secure       | 17.99     | 6.00     | 0.95    | 6.50    | 69.99    | 4.00
+```
+
+### Step 2: Update Default Settings in Code
 
 **File**: `src/lib/pricing.ts`
 
-Update the `quoteRidePrice()` function to include the long-trip discount:
+Update `DEFAULT_RIDE_ZONE` to match the new competitive rates as fallback.
 
-```text
-Before:
-  const combinedMultiplier = zoneMultiplier * surgeMultiplier;
+### Step 3: Update Default Hook Settings
 
-After:
-  const longTripDiscount = getLongTripMultiplier(distanceMiles);
-  const combinedMultiplier = zoneMultiplier * surgeMultiplier * longTripDiscount;
-```
+**File**: `src/hooks/useRidePricingSettings.ts`
 
-This alone will reduce the 71.3 mi trip by 12%.
+Update `DEFAULT_SETTINGS` to match new competitive rates.
 
-### Step 2: Update Database Rates
+## Price Comparison: Long Trip (71 mi / 67 min)
 
-Update the `zone_pricing_rates` table with industry-standard rates:
+| Service | Calculation | Total |
+|---------|-------------|-------|
+| **Uber (avg)** | $2.75 + (71 × $1.80) + (67 × $0.35) + $0.85 | **$154.00** |
+| **ZIVO new (Standard)** | $1.99 + (71 × $0.89) + (67 × $0.18) + $0.75 | **$78.04** |
+| **With 12% long-trip discount** | $78.04 × 0.88 | **$68.68** |
 
-**Standard ride (ride_type = 'standard'):**
-```text
-base_fare: $2.50
-per_mile: $1.25
-per_minute: $0.25
-booking_fee: $1.50
-minimum_fare: $6.50
-multiplier: 1.0
-```
-
-**Wait & Save (ride_type = 'wait_save'):**
-```text
-base_fare: $2.00
-per_mile: $1.00
-per_minute: $0.20
-booking_fee: $1.00
-minimum_fare: $5.50
-multiplier: 0.92
-```
-
-**All other ride types:** Adjust base rates proportionally while keeping multipliers.
-
-### Step 3: Update RidePriceQuote Interface
-
-**File**: `src/lib/pricing.ts`
-
-Add `longTripDiscount` to the debug info for transparency:
-
-```text
-debug: {
-  distanceMiles: number;
-  durationMinutes: number;
-  rideType: string;
-  longTripDiscount?: number;
-}
-```
-
-## Price Calculation After Fix
-
-For 71.3 mi / 67 min trip with 2.0× surge:
-
-```text
-subtotal = 2.50 + (71.3 × 1.25) + (67 × 0.25) + 1.50
-         = 2.50 + 89.13 + 16.75 + 1.50
-         = 109.88
-
-With long-trip discount (12%):
-         = 109.88 × 0.88 = 96.69
-
-With surge 2.0×:
-         = 96.69 × 2.0 = $193.38 (Standard)
-
-Wait & Save with 0.92 multiplier:
-         = 96.69 × 2.0 × 0.92 = $177.91
-```
-
-These prices are much more realistic and competitive with Uber/Lyft.
+ZIVO will be ~55% cheaper than Uber for long trips!
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/lib/pricing.ts` | Apply `getLongTripMultiplier()` in `quoteRidePrice()` |
-| Database | Update `zone_pricing_rates` with industry-standard values |
+| Database | Update `zone_pricing_rates` with new competitive values |
+| `src/lib/pricing.ts` | Update `DEFAULT_RIDE_ZONE` fallback rates |
+| `src/hooks/useRidePricingSettings.ts` | Update `DEFAULT_SETTINGS` to match |
 
-## New Rate Values for Database
+## Expected Results
 
-```text
-ride_type      | base_fare | per_mile | per_min | booking | min_fare | multi
----------------|-----------|----------|---------|---------|----------|------
-wait_save      | 2.00      | 1.00     | 0.20    | 1.00    | 5.50     | 0.92
-standard       | 2.50      | 1.25     | 0.25    | 1.50    | 6.50     | 1.00
-green          | 2.50      | 1.20     | 0.22    | 1.50    | 6.50     | 1.02
-priority       | 2.50      | 1.20     | 0.22    | 1.50    | 6.50     | 1.12
-pet            | 2.50      | 1.20     | 0.22    | 1.50    | 6.50     | 1.15
-comfort        | 3.00      | 1.50     | 0.28    | 1.75    | 8.00     | 1.45
-xl             | 3.00      | 1.50     | 0.28    | 1.75    | 8.00     | 1.45
-black          | 4.00      | 2.00     | 0.35    | 2.00    | 12.00    | 1.65
-black_suv      | 5.00      | 2.50     | 0.42    | 2.25    | 15.00    | 2.10
-xxl            | 3.50      | 1.75     | 0.30    | 2.00    | 9.00     | 1.75
-premium        | 4.00      | 2.00     | 0.35    | 2.00    | 12.00    | 1.65
-elite          | 6.00      | 2.80     | 0.48    | 2.50    | 20.00    | 2.10
-lux            | 12.00     | 5.00     | 0.85    | 4.00    | 60.00    | 3.50
-sprinter       | 10.00     | 4.00     | 0.70    | 4.00    | 40.00    | 2.50
-secure         | 20.00     | 7.00     | 1.10    | 8.00    | 80.00    | 4.00
-```
-
-## Testing Checklist
-
-1. Navigate to `/rides` and enter pickup/destination for 71.3 mi trip
-2. Verify Standard price is approximately $155-195 (with surge)
-3. Verify Wait & Save shows savings compared to Standard
-4. Verify Black and premium rides show appropriate premium pricing
-5. Verify long-trip discount is applied (check debug panel)
-6. Test shorter trips (< 25 mi) to ensure no discount is applied
+After implementation:
+- Standard 10mi trip: ~$15 (vs Uber ~$29)
+- Wait & Save 10mi trip: ~$12 (vs Uber ~$29)
+- Long 71mi trip: ~$69 (vs Uber ~$154)
+- All ride types: 40-55% cheaper than Uber/Lyft average
 
