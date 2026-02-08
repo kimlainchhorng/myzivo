@@ -47,6 +47,9 @@ import {
 import { PricingDebugPanel } from "@/components/ride/PricingDebugPanel";
 import { LiveDriverIndicator } from "@/components/ride/LiveDriverIndicator";
 import { SurgeBanner } from "@/components/ride/SurgeBanner";
+import { PromoCodeInput } from "@/components/ride/PromoCodeInput";
+import { RidePriceBreakdownWithPromo } from "@/components/ride/RidePriceBreakdownWithPromo";
+import { useRidePromoValidation, ValidatedRidePromo } from "@/hooks/useRidePromoValidation";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -322,6 +325,23 @@ function RidesInner() {
   // Zone-specific surge pricing
   const surge = useZoneSurgePricing(pricingZone);
   
+  // Promo code validation hook
+  const { 
+    isValidating: isValidatingPromo, 
+    appliedPromo, 
+    promoError, 
+    validateCode: validatePromoCode, 
+    removePromo,
+    calculateFinalTotal 
+  } = useRidePromoValidation();
+  
+  // Extract city from pickup address for promo validation
+  const extractCity = (address: string): string => {
+    const parts = address.split(',').map(p => p.trim());
+    // Typically city is the second-to-last part (before state/zip)
+    return parts.length >= 2 ? parts[parts.length - 2] : parts[0] || '';
+  };
+  
   // Log zone detection for debugging
   useEffect(() => {
     if (pricingZone && pickupCoords) {
@@ -559,6 +579,10 @@ function RidesInner() {
     try {
       // Use unified pricing (quoteRidePrice)
       const quote = getQuoteForOption(selectedOption);
+      const priceBeforeDiscount = quote?.total ?? 0;
+      
+      // Calculate final amount with promo discount
+      const { discountAmount, finalTotal } = calculateFinalTotal(priceBeforeDiscount);
       
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Request timed out")), 15000);
@@ -570,13 +594,22 @@ function RidesInner() {
           customer_phone: contactInfo.phone,
           customer_email: contactInfo.email || undefined,
           pickup_address: pickup,
+          pickup_lat: pickupCoords?.lat,
+          pickup_lng: pickupCoords?.lng,
           dropoff_address: dropoff,
+          dropoff_lat: dropoffCoords?.lat,
+          dropoff_lng: dropoffCoords?.lng,
           ride_type: selectedOption.id,
           notes: contactInfo.notes || undefined,
-          estimated_fare: quote?.total ?? 0, // Client estimate for comparison
+          estimated_fare: finalTotal, // Send discounted total
           distance_miles: estimatedDistance,
           duration_minutes: estimatedDuration,
-          surge_multiplier: surge.multiplier, // Zone-specific surge multiplier
+          surge_multiplier: surge.multiplier,
+          // Promo code data
+          promo_code: appliedPromo?.valid ? appliedPromo.code : undefined,
+          promo_id: appliedPromo?.valid ? appliedPromo.promo_id : undefined,
+          promo_discount: appliedPromo?.valid ? discountAmount : undefined,
+          price_before_discount: appliedPromo?.valid ? priceBeforeDiscount : undefined,
         },
       });
       
@@ -622,6 +655,7 @@ function RidesInner() {
     setSelectedOption(null);
     setContactInfo({ name: "", phone: "", email: "", notes: "" });
     setRequestId(null);
+    removePromo(); // Clear promo code
     clearRoute();
     navigate("/rides", { replace: true });
   };
@@ -1123,6 +1157,29 @@ function RidesInner() {
                   />
                 </div>
               </div>
+
+              {/* Promo Code Section */}
+              <div className="pt-2 border-t border-zinc-200">
+                <PromoCodeInput
+                  onApply={(code) => validatePromoCode(code, currentQuote?.total ?? 0, extractCity(pickup))}
+                  onRemove={removePromo}
+                  isValidating={isValidatingPromo}
+                  appliedPromo={appliedPromo}
+                  error={promoError}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Price Breakdown with Promo */}
+              {currentQuote && (
+                <RidePriceBreakdownWithPromo
+                  quote={currentQuote}
+                  appliedPromo={appliedPromo}
+                  distance={estimatedDistance}
+                  duration={estimatedDuration}
+                  rideTypeName={selectedOption.name}
+                />
+              )}
 
             </div>
           )}
