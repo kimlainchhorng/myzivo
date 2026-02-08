@@ -101,21 +101,17 @@ const RideCard = ({
               <span>Zone:</span>
               <span className="text-white/60">{quote.zoneName}</span>
             </div>
+            <div className="flex justify-between text-cyan-400">
+              <span>Route:</span>
+              <span>{quote.miles.toFixed(1)} mi / {quote.minutes} min</span>
+            </div>
             <div className="flex justify-between">
-              <span>Base:</span>
+              <span>Subtotal:</span>
               <span>${quote.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span>× Time:</span>
-              <span>{quote.multipliers.time.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>× Surge:</span>
-              <span>{quote.multipliers.surge.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>× Event:</span>
-              <span>{quote.multipliers.event.toFixed(2)}</span>
+              <span>× Combined:</span>
+              <span>{quote.multipliers.combined.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>× LongTrip:</span>

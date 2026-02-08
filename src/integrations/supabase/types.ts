@@ -6185,6 +6185,7 @@ export type Database = {
           acceptance_rate: number | null
           allowed_regions: string[] | null
           apns_token: string | null
+          approved_for_blacklux: boolean | null
           avatar_url: string | null
           avg_delay_minutes: number | null
           bank_connected: boolean | null
@@ -6220,6 +6221,7 @@ export type Database = {
           prev_lat: number | null
           prev_lng: number | null
           prev_location_at: string | null
+          priority_score: number | null
           rating: number | null
           rating_count: number | null
           referral_code: string
@@ -6247,6 +6249,7 @@ export type Database = {
           acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
+          approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
@@ -6282,6 +6285,7 @@ export type Database = {
           prev_lat?: number | null
           prev_lng?: number | null
           prev_location_at?: string | null
+          priority_score?: number | null
           rating?: number | null
           rating_count?: number | null
           referral_code?: string
@@ -6309,6 +6313,7 @@ export type Database = {
           acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
+          approved_for_blacklux?: boolean | null
           avatar_url?: string | null
           avg_delay_minutes?: number | null
           bank_connected?: boolean | null
@@ -6344,6 +6349,7 @@ export type Database = {
           prev_lat?: number | null
           prev_lng?: number | null
           prev_location_at?: string | null
+          priority_score?: number | null
           rating?: number | null
           rating_count?: number | null
           referral_code?: string
@@ -27032,19 +27038,34 @@ export type Database = {
         Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
         Returns: string
       }
-      find_nearest_drivers: {
-        Args: {
-          p_lat: number
-          p_limit: number
-          p_lng: number
-          p_mode?: string
-          p_radius: number
-        }
-        Returns: {
-          distance_miles: number
-          driver_id: string
-        }[]
-      }
+      find_nearest_drivers:
+        | {
+            Args: {
+              p_lat: number
+              p_limit?: number
+              p_lng: number
+              p_mode?: string
+              p_radius?: number
+            }
+            Returns: {
+              distance_miles: number
+              driver_id: string
+              priority_score: number
+            }[]
+          }
+        | {
+            Args: {
+              p_lat: number
+              p_limit: number
+              p_lng: number
+              p_mode?: string
+              p_radius: number
+            }
+            Returns: {
+              distance_miles: number
+              driver_id: string
+            }[]
+          }
       generate_all_forecasts: { Args: never; Returns: number }
       generate_compliance_alerts: { Args: never; Returns: undefined }
       generate_referral_code: { Args: never; Returns: string }

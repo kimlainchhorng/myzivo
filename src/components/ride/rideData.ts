@@ -3,7 +3,7 @@ import { RideOption } from "./RideCard";
 export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> = {
   economy: [
     {
-      id: "wait-save",
+      id: "wait_save",
       name: "Wait & Save",
       subtitle: "Lowest price, longer wait.",
       price: 15.89,
@@ -22,11 +22,31 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       category: "economy",
       multiplier: 1.0,
     },
+    {
+      id: "green",
+      name: "Green",
+      subtitle: "Eco-friendly rides.",
+      price: 21.50,
+      eta: 6,
+      image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&h=300&fit=crop",
+      category: "economy",
+      multiplier: 1.05,
+    },
+    {
+      id: "priority",
+      name: "Priority",
+      subtitle: "Skip the queue.",
+      price: 24.00,
+      eta: 2,
+      image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=400&h=300&fit=crop",
+      category: "economy",
+      multiplier: 1.15,
+    },
   ],
   premium: [
     {
-      id: "extra-comfort",
-      name: "Extra Comfort",
+      id: "comfort",
+      name: "Comfort",
       subtitle: "Newer cars, more legroom.",
       price: 30.17,
       eta: 5,
@@ -35,8 +55,8 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       multiplier: 1.2,
     },
     {
-      id: "zivo-black",
-      name: "ZIVO Black",
+      id: "premium",
+      name: "Premium",
       subtitle: "Premium leather sedans.",
       price: 49.80,
       eta: 8,
@@ -47,8 +67,8 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
   ],
   elite: [
     {
-      id: "zivo-lux",
-      name: "ZIVO Lux",
+      id: "elite",
+      name: "Elite",
       subtitle: "Ultimate luxury experience.",
       price: 189.00,
       eta: 20,
@@ -57,9 +77,9 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       multiplier: 2.0,
     },
     {
-      id: "executive",
-      name: "Executive",
-      subtitle: "Professional chauffeur service.",
+      id: "xl",
+      name: "XL",
+      subtitle: "Extra room for groups.",
       price: 150.00,
       eta: 15,
       image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=400&h=300&fit=crop",

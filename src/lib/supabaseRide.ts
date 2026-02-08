@@ -125,6 +125,10 @@ export const createRideInDb = async (
 
     // Note: We cast the insert object to allow 'requested_unpaid' status
     // which may not be in generated types until DB types are regenerated
+    // Calculate platform fee and driver earning
+    const platformFee = Math.round(payload.price * 0.15 * 100) / 100;
+    const driverEarning = Math.round((payload.price - platformFee) * 100) / 100;
+
     const insertData = {
       rider_id: user?.id ?? null,
       pickup_address: payload.pickup,
@@ -146,8 +150,10 @@ export const createRideInDb = async (
       // Quote-based pricing data
       insurance_fee: payload.insuranceFee || 0,
       zone_id: payload.zoneId || null,
-      // Commission: 15% of price
-      commission_amount: Math.round(payload.price * 0.15 * 100) / 100,
+      // Platform fee (15%) and driver earning (85%)
+      commission_amount: platformFee,
+      platform_fee: platformFee,
+      driver_earning: driverEarning,
     };
 
     const { data, error } = await supabase
