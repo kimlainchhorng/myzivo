@@ -128,6 +128,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          payload_json: Json | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          payload_json?: Json | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          payload_json?: Json | null
+        }
+        Relationships: []
+      }
       admin_audit_logs: {
         Row: {
           action: string
@@ -3517,6 +3547,54 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_policies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_type: string
+          expires_required: boolean
+          id: string
+          is_active: boolean
+          notes: string | null
+          reminder_days: number[]
+          required: boolean
+          role: string
+          state: string | null
+          updated_at: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_type: string
+          expires_required?: boolean
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reminder_days?: number[]
+          required?: boolean
+          role: string
+          state?: string | null
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_type?: string
+          expires_required?: boolean
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reminder_days?: number[]
+          required?: boolean
+          role?: string
+          state?: string | null
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
       compliance_reminders: {
         Row: {
           created_at: string | null
@@ -3620,6 +3698,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      compliance_requirements_cache: {
+        Row: {
+          compliance_score: number
+          entity_id: string
+          entity_type: string
+          expired_documents: string[]
+          id: string
+          missing_documents: string[]
+          pending_documents: string[]
+          rejected_documents: string[]
+          required_documents: string[]
+          updated_at: string
+        }
+        Insert: {
+          compliance_score?: number
+          entity_id: string
+          entity_type: string
+          expired_documents?: string[]
+          id?: string
+          missing_documents?: string[]
+          pending_documents?: string[]
+          rejected_documents?: string[]
+          required_documents?: string[]
+          updated_at?: string
+        }
+        Update: {
+          compliance_score?: number
+          entity_id?: string
+          entity_type?: string
+          expired_documents?: string[]
+          id?: string
+          missing_documents?: string[]
+          pending_documents?: string[]
+          rejected_documents?: string[]
+          required_documents?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       compliance_reviews: {
         Row: {
@@ -6615,6 +6732,7 @@ export type Database = {
         Row: {
           auto_accept_delay_seconds: number | null
           auto_accept_enabled: boolean | null
+          auto_arrived_enabled: boolean | null
           auto_sync_enabled: boolean | null
           cache_trips_days: number | null
           created_at: string
@@ -6639,6 +6757,7 @@ export type Database = {
         Insert: {
           auto_accept_delay_seconds?: number | null
           auto_accept_enabled?: boolean | null
+          auto_arrived_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
           created_at?: string
@@ -6663,6 +6782,7 @@ export type Database = {
         Update: {
           auto_accept_delay_seconds?: number | null
           auto_accept_enabled?: boolean | null
+          auto_arrived_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
           created_at?: string
@@ -13312,6 +13432,7 @@ export type Database = {
       order_events: {
         Row: {
           actor_id: string | null
+          actor_role: string | null
           created_at: string | null
           data: Json | null
           id: string
@@ -13321,6 +13442,7 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
+          actor_role?: string | null
           created_at?: string | null
           data?: Json | null
           id?: string
@@ -13330,6 +13452,7 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
+          actor_role?: string | null
           created_at?: string | null
           data?: Json | null
           id?: string
@@ -23599,6 +23722,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           arrived_at: string | null
+          arrived_dropoff_at: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
           cancelled_at: string | null
@@ -23657,6 +23781,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           arrived_at?: string | null
+          arrived_dropoff_at?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -23715,6 +23840,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           arrived_at?: string | null
+          arrived_dropoff_at?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -29267,6 +29393,10 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "refunded"
+        | "placed"
+        | "preparing"
+        | "ready"
+        | "delivered"
       business_account_status: "pending" | "approved" | "suspended"
       car_owner_document_type:
         | "drivers_license"
@@ -29594,6 +29724,10 @@ export const Constants = {
         "completed",
         "cancelled",
         "refunded",
+        "placed",
+        "preparing",
+        "ready",
+        "delivered",
       ],
       business_account_status: ["pending", "approved", "suspended"],
       car_owner_document_type: [

@@ -1,11 +1,13 @@
 /**
  * Realtime Order Toasts
  * Toast notifications for realtime dispatch events
+ * Uses standardized EatsOrderStatus from orderStatus.ts
  */
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { EatsOrderStatus, normalizeStatus, getStatusLabel } from "@/lib/orderStatus";
 
 const RealtimeOrderToasts = () => {
   const lastEventRef = useRef<string | null>(null);
@@ -43,27 +45,29 @@ const RealtimeOrderToasts = () => {
 
           if (oldStatus === newStatus) return;
 
-          const eventKey = `update-${payload.new.id}-${newStatus}`;
+          const normalizedNew = normalizeStatus(newStatus);
+
+          const eventKey = `update-${payload.new.id}-${normalizedNew}`;
           if (lastEventRef.current === eventKey) return;
           lastEventRef.current = eventKey;
 
-          switch (newStatus) {
-            case "confirmed":
-              toast.success("✓ Order assigned", {
+          switch (normalizedNew) {
+            case EatsOrderStatus.CONFIRMED:
+              toast.success("✓ Order confirmed", {
                 description: `Order #${(payload.new.id as string).slice(0, 8)}`,
               });
               break;
-            case "in_progress":
-              toast.info("📦 Order picked up", {
+            case EatsOrderStatus.OUT_FOR_DELIVERY:
+              toast.info("🚗 Order picked up", {
                 description: `Order #${(payload.new.id as string).slice(0, 8)}`,
               });
               break;
-            case "completed":
+            case EatsOrderStatus.DELIVERED:
               toast.success("✅ Order delivered", {
                 description: `Order #${(payload.new.id as string).slice(0, 8)}`,
               });
               break;
-            case "cancelled":
+            case EatsOrderStatus.CANCELLED:
               toast.error("Order cancelled", {
                 description: `Order #${(payload.new.id as string).slice(0, 8)}`,
               });

@@ -8,6 +8,7 @@ export const EATS_TABLES = {
   menuItems: "menu_items",
   orders: "food_orders",
   orderItems: null, // Items stored as JSONB in food_orders.items
+  orderEvents: "order_events",
   reviews: "eats_reviews",
   promoCodes: "promo_codes",
   drivers: "drivers",

@@ -1,29 +1,34 @@
 /**
  * Order Status Timeline Component
  * Visual progress indicator for food order status with timestamps
+ * Uses standardized EatsOrderStatus from orderStatus.ts
  */
 import { Check, Clock, ChefHat, Truck, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-
-type OrderStatus = "pending" | "confirmed" | "preparing" | "ready_for_pickup" | "out_for_delivery" | "delivered" | "cancelled";
+import {
+  EatsOrderStatus,
+  EatsOrderStatusType,
+  EATS_STATUS_ORDER,
+  getStatusLabel,
+  normalizeStatus,
+  getStatusIndex,
+} from "@/lib/orderStatus";
 
 interface StatusStep {
-  key: OrderStatus;
+  key: EatsOrderStatusType;
   label: string;
   icon: React.ElementType;
   timestampKey: string;
 }
 
 const STATUS_STEPS: StatusStep[] = [
-  { key: "pending", label: "Order Placed", icon: Clock, timestampKey: "placed_at" },
-  { key: "confirmed", label: "Confirmed", icon: Check, timestampKey: "accepted_at" },
-  { key: "preparing", label: "Preparing", icon: ChefHat, timestampKey: "prepared_at" },
-  { key: "out_for_delivery", label: "On the Way", icon: Truck, timestampKey: "picked_up_at" },
-  { key: "delivered", label: "Delivered", icon: Package, timestampKey: "delivered_at" },
+  { key: EatsOrderStatus.PLACED, label: getStatusLabel(EatsOrderStatus.PLACED), icon: Clock, timestampKey: "placed_at" },
+  { key: EatsOrderStatus.CONFIRMED, label: getStatusLabel(EatsOrderStatus.CONFIRMED), icon: Check, timestampKey: "accepted_at" },
+  { key: EatsOrderStatus.PREPARING, label: getStatusLabel(EatsOrderStatus.PREPARING), icon: ChefHat, timestampKey: "prepared_at" },
+  { key: EatsOrderStatus.OUT_FOR_DELIVERY, label: getStatusLabel(EatsOrderStatus.OUT_FOR_DELIVERY), icon: Truck, timestampKey: "picked_up_at" },
+  { key: EatsOrderStatus.DELIVERED, label: getStatusLabel(EatsOrderStatus.DELIVERED), icon: Package, timestampKey: "delivered_at" },
 ];
-
-const STATUS_ORDER: OrderStatus[] = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered"];
 
 export interface OrderTimestamps {
   placed_at?: string | null;
@@ -51,8 +56,10 @@ function formatTimestamp(timestamp: string | null | undefined): string | null {
 }
 
 export function StatusTimeline({ currentStatus, timestamps, className }: StatusTimelineProps) {
-  const currentIndex = STATUS_ORDER.indexOf(currentStatus as OrderStatus);
-  const isCancelled = currentStatus === "cancelled";
+  // Normalize legacy status values to standard ones
+  const normalizedStatus = normalizeStatus(currentStatus);
+  const currentIndex = getStatusIndex(normalizedStatus);
+  const isCancelled = currentStatus === EatsOrderStatus.CANCELLED || currentStatus === "cancelled";
 
   if (isCancelled) {
     return (
@@ -74,8 +81,8 @@ export function StatusTimeline({ currentStatus, timestamps, className }: StatusT
   const getTimestamp = (step: StatusStep): string | null => {
     if (!timestamps) return null;
     
-    // Special case: "pending" uses placed_at or created_at
-    if (step.key === "pending") {
+    // Special case: "placed" uses placed_at or created_at
+    if (step.key === EatsOrderStatus.PLACED) {
       return formatTimestamp(timestamps.placed_at || timestamps.created_at);
     }
     
@@ -84,10 +91,11 @@ export function StatusTimeline({ currentStatus, timestamps, className }: StatusT
 
   return (
     <div className={cn("space-y-1", className)}>
-      {STATUS_STEPS.map((step, index) => {
-        const isCompleted = currentIndex >= STATUS_ORDER.indexOf(step.key);
-        const isCurrent = currentStatus === step.key || 
-          (currentStatus === "ready_for_pickup" && step.key === "preparing"); // ready_for_pickup shows preparing as current
+    {STATUS_STEPS.map((step, index) => {
+        const stepIndex = EATS_STATUS_ORDER.indexOf(step.key);
+        const isCompleted = currentIndex >= stepIndex;
+        const isCurrent = normalizedStatus === step.key || 
+          (normalizedStatus === EatsOrderStatus.READY && step.key === EatsOrderStatus.PREPARING);
         const Icon = step.icon;
         const timestamp = getTimestamp(step);
 

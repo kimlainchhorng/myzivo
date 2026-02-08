@@ -2,8 +2,9 @@
  * Real-time Eats Order Hook
  * Subscribes to Supabase realtime updates for order status
  * Uses shared tables with Merchant app
+ * Includes reconnection handling for reliability
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EATS_TABLES } from "@/lib/eatsTables";
 
@@ -44,10 +45,32 @@ export interface LiveEatsOrder {
   };
 }
 
+type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
+
 export function useLiveEatsOrder(orderId: string | undefined) {
   const [order, setOrder] = useState<LiveEatsOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
+
+  // Refetch function for reconnection scenarios
+  const refetch = useCallback(async () => {
+    if (!orderId) return;
+    
+    try {
+      const { data, error: fetchError } = await supabase
+        .from(EATS_TABLES.orders)
+        .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
+        .eq("id", orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      setOrder(data as LiveEatsOrder);
+      setError(null);
+    } catch (e) {
+      setError(e as Error);
+    }
+  }, [orderId]);
 
   useEffect(() => {
     if (!orderId) {
@@ -56,10 +79,13 @@ export function useLiveEatsOrder(orderId: string | undefined) {
     }
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
 
     // Initial fetch
     const fetchOrder = async () => {
       setLoading(true);
+      setConnectionStatus("connecting");
+      
       try {
         const { data, error: fetchError } = await supabase
           .from(EATS_TABLES.orders)
@@ -73,6 +99,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
       } catch (e) {
         setError(e as Error);
         setOrder(null);
+        setConnectionStatus("error");
       } finally {
         setLoading(false);
       }
@@ -80,7 +107,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
 
     fetchOrder();
 
-    // Real-time subscription - listens for merchant status updates
+    // Real-time subscription with reconnection handling
     channel = supabase
       .channel(`eats-order-${orderId}`)
       .on(
@@ -101,14 +128,29 @@ export function useLiveEatsOrder(orderId: string | undefined) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setConnectionStatus("connected");
+        } else if (status === "CLOSED" || status === "CHANNEL_ERROR") {
+          setConnectionStatus("disconnected");
+          
+          // Auto-reconnect after 2 seconds
+          reconnectTimeout = setTimeout(() => {
+            refetch();
+            channel?.subscribe();
+          }, 2000);
+        }
+      });
 
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
     };
-  }, [orderId]);
+  }, [orderId, refetch]);
 
-  return { order, loading, error };
+  return { order, loading, error, connectionStatus, refetch };
 }
