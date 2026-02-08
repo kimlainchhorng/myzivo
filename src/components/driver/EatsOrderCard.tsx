@@ -3,6 +3,7 @@
  * Driver view of an assigned Eats delivery order with actions
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   MapPin, 
@@ -15,7 +16,8 @@ import {
   XCircle,
   ChevronDown,
   ChevronUp,
-  Store
+  Store,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +49,7 @@ export function EatsOrderCard({
   onUnassign,
   isLoading = false,
 }: EatsOrderCardProps) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(true);
   const [confirmUnassign, setConfirmUnassign] = useState(false);
 
@@ -227,6 +230,13 @@ export function EatsOrderCard({
                     </Button>
                     <Button
                       variant="outline"
+                      className="border-zinc-700"
+                      onClick={() => navigate(`/driver/orders/${order.id}/chat`)}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
                       className="border-red-500/30 text-red-400 hover:bg-red-500/10"
                       onClick={() => setConfirmUnassign(true)}
                       disabled={isLoading}
@@ -235,14 +245,23 @@ export function EatsOrderCard({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                    onClick={() => onDelivered(order.id)}
-                    disabled={isLoading}
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Delivered
-                  </Button>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                      onClick={() => onDelivered(order.id)}
+                      disabled={isLoading}
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Delivered
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-zinc-700"
+                      onClick={() => navigate(`/driver/orders/${order.id}/chat`)}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>

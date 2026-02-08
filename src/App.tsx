@@ -85,6 +85,7 @@ const DriverTripsPage = lazy(() => import("./pages/driver/DriverTripsPage"));
 const DriverAccountPage = lazy(
   () => import("./pages/driver/DriverAccountPage")
 );
+const DriverOrderChatPage = lazy(() => import("./pages/driver/DriverOrderChatPage"));
 
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
@@ -98,6 +99,7 @@ const EatsAddress = lazy(() => import("./pages/EatsAddress"));
 const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
 const EatsAlerts = lazy(() => import("./pages/EatsAlerts"));
 const EatsFavorites = lazy(() => import("./pages/EatsFavorites"));
+const EatsOrderChatPage = lazy(() => import("./pages/eats/EatsOrderChatPage"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -105,6 +107,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const RestaurantDashboard = lazy(() => import("./pages/RestaurantDashboard"));
 const CarRentalDashboard = lazy(() => import("./pages/CarRentalDashboard"));
+const MerchantOrderChatPage = lazy(() => import("./pages/merchant/MerchantOrderChatPage"));
 const FlightDashboard = lazy(() => import("./pages/FlightDashboard"));
 const HotelDashboard = lazy(() => import("./pages/HotelDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -582,9 +585,16 @@ const App = () => (
                 <Route path="/eats/address" element={<EatsAddress />} />
                 <Route path="/eats/orders" element={<EatsOrders />} />
                 <Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
+                <Route path="/eats/orders/:id/chat" element={<ProtectedRoute><EatsOrderChatPage /></ProtectedRoute>} />
                 <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
                 <Route path="/eats/alerts" element={<EatsAlerts />} />
                 <Route path="/eats/favorites" element={<EatsFavorites />} />
+                
+                {/* Driver Chat Route */}
+                <Route path="/driver/orders/:id/chat" element={<ProtectedRoute><DriverOrderChatPage /></ProtectedRoute>} />
+                
+                {/* Merchant Chat Route */}
+                <Route path="/merchant/orders/:id/chat" element={<ProtectedRoute><MerchantOrderChatPage /></ProtectedRoute>} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />
