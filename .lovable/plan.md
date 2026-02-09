@@ -1,167 +1,155 @@
 
 
-# Automatic Rewards System
+# Wallet Enhancement — Payment Integration and Notifications
 
 ## Overview
 
-The database already has a `rewards` table (user_id, reward_type, reward_value, status, expires_at) and a `reward_redemptions` table, but nothing in the frontend reads from them. No auto-award logic exists. This plan adds:
+The wallet infrastructure is already well-built:
+- **`/account/wallet` page** (`WalletPage.tsx`): Shows balance, lifetime earned, transaction history, and "How to Earn" section
+- **`useCustomerWallet` hook**: Fetches wallet, transactions, and has `applyCredit` mutation (calls `apply_wallet_credit` RPC)
+- **`CreditSelector` component**: Toggle to apply wallet credits at checkout (used in `EatsCart.tsx` but NOT in `EatsCheckout.tsx`)
+- **`PaymentTypeSelector` component**: Currently shows Card vs Cash options only
 
-1. A dedicated `/account/rewards` page showing earned coupons, loyalty rewards, and expiration dates
-2. A hook that auto-awards rewards based on milestone triggers (5 orders, tier changes, campaigns)
-3. Checkout integration to auto-apply or let users select available rewards
+What's missing:
+1. The wallet page doesn't distinguish reward-added transactions or show a "Rewards added" section
+2. Checkout (`EatsCheckout.tsx`) has no wallet payment option -- only the older `EatsCart.tsx` uses `CreditSelector`
+3. No wallet + card split payment logic
+4. No notifications when wallet is credited
 
 ## What Changes
 
-### 1. New hook: `useAutoRewards` (new file)
+### 1. Update Wallet Page with Rewards Section
 
-Detects milestones and awards rewards into the `rewards` table:
+Update `WalletPage.tsx` to:
+- Add a "Rewards Added" summary card showing total credits from rewards
+- Add "reward" as a recognized transaction type with a distinct icon (Trophy) and label
+- Add a link to `/account/rewards` in the "How to Earn" section
+- Show pending credits if any exist
 
-```text
-On mount (for logged-in user):
-  1. Count delivered food_orders for this user
-  2. Read current tier from loyalty_points
-  3. Query rewards table for already-awarded milestones (by reward_type prefix)
+### 2. Add Wallet Payment Option to Checkout
 
-Auto-award logic:
-  - 5 orders completed => award "5_orders" reward (e.g., $5 coupon, expires 30 days)
-  - 10 orders => award "10_orders" reward ($10 coupon)
-  - 25 orders => award "25_orders" reward ($15 coupon)
-  - Traveler tier reached => award "tier_traveler" reward ($5 coupon)
-  - Elite tier reached => award "tier_elite" reward ($15 coupon)
+Update `PaymentTypeSelector.tsx` to support a "wallet" payment type:
+- Add a third option: "Wallet" (shown only if balance > 0)
+- When wallet balance covers the full order: single "Wallet" payment
+- When wallet balance is insufficient: show "Wallet + Card" as a combined option that uses wallet balance first, then charges the remainder to card
+- Pass wallet balance as a prop so the component can show "$X.XX available"
 
-Each award:
-  - Checks if reward_type already exists for user (prevents duplicates)
-  - Inserts into rewards table with status='active', expires_at = now + 30 days
-  - Shows a toast notification: "You earned a reward! $5 off your next order"
+### 3. Integrate Wallet Payment into EatsCheckout
 
-Returns: { rewards: Reward[], isLoading, hasUnusedRewards }
-```
+Update `EatsCheckout.tsx` to:
+- Import `useCustomerWallet` and wallet payment logic
+- Add payment type state (`card` | `wallet` | `wallet_card`)
+- Show `PaymentTypeSelector` with wallet option when balance > 0
+- On submit with wallet payment: call `applyCredit` RPC to deduct wallet balance
+- On submit with wallet + card: deduct wallet balance first, then process card for remainder
+- Show wallet deduction as a line item in order summary
 
-### 2. New hook: `useUserRewards` (new file)
+### 4. Wallet Credit Notifications
 
-Simple data-fetching hook for the rewards page:
-
-```text
-Queries rewards table WHERE user_id = auth.uid()
-Orders by created_at DESC
-Returns rewards grouped by status: active, redeemed, expired
-
-Also queries reward_redemptions for redemption history
-```
-
-### 3. New page: `/account/rewards` (new file)
-
-Shows three sections:
-
-- **Active Rewards**: Cards with reward name, value, expiration countdown, and "Use at checkout" CTA
-- **Earned History**: Timeline of all rewards earned with dates and triggers
-- **Expired/Used**: Dimmed cards showing past rewards
-
-Each reward card shows:
-- Reward type icon (gift for coupons, crown for tier rewards, trophy for milestones)
-- Dollar value or description
-- Expiration date with countdown ("Expires in 12 days")
-- Status badge (Active, Used, Expired)
-
-### 4. New component: `RewardSelector` for checkout (new file)
-
-A compact card shown in the checkout order summary (above the promo code input):
-
-```text
-If user has active, non-expired rewards:
-  Show top reward as auto-selected with "Applied: $5 reward" badge
-  Toggle to deselect or pick a different reward from a dropdown
-  Applied reward reduces the order total (same as promo discount)
-
-If no rewards available:
-  Don't render anything
-```
-
-### 5. Update `EatsCheckout.tsx`
-
-- Import `useAutoRewards` (triggers milestone check on checkout load)
-- Import `RewardSelector` component
-- Place it above the PromoCodeInputInline in the order summary
-- When a reward is selected, apply its discount to the total
-- On order submission, update the reward status to 'redeemed' and create a reward_redemptions entry
-
-### 6. Update `App.tsx` routing
-
-- Add route: `/account/rewards` pointing to the new AccountRewardsPage
+Update `useCustomerWallet` hook to:
+- Subscribe to real-time changes on `customer_wallet_transactions` table for the current user
+- When a new credit transaction is detected (positive amount), show a toast notification: "Your wallet was credited $X.XX"
+- Invalidate wallet queries so balance updates immediately
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useAutoRewards.ts` | Create | Milestone detection and auto-award logic |
-| `src/hooks/useUserRewards.ts` | Create | Fetch and manage user rewards |
-| `src/pages/account/AccountRewardsPage.tsx` | Create | /account/rewards page with active/history/expired sections |
-| `src/components/checkout/RewardSelector.tsx` | Create | Checkout widget to auto-apply or select rewards |
-| `src/pages/EatsCheckout.tsx` | Update | Integrate RewardSelector and useAutoRewards |
-| `src/App.tsx` | Update | Add /account/rewards route |
+| `src/pages/account/WalletPage.tsx` | Update | Add rewards section, reward transaction type, link to rewards page |
+| `src/components/eats/PaymentTypeSelector.tsx` | Update | Add wallet and wallet+card payment options |
+| `src/pages/EatsCheckout.tsx` | Update | Integrate wallet payment flow with applyCredit |
+| `src/hooks/useCustomerWallet.ts` | Update | Add real-time subscription for credit notifications |
 
 ## Technical Details
 
-### Milestone thresholds
+### PaymentTypeSelector updates
 
 ```text
-const MILESTONES = [
-  { orderCount: 5,  rewardType: '5_orders',   value: 5,  label: '5 Orders Milestone' },
-  { orderCount: 10, rewardType: '10_orders',  value: 10, label: '10 Orders Milestone' },
-  { orderCount: 25, rewardType: '25_orders',  value: 15, label: '25 Orders Milestone' },
-];
+Current types: "card" | "cash"
+New types: "card" | "cash" | "wallet" | "wallet_card"
 
-const TIER_REWARDS = [
-  { tier: 'traveler', rewardType: 'tier_traveler', value: 5,  label: 'Traveler Tier Achieved' },
-  { tier: 'elite',    rewardType: 'tier_elite',    value: 15, label: 'Elite Tier Achieved' },
-];
+New props:
+  walletBalanceCents?: number  // Shows wallet option when > 0
+  orderTotalCents?: number     // Determines if full wallet or split
+
+Logic:
+  If walletBalanceCents >= orderTotalCents:
+    Show "Pay with Wallet" option ($XX.XX available)
+  If walletBalanceCents > 0 but < orderTotalCents:
+    Show "Wallet + Card" option (Use $XX.XX, card for rest)
+  If walletBalanceCents === 0:
+    Don't show wallet options
 ```
 
-### Reward insertion
+### Checkout wallet payment flow
 
 ```text
-Insert into rewards:
-  user_id: auth.uid()
-  reward_type: milestone key (e.g. '5_orders')
-  reward_value: dollar amount
-  status: 'active'
-  expires_at: now() + 30 days
+On submit:
+  If paymentType === "wallet":
+    Call applyCredit({ amount_cents: totalCents, order_id })
+    Create order with payment_type: "wallet", payment_status: "paid"
+
+  If paymentType === "wallet_card":
+    Call applyCredit({ amount_cents: walletBalanceCents, order_id })
+    Remaining = totalCents - walletBalanceCents
+    Process card payment for remaining amount
+    Create order with payment_type: "wallet_card"
+
+  If paymentType === "card":
+    Existing card flow (unchanged)
+
+  If paymentType === "cash":
+    Existing cash flow (unchanged)
 ```
 
-### Checkout reward application
+### Real-time wallet notifications
 
 ```text
-selectedReward state in EatsCheckoutContent
+In useCustomerWallet, add:
 
-If selectedReward:
-  rewardDiscount = selectedReward.reward_value
-  total = pricing.orderTotal - rewardDiscount (floored at 0)
+useEffect(() => {
+  if (!user?.id) return;
 
-On order submit:
-  Update rewards SET status = 'redeemed' WHERE id = selectedReward.id
-  Insert reward_redemptions: { user_id, reward_id, points_spent: 0, status: 'redeemed', applied_to_order_id }
+  const channel = supabase
+    .channel('wallet-credits')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'customer_wallet_transactions',
+      filter: `user_id=eq.${user.id}`,
+    }, (payload) => {
+      const tx = payload.new;
+      if (tx.amount_cents > 0) {
+        toast.success(`Your wallet was credited $${(tx.amount_cents / 100).toFixed(2)}`, {
+          description: tx.description || 'Credit added to your wallet',
+        });
+      }
+      // Refresh wallet data
+      queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}, [user?.id]);
 ```
 
-### Auto-selection logic
+### Wallet page rewards section
 
-When RewardSelector mounts:
-- Pick the reward with the nearest expiration date (use-it-or-lose-it priority)
-- Auto-select it (user sees "Reward applied: $5 off")
-- User can deselect via toggle or choose a different one
+Add between the balance card and "How to Earn":
+- A summary card showing total reward credits earned (filter transactions by type === "reward")
+- Link to `/account/rewards` page
 
-### Expiration handling
-
-- Rewards expire 30 days after creation
-- The rewards page shows countdown: "Expires in X days"
-- Expired rewards (expires_at < now) are shown dimmed with "Expired" badge
-- Checkout filters out expired rewards from selection
+Add "reward" to the transaction type mapping:
+- Icon: Trophy
+- Label: "Reward Credit"
+- Color: primary (same as the rewards theme)
 
 ### Edge cases
 
-- User not logged in: hooks return empty, no components render
-- No delivered orders: no milestones triggered
-- Reward already awarded: duplicate check by reward_type prevents re-insert
-- Reward used + new milestone: new reward created independently
-- Both reward and promo applied: reward discount applied first, then promo on remaining total
-- Reward expires between page load and submit: server-side check on status/expires_at before applying
+- Wallet balance changes between page load and submit: `applyCredit` RPC validates balance server-side and fails gracefully
+- Max $25 credit per order cap still applies when using wallet
+- If wallet payment fails, fall back to showing error without creating the order
+- Real-time subscription cleanup on unmount to prevent memory leaks
+- Wallet option hidden when balance is 0
 
