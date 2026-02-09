@@ -30720,6 +30720,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_loyalty: {
+        Row: {
+          id: string
+          tier_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          tier_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          tier_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_loyalty_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_personalization_settings: {
         Row: {
           allow_recently_viewed: boolean
