@@ -33,7 +33,10 @@ import { useDemandAdjustedEta } from "@/hooks/useDemandAdjustedEta";
 import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
+import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
+import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
+import { PeakDriverBanner } from "@/components/eats/PeakDriverBanner";
 import { DeliveryFeeBreakdownCard } from "@/components/eats/DeliveryFeeBreakdownCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
@@ -85,8 +88,16 @@ function EatsCheckoutContent() {
   // Demand forecast multiplier for ETA accuracy
   const { demandMultiplier } = useDemandAdjustedEta(restaurant?.region_id);
 
-  // Queue-aware ETA calculation
-  const eta = useQueueAwareEta({ restaurantId: restaurantId || undefined, demandMultiplier });
+  // Delivery factors (incentives, peak scheduling, driver supply)
+  const deliveryFactors = useEatsDeliveryFactors();
+
+  // Queue-aware ETA calculation with incentive/peak multipliers
+  const eta = useQueueAwareEta({ 
+    restaurantId: restaurantId || undefined, 
+    demandMultiplier,
+    scheduleForecastMultiplier: deliveryFactors.scheduleForecastMultiplier,
+    incentiveMultiplier: deliveryFactors.incentiveMultiplier,
+  });
   
   // Cart validation for item availability
   const { validateCart, unavailableItems, isValidating } = useCartValidation();
@@ -602,8 +613,20 @@ function EatsCheckoutContent() {
 
                     <hr />
 
-                    {/* ETA Breakdown */}
-                    <EtaBreakdownCard
+                     {/* Positive delivery banners */}
+                     {deliveryFactors.showIncentiveBanner && (
+                       <IncentiveBoostBanner variant="compact" />
+                     )}
+                     {deliveryFactors.showPeakBanner && !deliveryFactors.showIncentiveBanner && (
+                       <PeakDriverBanner
+                         message={deliveryFactors.peakMessage}
+                         peakStartsIn={deliveryFactors.peakStartsIn}
+                         variant="compact"
+                       />
+                     )}
+
+                     {/* ETA Breakdown */}
+                     <EtaBreakdownCard
                       queueMinutes={eta.breakdown.queueMinutes}
                       prepMinutes={eta.breakdown.prepMinutes}
                       driverMinutes={eta.breakdown.driverMinutes}

@@ -6141,6 +6141,7 @@ export type Database = {
       }
       delivery_batches: {
         Row: {
+          batch_bonus_cents: number | null
           completed_at: string | null
           created_at: string
           driver_id: string
@@ -6158,6 +6159,7 @@ export type Database = {
           total_stops: number | null
         }
         Insert: {
+          batch_bonus_cents?: number | null
           completed_at?: string | null
           created_at?: string
           driver_id: string
@@ -6175,6 +6177,7 @@ export type Database = {
           total_stops?: number | null
         }
         Update: {
+          batch_bonus_cents?: number | null
           completed_at?: string | null
           created_at?: string
           driver_id?: string
@@ -9780,6 +9783,30 @@ export type Database = {
         ]
       }
       eta_logs: {
+        Row: {
+          actual_minutes: number | null
+          id: string
+          order_id: string | null
+          predicted_minutes: number | null
+          recorded_at: string | null
+        }
+        Insert: {
+          actual_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          predicted_minutes?: number | null
+          recorded_at?: string | null
+        }
+        Update: {
+          actual_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          predicted_minutes?: number | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
+      eta_predictions: {
         Row: {
           actual_minutes: number | null
           id: string
