@@ -1,103 +1,189 @@
 
+# Optional Identity Verification
 
-# Tax Transparency
+## Overview
 
-## What's Already Working
+Add an optional identity verification feature at `/account/verification` for high-value users and business accounts. Users can upload a government ID and a selfie for manual admin review. Status flows through: Not Started, Pending, Verified, Rejected.
 
-The checkout (`DeliveryFeeBreakdownCard`) already shows: Subtotal, Delivery Fee, Service Fee, Small Order Fee, Tax, and Total. The in-app receipt (`OrderReceipt.tsx`) also shows all these lines. The downloadable invoice (`receiptUtils.ts`) renders them too.
+This builds a new system separate from the existing P2P renter verification (which requires license details). Customer identity verification is simpler -- just document uploads and status tracking.
 
-**What's missing**: The tax line everywhere just says "Tax — $X.XX" without showing the rate (e.g., 8.25%). The tax rate is calculated in `useEatsDeliveryPricing` from `zone.tax_rate` but never exposed to the UI.
+## What Gets Built
 
-## Changes
+### 1. Database: New table and storage bucket
 
-### 1. Expose `taxRate` from the pricing hook
+Create a `customer_identity_verifications` table:
+- `id` (uuid, PK)
+- `user_id` (uuid, FK to auth.users, unique -- one verification per user)
+- `id_document_url` (text) -- uploaded government ID image
+- `selfie_url` (text) -- uploaded selfie image
+- `status` (text: pending | verified | rejected, default: pending)
+- `rejection_reason` (text, nullable)
+- `reviewed_by` (uuid, nullable)
+- `reviewed_at` (timestamptz, nullable)
+- `created_at` / `updated_at` (timestamptz)
 
-Update `EatsDeliveryPricing` interface and the hook return value to include `taxRate: number` (the decimal rate from the zone, e.g., 0.0825).
+RLS policies:
+- Users can SELECT/INSERT/UPDATE their own row (customer role required)
+- Admins can SELECT/UPDATE all rows
 
-**File**: `src/hooks/useEatsDeliveryPricing.ts`
-- Add `taxRate: number` to the `EatsDeliveryPricing` interface
-- Add `taxRate: zone.tax_rate` to the return object
+Storage bucket: `identity-documents` (private) with RLS allowing authenticated users to upload to their own folder.
 
-### 2. Show tax rate in checkout breakdown
+### 2. Hook: `useCustomerVerification`
 
-Update `DeliveryFeeBreakdownCard` to display the rate next to the tax amount:
-- Change "Tax" label to "Tax (8.25%)" using `(pricing.taxRate * 100).toFixed(2)%`
+New file: `src/hooks/useCustomerVerification.ts`
 
-**File**: `src/components/eats/DeliveryFeeBreakdownCard.tsx`
-- Update the Tax row label to include the percentage
+Provides:
+- `verification` -- current verification record (or null if not started)
+- `uploadDocument(type, file)` -- uploads to storage, updates the verification row
+- `submitVerification()` -- sets status to "pending"
+- `status` -- derived: "not_started" | "pending" | "verified" | "rejected"
 
-### 3. Add `taxRate` to UnifiedOrder and persist it
+### 3. Page: `/account/verification`
 
-Update the `UnifiedOrder` interface with an optional `taxRate` field. The `food_orders` table already has a `tax_rate` column (confirmed in types). Map it in the spending stats query.
+New file: `src/pages/account/VerificationPage.tsx`
 
-**File**: `src/hooks/useSpendingStats.ts`
-- Add `taxRate?: number` to `UnifiedOrder`
-- Add `tax_rate` to the food_orders select query
-- Map `o.tax_rate` to `taxRate` in the UnifiedOrder mapping
+Layout:
+- Header with Shield icon and title "Identity Verification"
+- Status banner showing current state (not started / pending / verified / rejected)
+- Optional badge explanation: "Verified accounts get a trust badge and access to higher-value features"
+- Two upload cards: Government ID and Selfie
+- Submit button (enabled when both documents uploaded)
+- If rejected: show reason and allow resubmission
 
-### 4. Show tax rate in the in-app receipt
+### 4. Route and Navigation
 
-Update `OrderReceipt.tsx` to display the tax rate percentage when available.
-
-**File**: `src/components/eats/OrderReceipt.tsx`
-- Change "Tax" label to include rate if `order.tax_rate` exists (e.g., "Tax (8.25%)")
-
-### 5. Show tax rate in the downloadable invoice
-
-Update `receiptUtils.ts` to render the tax rate percentage in the breakdown.
-
-**File**: `src/lib/receiptUtils.ts`
-- Accept `taxRate` on `UnifiedOrder` (already adding to interface)
-- Change the Tax row label from "Tax" to "Tax (X.XX%)" when `order.taxRate` is defined
-- Update the `OrderReceipt` download button to pass `taxRate` in the UnifiedOrder conversion
-
-### 6. Store tax_rate on order creation
-
-Update the order submission in `EatsCheckout.tsx` to save `pricing.taxRate` alongside `pricing.tax` in the `food_orders` insert, so receipts can show the rate even after the zone config changes.
-
-**File**: `src/pages/EatsCheckout.tsx`
-- Add `tax_rate: pricing.taxRate` to the order creation payload (if the column exists)
+- Add route: `/account/verification` in `App.tsx` (ProtectedRoute)
+- Add menu item in `MobileAccount.tsx` account settings section with a Shield icon
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useEatsDeliveryPricing.ts` | Update | Add `taxRate` to interface and return value |
-| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Update | Show tax rate percentage in label |
-| `src/hooks/useSpendingStats.ts` | Update | Add `taxRate` to UnifiedOrder, expand query |
-| `src/components/eats/OrderReceipt.tsx` | Update | Show tax rate in receipt tax line |
-| `src/lib/receiptUtils.ts` | Update | Show tax rate in downloadable invoice |
-| `src/pages/EatsCheckout.tsx` | Update | Store tax_rate on order creation |
+| `supabase/migrations/[timestamp]_customer_identity_verification.sql` | Create | Table, RLS, storage bucket |
+| `src/hooks/useCustomerVerification.ts` | Create | Data fetching, upload, submission hook |
+| `src/pages/account/VerificationPage.tsx` | Create | Full verification page UI |
+| `src/App.tsx` | Update | Add route for `/account/verification` |
+| `src/pages/mobile/MobileAccount.tsx` | Update | Add verification menu item |
 
 ## Technical Details
 
-### Tax rate display format
-
-The rate is stored as a decimal (e.g., 0.0825). Display as percentage: `(rate * 100).toFixed(2)%` producing "8.25%".
-
-### Checkout tax line (before and after)
+### Database migration
 
 ```text
-Before:  Tax                    $3.30
-After:   Tax (8.25%)            $3.30
+-- Table
+CREATE TABLE public.customer_identity_verifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  id_document_url text,
+  selfie_url text,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
+  rejection_reason text,
+  reviewed_by uuid,
+  reviewed_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.customer_identity_verifications ENABLE ROW LEVEL SECURITY;
+
+-- Customer can read/write own record
+CREATE POLICY "Users can view own verification"
+  ON public.customer_identity_verifications FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
+
+CREATE POLICY "Users can insert own verification"
+  ON public.customer_identity_verifications FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
+
+CREATE POLICY "Users can update own verification"
+  ON public.customer_identity_verifications FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
+
+-- Admin access
+CREATE POLICY "Admins can view all verifications"
+  ON public.customer_identity_verifications FOR SELECT
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can update verifications"
+  ON public.customer_identity_verifications FOR UPDATE
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Storage bucket
+INSERT INTO storage.buckets (id, name, public) VALUES ('identity-documents', 'identity-documents', false);
+
+CREATE POLICY "Users upload own identity docs"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'identity-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "Users view own identity docs"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'identity-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
 ```
 
-### Receipt tax line (before and after)
+### Hook structure
 
 ```text
-Before:  Tax                    $3.30
-After:   Tax (8.25%)            $3.30
+useCustomerVerification() returns:
+  - verification: row data or null
+  - status: "not_started" | "pending" | "verified" | "rejected"
+  - isLoading: boolean
+  - uploadDocument(type: "id" | "selfie", file: File): uploads to storage, upserts row
+  - isUploading: boolean
 ```
 
-### Downloadable invoice (before and after)
+Upload flow:
+1. Upload file to `identity-documents/{user_id}/{type}_{timestamp}.{ext}`
+2. Get signed URL (private bucket)
+3. Upsert `customer_identity_verifications` row with the URL
+
+### Page UI structure
 
 ```text
-Before:  Tax          $3.30
-After:   Tax (8.25%)  $3.30
+/account/verification
+
+[Header: Shield icon + "Identity Verification"]
+
+[Status Banner]
+  Not started: "Optional -- verify your identity for enhanced trust"
+  Pending: "Your documents are being reviewed (1-2 business days)"
+  Verified: Green checkmark + "Your identity is verified"
+  Rejected: Red banner with rejection reason + "Resubmit" option
+
+[Info Card]
+  "Why verify?"
+  - Trust badge on your profile
+  - Access to higher-value bookings
+  - Enhanced account security
+
+[Upload: Government ID]
+  Drop zone with preview, accepts images
+
+[Upload: Selfie]
+  Drop zone with preview, accepts images
+
+[Submit Button]
+  Enabled only when both uploads present
+  Disabled if status is "pending" or "verified"
+```
+
+### Navigation entry in MobileAccount
+
+Add to `accountItems` array after "ZIVO Rewards":
+```text
+{ icon: Shield, label: "Identity Verification", path: "/account/verification" }
 ```
 
 ### Edge cases
 
-- Zone has 0% tax rate: show "Tax (0.00%)" with $0.00 (or hide the line entirely -- current behavior hides when tax is 0)
-- Tax rate not available on older orders (taxRate is undefined): fall back to just "Tax" without percentage
-- Rides and travel orders: no change -- they don't have a tax rate field, so receipts continue showing just the total
+- User uploads new documents while status is "rejected": reset status to "pending" on resubmit
+- User navigates to page when already verified: show verified state, no upload zones
+- File validation: images only, max 10MB
+- Private bucket: use `createSignedUrl` for display (60-minute expiry)
+- Only users with customer role can access (enforced by RLS)
