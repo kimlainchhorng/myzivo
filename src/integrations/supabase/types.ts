@@ -12742,6 +12742,78 @@ export type Database = {
         }
         Relationships: []
       }
+      item_availability_log: {
+        Row: {
+          category: string
+          created_at: string
+          event_type: string
+          id: string
+          item_name: string
+          menu_item_id: string
+          new_stock_qty: number | null
+          previous_stock_qty: number | null
+          restaurant_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          event_type: string
+          id?: string
+          item_name: string
+          menu_item_id: string
+          new_stock_qty?: number | null
+          previous_stock_qty?: number | null
+          restaurant_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          item_name?: string
+          menu_item_id?: string
+          new_stock_qty?: number | null
+          previous_stock_qty?: number | null
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_availability_log_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_availability_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_availability_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_availability_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_availability_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_option_groups: {
         Row: {
           id: string
