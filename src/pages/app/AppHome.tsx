@@ -2,7 +2,7 @@
  * App Home Screen - Super App Hub
  * Three zones: Services Grid, Personalized Section, Quick Actions
  */
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
@@ -94,6 +95,7 @@ const QuickActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onNav
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleNavigate = useCallback((screen: string) => {
     window.scrollTo(0, 0);
@@ -255,7 +257,7 @@ const AppHome = () => {
         <p className="text-zinc-400 mb-4 text-sm">One app for every journey.</p>
 
         <button 
-          onClick={() => navigate("/search")}
+          onClick={() => setIsSearchOpen(true)}
           className="relative group w-full touch-manipulation"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-teal-400 rounded-2xl blur opacity-20 group-active:opacity-40 transition-opacity" />
@@ -376,6 +378,9 @@ const AppHome = () => {
 
       {/* Bottom Navigation */}
       <ZivoMobileNav />
+
+      {/* Universal Search Overlay */}
+      <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 };

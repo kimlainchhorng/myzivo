@@ -11863,6 +11863,7 @@ export type Database = {
           merchant_coupon_id: string | null
           merchant_earnings_cents: number | null
           needs_driver: boolean | null
+          order_source: string | null
           paid_at: string | null
           participant_count: number | null
           payment_status: string | null
@@ -12031,6 +12032,7 @@ export type Database = {
           merchant_coupon_id?: string | null
           merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
+          order_source?: string | null
           paid_at?: string | null
           participant_count?: number | null
           payment_status?: string | null
@@ -12199,6 +12201,7 @@ export type Database = {
           merchant_coupon_id?: string | null
           merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
+          order_source?: string | null
           paid_at?: string | null
           participant_count?: number | null
           payment_status?: string | null
@@ -25671,6 +25674,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      search_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          query: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          query?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          query?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       search_sessions: {
         Row: {

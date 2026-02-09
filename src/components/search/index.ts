@@ -17,3 +17,5 @@ export { useAirportSearch, useCitySearch } from './hooks/useLocationSearch';
 
  // 2026 Spatial UI Components
  export { default as GlassSearchWidget } from './GlassSearchWidget';
+
+ export { default as UniversalSearchOverlay } from './UniversalSearchOverlay';
