@@ -75,7 +75,8 @@ function buildBreakdownRows(order: UnifiedOrder): string {
   }
   addRow("Delivery Fee", order.deliveryFee);
   addRow("Service Fee", order.serviceFee);
-  addRow("Tax", order.tax);
+  const taxLabel = order.taxRate != null ? `Tax (${(order.taxRate * 100).toFixed(2)}%)` : "Tax";
+  addRow(taxLabel, order.tax);
   addRow("Tip", order.tip);
 
   if (order.discount && order.discount > 0) {

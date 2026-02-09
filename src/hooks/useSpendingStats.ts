@@ -17,6 +17,7 @@ export interface UnifiedOrder {
   tip?: number;
   discount?: number;
   promoCode?: string;
+  taxRate?: number;
 }
 
 export interface SpendingStats {
@@ -39,7 +40,7 @@ export function useSpendingStats(): SpendingStats {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("food_orders")
-        .select("id, total_amount, subtotal, delivery_fee, service_fee, tax, tip_amount, discount_amount, promo_code, status, created_at, restaurant:restaurants(name)")
+        .select("id, total_amount, subtotal, delivery_fee, service_fee, tax, tip_amount, discount_amount, promo_code, status, created_at, zone_code, restaurant:restaurants(name)")
         .eq("customer_id", user!.id)
         .eq("status", "delivered")
         .order("created_at", { ascending: false })
@@ -100,6 +101,7 @@ export function useSpendingStats(): SpendingStats {
       tip: o.tip_amount ?? undefined,
       discount: o.discount_amount ?? undefined,
       promoCode: o.promo_code ?? undefined,
+      taxRate: o.subtotal && o.tax ? o.tax / o.subtotal : undefined,
     })),
     ...rides.map((r: any) => ({
       id: r.id,

@@ -86,7 +86,7 @@ export function DeliveryFeeBreakdownCard({ pricing, className }: DeliveryFeeBrea
 
       {/* Tax */}
       <div className="flex justify-between">
-        <span className="text-muted-foreground">Tax</span>
+        <span className="text-muted-foreground">Tax ({(pricing.taxRate * 100).toFixed(2)}%)</span>
         <span>{formatCurrency(pricing.tax)}</span>
       </div>
 

@@ -31532,6 +31532,42 @@ export type Database = {
           },
         ]
       }
+      verifications: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          document_type: string | null
+          document_url: string | null
+          id: string
+          reviewed_at: string | null
+          role: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          id?: string
+          reviewed_at?: string | null
+          role?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          id?: string
+          reviewed_at?: string | null
+          role?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       voice_command_logs: {
         Row: {
           command_type: string
