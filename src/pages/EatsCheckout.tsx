@@ -5,9 +5,10 @@
  * Supports business account billing
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePromotionValidation } from "@/hooks/usePromotionValidation";
+import { useWinBackOffer } from "@/hooks/useWinBackOffer";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -128,6 +129,10 @@ function EatsCheckoutContent() {
   const promoValidation = usePromotionValidation({ serviceType: 'eats', restaurantId: restaurantId || undefined });
   const { discountAmount, finalTotal: promoFinalTotal, isFreeDel } = promoValidation.calculateFinalTotal(subtotal, deliveryFee);
   const total = promoValidation.appliedPromo?.valid ? promoFinalTotal : pricing.orderTotal;
+
+  // Win-back offer auto-apply
+  const winBackOffer = useWinBackOffer();
+  const autoAppliedRef = useRef(false);
   
   // Fetch restaurant to check availability
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
@@ -190,6 +195,24 @@ function EatsCheckoutContent() {
       validateCart(items).then(() => setHasValidated(true));
     }
   }, [items, hasValidated, validateCart]);
+
+  // Auto-apply win-back promo code
+  useEffect(() => {
+    if (
+      !winBackOffer.isLoading &&
+      winBackOffer.promoCode &&
+      !promoValidation.appliedPromo &&
+      !autoAppliedRef.current &&
+      subtotal > 0
+    ) {
+      autoAppliedRef.current = true;
+      promoValidation.validateCode(winBackOffer.promoCode, subtotal).then((result: any) => {
+        if (result?.valid) {
+          toast.success("Win-back offer applied automatically!");
+        }
+      });
+    }
+  }, [winBackOffer.isLoading, winBackOffer.promoCode, subtotal]);
 
   // Check if cart has unavailable items
   const hasUnavailableItems = unavailableItems.length > 0;

@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
+import { WinBackBanner } from "@/components/home/WinBackBanner";
 
 // Desktop components
 import NavBar from "@/components/home/NavBar";
@@ -25,6 +26,8 @@ const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
 // Desktop version - Clean, premium layout focused on Flights
 const DesktopHomePage = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <OGImageMeta pageType="homepage" />
@@ -32,6 +35,9 @@ const DesktopHomePage = () => {
       <NavBar />
 
       <main className="pt-16">
+        {/* Win-Back Banner for returning users */}
+        {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
+
         {/* 1. Hero Section with Trust Bar built-in */}
         <HeroSection />
 
