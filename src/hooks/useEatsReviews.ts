@@ -118,6 +118,30 @@ export function useRestaurantRating(restaurantId: string | undefined) {
   });
 }
 
+// Get all reviews for the current user, keyed by order_id
+export function useMyOrderReviews() {
+  return useQuery({
+    queryKey: ["my-eats-reviews"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) return new Map<string, EatsReview>();
+
+      const { data, error } = await supabase
+        .from("eats_reviews")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      const map = new Map<string, EatsReview>();
+      (data || []).forEach((r) => map.set(r.order_id, r as EatsReview));
+      return map;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // Get all reviews for a restaurant
 export function useRestaurantReviews(restaurantId: string | undefined) {
   return useQuery({

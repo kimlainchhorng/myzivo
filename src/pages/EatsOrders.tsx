@@ -3,12 +3,13 @@
  * Order history with status badges and scheduled order indicators
  */
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2, CalendarClock, RotateCcw } from "lucide-react";
+import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2, CalendarClock, RotateCcw, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyEatsOrders } from "@/hooks/useEatsOrders";
 import { useReorder } from "@/hooks/useReorder";
+import { useMyOrderReviews } from "@/hooks/useEatsReviews";
 import SEOHead from "@/components/SEOHead";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ function EatsOrdersContent() {
   const navigate = useNavigate();
   const { data: orders, isLoading, error } = useMyEatsOrders();
   const { reorder, isReordering } = useReorder();
+  const { data: reviewsMap } = useMyOrderReviews();
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -127,6 +129,13 @@ function EatsOrdersContent() {
                             <Badge className={cn("text-xs font-semibold border-0", statusStyle.bg, statusStyle.text)}>
                               {statusStyle.label}
                             </Badge>
+                            {/* Inline rating for delivered orders */}
+                            {order.status === "delivered" && reviewsMap?.get(order.id) && (
+                              <span className="flex items-center gap-1 text-xs text-orange-400 font-medium">
+                                <Star className="w-3 h-3 fill-orange-400 text-orange-400" />
+                                {reviewsMap.get(order.id)!.rating.toFixed(1)}
+                              </span>
+                            )}
                             {(order as any).is_scheduled && (order as any).deliver_by && (
                               <Badge className="bg-violet-500/20 text-violet-400 text-xs font-semibold border-0 flex items-center gap-1">
                                 <CalendarClock className="w-3 h-3" />
