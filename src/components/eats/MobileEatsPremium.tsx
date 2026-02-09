@@ -23,6 +23,8 @@ import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { Skeleton } from "@/components/ui/skeleton";
 import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
 import CitySelectionModal from "@/components/city/CitySelectionModal";
+import { RecommendedForYouSection } from "./RecommendedForYouSection";
+import { TimingSuggestionBadge, getTimingBadgeForCuisine } from "./TimingSuggestionBadge";
 
 const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
 
@@ -110,6 +112,9 @@ export default function MobileEatsPremium() {
           <EatsSurgeBadge level={surgeLevel} multiplier={surgeMultiplier} variant="banner" />
         </div>
       )}
+
+      {/* SMART RECOMMENDATIONS */}
+      <RecommendedForYouSection />
 
       {/* 2. CATEGORY PILLS */}
       <div className="pl-6 mb-6 overflow-x-auto hide-scrollbar">
@@ -258,9 +263,15 @@ export default function MobileEatsPremium() {
                 })()}
               </div>
 
-              {/* Availability Badge */}
-              <div className="absolute top-6 left-6">
+              {/* Availability Badge & Timing Badge */}
+              <div className="absolute top-6 left-6 flex items-center gap-2">
                 <RestaurantAvailabilityBadge restaurant={restaurant} size="sm" />
+                {(() => {
+                  const timingPeriod = getTimingBadgeForCuisine(restaurant.cuisine_type);
+                  return timingPeriod ? (
+                    <TimingSuggestionBadge period={timingPeriod} variant="compact" />
+                  ) : null;
+                })()}
               </div>
 
               {/* Content Overlay */}
