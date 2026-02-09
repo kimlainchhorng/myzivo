@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import flightsHeroImg from "@/assets/flights-hero.png";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
+import { WinBackBanner } from "@/components/home/WinBackBanner";
 
 // Premium Image Assets
 const assets = {
@@ -187,6 +188,9 @@ const AppHome = () => {
 
       {/* 3. HERO SEARCH SECTION */}
       <div className="pt-36 px-4 pb-4">
+        {/* Win-Back Banner */}
+        {user && <WinBackBanner className="mb-4" />}
+
         <h1 className="text-2xl font-thin tracking-tight mb-0.5">
           Explore the <span className="font-black italic">World</span>
         </h1>
