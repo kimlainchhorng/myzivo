@@ -2,12 +2,14 @@
  * useSmartEta Hook
  * Centralized ETA range calculation with traffic/demand factors
  * Recalculates on driver assignment, pickup, and significant location changes
+ * Now includes learned prep time integration
  */
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type TrafficLevel = "light" | "moderate" | "heavy";
 export type RecalcReason = "initial" | "driver_assigned" | "pickup_complete" | "location_change" | "interval";
+export type OrderPhase = "preparing" | "ready" | "out_for_delivery";
 
 export interface SmartEtaResult {
   // Range-based ETA
@@ -28,6 +30,11 @@ export interface SmartEtaResult {
   demandFactor: number;
   isRushHour: boolean;
   trafficLevel: TrafficLevel;
+  
+  // Prep time breakdown
+  prepComponent: number | null;
+  travelComponent: number | null;
+  isPrepLearned: boolean;
 }
 
 interface UseSmartEtaOptions {
@@ -42,6 +49,10 @@ interface UseSmartEtaOptions {
   baseEtaMinutes?: number | null;
   demandLevel?: SurgeLevel;
   supplyMultiplier?: number;
+  // Learned prep time integration
+  learnedPrepMinutes?: number | null;
+  isPrepLearned?: boolean;
+  orderPhase?: OrderPhase;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -105,6 +116,9 @@ export function useSmartEta({
   deliveryLng,
   baseEtaMinutes,
   supplyMultiplier = 1.0,
+  learnedPrepMinutes,
+  isPrepLearned = false,
+  orderPhase,
 }: UseSmartEtaOptions): SmartEtaResult {
   const [lastRecalcAt, setLastRecalcAt] = useState(new Date());
   const [lastRecalcReason, setLastRecalcReason] = useState<RecalcReason>("initial");
@@ -164,8 +178,8 @@ export function useSmartEta({
     const demandFactor = getDemandFactor(supplyMultiplier);
     const isLive = driverLat != null && driverLng != null;
     
-    // Calculate base ETA from driver location
-    let etaSingleMinutes: number | null = null;
+    // Calculate travel ETA from driver location
+    let travelEtaMinutes: number | null = null;
     
     if (isLive) {
       // Determine target based on order status
@@ -174,10 +188,34 @@ export function useSmartEta({
       
       if (targetLat != null && targetLng != null) {
         const distance = calculateDistanceMiles(driverLat!, driverLng!, targetLat, targetLng);
-        etaSingleMinutes = Math.max(1, Math.ceil(distance / AVG_SPEED_MILES_PER_MIN));
+        travelEtaMinutes = Math.max(1, Math.ceil(distance / AVG_SPEED_MILES_PER_MIN));
       }
     } else if (baseEtaMinutes != null) {
-      etaSingleMinutes = baseEtaMinutes;
+      travelEtaMinutes = baseEtaMinutes;
+    }
+    
+    // Phase-aware ETA calculation with prep time
+    let prepComponent: number | null = null;
+    let travelComponent: number | null = null;
+    let totalEtaMinutes: number | null = null;
+    
+    const phase = orderPhase || "preparing";
+    
+    if (phase === "preparing") {
+      // Add prep time + travel time
+      const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor;
+      const adjustedTravel = (travelEtaMinutes || 10) * traffic.factor;
+      prepComponent = Math.ceil(adjustedPrep);
+      travelComponent = Math.ceil(adjustedTravel);
+      totalEtaMinutes = Math.ceil(adjustedPrep + adjustedTravel);
+    } else if (phase === "ready" || phase === "out_for_delivery") {
+      // Travel only
+      prepComponent = 0;
+      travelComponent = travelEtaMinutes ? Math.ceil(travelEtaMinutes * traffic.factor) : null;
+      totalEtaMinutes = travelComponent;
+    } else {
+      // Default
+      totalEtaMinutes = learnedPrepMinutes || 25;
     }
     
     // Calculate range
@@ -185,14 +223,14 @@ export function useSmartEta({
     let etaMaxRange: number | null = null;
     let etaDisplayText = "";
     
-    if (etaSingleMinutes != null) {
+    if (totalEtaMinutes != null) {
       const combinedFactor = Math.min(traffic.factor * demandFactor, 2.0);
       
       // Min = 85% of base (optimistic)
-      etaMinRange = Math.max(1, Math.floor(etaSingleMinutes * 0.85));
+      etaMinRange = Math.max(1, Math.floor(totalEtaMinutes * 0.85));
       
       // Max = base × combinedFactor × 1.15 (pessimistic)
-      etaMaxRange = Math.max(etaMinRange + 2, Math.ceil(etaSingleMinutes * combinedFactor * 1.15));
+      etaMaxRange = Math.max(etaMinRange + 2, Math.ceil(totalEtaMinutes * combinedFactor * 1.15));
       
       // Cap range spread to be reasonable
       if (etaMaxRange - etaMinRange > 20) {
@@ -206,7 +244,7 @@ export function useSmartEta({
       etaMinRange,
       etaMaxRange,
       etaDisplayText,
-      etaSingleMinutes,
+      etaSingleMinutes: totalEtaMinutes,
       lastRecalcAt,
       lastRecalcReason,
       isLive,
@@ -214,9 +252,13 @@ export function useSmartEta({
       demandFactor,
       isRushHour: traffic.isRushHour,
       trafficLevel: traffic.level,
+      prepComponent,
+      travelComponent,
+      isPrepLearned,
     };
   }, [
     orderStatus,
+    orderPhase,
     driverLat,
     driverLng,
     pickupLat,
@@ -225,6 +267,8 @@ export function useSmartEta({
     deliveryLng,
     baseEtaMinutes,
     supplyMultiplier,
+    learnedPrepMinutes,
+    isPrepLearned,
     lastRecalcAt,
     lastRecalcReason,
   ]);

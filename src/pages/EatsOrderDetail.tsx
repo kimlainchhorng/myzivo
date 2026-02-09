@@ -16,7 +16,8 @@ import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { useDriverProximity } from "@/hooks/useDriverProximity";
-import { useSmartEta } from "@/hooks/useSmartEta";
+import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
+import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -105,7 +106,18 @@ export default function EatsOrderDetail() {
     orderStatus: order?.status || "",
   });
 
-  // Smart ETA with range calculation
+  // Fetch learned prep time for this restaurant
+  const learnedPrep = useLearnedPrepTime(order?.restaurant_id);
+
+  // Determine order phase for ETA calculation
+  const orderPhase: OrderPhase = useMemo(() => {
+    if (order?.status === "out_for_delivery") return "out_for_delivery";
+    if (order?.status === "ready_for_pickup") return "ready";
+    if (["confirmed", "preparing"].includes(order?.status || "")) return "preparing";
+    return "preparing";
+  }, [order?.status]);
+
+  // Smart ETA with range calculation and learned prep time
   const smartEta = useSmartEta({
     orderStatus: order?.status || "",
     driverAssigned: !!order?.driver_id,
@@ -116,6 +128,10 @@ export default function EatsOrderDetail() {
     deliveryLat: order?.delivery_lat,
     deliveryLng: order?.delivery_lng,
     supplyMultiplier: deliveryFactors.supplyMultiplier,
+    // Learned prep time integration
+    learnedPrepMinutes: learnedPrep.avgPrepMinutes,
+    isPrepLearned: learnedPrep.isLearned,
+    orderPhase,
   });
   
   const etaLabel: "to pickup" | "to you" | undefined = order?.status === "out_for_delivery"
@@ -273,7 +289,8 @@ export default function EatsOrderDetail() {
           etaMaxRange={order.driver_id ? smartEta.etaMaxRange : null}
           etaLabel={etaLabel}
           isLocationBased={smartEta.isLive}
-          showEtaExplanation={smartEta.isLive}
+          showEtaExplanation={true}
+          isPrepLearned={learnedPrep.isLearned}
         />
 
         {/* Scheduled Delivery Banner */}

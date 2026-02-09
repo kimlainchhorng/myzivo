@@ -57,6 +57,7 @@ export interface LiveEatsOrder {
     address: string | null;
     lat?: number | null;
     lng?: number | null;
+    avg_prep_time?: number | null;
   };
 }
 
@@ -75,7 +76,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
     try {
       const { data, error: fetchError } = await supabase
         .from(EATS_TABLES.orders)
-        .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng)")
+        .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng, avg_prep_time)")
         .eq("id", orderId)
         .single();
 
@@ -104,7 +105,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
       try {
         const { data, error: fetchError } = await supabase
           .from(EATS_TABLES.orders)
-          .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng)")
+          .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng, avg_prep_time)")
           .eq("id", orderId)
           .single();
 

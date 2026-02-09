@@ -432,6 +432,33 @@ export type Database = {
           },
         ]
       }
+      admin_invitations: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          invited_by: string | null
+          role: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       admin_login_attempts: {
         Row: {
           created_at: string
@@ -10797,9 +10824,13 @@ export type Database = {
           eta_pickup: string | null
           happy_hour_id: string | null
           id: string
+          inactivity_warning_at: string | null
           is_business_order: boolean | null
           is_scheduled: boolean | null
           items: Json
+          last_driver_lat: number | null
+          last_driver_lng: number | null
+          last_progress_at: string | null
           membership_applied: boolean | null
           membership_discount_cents: number | null
           merchant_coupon_id: string | null
@@ -10947,9 +10978,13 @@ export type Database = {
           eta_pickup?: string | null
           happy_hour_id?: string | null
           id?: string
+          inactivity_warning_at?: string | null
           is_business_order?: boolean | null
           is_scheduled?: boolean | null
           items: Json
+          last_driver_lat?: number | null
+          last_driver_lng?: number | null
+          last_progress_at?: string | null
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
@@ -11097,9 +11132,13 @@ export type Database = {
           eta_pickup?: string | null
           happy_hour_id?: string | null
           id?: string
+          inactivity_warning_at?: string | null
           is_business_order?: boolean | null
           is_scheduled?: boolean | null
           items?: Json
+          last_driver_lat?: number | null
+          last_driver_lng?: number | null
+          last_progress_at?: string | null
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
           merchant_coupon_id?: string | null
@@ -24371,6 +24410,8 @@ export type Database = {
           image_url: string | null
           is_archived: boolean | null
           is_available: boolean | null
+          is_popular: boolean | null
+          is_recommended: boolean | null
           is_visible: boolean | null
           name: string
           raw: Json
@@ -24386,6 +24427,8 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean | null
           is_available?: boolean | null
+          is_popular?: boolean | null
+          is_recommended?: boolean | null
           is_visible?: boolean | null
           name: string
           raw: Json
@@ -24401,6 +24444,8 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean | null
           is_available?: boolean | null
+          is_popular?: boolean | null
+          is_recommended?: boolean | null
           is_visible?: boolean | null
           name?: string
           raw?: Json
@@ -27355,6 +27400,10 @@ export type Database = {
           fare_amount: number | null
           feedback: string | null
           id: string
+          inactivity_warning_at: string | null
+          last_driver_lat: number | null
+          last_driver_lng: number | null
+          last_progress_at: string | null
           passenger_name: string | null
           payment_status: string | null
           payout_at: string | null
@@ -27415,6 +27464,10 @@ export type Database = {
           fare_amount?: number | null
           feedback?: string | null
           id?: string
+          inactivity_warning_at?: string | null
+          last_driver_lat?: number | null
+          last_driver_lng?: number | null
+          last_progress_at?: string | null
           passenger_name?: string | null
           payment_status?: string | null
           payout_at?: string | null
@@ -27475,6 +27528,10 @@ export type Database = {
           fare_amount?: number | null
           feedback?: string | null
           id?: string
+          inactivity_warning_at?: string | null
+          last_driver_lat?: number | null
+          last_driver_lng?: number | null
+          last_progress_at?: string | null
           passenger_name?: string | null
           payment_status?: string | null
           payout_at?: string | null
@@ -32956,6 +33013,14 @@ export type Database = {
         }[]
       }
       get_referral_settings: { Args: never; Returns: Json }
+      get_restaurant_avg_prep_time: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          avg_prep_minutes: number
+          sample_size: number
+          source: string
+        }[]
+      }
       get_restaurant_reviews: {
         Args: {
           p_limit?: number

@@ -18,6 +18,8 @@ interface SmartEtaDisplayProps {
   isLowSupply?: boolean;
   isIncentivePeriod?: boolean;
   batchPosition?: { current: number; total: number } | null;
+  isPrepLearned?: boolean;
+  showPrepMessage?: boolean;
   className?: string;
 }
 
@@ -32,6 +34,8 @@ export function SmartEtaDisplay({
   isLowSupply = false,
   isIncentivePeriod = false,
   batchPosition,
+  isPrepLearned = false,
+  showPrepMessage = false,
   className,
 }: SmartEtaDisplayProps) {
   const isNearby = etaMaxRange <= 5;
@@ -173,7 +177,9 @@ export function SmartEtaDisplay({
       {/* Explanation message */}
       {showExplanation && !showArrivingSoon && (
         <p className="text-xs text-zinc-500 mt-3">
-          ETA updated based on traffic and demand.
+          {showPrepMessage && isPrepLearned
+            ? "ETA based on real preparation times."
+            : "ETA updated based on traffic and demand."}
         </p>
       )}
 
