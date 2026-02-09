@@ -3,7 +3,7 @@
  * Shows granular delivery fee breakdown with demand adjustment messaging.
  */
 
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/pricing";
 import { SurgeExplainerTooltip } from "@/components/eats/SurgeExplainerTooltip";
@@ -23,25 +23,48 @@ export function DeliveryFeeBreakdownCard({ pricing, className }: DeliveryFeeBrea
         <span>{formatCurrency(pricing.subtotal)}</span>
       </div>
 
-      {/* Delivery fee lines */}
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Base delivery fee</span>
-        <span>{formatCurrency(pricing.baseFee)}</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Distance fee (~{pricing.estimatedMiles} mi)</span>
-        <span>{formatCurrency(pricing.distanceFee)}</span>
-      </div>
-
-      {/* Demand adjustment - only when surge active */}
-      {pricing.surgeActive && (
-        <div className="flex justify-between items-center text-orange-400">
+      {/* Loyalty discount */}
+      {pricing.loyaltyDiscount > 0 && (
+        <div className="flex justify-between items-center text-emerald-500">
           <span className="flex items-center gap-1">
-            Demand adjustment
-            <SurgeExplainerTooltip />
+            <Sparkles className="w-3 h-3" />
+            Loyalty discount ({pricing.loyaltyTier ? `${pricing.loyaltyTier.charAt(0).toUpperCase() + pricing.loyaltyTier.slice(1)}` : ""})
           </span>
-          <span>+{formatCurrency(pricing.demandAdjustment)}</span>
+          <span>-{formatCurrency(pricing.loyaltyDiscount)}</span>
         </div>
+      )}
+
+      {/* Delivery fee lines */}
+      {pricing.loyaltyFreeDelivery ? (
+        <div className="flex justify-between items-center text-emerald-500">
+          <span className="flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            Delivery fee
+          </span>
+          <span className="font-medium">FREE</span>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Base delivery fee</span>
+            <span>{formatCurrency(pricing.baseFee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Distance fee (~{pricing.estimatedMiles} mi)</span>
+            <span>{formatCurrency(pricing.distanceFee)}</span>
+          </div>
+
+          {/* Demand adjustment - only when surge active */}
+          {pricing.surgeActive && (
+            <div className="flex justify-between items-center text-orange-400">
+              <span className="flex items-center gap-1">
+                Demand adjustment
+                <SurgeExplainerTooltip />
+              </span>
+              <span>+{formatCurrency(pricing.demandAdjustment)}</span>
+            </div>
+          )}
+        </>
       )}
 
       {/* Service fee */}
@@ -85,6 +108,14 @@ export function DeliveryFeeBreakdownCard({ pricing, className }: DeliveryFeeBrea
         <span>Total</span>
         <span className="text-eats">{formatCurrency(pricing.orderTotal)}</span>
       </div>
+
+      {/* Bonus points indicator */}
+      {pricing.loyaltyBonusMultiplier > 1 && (
+        <div className="flex items-center gap-1.5 text-xs text-primary pt-1">
+          <Sparkles className="w-3 h-3" />
+          Earning {pricing.loyaltyBonusMultiplier}x points on this order
+        </div>
+      )}
     </div>
   );
 }

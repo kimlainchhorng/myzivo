@@ -37,6 +37,13 @@ export const POINTS_COMPLIANCE = {
 
 export type ZivoTier = 'explorer' | 'traveler' | 'elite';
 
+export interface TierPerks {
+  freeDelivery: boolean;
+  discountPercent: number;
+  bonusPointsMultiplier: number;
+  prioritySupport: boolean;
+}
+
 export interface TierConfig {
   name: string;
   displayName: string;
@@ -49,6 +56,7 @@ export interface TierConfig {
   borderColor: string;
   icon: string;
   benefits: string[];
+  perks: TierPerks;
 }
 
 export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
@@ -67,6 +75,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
       'Access to deals hub',
       'Basic price alerts',
     ],
+    perks: { freeDelivery: false, discountPercent: 0, bonusPointsMultiplier: 1, prioritySupport: false },
   },
   traveler: {
     name: 'traveler',
@@ -84,6 +93,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
       'Priority price alerts',
       'Early access to seasonal deals',
     ],
+    perks: { freeDelivery: false, discountPercent: 5, bonusPointsMultiplier: 1.5, prioritySupport: true },
   },
   elite: {
     name: 'elite',
@@ -102,6 +112,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
       'Priority customer support',
       'Birthday bonus points',
     ],
+    perks: { freeDelivery: true, discountPercent: 10, bonusPointsMultiplier: 2, prioritySupport: true },
   },
 };
 
@@ -282,6 +293,11 @@ export function getTierFromPoints(lifetimePoints: number): ZivoTier {
 /** Get tier config */
 export function getTierConfig(tier: ZivoTier): TierConfig {
   return ZIVO_TIERS[tier];
+}
+
+/** Get tier perks for checkout logic */
+export function getTierPerks(tier: ZivoTier): TierPerks {
+  return ZIVO_TIERS[tier].perks;
 }
 
 /** Calculate points needed for next tier */
