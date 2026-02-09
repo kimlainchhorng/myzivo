@@ -31,7 +31,9 @@ import { useCartValidation } from "@/hooks/useCartValidation";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
 import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
+import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
+import { DeliveryFeeBreakdownCard } from "@/components/eats/DeliveryFeeBreakdownCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
 import { UnavailableItemBanner } from "@/components/eats/UnavailableItemBanner";
@@ -65,8 +67,9 @@ function EatsCheckoutContent() {
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
 
   const subtotal = getSubtotal();
-  const deliveryFee = 3.99;
-  const total = subtotal + deliveryFee;
+  const pricing = useEatsDeliveryPricing(subtotal);
+  const deliveryFee = pricing.totalDeliveryFee;
+  const total = pricing.orderTotal;
 
   const restaurantId = items.length > 0 ? items[0].restaurantId : null;
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
@@ -595,21 +598,7 @@ function EatsCheckoutContent() {
                     />
 
                     <hr />
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span>${subtotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Delivery Fee</span>
-                        <span>${deliveryFee.toFixed(2)}</span>
-                      </div>
-                      <hr />
-                      <div className="flex justify-between font-bold text-lg pt-1">
-                        <span>Total</span>
-                        <span>${total.toFixed(2)}</span>
-                      </div>
-                    </div>
+                    <DeliveryFeeBreakdownCard pricing={pricing} />
 
                     {/* Company Billing Badge */}
                     {billingType === "company" && businessMembership?.company && (

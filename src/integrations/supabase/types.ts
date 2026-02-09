@@ -2966,6 +2966,42 @@ export type Database = {
           },
         ]
       }
+      brand_regions: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          region_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          region_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          region_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_regions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_regions_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string | null
