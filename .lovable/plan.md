@@ -1,33 +1,42 @@
 
 
-# Referral Program — Add Account Menu Link
+# Smart Notifications — Add Missing Categories
 
 ## Current State
 
-The referral program is **already fully built**:
+The `/account/notifications` page is already fully built with:
+- Push, SMS, and Email channel controls
+- Notification type toggles for: Order Updates, Chat & Support, Price Alerts, Deals & Promotions
+- Automated Messages section (cart reminders, re-engagement, birthday)
+- Quiet hours, phone verification, and consent flows
 
-- `/account/referrals` page exists with referral code display, copy/share buttons, "How It Works" steps, tier progress bar, referral list with status badges (Signed Up / First Booking / Points Earned / Expired), and a link to the wallet
-- `useReferrals` hook handles code generation, sharing, and applying referral codes
-- Wallet page shows referral bonus transactions
-- Route is registered and protected
+The order lifecycle notifications (confirmed, driver assigned, driver arriving, delivered) are already covered under "Order Updates."
 
-**The only gap**: There is no "Invite Friends" or "Referrals" menu item on the Account page. Users can only reach the referrals page through the Wallet page, which is buried.
+## What's Missing
 
-## What Changes
+Two notification categories the user requested are not present:
+1. **Rewards** — notifications about loyalty tier changes, points earned, referral rewards credited
+2. **Announcements** — platform updates, new features, service area expansions
 
-A single update to `MobileAccount.tsx` to add a prominent "Invite Friends" menu item in the account settings list, making the existing referral page easily discoverable.
+## Changes
 
-### File Change
+### File: `src/pages/account/NotificationSettings.tsx` (Update)
 
-| File | Action | What |
-|------|--------|------|
-| `src/pages/mobile/MobileAccount.tsx` | Update | Add "Invite Friends" item with Users icon linking to `/account/referrals` |
+Add two new entries to the `NOTIFICATION_CATEGORIES` array:
 
-The new item will be added to the `accountItems` array after "ZIVO Rewards":
+| Category | ID | Icon | Description | Default |
+|---|---|---|---|---|
+| Rewards & Loyalty | `rewards` | Crown | Points earned, tier upgrades, and referral rewards | Enabled |
+| Announcements | `announcements` | Info | New features, service updates, and platform news | Disabled (opt-in) |
 
-```text
-{ icon: Users, label: "Invite Friends", path: "/account/referrals" }
-```
+This adds the `Crown` icon import (already available in other files) and two new toggle rows in the existing "Notification Types" card. No new files, hooks, or pages needed — it's a single-file update adding roughly 15 lines.
 
-This is a one-line change -- the referral page, hook, config, wallet integration, and reward flow are all already in place and working.
+### Updated category list after change
+
+1. Order Updates (existing)
+2. Chat & Support (existing)
+3. Price Alerts (existing)
+4. Rewards & Loyalty (new)
+5. Deals & Promotions (existing)
+6. Announcements (new)
 
