@@ -36,6 +36,8 @@ import { useGroupOrder, useGroupSession } from "@/hooks/useGroupOrder";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRestaurantPromotions } from "@/hooks/useRestaurantPromotions";
 import { ActivePromotionsSection } from "@/components/eats/ActivePromotionsSection";
+import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
+import { PeakDemandAlert } from "@/components/eats/PeakDemandAlert";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -255,6 +257,9 @@ function EatsRestaurantMenuContent() {
   // Active promotions for this restaurant
   const { data: restaurantPromos } = useRestaurantPromotions(id);
   
+  // Upcoming demand alert for this restaurant's zone
+  const demandAlert = useUpcomingDemandAlert(restaurant?.region_id);
+  
   // Share tracking — log "link_opened" if arrived via share link
   const [searchParams] = useSearchParams();
   const { logLinkOpened } = useShareTracking();
@@ -366,7 +371,12 @@ function EatsRestaurantMenuContent() {
                   {(availability.adjustedPrepTime || restaurant.avg_prep_time) && (
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      <span>{availability.adjustedPrepTime || restaurant.avg_prep_time} min prep</span>
+                      <span>
+                        {Math.round(
+                          (availability.adjustedPrepTime || restaurant.avg_prep_time || 20) *
+                          demandAlert.demandMultiplier
+                        )} min prep
+                      </span>
                     </div>
                   )}
                   {restaurant.phone && (
@@ -425,6 +435,18 @@ function EatsRestaurantMenuContent() {
               />
             )}
             
+            {/* Peak Demand Alert */}
+            {!isServiceMaintenance && availability.status === "open" && (
+              <PeakDemandAlert
+                isHighDemand={demandAlert.isHighDemandPredicted}
+                isLowCoverage={demandAlert.isLowCoverage}
+                alertMessage={demandAlert.alertMessage}
+                coverageMessage={demandAlert.coverageMessage}
+                storageKey={`peak-demand-menu-${id}`}
+                className="mt-4"
+              />
+            )}
+
             {/* High Volume Banner - shows when queue is high but not in busy mode */}
             {!isServiceMaintenance && availability.status !== "busy" && queue.isHighVolume && (
               <HighVolumeBanner

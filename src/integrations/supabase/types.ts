@@ -2048,6 +2048,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_operations: {
+        Row: {
+          action_type: string | null
+          applied_at: string | null
+          created_at: string | null
+          id: string
+          recommendation: Json | null
+          status: string | null
+          target_zone: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          applied_at?: string | null
+          created_at?: string | null
+          id?: string
+          recommendation?: Json | null
+          status?: string | null
+          target_zone?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          applied_at?: string | null
+          created_at?: string | null
+          id?: string
+          recommendation?: Json | null
+          status?: string | null
+          target_zone?: string | null
+        }
+        Relationships: []
+      }
       automated_message_log: {
         Row: {
           channel: string

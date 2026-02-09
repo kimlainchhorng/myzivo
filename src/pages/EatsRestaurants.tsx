@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
 import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { FavoriteButton } from "@/components/eats/FavoriteButton";
+import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
+import { PeakDemandAlert } from "@/components/eats/PeakDemandAlert";
 
 const eatsSortOptions: SortOption[] = [
   { value: "recommended", label: "Recommended" },
@@ -39,6 +41,7 @@ function EatsRestaurantsContent() {
   const { data: restaurants, isLoading } = useRestaurants();
   const { deliveryAddress, setDeliveryAddress, getItemCount } = useCart();
   const { getBadges } = usePromoBadgesByRestaurant();
+  const demandAlert = useUpcomingDemandAlert();
 
   // Get unique cuisines
   const cuisines = [...new Set(restaurants?.map(r => r.cuisine_type).filter(Boolean))] as string[];
@@ -174,6 +177,16 @@ function EatsRestaurantsContent() {
             </div>
           </div>
 
+          {/* Demand Alert */}
+          <PeakDemandAlert
+            isHighDemand={demandAlert.isHighDemandPredicted}
+            isLowCoverage={demandAlert.isLowCoverage}
+            alertMessage={demandAlert.alertMessage}
+            coverageMessage={demandAlert.coverageMessage}
+            storageKey="peak-demand-restaurants"
+            className="mb-6"
+          />
+
           {/* Restaurant Grid */}
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
@@ -249,6 +262,9 @@ function EatsRestaurantsContent() {
                           </div>
                         ) : null;
                       })()}
+                      {demandAlert.isHighDemandPredicted && (
+                        <span className="text-xs text-amber-400 font-medium">Busy soon</span>
+                      )}
                     </div>
                     <Button
                       className="w-full mt-4 rounded-xl bg-gradient-to-r from-eats to-orange-500"
