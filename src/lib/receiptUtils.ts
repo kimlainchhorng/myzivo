@@ -30,6 +30,7 @@ function baseReceiptHTML(order: UnifiedOrder, body: string): string {
     .row:last-child { border-bottom: none; }
     .label { color: #666; font-size: 14px; }
     .value { font-weight: 600; font-size: 14px; }
+    .discount-row { color: #059669; }
     .total-row { display: flex; justify-content: space-between; padding: 16px 0; margin-top: 12px; border-top: 2px solid #1a1a1a; }
     .total-label { font-weight: 700; font-size: 16px; }
     .total-value { font-weight: 800; font-size: 20px; }
@@ -57,13 +58,55 @@ function baseReceiptHTML(order: UnifiedOrder, body: string): string {
 </html>`;
 }
 
+function buildBreakdownRows(order: UnifiedOrder): string {
+  const lines: string[] = [];
+
+  const addRow = (label: string, value: number | undefined, cssClass = "") => {
+    if (value && value > 0) {
+      const prefix = cssClass.includes("discount") ? "-" : "";
+      lines.push(
+        `<div class="row ${cssClass}"><span class="label">${label}</span><span class="value">${prefix}$${value.toFixed(2)}</span></div>`
+      );
+    }
+  };
+
+  if (order.subtotal != null && order.subtotal > 0) {
+    addRow("Subtotal", order.subtotal);
+  }
+  addRow("Delivery Fee", order.deliveryFee);
+  addRow("Service Fee", order.serviceFee);
+  addRow("Tax", order.tax);
+  addRow("Tip", order.tip);
+
+  if (order.discount && order.discount > 0) {
+    const promoLabel = order.promoCode ? `Discount (${order.promoCode})` : "Discount";
+    addRow(promoLabel, order.discount, "discount-row");
+  }
+
+  return lines.join("\n");
+}
+
 export function generateReceiptHTML(order: UnifiedOrder): string {
-  const body = `
+  const hasBreakdown = order.subtotal != null || order.deliveryFee != null || order.serviceFee != null || order.tax != null;
+
+  let body: string;
+  if (hasBreakdown) {
+    body = `
     <div class="details">
       <div class="row"><span class="label">Service</span><span class="value">${order.title}</span></div>
       <div class="row"><span class="label">Status</span><span class="value" style="text-transform:capitalize;">${order.status}</span></div>
     </div>
-  `;
+    <div class="details">
+      ${buildBreakdownRows(order)}
+    </div>`;
+  } else {
+    body = `
+    <div class="details">
+      <div class="row"><span class="label">Service</span><span class="value">${order.title}</span></div>
+      <div class="row"><span class="label">Status</span><span class="value" style="text-transform:capitalize;">${order.status}</span></div>
+    </div>`;
+  }
+
   return baseReceiptHTML(order, body);
 }
 

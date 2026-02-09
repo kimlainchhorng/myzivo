@@ -3,9 +3,11 @@
  * Printable receipt for food orders
  */
 import { format } from "date-fns";
-import { Printer, Download, UtensilsCrossed, MapPin, CreditCard, Banknote } from "lucide-react";
+import { Printer, Download, UtensilsCrossed, MapPin, CreditCard, Banknote, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveEatsOrder } from "@/hooks/useLiveEatsOrder";
+import { downloadReceipt } from "@/lib/receiptUtils";
+import type { UnifiedOrder } from "@/hooks/useSpendingStats";
 
 interface OrderReceiptProps {
   order: LiveEatsOrder;
@@ -125,6 +127,20 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
           </div>
         )}
 
+        {order.service_fee != null && order.service_fee > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-500">Service Fee</span>
+            <span>${order.service_fee.toFixed(2)}</span>
+          </div>
+        )}
+
+        {order.tip_amount != null && order.tip_amount > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-500">Tip</span>
+            <span>${order.tip_amount.toFixed(2)}</span>
+          </div>
+        )}
+
         <div className="flex justify-between pt-3 border-t border-zinc-200">
           <span className="font-bold text-lg">Total</span>
           <span className="font-bold text-lg text-orange-600">
@@ -166,6 +182,31 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
         >
           <Printer className="w-4 h-4 mr-2" />
           Print Receipt
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const unified: UnifiedOrder = {
+              id: order.id,
+              type: "eats",
+              title: restaurantName,
+              amount: order.total_amount || 0,
+              date: order.created_at,
+              status: order.status,
+              subtotal: order.subtotal ?? undefined,
+              deliveryFee: order.delivery_fee ?? undefined,
+              serviceFee: order.service_fee ?? undefined,
+              tax: order.tax ?? undefined,
+              tip: order.tip_amount ?? undefined,
+              discount: order.discount_amount ?? undefined,
+              promoCode: order.promo_code ?? undefined,
+            };
+            downloadReceipt(unified);
+          }}
+          className="flex-1 h-12 rounded-xl border-zinc-300"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download Invoice
         </Button>
       </div>
 
