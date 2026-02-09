@@ -545,6 +545,105 @@ export default function NotificationSettings() {
           </Card>
         </motion.div>
 
+        {/* Automated Messages */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+        >
+          <h3 className="text-sm font-medium text-muted-foreground mb-2 px-1">
+            Automated Messages
+          </h3>
+          <Card>
+            <CardContent className="p-0">
+              {/* Master toggle */}
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-start gap-3">
+                  <BellRing className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <Label htmlFor="automated_master" className="font-medium cursor-pointer">
+                      Automated Reminders
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Cart reminders, re-engagement offers, and birthday rewards
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="automated_master"
+                  checked={prefs?.automatedMessagesEnabled ?? true}
+                  onCheckedChange={(enabled) =>
+                    updatePrefs.mutate({ automatedMessagesEnabled: enabled })
+                  }
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Sub-toggles (only shown when master is on) */}
+              {(prefs?.automatedMessagesEnabled ?? true) && (
+                <div className="divide-y divide-border">
+                  <div className="flex items-center justify-between p-4 pl-12">
+                    <div>
+                      <Label htmlFor="auto_cart" className="font-medium cursor-pointer">
+                        Cart Reminders
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Remind me about unfinished orders
+                      </p>
+                    </div>
+                    <Switch
+                      id="auto_cart"
+                      checked={prefs?.automatedCartReminders ?? true}
+                      onCheckedChange={(enabled) =>
+                        updatePrefs.mutate({ automatedCartReminders: enabled })
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 pl-12">
+                    <div>
+                      <Label htmlFor="auto_reengage" className="font-medium cursor-pointer">
+                        Re-engagement Offers
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Special offers when I haven't ordered in a while
+                      </p>
+                    </div>
+                    <Switch
+                      id="auto_reengage"
+                      checked={prefs?.automatedReengagement ?? true}
+                      onCheckedChange={(enabled) =>
+                        updatePrefs.mutate({ automatedReengagement: enabled })
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 pl-12">
+                    <div>
+                      <Label htmlFor="auto_birthday" className="font-medium cursor-pointer">
+                        Birthday & Special Events
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Birthday coupons and seasonal gifts
+                      </p>
+                    </div>
+                    <Switch
+                      id="auto_birthday"
+                      checked={prefs?.automatedBirthday ?? true}
+                      onCheckedChange={(enabled) =>
+                        updatePrefs.mutate({ automatedBirthday: enabled })
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Mobile App Prompt */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

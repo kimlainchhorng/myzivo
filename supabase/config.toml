@@ -209,3 +209,6 @@ verify_jwt = false
 
 [functions.update-eats-order]
 verify_jwt = false
+
+[functions.process-automated-triggers]
+verify_jwt = false

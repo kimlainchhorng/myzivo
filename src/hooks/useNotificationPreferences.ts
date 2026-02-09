@@ -20,9 +20,13 @@ export interface NotificationPreferences {
   phoneNumber: string | null;
   phoneVerified: boolean;
   quietHoursEnabled: boolean;
-  quietHoursStart: string | null; // "22:00"
-  quietHoursEnd: string | null;   // "08:00"
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
   smsConsentAt: string | null;
+  automatedMessagesEnabled: boolean;
+  automatedCartReminders: boolean;
+  automatedReengagement: boolean;
+  automatedBirthday: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +45,10 @@ interface RawNotificationPreferences {
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;
   sms_consent_at: string | null;
+  automated_messages_enabled: boolean;
+  automated_cart_reminders: boolean;
+  automated_reengagement: boolean;
+  automated_birthday: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +68,10 @@ function mapToPreferences(raw: RawNotificationPreferences): NotificationPreferen
     quietHoursStart: raw.quiet_hours_start,
     quietHoursEnd: raw.quiet_hours_end,
     smsConsentAt: raw.sms_consent_at,
+    automatedMessagesEnabled: raw.automated_messages_enabled ?? true,
+    automatedCartReminders: raw.automated_cart_reminders ?? true,
+    automatedReengagement: raw.automated_reengagement ?? true,
+    automatedBirthday: raw.automated_birthday ?? true,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };
@@ -103,6 +115,10 @@ export interface UpdatePreferencesInput {
   quietHoursEnd?: string;
   smsConsentAt?: string;
   smsConsentText?: string;
+  automatedMessagesEnabled?: boolean;
+  automatedCartReminders?: boolean;
+  automatedReengagement?: boolean;
+  automatedBirthday?: boolean;
 }
 
 export function useUpdateNotificationPreferences() {
@@ -128,6 +144,10 @@ export function useUpdateNotificationPreferences() {
       if (updates.quietHoursEnd !== undefined) updateData.quiet_hours_end = updates.quietHoursEnd;
       if (updates.smsConsentAt !== undefined) updateData.sms_consent_at = updates.smsConsentAt;
       if (updates.smsConsentText !== undefined) updateData.sms_consent_text = updates.smsConsentText;
+      if (updates.automatedMessagesEnabled !== undefined) updateData.automated_messages_enabled = updates.automatedMessagesEnabled;
+      if (updates.automatedCartReminders !== undefined) updateData.automated_cart_reminders = updates.automatedCartReminders;
+      if (updates.automatedReengagement !== undefined) updateData.automated_reengagement = updates.automatedReengagement;
+      if (updates.automatedBirthday !== undefined) updateData.automated_birthday = updates.automatedBirthday;
 
       // Check if preferences exist
       const { data: existing } = await supabase
