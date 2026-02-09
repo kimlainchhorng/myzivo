@@ -31,6 +31,8 @@ interface UseQueueAwareEtaOptions {
   scheduleForecastMultiplier?: number;
   /** Demand forecast multiplier (1.0-1.3) applied to prep time */
   demandMultiplier?: number;
+  /** Incentive multiplier (0.85-1.0) applied to driver time when incentives attract more drivers */
+  incentiveMultiplier?: number;
 }
 
 // Default values
@@ -42,6 +44,7 @@ export function useQueueAwareEta({
   driverMinutes = DEFAULT_DRIVER_MINUTES,
   scheduleForecastMultiplier = 1.0,
   demandMultiplier = 1.0,
+  incentiveMultiplier = 1.0,
 }: UseQueueAwareEtaOptions): QueueAwareEtaResult {
   // Get learned prep time
   const learnedPrep = useLearnedPrepTime(restaurantId);
@@ -53,8 +56,8 @@ export function useQueueAwareEta({
   return useMemo(() => {
     // Apply demand forecast multiplier to prep time
     const adjustedPrepMinutes = Math.round(prepMinutes * demandMultiplier);
-    // Apply schedule forecast multiplier to driver time
-    const adjustedDriverMinutes = Math.round(driverMinutes * scheduleForecastMultiplier);
+    // Apply schedule forecast and incentive multipliers to driver time
+    const adjustedDriverMinutes = Math.round(driverMinutes * scheduleForecastMultiplier * incentiveMultiplier);
     
     const breakdown: EtaBreakdown = {
       queueMinutes: queue.queueWaitMinutes,
@@ -100,6 +103,7 @@ export function useQueueAwareEta({
     driverMinutes,
     scheduleForecastMultiplier,
     demandMultiplier,
+    incentiveMultiplier,
     learnedPrep.loading,
   ]);
 }
