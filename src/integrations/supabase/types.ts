@@ -2661,6 +2661,42 @@ export type Database = {
           },
         ]
       }
+      bundling_settings: {
+        Row: {
+          bundling_enabled: boolean
+          id: number
+          max_delay_minutes: number
+          max_distance_miles: number
+          max_orders_per_bundle: number
+          min_savings_threshold_cents: number
+          same_restaurant_only: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bundling_enabled?: boolean
+          id?: number
+          max_delay_minutes?: number
+          max_distance_miles?: number
+          max_orders_per_bundle?: number
+          min_savings_threshold_cents?: number
+          same_restaurant_only?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bundling_enabled?: boolean
+          id?: number
+          max_delay_minutes?: number
+          max_distance_miles?: number
+          max_orders_per_bundle?: number
+          min_savings_threshold_cents?: number
+          same_restaurant_only?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       business_authorized_drivers: {
         Row: {
           business_account_id: string
@@ -15738,10 +15774,12 @@ export type Database = {
         Row: {
           almost_ready_at: string | null
           bundle_id: string | null
+          cancelled_by_user: boolean | null
           created_at: string | null
           credit_used_amount: number
           discount_amount: number
           driver_dispatched_at: string | null
+          editable_until: string | null
           id: string
           is_scheduled: boolean | null
           promo_code: string | null
@@ -15750,10 +15788,12 @@ export type Database = {
         Insert: {
           almost_ready_at?: string | null
           bundle_id?: string | null
+          cancelled_by_user?: boolean | null
           created_at?: string | null
           credit_used_amount?: number
           discount_amount?: number
           driver_dispatched_at?: string | null
+          editable_until?: string | null
           id?: string
           is_scheduled?: boolean | null
           promo_code?: string | null
@@ -15762,10 +15802,12 @@ export type Database = {
         Update: {
           almost_ready_at?: string | null
           bundle_id?: string | null
+          cancelled_by_user?: boolean | null
           created_at?: string | null
           credit_used_amount?: number
           discount_amount?: number
           driver_dispatched_at?: string | null
+          editable_until?: string | null
           id?: string
           is_scheduled?: boolean | null
           promo_code?: string | null
@@ -19810,6 +19852,33 @@ export type Database = {
           date?: string
           push_count?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      reassignment_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          new_driver_id: string | null
+          old_driver_id: string | null
+          order_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          new_driver_id?: string | null
+          old_driver_id?: string | null
+          order_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          new_driver_id?: string | null
+          old_driver_id?: string | null
+          order_id?: string | null
+          reason?: string | null
         }
         Relationships: []
       }
@@ -30490,10 +30559,10 @@ export type Database = {
           booking_fee: number | null
           id: string
           minimum_fare: number | null
-          multiplier: number | null
           per_mile: number | null
           per_minute: number | null
           ride_type: string | null
+          ride_type_multiplier: number | null
           updated_at: string | null
           zone_id: string | null
         }
@@ -30502,10 +30571,10 @@ export type Database = {
           booking_fee?: number | null
           id?: string
           minimum_fare?: number | null
-          multiplier?: number | null
           per_mile?: number | null
           per_minute?: number | null
           ride_type?: string | null
+          ride_type_multiplier?: number | null
           updated_at?: string | null
           zone_id?: string | null
         }
@@ -30514,10 +30583,10 @@ export type Database = {
           booking_fee?: number | null
           id?: string
           minimum_fare?: number | null
-          multiplier?: number | null
           per_mile?: number | null
           per_minute?: number | null
           ride_type?: string | null
+          ride_type_multiplier?: number | null
           updated_at?: string | null
           zone_id?: string | null
         }
