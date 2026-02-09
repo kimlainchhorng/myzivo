@@ -7,12 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight
+  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDistanceToNow } from "date-fns";
+import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
@@ -92,10 +92,56 @@ const QuickActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onNav
   </motion.button>
 );
 
+// Restaurant Card for personalized rows
+const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
+  <motion.button
+    onClick={onNavigate}
+    whileTap={{ scale: 0.96 }}
+    className="shrink-0 w-[120px] rounded-2xl overflow-hidden bg-zinc-900/80 border border-white/10 touch-manipulation text-left"
+  >
+    <div className="relative h-[100px]">
+      <img
+        src={restaurant.cover_image_url || restaurant.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
+        alt={restaurant.name}
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+      {restaurant.rating && (
+        <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+          <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+          <span className="text-[9px] font-bold text-white">{restaurant.rating.toFixed(1)}</span>
+        </div>
+      )}
+    </div>
+    <div className="p-2">
+      <div className="text-xs font-semibold truncate">{restaurant.name}</div>
+      {restaurant.cuisine_type && (
+        <div className="text-[9px] text-zinc-400 truncate mt-0.5">{restaurant.cuisine_type}</div>
+      )}
+    </div>
+  </motion.button>
+);
+
+// Horizontal scroll row
+const PersonalizedRow = ({ title, emoji, restaurants, navigate: nav }: { title: string; emoji?: string; restaurants: HomeRestaurant[]; navigate: (path: string) => void }) => {
+  if (!restaurants.length) return null;
+  return (
+    <div>
+      <h2 className="text-sm font-bold text-zinc-300 mb-2">{emoji && <span className="mr-1">{emoji}</span>}{title}</h2>
+      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+        {restaurants.map((r) => (
+          <RestaurantCard key={r.id} restaurant={r} onNavigate={() => nav(`/eats/restaurant/${r.id}`)} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { timeContext, timeSuggestions, orderAgain, favorites, recommended } = usePersonalizedHome();
 
   const handleNavigate = useCallback((screen: string) => {
     window.scrollTo(0, 0);
@@ -118,57 +164,6 @@ const AppHome = () => {
   };
 
   const userName = user?.email?.split('@')[0] || "Traveler";
-
-  // --- Zone 2: Recent Activity ---
-  const { data: recentActivity } = useQuery({
-    queryKey: ["home-recent", user?.id],
-    queryFn: async () => {
-      const db = supabase as any;
-      const [tripsRes, ordersRes, deliveriesRes] = await Promise.all([
-        db.from("trips").select("id, pickup_address, created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
-        db.from("food_orders").select("id, restaurant_id, restaurants(name), created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
-        db.from("package_deliveries").select("id, pickup_address, created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
-      ]);
-
-      const items: { id: string; title: string; subtitle: string; emoji: string; timestamp: string }[] = [];
-
-      tripsRes.data?.forEach((t) => items.push({
-        id: t.id, title: "Ride", subtitle: t.pickup_address || "Trip", emoji: "🚗", timestamp: t.created_at,
-      }));
-      ordersRes.data?.forEach((o) => {
-        const rName = (o.restaurants as any)?.name || "Restaurant";
-        items.push({ id: o.id, title: "Eats", subtitle: rName, emoji: "🍔", timestamp: o.created_at });
-      });
-      deliveriesRes.data?.forEach((d) => items.push({
-        id: d.id, title: "Delivery", subtitle: d.pickup_address || "Package", emoji: "📦", timestamp: d.created_at,
-      }));
-
-      return items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 3);
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
-
-  // --- Zone 2: Recommended Services ---
-  const { data: recommendations } = useQuery({
-    queryKey: ["home-recommendations", user?.id],
-    queryFn: async () => {
-      const db = supabase as any;
-      const [ridesCount, ordersCount, deliveriesCount] = await Promise.all([
-        db.from("trips").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
-        db.from("food_orders").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
-        db.from("package_deliveries").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
-      ]);
-
-      const suggestions: { label: string; href: string }[] = [];
-      if (!ridesCount.count) suggestions.push({ label: "Try ZIVO Ride", href: "/rides" });
-      if (!ordersCount.count) suggestions.push({ label: "Order your first meal", href: "/eats" });
-      if (!deliveriesCount.count) suggestions.push({ label: "Send a package", href: "/move" });
-      return suggestions;
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
 
   // --- Zone 3: Last Meal ---
   const { data: lastMeal } = useQuery({
@@ -284,47 +279,29 @@ const AppHome = () => {
         </div>
       </div>
 
-      {/* ZONE 2: Personalized (auth-gated) */}
-      {user && (
-        <div className="px-4 pb-4 space-y-4">
-          {/* Recent Activity */}
-          {recentActivity && recentActivity.length > 0 && (
-            <div>
-              <h2 className="text-sm font-bold text-zinc-300 mb-2">Recent Activity</h2>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {recentActivity.map((item) => (
-                  <div key={item.id} className="shrink-0 bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-2 min-w-[140px]">
-                    <div className="text-lg mb-0.5">{item.emoji}</div>
-                    <div className="text-xs font-semibold">{item.title}</div>
-                    <div className="text-[10px] text-zinc-400 truncate">{item.subtitle}</div>
-                    <div className="text-[9px] text-zinc-500 mt-1">
-                      {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* ZONE 2: Personalized Rows */}
+      <div className="px-4 pb-4 space-y-4">
+        {/* Time Context Banner */}
+        <PersonalizedRow
+          title={timeContext.headline}
+          emoji={timeContext.emoji}
+          restaurants={timeSuggestions}
+          navigate={navigate}
+        />
 
-          {/* Recommended Services */}
-          {recommendations && recommendations.length > 0 && (
-            <div>
-              <h2 className="text-sm font-bold text-zinc-300 mb-2">Recommended for You</h2>
-              <div className="flex gap-2 flex-wrap">
-                {recommendations.map((rec) => (
-                  <button
-                    key={rec.href}
-                    onClick={() => navigate(rec.href)}
-                    className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold rounded-full active:scale-95 transition-transform touch-manipulation"
-                  >
-                    {rec.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Order Again (auth-gated) */}
+        {user && orderAgain.length > 0 && (
+          <PersonalizedRow title="Order Again" emoji="🔄" restaurants={orderAgain} navigate={navigate} />
+        )}
+
+        {/* Your Favorites (auth-gated) */}
+        {user && favorites.length > 0 && (
+          <PersonalizedRow title="Your Favorites" emoji="❤️" restaurants={favorites} navigate={navigate} />
+        )}
+
+        {/* Recommended for You */}
+        <PersonalizedRow title="Recommended for You" emoji="✨" restaurants={recommended} navigate={navigate} />
+      </div>
 
       {/* ZONE 3: Quick Actions (auth-gated) */}
       {user && (
