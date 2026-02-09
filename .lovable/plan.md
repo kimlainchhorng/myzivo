@@ -1,293 +1,394 @@
 
-# SMS + Email Fallback Notifications for Critical Events
+
+# Phone Verification (OTP) & Compliance-Safe Messaging Implementation Plan
 
 ## Overview
-Implement a multi-channel notification system that sends SMS (Twilio) and Email (Resend) as fallbacks when push notifications are disabled or fail. The system includes user notification preferences management, phone number verification via OTP, a unified notification outbox, and an admin monitoring dashboard.
+Enhance the existing phone verification flow with stricter compliance controls, SMS consent tracking, opt-out keyword handling, and a dedicated notification audit log for legal compliance. The system will ensure SMS/calls are only sent to verified numbers with explicit consent.
 
 ---
 
 ## Current State Analysis
 
-### Already Exists ✅
+### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `notification_preferences` table | Complete | user_id, email_enabled, sms_enabled, in_app_enabled, phone_number, phone_verified |
-| `notifications` table | Complete | Unified outbox with channel, status, provider_message_id, error_message |
-| `notification_templates` table | Complete | template_key, body_html, body_text, supports_email/sms/in_app |
-| `send-notification` edge function | Complete | Handles email via Resend, SMS via Twilio |
-| `send-push-notification` edge function | Complete | VAPID web push + FCM/APNs |
-| `process-order-notifications` edge function | Complete | Batch processor for queued SMS/email |
-| `send-otp-email` edge function | Complete | 6-digit OTP via email with rate limiting |
-| `profiles` table | Complete | phone, phone_e164, phone_verified, phone_verified_at, sms_consent |
-| Push in `useUpdateFoodOrder` | Complete | Sends push on order status change |
-| Push in `useAddTicketMessage` | Complete | Sends push on support reply |
-| Twilio secrets | Configured | TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN |
-| Resend secrets | Configured | RESEND_API_KEY |
-| NotificationSettings page | Complete | Push toggle and category preferences |
+| `profiles` table | Complete | Has `phone_e164`, `phone_verified`, `phone_verified_at`, `sms_consent`, `sms_opted_out`, `sms_opted_out_at` |
+| `notification_preferences` table | Complete | Has `email_enabled`, `sms_enabled`, `in_app_enabled`, `phone_number`, `phone_verified` |
+| `sms_otp_codes` table | Complete | Has `id`, `user_id`, `phone_e164`, `code`, `expires_at`, `verified_at`, `attempts` |
+| `sms_daily_limits` table | Complete | Rate limiting for SMS sends |
+| `send-otp-sms` edge function | Complete | Sends 6-digit OTP via Twilio with rate limiting |
+| `verify-otp-sms` edge function | Complete | Verifies OTP, updates profile and preferences |
+| `twilio-sms-status` edge function | Complete | Handles delivery status callbacks |
+| `PhoneVerificationDialog` component | Complete | OTP input modal with 6-digit entry |
+| `NotificationChannelCard` component | Complete | Reusable toggle card with verification badge |
+| `useNotificationPreferences` hook | Complete | CRUD for preferences + OTP hooks |
+| `NotificationSettings` page | Complete | Push, SMS, Email toggles with phone verification |
+| `audit_logs` table | Complete | Generic audit logging (admin actions) |
+| `notifications` table | Complete | Has `channel`, `status`, `provider_message_id`, `error_message`, `event_type`, `to_value` |
+| `send-notification` edge function | Complete | Multi-channel with push → SMS → email fallback |
 
-### Missing ❌
+### Missing/Needs Enhancement
 | Feature | Status |
 |---------|--------|
-| `TWILIO_FROM_NUMBER` secret | Not configured (needed for SMS) |
-| SMS OTP verification flow | Need to create |
-| Enhanced NotificationSettings UI | Need SMS/Email toggles, phone input |
-| `useNotificationPreferences` hook | Need to create |
-| Fallback logic in event handlers | Need to add SMS/Email after push fails |
-| `notification_outbox` view/table enhancement | Already exists as `notifications` table |
-| Admin notifications outbox page | Need to create |
-| SMS rate limiting | Need to add |
-| Twilio delivery webhook | Need to create |
-
----
-
-## Database Schema
-
-### Use Existing `notification_preferences` Table
-Already has the required columns:
-```sql
--- Existing columns (no changes needed):
--- email_enabled, sms_enabled, in_app_enabled
--- phone_number, phone_verified
--- marketing_enabled, operational_enabled
-```
-
-### Add SMS Rate Limiting Table
-```sql
-CREATE TABLE sms_daily_limits (
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  date DATE NOT NULL,
-  sms_count INTEGER DEFAULT 0,
-  PRIMARY KEY (user_id, date)
-);
-
-CREATE INDEX idx_sms_daily_limits_date ON sms_daily_limits(date);
-```
-
-### Add SMS OTP Table
-```sql
-CREATE TABLE sms_otp_codes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
-  phone_e164 TEXT NOT NULL,
-  code TEXT NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  verified_at TIMESTAMPTZ,
-  attempts INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_sms_otp_phone ON sms_otp_codes(phone_e164);
-CREATE INDEX idx_sms_otp_user ON sms_otp_codes(user_id);
-```
+| Inbound SMS webhook (STOP/UNSUBSCRIBE) | Need to create |
+| SMS consent checkbox in UI | Need to add |
+| Quiet hours support | Need to add fields + logic |
+| OTP lockout after max wrong codes | Exists (5 attempts), may need UI feedback |
+| Masked phone display | Need to enhance |
+| Notification audit table | Can use existing `notifications` table or extend |
+| Admin audit log for notification sends | Need to integrate |
 
 ---
 
 ## Implementation Plan
 
-### 1) User Notification Preferences Hook
+### 1) Database Migration
 
-**File to Create:** `src/hooks/useNotificationPreferences.ts`
+**Enhancements Needed:**
 
-```typescript
-export interface NotificationPreferences {
-  id: string;
-  userId: string;
-  emailEnabled: boolean;
-  smsEnabled: boolean;
-  inAppEnabled: boolean;
-  marketingEnabled: boolean;
-  operationalEnabled: boolean;
-  phoneNumber: string | null;
-  phoneVerified: boolean;
-}
+```sql
+-- Add quiet hours to notification_preferences
+ALTER TABLE notification_preferences
+ADD COLUMN IF NOT EXISTS quiet_hours_enabled BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS quiet_hours_start TIME DEFAULT '22:00',
+ADD COLUMN IF NOT EXISTS quiet_hours_end TIME DEFAULT '08:00',
+ADD COLUMN IF NOT EXISTS sms_consent_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS sms_consent_text TEXT;
 
-export function useNotificationPreferences()
-export function useUpdateNotificationPreferences()
-export function useSendPhoneOTP()
-export function useVerifyPhoneOTP()
+-- Add notification audit log table for compliance
+CREATE TABLE notification_audit (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  channel TEXT NOT NULL, -- 'push', 'sms', 'email', 'call'
+  event_type TEXT NOT NULL, -- 'order_status', 'support_reply', 'otp', 'marketing', etc.
+  destination_masked TEXT, -- '***-***-1234' or 'j***@example.com'
+  provider_id TEXT, -- Twilio SID, Resend ID, etc.
+  status TEXT NOT NULL, -- 'sent', 'failed', 'skipped', 'opted_out'
+  error TEXT,
+  skip_reason TEXT, -- 'not_verified', 'opted_out', 'rate_limited', 'quiet_hours'
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_notification_audit_user ON notification_audit(user_id);
+CREATE INDEX idx_notification_audit_channel ON notification_audit(channel);
+CREATE INDEX idx_notification_audit_created ON notification_audit(created_at);
+
+-- RLS for notification_audit (admin read, system write)
+ALTER TABLE notification_audit ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin can view notification audit"
+  ON notification_audit FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND role IN ('admin', 'super_admin', 'operations', 'support')
+    )
+  );
+
+CREATE POLICY "Service role can insert notification audit"
+  ON notification_audit FOR INSERT
+  WITH CHECK (true);
 ```
-
-**Logic:**
-- Fetch from `notification_preferences` table
-- If no row exists, create with defaults on first update
-- Sync `sms_enabled` with profile's `sms_consent`
 
 ---
 
-### 2) Enhanced NotificationSettings Page
+### 2) Inbound SMS Webhook (STOP/UNSUBSCRIBE Handler)
+
+**File to Create:** `supabase/functions/twilio-sms-inbound/index.ts`
+
+**Purpose:** Handle inbound SMS messages from users to process opt-out keywords.
+
+**Logic:**
+1. Parse Twilio webhook payload (From, Body)
+2. Check if Body contains STOP, UNSUBSCRIBE, CANCEL, END, QUIT
+3. If opt-out keyword found:
+   - Find user by phone_e164
+   - Set `profiles.sms_opted_out = true`, `sms_opted_out_at = now()`
+   - Set `notification_preferences.sms_enabled = false`
+   - Log to `notification_audit` with event_type = 'opt_out'
+   - Reply with confirmation TwiML: "You have been unsubscribed from ZIVO SMS notifications. Reply START to re-subscribe."
+4. If START keyword found:
+   - Set `profiles.sms_opted_out = false`, `sms_opted_out_at = null`
+   - Reply: "Welcome back! You will now receive ZIVO SMS notifications."
+5. Return TwiML response
+
+```typescript
+// Opt-out keywords per CTIA guidelines
+const OPT_OUT_KEYWORDS = ['stop', 'unsubscribe', 'cancel', 'end', 'quit'];
+const OPT_IN_KEYWORDS = ['start', 'subscribe', 'yes', 'unstop'];
+```
+
+---
+
+### 3) Enhanced SMS Consent UI
 
 **File to Modify:** `src/pages/account/NotificationSettings.tsx`
 
-**New Sections:**
+**Add Consent Checkbox:**
+When user enables SMS and has verified phone, show consent checkbox:
 
-**SMS Notifications:**
 ```text
 +--------------------------------------------------+
 | 📱 SMS Notifications                              |
 +--------------------------------------------------+
 | [Toggle: Enable SMS]                              |
 |                                                   |
-| Phone Number: [+1 (555) 123-4567] [Verify]        |
-| Status: ✅ Verified / ⚠️ Not Verified              |
+| Phone Number: [+1 (555) 123-4567] ✅ Verified      |
 |                                                   |
-| Rate: Max 5 SMS/day for critical updates only    |
+| ☐ I agree to receive SMS notifications from ZIVO  |
+|   for order updates, support, and alerts.         |
+|   Standard message rates may apply. Reply STOP    |
+|   to unsubscribe at any time.                     |
+|                                                   |
+| Rate: Max 5 SMS/day for critical updates only     |
 +--------------------------------------------------+
 ```
 
-**Email Notifications:**
+**Logic:**
+- SMS toggle disabled until phone verified AND consent checked
+- When consent given, record `sms_consent = true`, `sms_consent_at = now()`, `sms_consent_text = "..."`
+- Show warning if `sms_opted_out = true`: "You previously unsubscribed. Reply START to your last ZIVO message or re-enable below."
+
+---
+
+### 4) Quiet Hours Support
+
+**File to Modify:** `src/pages/account/NotificationSettings.tsx`
+
+**Add Quiet Hours Section:**
+
 ```text
 +--------------------------------------------------+
-| 📧 Email Notifications                            |
+| 🌙 Quiet Hours (Optional)                         |
 +--------------------------------------------------+
-| [Toggle: Enable Email]                            |
+| [Toggle: Enable Quiet Hours]                      |
 |                                                   |
-| Email: user@example.com (from auth)              |
+| During quiet hours, we'll hold non-urgent SMS     |
+| and push notifications.                           |
 |                                                   |
-| Types:                                            |
-| [x] Order receipts & confirmations               |
-| [x] Support ticket updates                       |
-| [ ] Marketing & promotions                       |
+| Start: [10:00 PM ▼]  End: [8:00 AM ▼]            |
 +--------------------------------------------------+
 ```
 
-**Components to Create:**
-- `PhoneVerificationDialog.tsx` - OTP input modal
-- `NotificationChannelCard.tsx` - Reusable channel toggle card
+**Logic:**
+- If quiet hours enabled and current time is within range, skip non-critical SMS
+- Critical events (order cancellation, fraud alerts) still send immediately
+- Store in `notification_preferences.quiet_hours_enabled`, `quiet_hours_start`, `quiet_hours_end`
 
 ---
 
-### 3) SMS OTP Edge Function
-
-**File to Create:** `supabase/functions/send-otp-sms/index.ts`
-
-**Logic:**
-1. Accept `{ phone_e164, user_id }`
-2. Rate limit: max 5 OTP requests per phone per hour
-3. Generate 6-digit code, expires in 10 minutes
-4. Invalidate previous codes for this phone
-5. Send SMS via Twilio
-6. Store in `sms_otp_codes` table
-
-**SMS Template:**
-```
-Your ZIVO verification code is 123456. Expires in 10 minutes. Reply STOP to opt out.
-```
-
-**File to Create:** `supabase/functions/verify-otp-sms/index.ts`
-
-**Logic:**
-1. Accept `{ phone_e164, code, user_id }`
-2. Find matching unexpired code with < 3 attempts
-3. If valid:
-   - Mark as verified
-   - Update `notification_preferences.phone_verified = true`
-   - Update `profiles.phone_verified = true`, `phone_verified_at = now()`
-4. If invalid: increment attempts, return error
-
----
-
-### 4) Unified Send Notification Function
+### 5) Update send-notification Edge Function
 
 **File to Modify:** `supabase/functions/send-notification/index.ts`
 
-Add multi-channel cascade logic:
+**Add Compliance Checks:**
 
 ```typescript
-async function sendMultiChannelNotification({
-  user_id,
-  title,
-  body,
-  action_url,
-  priority = 'normal', // 'critical' | 'normal' | 'low'
-  event_type, // 'order_status', 'support_reply', 'chat_message'
+// Before sending SMS
+async function canSendSMS(supabase, userId: string, priority: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+}> {
+  // 1. Get profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("phone_e164, phone_verified, sms_consent, sms_opted_out")
+    .eq("user_id", userId)
+    .single();
+
+  if (!profile?.phone_e164) {
+    return { allowed: false, reason: "no_phone" };
+  }
+
+  if (!profile.phone_verified) {
+    return { allowed: false, reason: "not_verified" };
+  }
+
+  if (!profile.sms_consent) {
+    return { allowed: false, reason: "no_consent" };
+  }
+
+  if (profile.sms_opted_out) {
+    return { allowed: false, reason: "opted_out" };
+  }
+
+  // 2. Check quiet hours (skip for critical)
+  if (priority !== "critical") {
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
+      .eq("user_id", userId)
+      .single();
+
+    if (prefs?.quiet_hours_enabled) {
+      const now = new Date();
+      const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
+      const start = prefs.quiet_hours_start;
+      const end = prefs.quiet_hours_end;
+
+      // Simple quiet hours check
+      if (isWithinQuietHours(currentTime, start, end)) {
+        return { allowed: false, reason: "quiet_hours" };
+      }
+    }
+  }
+
+  // 3. Check rate limit
+  const withinLimit = await checkSMSRateLimit(supabase, userId);
+  if (!withinLimit) {
+    return { allowed: false, reason: "rate_limited" };
+  }
+
+  return { allowed: true };
+}
+```
+
+**Add Audit Logging:**
+
+```typescript
+// After each send attempt
+async function logNotificationAudit(supabase, {
+  userId,
+  channel,
+  eventType,
+  destination,
+  providerId,
+  status,
+  error,
+  skipReason,
+}: {
+  userId: string;
+  channel: 'push' | 'sms' | 'email' | 'call';
+  eventType: string;
+  destination: string;
+  providerId?: string;
+  status: 'sent' | 'failed' | 'skipped';
+  error?: string;
+  skipReason?: string;
 }) {
-  // 1. Get user preferences
-  const prefs = await getNotificationPreferences(user_id);
-  const profile = await getProfile(user_id);
-  
-  // 2. Determine channels based on priority
-  let channels = [];
-  
-  if (priority === 'critical') {
-    // Try push first
-    if (prefs.in_app_enabled) channels.push('push');
-    // Fallback to SMS if push fails or no subscription
-    if (prefs.sms_enabled && prefs.phone_verified) channels.push('sms');
-    // Always email for receipts
-    if (prefs.email_enabled) channels.push('email');
-  } else {
-    // Normal: push + in-app only
-    if (prefs.in_app_enabled) channels.push('push');
-    // Email for certain types
-    if (['receipt', 'refund'].includes(event_type) && prefs.email_enabled) {
-      channels.push('email');
-    }
+  // Mask destination
+  let maskedDestination = destination;
+  if (channel === 'sms' || channel === 'call') {
+    maskedDestination = maskPhone(destination);
+  } else if (channel === 'email') {
+    maskedDestination = maskEmail(destination);
   }
-  
-  // 3. Execute in order with fallback
-  let pushSuccess = false;
-  
-  for (const channel of channels) {
-    if (channel === 'push') {
-      const result = await sendPush(user_id, title, body, action_url);
-      pushSuccess = result.success;
-      if (!pushSuccess && prefs.sms_enabled && prefs.phone_verified) {
-        // Fallback to SMS
-        await sendSMS(profile.phone_e164, body);
-      }
-    } else if (channel === 'sms') {
-      if (!pushSuccess) {
-        await sendSMS(profile.phone_e164, body);
-      }
-    } else if (channel === 'email') {
-      await sendEmail(profile.email, title, body);
-    }
+
+  await supabase.from("notification_audit").insert({
+    user_id: userId,
+    channel,
+    event_type: eventType,
+    destination_masked: maskedDestination,
+    provider_id: providerId,
+    status,
+    error,
+    skip_reason: skipReason,
+  });
+}
+
+function maskPhone(phone: string): string {
+  // +15551234567 → ***-***-4567
+  if (phone.length >= 4) {
+    return "***-***-" + phone.slice(-4);
   }
+  return "***";
+}
+
+function maskEmail(email: string): string {
+  // john@example.com → j***@example.com
+  const [local, domain] = email.split("@");
+  if (local.length > 1) {
+    return local[0] + "***@" + domain;
+  }
+  return "***@" + domain;
 }
 ```
 
 ---
 
-### 5) Event Handler Integration
+### 6) Update send-otp-sms Edge Function
 
-**Modify `useUpdateFoodOrder`:**
+**File to Modify:** `supabase/functions/send-otp-sms/index.ts`
+
+**Enhancements:**
+1. Add audit logging for OTP sends
+2. Return rate limit status to UI
+3. Ensure OTP lockout info is returned
+
+Already has rate limiting (5 per hour per phone). Add:
 
 ```typescript
-// After push notification attempt
-if (updates.status && currentOrder?.customer_id) {
-  const isCritical = ['out_for_delivery', 'delivered', 'cancelled'].includes(updates.status);
-  
-  try {
-    await supabase.functions.invoke("send-notification", {
-      body: {
-        user_id: currentOrder.customer_id,
-        title: pushMessage.title,
-        body: pushMessage.body,
-        action_url: `/eats/orders/${id}`,
-        priority: isCritical ? 'critical' : 'normal',
-        event_type: 'order_status',
-        order_id: id,
-      },
-    });
-  } catch (err) {
-    console.warn("Notification send failed:", err);
-  }
-}
+// Log OTP send to audit
+await supabase.from("notification_audit").insert({
+  user_id,
+  channel: "sms",
+  event_type: "otp",
+  destination_masked: maskPhone(phone_e164),
+  provider_id: smsResult.sid,
+  status: smsResult.success ? "sent" : "failed",
+  error: smsResult.error,
+});
 ```
 
-**Modify `useAddTicketMessage`:**
+---
+
+### 7) Enhanced UI Hook
+
+**File to Modify:** `src/hooks/useNotificationPreferences.ts`
+
+**Add:**
 
 ```typescript
-// After agent reply
-if (ticket?.user_id) {
-  await supabase.functions.invoke("send-notification", {
-    body: {
-      user_id: ticket.user_id,
-      title: "Support Team Replied 💬",
-      body: `Re: ${ticket.subject?.substring(0, 50)}`,
-      action_url: `/support/tickets/${ticketId}`,
-      priority: 'critical', // Support replies are critical
-      event_type: 'support_reply',
+export interface NotificationPreferences {
+  // ... existing fields
+  quietHoursEnabled: boolean;
+  quietHoursStart: string; // "22:00"
+  quietHoursEnd: string;   // "08:00"
+  smsConsentAt: string | null;
+}
+
+export interface UpdatePreferencesInput {
+  // ... existing fields
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  smsConsentAt?: string;
+  smsConsentText?: string;
+}
+
+// Add opt-out re-enable hook
+export function useReenableSMS() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Clear opt-out flag
+      await supabase
+        .from("profiles")
+        .update({
+          sms_opted_out: false,
+          sms_opted_out_at: null,
+          sms_consent: true,
+        })
+        .eq("user_id", user.id);
+
+      await supabase
+        .from("notification_preferences")
+        .update({ sms_enabled: true })
+        .eq("user_id", user.id);
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      toast.success("SMS notifications re-enabled");
     },
   });
 }
@@ -295,244 +396,205 @@ if (ticket?.user_id) {
 
 ---
 
-### 6) Twilio Webhook for Delivery Status
+### 8) Phone Masking in UI
 
-**File to Create:** `supabase/functions/twilio-sms-status/index.ts`
+**File to Modify:** `src/pages/account/NotificationSettings.tsx`
 
-**Handles:**
-- `delivered` - Update notification status to 'sent'
-- `failed` - Update notification status to 'failed', store error
-- `undelivered` - Same as failed
+**Update display logic:**
 
 ```typescript
-serve(async (req) => {
-  const formData = await req.formData();
-  const messageSid = formData.get("MessageSid");
-  const status = formData.get("MessageStatus");
-  const errorCode = formData.get("ErrorCode");
-  
-  await supabase
-    .from("notifications")
-    .update({
-      status: status === "delivered" ? "sent" : "failed",
-      error_message: errorCode ? `Twilio error: ${errorCode}` : null,
-      sent_at: status === "delivered" ? new Date().toISOString() : null,
-    })
-    .eq("provider_message_id", messageSid);
-    
-  return new Response("OK", { status: 200 });
-});
+// Mask phone for display in sensitive contexts
+function maskPhoneForDisplay(phone: string | null): string {
+  if (!phone) return "";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length >= 4) {
+    return "***-***-" + cleaned.slice(-4);
+  }
+  return "•••";
+}
+
+// Show full number only when editing, masked when verified
+{prefs?.phoneVerified ? (
+  <span className="font-mono">***-***-{phoneInput.slice(-4)}</span>
+) : (
+  <Input value={phoneInput} onChange={...} />
+)}
 ```
 
 ---
 
-### 7) Admin Notifications Outbox Page
+### 9) Admin Notification Audit Page
 
-**File to Create:** `src/pages/admin/NotificationsOutboxPage.tsx`
+**File to Create:** `src/pages/admin/NotificationAuditPage.tsx`
 
-**Route:** `/admin/notifications/outbox`
+**Route:** `/admin/notifications/audit`
+
+**Features:**
+- Table of all notification send attempts
+- Filter by channel, status, date range
+- Show masked destinations
+- Show provider IDs for debugging
+- Export for compliance reporting
 
 **Layout:**
 ```text
 +----------------------------------------------------------+
-|  Notification Outbox                    [Refresh]         |
+|  Notification Audit Log                    [Export CSV]   |
 +----------------------------------------------------------+
 |                                                           |
-|  Filters: [All Channels ▼] [All Status ▼] [Last 24h ▼]   |
+|  Filters: [All Channels ▼] [All Status ▼] [Last 7 days ▼]|
 |                                                           |
-|  +------------------+  +------------------+               |
-|  | TOTAL SENT       |  | FAILED           |               |
-|  | 1,234            |  | 23               |               |
-|  +------------------+  +------------------+               |
-|                                                           |
-|  +------------------+  +------------------+               |
-|  | SMS SENT         |  | EMAIL SENT       |               |
-|  | 89               |  | 456              |               |
-|  +------------------+  +------------------+               |
-|                                                           |
-|  Failed Notifications (click to expand)                   |
 |  +------------------------------------------------------+|
-|  | 12:34 | SMS  | +1555... | "Your order..." | Retry    ||
-|  |       | Error: 30008 - Unknown error                 ||
+|  | Time       | User     | Channel | Event    | Status  ||
 |  +------------------------------------------------------+|
-|  | 12:30 | Email| user@... | "Support reply" | Retry    ||
-|  |       | Error: Invalid email format                   ||
+|  | 12:34 PM   | usr_123  | SMS     | otp      | sent    ||
+|  |            | ***-***-4567       | sid_abc...          ||
+|  +------------------------------------------------------+|
+|  | 12:30 PM   | usr_456  | SMS     | order    | skipped ||
+|  |            | ***-***-7890       | Reason: opted_out   ||
 |  +------------------------------------------------------+|
 |                                                           |
 +----------------------------------------------------------+
 ```
 
-**Features:**
-- Filter by channel (push/sms/email)
-- Filter by status (sent/failed/queued)
-- Date range filter
-- Retry failed notifications
-- Show error details
-- Export failed list
-
 ---
 
-### 8) SMS Rate Limiting
+### 10) Routes Configuration
 
-**In `send-notification` function:**
+**File to Modify:** `src/App.tsx`
+
+Add route for audit page:
 
 ```typescript
-async function checkSMSRateLimit(userId: string): Promise<boolean> {
-  const today = new Date().toISOString().split('T')[0];
-  
-  const { data } = await supabase
-    .from("sms_daily_limits")
-    .select("sms_count")
-    .eq("user_id", userId)
-    .eq("date", today)
-    .single();
-  
-  if (data && data.sms_count >= 5) {
-    return false; // Rate limited
-  }
-  
-  // Upsert count
-  await supabase.rpc("increment_sms_count", {
-    p_user_id: userId,
-    p_date: today,
-  });
-  
-  return true;
-}
+const NotificationAuditPage = lazy(() => import("./pages/admin/NotificationAuditPage"));
+
+<Route path="/admin/notifications/audit" element={
+  <ProtectedRoute requireAdmin><NotificationAuditPage /></ProtectedRoute>
+} />
 ```
-
-**RPC Function:**
-```sql
-CREATE OR REPLACE FUNCTION increment_sms_count(p_user_id UUID, p_date DATE)
-RETURNS void AS $$
-BEGIN
-  INSERT INTO sms_daily_limits (user_id, date, sms_count)
-  VALUES (p_user_id, p_date, 1)
-  ON CONFLICT (user_id, date)
-  DO UPDATE SET sms_count = sms_daily_limits.sms_count + 1;
-END;
-$$ LANGUAGE plpgsql;
-```
-
----
-
-## Events to Notify (MVP)
-
-| Event | Push | SMS (if push fails) | Email |
-|-------|------|---------------------|-------|
-| Order confirmed | ✅ | ❌ | ✅ receipt |
-| Order preparing | ✅ | ❌ | ❌ |
-| Out for delivery | ✅ | ✅ critical | ❌ |
-| Delivered | ✅ | ✅ critical | ✅ receipt |
-| Order cancelled | ✅ | ✅ critical | ✅ |
-| Support reply | ✅ | ✅ critical | ✅ |
-| New chat message | ✅ | ❌ | ❌ |
-| Refund processed | ✅ | ✅ critical | ✅ |
-| Driver assigned | ✅ | ❌ | ❌ |
 
 ---
 
 ## File Summary
 
-### Database Migration
+### Database Migration (1)
 | Change | Purpose |
 |--------|---------|
-| Create `sms_daily_limits` table | Rate limiting |
-| Create `sms_otp_codes` table | Phone verification |
-| Create `increment_sms_count` RPC | Atomic counter |
-| Add RLS policies | Security |
+| Add quiet hours columns | User preference for notification timing |
+| Add sms_consent_at/text | Compliance tracking |
+| Create `notification_audit` table | Legal/compliance audit trail |
+| RLS policies | Admin read, service write |
 
-### Secrets to Add
-| Secret | Purpose |
-|--------|---------|
-| `TWILIO_FROM_NUMBER` | SMS sender number |
-
-### New Files (8)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useNotificationPreferences.ts` | Preferences hook |
-| `src/components/account/PhoneVerificationDialog.tsx` | OTP input modal |
-| `src/components/account/NotificationChannelCard.tsx` | Reusable toggle card |
-| `src/pages/admin/NotificationsOutboxPage.tsx` | Admin outbox view |
-| `supabase/functions/send-otp-sms/index.ts` | Send SMS OTP |
-| `supabase/functions/verify-otp-sms/index.ts` | Verify SMS OTP |
-| `supabase/functions/twilio-sms-status/index.ts` | Delivery webhook |
-| Migration SQL file | Schema changes |
+| `supabase/functions/twilio-sms-inbound/index.ts` | STOP/UNSUBSCRIBE handler |
+| `src/pages/admin/NotificationAuditPage.tsx` | Admin audit log viewer |
 
-### Modified Files (4)
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/pages/account/NotificationSettings.tsx` | Add SMS/Email sections |
-| `supabase/functions/send-notification/index.ts` | Add multi-channel cascade |
-| `src/hooks/useEatsOrders.ts` | Use unified send-notification |
-| `src/hooks/useSupportTickets.ts` | Use unified send-notification |
+| `supabase/functions/send-notification/index.ts` | Add compliance checks + audit logging |
+| `supabase/functions/send-otp-sms/index.ts` | Add audit logging |
+| `src/pages/account/NotificationSettings.tsx` | Add consent checkbox, quiet hours, masked display |
+| `src/hooks/useNotificationPreferences.ts` | Add quiet hours fields, re-enable hook |
+| `src/App.tsx` | Add audit page route |
 
 ---
 
 ## Data Flow
 
 ```text
-Event Occurs (order status change)
+User Enables SMS
         ↓
-Hook calls send-notification edge function
+Check phone verified? → No → Show "Verify" button
+        ↓ Yes
+Show consent checkbox
         ↓
-Load user notification_preferences
+User checks consent → Record sms_consent=true, sms_consent_at=now()
         ↓
-Determine channels based on priority:
-├── Critical: push → SMS fallback → email
-└── Normal: push only (email for receipts)
+SMS toggle enabled
+
+---
+
+Event Triggers Notification
         ↓
-Try PUSH first
-├── Success → Log to notifications (channel=push)
-└── Failure → Try SMS if enabled
+send-notification edge function
         ↓
-Try SMS (if applicable)
-├── Check rate limit (5/day)
-├── Check phone_verified
-├── Send via Twilio
-├── Log to notifications (channel=sms)
-└── Twilio webhook updates status
+canSendSMS() check:
+├── phone_verified? → No → Log audit (skipped: not_verified)
+├── sms_consent? → No → Log audit (skipped: no_consent)
+├── sms_opted_out? → Yes → Log audit (skipped: opted_out)
+├── quiet_hours? → Yes + non-critical → Log audit (skipped: quiet_hours)
+├── rate_limit? → Exceeded → Log audit (skipped: rate_limited)
+└── All pass → Send SMS via Twilio
         ↓
-Send EMAIL (if applicable)
-├── Send via Resend
-└── Log to notifications (channel=email)
+Log to notification_audit (sent/failed)
+
+---
+
+User Replies STOP
         ↓
-All results stored in notifications table
+twilio-sms-inbound webhook
         ↓
-Admin can view in /admin/notifications/outbox
+Detect STOP keyword
+        ↓
+Update profiles: sms_opted_out=true, sms_opted_out_at=now()
+Update notification_preferences: sms_enabled=false
+Log to notification_audit (opt_out)
+        ↓
+Reply TwiML: "You have been unsubscribed..."
 ```
 
 ---
 
-## Safety Controls
+## Security Controls
 
-### 1. SMS Rate Limiting (5/user/day)
-Prevents abuse and controls costs.
+### 1. Phone Verification Required
+SMS only to `phone_verified = true`.
 
-### 2. Phone Verification Required
-SMS only sent to verified phones.
+### 2. Explicit Consent
+Require `sms_consent = true` with timestamp for legal compliance.
 
-### 3. Transactional Only
-SMS reserved for critical events only (out for delivery, support replies).
+### 3. Opt-Out Handling
+Process STOP/UNSUBSCRIBE keywords immediately per TCPA/CTIA guidelines.
 
-### 4. Opt-Out Support
-SMS includes "Reply STOP" and respects `sms_opted_out` flag.
+### 4. Rate Limiting
+Existing 5 SMS/day limit per user.
 
-### 5. Fallback Priority
-Push first, then SMS, then email - avoids duplicate notifications.
+### 5. OTP Lockout
+Existing 5 attempts per code, then code invalidated.
+
+### 6. Masked Display
+Phone numbers shown as `***-***-1234` in UI and audit logs.
+
+### 7. Quiet Hours
+Non-critical messages held during user-defined quiet period.
+
+### 8. Complete Audit Trail
+Every send attempt logged with channel, status, and reason.
+
+---
+
+## Compliance Notes
+
+- **TCPA**: Requires prior express written consent for marketing SMS
+- **CTIA**: Requires processing STOP/HELP keywords
+- **Record Retention**: Audit logs should be retained for compliance period
+- **Opt-Out**: Must honor within reasonable time (implementation is instant)
 
 ---
 
 ## Summary
 
-This implementation creates a robust multi-channel notification system:
+This implementation enhances the existing phone verification system with:
 
-1. **User Preferences** - Granular control over push, SMS, and email
-2. **Phone Verification** - OTP-based verification for SMS eligibility
-3. **Smart Fallback** - Push → SMS → Email with priority-based routing
-4. **Rate Limiting** - 5 SMS/day max to control costs
-5. **Delivery Tracking** - Twilio webhooks update notification status
-6. **Admin Dashboard** - Monitor failed notifications, retry capability
-7. **Existing Integration** - Uses existing `notifications` table and templates
+1. **Inbound SMS Webhook** - Handle STOP/UNSUBSCRIBE keywords automatically
+2. **Consent Tracking** - Record explicit consent with timestamp and text
+3. **Quiet Hours** - User-controlled notification timing
+4. **Complete Audit Trail** - Every notification attempt logged for compliance
+5. **Masked Display** - Phone numbers masked in UI and logs
+6. **Enhanced Checks** - All 5 conditions verified before SMS: verified, consent, not opted out, not quiet hours, not rate limited
 
-All leveraging existing Twilio and Resend configurations with minimal new infrastructure.
+Builds on existing infrastructure with minimal new tables and functions.
+
