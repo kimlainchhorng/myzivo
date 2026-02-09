@@ -20,6 +20,7 @@ interface EnhancedStatusBannerProps {
   etaLabel?: "to pickup" | "to you";
   isLocationBased?: boolean;
   showEtaExplanation?: boolean;
+  isPrepLearned?: boolean;
   className?: string;
 }
 
@@ -109,6 +110,7 @@ export function EnhancedStatusBanner({
   etaLabel,
   isLocationBased = false,
   showEtaExplanation = false,
+  isPrepLearned = false,
   className,
 }: EnhancedStatusBannerProps) {
   const style = PHASE_STYLES[phase] || PHASE_STYLES.pending;
@@ -187,7 +189,9 @@ export function EnhancedStatusBanner({
       {/* ETA explanation message */}
       {showEtaExplanation && displayMin != null && phase !== "delivered" && phase !== "cancelled" && (
         <p className="text-xs text-zinc-500 mt-2">
-          ETA updated based on traffic and demand.
+          {isPrepLearned 
+            ? "ETA based on real preparation times."
+            : "ETA updated based on traffic and demand."}
         </p>
       )}
       
