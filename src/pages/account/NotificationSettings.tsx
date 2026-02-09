@@ -13,6 +13,7 @@ import {
   BellOff,
   BellRing,
   CheckCircle2,
+  Crown,
   Info,
   Package,
   MessageSquare,
@@ -84,10 +85,24 @@ const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
     defaultEnabled: true,
   },
   {
+    id: "rewards",
+    label: "Rewards & Loyalty",
+    description: "Points earned, tier upgrades, and referral rewards",
+    icon: Crown,
+    defaultEnabled: true,
+  },
+  {
     id: "promotions",
     label: "Deals & Promotions",
     description: "Exclusive offers, flash sales, and seasonal deals",
     icon: Gift,
+    defaultEnabled: false,
+  },
+  {
+    id: "announcements",
+    label: "Announcements",
+    description: "New features, service updates, and platform news",
+    icon: Info,
     defaultEnabled: false,
   },
 ];
