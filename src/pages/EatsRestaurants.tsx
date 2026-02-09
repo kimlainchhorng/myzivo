@@ -4,7 +4,9 @@
 
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2, Heart } from "lucide-react";
+import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2 } from "lucide-react";
+import { usePromoBadgesByRestaurant } from "@/hooks/useRestaurantPromotions";
+import { PromoBadgeOverlay } from "@/components/eats/PromoBadgeOverlay";
 import { VoiceSearchButton } from "@/components/eats/VoiceSearchButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ function EatsRestaurantsContent() {
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const { data: restaurants, isLoading } = useRestaurants();
   const { deliveryAddress, setDeliveryAddress, getItemCount } = useCart();
+  const { getBadges } = usePromoBadgesByRestaurant();
 
   // Get unique cuisines
   const cuisines = [...new Set(restaurants?.map(r => r.cuisine_type).filter(Boolean))] as string[];
@@ -196,6 +199,7 @@ function EatsRestaurantsContent() {
                         size="sm"
                       />
                     </div>
+                    <PromoBadgeOverlay badges={getBadges(restaurant.id)} />
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-lg mb-1 line-clamp-1">{restaurant.name}</h3>

@@ -7,12 +7,13 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePromotionValidation } from "@/hooks/usePromotionValidation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
   UtensilsCrossed, Clock, User, 
-  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle
+  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle, Tag, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,49 @@ const checkoutSchema = z.object({
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
+/** Inline promo code input for checkout order summary */
+function PromoCodeInputInline({ 
+  onApply, isValidating, error 
+}: { 
+  onApply: (code: string) => Promise<any>; 
+  isValidating: boolean; 
+  error: string | null; 
+}) {
+  const [code, setCode] = useState("");
+  const handleApply = async () => {
+    if (!code.trim()) return;
+    const result = await onApply(code.trim());
+    if (result?.valid) setCode("");
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApply())}
+            placeholder="Promo code"
+            disabled={isValidating}
+            className="pl-10 h-9 text-sm"
+          />
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleApply}
+          disabled={!code.trim() || isValidating}
+          className="h-9 px-4 bg-gradient-to-r from-eats to-orange-500"
+        >
+          {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+        </Button>
+      </div>
+      {error && <p className="text-xs text-destructive px-1">{error}</p>}
+    </div>
+  );
+}
 function EatsCheckoutContent() {
   const navigate = useNavigate();
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
@@ -76,10 +120,14 @@ function EatsCheckoutContent() {
   const subtotal = getSubtotal();
   const pricing = useEatsDeliveryPricing(subtotal);
   const deliveryFee = pricing.totalDeliveryFee;
-  const total = pricing.orderTotal;
 
   const restaurantId = items.length > 0 ? items[0].restaurantId : null;
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
+
+  // Promo code validation
+  const promoValidation = usePromotionValidation({ serviceType: 'eats', restaurantId: restaurantId || undefined });
+  const { discountAmount, finalTotal: promoFinalTotal, isFreeDel } = promoValidation.calculateFinalTotal(subtotal, deliveryFee);
+  const total = promoValidation.appliedPromo?.valid ? promoFinalTotal : pricing.orderTotal;
   
   // Fetch restaurant to check availability
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
@@ -613,6 +661,45 @@ function EatsCheckoutContent() {
 
                     <hr />
 
+                    {/* Promo Code Input */}
+                    <div className="space-y-3">
+                      {promoValidation.appliedPromo?.valid ? (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                          <div className="flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-emerald-500" />
+                            <div>
+                              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                {promoValidation.appliedPromo.code}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {promoValidation.appliedPromo.description}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                              -${discountAmount.toFixed(2)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={promoValidation.removePromo}
+                              className="p-1 rounded-full hover:bg-muted transition-colors"
+                            >
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <PromoCodeInputInline
+                          onApply={(code) => promoValidation.validateCode(code, subtotal, restaurantId || undefined)}
+                          isValidating={promoValidation.isValidating}
+                          error={promoValidation.error}
+                        />
+                      )}
+                    </div>
+
+                    <hr />
+
                      {/* Positive delivery banners */}
                      {deliveryFactors.showIncentiveBanner && (
                        <IncentiveBoostBanner variant="compact" />
@@ -638,6 +725,18 @@ function EatsCheckoutContent() {
 
                     <hr />
                     <DeliveryFeeBreakdownCard pricing={pricing} />
+
+                    {/* Discount line item */}
+                    {promoValidation.appliedPromo?.valid && discountAmount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          Promo ({promoValidation.appliedPromo.code})
+                        </span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          -${discountAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Company Billing Badge */}
                     {billingType === "company" && businessMembership?.company && (
