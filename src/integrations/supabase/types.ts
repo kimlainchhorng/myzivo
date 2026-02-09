@@ -3610,11 +3610,14 @@ export type Database = {
       campaign_deliveries: {
         Row: {
           campaign_id: string
+          channel: string | null
+          clicked_at: string | null
           conversion_order_id: string | null
           converted_at: string | null
           created_at: string | null
           id: string
           notification_id: string | null
+          opened_at: string | null
           promo_code_id: string | null
           sent_at: string | null
           status: string | null
@@ -3622,11 +3625,14 @@ export type Database = {
         }
         Insert: {
           campaign_id: string
+          channel?: string | null
+          clicked_at?: string | null
           conversion_order_id?: string | null
           converted_at?: string | null
           created_at?: string | null
           id?: string
           notification_id?: string | null
+          opened_at?: string | null
           promo_code_id?: string | null
           sent_at?: string | null
           status?: string | null
@@ -3634,11 +3640,14 @@ export type Database = {
         }
         Update: {
           campaign_id?: string
+          channel?: string | null
+          clicked_at?: string | null
           conversion_order_id?: string | null
           converted_at?: string | null
           created_at?: string | null
           id?: string
           notification_id?: string | null
+          opened_at?: string | null
           promo_code_id?: string | null
           sent_at?: string | null
           status?: string | null
@@ -14880,12 +14889,18 @@ export type Database = {
           end_date: string | null
           executed_at: string | null
           id: string
+          is_recurring: boolean | null
+          last_executed_at: string | null
           message: string | null
           name: string
+          next_run_at: string | null
           notification_body: string | null
           notification_title: string | null
           promo_code_id: string | null
           push_enabled: boolean | null
+          recurrence_interval: string | null
+          sms_enabled: boolean | null
+          sms_message: string | null
           start_date: string | null
           status: string | null
           target_audience: string | null
@@ -14893,6 +14908,9 @@ export type Database = {
           target_criteria: Json | null
           target_restaurant_id: string | null
           title: string | null
+          trigger_config: Json | null
+          trigger_type: string | null
+          updated_at: string | null
         }
         Insert: {
           campaign_type: string
@@ -14903,12 +14921,18 @@ export type Database = {
           end_date?: string | null
           executed_at?: string | null
           id?: string
+          is_recurring?: boolean | null
+          last_executed_at?: string | null
           message?: string | null
           name: string
+          next_run_at?: string | null
           notification_body?: string | null
           notification_title?: string | null
           promo_code_id?: string | null
           push_enabled?: boolean | null
+          recurrence_interval?: string | null
+          sms_enabled?: boolean | null
+          sms_message?: string | null
           start_date?: string | null
           status?: string | null
           target_audience?: string | null
@@ -14916,6 +14940,9 @@ export type Database = {
           target_criteria?: Json | null
           target_restaurant_id?: string | null
           title?: string | null
+          trigger_config?: Json | null
+          trigger_type?: string | null
+          updated_at?: string | null
         }
         Update: {
           campaign_type?: string
@@ -14926,12 +14953,18 @@ export type Database = {
           end_date?: string | null
           executed_at?: string | null
           id?: string
+          is_recurring?: boolean | null
+          last_executed_at?: string | null
           message?: string | null
           name?: string
+          next_run_at?: string | null
           notification_body?: string | null
           notification_title?: string | null
           promo_code_id?: string | null
           push_enabled?: boolean | null
+          recurrence_interval?: string | null
+          sms_enabled?: boolean | null
+          sms_message?: string | null
           start_date?: string | null
           status?: string | null
           target_audience?: string | null
@@ -14939,6 +14972,9 @@ export type Database = {
           target_criteria?: Json | null
           target_restaurant_id?: string | null
           title?: string | null
+          trigger_config?: Json | null
+          trigger_type?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

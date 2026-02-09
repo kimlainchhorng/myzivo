@@ -6,6 +6,8 @@ import { ReactNode } from "react";
 import AppBottomNav from "./AppBottomNav";
 import AppHeader from "./AppHeader";
 import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
+import OfflineBanner from "@/components/shared/OfflineBanner";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
@@ -31,6 +33,8 @@ const AppLayout = ({
   headerRightAction,
   className,
 }: AppLayoutProps) => {
+  const { isOnline } = useNetworkStatus();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!hideHeader && (
@@ -45,6 +49,9 @@ const AppLayout = ({
 
       {/* System Status Banner (customer-facing) */}
       <SystemStatusBanner />
+
+      {/* Offline Banner */}
+      <OfflineBanner isOffline={!isOnline} />
 
       <main className={cn(
         "flex-1",
