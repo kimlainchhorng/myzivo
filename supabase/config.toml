@@ -188,3 +188,12 @@ verify_jwt = true
 
 [functions.push-campaign-scheduler]
 verify_jwt = false
+
+[functions.send-otp-sms]
+verify_jwt = false
+
+[functions.verify-otp-sms]
+verify_jwt = false
+
+[functions.twilio-sms-status]
+verify_jwt = false

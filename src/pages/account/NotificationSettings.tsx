@@ -1,6 +1,6 @@
 /**
  * NotificationSettings Page
- * User notification preferences and controls
+ * User notification preferences and controls for push, SMS, and email
  */
 
 import { useState, useEffect } from "react";
@@ -19,16 +19,26 @@ import {
   Gift,
   AlertCircle,
   Smartphone,
+  Mail,
+  Phone,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useWebPush } from "@/hooks/useWebPush";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  useUserProfile,
+} from "@/hooks/useNotificationPreferences";
+import { NotificationChannelCard } from "@/components/account/NotificationChannelCard";
+import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { toast } from "sonner";
 
 interface NotificationCategory {
@@ -72,6 +82,17 @@ const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
 
 const PREFS_KEY = "zivo_notification_prefs";
 
+// Format phone number for display
+function formatPhoneDisplay(phone: string | null): string {
+  if (!phone) return "";
+  // Simple format: +1 (555) 123-4567
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length === 11 && cleaned.startsWith("1")) {
+    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  }
+  return phone;
+}
+
 export default function NotificationSettings() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -83,10 +104,16 @@ export default function NotificationSettings() {
     subscribe,
     unsubscribe,
     sendTestNotification,
-    isLoading,
-    error,
+    isLoading: pushLoading,
+    error: pushError,
   } = useWebPush();
 
+  // Notification preferences from database
+  const { data: prefs, isLoading: prefsLoading } = useNotificationPreferences();
+  const updatePrefs = useUpdateNotificationPreferences();
+  const { data: profile } = useUserProfile();
+
+  // Local preferences for categories
   const [preferences, setPreferences] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem(PREFS_KEY);
@@ -97,6 +124,17 @@ export default function NotificationSettings() {
       return acc;
     }, {} as Record<string, boolean>);
   });
+
+  // Phone verification
+  const [phoneInput, setPhoneInput] = useState("");
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+
+  // Sync phone from profile
+  useEffect(() => {
+    if (profile?.phone_e164) {
+      setPhoneInput(profile.phone_e164);
+    }
+  }, [profile]);
 
   // Save preferences when they change
   useEffect(() => {
@@ -117,6 +155,7 @@ export default function NotificationSettings() {
     const result = await subscribe();
     if (result) {
       toast.success("Push notifications enabled! 🔔");
+      updatePrefs.mutate({ inAppEnabled: true });
     }
   };
 
@@ -124,12 +163,40 @@ export default function NotificationSettings() {
     const result = await unsubscribe();
     if (result) {
       toast.success("Push notifications disabled");
+      updatePrefs.mutate({ inAppEnabled: false });
     }
   };
 
   const handleTestNotification = async () => {
     await sendTestNotification();
     toast.success("Test notification sent!");
+  };
+
+  const handleToggleSMS = (enabled: boolean) => {
+    updatePrefs.mutate({ smsEnabled: enabled });
+  };
+
+  const handleToggleEmail = (enabled: boolean) => {
+    updatePrefs.mutate({ emailEnabled: enabled });
+  };
+
+  const handleToggleMarketing = (enabled: boolean) => {
+    updatePrefs.mutate({ marketingEnabled: enabled });
+  };
+
+  const handleVerifyPhone = () => {
+    // Validate phone format
+    const cleaned = phoneInput.replace(/\D/g, "");
+    let e164 = phoneInput;
+    if (!phoneInput.startsWith("+")) {
+      e164 = `+1${cleaned}`;
+    }
+    if (!/^\+[1-9]\d{6,14}$/.test(e164)) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+    setPhoneInput(e164);
+    setShowPhoneDialog(true);
   };
 
   const getPermissionBadge = () => {
@@ -167,6 +234,8 @@ export default function NotificationSettings() {
     }
   };
 
+  const isLoading = prefsLoading || updatePrefs.isPending;
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -183,7 +252,7 @@ export default function NotificationSettings() {
       </div>
 
       <div className="px-4 py-4 space-y-6">
-        {/* Permission Status Card */}
+        {/* Push Notifications Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,11 +285,11 @@ export default function NotificationSettings() {
                 {permission !== "granted" && isSupported && (
                   <Button
                     onClick={handleEnableNotifications}
-                    disabled={isLoading || !isConfigured}
+                    disabled={pushLoading || !isConfigured}
                     size="sm"
                   >
                     <BellRing className="w-4 h-4 mr-2" />
-                    {isLoading ? "Enabling..." : "Enable Notifications"}
+                    {pushLoading ? "Enabling..." : "Enable Notifications"}
                   </Button>
                 )}
 
@@ -236,7 +305,7 @@ export default function NotificationSettings() {
                     <Button
                       variant="outline"
                       onClick={handleDisableNotifications}
-                      disabled={isLoading}
+                      disabled={pushLoading}
                       size="sm"
                     >
                       <BellOff className="w-4 h-4 mr-2" />
@@ -261,12 +330,10 @@ export default function NotificationSettings() {
                 )}
               </div>
 
-              {/* Error message */}
-              {error && (
-                <p className="text-sm text-destructive mt-3">{error}</p>
+              {pushError && (
+                <p className="text-sm text-destructive mt-3">{pushError}</p>
               )}
 
-              {/* Not configured message */}
               {!isConfigured && isSupported && (
                 <div className="flex items-start gap-2 mt-3 p-3 bg-amber-500/10 rounded-lg text-sm">
                   <Info className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -280,11 +347,109 @@ export default function NotificationSettings() {
           </Card>
         </motion.div>
 
-        {/* Notification Categories */}
+        {/* SMS Notifications */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <NotificationChannelCard
+            icon={<Smartphone className="w-5 h-5 text-primary" />}
+            title="SMS Notifications"
+            description="Receive critical updates via text message"
+            enabled={prefs?.smsEnabled ?? false}
+            onToggle={handleToggleSMS}
+            isLoading={isLoading}
+            verified={prefs?.phoneVerified ?? profile?.phone_verified ?? false}
+            verificationRequired={true}
+            onVerify={handleVerifyPhone}
+            verifyLabel="Verify Phone Number"
+            rateLimit="Max 5 SMS/day for critical updates only"
+          >
+            {/* Phone Input */}
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label htmlFor="phone" className="sr-only">
+                  Phone Number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  value={formatPhoneDisplay(phoneInput) || phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  disabled={prefs?.phoneVerified}
+                />
+              </div>
+              {!prefs?.phoneVerified && phoneInput && (
+                <Button
+                  variant="outline"
+                  onClick={handleVerifyPhone}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Verify"
+                  )}
+                </Button>
+              )}
+            </div>
+            {prefs?.phoneVerified && (
+              <p className="text-xs text-success flex items-center gap-1 mt-2">
+                <CheckCircle2 className="w-3 h-3" />
+                Phone verified: {formatPhoneDisplay(prefs.phoneNumber)}
+              </p>
+            )}
+          </NotificationChannelCard>
+        </motion.div>
+
+        {/* Email Notifications */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+        >
+          <NotificationChannelCard
+            icon={<Mail className="w-5 h-5 text-primary" />}
+            title="Email Notifications"
+            description="Receipts, confirmations, and important updates"
+            enabled={prefs?.emailEnabled ?? true}
+            onToggle={handleToggleEmail}
+            isLoading={isLoading}
+          >
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="w-4 h-4" />
+                <span>{user?.email || profile?.email || "Not available"}</span>
+              </div>
+              
+              {/* Marketing toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="marketing" className="font-medium">
+                    Marketing & Promotions
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Deals, offers, and travel inspiration
+                  </p>
+                </div>
+                <Switch
+                  id="marketing"
+                  checked={prefs?.marketingEnabled ?? false}
+                  onCheckedChange={handleToggleMarketing}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          </NotificationChannelCard>
+        </motion.div>
+
+        {/* Notification Categories */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
         >
           <h3 className="text-sm font-medium text-muted-foreground mb-2 px-1">
             Notification Types
@@ -334,7 +499,7 @@ export default function NotificationSettings() {
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Smartphone className="w-5 h-5 text-primary" />
+                  <Phone className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Get the hiZIVO App</h3>
@@ -361,13 +526,22 @@ export default function NotificationSettings() {
           <div className="flex items-start gap-2 text-xs text-muted-foreground">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <p>
-              Notification preferences are saved locally on this device. To
-              manage notifications on other devices, visit this page on each
-              device.
+              SMS and email preferences are synced across all your devices.
+              Push notification settings are device-specific.
             </p>
           </div>
         </div>
       </div>
+
+      {/* Phone Verification Dialog */}
+      <PhoneVerificationDialog
+        open={showPhoneDialog}
+        onOpenChange={setShowPhoneDialog}
+        phoneNumber={phoneInput}
+        onVerified={() => {
+          updatePrefs.mutate({ smsEnabled: true, phoneNumber: phoneInput });
+        }}
+      />
     </div>
   );
 }

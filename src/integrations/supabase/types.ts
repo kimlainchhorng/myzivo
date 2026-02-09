@@ -22905,6 +22905,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_daily_limits: {
+        Row: {
+          date: string
+          sms_count: number | null
+          user_id: string
+        }
+        Insert: {
+          date: string
+          sms_count?: number | null
+          user_id: string
+        }
+        Update: {
+          date?: string
+          sms_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_otp_codes: {
+        Row: {
+          attempts: number | null
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone_e164: string
+          user_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          code: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          phone_e164: string
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_e164?: string
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -31200,6 +31251,7 @@ export type Database = {
         Returns: Json
       }
       check_sla_breaches: { Args: never; Returns: number }
+      check_sms_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_withdrawal_allowed: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
@@ -31613,6 +31665,10 @@ export type Database = {
         Returns: undefined
       }
       increment_promo_uses: { Args: { promo_id: string }; Returns: undefined }
+      increment_sms_count: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_uuid: string }; Returns: boolean }
