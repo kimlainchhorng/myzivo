@@ -485,28 +485,37 @@ export type Database = {
       }
       admin_invitations: {
         Row: {
+          accepted_at: string | null
           created_at: string | null
           email: string
+          expires_at: string | null
           id: string
           invited_by: string | null
           role: string | null
           status: string | null
+          token: string | null
         }
         Insert: {
+          accepted_at?: string | null
           created_at?: string | null
           email: string
+          expires_at?: string | null
           id?: string
           invited_by?: string | null
           role?: string | null
           status?: string | null
+          token?: string | null
         }
         Update: {
+          accepted_at?: string | null
           created_at?: string | null
           email?: string
+          expires_at?: string | null
           id?: string
           invited_by?: string | null
           role?: string | null
           status?: string | null
+          token?: string | null
         }
         Relationships: []
       }

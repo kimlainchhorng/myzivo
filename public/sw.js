@@ -60,9 +60,32 @@ if (workbox) {
       plugins: [
         new workbox.expiration.ExpirationPlugin({
           maxEntries: 50,
-          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+          maxAgeSeconds: 60 * 60 * 24 * 30,
         }),
       ],
+    })
+  );
+
+  // NetworkFirst for navigation (HTML pages) — always fetch fresh index.html
+  workbox.routing.registerRoute(
+    ({ request }) => request.mode === 'navigate',
+    new workbox.strategies.NetworkFirst({
+      cacheName: 'navigation-cache',
+      networkTimeoutSeconds: 3,
+      plugins: [
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
+    })
+  );
+
+  // NetworkFirst for Supabase API calls — never serve stale data
+  workbox.routing.registerRoute(
+    /^https:\/\/.*\.supabase\.co\/.*/i,
+    new workbox.strategies.NetworkFirst({
+      cacheName: 'api-cache',
+      networkTimeoutSeconds: 5,
     })
   );
 } else {
@@ -177,22 +200,18 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating...');
-  // Clean old caches and claim all clients immediately
+  // Purge all caches except the ones we explicitly want to keep
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      const keepCaches = [
+        'google-fonts-stylesheets',
+        'google-fonts-webfonts',
+        'navigation-cache',
+        'api-cache',
+      ];
       return Promise.all(
         cacheNames
-          .filter((name) => {
-            // Keep workbox-managed caches, delete unknown old ones
-            const knownCaches = [
-              'google-fonts-stylesheets',
-              'google-fonts-webfonts',
-              'images-cache',
-              'mapbox-cache',
-              'workbox-precache',
-            ];
-            return !knownCaches.some((known) => name.includes(known));
-          })
+          .filter((name) => !keepCaches.some((keep) => name === keep))
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
