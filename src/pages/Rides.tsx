@@ -418,7 +418,7 @@ function RidesInner() {
     };
     
     // Multiplier: from zone rates if available, otherwise fallback to RIDE_TYPE_MULTIPLIERS
-    const multiplier = ratesForType?.multiplier ?? RIDE_TYPE_MULTIPLIERS[option.id] ?? 1.0;
+    const multiplier = ratesForType?.ride_type_multiplier ?? RIDE_TYPE_MULTIPLIERS[option.id] ?? 1.0;
     
     return quoteRidePrice(
       settings,

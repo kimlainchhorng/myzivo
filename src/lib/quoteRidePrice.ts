@@ -152,7 +152,7 @@ export async function fetchZoneRate(
 ): Promise<ZoneRate> {
   const { data, error } = await supabase
     .from("zone_pricing_rates")
-    .select("base_fare, per_mile, per_minute, booking_fee, minimum_fare, multiplier")
+    .select("base_fare, per_mile, per_minute, booking_fee, minimum_fare, ride_type_multiplier")
     .eq("zone_id", zoneId)
     .eq("ride_type", rideType)
     .single();
@@ -168,7 +168,7 @@ export async function fetchZoneRate(
     per_minute: Number(data.per_minute) || DEFAULT_RATE.per_minute,
     booking_fee: Number(data.booking_fee) || DEFAULT_RATE.booking_fee,
     minimum_fare: Number(data.minimum_fare) || DEFAULT_RATE.minimum_fare,
-    ride_type_multiplier: Number(data.multiplier) || DEFAULT_RATE.ride_type_multiplier,
+    ride_type_multiplier: Number(data.ride_type_multiplier) || DEFAULT_RATE.ride_type_multiplier,
   };
 }
 

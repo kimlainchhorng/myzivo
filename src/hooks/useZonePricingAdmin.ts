@@ -29,7 +29,7 @@ export interface ZonePricingRate {
   per_minute: number;
   booking_fee: number;
   minimum_fare: number;
-  multiplier: number;
+  ride_type_multiplier: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -179,11 +179,11 @@ export function useDeleteZoneRate() {
  * Calculate fare preview
  */
 export function calculateFarePreview(
-  rate: Pick<ZonePricingRate, "base_fare" | "per_mile" | "per_minute" | "booking_fee" | "minimum_fare" | "multiplier">,
+  rate: Pick<ZonePricingRate, "base_fare" | "per_mile" | "per_minute" | "booking_fee" | "minimum_fare" | "ride_type_multiplier">,
   miles: number = 10,
   minutes: number = 25
 ): number {
   const subtotal = rate.base_fare + (miles * rate.per_mile) + (minutes * rate.per_minute) + rate.booking_fee;
   const beforeMultiplier = Math.max(subtotal, rate.minimum_fare);
-  return Math.round(beforeMultiplier * rate.multiplier * 100) / 100;
+  return Math.round(beforeMultiplier * rate.ride_type_multiplier * 100) / 100;
 }

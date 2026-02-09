@@ -27248,6 +27248,39 @@ export type Database = {
           },
         ]
       }
+      user_addresses: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          label: string | null
+          lat: number | null
+          lng: number | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_behavior_signals: {
         Row: {
           created_at: string
