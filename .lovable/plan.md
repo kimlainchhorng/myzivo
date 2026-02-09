@@ -1,115 +1,128 @@
 
 
-# Universal Search — Cross-Service Search Hub
+# Personalized Home — Time-Aware, Behavior-Driven Content
 
 ## Overview
 
-Replace the current search bar behavior on the mobile home screen with a full-screen Universal Search overlay that searches across all ZIVO services (Eats, Rides, Hotels, Flights, Rentals, Delivery) from a single input, with suggestion sections and result tabs.
-
-## Current State
-
-- The home screen search bar (`AppHome.tsx` line 257) navigates to `/search` (the travel search page with Flights/Hotels/Cars tabs)
-- The existing `PremiumSearchOverlay` is a full-screen overlay but only covers Flights, Hotels, and Cars — no Eats, Rides, or Delivery
-- Recent searches are stored in localStorage under `zivo_recent_searches`
-- Restaurant data is available via `eatsApi.ts` (`getRestaurants`)
-- No unified cross-service search exists
+Add three new personalized rows to the AppHome screen that adapt to time of day and user behavior. These sit between the existing Services Grid (Zone 1) and the existing Quick Actions (Zone 3), replacing the current basic "Recent Activity" and "Recommended for You" sections with richer, smarter content.
 
 ## What Changes
 
-### New File: `src/components/search/UniversalSearchOverlay.tsx`
+### New file: `src/hooks/usePersonalizedHome.ts`
 
-A full-screen overlay triggered from the home screen search bar. Contains:
+A single hook that encapsulates all personalization logic. Returns data for three sections plus a time-of-day context banner.
 
-**Search Input**: Placeholder reads "Search food, rides, hotels, flights..."
+**Time-of-day logic:**
+- Morning (5am-11am): Headline "Good Morning" with coffee/breakfast suggestions
+- Lunch (11am-2pm): Headline "Lunchtime" with nearby restaurant deals
+- Afternoon (2pm-5pm): Headline "Good Afternoon" with snack/coffee suggestions
+- Evening (5pm-10pm): Headline "Dinner Time" with dinner and delivery promos
+- Late night (10pm-5am): Headline "Late Night" with late-night delivery options
 
-**Suggestion Sections** (shown when input is empty):
-1. **Recent Searches** — loaded from localStorage (`zivo_recent_searches`), same format as existing, displayed with service-specific icons and colors
-2. **Popular Services** — static list of 6 service pills (Ride, Eats, Delivery, Flights, Hotels, Rentals) that navigate directly to each service
-3. **Nearby Restaurants** — fetches top 5 active restaurants from Supabase `restaurants` table via `eatsApi.getRestaurants()`, displayed as compact cards with name and cuisine type
+**Data queries (all React Query, auth-gated):**
 
-**Result Tabs** (shown when input has text):
-Tabs: All | Eats | Rides | Hotels | Flights | Rentals
+1. **"Order Again" row** — Fetches the user's last 5 distinct restaurants from `food_orders` (status = delivered), joins `restaurants` for name, logo, cuisine, and rating. Deduplicates by `restaurant_id`.
 
-Filtering logic (client-side, lightweight):
-- **Eats**: Searches restaurants table by name (case-insensitive `ilike`)
-- **Rides**: Matches if query contains ride-related keywords — shows a "Book a ride to [query]" action card
-- **Hotels**: Shows "Search hotels in [query]" action card linking to `/search?tab=hotels`
-- **Flights**: Shows "Search flights to [query]" action card linking to `/search?tab=flights`
-- **Rentals**: Shows "Rent a car in [query]" action card linking to `/rent-car`
-- **All tab**: Combines all of the above
+2. **"Your Favorites" row** — Fetches from `user_favorites` where `item_type = 'restaurant'`, joins `restaurants` for display data. Falls back to top-rated restaurants if no favorites exist.
 
-This keeps it fast — restaurant results come from a single Supabase query, while other services show smart action cards that deep-link to the appropriate service page.
+3. **"Recommended for You" row** — Combines signals:
+   - Gets the user's most-ordered cuisine types from `food_orders` joined to `restaurants.cuisine_type`
+   - Fetches restaurants matching those cuisine types that the user has NOT ordered from
+   - Sorts by restaurant rating descending
+   - Limits to 6 results
+   - Falls back to top-rated restaurants near the user if no order history
 
-### Updated File: `src/pages/app/AppHome.tsx`
+4. **Time-based suggestions** — Filters restaurants by cuisine type keywords:
+   - Morning: cuisine contains "cafe", "bakery", "breakfast", "coffee"
+   - Lunch: all active restaurants sorted by rating
+   - Evening: cuisine contains "dinner", "pizza", "sushi", "italian", "mexican", "indian", "chinese"
+   - Late night: restaurants that are still open (if `hours` data is available), otherwise top-rated
 
-- Import `UniversalSearchOverlay`
-- Add `isSearchOpen` state
-- Change the search bar button from `navigate("/search")` to `setIsSearchOpen(true)`
-- Render `<UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />`
+### Updated file: `src/pages/app/AppHome.tsx`
 
-### Updated File: `src/components/search/index.ts`
+Replace the current Zone 2 (basic "Recent Activity" + pill badges) with three new horizontal-scroll rows:
 
-- Add export for `UniversalSearchOverlay`
+```
+--- TIME CONTEXT BANNER ---
+  "Lunchtime Picks" / "Breakfast Spots" / "Dinner & Delivery"
+  (horizontal scroll of restaurant cards filtered by time)
+
+--- ORDER AGAIN ---
+  "Order Again"
+  (horizontal scroll of restaurants from past orders)
+
+--- YOUR FAVORITES ---
+  "Your Favorites"
+  (horizontal scroll of favorited restaurants)
+
+--- RECOMMENDED FOR YOU ---
+  "Recommended for You"
+  (horizontal scroll of restaurants matching user's cuisine preferences)
+```
+
+Each row uses a compact restaurant card showing: cover image or logo, name, cuisine type, rating stars, and a chevron. Tapping navigates to `/eats/restaurant/:id`.
+
+**For guests (not logged in):** Show only the time context banner with top-rated restaurants, and a "Recommended for You" row with popular restaurants. No "Order Again" or "Favorites" rows.
+
+### Removed from AppHome
+
+- The old "Recent Activity" horizontal scroll (emoji-based cards from trips/food/deliveries) — this data is still accessible via the quick actions and trips page
+- The old "Recommended for You" pill badges ("Try ZIVO Ride", etc.)
+- The related `recentActivity` and `recommendations` queries from AppHome (moved into the new hook)
+
+### Kept in AppHome
+
+- Zone 1 (Services Grid) — unchanged
+- Zone 3 (Quick Actions: Reorder, Rebook Ride, Upcoming) — unchanged
+- Recommended Deals section — unchanged
+- Profile bar, search, bottom nav — unchanged
 
 ## Technical Detail
 
-### UniversalSearchOverlay structure
+### usePersonalizedHome hook structure
 
-```text
-Props:
-  isOpen: boolean
-  onClose: () => void
+```
+Input: user (from useAuth)
 
-State:
-  query: string (search input)
-  activeTab: "all" | "eats" | "rides" | "hotels" | "flights" | "rentals"
-
-Queries:
-  1. Restaurant search (React Query)
-     - queryKey: ["universal-search-restaurants", debouncedQuery]
-     - Calls supabase.from("restaurants").select("id, name, cuisine_type, logo_url")
-       .ilike("name", `%${query}%`).eq("status", "active").limit(5)
-     - enabled: query.length >= 2
-     - staleTime: 30_000
-
-  2. Nearby restaurants (React Query)
-     - queryKey: ["nearby-restaurants"]
-     - Calls supabase.from("restaurants").select("id, name, cuisine_type, logo_url")
-       .eq("status", "active").order("rating", { ascending: false }).limit(5)
-     - enabled: query === "" (only when suggestions are shown)
-     - staleTime: 60_000
+Returns:
+  timeContext: {
+    period: "morning" | "lunch" | "afternoon" | "evening" | "late_night"
+    headline: string (e.g. "Breakfast Spots")
+    emoji: string
+  }
+  timeSuggestions: Restaurant[] (filtered by time-appropriate cuisine)
+  orderAgain: Restaurant[] (from past delivered orders, deduplicated)
+  favorites: Restaurant[] (from user_favorites)
+  recommended: Restaurant[] (cuisine-match scoring)
+  isLoading: boolean
 ```
 
-### Tab filtering in "All" view
+### Sorting logic for "Recommended for You"
 
-When the user types a query, each service generates result cards:
+```
+1. Get user's top 3 cuisine types from food_orders
+2. Query restaurants matching those cuisines, excluding already-ordered ones
+3. Score each: cuisineMatch (40%) + rating (40%) + isOpen bonus (20%)
+4. Sort by score desc, take top 6
+```
 
-| Service | Result Card | Action |
-|---|---|---|
-| Eats | Restaurant name + cuisine from DB | Navigate to `/eats/restaurant/:id` |
-| Rides | "Book a ride to [query]" | Navigate to `/rides?dropoff=[query]` |
-| Hotels | "Search hotels in [query]" | Navigate to `/search?tab=hotels` |
-| Flights | "Search flights to [query]" | Navigate to `/search?tab=flights` |
-| Rentals | "Rent a car in [query]" | Navigate to `/rent-car?pickup=[query]` |
+### Restaurant card component (inline in AppHome)
 
-The "All" tab shows all of these together. Individual tabs filter to just that service type.
+Small reusable component rendered in each row:
+- 120px wide, rounded-2xl
+- Cover image (100px height) with gradient overlay
+- Restaurant name (truncated), cuisine type, star rating
+- Tap navigates to `/eats/restaurant/:id`
 
-### Visual Design
+### Query efficiency
 
-- Full-screen overlay matching existing dark theme (zinc-950)
-- AnimatePresence slide-up animation (consistent with PremiumSearchOverlay)
-- Auto-focus on input when opened
-- ESC key and back button to close
-- Body scroll lock when open
-- Tab bar uses horizontal scroll with service-colored active states
-- 300ms debounce on search input before querying restaurants
+All 4 queries run in parallel via separate `useQuery` calls inside the hook. Each has `staleTime: 60_000` (1 minute) since restaurant data doesn't change frequently. The time context is computed client-side with no query — just `new Date().getHours()`.
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/components/search/UniversalSearchOverlay.tsx` | Create | Full-screen universal search with suggestions, restaurant search, action cards, and 6 result tabs |
-| `src/pages/app/AppHome.tsx` | Update | Wire search bar to open the overlay instead of navigating to /search |
-| `src/components/search/index.ts` | Update | Add UniversalSearchOverlay export |
+| `src/hooks/usePersonalizedHome.ts` | Create | Hook with time-of-day logic, 4 personalized queries (time suggestions, order again, favorites, recommended) |
+| `src/pages/app/AppHome.tsx` | Update | Replace Zone 2 with 4 personalized rows using the new hook; remove old recentActivity/recommendations queries |
 
-Three file changes total. Restaurant data comes from existing Supabase table. Other services use smart action cards that deep-link — no new APIs needed.
+Two file changes. No new routes, no schema changes. All data comes from existing `food_orders`, `restaurants`, `user_favorites`, and `eats_reviews` tables.
