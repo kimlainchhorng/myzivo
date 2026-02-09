@@ -1,189 +1,154 @@
 
-# Demand Awareness (ETA Accuracy) for Eats
 
-## Overview
-Improve ETA transparency during high demand by showing customers a contextual message when delivery times may be longer, and adjusting ETA calculations based on the current demand level from zone data.
+# ZIVO+ Membership Implementation Plan
+
+## Executive Summary
+The ZIVO+ membership feature is **90% complete** with robust infrastructure already built. This plan addresses the remaining gaps: adding the `/account/membership` route, activating the Stripe plan, creating a monthly savings summary, and ensuring the badge is visible across the platform.
 
 ---
 
 ## Current State Analysis
 
-### Already Complete
-| Feature | Status | Location |
-|---------|--------|----------|
-| `useEatsSurgePricing` hook | Complete | Fetches global surge multiplier, returns level (Low/Medium/High) |
-| `surge_multipliers` table | Complete | Stores zone='GLOBAL' multiplier for demand-based pricing |
-| `EatsSurgeBadge` component | Complete | Shows badge on restaurant list when surge active |
-| `EtaCountdown` component | Complete | Shows ETA with countdown on order detail page |
-| `eats-auto-dispatch` edge function | Complete | Calculates ETA based on distance only |
-| `EatsOrderDetail.tsx` | Complete | Order tracking page with status, driver info, map |
+### Already Built
+| Component | Status | Details |
+|-----------|--------|---------|
+| Membership Page | Complete | Full UI at `src/pages/MembershipPage.tsx` with plan pricing, benefits, management |
+| Hooks | Complete | `useMembership`, `useMembershipPlans`, `useCreateMembershipCheckout`, `useCancelMembership`, `useOpenCustomerPortal` |
+| Edge Functions | Complete | `create-membership-checkout`, `cancel-membership`, `customer-portal-membership`, `stripe-webhook` |
+| Checkout Integration | Complete | EatsCart.tsx applies free delivery + 50% off service fees |
+| Database Tables | Complete | `zivo_subscription_plans`, `zivo_subscriptions`, `membership_usage` |
+| Order Tracking | Complete | `membership_applied`, `membership_discount_cents` columns |
+| Badges | Complete | `ZivoPlusBadge`, `MembershipSavingsBadge` components |
 
-### Missing
-| Feature | Status |
-|---------|--------|
-| High demand message on order detail page | Need to add |
-| ETA adjustment based on demand level | Need to add to edge function |
-| Demand-aware ETA display on order screen | Need to add to EtaCountdown |
-| Transparent messaging about delay reasons | Need to create component |
+### Missing Pieces
+| Item | What's Needed |
+|------|---------------|
+| Route | Add `/account/membership` and `/membership` routes to App.tsx |
+| Stripe Prices | Create ZIVO+ product and prices in Stripe, update plan record |
+| Plan Activation | Set `is_active = true` on the plan |
+| Monthly Savings Hook | Create hook to aggregate savings from orders |
+| Savings Card on Membership Page | Show "You saved $X this month" |
+| Member Badge Visibility | Show badge in header/profile for active members |
 
 ---
 
-## Implementation Plan
+## Implementation Steps
 
-### 1) Create High Demand Banner Component
+### 1) Add Membership Routes to App.tsx
 
-**File to Create:** `src/components/eats/HighDemandBanner.tsx`
+**File to Modify:** `src/App.tsx`
 
-**Purpose:** Display a contextual message when demand is high during order tracking.
-
-**UI:**
-```text
-+----------------------------------------------------------+
-| [🔥] High demand in your area                            |
-|     Delivery may take a little longer than usual.        |
-|     We appreciate your patience!                         |
-+----------------------------------------------------------+
-```
-
-**Variants:**
-| Level | Icon | Message | Color |
-|-------|------|---------|-------|
-| Medium | Clock | "Busy area — delivery may take a bit longer" | Amber |
-| High | Flame | "High demand in your area — delivery time may be slightly longer" | Orange/Red |
-
-**Features:**
-- Animated entry with Framer Motion
-- Dismissible (stores in sessionStorage)
-- Links to surge explainer if tapped
-
-### 2) Add Demand Banner to Order Detail Page
-
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
-
-**Changes:**
-- Import `useEatsSurgePricing` hook
-- Import new `HighDemandBanner` component
-- Display banner below status banner when demand is Medium or High
-- Only show for active orders (not delivered/cancelled)
-
-**Placement:** Between live status banner and scheduled delivery banner
+Add routes for both public membership page and account-level access:
 
 ```typescript
-// Import
-import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
-import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
-
-// In component
-const { level: demandLevel, isActive: demandActive } = useEatsSurgePricing();
-
-// In render, after status banner:
-{demandActive && order.status !== "delivered" && order.status !== "cancelled" && (
-  <HighDemandBanner level={demandLevel} orderId={order.id} />
-)}
+// Add near other account routes (around line 915)
+<Route path="/membership" element={<MembershipPage />} />
+<Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
 ```
 
-### 3) Enhance EtaCountdown with Demand Awareness
+### 2) Create Stripe Products and Prices
 
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+Using Stripe tools:
+- Create product: "ZIVO Plus" with description
+- Create monthly price: $9.99/month recurring
+- Create annual price: $79.99/year recurring
+- Get price IDs and update database
 
-**Changes:**
-- Add optional `demandLevel` prop
-- Show subtle indicator when ETA includes demand buffer
-- Display "Includes busy time buffer" note when relevant
+**SQL to execute after creating Stripe prices:**
+```sql
+UPDATE zivo_subscription_plans
+SET 
+  stripe_price_id_monthly = 'price_xxx_monthly',
+  stripe_price_id_yearly = 'price_xxx_yearly',
+  is_active = true
+WHERE slug = 'zivo-plus';
+```
 
-**New Props:**
+### 3) Create Monthly Savings Hook
+
+**File to Create:** `src/hooks/useMembershipSavings.ts`
+
+Query `food_orders` to aggregate membership savings for the current month:
+
 ```typescript
-interface EtaCountdownProps {
-  // ... existing props
-  demandLevel?: SurgeLevel;  // New prop
-  showDemandNote?: boolean;  // Show "includes busy time buffer" note
+export function useMembershipSavings() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ["membership-savings", user?.id],
+    queryFn: async () => {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select("membership_discount_cents")
+        .eq("customer_id", user.id)
+        .eq("membership_applied", true)
+        .gte("created_at", startOfMonth.toISOString());
+      
+      if (error) throw error;
+      
+      const totalCents = data?.reduce((sum, order) => 
+        sum + (order.membership_discount_cents || 0), 0) || 0;
+      
+      return {
+        thisMonthCents: totalCents,
+        thisMonthDollars: totalCents / 100,
+        orderCount: data?.length || 0,
+      };
+    },
+    enabled: !!user?.id,
+  });
 }
 ```
 
-**UI Enhancement:**
+### 4) Add Savings Summary Card to MembershipPage
+
+**File to Modify:** `src/pages/MembershipPage.tsx`
+
+For active members, show a card with this month's savings:
+
 ```text
 +------------------------------------------+
-| [🕐]  Arriving in                        |
-|       35 min                             |
+| 📊 Your Savings This Month               |
++------------------------------------------+
 |                                          |
-| [🔥 Includes busy time buffer]     Live  |
+|   $12.47 saved                           |
+|   across 5 orders                        |
+|                                          |
+|   [View Order History →]                 |
 +------------------------------------------+
 ```
 
-### 4) Update ETA Calculation in Edge Function
+### 5) Add Member Badge to Header
 
-**File to Modify:** `supabase/functions/eats-auto-dispatch/index.ts`
+**File to Modify:** `src/components/home/NavBar.tsx` (or `Header.tsx`)
 
-**Changes:**
-- Fetch current surge multiplier from `surge_multipliers` table
-- Add demand-based buffer to ETA calculation
-- Store demand level with order for historical tracking
+For logged-in members, show small badge next to avatar:
 
-**Demand Buffers:**
-| Surge Level | Multiplier | ETA Buffer |
-|-------------|------------|------------|
-| Low | 1.0 | +0 min |
-| Medium | 1.01-1.5 | +5 min |
-| High | >1.5 | +10 min |
-
-**Updated calculateETA function:**
 ```typescript
-function calculateETA(
-  driverLat: number, 
-  driverLng: number,
-  restaurantLat: number, 
-  restaurantLng: number,
-  customerLat: number | null, 
-  customerLng: number | null,
-  surgeMultiplier: number = 1.0  // New parameter
-) {
-  const distanceToRestaurant = calculateDistance(driverLat, driverLng, restaurantLat, restaurantLng);
-  const etaPickupMinutes = Math.ceil(distanceToRestaurant / AVG_SPEED_KM_PER_MIN);
-  
-  let etaDeliveryMinutes = 15;
-  if (customerLat && customerLng) {
-    const distanceToCustomer = calculateDistance(restaurantLat, restaurantLng, customerLat, customerLng);
-    etaDeliveryMinutes = Math.ceil(distanceToCustomer / AVG_SPEED_KM_PER_MIN);
-  }
-  
-  // Add demand buffer based on surge level
-  let demandBuffer = 0;
-  if (surgeMultiplier > 1.5) {
-    demandBuffer = 10; // High demand
-  } else if (surgeMultiplier > 1.0) {
-    demandBuffer = 5;  // Medium demand
-  }
-  
-  const totalMinutes = etaPickupMinutes + etaDeliveryMinutes + demandBuffer;
-  const now = new Date();
-  
-  return {
-    eta_pickup: new Date(now.getTime() + etaPickupMinutes * 60 * 1000).toISOString(),
-    eta_dropoff: new Date(now.getTime() + totalMinutes * 60 * 1000).toISOString(),
-    eta_minutes: totalMinutes,
-    demand_buffer: demandBuffer,
-  };
-}
+// Import useMembership hook
+const { isActive } = useMembership();
+
+// In render, near user avatar:
+{isActive && <ZivoPlusBadge variant="small" />}
 ```
 
-### 5) Pass Demand Level to EtaCountdown
+### 6) Add Member Badge to Mobile Account Page
 
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+**File to Modify:** `src/pages/mobile/MobileAccount.tsx`
 
-**Changes:**
-- Pass demand level to EtaCountdown component
-- Show demand note when buffer was applied
+Show member status in profile section:
 
 ```typescript
-<EtaCountdown
-  etaDropoff={order.eta_dropoff}
-  driverLat={driverLat}
-  driverLng={driverLng}
-  deliveryLat={order.delivery_lat ?? undefined}
-  deliveryLng={order.delivery_lng ?? undefined}
-  demandLevel={demandLevel}  // New prop
-  showDemandNote={demandActive}  // New prop
-/>
+{isActive && (
+  <Link to="/account/membership" className="...">
+    <ZivoPlusBadge />
+    <span>Manage Membership</span>
+  </Link>
+)}
 ```
 
 ---
@@ -193,120 +158,148 @@ function calculateETA(
 ### New Files (1)
 | File | Purpose |
 |------|---------|
-| `src/components/eats/HighDemandBanner.tsx` | Contextual demand message for order tracking |
+| `src/hooks/useMembershipSavings.ts` | Aggregate monthly savings from orders |
 
-### Modified Files (3)
+### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsOrderDetail.tsx` | Add surge hook, display HighDemandBanner, pass demand to EtaCountdown |
-| `src/components/eats/EtaCountdown.tsx` | Add demandLevel prop, show "busy time buffer" note |
-| `supabase/functions/eats-auto-dispatch/index.ts` | Fetch surge, add demand buffer to ETA calculation |
+| `src/App.tsx` | Add `/membership` and `/account/membership` routes |
+| `src/pages/MembershipPage.tsx` | Add savings summary card using `useMembershipSavings` |
+| `src/components/home/NavBar.tsx` | Show member badge for active subscribers |
+| `src/pages/mobile/MobileAccount.tsx` | Show membership link with badge |
+
+### Database Updates (via Stripe + SQL)
+| Action | Details |
+|--------|---------|
+| Create Stripe Product | "ZIVO Plus" membership product |
+| Create Monthly Price | $9.99/month recurring |
+| Create Annual Price | $79.99/year recurring |
+| Update Plan Record | Set price IDs and `is_active = true` |
 
 ---
 
 ## UI Components
 
-### HighDemandBanner (Medium Level)
-```text
-+----------------------------------------------------------+
-| [⏱️]  Busy area right now                                |
-|       Delivery may take a bit longer than usual.         |
-+----------------------------------------------------------+
-```
-- Background: `bg-amber-500/10`
-- Border: `border-amber-500/30`
-- Icon: Clock (amber)
-
-### HighDemandBanner (High Level)
-```text
-+----------------------------------------------------------+
-| [🔥]  High demand in your area                           |
-|       Delivery time may be slightly longer.              |
-|       We appreciate your patience!                       |
-+----------------------------------------------------------+
-```
-- Background: `bg-orange-500/10`
-- Border: `border-orange-500/30`
-- Icon: Flame (orange, animated pulse)
-
-### EtaCountdown with Demand Note
+### Savings Summary Card (MembershipPage)
 ```text
 +------------------------------------------+
-| [🕐]  Arriving in                        |
-|       38 min                             |
+| [📊]  Your Savings                       |
++------------------------------------------+
 |                                          |
-| ─────────────────────────────────────────|
-| 🔥 Busy time — ETA includes buffer  Live |
+|   $12.47                                 |
+|   saved this month                       |
+|                                          |
+|   ─────────────────────────────────────  |
+|   5 orders with ZIVO+ benefits           |
+|                                          |
++------------------------------------------+
+```
+- Gradient background (amber/orange theme)
+- Crown icon
+- Animated entry
+
+### Member Badge in NavBar
+```text
+[Avatar] 👑   ← Small crown badge overlay
+```
+- ZivoPlusBadge variant="small"
+- Tooltip on hover: "ZIVO Plus Member"
+
+### Mobile Account Link
+```text
++------------------------------------------+
+| [👑 ZIVO Plus]                           |
+|      Manage your membership          →   |
 +------------------------------------------+
 ```
 
 ---
 
-## Data Flow
+## Technical Details
 
+### Membership Benefits (from plan)
+| Benefit | Config |
+|---------|--------|
+| Free delivery | Orders $15+ (`free_delivery_min_order`) |
+| Delivery fee discount | 100% off if threshold met |
+| Service fee discount | 50% off (`service_fee_discount_pct`) |
+| Priority support | Enabled (`priority_support = true`) |
+
+### Savings Calculation (already implemented)
+```typescript
+// calculateMembershipSavings in useMembership.ts
+if (subtotal >= plan.free_delivery_min_order) {
+  deliverySavings = deliveryFee; // 100% off
+}
+serviceSavings = serviceFee * (plan.service_fee_discount_pct / 100);
+```
+
+### Edge Function Flow
 ```text
-Order placed
-      ↓
-eats-auto-dispatch triggered when order ready
-      ↓
-Fetch current surge_multiplier from database
-├── multiplier = 1.0 → buffer = 0 min
-├── multiplier 1.01-1.5 → buffer = +5 min
-└── multiplier > 1.5 → buffer = +10 min
-      ↓
-Calculate ETA = pickup_time + delivery_time + demand_buffer
-      ↓
-Store eta_dropoff, eta_minutes on order
-      ↓
-Customer opens EatsOrderDetail
-      ↓
-useEatsSurgePricing fetches current demand level
-      ↓
-If demand is Medium or High:
-├── Show HighDemandBanner below status
-└── Show "Busy time buffer" note on EtaCountdown
-      ↓
-Customer sees transparent messaging:
-"High demand in your area — delivery time may be slightly longer"
+User clicks "Join ZIVO+"
+       ↓
+useMembershipCheckout.mutate()
+       ↓
+create-membership-checkout (edge function)
+       ↓
+Returns Stripe Checkout URL
+       ↓
+User completes payment on Stripe
+       ↓
+Stripe webhook → stripe-webhook (edge function)
+       ↓
+Inserts/updates zivo_subscriptions table
+       ↓
+useMembership() returns isActive = true
+       ↓
+EatsCart applies discounts automatically
 ```
 
 ---
 
-## Demand Level Thresholds
+## Stripe Setup Required
 
-Using existing logic from `getSurgeLevelFromMultiplier()`:
+Before the plan works, Stripe products/prices must be created:
 
-| Multiplier | Level | Banner Color | ETA Buffer | Message |
-|------------|-------|--------------|------------|---------|
-| 1.0 | Low | Hidden | +0 min | None |
-| 1.01-1.5 | Medium | Amber | +5 min | "Busy area — delivery may take a bit longer" |
-| > 1.5 | High | Orange | +10 min | "High demand in your area — delivery time may be slightly longer" |
+1. **Product**: ZIVO Plus
+   - Description: "Premium membership with free delivery and reduced fees"
 
----
+2. **Monthly Price**: 
+   - Amount: $9.99
+   - Interval: month
+   - Usage: licensed (subscription)
 
-## Technical Notes
+3. **Annual Price**:
+   - Amount: $79.99
+   - Interval: year
+   - Usage: licensed (subscription)
 
-### Why Global Surge?
-The `surge_multipliers` table currently uses zone='GLOBAL' for simplicity. Future enhancement could support zone-specific surge based on `pricing_zones` or `regions`.
-
-### Banner Dismissal
-HighDemandBanner can be dismissed by the user. Dismissal is stored in `sessionStorage` per order to avoid repeated display in the same session, but will reappear on fresh page load.
-
-### ETA Buffer Accuracy
-The buffer is conservative (5-10 min) to set realistic expectations. Better to under-promise and over-deliver than frustrate customers with inaccurate ETAs.
-
-### Real-time Updates
-EtaCountdown already recalculates dynamically based on driver location. The demand buffer is applied at dispatch time and baked into `eta_dropoff`, so real-time adjustments use the demand-aware initial estimate.
+4. **Update Database**:
+   ```sql
+   UPDATE zivo_subscription_plans
+   SET 
+     stripe_price_id_monthly = '[monthly_price_id]',
+     stripe_price_id_yearly = '[yearly_price_id]',
+     is_active = true
+   WHERE slug = 'zivo-plus';
+   ```
 
 ---
 
 ## Summary
 
-This implementation improves ETA transparency during high demand by:
+The ZIVO+ membership system is **largely built** with:
+- Complete checkout and subscription management flow
+- Working checkout integration with automatic discounts
+- Database tracking of per-order savings
 
-1. **HighDemandBanner** - Contextual message on order detail page during Medium/High demand
-2. **ETA Buffer** - Adds 5-10 minutes to ETA calculation based on surge level
-3. **EtaCountdown Enhancement** - Shows "Includes busy time buffer" note when applicable
-4. **Edge Function Update** - Fetches surge multiplier and factors demand into ETA calculation
+**Remaining work**:
+1. Add routes to App.tsx (2 lines)
+2. Create Stripe prices (via tools)
+3. Activate the plan (1 SQL update)
+4. Create savings aggregation hook (new file)
+5. Add savings card to membership page (UI addition)
+6. Show member badge in header/account (small UI updates)
 
-Leverages existing surge infrastructure (`useEatsSurgePricing`, `surge_multipliers` table) with minimal new code, providing customers with honest expectations during busy periods.
+Total estimated implementation: 4 files modified, 1 new file, Stripe setup
+
