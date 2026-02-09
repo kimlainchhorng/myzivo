@@ -1,340 +1,427 @@
 
-# Better Driver Availability — Implementation Plan
+# Multi-Stop Delivery — Implementation Plan
 
 ## Overview
-Leverage driver schedule data to improve ETA accuracy and show positive messaging during peak driver periods. The system will look ahead at scheduled drivers to predict upcoming supply levels and adjust delivery ETAs accordingly.
+Enable customers to add multiple delivery addresses when placing an order, allowing food to be dropped off at different locations during a single trip. This feature includes dynamic pricing based on distance and stops, and a progressive tracking UI showing route progress.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Driver schedules table | Complete | `driver_schedules` (day_of_week, start_time, end_time, is_active) |
-| Available drivers hook | Complete | `src/hooks/useAvailableDrivers.ts` |
-| Driver incentives hook | Complete | `src/hooks/useDriverIncentives.ts` |
-| Delivery factors hook | Complete | `src/hooks/useEatsDeliveryFactors.ts` |
-| IncentiveBoostBanner | Complete | `src/components/eats/IncentiveBoostBanner.tsx` |
-| Smart ETA calculation | Complete | `src/hooks/useSmartEta.ts` |
-| Supply-based multipliers | Complete | In useEatsDeliveryFactors (low/moderate/high) |
+| Single delivery address in checkout | Complete | `src/pages/EatsCheckout.tsx` |
+| Saved locations system | Complete | `src/hooks/useSavedLocations.ts` |
+| CartContext with deliveryAddress | Complete | `src/contexts/CartContext.tsx` |
+| Batch stops system (admin) | Complete | `batch_stops` table, `useBatches.ts` |
+| Order batch info hook | Complete | `src/hooks/useOrderBatchInfo.ts` |
+| DeliveryMap component | Complete | `src/components/eats/DeliveryMap.tsx` |
+| Order tracking page | Complete | `src/pages/track/OrderTrackingPage.tsx` |
+| Haversine distance calculation | Complete | Multiple locations |
+| Food order creation | Complete | `src/hooks/useEatsOrders.ts` |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Scheduled drivers forecast hook | Missing | Look ahead at upcoming scheduled drivers |
-| Peak driver period detection | Missing | Identify when more drivers are scheduled |
-| Peak driver banner | Missing | "More drivers scheduled for faster delivery" |
-| Schedule-aware ETA adjustment | Missing | Reduce ETA when more drivers coming online |
+| Multi-stop address management in cart | Missing | Store array of delivery addresses |
+| "Add another address" UI in checkout | Missing | Button and form to add stops |
+| Multi-stop order summary display | Missing | Show Stop 1, Stop 2, etc. |
+| Distance-based delivery fee calculation | Missing | Fee = base + per-mile + per-stop |
+| Multi-stop tracking progress UI | Missing | "Delivered Stop 1 → Heading to Stop 2" |
+| Multi-stop DeliveryMap support | Missing | Show multiple dropoff markers |
+| Database schema for customer stops | Missing | Separate from admin batch_stops |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Scheduled Drivers Forecast Hook
+### 1) Update CartContext for Multi-Stop Addresses
 
-**File to Create:** `src/hooks/useScheduledDriverForecast.ts`
+**File to Modify:** `src/contexts/CartContext.tsx`
 
-**Purpose:** Look ahead at driver schedules to predict upcoming supply levels.
+**Purpose:** Store an array of delivery stops instead of a single address.
 
-**Logic:**
-- Query `driver_schedules` for current day
-- Count drivers scheduled in upcoming time windows (15, 30, 60 min)
-- Compare to current online count to detect "peak incoming"
-
-**Returned Data:**
+**New Interface:**
 ```text
-interface ScheduledDriverForecast {
-  // Current state
-  currentOnlineCount: number;
-  
-  // Upcoming schedule
-  driversScheduledNext15Min: number;
-  driversScheduledNext30Min: number;
-  driversScheduledNext60Min: number;
-  
-  // Peak detection
-  isPeakPeriod: boolean;
-  peakStartsIn: number | null; // minutes until peak
-  peakMessage: string | null;
-  
-  // ETA adjustment
-  scheduleForecastMultiplier: number; // 0.9-1.0 based on incoming drivers
-  
-  isLoading: boolean;
+interface DeliveryStop {
+  id: string;              // UUID for UI key
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  instructions?: string;
+  label?: string;          // e.g., "Home", "Office"
+}
+
+interface CartContextType {
+  // Existing...
+  deliveryStops: DeliveryStop[];
+  addDeliveryStop: (stop: Omit<DeliveryStop, "id">) => void;
+  updateDeliveryStop: (id: string, updates: Partial<DeliveryStop>) => void;
+  removeDeliveryStop: (id: string) => void;
+  reorderDeliveryStops: (stopIds: string[]) => void;
+  clearDeliveryStops: () => void;
+  // Backward compatibility
+  deliveryAddress: string; // First stop's address
 }
 ```
 
-**Peak Detection Logic:**
-```text
-Peak Period = TRUE when:
-  - Current time is within a window where 6+ drivers are scheduled
-  - OR upcoming 30 min has 3+ more scheduled than currently online
+**Storage Key:** `zivo-eats-delivery-stops`
 
-Peak Multiplier:
-  - 8+ drivers scheduled: 0.85 (15% faster ETA)
-  - 6-7 drivers: 0.90 (10% faster)
-  - 4-5 drivers: 0.95 (5% faster)
-  - <4 drivers: 1.0 (no adjustment)
+---
+
+### 2) Create Multi-Stop Delivery Fee Calculator
+
+**File to Create:** `src/lib/multiStopDeliveryFee.ts`
+
+**Purpose:** Calculate dynamic delivery fee based on distance and number of stops.
+
+**Pricing Formula:**
+```text
+Base Fee: $3.99 (single stop)
+Per Additional Stop: +$1.50
+Per Mile (beyond first 2 mi): +$0.50/mi
+
+Total = baseFee + (additionalStops × stopFee) + (extraMiles × perMileFee)
+
+Example: 3 stops, 8 total miles
+Base: $3.99
+Extra stops: 2 × $1.50 = $3.00
+Extra miles: (8 - 2) × $0.50 = $3.00
+Total: $9.99
+```
+
+**Function Signature:**
+```text
+interface MultiStopFeeResult {
+  baseFee: number;
+  additionalStopFee: number;
+  distanceFee: number;
+  totalFee: number;
+  totalDistance: number;
+  breakdown: {
+    label: string;
+    amount: number;
+  }[];
+}
+
+function calculateMultiStopDeliveryFee(
+  stops: { lat: number; lng: number }[],
+  restaurantLocation: { lat: number; lng: number }
+): MultiStopFeeResult
 ```
 
 ---
 
-### 2) Create Peak Driver Banner Component
+### 3) Create Multi-Stop Address Manager Component
 
-**File to Create:** `src/components/eats/PeakDriverBanner.tsx`
+**File to Create:** `src/components/eats/MultiStopAddressManager.tsx`
 
-**Purpose:** Show positive messaging when more drivers are scheduled/coming online.
+**Purpose:** UI for adding, editing, and reordering delivery stops.
 
-**Message Variants:**
-| Scenario | Message |
-|----------|---------|
-| Peak now | "More drivers scheduled in your area for faster delivery." |
-| Peak soon (15 min) | "More drivers coming online soon — expect faster delivery." |
-| High supply | "High driver availability — shorter wait times." |
+**Features:**
+- List of current stops with drag-drop reordering
+- "Add another delivery address" button
+- Remove stop button (if > 1 stop)
+- Stop numbering badges (1, 2, 3...)
+- Instructions field per stop
+- Saved address quick-select
 
 **UI Design:**
 ```text
 ┌─────────────────────────────────────────────────┐
-│ 🚗✨                                        [×] │
-│                                                 │
-│ More drivers scheduled in your area            │
-│ — faster delivery times expected.              │
+│ Delivery Stops                                  │
+├─────────────────────────────────────────────────┤
+│ ① 123 Main St, City, State           [Remove]  │
+│    Instructions: Leave at door                  │
+├─────────────────────────────────────────────────┤
+│ ② 456 Oak Ave, City, State           [Remove]  │
+│    Instructions: Ring bell                      │
+├─────────────────────────────────────────────────┤
+│ [+ Add another delivery address]                │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+### 4) Create Stop Address Input Sheet
+
+**File to Create:** `src/components/eats/AddDeliveryStopSheet.tsx`
+
+**Purpose:** Bottom sheet for entering a new delivery stop.
+
+**Features:**
+- Address autocomplete input
+- Saved address quick-select
+- Delivery instructions field
+- Validate address before adding
+- Geocode address to lat/lng
+
+---
+
+### 5) Update EatsCheckout for Multi-Stop
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
+
+**Changes:**
+- Replace single address input with MultiStopAddressManager
+- Update delivery fee calculation to use multi-stop calculator
+- Update order summary to show numbered stops
+- Update form validation for multiple addresses
+- Pass stops array to order creation
+
+**Order Summary Updates:**
+```text
+Delivery Stops:
+  Stop 1 – 123 Main St
+  Stop 2 – 456 Oak Ave
+
+Subtotal: $45.00
+Delivery Fee (2 stops, 6.2 mi): $7.49
+Total: $52.49
+```
+
+---
+
+### 6) Update CreateFoodOrderInput and Mutation
+
+**File to Modify:** `src/hooks/useEatsOrders.ts`
+
+**Changes:**
+- Add `delivery_stops` array to CreateFoodOrderInput
+- Store stops as JSONB in order record
+- Calculate and store total distance
+- Generate customer-side stops for tracking
+
+**New Field:**
+```text
+interface DeliveryStopInput {
+  address: string;
+  lat: number;
+  lng: number;
+  instructions?: string;
+  label?: string;
+  stop_order: number;
+}
+
+interface CreateFoodOrderInput {
+  // Existing...
+  delivery_stops: DeliveryStopInput[];
+  total_distance_miles: number;
+  is_multi_stop: boolean;
+}
+```
+
+---
+
+### 7) Database Schema Updates
+
+**New Column on food_orders:**
+```text
+delivery_stops JSONB DEFAULT NULL
+is_multi_stop BOOLEAN DEFAULT FALSE
+total_distance_miles NUMERIC DEFAULT NULL
+current_stop_index INTEGER DEFAULT 0
+```
+
+**delivery_stops JSONB Structure:**
+```json
+[
+  {
+    "stop_order": 1,
+    "address": "123 Main St",
+    "lat": 40.7128,
+    "lng": -74.0060,
+    "instructions": "Leave at door",
+    "status": "pending",
+    "delivered_at": null
+  },
+  {
+    "stop_order": 2,
+    "address": "456 Oak Ave",
+    "lat": 40.7200,
+    "lng": -74.0100,
+    "instructions": "Ring bell",
+    "status": "pending",
+    "delivered_at": null
+  }
+]
+```
+
+---
+
+### 8) Create Multi-Stop Tracking Progress Component
+
+**File to Create:** `src/components/eats/MultiStopTrackingProgress.tsx`
+
+**Purpose:** Show route progress for multi-stop orders.
+
+**States:**
+| Current Stop | Display |
+|--------------|---------|
+| On way to 1 | "Heading to Stop 1 of 2" |
+| Delivered 1 | "Delivered Stop 1 ✓ → Heading to Stop 2" |
+| All done | "All 2 stops delivered ✓" |
+
+**UI Design:**
+```text
+┌─────────────────────────────────────────────────┐
+│ 📍 Route Progress                               │
+├─────────────────────────────────────────────────┤
+│  ✓ Stop 1 – 123 Main St          Delivered 2:15pm │
+│  → Stop 2 – 456 Oak Ave              Arriving...   │
 └─────────────────────────────────────────────────┘
 ```
 
 **Features:**
-- Green/emerald color scheme (positive messaging)
-- Dismissible per session
-- Pulsing car icon with sparkles
-- Only shows when supply is good (not during low supply warnings)
+- Visual timeline with stop markers
+- Checkmarks for completed stops
+- Delivery time for each stop
+- Current stop highlighted
+- ETA for next stop
 
 ---
 
-### 3) Update Delivery Factors Hook
+### 9) Update DeliveryMap for Multi-Stop
 
-**File to Modify:** `src/hooks/useEatsDeliveryFactors.ts`
+**File to Modify:** `src/components/eats/DeliveryMap.tsx`
 
 **Changes:**
-- Import and use `useScheduledDriverForecast`
-- Add `isPeakPeriod` and `peakMessage` to return type
-- Add `showPeakBanner` flag (similar to incentive banner logic)
-- Factor schedule forecast into ETA multiplier
+- Accept array of delivery stops instead of single point
+- Show numbered markers for each stop (1, 2, 3...)
+- Color code: completed (green), current (orange), pending (gray)
+- Draw route through all stops
+- Update legend for multi-stop
 
-**New Return Values:**
+**New Props:**
 ```text
-interface DeliveryFactors {
-  // Existing fields...
-  
-  // New peak period fields
-  isPeakPeriod: boolean;
-  peakStartsIn: number | null;
-  showPeakBanner: boolean;
-  peakMessage: string | null;
-  scheduleForecastMultiplier: number;
+interface DeliveryMapProps {
+  // Existing...
+  deliveryStops?: Array<{
+    lat: number;
+    lng: number;
+    stopOrder: number;
+    status: "pending" | "current" | "delivered";
+  }>;
+  isMultiStop?: boolean;
 }
 ```
 
-**Banner Priority (mutual exclusivity):**
-1. Demand surge → show demand banner (warning)
-2. Low supply → show supply banner (warning)
-3. Incentive active → show incentive banner (positive)
-4. Peak scheduled → show peak banner (positive)
+---
+
+### 10) Update Order Detail Page for Multi-Stop
+
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+
+**Changes:**
+- Show MultiStopTrackingProgress when multi-stop order
+- Pass stops array to DeliveryMap
+- Update delivery status to show current stop
+- Show stop-by-stop delivery confirmation
 
 ---
 
-### 4) Update ETA Calculation with Schedule Forecast
+### 11) Update Order Tracking Page (Public)
 
-**File to Modify:** `src/hooks/useQueueAwareEta.ts`
-
-**Changes:**
-- Accept optional `scheduleForecastMultiplier` parameter
-- Apply multiplier to driver time component
-- Reduce ETA range when peak period detected
-
-**Updated Calculation:**
-```text
-driverMinutes = baseDriverMinutes × scheduleForecastMultiplier
-
-Example:
-  Base driver time: 12 min
-  Peak multiplier: 0.85
-  Adjusted: 12 × 0.85 = 10.2 min (rounded to 10)
-```
-
----
-
-### 5) Integrate Peak Banner into Order Pages
-
-**Files to Modify:**
-- `src/pages/EatsRestaurantMenu.tsx`
-- `src/pages/EatsCheckout.tsx`
-- `src/pages/EatsOrderDetail.tsx`
+**File to Modify:** `src/pages/track/OrderTrackingPage.tsx`
 
 **Changes:**
-- Import `useEatsDeliveryFactors` (if not already)
-- Show `PeakDriverBanner` when `showPeakBanner` is true
-- Pass forecast multiplier to ETA calculations
-
-**Integration on Restaurant Menu:**
-```text
-{/* Peak Driver Banner - positive messaging */}
-{deliveryFactors.showPeakBanner && (
-  <PeakDriverBanner
-    message={deliveryFactors.peakMessage}
-    peakStartsIn={deliveryFactors.peakStartsIn}
-    className="mt-4"
-  />
-)}
-```
+- Support multi-stop display for public tracking
+- Show route progress component
+- Update map with multiple markers
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (5)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useScheduledDriverForecast.ts` | Forecast upcoming driver supply from schedules |
-| `src/components/eats/PeakDriverBanner.tsx` | Positive messaging banner for peak periods |
+| `src/lib/multiStopDeliveryFee.ts` | Calculate delivery fee for multiple stops |
+| `src/components/eats/MultiStopAddressManager.tsx` | Manage multiple delivery addresses |
+| `src/components/eats/AddDeliveryStopSheet.tsx` | Bottom sheet for adding a stop |
+| `src/components/eats/MultiStopTrackingProgress.tsx` | Route progress display |
+| `src/components/eats/StopMarker.tsx` | Numbered map marker for stops |
 
-### Modified Files (4)
+### Modified Files (7)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsDeliveryFactors.ts` | Add peak period detection and banner logic |
-| `src/hooks/useQueueAwareEta.ts` | Apply schedule forecast multiplier to ETA |
-| `src/pages/EatsRestaurantMenu.tsx` | Show peak banner when applicable |
-| `src/pages/EatsCheckout.tsx` | Show peak banner and use adjusted ETA |
+| `src/contexts/CartContext.tsx` | Add deliveryStops array and methods |
+| `src/pages/EatsCheckout.tsx` | Multi-stop UI and fee calculation |
+| `src/hooks/useEatsOrders.ts` | Handle multi-stop order creation |
+| `src/components/eats/DeliveryMap.tsx` | Multi-stop markers and route |
+| `src/pages/EatsOrderDetail.tsx` | Multi-stop tracking display |
+| `src/pages/track/OrderTrackingPage.tsx` | Public multi-stop tracking |
+| Database migration | Add new columns to food_orders |
 
 ---
 
-## Peak Period Detection Algorithm
+## Delivery Fee Calculation Details
 
-### Step 1: Query Today's Schedules
+### Base Pricing
 ```text
-SELECT driver_id, start_time, end_time
-FROM driver_schedules
-WHERE day_of_week = current_day
-  AND is_active = true
+BASE_FEE = $3.99
+PER_ADDITIONAL_STOP = $1.50
+FREE_MILES = 2.0
+PER_MILE_RATE = $0.50
+MAX_STOPS = 5
 ```
 
-### Step 2: Count Drivers by Time Window
+### Route Distance Calculation
 ```text
-current_time = now()
-
-scheduled_now = count where:
-  start_time <= current_time <= end_time
-
-scheduled_15min = count where:
-  start_time <= current_time + 15 min
-  AND end_time >= current_time
-
-scheduled_30min = count where:
-  start_time <= current_time + 30 min
-  AND end_time >= current_time
+1. Start at restaurant
+2. Calculate Haversine distance to Stop 1
+3. Calculate distance from Stop 1 to Stop 2
+4. Sum all segments for total route distance
+5. Apply pricing formula
 ```
 
-### Step 3: Determine Peak Status
-```text
-online_now = current available drivers count
-
-is_peak_period = 
-  scheduled_now >= 6 OR
-  (scheduled_30min - online_now) >= 3
-
-peak_starts_in = 
-  If !is_peak_period AND scheduled_30min >= 6:
-    Calculate minutes until first 6+ driver window
-  Else:
-    null
-```
-
-### Step 4: Calculate Forecast Multiplier
-```text
-If scheduled_now >= 8:
-  multiplier = 0.85
-Else If scheduled_now >= 6:
-  multiplier = 0.90
-Else If scheduled_now >= 4:
-  multiplier = 0.95
-Else:
-  multiplier = 1.0
-```
+### Example Calculations
+| Scenario | Stops | Distance | Delivery Fee |
+|----------|-------|----------|--------------|
+| Single stop, 1.5 mi | 1 | 1.5 mi | $3.99 |
+| Single stop, 5 mi | 1 | 5 mi | $5.49 |
+| Two stops, 4 mi | 2 | 4 mi | $6.49 |
+| Three stops, 8 mi | 3 | 8 mi | $9.99 |
 
 ---
 
-## Banner Display Logic
+## Multi-Stop Order Flow
 
-### Priority Order (mutually exclusive)
+### Customer Flow
 ```text
-1. demandActive → Show HighDemandBanner (warning - amber/red)
-2. showLowSupplyWarning → Show LowDriverSupplyBanner (warning - amber)
-3. showIncentiveBanner → Show IncentiveBoostBanner (positive - emerald)
-4. showPeakBanner → Show PeakDriverBanner (positive - emerald)
-5. None → No banner
+1. Add items to cart
+2. Go to checkout
+3. Enter first delivery address (required)
+4. Click "Add another delivery address"
+5. Enter second address with instructions
+6. Review stop order (drag to reorder)
+7. See updated delivery fee
+8. Place order
+9. Track route progress in real-time
 ```
 
-### Peak Banner Conditions
+### Driver Flow
 ```text
-showPeakBanner = 
-  isPeakPeriod AND
-  !demandActive AND
-  driverSupply !== "low" AND
-  !showIncentiveBanner
+1. Accept multi-stop order
+2. See all stops with route
+3. Navigate to Stop 1
+4. Confirm delivery at Stop 1
+5. Navigate to Stop 2
+6. Confirm delivery at Stop 2
+7. Complete order
 ```
 
 ---
 
-## ETA Adjustment Examples
+## Tracking Status Messages
 
-### Example 1: Peak Period Active
-```text
-Base ETA:
-  Queue: 5 min
-  Prep: 20 min
-  Driver: 12 min
-  
-Peak Multiplier: 0.85 (8+ drivers scheduled)
-
-Adjusted:
-  Queue: 5 min
-  Prep: 20 min
-  Driver: 12 × 0.85 = 10 min
-  
-Total: 35 min → Range: 30-40 min
-(vs. 37 min → 31-43 min without adjustment)
-```
-
-### Example 2: Peak Coming Soon
-```text
-Current: 3 drivers online
-In 20 min: 7 drivers scheduled
-
-Message: "More drivers coming online soon — expect faster delivery."
-Multiplier: 0.95 (slight optimism since peak approaching)
-```
-
----
-
-## UI Components
-
-### Peak Banner (Current Peak)
-```text
-┌─────────────────────────────────────────────────┐
-│ 🚗✨                                        [×] │
-│                                                 │
-│ More drivers scheduled in your area            │
-│ — faster delivery times.                       │
-└─────────────────────────────────────────────────┘
-```
-
-### Peak Banner (Upcoming Peak)
-```text
-┌─────────────────────────────────────────────────┐
-│ 🚗✨                                        [×] │
-│                                                 │
-│ More drivers coming online soon                │
-│ — expect faster delivery in ~15 min.           │
-└─────────────────────────────────────────────────┘
-```
+| Phase | Message |
+|-------|---------|
+| Picking up | "Picking up your order from {restaurant}" |
+| En route to Stop 1 | "Heading to Stop 1 of {total}" |
+| Arriving Stop 1 | "Arriving at Stop 1 — {address}" |
+| Delivered Stop 1 | "Delivered to Stop 1 ✓ — Heading to Stop 2" |
+| Arriving Stop 2 | "Arriving at Stop 2 — {address}" |
+| All delivered | "All {total} stops delivered! ✓" |
 
 ---
 
@@ -342,12 +429,25 @@ Multiplier: 0.95 (slight optimism since peak approaching)
 
 | Scenario | Behavior |
 |----------|----------|
-| No schedules configured | Fall back to current online count only |
-| All drivers have no schedules | Treat as always available when online |
-| Schedule ends soon | Don't show peak if ending in <15 min |
-| Overlap with incentive | Prefer incentive banner (more specific) |
-| Weekend vs weekday | Use day_of_week filter |
-| Driver goes offline during peak | Real-time count takes precedence |
+| Remove only stop | Prevent (must have at least 1) |
+| Max stops reached | Hide "Add another" button (max 5) |
+| Same address twice | Show warning, allow if intentional |
+| Invalid address | Block addition, show geocoding error |
+| Stop too far (>15 mi from previous) | Show warning about extended fee |
+| Order cancelled mid-delivery | Driver completes current stop, returns |
+
+---
+
+## Validation Rules
+
+| Rule | Validation |
+|------|------------|
+| Minimum stops | 1 (required) |
+| Maximum stops | 5 |
+| Address format | Must geocode successfully |
+| Distance limit | Each stop within 15 mi of previous |
+| Total route | Under 30 mi |
+| Instructions length | Max 200 characters |
 
 ---
 
@@ -355,11 +455,12 @@ Multiplier: 0.95 (slight optimism since peak approaching)
 
 This implementation provides:
 
-1. **Schedule-aware forecasting** — Look ahead at driver schedules to predict supply
-2. **Peak period detection** — Identify when 6+ drivers are scheduled/coming online
-3. **Positive customer messaging** — "More drivers scheduled for faster delivery"
-4. **ETA optimization** — Reduce delivery time estimates during peak periods
-5. **Smart banner priority** — Show most relevant message (warnings over positive)
-6. **Real-time integration** — Combines scheduled data with live online counts
+1. **Multi-stop address management** — Add up to 5 delivery stops per order
+2. **Dynamic pricing** — Fee adjusts based on distance and number of stops
+3. **Clear order summary** — Shows numbered stops with addresses
+4. **Route progress tracking** — "Delivered Stop 1 → Heading to Stop 2"
+5. **Multi-stop map** — Visual route with numbered markers
+6. **Driver support** — Sequential stop-by-stop navigation
+7. **Public tracking** — Works for guest order tracking too
 
-The feature improves ETA accuracy by leveraging schedule data and builds customer confidence by showing when more drivers are available.
+The feature enables scenarios like delivering food to multiple offices, splitting an order between friends, or party deliveries at different venues.
