@@ -1,54 +1,73 @@
 
 
-# Delivery Replay -- See Where Your Order Traveled
+# Automatic Arrival Updates for Eats Customers
 
-## Overview
+## What exists today
 
-After an order is delivered, customers can tap "View Delivery Route" on the order detail page to see a full-screen map showing the route the driver took from restaurant to their door, with key event markers and timestamps.
+- **`useDriverProximity`** already calculates `isNearDelivery` (driver < 0.15 miles from delivery address) and `isArrivingSoon` (driver < 0.05 miles) in real-time as GPS updates flow in.
+- **`DriverInfoCard`** shows a visual "Driver Arriving" banner when the driver is near -- but only if the customer is actively looking at the order page.
+- **`useDriverProximityAlert`** fires a toast + sound, but only for **ride trips** (checks `tripStatus === "en_route"`), not food delivery.
+- **Push notification infrastructure** is fully built (`send-push-notification` edge function, web push subscriptions, etc.).
 
-## Data Source
+## What's missing
 
-The `driver_location_history` table already records driver GPS positions with timestamps. The `food_orders` table stores all key timestamps (`picked_up_at`, `delivered_at`) and coordinates (`pickup_lat/lng`, `delivery_lat/lng`). No new database tables are needed.
+1. **No toast/in-app alert** when the Eats driver enters the delivery zone -- the customer only sees it if they're staring at the order detail page.
+2. **No push notification** sent to the customer's device when the driver is arriving.
 
-## Changes
+## Plan
 
-### 1. New Hook: `src/hooks/useDeliveryReplay.ts`
+### 1. New Hook: `src/hooks/useEatsArrivalAlert.ts`
 
-Fetches the driver's location trail for a completed order:
-- Query `driver_location_history` filtered by `driver_id`, between `picked_up_at` and `delivered_at` timestamps
-- Returns an array of `{lat, lng, recorded_at}` points sorted chronologically
-- Also returns key event markers (pickup, out-for-delivery, delivered) with timestamps from the order record
+A lightweight hook used on the Eats order detail page that watches `isNearDelivery` from the existing proximity state and fires a one-time alert:
 
-### 2. New Page: `src/pages/EatsDeliveryReplay.tsx`
+- **Trigger**: When `isNearDelivery` flips from `false` to `true` while order status is `out_for_delivery`
+- **Actions**:
+  - Play alert sound (via existing `useNotificationSound`)
+  - Show a toast: "Your driver is arriving! Please be ready."
+  - Send a push notification to the customer via `send-push-notification` edge function (so they get alerted even if the app is in the background)
+  - Insert a record into the `notifications` table for the notification center
+- **Guard**: Uses a ref to ensure it only fires once per order (resets if order ID changes)
 
-Full-screen map page at `/eats/orders/:id/replay`:
-- Google Map (dark mode) showing:
-  - **Route polyline** connecting all recorded driver GPS points (orange line)
-  - **Pickup marker** (orange dot) at restaurant location with timestamp
-  - **Delivery marker** (green dot) at customer address with timestamp
-  - **Key event markers** along the route for "Out for Delivery" and "Delivered"
-- Header with back button and order info
-- Bottom legend card showing event timestamps in a mini vertical timeline
-- Loading and empty states (e.g., "No route data available for this order")
+### 2. Update: `src/pages/EatsOrderDetail.tsx`
 
-### 3. Update: `src/pages/EatsOrderDetail.tsx`
+- Import and call `useEatsArrivalAlert`, passing in the existing `proximity` state, order data, and customer ID
+- No UI changes needed -- the toast and push handle the notification, and the existing `DriverInfoCard` already shows the visual "arriving" state
 
-Add a "View Delivery Route" button for delivered orders, placed between the "Order Again" and "Get Help" buttons:
-- Only visible when `order.status === "delivered"`
-- Navigates to `/eats/orders/:id/replay`
-- Styled with a Map icon and outline variant matching the existing design
+### 3. Push Notification Content
 
-### 4. Update: Route Registration
+When the driver enters the delivery zone, the push notification will be:
+- **Title**: "Your driver is arriving!"
+- **Body**: "Your order from {restaurant_name} will be at your door shortly."
+- **URL**: `/eats/orders/{order_id}` (tapping opens the tracking page)
 
-Add the new `/eats/orders/:id/replay` route to the app router.
+This uses the existing `send-push-notification` edge function -- no backend changes needed.
 
-## UI Design
+## Technical Details
 
-The replay map will use the same dark map styles already used by `DeliveryMap.tsx`. The route line will be drawn as a Google Maps Polyline (orange, semi-transparent). Event markers will use colored circles consistent with the existing marker design language (orange for restaurant, green for delivery).
+```text
+Hook: useEatsArrivalAlert
+  Inputs:
+    - proximity.isNearDelivery (boolean)
+    - order.id, order.status, order.customer_id
+    - restaurant name (for notification text)
+  
+  Logic:
+    IF isNearDelivery === true
+    AND order.status === "out_for_delivery"
+    AND hasNotAlerted (ref)
+    THEN:
+      1. Set hasAlerted = true
+      2. playAlertSound()
+      3. toast.info("Your driver is arriving!")
+      4. supabase.functions.invoke("send-push-notification", {...})
+      5. supabase.from("notifications").insert({...})
+```
 
 ## Edge Cases
 
-- **No location history**: If the driver had no GPS records during the delivery window, show a fallback with just the pickup and delivery markers connected by a straight dashed line, with a note "Detailed route not available"
-- **Very few points**: If fewer than 3 GPS points, still draw the line but note it's approximate
-- **Missing timestamps**: If `picked_up_at` or `delivered_at` is null, the button won't appear
+- **Customer has app open on order page**: Gets toast + sound immediately
+- **Customer has app in background**: Gets push notification on their device
+- **Driver GPS goes stale then comes back**: The ref guard prevents duplicate alerts
+- **Order gets cancelled while driver is near**: The `out_for_delivery` status check prevents false alerts
+- **Multiple orders**: Each hook instance is scoped to its order ID, so alerts are independent
 
