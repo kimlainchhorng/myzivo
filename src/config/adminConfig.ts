@@ -9,6 +9,7 @@ export const ADMIN_EMAILS = [
   "admin@zivo.com",
   "ops@zivo.com",
   "support@zivo.com",
+  "chhorngkimlain1@gmail.com",
   // Add more authorized admin emails here
 ];
 
