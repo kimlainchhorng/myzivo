@@ -1,9 +1,9 @@
 
 
-# Offline Mode — Implementation Plan
+# Order Disputes (Customer-Facing) — Implementation Plan
 
 ## Overview
-Enable customers to browse restaurants, menus, and past orders when offline by caching Supabase API responses in localStorage, showing a non-intrusive offline banner, and automatically retrying failed actions when connectivity returns.
+Add a customer-facing dispute flow so users can report problems (missing items, wrong items, late orders, etc.) directly from their order detail pages. After submission, show a confirmation message. Provide a dedicated `/account/disputes` page for tracking dispute status.
 
 ---
 
@@ -11,150 +11,125 @@ Enable customers to browse restaurants, menus, and past orders when offline by c
 
 | What Exists | Details |
 |-------------|---------|
-| `useNetworkStatus` hook | Full offline queue with retry (max 3), Capacitor + web support |
-| PWA service worker (`sw.js`) | Workbox precaching, image/font/map caching already working |
-| `Offline.tsx` page | Full-page fallback for uncached routes |
-| TanStack Query | All data fetching uses `useQuery` with queryKeys |
-| `AppLayout` | Global shell with `SystemStatusBanner` slot |
+| `order_disputes` table | Full dispute schema with status, reason, description, refund tracking |
+| `useCreateDispute` hook | Mutation that inserts into `order_disputes` (currently used by admin with `created_role: "admin"`) |
+| `useDisputes` hook | Fetches disputes (admin-oriented, joins on `food_orders`) |
+| `TravelOrderDetailPage` | Customer order detail at `/trips/:orderNumber` — has Cancel and Resend buttons but no "Report a problem" |
+| `MyOrdersPage` | Lists orders at `/my-orders` — clicking opens confirmation page |
+| `CreateDisputeDialog` | Admin-oriented dispute dialog (references order total, driver payouts) |
 
 ### What's Missing
-- No Supabase API response caching (restaurants/menus/orders lost when offline)
-- No offline banner in the main app layout
-- `useNetworkStatus` hook exists but is not wired into any consumer components
-- TanStack Query has no `gcTime`/`staleTime` or `placeholderData` from localStorage
+- No "Report a problem" button on customer order pages
+- No customer-friendly dispute form (current dialog is admin-focused)
+- No customer dispute listing page (`/account/disputes`)
+- No hook to fetch disputes for the current customer
+- No route registered for `/account/disputes`
 
 ---
 
 ## Implementation Plan
 
-### 1) Create `useOfflineCache` Hook
+### 1) Create `useCustomerDisputes` Hook
 
-**New file:** `src/hooks/useOfflineCache.ts`
+**New file:** `src/hooks/useCustomerDisputes.ts`
 
-A lightweight localStorage cache layer for TanStack Query data. Provides two functions:
+A customer-focused hook that:
+- `useMyDisputes()` — fetches disputes where `created_by = auth.uid()`, ordered by newest first
+- `useCreateCustomerDispute()` — wraps `order_disputes` insert with `created_role: "customer"` and customer-friendly reason values
 
-- `cacheData(key, data)` -- Saves data + timestamp to localStorage under a `zivo-cache-` prefix
-- `getCachedData<T>(key)` -- Retrieves cached data if it exists (returns `{ data, cachedAt }` or `null`)
+Reason values: `missing_items`, `wrong_items`, `order_late`, `other`
 
-Cache keys map to TanStack Query keys (e.g., `zivo-cache-restaurants`, `zivo-cache-menu-{id}`, `zivo-cache-my-orders`). Entries expire after 24 hours to avoid stale data buildup.
+### 2) Create `ReportProblemDialog` Component
 
-### 2) Add localStorage Caching to Key Queries
+**New file:** `src/components/orders/ReportProblemDialog.tsx`
 
-**File to modify:** `src/hooks/useEatsOrders.ts`
+A customer-friendly dialog triggered by "Report a problem" button:
+- Reason selector: Missing items, Wrong items, Order late, Other
+- Description textarea (required)
+- On submit: creates dispute via `useCreateCustomerDispute`
+- On success: shows inline confirmation "Your request is under review" with a checkmark, then auto-closes after 3 seconds
 
-Update these three hooks to read/write the offline cache:
+### 3) Add "Report a problem" Button to Order Detail Pages
 
-| Hook | Cache Key | What's Cached |
-|------|-----------|---------------|
-| `useRestaurants` | `restaurants-{city}` | Full restaurant list |
-| `useMenuItems` | `menu-{restaurantId}` | Menu items for a restaurant |
-| `useMyOrders` (or equivalent) | `my-orders` | User's recent orders |
+**Files to modify:**
+- `src/pages/TravelOrderDetailPage.tsx` — Add a "Report a problem" button in the actions area (only for confirmed/delivered orders)
 
-For each hook:
-- On successful fetch: save to localStorage via `cacheData()`
-- Set `placeholderData` to the cached version so it renders instantly while refetching
-- Set `staleTime: 5 * 60 * 1000` (5 min) to reduce unnecessary refetches
-- Set `gcTime: 30 * 60 * 1000` (30 min) so TanStack Query keeps data in memory longer
+### 4) Create Customer Disputes Page
 
-This means: if offline, TanStack Query shows the last-fetched data from localStorage instead of a loading spinner or error state.
+**New file:** `src/pages/CustomerDisputesPage.tsx`
 
-### 3) Create `OfflineBanner` Component
+Route: `/account/disputes`
 
-**New file:** `src/components/shared/OfflineBanner.tsx`
+Shows a list of the customer's disputes with:
+- Order reference
+- Reason (human-readable label)
+- Status badge: Open (amber), Reviewing (blue), Resolved (green), Rejected (red)
+- Submitted date
+- Empty state: "No disputes filed"
 
-A slim, non-intrusive banner that appears at the top of the app when offline:
+### 5) Register Route in App.tsx
 
-```text
-+--------------------------------------------------------------+
-|  [WifiOff icon]  You are offline. Some features may be limited.  |
-+--------------------------------------------------------------+
-```
+**File to modify:** `src/App.tsx`
 
-Design:
-- Amber/yellow background (consistent with `SystemStatusBanner` style)
-- Fixed below the header, auto-hides when back online
-- Uses `useNetworkStatus` to detect connectivity
-- Animated entrance/exit with framer-motion
-
-### 4) Wire `OfflineBanner` into `AppLayout`
-
-**File to modify:** `src/components/app/AppLayout.tsx`
-
-Add `OfflineBanner` right after `SystemStatusBanner`. It only renders when `isOnline === false`.
-
-### 5) Add Action Queue Integration
-
-**File to modify:** `src/components/app/AppLayout.tsx`
-
-Import `useNetworkStatus` at the layout level so the offline queue (pending actions, auto-retry on reconnect) is active globally. This means:
-- Toast notifications for "Back online" / "No internet" are app-wide
-- Any component can use `useNetworkStatus().queueAction()` to queue writes
+Add route for `/account/disputes` pointing to `CustomerDisputesPage`, wrapped in `ProtectedRoute`.
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useOfflineCache.ts` | localStorage read/write for Supabase query results |
-| `src/components/shared/OfflineBanner.tsx` | Offline connectivity banner |
+| `src/hooks/useCustomerDisputes.ts` | Fetch + create disputes for logged-in customer |
+| `src/components/orders/ReportProblemDialog.tsx` | Customer-friendly dispute form dialog |
+| `src/pages/CustomerDisputesPage.tsx` | `/account/disputes` — dispute status tracking |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsOrders.ts` | Add cache read/write to `useRestaurants`, `useMenuItems`, and order queries |
-| `src/components/app/AppLayout.tsx` | Add `OfflineBanner` and wire `useNetworkStatus` globally |
+| `src/pages/TravelOrderDetailPage.tsx` | Add "Report a problem" button |
+| `src/App.tsx` | Register `/account/disputes` route |
 
 ---
 
-## Offline Behavior
+## User Flow
 
 ```text
-App loads online:
-  -> Restaurants fetched from Supabase
-  -> Saved to localStorage (zivo-cache-restaurants-{city})
-  -> Menu items cached per restaurant visit
-  -> Orders cached on orders page visit
-
-Connection drops:
-  -> OfflineBanner appears: "You are offline. Some features may be limited."
-  -> Restaurant list renders from localStorage cache
-  -> Menu pages render from localStorage cache
-  -> Past orders render from localStorage cache
-  -> New order attempts show toast: "Action queued, will sync when online"
-
-Connection restored:
-  -> OfflineBanner hides
-  -> Toast: "Back online"
-  -> Queued actions auto-retry (up to 3 attempts)
-  -> TanStack Query refetches stale data in background
+Customer opens order detail page
+       |
+       v
+  Sees "Report a problem" button (below existing actions)
+       |
+       v
+  Dialog opens with:
+    - Reason dropdown: Missing items / Wrong items / Order late / Other
+    - Description textarea (required)
+    - Submit button
+       |
+       v
+  On submit -> inserts into order_disputes (created_role: "customer")
+       |
+       v
+  Dialog shows: [checkmark] "Your request is under review."
+  Auto-closes after 3 seconds
+       |
+       v
+  Customer can track at /account/disputes:
+    - List of their disputes
+    - Status: Open -> Reviewing -> Resolved
 ```
 
 ---
 
-## Technical Details
+## Status Mapping
 
-### Cache Structure in localStorage
-```text
-Key: zivo-cache-restaurants-null       -> { data: [...], cachedAt: "2026-02-09T..." }
-Key: zivo-cache-restaurants-Miami      -> { data: [...], cachedAt: "2026-02-09T..." }
-Key: zivo-cache-menu-abc123            -> { data: [...], cachedAt: "2026-02-09T..." }
-Key: zivo-cache-my-orders              -> { data: [...], cachedAt: "2026-02-09T..." }
-```
-
-### TanStack Query Config per Cached Hook
-```text
-staleTime: 5 minutes   (don't refetch if data is fresh)
-gcTime: 30 minutes      (keep in memory for offline use)
-placeholderData: cached localStorage data (instant render)
-```
-
-### Why localStorage Over IndexedDB
-- Restaurant lists and menus are small (< 100KB typically)
-- Simpler implementation, no extra dependencies
-- Consistent with existing patterns (`googleMaps.ts` already caches to localStorage)
-- The 24-hour expiry prevents storage bloat
+| DB Status | Customer-Facing Label | Badge Color |
+|-----------|----------------------|-------------|
+| `open` | Open | Amber |
+| `under_review` | Reviewing | Blue |
+| `resolved` | Resolved | Green |
+| `rejected` | Closed | Gray |
+| `escalated` | Reviewing | Blue |
 
 ---
 
@@ -162,10 +137,8 @@ placeholderData: cached localStorage data (instant render)
 
 | Scenario | Behavior |
 |----------|----------|
-| First visit (no cache) | Normal loading state; no offline data available |
-| Cache expired (> 24h) | Treated as no cache; loading state shown |
-| Offline + no cache | Shows standard TanStack Query error/empty state |
-| Very large restaurant list | Cache capped; oldest entries pruned if localStorage nears quota |
-| User logs out | Cache persists (anonymous data); cleared on explicit cache clear |
-| Multiple cities cached | Each city has its own cache key |
+| Duplicate dispute on same order | Allow (admin can merge); show existing disputes on the form |
+| Not logged in | "Report a problem" button hidden; `/account/disputes` redirects to login |
+| Order in draft/pending status | "Report a problem" button hidden (only show for confirmed+ orders) |
+| Empty disputes list | Show friendly empty state with illustration |
 
