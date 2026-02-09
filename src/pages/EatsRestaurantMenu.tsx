@@ -24,6 +24,8 @@ import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailab
 import { BusyRestaurantBanner } from "@/components/eats/BusyRestaurantBanner";
 import { UnavailableBanner } from "@/components/eats/UnavailableBanner";
 import { ItemAvailabilityBadge } from "@/components/eats/ItemAvailabilityBadge";
+import { HighVolumeBanner } from "@/components/eats/HighVolumeBanner";
+import { useRestaurantQueueLength } from "@/hooks/useRestaurantQueueLength";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: { 
   item: MenuItem; 
@@ -231,6 +233,9 @@ function EatsRestaurantMenuContent() {
   
   // Get availability status
   const availability = useRestaurantAvailability(restaurant);
+  
+  // Get queue length for high volume banner
+  const queue = useRestaurantQueueLength(id, restaurant?.avg_prep_time || 20);
 
   const isLoading = restaurantLoading || menuLoading;
   const cartCount = getItemCount();
@@ -349,6 +354,16 @@ function EatsRestaurantMenuContent() {
             {availability.status === "unavailable" && (
               <UnavailableBanner
                 message={availability.detailMessage}
+                className="mt-4"
+              />
+            )}
+            
+            {/* High Volume Banner - shows when queue is high but not in busy mode */}
+            {availability.status !== "busy" && queue.isHighVolume && (
+              <HighVolumeBanner
+                queueLength={queue.queueLength}
+                estimatedWait={queue.queueWaitMinutes}
+                isVeryHigh={queue.isVeryHighVolume}
                 className="mt-4"
               />
             )}

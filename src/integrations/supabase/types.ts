@@ -7885,6 +7885,7 @@ export type Database = {
           id: string
           notes: string | null
           shift_date: string
+          slot_id: string | null
           start_time: string
           status: string
           trips_completed: number | null
@@ -7900,6 +7901,7 @@ export type Database = {
           id?: string
           notes?: string | null
           shift_date: string
+          slot_id?: string | null
           start_time: string
           status?: string
           trips_completed?: number | null
@@ -7915,6 +7917,7 @@ export type Database = {
           id?: string
           notes?: string | null
           shift_date?: string
+          slot_id?: string | null
           start_time?: string
           status?: string
           trips_completed?: number | null
@@ -7933,6 +7936,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_shifts_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "shift_slots"
             referencedColumns: ["id"]
           },
         ]
@@ -23998,6 +24008,51 @@ export type Database = {
           service_type?: string
           updated_at?: string | null
           vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      shift_slots: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string | null
+          current_drivers: number | null
+          demand_level: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          max_drivers: number | null
+          shift_date: string
+          start_time: string
+          updated_at: string | null
+          zone: string | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          current_drivers?: number | null
+          demand_level?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          max_drivers?: number | null
+          shift_date: string
+          start_time: string
+          updated_at?: string | null
+          zone?: string | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          current_drivers?: number | null
+          demand_level?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          max_drivers?: number | null
+          shift_date?: string
+          start_time?: string
+          updated_at?: string | null
+          zone?: string | null
         }
         Relationships: []
       }
