@@ -270,6 +270,9 @@ function EatsOrderDetailContent() {
     // Real-time prep speed adjustment
     actualPrepElapsed: prepProgress.elapsedMinutes,
     prepSpeedFactor: prepProgress.prepSpeedFactor,
+    // Forecast and real traffic multipliers
+    forecastMultiplier: deliveryFactors.forecastMultiplier,
+    realTrafficMultiplier: activeTrafficMultiplier,
   });
   
   const etaLabel: "to pickup" | "to you" | undefined = order?.status === "out_for_delivery"

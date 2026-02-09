@@ -22,6 +22,8 @@ import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
 import { useMembership, calculateMembershipSavings } from "@/hooks/useMembership";
 import { useCustomerWallet, useAppliedCredit } from "@/hooks/useCustomerWallet";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
+import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
+import { LiveDemandBanner } from "@/components/eats/LiveDemandBanner";
 import { useDemandAdjustedEta } from "@/hooks/useDemandAdjustedEta";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +66,7 @@ function EatsCartContent() {
   
   // Surge pricing
   const { isActive: surgeActive, level: surgeLevel, multiplier: surgeMultiplier, calculateDeliveryFee } = useEatsSurgePricing();
+  const deliveryFactors = useEatsDeliveryFactors();
 
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
   const restaurantId = items.length > 0 ? items[0].restaurantId : "";
@@ -74,6 +77,7 @@ function EatsCartContent() {
     restaurantId: restaurantId || undefined,
     demandMultiplier,
     surgeMultiplier,
+    forecastMultiplier: deliveryFactors.forecastMultiplier,
   });
 
   // Get current user
@@ -421,12 +425,21 @@ function EatsCartContent() {
           onToggle={setUseCredits}
         />
 
-        {/* High Demand Banner */}
+        {/* Live Demand Banner */}
+        {(deliveryFactors.demandActive || deliveryFactors.isForecastedDemand) && (
+          <LiveDemandBanner
+            isActive={deliveryFactors.demandActive}
+            isForecastedDemand={deliveryFactors.isForecastedDemand}
+            isIncentivePeriod={deliveryFactors.isIncentivePeriod}
+          />
+        )}
+
+        {/* Surge Fee Notice (kept for pricing context) */}
         {surgeActive && (
           <div className="flex items-start gap-3 rounded-2xl bg-orange-500/10 border border-orange-500/20 p-4">
             <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-bold text-sm text-orange-400">High demand in your area</p>
+              <p className="font-bold text-sm text-orange-400">Delivery fee adjusted</p>
               <p className="text-xs text-zinc-400 mt-0.5">Delivery fee adjusted based on demand.</p>
             </div>
           </div>

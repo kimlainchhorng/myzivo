@@ -38,6 +38,7 @@ import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
 import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
+import { LiveDemandBanner } from "@/components/eats/LiveDemandBanner";
 import { PaymentTypeSelector, type PaymentType } from "@/components/eats/PaymentTypeSelector";
 import { PeakDriverBanner } from "@/components/eats/PeakDriverBanner";
 import { DeliveryFeeBreakdownCard } from "@/components/eats/DeliveryFeeBreakdownCard";
@@ -177,6 +178,7 @@ function EatsCheckoutContent() {
     demandMultiplier,
     scheduleForecastMultiplier: deliveryFactors.scheduleForecastMultiplier,
     incentiveMultiplier: deliveryFactors.incentiveMultiplier,
+    forecastMultiplier: deliveryFactors.forecastMultiplier,
   });
   
   // Cart validation for item availability
@@ -809,6 +811,15 @@ function EatsCheckoutContent() {
                     </div>
 
                     <hr />
+
+                     {/* Live demand banner */}
+                     {(deliveryFactors.demandActive || deliveryFactors.isForecastedDemand) && (
+                       <LiveDemandBanner
+                         isActive={deliveryFactors.demandActive}
+                         isForecastedDemand={deliveryFactors.isForecastedDemand}
+                         isIncentivePeriod={deliveryFactors.isIncentivePeriod}
+                       />
+                     )}
 
                      {/* Positive delivery banners */}
                      {deliveryFactors.showIncentiveBanner && (
