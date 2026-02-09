@@ -1,158 +1,129 @@
 
 
-# Real-Time Service Feedback — Metric-Driven ETA and Demand Transparency
+# Smart Offers — "Limited-time offers for you" Home Section
 
 ## Overview
 
-Close the gap between the platform's real-time metrics (traffic, demand forecasts, driver supply) and the customer experience by (1) feeding all available signals into the ETA calculation for better accuracy, and (2) showing a clear "High demand right now" banner on checkout and cart pages when conditions warrant it.
+Create a new "Limited-time offers for you" section on the home page that automatically shows targeted offers based on three triggers: customer inactivity (days since last order), low order frequency, and active zone-specific marketing campaigns. This replaces/supplements the existing "Recommended Deals" section with smarter, trigger-based targeting.
 
-## Current Gaps
+## Current State
 
-- **useSmartEta** uses `supplyMultiplier` and time-of-day traffic but ignores `forecastMultiplier` from demand predictions and the real `trafficMultiplier` from Google Directions API via `useTrafficAwareEta`
-- **Checkout and Cart pages** show surge pricing badges and incentive/peak banners, but never show a "high demand right now" warning banner -- customers only see that on the order tracking page after placing an order
-- **deliveryFactors.isForecastedDemand** and **forecastMultiplier** are computed by `useEatsDeliveryFactors` but never consumed by any customer-facing page
-- **Real traffic data** (from `useTrafficAwareEta`) runs in parallel with the static time-of-day traffic factor in `useSmartEta` -- they never combine, so the "smart" ETA misses real route data
+- **`useRecommendedDeals`** scores all active promotions by user behavior (search history, time-of-day, budget) but has no concept of inactivity, order frequency, or zone campaigns
+- **`useWinBackOffer`** detects inactivity (7/14/30 day tiers) and fetches win-back promos, but only powers the `WinBackBanner` -- never feeds the deals section
+- **`RecommendedDealsSection`** shows a grid/scroll of scored deals titled "Recommended Deals" -- no urgency framing or trigger awareness
+- **`marketing_campaigns`** table has `target_city`, `campaign_type`, `status`, `promo_code_id`, and date fields -- perfect for zone-specific campaign detection
+- **Profiles** have `selected_city_name` and `zone_id` for geo-matching
 
 ## What Changes
 
-### 1. Update `src/hooks/useSmartEta.ts` -- Incorporate forecast and real traffic multipliers
+### 1. Create `src/hooks/useSmartOffers.ts` -- Unified trigger-based offer engine
 
-Add two new optional props:
-- `forecastMultiplier` (from `useUpcomingDemandAlert` or `useEatsDeliveryFactors`) -- inflates prep time when demand is predicted to rise
-- `realTrafficMultiplier` (from `useTrafficAwareEta`) -- replaces the static time-of-day traffic factor when real route data is available
+A new hook that combines three trigger signals and returns a prioritized list of offers:
 
-Updated ETA logic:
+**Trigger A -- Inactivity** (reuses win-back logic):
+- Query `food_orders` for last delivered order date
+- 7+ days inactive = eligible for gentle offers
+- 14+ days = stronger discount offers
+- 30+ days = highest-value offers
+
+**Trigger B -- Low order frequency**:
+- Count orders in the past 30 days
+- 0-1 orders = "low frequency" flag, boost discount-heavy offers
+- 2-3 orders = "medium", show lighter offers
+- 4+ = active user, show campaign/seasonal offers only
+
+**Trigger C -- Active zone campaign**:
+- Query `marketing_campaigns` where `status = 'active'`, date range is current, and `target_city` matches the user's `selected_city_name`
+- Join to `promotions` via `promo_code_id` to get the actual promo details
+- These offers get a large score boost since they're admin-curated for the user's area
+
+**Scoring**: Each offer gets a composite score:
+- Base score from `useRecommendedDeals`-style logic (time-of-day, budget tier, urgency)
+- +25 for inactivity-triggered offers matching the user's tier
+- +20 for zone campaign matches
+- +15 for low-frequency users seeing high-discount offers
+- Expiring-soon offers get additional urgency boost
+
+**Output**:
 ```
-Prep component:
-  adjustedPrep = basePrepMinutes * demandFactor * forecastMultiplier * prepSpeedFactor
-
-Travel component:
-  if realTrafficMultiplier is available (route data exists):
-    adjustedTravel = travelEtaMinutes * realTrafficMultiplier
-  else:
-    adjustedTravel = travelEtaMinutes * timeOfDayTrafficFactor (existing behavior)
+offers: SmartOffer[]       // Scored and sorted
+triggerReason: string      // "inactivity" | "low_frequency" | "campaign" | "general"
+sectionTitle: string       // Dynamic: "Limited-time offers for you" or "Offers in [city]"
+isLoading: boolean
+hasOffers: boolean
 ```
 
-This means the ETA gets more accurate as more signals become available -- starts with time-of-day heuristics, upgrades to real route data once a driver is assigned.
+### 2. Create `src/components/home/SmartOffersSection.tsx` -- New home page section
 
-### 2. Update `src/pages/EatsOrderDetail.tsx` -- Pass new multipliers to useSmartEta
+A visually distinct section titled "Limited-time offers for you" with:
+- Dynamic subtitle based on trigger reason (e.g., "We picked these just for you" for inactivity, "Hot in [city]" for zone campaigns)
+- Same `DealCard` component pattern as `RecommendedDealsSection` (grid on desktop, horizontal scroll on mobile)
+- Subtle trigger badge on cards when relevant: "For You" (inactivity), "In Your Area" (zone campaign)
+- Countdown timers for expiring offers (reuses existing `Countdown` component pattern)
+- "View All" link to `/deals`
 
-Pass `forecastMultiplier` from `deliveryFactors` and the active `trafficMultiplier` from `useTrafficAwareEta` to `useSmartEta`:
+### 3. Update `src/pages/Index.tsx` -- Replace RecommendedDealsSection with SmartOffersSection
 
-```
-const smartEta = useSmartEta({
-  ...existing props,
-  forecastMultiplier: deliveryFactors.forecastMultiplier,
-  realTrafficMultiplier: activeTrafficMultiplier,
-});
-```
+- Import `SmartOffersSection` instead of (or alongside) `RecommendedDealsSection`
+- For signed-in users: show `SmartOffersSection` (trigger-aware)
+- For signed-out users: fall back to `RecommendedDealsSection` (general deals)
+- Position remains the same (after Popular Routes)
 
-This connects the two existing data streams so ETA calculations on the order detail page use all available real-time data.
+### 4. Update `src/pages/app/AppHome.tsx` -- Add SmartOffersSection to mobile home
 
-### 3. Create `src/components/eats/LiveDemandBanner.tsx` -- "High demand right now" banner for pre-order pages
-
-A new banner component for checkout and cart pages that shows when demand is active (surge) or forecasted. Unlike `HighDemandBanner` (which is order-specific and dismissible per order), this is a lightweight, session-dismissible banner for pre-order contexts.
-
-Two states:
-- **Active surge**: "High demand right now -- delivery times may vary." (orange)
-- **Forecasted demand**: "Demand is increasing -- delivery times may change." (amber)
-
-Both include incentive-aware sub-text when `isIncentivePeriod` is true:
-- "We're bringing additional drivers online."
-
-The banner is dismissible per session.
-
-### 4. Update `src/pages/EatsCheckout.tsx` -- Add LiveDemandBanner and pass forecast multiplier to ETA
-
-- Import and render `LiveDemandBanner` above the ETA breakdown when demand is active or forecasted
-- Pass `deliveryFactors.forecastMultiplier` to `useQueueAwareEta` so checkout ETA reflects predicted demand
-- Show the banner between the promo section and ETA breakdown for visibility
-
-### 5. Update `src/pages/EatsCart.tsx` -- Add LiveDemandBanner
-
-- Import and render `LiveDemandBanner` at the top of the cart summary when demand is active or forecasted
-- This gives customers early awareness before they reach checkout
-
-### 6. Update `src/hooks/useQueueAwareEta.ts` -- Accept forecast multiplier
-
-Add an optional `forecastMultiplier` prop that inflates the prep time estimate, matching the pattern already used for `demandMultiplier` and `scheduleForecastMultiplier`. This ensures the checkout ETA accounts for predicted demand increases.
+- Replace the `RecommendedDealsSection` at the bottom with `SmartOffersSection` for signed-in users
+- Keep `RecommendedDealsSection` for signed-out visitors
 
 ## Technical Detail
 
-### useSmartEta new props
+### useSmartOffers query flow
+
+```text
+1. Fetch user profile (selected_city_name, zone_id) from profiles table
+2. Parallel queries:
+   a. Last order date from food_orders (for inactivity detection)
+   b. Order count in last 30 days from food_orders (for frequency detection)
+   c. Active zone campaigns from marketing_campaigns 
+      WHERE status = 'active' 
+      AND start_date <= now AND end_date >= now
+      AND (target_city = user_city OR target_city IS NULL)
+   d. Active promotions (same query as useRecommendedDeals)
+3. Score and merge all sources
+4. Deduplicate (campaign promo overlaps with general promos)
+5. Return top N sorted by score
+```
+
+### SmartOffer interface
 
 ```typescript
-interface UseSmartEtaOptions {
-  // ...existing props
-  forecastMultiplier?: number;      // From useEatsDeliveryFactors (1.0-1.3)
-  realTrafficMultiplier?: number;   // From useTrafficAwareEta (1.0-1.5)
+interface SmartOffer extends RecommendedDeal {
+  triggerType: "inactivity" | "low_frequency" | "campaign" | "general";
+  triggerLabel: string | null;  // "For You", "In Your Area", null
+  campaignName: string | null;  // From marketing_campaigns.name
 }
 ```
 
-Updated travel calculation:
-```typescript
-const effectiveTrafficFactor = realTrafficMultiplier != null && realTrafficMultiplier > 0
-  ? realTrafficMultiplier
-  : traffic.factor;
+### Section title logic
 
-const effectiveForecast = forecastMultiplier ?? 1.0;
-
-// Prep phase
-const adjustedPrep = basePrepMinutes * demandFactor * effectiveForecast * prepSpeedFactor;
-const adjustedTravel = travelEtaMinutes * effectiveTrafficFactor;
+```text
+Has zone campaign offers  -> "Offers in {city}"
+Inactivity triggered      -> "Limited-time offers for you"
+Low frequency triggered   -> "Deals you don't want to miss"
+General (active user)     -> "Today's best offers"
 ```
 
-### LiveDemandBanner component
+### Deduplication with automated_message_log
 
-```typescript
-interface LiveDemandBannerProps {
-  isActive: boolean;           // Current surge active
-  isForecastedDemand: boolean; // Predicted upcoming demand
-  isIncentivePeriod: boolean;  // Platform responding with incentives
-  className?: string;
-}
-```
-
-Messaging:
-```
-Active surge:
-  "High demand right now -- delivery times may vary."
-  + incentives: "We're bringing additional drivers online."
-
-Forecasted only:
-  "Demand is increasing -- delivery times may change."
-  + incentives: "We're pre-positioning drivers in your area."
-```
-
-### EatsCheckout integration
-
-```tsx
-{(deliveryFactors.demandActive || deliveryFactors.isForecastedDemand) && (
-  <LiveDemandBanner
-    isActive={deliveryFactors.demandActive}
-    isForecastedDemand={deliveryFactors.isForecastedDemand}
-    isIncentivePeriod={deliveryFactors.isIncentivePeriod}
-  />
-)}
-```
-
-### useQueueAwareEta change
-
-Add `forecastMultiplier` to the options interface and multiply it into the prep time component alongside the existing `demandMultiplier`:
-
-```typescript
-const effectivePrep = basePrepTime * demandMultiplier * (forecastMultiplier ?? 1.0);
-```
+Log when the smart offers section is shown (once per session per trigger type) to prevent over-exposure, using the same `automated_message_log` table pattern as `useWinBackOffer`.
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/hooks/useSmartEta.ts` | Update | Add `forecastMultiplier` and `realTrafficMultiplier` props, use in ETA calculation |
-| `src/pages/EatsOrderDetail.tsx` | Update | Pass forecast and traffic multipliers to `useSmartEta` |
-| `src/components/eats/LiveDemandBanner.tsx` | Create | Pre-order demand banner with active/forecast states |
-| `src/pages/EatsCheckout.tsx` | Update | Add `LiveDemandBanner`, pass `forecastMultiplier` to queue ETA |
-| `src/pages/EatsCart.tsx` | Update | Add `LiveDemandBanner` for early demand awareness |
-| `src/hooks/useQueueAwareEta.ts` | Update | Accept and apply `forecastMultiplier` to prep time |
+| `src/hooks/useSmartOffers.ts` | Create | Unified trigger-based offer scoring hook with inactivity, frequency, and campaign signals |
+| `src/components/home/SmartOffersSection.tsx` | Create | "Limited-time offers for you" section with trigger badges and dynamic title |
+| `src/pages/Index.tsx` | Update | Show `SmartOffersSection` for signed-in users, keep `RecommendedDealsSection` for signed-out |
+| `src/pages/app/AppHome.tsx` | Update | Same swap for mobile home page |
 
-One new file, five updates. No schema changes, no new edge functions.
+Two new files, two updates. No schema changes, no new edge functions.
+
