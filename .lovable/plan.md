@@ -1,50 +1,81 @@
 
 
-# Service Status Messages — Context-Aware Banners
+# Stability Improvements — Global Retry & Error Handling
 
-## Current State
+## Problem
 
-The system already has:
-- A `service_health_status` table tracking 12 services (flights, hotels, payments, eats, rides, dispatch, etc.)
-- A `useSystemStatus` hook that detects degraded services but returns a **single generic message** regardless of which service is affected
-- A `SystemStatusBanner` component that displays that generic message in a dismissible amber banner
+React Query is initialized with no configuration (`new QueryClient()`) in `App.tsx`. This means:
+- Failed queries are retried 3 times by default, but with no intelligent backoff or error-type awareness
+- Mutations have no retry at all
+- There is no global error handler to show the "Service temporarily unavailable" message
+- The existing `withRetry` utility in `supabaseErrors.ts` and `categorizeError` are not connected to React Query
 
-**The gap**: The banner always says "Some services may be temporarily slower than usual" — it never tells customers *what* is actually impacted.
+## Changes
 
-## What Changes
+### 1. `src/App.tsx` — Configure QueryClient defaults
 
-Upgrade the hook and banner to show **service-specific messages** based on which services are degraded.
+Replace the bare `new QueryClient()` with smart defaults:
 
-### Message Mapping
+- **Queries**: retry up to 2 times with exponential backoff (1s, 2s); skip retry for auth errors (401/403)
+- **Queries**: set `staleTime: 30000` (30s) to reduce redundant refetches across navigation
+- **Mutations**: retry once for network/5xx errors only (safe because mutations that already succeeded won't match the retry condition)
+- **Global `onError`**: show a toast with the user-friendly message from the existing `categorizeError` utility — specifically "Service temporarily unavailable. Please try again shortly." for 502/503/504 errors
 
-| Degraded Service Key(s) | Banner Message |
-|---|---|
-| `eats`, `rides`, `dispatch` | "High demand in your area -- delivery times may be longer." |
-| `payments` | "Payment processing delays -- please try again shortly." |
-| Both categories | Shows the more urgent one (payments) |
-| Other services | Falls back to existing generic message |
+### 2. `src/lib/supabaseErrors.ts` — Add the exact message requested
 
-### File Changes
+Update the 502/503/504 branch `userMessage` from the current generic wording to the exact copy requested:
+
+> "Service temporarily unavailable. Please try again shortly."
+
+This message is already close but not an exact match. The update ensures consistency with what the user asked for.
+
+## Technical Detail
+
+```text
+src/App.tsx (line ~574)
+──────────────────────
+Before:
+  const queryClient = new QueryClient();
+
+After:
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+        retry: (failureCount, error) => {
+          // Don't retry auth errors
+          const info = categorizeError(error);
+          if (info.type === "auth") return false;
+          return failureCount < 2;
+        },
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+      },
+      mutations: {
+        retry: (failureCount, error) => {
+          const info = categorizeError(error);
+          return info.type === "network" && failureCount < 1;
+        },
+      },
+    },
+  });
+```
+
+```text
+src/lib/supabaseErrors.ts (503 branch, ~line 72)
+─────────────────────────────────────────────────
+Before:
+  userMessage: "Service temporarily unavailable. Please try again."
+
+After:
+  userMessage: "Service temporarily unavailable. Please try again shortly."
+```
+
+## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/hooks/useSystemStatus.ts` | Update | Return the list of degraded `service_key` values and derive a context-specific `incidentMessage` based on which services are affected |
-| `src/components/shared/SystemStatusBanner.tsx` | Update | Use the new context-specific message; use a credit-card icon for payment issues vs. the existing warning triangle for delivery delays |
+| `src/App.tsx` | Update | Add `defaultOptions` to QueryClient with retry logic, staleTime, and retryDelay |
+| `src/lib/supabaseErrors.ts` | Update | Align 502/503/504 user message to exact requested copy |
 
-### Technical Detail
-
-**`useSystemStatus.ts`** changes:
-- Query now also selects `service_key`
-- New logic derives the message:
-  - If any degraded service key is `payments` -> payment delay message
-  - If any degraded service key is `eats`, `rides`, or `dispatch` -> high demand / delivery delay message  
-  - Otherwise -> existing generic fallback
-- Returns a new `incidentType` field (`"delivery"` | `"payment"` | `"general"`) so the banner can pick the right icon
-
-**`SystemStatusBanner.tsx`** changes:
-- Reads `incidentType` from the hook
-- Shows `CreditCard` icon (from lucide) for payment issues, keeps `AlertTriangle` for delivery/general
-- No other behavioral changes — dismissal, 1-hour expiry, and layout remain the same
-
-This is a minimal update to two existing files with no new files, hooks, or routes needed.
+Two small edits, no new files. Leverages the existing `categorizeError` function so retry decisions are intelligent (no retrying expired sessions, only retrying transient failures).
 
