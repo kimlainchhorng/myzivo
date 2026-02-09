@@ -18,6 +18,7 @@ import SocialProofSection from "@/components/home/SocialProofSection";
 import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
 import PriceAlertPromo from "@/components/home/PriceAlertPromo";
 import BentoFeatures from "@/components/home/BentoFeatures";
+import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 
 // Mobile app home - lazy load to match App.tsx pattern
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -48,6 +49,9 @@ const DesktopHomePage = () => {
 
         {/* 5. Popular Routes */}
         <PopularRoutesSection />
+
+        {/* 5.5. Recommended Deals */}
+        <RecommendedDealsSection />
 
         {/* 6. Price Alert Promo */}
         <PriceAlertPromo />
