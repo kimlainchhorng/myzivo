@@ -1,9 +1,10 @@
 /**
  * ZIVO Eats — Checkout Page
  * MVP: Submit order request — no payment processing
+ * Includes fraud protection verification gate
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,9 @@ import SEOHead from "@/components/SEOHead";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { useCreateFoodOrder, useRestaurant } from "@/hooks/useEatsOrders";
 import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
+import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
+import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
+import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -43,6 +47,8 @@ function EatsCheckoutContent() {
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress } = useCart();
   const createOrder = useCreateFoodOrder();
   const [orderSubmitted, setOrderSubmitted] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   const subtotal = getSubtotal();
   const deliveryFee = 3.99;
@@ -54,6 +60,17 @@ function EatsCheckoutContent() {
   // Fetch restaurant to check availability
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
   const availability = useRestaurantAvailability(restaurant);
+  
+  // Risk assessment for fraud protection
+  const riskAssessment = useCheckoutRiskAssessment({
+    orderTotal: total,
+    isFirstOrder: true, // TODO: Check user's order history
+    phoneVerified: phoneVerified,
+    emailVerified: true, // Assume verified for MVP
+    isNewAccount: false,
+    failedPaymentAttempts: 0,
+  });
+
   const {
     register,
     handleSubmit,
@@ -68,6 +85,13 @@ function EatsCheckoutContent() {
   });
 
   const preferredTime = watch("preferred_time");
+  const customerPhone = watch("customer_phone");
+
+  const handlePhoneVerified = () => {
+    setPhoneVerified(true);
+    setShowPhoneVerification(false);
+    toast.success("Phone verified successfully!");
+  };
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!restaurantId || items.length === 0) {
@@ -242,9 +266,18 @@ function EatsCheckoutContent() {
             Back
           </Button>
 
-          <h1 className="font-display text-3xl font-bold mb-8">
+          <h1 className="font-display text-3xl font-bold mb-6">
             Checkout
           </h1>
+
+          {/* Security Verification Banner - shown when risk score is high */}
+          {riskAssessment.requiresPhoneVerification && !phoneVerified && customerPhone && (
+            <SecurityVerificationBanner
+              onVerify={() => setShowPhoneVerification(true)}
+              isVerifying={false}
+              className="mb-6"
+            />
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid lg:grid-cols-3 gap-8">
@@ -456,7 +489,7 @@ function EatsCheckoutContent() {
                     {/* Submit */}
                     <Button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || (riskAssessment.requiresPhoneVerification && !phoneVerified)}
                       className="w-full h-12 rounded-xl font-bold bg-gradient-to-r from-eats to-orange-500"
                     >
                       {isSubmitting ? (
@@ -464,6 +497,8 @@ function EatsCheckoutContent() {
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Submitting...
                         </>
+                      ) : riskAssessment.requiresPhoneVerification && !phoneVerified ? (
+                        "Verify Phone to Continue"
                       ) : (
                         "Place Order Request"
                       )}
@@ -475,6 +510,14 @@ function EatsCheckoutContent() {
           </form>
         </div>
       </main>
+
+      {/* Phone Verification Dialog */}
+      <PhoneVerificationDialog
+        open={showPhoneVerification}
+        onOpenChange={setShowPhoneVerification}
+        phoneNumber={customerPhone || ""}
+        onVerified={handlePhoneVerified}
+      />
 
       <Footer />
     </div>
