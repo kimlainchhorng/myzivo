@@ -1,458 +1,434 @@
 
-# Segmented Push Notifications & Broadcast System Implementation Plan
+# SMS + Email Fallback Notifications for Critical Events
 
 ## Overview
-Build a comprehensive admin-facing push notification broadcast system that enables sending targeted push notifications to user segments (customers, drivers, merchants), individual users, or all users. The system includes segment rule building, campaign management, scheduled sends, delivery logging, and safety controls.
+Implement a multi-channel notification system that sends SMS (Twilio) and Email (Resend) as fallbacks when push notifications are disabled or fail. The system includes user notification preferences management, phone number verification via OTP, a unified notification outbox, and an admin monitoring dashboard.
 
 ---
 
 ## Current State Analysis
 
-### Already Exists
+### Already Exists ✅
 | Feature | Status | Location |
 |---------|--------|----------|
-| `push_subscriptions` table | Complete | user_id, endpoint, p256dh, auth, is_active, platform |
-| `push_notification_logs` table | Complete | user_id, title, body, status, sent_at, error_message |
-| `send-push-notification` edge function | Complete | VAPID web push + FCM/APNs support |
-| `profiles` table | Complete | user_id, email, full_name, phone, status, city-related data |
-| `user_roles` table | Complete | user_id, role (admin, driver, etc.) |
-| `drivers` table | Complete | user_id, is_online, status, city data |
-| `notifications` table | Complete | user_id, title, body, channel, is_read |
-| Marketing campaigns system | Complete | `/admin/marketing/*` with targeting engine |
-| `CampaignTargetCriteria` | Complete | last_order_days_ago, city, membership_status |
-| `getTargetedUsers()` function | Complete | Resolves users from criteria |
-| `execute-campaign` edge function | Complete | Sends to targeted users |
-| `campaign-scheduler` edge function | Complete | Scheduled campaign execution |
-| AdminProtectedRoute | Complete | Role-based admin access control |
+| `notification_preferences` table | Complete | user_id, email_enabled, sms_enabled, in_app_enabled, phone_number, phone_verified |
+| `notifications` table | Complete | Unified outbox with channel, status, provider_message_id, error_message |
+| `notification_templates` table | Complete | template_key, body_html, body_text, supports_email/sms/in_app |
+| `send-notification` edge function | Complete | Handles email via Resend, SMS via Twilio |
+| `send-push-notification` edge function | Complete | VAPID web push + FCM/APNs |
+| `process-order-notifications` edge function | Complete | Batch processor for queued SMS/email |
+| `send-otp-email` edge function | Complete | 6-digit OTP via email with rate limiting |
+| `profiles` table | Complete | phone, phone_e164, phone_verified, phone_verified_at, sms_consent |
+| Push in `useUpdateFoodOrder` | Complete | Sends push on order status change |
+| Push in `useAddTicketMessage` | Complete | Sends push on support reply |
+| Twilio secrets | Configured | TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN |
+| Resend secrets | Configured | RESEND_API_KEY |
+| NotificationSettings page | Complete | Push toggle and category preferences |
 
-### Missing
+### Missing ❌
 | Feature | Status |
 |---------|--------|
-| `push_segments` table | Need to create |
-| `push_campaigns` table | Need to create |
-| `push_delivery_log` table | Need to create |
-| `/admin/push` dashboard | Need to create |
-| `/admin/push/segments` management | Need to create |
-| `/admin/push/campaigns` listing | Need to create |
-| `/admin/push/campaigns/[id]` detail | Need to create |
-| Segment rule builder UI | Need to create |
-| `send-segment-push` edge function | Need to create |
-| `push-campaign-scheduler` edge function | Need to create |
-| Rate limiting per user | Need to add |
-| Unsubscribe checking | Need to add |
+| `TWILIO_FROM_NUMBER` secret | Not configured (needed for SMS) |
+| SMS OTP verification flow | Need to create |
+| Enhanced NotificationSettings UI | Need SMS/Email toggles, phone input |
+| `useNotificationPreferences` hook | Need to create |
+| Fallback logic in event handlers | Need to add SMS/Email after push fails |
+| `notification_outbox` view/table enhancement | Already exists as `notifications` table |
+| Admin notifications outbox page | Need to create |
+| SMS rate limiting | Need to add |
+| Twilio delivery webhook | Need to create |
 
 ---
 
 ## Database Schema
 
-### New Table: `push_segments`
-Reusable audience segments with JSON rules:
-
+### Use Existing `notification_preferences` Table
+Already has the required columns:
 ```sql
-CREATE TABLE push_segments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  description TEXT,
-  rules_json JSONB NOT NULL DEFAULT '{}',
-  estimated_count INTEGER DEFAULT 0,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  created_by UUID REFERENCES auth.users(id)
-);
-
-CREATE INDEX idx_push_segments_active ON push_segments(is_active) WHERE is_active = true;
+-- Existing columns (no changes needed):
+-- email_enabled, sms_enabled, in_app_enabled
+-- phone_number, phone_verified
+-- marketing_enabled, operational_enabled
 ```
 
-### New Table: `push_campaigns`
-Push notification campaigns with scheduling:
-
+### Add SMS Rate Limiting Table
 ```sql
-CREATE TABLE push_campaigns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  title TEXT NOT NULL,
-  body TEXT NOT NULL,
-  url TEXT, -- Deep link or action URL
-  icon TEXT, -- Custom icon (optional)
-  segment_id UUID REFERENCES push_segments(id),
-  target_type TEXT DEFAULT 'segment', -- 'segment', 'all', 'test'
-  status TEXT DEFAULT 'draft', -- 'draft', 'scheduled', 'sending', 'sent', 'failed'
-  send_at TIMESTAMPTZ, -- NULL = send now
-  sent_at TIMESTAMPTZ,
-  targeted_count INTEGER DEFAULT 0,
-  sent_count INTEGER DEFAULT 0,
-  failed_count INTEGER DEFAULT 0,
-  skipped_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  created_by UUID REFERENCES auth.users(id)
-);
-
-CREATE INDEX idx_push_campaigns_status ON push_campaigns(status);
-CREATE INDEX idx_push_campaigns_scheduled ON push_campaigns(status, send_at) 
-  WHERE status = 'scheduled';
-```
-
-### New Table: `push_delivery_log`
-Delivery results for each user:
-
-```sql
-CREATE TABLE push_delivery_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  campaign_id UUID NOT NULL REFERENCES push_campaigns(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  status TEXT NOT NULL, -- 'sent', 'failed', 'skipped'
-  error TEXT,
-  skip_reason TEXT, -- 'no_subscription', 'rate_limited', 'unsubscribed'
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_push_delivery_log_campaign ON push_delivery_log(campaign_id);
-CREATE INDEX idx_push_delivery_log_user ON push_delivery_log(user_id);
-```
-
-### New Table: `push_user_daily_limits`
-Track daily push count per user for rate limiting:
-
-```sql
-CREATE TABLE push_user_daily_limits (
+CREATE TABLE sms_daily_limits (
   user_id UUID NOT NULL REFERENCES auth.users(id),
   date DATE NOT NULL,
-  push_count INTEGER DEFAULT 0,
+  sms_count INTEGER DEFAULT 0,
   PRIMARY KEY (user_id, date)
 );
 
-CREATE INDEX idx_push_daily_limits_date ON push_user_daily_limits(date);
+CREATE INDEX idx_sms_daily_limits_date ON sms_daily_limits(date);
 ```
 
----
+### Add SMS OTP Table
+```sql
+CREATE TABLE sms_otp_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  phone_e164 TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  verified_at TIMESTAMPTZ,
+  attempts INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
-## Segment Rules Schema
-
-The `rules_json` field supports these MVP rules:
-
-```typescript
-interface SegmentRules {
-  // Role-based targeting
-  roles?: ('customer' | 'driver' | 'merchant' | 'admin')[];
-  
-  // Driver-specific
-  driver_is_online?: boolean;
-  driver_status?: 'active' | 'inactive' | 'suspended';
-  
-  // Customer activity
-  last_order_days_ago?: number; // Inactive if > this value
-  has_ordered_ever?: boolean;
-  
-  // Membership
-  has_membership?: boolean;
-  
-  // Location (if available)
-  city?: string;
-  
-  // Custom SQL filter (advanced, admin only)
-  custom_filter?: string;
-}
+CREATE INDEX idx_sms_otp_phone ON sms_otp_codes(phone_e164);
+CREATE INDEX idx_sms_otp_user ON sms_otp_codes(user_id);
 ```
-
-**Example Segments:**
-| Segment Name | Rules |
-|--------------|-------|
-| All Drivers Online | `{ "roles": ["driver"], "driver_is_online": true }` |
-| Inactive Customers (14+ days) | `{ "roles": ["customer"], "last_order_days_ago": 14 }` |
-| All Merchants | `{ "roles": ["merchant"] }` |
-| Baton Rouge Customers | `{ "roles": ["customer"], "city": "Baton Rouge" }` |
-| ZIVO+ Members | `{ "has_membership": true }` |
 
 ---
 
 ## Implementation Plan
 
-### A) Push Data Library
+### 1) User Notification Preferences Hook
 
-**File to Create:** `src/lib/pushBroadcast.ts`
+**File to Create:** `src/hooks/useNotificationPreferences.ts`
 
 ```typescript
-// Interfaces
-export interface PushSegment {
+export interface NotificationPreferences {
   id: string;
-  name: string;
-  description: string | null;
-  rulesJson: SegmentRules;
-  estimatedCount: number;
-  isActive: boolean;
-  createdAt: string;
-  createdBy: string | null;
-}
-
-export interface PushCampaign {
-  id: string;
-  name: string;
-  title: string;
-  body: string;
-  url: string | null;
-  segmentId: string | null;
-  targetType: 'segment' | 'all' | 'test';
-  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
-  sendAt: string | null;
-  sentAt: string | null;
-  targetedCount: number;
-  sentCount: number;
-  failedCount: number;
-  skippedCount: number;
-  createdAt: string;
-  segment?: PushSegment;
-}
-
-export interface PushDeliveryLog {
-  id: string;
-  campaignId: string;
   userId: string;
-  status: 'sent' | 'failed' | 'skipped';
-  error: string | null;
-  skipReason: string | null;
-  createdAt: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  inAppEnabled: boolean;
+  marketingEnabled: boolean;
+  operationalEnabled: boolean;
+  phoneNumber: string | null;
+  phoneVerified: boolean;
 }
 
-// Segment CRUD
-export async function getSegments(): Promise<PushSegment[]>
-export async function getSegment(id: string): Promise<PushSegment | null>
-export async function createSegment(segment: Partial<PushSegment>): Promise<PushSegment>
-export async function updateSegment(id: string, updates: Partial<PushSegment>): Promise<void>
-export async function deleteSegment(id: string): Promise<void>
-export async function estimateSegmentSize(rules: SegmentRules): Promise<number>
-export async function previewSegmentUsers(rules: SegmentRules, limit?: number): Promise<User[]>
-
-// Campaign CRUD
-export async function getCampaigns(): Promise<PushCampaign[]>
-export async function getCampaign(id: string): Promise<PushCampaign | null>
-export async function createCampaign(campaign: Partial<PushCampaign>): Promise<PushCampaign>
-export async function updateCampaign(id: string, updates: Partial<PushCampaign>): Promise<void>
-export async function deleteCampaign(id: string): Promise<void>
-export async function sendCampaignNow(id: string): Promise<{ sent: number; failed: number }>
-export async function scheduleCampaign(id: string, sendAt: Date): Promise<void>
-
-// Delivery Logs
-export async function getCampaignDeliveryLogs(campaignId: string, limit?: number): Promise<PushDeliveryLog[]>
-export async function getPushStats(): Promise<PushStats>
+export function useNotificationPreferences()
+export function useUpdateNotificationPreferences()
+export function useSendPhoneOTP()
+export function useVerifyPhoneOTP()
 ```
 
-### B) Push Broadcast Hooks
+**Logic:**
+- Fetch from `notification_preferences` table
+- If no row exists, create with defaults on first update
+- Sync `sms_enabled` with profile's `sms_consent`
 
-**File to Create:** `src/hooks/usePushBroadcast.ts`
+---
+
+### 2) Enhanced NotificationSettings Page
+
+**File to Modify:** `src/pages/account/NotificationSettings.tsx`
+
+**New Sections:**
+
+**SMS Notifications:**
+```text
++--------------------------------------------------+
+| 📱 SMS Notifications                              |
++--------------------------------------------------+
+| [Toggle: Enable SMS]                              |
+|                                                   |
+| Phone Number: [+1 (555) 123-4567] [Verify]        |
+| Status: ✅ Verified / ⚠️ Not Verified              |
+|                                                   |
+| Rate: Max 5 SMS/day for critical updates only    |
++--------------------------------------------------+
+```
+
+**Email Notifications:**
+```text
++--------------------------------------------------+
+| 📧 Email Notifications                            |
++--------------------------------------------------+
+| [Toggle: Enable Email]                            |
+|                                                   |
+| Email: user@example.com (from auth)              |
+|                                                   |
+| Types:                                            |
+| [x] Order receipts & confirmations               |
+| [x] Support ticket updates                       |
+| [ ] Marketing & promotions                       |
++--------------------------------------------------+
+```
+
+**Components to Create:**
+- `PhoneVerificationDialog.tsx` - OTP input modal
+- `NotificationChannelCard.tsx` - Reusable channel toggle card
+
+---
+
+### 3) SMS OTP Edge Function
+
+**File to Create:** `supabase/functions/send-otp-sms/index.ts`
+
+**Logic:**
+1. Accept `{ phone_e164, user_id }`
+2. Rate limit: max 5 OTP requests per phone per hour
+3. Generate 6-digit code, expires in 10 minutes
+4. Invalidate previous codes for this phone
+5. Send SMS via Twilio
+6. Store in `sms_otp_codes` table
+
+**SMS Template:**
+```
+Your ZIVO verification code is 123456. Expires in 10 minutes. Reply STOP to opt out.
+```
+
+**File to Create:** `supabase/functions/verify-otp-sms/index.ts`
+
+**Logic:**
+1. Accept `{ phone_e164, code, user_id }`
+2. Find matching unexpired code with < 3 attempts
+3. If valid:
+   - Mark as verified
+   - Update `notification_preferences.phone_verified = true`
+   - Update `profiles.phone_verified = true`, `phone_verified_at = now()`
+4. If invalid: increment attempts, return error
+
+---
+
+### 4) Unified Send Notification Function
+
+**File to Modify:** `supabase/functions/send-notification/index.ts`
+
+Add multi-channel cascade logic:
 
 ```typescript
-// Segment hooks
-export function useSegments()
-export function useSegment(id: string | undefined)
-export function useCreateSegment()
-export function useUpdateSegment()
-export function useDeleteSegment()
-export function useSegmentPreview(rules: SegmentRules, enabled?: boolean)
-
-// Campaign hooks
-export function usePushCampaigns()
-export function usePushCampaign(id: string | undefined)
-export function useCreatePushCampaign()
-export function useUpdatePushCampaign()
-export function useDeletePushCampaign()
-export function useSendPushCampaign()
-export function useSchedulePushCampaign()
-
-// Delivery & Stats hooks
-export function usePushDeliveryLogs(campaignId: string | undefined)
-export function usePushStats()
+async function sendMultiChannelNotification({
+  user_id,
+  title,
+  body,
+  action_url,
+  priority = 'normal', // 'critical' | 'normal' | 'low'
+  event_type, // 'order_status', 'support_reply', 'chat_message'
+}) {
+  // 1. Get user preferences
+  const prefs = await getNotificationPreferences(user_id);
+  const profile = await getProfile(user_id);
+  
+  // 2. Determine channels based on priority
+  let channels = [];
+  
+  if (priority === 'critical') {
+    // Try push first
+    if (prefs.in_app_enabled) channels.push('push');
+    // Fallback to SMS if push fails or no subscription
+    if (prefs.sms_enabled && prefs.phone_verified) channels.push('sms');
+    // Always email for receipts
+    if (prefs.email_enabled) channels.push('email');
+  } else {
+    // Normal: push + in-app only
+    if (prefs.in_app_enabled) channels.push('push');
+    // Email for certain types
+    if (['receipt', 'refund'].includes(event_type) && prefs.email_enabled) {
+      channels.push('email');
+    }
+  }
+  
+  // 3. Execute in order with fallback
+  let pushSuccess = false;
+  
+  for (const channel of channels) {
+    if (channel === 'push') {
+      const result = await sendPush(user_id, title, body, action_url);
+      pushSuccess = result.success;
+      if (!pushSuccess && prefs.sms_enabled && prefs.phone_verified) {
+        // Fallback to SMS
+        await sendSMS(profile.phone_e164, body);
+      }
+    } else if (channel === 'sms') {
+      if (!pushSuccess) {
+        await sendSMS(profile.phone_e164, body);
+      }
+    } else if (channel === 'email') {
+      await sendEmail(profile.email, title, body);
+    }
+  }
+}
 ```
 
-### C) Admin Push Dashboard
+---
 
-**File to Create:** `src/pages/admin/push/PushDashboard.tsx`
+### 5) Event Handler Integration
 
-**Route:** `/admin/push`
+**Modify `useUpdateFoodOrder`:**
+
+```typescript
+// After push notification attempt
+if (updates.status && currentOrder?.customer_id) {
+  const isCritical = ['out_for_delivery', 'delivered', 'cancelled'].includes(updates.status);
+  
+  try {
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        user_id: currentOrder.customer_id,
+        title: pushMessage.title,
+        body: pushMessage.body,
+        action_url: `/eats/orders/${id}`,
+        priority: isCritical ? 'critical' : 'normal',
+        event_type: 'order_status',
+        order_id: id,
+      },
+    });
+  } catch (err) {
+    console.warn("Notification send failed:", err);
+  }
+}
+```
+
+**Modify `useAddTicketMessage`:**
+
+```typescript
+// After agent reply
+if (ticket?.user_id) {
+  await supabase.functions.invoke("send-notification", {
+    body: {
+      user_id: ticket.user_id,
+      title: "Support Team Replied 💬",
+      body: `Re: ${ticket.subject?.substring(0, 50)}`,
+      action_url: `/support/tickets/${ticketId}`,
+      priority: 'critical', // Support replies are critical
+      event_type: 'support_reply',
+    },
+  });
+}
+```
+
+---
+
+### 6) Twilio Webhook for Delivery Status
+
+**File to Create:** `supabase/functions/twilio-sms-status/index.ts`
+
+**Handles:**
+- `delivered` - Update notification status to 'sent'
+- `failed` - Update notification status to 'failed', store error
+- `undelivered` - Same as failed
+
+```typescript
+serve(async (req) => {
+  const formData = await req.formData();
+  const messageSid = formData.get("MessageSid");
+  const status = formData.get("MessageStatus");
+  const errorCode = formData.get("ErrorCode");
+  
+  await supabase
+    .from("notifications")
+    .update({
+      status: status === "delivered" ? "sent" : "failed",
+      error_message: errorCode ? `Twilio error: ${errorCode}` : null,
+      sent_at: status === "delivered" ? new Date().toISOString() : null,
+    })
+    .eq("provider_message_id", messageSid);
+    
+  return new Response("OK", { status: 200 });
+});
+```
+
+---
+
+### 7) Admin Notifications Outbox Page
+
+**File to Create:** `src/pages/admin/NotificationsOutboxPage.tsx`
+
+**Route:** `/admin/notifications/outbox`
 
 **Layout:**
 ```text
 +----------------------------------------------------------+
-|  Push Notifications                   [+ New Campaign]    |
+|  Notification Outbox                    [Refresh]         |
 +----------------------------------------------------------+
 |                                                           |
+|  Filters: [All Channels ▼] [All Status ▼] [Last 24h ▼]   |
+|                                                           |
 |  +------------------+  +------------------+               |
-|  | TOTAL SENT       |  | ACTIVE SEGMENTS  |               |
-|  | 12,450           |  | 8                |               |
+|  | TOTAL SENT       |  | FAILED           |               |
+|  | 1,234            |  | 23               |               |
 |  +------------------+  +------------------+               |
 |                                                           |
 |  +------------------+  +------------------+               |
-|  | SCHEDULED        |  | DELIVERY RATE    |               |
-|  | 3 campaigns      |  | 94.5%            |               |
+|  | SMS SENT         |  | EMAIL SENT       |               |
+|  | 89               |  | 456              |               |
 |  +------------------+  +------------------+               |
 |                                                           |
-|  Quick Actions                                            |
+|  Failed Notifications (click to expand)                   |
 |  +------------------------------------------------------+|
-|  | [Manage Segments] [All Campaigns] [Send Test]        ||
+|  | 12:34 | SMS  | +1555... | "Your order..." | Retry    ||
+|  |       | Error: 30008 - Unknown error                 ||
 |  +------------------------------------------------------+|
-|                                                           |
-|  Recent Campaigns                                         |
-|  +------------------------------------------------------+|
-|  | Flash Sale Alert | Sent | 2,345 delivered | 2 hrs ago||
-|  | Driver Boost     | Sent | 128 delivered   | 5 hrs ago||
-|  | Weekend Special  | Scheduled | Feb 10     | [Cancel] ||
+|  | 12:30 | Email| user@... | "Support reply" | Retry    ||
+|  |       | Error: Invalid email format                   ||
 |  +------------------------------------------------------+|
 |                                                           |
 +----------------------------------------------------------+
 ```
 
-### D) Segments Management Page
-
-**File to Create:** `src/pages/admin/push/SegmentsPage.tsx`
-
-**Route:** `/admin/push/segments`
-
 **Features:**
-- List all segments with estimated user counts
-- Create new segment with rule builder
-- Edit/delete segments
-- Preview matching users
+- Filter by channel (push/sms/email)
+- Filter by status (sent/failed/queued)
+- Date range filter
+- Retry failed notifications
+- Show error details
+- Export failed list
 
-### E) Segment Rule Builder Component
+---
 
-**File to Create:** `src/components/admin/push/SegmentRuleBuilder.tsx`
+### 8) SMS Rate Limiting
 
-**Features:**
-- Visual rule builder (no JSON editing required for MVP rules)
-- Role selector (Customer, Driver, Merchant checkboxes)
-- Driver online toggle
-- Inactive days slider
-- Membership toggle
-- City dropdown (from available cities)
-- Real-time estimated count
-
-**Layout:**
-```text
-+------------------------------------------------------+
-| Segment Rules                                         |
-+------------------------------------------------------+
-| Target Roles:                                         |
-| [x] Customers  [ ] Drivers  [ ] Merchants            |
-|                                                       |
-| Driver Status: (only if Driver selected)              |
-| ( ) All  (•) Online Only  ( ) Offline Only           |
-|                                                       |
-| Customer Activity:                                    |
-| [ ] Inactive for [14] days or more                   |
-| [ ] Has placed at least one order                    |
-|                                                       |
-| Membership:                                           |
-| ( ) Any  (•) ZIVO+ Members Only  ( ) Non-Members     |
-|                                                       |
-| Location:                                             |
-| [All Cities         ▼]                                |
-|                                                       |
-| Estimated Reach: ~2,345 users                         |
-+------------------------------------------------------+
-```
-
-### F) Campaigns Listing Page
-
-**File to Create:** `src/pages/admin/push/CampaignsPage.tsx`
-
-**Route:** `/admin/push/campaigns`
-
-**Features:**
-- List all push campaigns with status badges
-- Filter by status (draft, scheduled, sent)
-- Quick actions: Send Now, Schedule, Delete
-- Link to detail page
-
-### G) Campaign Detail/Create Page
-
-**File to Create:** `src/pages/admin/push/CampaignDetailPage.tsx`
-
-**Route:** `/admin/push/campaigns/:id` (or `/admin/push/campaigns/new`)
-
-**Features:**
-- Campaign name input
-- Title & Body inputs with character counters
-- URL input (optional deep link)
-- Segment selector (dropdown of saved segments)
-- Or "Send to All Users" toggle
-- Schedule picker or "Send Now" button
-- Test send to current user
-- Preview notification appearance
-- Delivery stats after sent
-
-### H) Send to Segment Edge Function
-
-**File to Create:** `supabase/functions/send-segment-push/index.ts`
-
-**Logic:**
-1. Accept `campaign_id` or `{ segment_id, title, body, url }`
-2. Load segment rules
-3. Resolve matching users via SQL query
-4. For each user:
-   - Check rate limit (max 5 pushes/day)
-   - Check if has active subscription
-   - Check if unsubscribed
-   - Call `send-push-notification` or inline VAPID send
-5. Log to `push_delivery_log`
-6. Update campaign stats
-7. Return results
+**In `send-notification` function:**
 
 ```typescript
-// User resolution query based on rules
-async function resolveSegmentUsers(rules: SegmentRules): Promise<string[]> {
-  let query = supabase.from("profiles").select("user_id");
+async function checkSMSRateLimit(userId: string): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
   
-  if (rules.roles?.includes("driver")) {
-    // Join with drivers table
-    const { data: drivers } = await supabase
-      .from("drivers")
-      .select("user_id")
-      .eq("is_online", rules.driver_is_online ?? true);
-    return drivers?.map(d => d.user_id) || [];
+  const { data } = await supabase
+    .from("sms_daily_limits")
+    .select("sms_count")
+    .eq("user_id", userId)
+    .eq("date", today)
+    .single();
+  
+  if (data && data.sms_count >= 5) {
+    return false; // Rate limited
   }
   
-  if (rules.last_order_days_ago) {
-    // Find inactive customers (similar to marketing.ts logic)
-    // ...
-  }
+  // Upsert count
+  await supabase.rpc("increment_sms_count", {
+    p_user_id: userId,
+    p_date: today,
+  });
   
-  // More rule processing...
-  
-  return userIds;
+  return true;
 }
 ```
 
-### I) Push Campaign Scheduler
-
-**File to Create:** `supabase/functions/push-campaign-scheduler/index.ts`
-
-**Runs:** Every 5 minutes (configured via pg_cron or external scheduler)
-
-**Logic:**
-1. Find campaigns where `status = 'scheduled'` AND `send_at <= now()`
-2. For each:
-   - Set status = 'sending'
-   - Call `send-segment-push`
-   - Set status = 'sent' or 'failed'
-
-### J) Routes Configuration
-
-**File to Modify:** `src/App.tsx`
-
-```typescript
-// Lazy imports
-const PushDashboard = lazy(() => import("./pages/admin/push/PushDashboard"));
-const PushSegmentsPage = lazy(() => import("./pages/admin/push/SegmentsPage"));
-const PushCampaignsPage = lazy(() => import("./pages/admin/push/CampaignsPage"));
-const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDetailPage"));
-
-// Routes
-<Route path="/admin/push" element={<ProtectedRoute requireAdmin><PushDashboard /></ProtectedRoute>} />
-<Route path="/admin/push/segments" element={<ProtectedRoute requireAdmin><PushSegmentsPage /></ProtectedRoute>} />
-<Route path="/admin/push/campaigns" element={<ProtectedRoute requireAdmin><PushCampaignsPage /></ProtectedRoute>} />
-<Route path="/admin/push/campaigns/:id" element={<ProtectedRoute requireAdmin><PushCampaignDetailPage /></ProtectedRoute>} />
+**RPC Function:**
+```sql
+CREATE OR REPLACE FUNCTION increment_sms_count(p_user_id UUID, p_date DATE)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO sms_daily_limits (user_id, date, sms_count)
+  VALUES (p_user_id, p_date, 1)
+  ON CONFLICT (user_id, date)
+  DO UPDATE SET sms_count = sms_daily_limits.sms_count + 1;
+END;
+$$ LANGUAGE plpgsql;
 ```
+
+---
+
+## Events to Notify (MVP)
+
+| Event | Push | SMS (if push fails) | Email |
+|-------|------|---------------------|-------|
+| Order confirmed | ✅ | ❌ | ✅ receipt |
+| Order preparing | ✅ | ❌ | ❌ |
+| Out for delivery | ✅ | ✅ critical | ❌ |
+| Delivered | ✅ | ✅ critical | ✅ receipt |
+| Order cancelled | ✅ | ✅ critical | ✅ |
+| Support reply | ✅ | ✅ critical | ✅ |
+| New chat message | ✅ | ❌ | ❌ |
+| Refund processed | ✅ | ✅ critical | ✅ |
+| Driver assigned | ✅ | ❌ | ❌ |
 
 ---
 
@@ -461,176 +437,102 @@ const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDet
 ### Database Migration
 | Change | Purpose |
 |--------|---------|
-| Create `push_segments` table | Store reusable audience segments |
-| Create `push_campaigns` table | Push campaign management |
-| Create `push_delivery_log` table | Per-user delivery tracking |
-| Create `push_user_daily_limits` table | Rate limiting |
-| RLS policies | Admin-only access |
+| Create `sms_daily_limits` table | Rate limiting |
+| Create `sms_otp_codes` table | Phone verification |
+| Create `increment_sms_count` RPC | Atomic counter |
+| Add RLS policies | Security |
 
-### New Files (12)
+### Secrets to Add
+| Secret | Purpose |
+|--------|---------|
+| `TWILIO_FROM_NUMBER` | SMS sender number |
+
+### New Files (8)
 | File | Purpose |
 |------|---------|
-| `src/lib/pushBroadcast.ts` | Data layer for segments & campaigns |
-| `src/hooks/usePushBroadcast.ts` | React Query hooks |
-| `src/pages/admin/push/PushDashboard.tsx` | Main push admin hub |
-| `src/pages/admin/push/SegmentsPage.tsx` | Segment management |
-| `src/pages/admin/push/CampaignsPage.tsx` | Campaign listing |
-| `src/pages/admin/push/CampaignDetailPage.tsx` | Campaign create/edit/view |
-| `src/components/admin/push/SegmentRuleBuilder.tsx` | Visual rule builder |
-| `src/components/admin/push/NotificationPreview.tsx` | Live preview |
-| `src/components/admin/push/CampaignStats.tsx` | Delivery stats display |
-| `supabase/functions/send-segment-push/index.ts` | Send to segment |
-| `supabase/functions/push-campaign-scheduler/index.ts` | Scheduled sender |
+| `src/hooks/useNotificationPreferences.ts` | Preferences hook |
+| `src/components/account/PhoneVerificationDialog.tsx` | OTP input modal |
+| `src/components/account/NotificationChannelCard.tsx` | Reusable toggle card |
+| `src/pages/admin/NotificationsOutboxPage.tsx` | Admin outbox view |
+| `supabase/functions/send-otp-sms/index.ts` | Send SMS OTP |
+| `supabase/functions/verify-otp-sms/index.ts` | Verify SMS OTP |
+| `supabase/functions/twilio-sms-status/index.ts` | Delivery webhook |
 | Migration SQL file | Schema changes |
 
-### Modified Files (1)
+### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add push admin routes |
+| `src/pages/account/NotificationSettings.tsx` | Add SMS/Email sections |
+| `supabase/functions/send-notification/index.ts` | Add multi-channel cascade |
+| `src/hooks/useEatsOrders.ts` | Use unified send-notification |
+| `src/hooks/useSupportTickets.ts` | Use unified send-notification |
 
 ---
 
 ## Data Flow
 
 ```text
-Admin Creates Segment
-  └── Define rules (roles, activity, location)
-  └── Save to push_segments
+Event Occurs (order status change)
         ↓
-Admin Creates Campaign
-  └── Select segment or "All Users"
-  └── Write title, body, URL
-  └── Choose: Send Now OR Schedule
+Hook calls send-notification edge function
         ↓
-[Send Now]                    [Schedule]
-    ↓                              ↓
-send-segment-push         Save with status='scheduled'
-    ↓                              ↓
-Resolve users from rules    push-campaign-scheduler (cron)
-    ↓                              ↓
-For each user:              When send_at <= now()
-├── Check rate limit           ↓
-├── Check subscription      send-segment-push
-├── Send via VAPID              ↓
-└── Log to push_delivery_log    (same flow)
+Load user notification_preferences
         ↓
-Update campaign stats
+Determine channels based on priority:
+├── Critical: push → SMS fallback → email
+└── Normal: push only (email for receipts)
         ↓
-Admin sees results in dashboard
+Try PUSH first
+├── Success → Log to notifications (channel=push)
+└── Failure → Try SMS if enabled
+        ↓
+Try SMS (if applicable)
+├── Check rate limit (5/day)
+├── Check phone_verified
+├── Send via Twilio
+├── Log to notifications (channel=sms)
+└── Twilio webhook updates status
+        ↓
+Send EMAIL (if applicable)
+├── Send via Resend
+└── Log to notifications (channel=email)
+        ↓
+All results stored in notifications table
+        ↓
+Admin can view in /admin/notifications/outbox
 ```
 
 ---
 
 ## Safety Controls
 
-### 1. Rate Limiting (5 pushes/user/day)
-```sql
--- Before sending, check:
-SELECT push_count FROM push_user_daily_limits
-WHERE user_id = $1 AND date = CURRENT_DATE;
+### 1. SMS Rate Limiting (5/user/day)
+Prevents abuse and controls costs.
 
--- If >= 5, skip with reason 'rate_limited'
-```
+### 2. Phone Verification Required
+SMS only sent to verified phones.
 
-### 2. Unsubscribe Checking
-```sql
--- Only send to users with active subscriptions
-SELECT * FROM push_subscriptions
-WHERE user_id = $1 AND is_active = true;
-```
+### 3. Transactional Only
+SMS reserved for critical events only (out for delivery, support replies).
 
-### 3. Admin-Only Access
-All push admin pages wrapped in `AdminProtectedRoute`:
-```typescript
-<Route path="/admin/push/*" element={
-  <AdminProtectedRoute allowedRoles={["admin", "super_admin", "operations"]}>
-    ...
-  </AdminProtectedRoute>
-} />
-```
+### 4. Opt-Out Support
+SMS includes "Reply STOP" and respects `sms_opted_out` flag.
 
-### 4. Test Send First
-Campaign creation includes "Send Test to Me" button that sends only to the current admin's user_id.
-
-### 5. Confirmation Dialogs
-All "Send Now" actions require confirmation modal showing:
-- Estimated recipients count
-- Campaign title/body preview
-- "Are you sure?" with Cancel/Confirm buttons
-
----
-
-## Segment Resolution SQL Examples
-
-**All Online Drivers:**
-```sql
-SELECT user_id FROM drivers 
-WHERE is_online = true AND status = 'active';
-```
-
-**Inactive Customers (14+ days):**
-```sql
-SELECT DISTINCT p.user_id FROM profiles p
-LEFT JOIN food_orders fo ON fo.customer_id = p.user_id 
-  AND fo.created_at > NOW() - INTERVAL '14 days'
-  AND fo.status = 'completed'
-WHERE fo.id IS NULL
-  AND EXISTS (SELECT 1 FROM food_orders WHERE customer_id = p.user_id);
-```
-
-**Customers in Baton Rouge:**
-```sql
-SELECT DISTINCT p.user_id FROM profiles p
-JOIN saved_locations sl ON sl.user_id = p.user_id
-WHERE sl.city ILIKE '%Baton Rouge%';
-```
-
----
-
-## UI Component Details
-
-### NotificationPreview
-Shows how the push will appear on device:
-```text
-+---------------------------+
-| 📱 iOS / Android Preview  |
-+---------------------------+
-| [ZIVO icon]               |
-| Weekend Flash Sale! 🔥    |
-| 50% off all rides this... |
-| now                       |
-+---------------------------+
-```
-
-### CampaignStats
-After campaign is sent:
-```text
-+------------------------------------------+
-| Delivery Results                         |
-+------------------------------------------+
-| Targeted: 2,500 | Sent: 2,345 | Rate: 94%|
-| Failed: 55      | Skipped: 100           |
-|                                          |
-| Skip Reasons:                            |
-| - No subscription: 80                    |
-| - Rate limited: 15                       |
-| - Unsubscribed: 5                        |
-+------------------------------------------+
-```
+### 5. Fallback Priority
+Push first, then SMS, then email - avoids duplicate notifications.
 
 ---
 
 ## Summary
 
-This implementation creates a complete push notification broadcast system with:
+This implementation creates a robust multi-channel notification system:
 
-1. **Reusable Segments** - Define once, use across campaigns
-2. **Visual Rule Builder** - No JSON editing required for common rules
-3. **Campaign Management** - Draft, schedule, or send immediately
-4. **Delivery Tracking** - Per-user logs with failure reasons
-5. **Safety Controls** - Rate limits, unsubscribe checks, admin-only
-6. **Test Mode** - Send to yourself before broadcasting
-7. **Scheduling** - Set future send times with automatic execution
-8. **Real-time Stats** - See delivery rates and skip reasons
+1. **User Preferences** - Granular control over push, SMS, and email
+2. **Phone Verification** - OTP-based verification for SMS eligibility
+3. **Smart Fallback** - Push → SMS → Email with priority-based routing
+4. **Rate Limiting** - 5 SMS/day max to control costs
+5. **Delivery Tracking** - Twilio webhooks update notification status
+6. **Admin Dashboard** - Monitor failed notifications, retry capability
+7. **Existing Integration** - Uses existing `notifications` table and templates
 
-All integrated with existing `send-push-notification` edge function and `push_subscriptions` table.
+All leveraging existing Twilio and Resend configurations with minimal new infrastructure.
