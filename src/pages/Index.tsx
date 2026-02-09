@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -19,8 +19,8 @@ import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
 import PriceAlertPromo from "@/components/home/PriceAlertPromo";
 import BentoFeatures from "@/components/home/BentoFeatures";
 
-// Mobile app home
-import AppHome from "@/pages/app/AppHome";
+// Mobile app home - lazy load to match App.tsx pattern
+const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
 // Desktop version - Clean, premium layout focused on Flights
 const DesktopHomePage = () => {
@@ -107,13 +107,19 @@ const Index = () => {
     if (user) {
       return (
         <SetupRequiredRoute>
-          <AppHome />
+          <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            <AppHome />
+          </Suspense>
         </SetupRequiredRoute>
       );
     }
 
     // Keep current public mobile experience for signed-out visitors.
-    return <AppHome />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <AppHome />
+      </Suspense>
+    );
   }
 
   // Desktop version

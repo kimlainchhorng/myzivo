@@ -677,6 +677,7 @@ serve(async (req) => {
 
       default:
         console.log("[Webhook] Unhandled event type:", event.type);
+    }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
