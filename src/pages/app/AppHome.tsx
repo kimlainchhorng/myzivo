@@ -17,6 +17,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
+import SmartOffersSection from "@/components/home/SmartOffersSection";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 
 // Image Assets
@@ -348,9 +349,13 @@ const AppHome = () => {
         </div>
       )}
 
-      {/* Recommended Deals */}
+      {/* Smart Offers (signed-in) / Recommended Deals (signed-out) */}
       <div className="px-4 pb-24">
-        <RecommendedDealsSection className="py-6 px-0" />
+        {user ? (
+          <SmartOffersSection className="py-6 px-0" />
+        ) : (
+          <RecommendedDealsSection className="py-6 px-0" />
+        )}
       </div>
 
       {/* Bottom Navigation */}
