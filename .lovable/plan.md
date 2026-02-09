@@ -1,98 +1,125 @@
 
 
-# Recommended Deals Section -- Home Page
+# Personalized Win-Back Offers
 
 ## Overview
 
-Neither the desktop home page (`Index.tsx`) nor the mobile app home (`AppHome.tsx`) currently display any personalized deal content. The `promotions` table and `useAllEatsPromotions` hook exist but only target eats. The `useUserBehavior` hook provides search history, budget tier, and destination preferences. The `FlashDealCard` component and `FlashDeal` type are fully built for travel deals but only used on the standalone `/deals` page.
+No win-back code exists in the codebase yet. The admin side has `winback` campaign types and the `automated_message_log` table is available for deduplication, but nothing customer-facing detects inactivity or shows offers. This plan adds three things: a detection hook, a home page banner, and checkout auto-application.
 
 ## What Changes
 
-### 1. Create `useRecommendedDeals` hook (new file)
+### 1. Create `useWinBackOffer` hook (new file)
 
-A hook that fetches all active promotions from the database across all service types, then scores and sorts them client-side using three signals:
+Queries the `food_orders` table for the logged-in user's most recent delivered order. Calculates days since that order and returns the appropriate tier:
 
-- **Order/search history**: Boost deals matching the user's recent search destinations or preferred service categories (from `useUserBehavior`)
-- **Time of day**: Boost food/eats deals during meal windows (11am-2pm, 5pm-9pm), travel deals during evening browse hours (7pm-11pm)
-- **Budget tier**: Boost deals whose discount value aligns with the user's tracked budget preference (budget users see higher-discount deals first, luxury users see premium deals first)
+- 7-13 days: `gentle` -- "We miss you!" reminder, no discount
+- 14-29 days: `small` -- fetches a small win-back promo (discount_value <= 15%) from `promotions` where name matches "winback"
+- 30+ days (or no orders ever): `strong` -- fetches a stronger win-back promo (discount_value > 15%)
 
-For first-time visitors with no history, falls back to a curated sort: highest discount percentage first, with urgency (ending soon) as a tiebreaker.
+Deduplicates via `automated_message_log` with `trigger_type = 'winback'` and a 7-day cooldown per tier.
 
-Returns the top 6 scored deals as a unified `RecommendedDeal` type that normalizes both database promotions and flash deals into a single card format.
+### 2. Create `WinBackBanner` component (new file)
 
-### 2. Create `RecommendedDealsSection` component (new file)
+A tiered banner for the home page:
 
-A self-contained section component with:
-- Heading: "Recommended Deals" with a sparkle icon
-- Subheading that adapts: "Based on your recent searches" (if history exists) or "Trending deals for you" (if no history)
-- Horizontal scrollable row on mobile, 3-column grid on desktop
-- Each card shows: deal title, discount badge, service category icon, expiry countdown (if within 48h), and a CTA button
-- "View All Deals" link that navigates to `/deals`
+- Gentle: Warm message "We miss you! Check out what's new" with a browse CTA
+- Small: "Welcome back -- here's 10% off your next order" with promo code and copy button
+- Strong: "It's been a while! Enjoy 25% off on us" with prominent promo code and urgency countdown
 
-Uses the existing dark glass card aesthetic consistent with the rest of the home page.
+Dismissible via close button (state in sessionStorage, reappears next session). Uses the existing dark glass card aesthetic.
 
-### 3. Add section to desktop home page (`Index.tsx`)
+### 3. Add WinBackBanner to home pages
 
-Insert `RecommendedDealsSection` between "Popular Routes" and "Price Alert Promo" -- this is where deal-browsing intent is highest after users have seen route options.
+- Desktop (`Index.tsx`): Render above HeroSection for logged-in users
+- Mobile (`AppHome.tsx`): Render below the header greeting, above service cards
 
-### 4. Add section to mobile home page (`AppHome.tsx`)
+### 4. Auto-apply win-back promo at checkout (`EatsCheckout.tsx`)
 
-Add a compact version of `RecommendedDealsSection` after the Quick Actions row and before the bottom nav padding. Uses horizontal scroll with snap-scrolling cards sized for mobile.
+When checkout loads and no promo is already applied, if the user has a win-back promo code, auto-validate it via the existing `usePromotionValidation.validateCode()`. Show a toast: "Win-back offer applied automatically!" User can remove it and enter a different code.
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useRecommendedDeals.ts` | Create | Hook to fetch + score deals by history, time, budget |
-| `src/components/home/RecommendedDealsSection.tsx` | Create | Desktop/mobile section rendering scored deal cards |
-| `src/pages/Index.tsx` | Update | Add RecommendedDealsSection between Popular Routes and Price Alert Promo |
-| `src/pages/app/AppHome.tsx` | Update | Add compact RecommendedDealsSection after Quick Actions |
+| `src/hooks/useWinBackOffer.ts` | Create | Detect inactivity tier, fetch matching promo, dedup via automated_message_log |
+| `src/components/home/WinBackBanner.tsx` | Create | Tiered banner with promo code display and dismiss |
+| `src/pages/Index.tsx` | Update | Add WinBackBanner above HeroSection for logged-in users |
+| `src/pages/app/AppHome.tsx` | Update | Add WinBackBanner below header |
+| `src/pages/EatsCheckout.tsx` | Update | Auto-apply win-back promo on mount if eligible |
 
 ## Technical Details
 
-### Scoring algorithm
-
-Each deal gets a base score of 50, then adjustments:
+### Inactivity detection
 
 ```text
-+20  if deal destination matches a recent search destination
-+15  if deal service category matches user's most-searched category
-+10  if time of day matches deal type (meals during lunch/dinner, travel in evening)
-+10  if discount_value aligns with budget tier (>30% for budget, 15-30% for mid, <15% for luxury)
-+15  if deal ends within 24 hours (urgency boost)
-+5   if deal ends within 48 hours
+Query: food_orders table
+  WHERE customer_id = user.id
+  AND status = 'delivered'
+  ORDER BY created_at DESC
+  LIMIT 1
+
+daysSince = floor((now - lastOrder.created_at) / 86400000)
+
+Tier:
+  < 7 days   => null (active user)
+  7-13 days  => 'gentle'
+  14-29 days => 'small'
+  30+ days   => 'strong'
+  no orders  => 'strong'
 ```
 
-Final list sorted by score descending, top 6 returned.
-
-### Data source
-
-Query the `promotions` table with no `applicable_services` filter (to get all service types), then map each row to a normalized `RecommendedDeal`:
+### Win-back promo matching
 
 ```text
-RecommendedDeal {
-  id, name, description, code,
-  discountLabel (e.g. "20% OFF", "$5 OFF", "Free Delivery"),
-  serviceType (derived from applicable_services[0]),
-  expiresAt (from ends_at),
-  score (calculated),
-  href (deep link to relevant page)
+Query: promotions table
+  WHERE is_active = true
+  AND (name ILIKE '%winback%' OR name ILIKE '%win-back%')
+  AND applicable_services contains 'eats'
+  ORDER BY discount_value DESC
+
+Tier selection:
+  'small'  => first promo with discount_value <= 15
+  'strong' => first promo with discount_value > 15
+```
+
+### Deduplication
+
+```text
+Query: automated_message_log
+  WHERE user_id = user.id
+  AND trigger_type = 'winback'
+  AND trigger_ref = tier
+  AND sent_at > now() - 7 days
+
+If found => skip banner for that tier
+On first display => insert log entry
+```
+
+### Checkout auto-application
+
+In `EatsCheckoutContent`, a useEffect runs once:
+
+```text
+if (!promoValidation.appliedPromo && winBackOffer.promoCode && !autoAppliedRef.current) {
+  autoAppliedRef.current = true;
+  promoValidation.validateCode(winBackOffer.promoCode, subtotal);
 }
 ```
 
-### Routing from deal cards
+Uses the existing `validate_promo_code` RPC so all server-side checks still apply.
 
-- Flights/Hotels/Cars deals link to `/deals` with the deal pre-selected
-- Eats deals link to `/eats` (or specific restaurant if merchant_id exists)
-- Rides deals link to `/ride` with the promo code pre-filled
+### Banner dismiss
 
-### No-deals state
-
-If no active promotions exist in the database, the section renders nothing (hidden entirely). No empty state needed.
+- Close button sets `sessionStorage.setItem('winback_dismissed', 'true')`
+- Banner checks on render and hides if set
+- Clears on next session automatically
 
 ## Edge Cases
 
-- **New user, no history**: Falls back to discount-percentage + urgency sorting with generic "Trending deals" heading
-- **All deals expired during session**: Cards show countdown hitting zero, CTA disables
-- **Only eats deals active**: Section still shows, just all eats cards
-- **Mobile performance**: Horizontal scroll with CSS snap, no extra re-renders from scoring (memoized in hook)
+- No orders ever: treated as 30+ days (strong tier)
+- User not logged in: hook returns null, no banner, no auto-apply
+- No win-back promos configured in DB: banner shows reminder text only (gentle style), no code; checkout skips auto-apply
+- User already applied a manual promo: auto-apply skips
+- Promo expired between page load and checkout: validateCode RPC catches it server-side
+- Multiple service types: detection uses food_orders only; extensible to rides/travel later
+
