@@ -5,6 +5,7 @@
 import { ReactNode } from "react";
 import HizovoAppBottomNav from "./HizovoAppBottomNav";
 import HizovoAppHeader from "./HizovoAppHeader";
+import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import { cn } from "@/lib/utils";
 
 interface HizovoAppLayoutProps {
@@ -41,6 +42,9 @@ const HizovoAppLayout = ({
           rightAction={headerRightAction}
         />
       )}
+
+      {/* System Status Banner (customer-facing) */}
+      <SystemStatusBanner />
 
       <main className={cn(
         "flex-1",

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ZivoSuperAppNav from "./ZivoSuperAppNav";
+import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
 
@@ -112,6 +113,9 @@ const ZivoSuperAppLayout = ({
           </div>
         </header>
       )}
+
+      {/* System Status Banner (customer-facing) */}
+      <SystemStatusBanner />
 
       {/* Main Content */}
       <main className={cn(
