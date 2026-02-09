@@ -1,319 +1,387 @@
 
-# ETA Accuracy Improvements — Implementation Plan
+# Restaurant Availability Status — Implementation Plan
 
 ## Overview
-Enhance ETA accuracy by incorporating driver supply data alongside existing demand signals. Add clear messaging when few drivers are available to set proper customer expectations.
+Add a comprehensive restaurant availability status system showing Open, Busy, or Temporarily Unavailable states with appropriate messaging and ordering behavior.
 
 ---
 
 ## Current State Analysis
 
-### Already Complete
-| Feature | Status | Location |
-|---------|--------|----------|
-| Demand-based surge detection | Complete | `useEatsSurgePricing`, `lib/surge.ts` |
-| High demand messaging | Complete | `HighDemandBanner` - "High demand in your area" |
-| Traffic-aware ETA | Complete | `EtaCountdown` with rush hour/late night multipliers |
-| Demand note in ETA | Complete | `showDemandNote` prop shows "Busy time — ETA includes buffer" |
-| Driver availability hook | Complete | `useAvailableDrivers`, `useAvailableDriversCount` |
-| Live driver location tracking | Complete | `useLiveDriverTracking`, `useDriverAvailability` |
-| Batch position ETA | Complete | Uses batch stop ETA for grouped orders |
+### Database Fields Available (already in `restaurants` table)
+| Field | Type | Purpose |
+|-------|------|---------|
+| `is_open` | boolean | Whether restaurant is currently accepting orders |
+| `busy_mode` | boolean | Whether restaurant is in busy mode |
+| `busy_prep_time_bonus_minutes` | number | Extra minutes added during busy periods |
+| `pause_new_orders` | boolean | Temporarily disable new orders |
+| `avg_prep_time` | number | Normal preparation time |
+| `closed_reason` | string | Optional reason for closure |
 
-### Missing
-| Feature | What's Needed |
-|---------|---------------|
-| Supply-aware ETA adjustment | Apply multiplier when few drivers are available |
-| Low supply messaging | Show "High demand — delivery may take longer" when driver supply is low |
-| Combined demand+supply factor | Merge demand level with driver availability for comprehensive ETA |
-| Driver supply indicator | Show driver count context in EtaCountdown |
+### Frontend Interface (needs updating)
+Current `Restaurant` interface in `useEatsOrders.ts`:
+```typescript
+interface Restaurant {
+  id: string;
+  name: string;
+  is_open: boolean | null;
+  status: string | null;
+  avg_prep_time: number | null;
+  // Missing: busy_mode, pause_new_orders, busy_prep_time_bonus_minutes
+}
+```
+
+### Current UI Behavior
+- Shows "Open" badge if `is_open === true`
+- Shows "Closed" badge if `is_open === false`
+- No busy state messaging
+- No ordering restriction for unavailable restaurants
 
 ---
 
 ## Implementation Plan
 
-### 1) Create useEatsDeliveryFactors Hook
+### 1) Update Restaurant Interface
 
-**File to Create:** `src/hooks/useEatsDeliveryFactors.ts`
+**File to Modify:** `src/hooks/useEatsOrders.ts`
 
-**Purpose:** Combine demand level and driver supply into a single comprehensive delivery factor for ETA adjustment.
+**Changes:**
+Add new fields to the `Restaurant` interface to capture availability status:
 
 ```typescript
-interface DeliveryFactors {
-  // Core factors
-  demandLevel: SurgeLevel;
-  driverSupply: "low" | "moderate" | "high";
-  nearbyDriverCount: number;
-  
-  // Computed
-  etaMultiplier: number;  // Combined factor for ETA adjustment
-  showLowSupplyWarning: boolean;
-  warningMessage: string | null;
-  warningType: "demand" | "supply" | "both" | null;
+export interface Restaurant {
+  // ... existing fields
+  busy_mode: boolean | null;
+  busy_prep_time_bonus_minutes: number | null;
+  pause_new_orders: boolean | null;
+  closed_reason: string | null;
+}
+```
+
+### 2) Create RestaurantAvailabilityBadge Component
+
+**File to Create:** `src/components/eats/RestaurantAvailabilityBadge.tsx`
+
+**Purpose:** Unified badge component showing restaurant status with consistent styling.
+
+**States:**
+| Status | Condition | Badge Color | Icon |
+|--------|-----------|-------------|------|
+| Open | `is_open && !busy_mode && !pause_new_orders` | Emerald/green | Checkmark |
+| Busy | `is_open && busy_mode && !pause_new_orders` | Amber/orange | Clock |
+| Temporarily Unavailable | `pause_new_orders || !is_open` | Red | AlertCircle |
+
+**Styling:**
+```text
++----------------------------------+
+| [🟢 Open]                        | Emerald badge
++----------------------------------+
+| [⏱ Busy — longer wait]          | Amber badge + tooltip
++----------------------------------+
+| [⚠ Temporarily unavailable]     | Red badge
++----------------------------------+
+```
+
+### 3) Create BusyRestaurantBanner Component
+
+**File to Create:** `src/components/eats/BusyRestaurantBanner.tsx`
+
+**Purpose:** Contextual banner on restaurant menu page when busy.
+
+**UI Design:**
+```text
++----------------------------------------------------------+
+| [⏱]  High demand — longer preparation times              |
+|      Expected wait: 45-55 min (15 min longer than usual) |
++----------------------------------------------------------+
+```
+
+**Features:**
+- Show when `busy_mode === true`
+- Calculate extended prep time using `avg_prep_time + busy_prep_time_bonus_minutes`
+- Dismissible per-session
+- Amber/orange theme matching other Eats warnings
+
+### 4) Create UnavailableBanner Component
+
+**File to Create:** `src/components/eats/UnavailableBanner.tsx`
+
+**Purpose:** Banner on restaurant page when temporarily unavailable.
+
+**UI Design:**
+```text
++----------------------------------------------------------+
+| [⚠]  This restaurant is temporarily unavailable          |
+|      You can browse the menu, but ordering is paused.    |
+|      [reason if provided]                                |
++----------------------------------------------------------+
+```
+
+**Features:**
+- Show when `pause_new_orders === true` or `is_open === false`
+- Red/destructive theme
+- Non-dismissible (ordering actually blocked)
+
+### 5) Create useRestaurantAvailability Hook
+
+**File to Create:** `src/hooks/useRestaurantAvailability.ts`
+
+**Purpose:** Derive availability status and messaging from restaurant data.
+
+```typescript
+interface RestaurantAvailability {
+  status: "open" | "busy" | "unavailable";
+  canOrder: boolean;
+  statusMessage: string;
+  detailMessage: string | null;
+  adjustedPrepTime: number | null;
+  prepTimeBonus: number | null;
 }
 ```
 
 **Logic:**
-- **Driver Supply Levels:**
-  - `low`: 0-2 drivers nearby — 1.5x ETA multiplier
-  - `moderate`: 3-5 drivers nearby — 1.2x ETA multiplier
-  - `high`: 6+ drivers nearby — 1.0x (no adjustment)
-
-- **Combined Multiplier:**
-  - Base: Traffic multiplier (existing)
-  - + Demand: surge multiplier from `useEatsSurgePricing`
-  - + Supply: driver availability factor
-  - Cap at 2.0x to avoid unrealistic ETAs
-
-### 2) Create LowDriverSupplyBanner Component
-
-**File to Create:** `src/components/eats/LowDriverSupplyBanner.tsx`
-
-**Purpose:** Show when few drivers are available, complementing the existing `HighDemandBanner`.
-
-**UI Design:**
-```
-+----------------------------------------------------------+
-| [🚗⚠]  Limited drivers available                         |
-|        Delivery may take longer than usual.              |
-|        We're actively finding more drivers.          [X] |
-+----------------------------------------------------------+
-```
-
-**Variants by severity:**
-| Driver Count | Style | Message |
-|--------------|-------|---------|
-| 0 drivers | Red | "No drivers nearby — delivery times are extended" |
-| 1-2 drivers | Orange | "High demand — delivery may take longer" |
-| 3-5 drivers | Amber | "Busy area — delivery may take a bit longer" |
-
-**Features:**
-- Animated entry matching `HighDemandBanner` style
-- Dismissible per-order (sessionStorage)
-- Different from demand banner (this is supply-focused)
-- Only shown when demand banner is NOT shown (avoid double messaging)
-
-### 3) Enhance EtaCountdown with Supply Factor
-
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
-
-**Changes:**
-- Add new props for supply-aware calculation:
-  ```typescript
-  interface EtaCountdownProps {
-    // ... existing props
-    /** Driver supply factor for ETA adjustment */
-    supplyMultiplier?: number;
-    /** Number of nearby drivers */
-    nearbyDriverCount?: number;
-    /** Whether to show low supply note */
-    showLowSupplyNote?: boolean;
+```typescript
+function getRestaurantAvailability(restaurant: Restaurant): RestaurantAvailability {
+  // Unavailable: explicitly paused or closed
+  if (restaurant.pause_new_orders || restaurant.is_open === false) {
+    return {
+      status: "unavailable",
+      canOrder: false,
+      statusMessage: "Temporarily unavailable",
+      detailMessage: restaurant.closed_reason || "Ordering is currently paused.",
+      adjustedPrepTime: null,
+      prepTimeBonus: null,
+    };
   }
-  ```
-
-- Update ETA calculation to include supply factor:
-  ```typescript
-  const withTrafficAndSupply = baseMinutes * traffic.multiplier * (supplyMultiplier || 1.0);
-  ```
-
-- Add low supply indicator (similar to existing traffic note):
-  ```
-  [🚗] Few drivers nearby — ETA extended
-  ```
-
-### 4) Integrate Supply Awareness in EatsOrderDetail
-
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
-
-**Changes:**
-1. Import `useEatsDeliveryFactors` hook
-2. Import `LowDriverSupplyBanner` component
-3. Pass supply factors to `EtaCountdown`
-4. Show `LowDriverSupplyBanner` when appropriate (and demand banner NOT shown)
-
-**Hook usage:**
-```typescript
-const deliveryFactors = useEatsDeliveryFactors({
-  restaurantLat: order?.restaurants?.lat,
-  restaurantLng: order?.restaurants?.lng,
-});
+  
+  // Busy: open but in busy mode
+  if (restaurant.busy_mode) {
+    const bonus = restaurant.busy_prep_time_bonus_minutes || 15;
+    const base = restaurant.avg_prep_time || 25;
+    return {
+      status: "busy",
+      canOrder: true,
+      statusMessage: "Busy",
+      detailMessage: "High demand — longer preparation times.",
+      adjustedPrepTime: base + bonus,
+      prepTimeBonus: bonus,
+    };
+  }
+  
+  // Normal open state
+  return {
+    status: "open",
+    canOrder: true,
+    statusMessage: "Open",
+    detailMessage: null,
+    adjustedPrepTime: restaurant.avg_prep_time,
+    prepTimeBonus: null,
+  };
+}
 ```
 
-**Banner logic (mutual exclusivity):**
+### 6) Update EatsRestaurants Page (Restaurant List)
+
+**File to Modify:** `src/pages/EatsRestaurants.tsx`
+
+**Changes:**
+1. Import `RestaurantAvailabilityBadge`
+2. Replace simple Open/Closed badge with new unified badge
+3. Show prep time adjustment for busy restaurants
+
+**Badge Location:**
+```text
++------------------------------------------+
+| [Image]                                  |
+|                          [🟡 Busy]       |  <-- Top right corner
++------------------------------------------+
+| Restaurant Name                          |
+| Italian • ⭐ 4.8 • 🕐 35-45 min          |  <-- Prep time adjusted
++------------------------------------------+
+```
+
+### 7) Update MobileEatsPremium Component
+
+**File to Modify:** `src/components/eats/MobileEatsPremium.tsx`
+
+**Changes:**
+1. Import and use `RestaurantAvailabilityBadge`
+2. Replace current Open/Closed badge (lines 253-264)
+3. Adjust displayed prep time when busy
+
+**Current Code (to replace):**
 ```typescript
-{/* Show either demand OR supply banner, not both */}
-{demandActive && isActiveOrder && (
-  <HighDemandBanner level={demandLevel} orderId={order.id} />
+{restaurant.is_open !== null && (
+  <div className="absolute top-6 left-6">
+    <div className={`... ${restaurant.is_open ? "emerald" : "red"}`}>
+      {restaurant.is_open ? "Open Now" : "Closed"}
+    </div>
+  </div>
 )}
-{!demandActive && deliveryFactors.showLowSupplyWarning && isActiveOrder && (
-  <LowDriverSupplyBanner
-    driverCount={deliveryFactors.nearbyDriverCount}
-    orderId={order.id}
+```
+
+**New Code:**
+```typescript
+<div className="absolute top-6 left-6">
+  <RestaurantAvailabilityBadge restaurant={restaurant} />
+</div>
+```
+
+### 8) Update EatsRestaurantMenu Page
+
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+
+**Changes:**
+1. Import `useRestaurantAvailability`, `BusyRestaurantBanner`, `UnavailableBanner`
+2. Show appropriate banner based on availability status
+3. Disable "Add to Cart" buttons when `canOrder === false`
+4. Update prep time display to use adjusted time
+
+**Banner Placement (after header, before menu):**
+```typescript
+{/* Availability Banners */}
+{availability.status === "busy" && (
+  <BusyRestaurantBanner
+    restaurant={restaurant}
+    adjustedPrepTime={availability.adjustedPrepTime}
+    bonusMinutes={availability.prepTimeBonus}
+  />
+)}
+{availability.status === "unavailable" && (
+  <UnavailableBanner
+    message={availability.detailMessage}
   />
 )}
 ```
 
-**EtaCountdown update:**
+**Add Button Disable Logic (in MenuItemCard):**
 ```typescript
-<EtaCountdown
-  // ... existing props
-  supplyMultiplier={deliveryFactors.etaMultiplier}
-  nearbyDriverCount={deliveryFactors.nearbyDriverCount}
-  showLowSupplyNote={deliveryFactors.driverSupply === "low"}
-/>
+<Button
+  disabled={!canOrder}  // New prop passed down
+  onClick={handleAdd}
+>
+  {canOrder ? "Add" : "Unavailable"}
+</Button>
+```
+
+### 9) Update Checkout Page
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
+
+**Changes:**
+Add validation to prevent checkout for unavailable restaurants:
+
+```typescript
+// Fetch restaurant to check availability
+const { data: restaurant } = useRestaurant(restaurantId);
+const availability = useRestaurantAvailability(restaurant);
+
+// Block checkout if unavailable
+if (!availability.canOrder) {
+  return (
+    <div className="...">
+      <AlertCircle />
+      <h1>Restaurant Unavailable</h1>
+      <p>This restaurant is temporarily not accepting orders.</p>
+      <Button onClick={() => navigate("/eats/restaurants")}>
+        Browse Other Restaurants
+      </Button>
+    </div>
+  );
+}
 ```
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (4)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useEatsDeliveryFactors.ts` | Combine demand + supply for ETA adjustment |
-| `src/components/eats/LowDriverSupplyBanner.tsx` | Banner for low driver availability |
+| `src/components/eats/RestaurantAvailabilityBadge.tsx` | Unified status badge (Open/Busy/Unavailable) |
+| `src/components/eats/BusyRestaurantBanner.tsx` | Banner for busy restaurants with prep time info |
+| `src/components/eats/UnavailableBanner.tsx` | Banner for temporarily unavailable restaurants |
+| `src/hooks/useRestaurantAvailability.ts` | Hook to derive availability status and messaging |
 
-### Modified Files (2)
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/components/eats/EtaCountdown.tsx` | Add supply multiplier and low supply note |
-| `src/pages/EatsOrderDetail.tsx` | Integrate delivery factors hook and banner |
-
----
-
-## ETA Calculation Logic
-
-### Current Flow
-```
-Base ETA (distance / speed)
-    ↓
-Traffic Multiplier (rush hour 1.4x, late night 0.8x)
-    ↓
-Display ETA
-```
-
-### Enhanced Flow
-```
-Base ETA (distance / speed)
-    ↓
-Traffic Multiplier (rush hour 1.4x, late night 0.8x)
-    ↓
-Supply Multiplier (0-2 drivers: 1.5x, 3-5: 1.2x, 6+: 1.0x)
-    ↓
-Demand Buffer (if surge active)
-    ↓
-Cap at 2.0x total adjustment
-    ↓
-Display ETA with appropriate messaging
-```
-
-### Multiplier Examples
-| Scenario | Traffic | Supply | Demand | Total | 10 min base → |
-|----------|---------|--------|--------|-------|---------------|
-| Normal day, good supply | 1.0x | 1.0x | 1.0x | 1.0x | 10 min |
-| Rush hour, good supply | 1.4x | 1.0x | 1.0x | 1.4x | 14 min |
-| Normal, few drivers | 1.0x | 1.5x | 1.0x | 1.5x | 15 min |
-| Rush hour, few drivers | 1.4x | 1.5x | 1.0x | 2.0x (capped) | 20 min |
-| Rush hour, high demand | 1.4x | 1.0x | 1.25x | 1.75x | 18 min |
+| `src/hooks/useEatsOrders.ts` | Add `busy_mode`, `pause_new_orders`, `busy_prep_time_bonus_minutes`, `closed_reason` to Restaurant interface |
+| `src/pages/EatsRestaurants.tsx` | Use new availability badge component |
+| `src/components/eats/MobileEatsPremium.tsx` | Replace Open/Closed badge with availability badge |
+| `src/pages/EatsRestaurantMenu.tsx` | Add banners, disable ordering when unavailable |
+| `src/pages/EatsCheckout.tsx` | Block checkout for unavailable restaurants |
 
 ---
 
 ## UI Components
 
-### LowDriverSupplyBanner (New)
+### RestaurantAvailabilityBadge
+```text
+Open:        [✓ Open]           bg-emerald-500/20 text-emerald-400
+Busy:        [⏱ Busy]           bg-amber-500/20 text-amber-400
+Unavailable: [⚠ Unavailable]    bg-red-500/20 text-red-400
 ```
+
+### BusyRestaurantBanner
+```text
 +----------------------------------------------------------+
-| [🚗]  High demand — delivery may take longer         [X] |
-|       Only 2 drivers available nearby.                   |
-|       We're actively finding more drivers.               |
+| [⏱]  High demand — longer preparation times          [X] |
+|      Expected wait: 45-55 min (~15 min longer)           |
 +----------------------------------------------------------+
-```
-- Background: `bg-orange-500/10` (matches high demand theme)
-- Icon: Car with warning indicator
-- Dismissible
-
-### EtaCountdown with Supply Note
-```
-+------------------------------------------+
-| [🕐]  Arriving in                        |
-|       22 min                             |
-|                                          |
-| 🚗 Few drivers nearby — ETA adjusted     |
-+------------------------------------------+
+Background: bg-amber-500/10 border-amber-500/30
 ```
 
-### Combined Messaging Priority
-1. **Driver Arriving** (< 0.2 mi) — No warnings shown
-2. **Traffic Note** — Rush hour adjustment (existing)
-3. **Supply Note** — Few drivers (new, only if no traffic note)
-4. **Demand Note** — Busy time buffer (existing, only if no above)
-
----
-
-## Technical Notes
-
-### Driver Supply Calculation
-- Uses existing `useDriverAvailability` hook
-- Filters to verified online drivers within 5-mile radius of restaurant
-- Thresholds based on typical delivery zones:
-  - 0-2: Critical shortage
-  - 3-5: Below normal
-  - 6+: Normal capacity
-
-### Message Selection Logic
-To avoid overwhelming users with multiple warnings:
-```typescript
-// Priority order for notes in EtaCountdown
-if (isArrivingSoon) → No notes
-else if (showTrafficNote) → "Rush hour — adjusted for traffic"
-else if (showLowSupplyNote) → "Few drivers nearby — ETA adjusted"
-else if (hasDemandBuffer) → "Busy time — ETA includes buffer"
-```
-
-### Banner Selection Logic
-```typescript
-// Only show one banner at a time
-if (demandActive) → HighDemandBanner
-else if (lowDriverSupply) → LowDriverSupplyBanner
-else if (batchStopsBefore > 0) → GroupedDeliveryBanner
+### UnavailableBanner
+```text
++----------------------------------------------------------+
+| [⚠]  This restaurant is temporarily unavailable          |
+|      You can browse the menu, but ordering is paused.    |
++----------------------------------------------------------+
+Background: bg-red-500/10 border-red-500/30
 ```
 
 ---
 
-## Data Flow
+## Status Logic Flow
 
+```text
+Restaurant Data
+      ↓
+pause_new_orders === true?
+      ├── YES → Status: "unavailable", canOrder: false
+      └── NO ↓
+is_open === false?
+      ├── YES → Status: "unavailable", canOrder: false
+      └── NO ↓
+busy_mode === true?
+      ├── YES → Status: "busy", canOrder: true, adjust prep time
+      └── NO → Status: "open", canOrder: true
 ```
-Restaurant Location
-       ↓
-useEatsDeliveryFactors(restaurantLat, restaurantLng)
-       ↓
-Fetches nearby drivers via useDriverAvailability
-       ↓
-Returns:
-├── demandLevel: from useEatsSurgePricing
-├── driverSupply: "low" | "moderate" | "high"
-├── nearbyDriverCount: 2
-├── etaMultiplier: 1.5
-├── showLowSupplyWarning: true
-└── warningMessage: "High demand — delivery may take longer"
-       ↓
-EatsOrderDetail renders:
-├── LowDriverSupplyBanner (if supply low and no demand surge)
-└── EtaCountdown (with supply-adjusted ETA and note)
-```
+
+---
+
+## Data Requirements
+
+The database already has these fields — just need to include them in frontend queries:
+- `busy_mode`: boolean (set by merchant when overwhelmed)
+- `busy_prep_time_bonus_minutes`: number (extra minutes during busy)
+- `pause_new_orders`: boolean (merchant can pause without closing)
+- `closed_reason`: string (optional explanation)
 
 ---
 
 ## Summary
 
-This implementation provides more accurate ETAs by considering:
+This implementation provides:
 
-1. **Driver Supply** — Low driver availability extends ETA with clear messaging
-2. **Combined Factors** — Traffic + Supply + Demand for comprehensive adjustment
-3. **Clear Messaging** — "High demand — delivery may take longer" when few drivers available
-4. **Non-Overlapping UI** — Either demand OR supply banner shown, not both
-5. **Capped Multipliers** — Maximum 2.0x total adjustment to avoid unrealistic times
+1. **Three clear status states**: Open, Busy, Temporarily Unavailable
+2. **Consistent badge component**: Used across restaurant lists and menu pages
+3. **Busy messaging**: "High demand — longer preparation times" with adjusted ETA
+4. **Unavailable behavior**: Menu browsing allowed, ordering disabled
+5. **Checkout protection**: Prevents orders to unavailable restaurants
 
-The key customer message for low driver supply:
-> **"High demand — delivery may take longer."**
+The customer message for busy status:
+> **"High demand — longer preparation times."**
 
-This matches the user's exact requirement while providing the technical infrastructure for accurate, supply-aware ETAs.
+This matches the user's exact requirement while leveraging existing database fields.
