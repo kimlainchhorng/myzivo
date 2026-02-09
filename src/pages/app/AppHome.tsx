@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import flightsHeroImg from "@/assets/flights-hero.png";
+import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 
 // Premium Image Assets
 const assets = {
@@ -316,6 +317,9 @@ const AppHome = () => {
             </div>
           </motion.button>
         </div>
+
+        {/* Recommended Deals */}
+        <RecommendedDealsSection className="py-6 px-0" />
       </div>
 
       {/* 5. BOTTOM NAVIGATION */}
