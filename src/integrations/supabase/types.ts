@@ -9263,6 +9263,48 @@ export type Database = {
           },
         ]
       }
+      engagement_notifications: {
+        Row: {
+          driver_id: string
+          id: string
+          metadata: Json | null
+          notification_type: string
+          opened_at: string | null
+          sent_at: string
+        }
+        Insert: {
+          driver_id: string
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          opened_at?: string | null
+          sent_at?: string
+        }
+        Update: {
+          driver_id?: string
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          opened_at?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment: {
         Row: {
           category: string | null

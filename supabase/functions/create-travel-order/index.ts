@@ -155,6 +155,24 @@ serve(async (req) => {
     const body: CreateOrderRequest = await req.json();
     const { items, holder, currency = "USD" } = body;
 
+    // Check if travel service is in maintenance
+    const { data: serviceStatus } = await supabase
+      .from("service_health_status")
+      .select("status, is_paused")
+      .eq("service_name", "hotels")
+      .maybeSingle();
+
+    if (serviceStatus?.status === "maintenance" || serviceStatus?.status === "outage" || serviceStatus?.is_paused) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Service temporarily unavailable",
+          maintenance: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
+      );
+    }
+
     // Validate required fields
     if (!items || items.length === 0) {
       throw new Error("At least one item is required");
