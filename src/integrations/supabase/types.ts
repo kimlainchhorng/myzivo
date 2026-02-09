@@ -16296,15 +16296,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "travel_orders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       offline_sync_queue: {
         Row: {
