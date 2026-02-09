@@ -29,6 +29,7 @@ import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
 import { useCartValidation } from "@/hooks/useCartValidation";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
+import { useDemandAdjustedEta } from "@/hooks/useDemandAdjustedEta";
 import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
@@ -81,8 +82,11 @@ function EatsCheckoutContent() {
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
   const availability = useRestaurantAvailability(restaurant);
   
+  // Demand forecast multiplier for ETA accuracy
+  const { demandMultiplier } = useDemandAdjustedEta(restaurant?.region_id);
+
   // Queue-aware ETA calculation
-  const eta = useQueueAwareEta({ restaurantId: restaurantId || undefined });
+  const eta = useQueueAwareEta({ restaurantId: restaurantId || undefined, demandMultiplier });
   
   // Cart validation for item availability
   const { validateCart, unavailableItems, isValidating } = useCartValidation();
