@@ -1,128 +1,92 @@
 
 
-# Personalized Home — Time-Aware, Behavior-Driven Content
+# Dynamic Delivery Pricing — Demand-Aware Checkout
 
 ## Overview
 
-Add three new personalized rows to the AppHome screen that adapt to time of day and user behavior. These sit between the existing Services Grid (Zone 1) and the existing Quick Actions (Zone 3), replacing the current basic "Recent Activity" and "Recommended for You" sections with richer, smarter content.
+Connect the existing surge pricing system to delivery time estimates and add demand transparency messaging to the EatsCart page. The infrastructure (surge hooks, delivery fee breakdown, ETA breakdown, demand forecasting) is already built — this update wires the missing connections and adds the "High demand" banner to EatsCart.
+
+## Current State
+
+- **EatsCheckout** already shows the full `DeliveryFeeBreakdownCard` with demand adjustment line items and an amber "Delivery fee adjusted due to high demand" banner, plus a detailed `EtaBreakdownCard`
+- **EatsCart** shows surge delivery fee breakdown (base + busy time multiplier) but is missing: (1) the "High demand in your area" banner, and (2) demand-adjusted delivery time — it hardcodes "ASAP (30-45 min)"
+- **ETA calculation** (`useQueueAwareEta`) already accepts a `demandMultiplier` from `useDemandAdjustedEta`, but EatsCart doesn't use either of these hooks
+- The `useEatsDeliveryPricing` hook already computes `surgeLabel` ("Delivery fee adjusted due to high demand") but EatsCart uses the older `useEatsSurgePricing` hook directly instead
 
 ## What Changes
 
-### New file: `src/hooks/usePersonalizedHome.ts`
+### 1. Update `src/pages/EatsCart.tsx`
 
-A single hook that encapsulates all personalization logic. Returns data for three sections plus a time-of-day context banner.
+**Add demand-adjusted ETA**: Import and use `useDemandAdjustedEta` and `useQueueAwareEta` (same as EatsCheckout does) to replace the hardcoded "30-45 min" with real demand-aware estimates.
 
-**Time-of-day logic:**
-- Morning (5am-11am): Headline "Good Morning" with coffee/breakfast suggestions
-- Lunch (11am-2pm): Headline "Lunchtime" with nearby restaurant deals
-- Afternoon (2pm-5pm): Headline "Good Afternoon" with snack/coffee suggestions
-- Evening (5pm-10pm): Headline "Dinner Time" with dinner and delivery promos
-- Late night (10pm-5am): Headline "Late Night" with late-night delivery options
+**Add "High demand" banner**: When surge is active, display an amber banner above the order summary reading "High demand in your area — Delivery fee adjusted based on demand." This matches the pattern already used in `DeliveryFeeBreakdownCard`.
 
-**Data queries (all React Query, auth-gated):**
+**Replace hardcoded delivery time**: Change the "Delivery Time" line from `ASAP (30-45 min)` to use the calculated ETA range from `useQueueAwareEta`, which already factors in queue wait, prep time, driver time, and demand multiplier.
 
-1. **"Order Again" row** — Fetches the user's last 5 distinct restaurants from `food_orders` (status = delivered), joins `restaurants` for name, logo, cuisine, and rating. Deduplicates by `restaurant_id`.
+### 2. Update `src/hooks/useQueueAwareEta.ts`
 
-2. **"Your Favorites" row** — Fetches from `user_favorites` where `item_type = 'restaurant'`, joins `restaurants` for display data. Falls back to top-rated restaurants if no favorites exist.
+**Link surge to driver ETA**: Add the surge multiplier as an optional input. When surge is active (multiplier > 1.0), inflate the `driverMinutes` component by a dampened factor (e.g., `driverMinutes * (1 + (surgeMultiplier - 1) * 0.5)`). This reflects that high demand means longer driver wait times. Cap the inflation at 1.3x to avoid scaring users.
 
-3. **"Recommended for You" row** — Combines signals:
-   - Gets the user's most-ordered cuisine types from `food_orders` joined to `restaurants.cuisine_type`
-   - Fetches restaurants matching those cuisine types that the user has NOT ordered from
-   - Sorts by restaurant rating descending
-   - Limits to 6 results
-   - Falls back to top-rated restaurants near the user if no order history
+### 3. Update `src/components/eats/EtaBreakdownCard.tsx`
 
-4. **Time-based suggestions** — Filters restaurants by cuisine type keywords:
-   - Morning: cuisine contains "cafe", "bakery", "breakfast", "coffee"
-   - Lunch: all active restaurants sorted by rating
-   - Evening: cuisine contains "dinner", "pizza", "sushi", "italian", "mexican", "indian", "chinese"
-   - Late night: restaurants that are still open (if `hours` data is available), otherwise top-rated
-
-### Updated file: `src/pages/app/AppHome.tsx`
-
-Replace the current Zone 2 (basic "Recent Activity" + pill badges) with three new horizontal-scroll rows:
-
-```
---- TIME CONTEXT BANNER ---
-  "Lunchtime Picks" / "Breakfast Spots" / "Dinner & Delivery"
-  (horizontal scroll of restaurant cards filtered by time)
-
---- ORDER AGAIN ---
-  "Order Again"
-  (horizontal scroll of restaurants from past orders)
-
---- YOUR FAVORITES ---
-  "Your Favorites"
-  (horizontal scroll of favorited restaurants)
-
---- RECOMMENDED FOR YOU ---
-  "Recommended for You"
-  (horizontal scroll of restaurants matching user's cuisine preferences)
-```
-
-Each row uses a compact restaurant card showing: cover image or logo, name, cuisine type, rating stars, and a chevron. Tapping navigates to `/eats/restaurant/:id`.
-
-**For guests (not logged in):** Show only the time context banner with top-rated restaurants, and a "Recommended for You" row with popular restaurants. No "Order Again" or "Favorites" rows.
-
-### Removed from AppHome
-
-- The old "Recent Activity" horizontal scroll (emoji-based cards from trips/food/deliveries) — this data is still accessible via the quick actions and trips page
-- The old "Recommended for You" pill badges ("Try ZIVO Ride", etc.)
-- The related `recentActivity` and `recommendations` queries from AppHome (moved into the new hook)
-
-### Kept in AppHome
-
-- Zone 1 (Services Grid) — unchanged
-- Zone 3 (Quick Actions: Reorder, Rebook Ride, Upcoming) — unchanged
-- Recommended Deals section — unchanged
-- Profile bar, search, bottom nav — unchanged
+**Add demand note**: When high demand is detected (passed as a new optional prop `surgeActive`), show a small note below the ETA range: "Delivery times may be longer due to high demand." This provides the transparency the user requested.
 
 ## Technical Detail
 
-### usePersonalizedHome hook structure
+### EatsCart changes
 
 ```
-Input: user (from useAuth)
+Current delivery time display (line ~472):
+  "ASAP (30-45 min)"
 
-Returns:
-  timeContext: {
-    period: "morning" | "lunch" | "afternoon" | "evening" | "late_night"
-    headline: string (e.g. "Breakfast Spots")
-    emoji: string
-  }
-  timeSuggestions: Restaurant[] (filtered by time-appropriate cuisine)
-  orderAgain: Restaurant[] (from past delivered orders, deduplicated)
-  favorites: Restaurant[] (from user_favorites)
-  recommended: Restaurant[] (cuisine-match scoring)
-  isLoading: boolean
+New display:
+  "ASAP ({eta.etaMinRange}-{eta.etaMaxRange} min)"
+
+New hooks added to EatsCart:
+  const { demandMultiplier } = useDemandAdjustedEta(restaurantRegionId);
+  const eta = useQueueAwareEta({ restaurantId, demandMultiplier });
 ```
 
-### Sorting logic for "Recommended for You"
+The restaurant's `region_id` will be fetched via the existing `useRestaurant` hook (already used in EatsCheckout).
+
+### EatsCart demand banner
+
+Added above the order summary section when `surgeActive` is true:
 
 ```
-1. Get user's top 3 cuisine types from food_orders
-2. Query restaurants matching those cuisines, excluding already-ordered ones
-3. Score each: cuisineMatch (40%) + rating (40%) + isOpen bonus (20%)
-4. Sort by score desc, take top 6
+[AlertTriangle icon] High demand in your area
+Delivery fee adjusted based on demand.
 ```
 
-### Restaurant card component (inline in AppHome)
+Uses the same amber color scheme as `DeliveryFeeBreakdownCard` (orange-500/10 bg, orange-400 text).
 
-Small reusable component rendered in each row:
-- 120px wide, rounded-2xl
-- Cover image (100px height) with gradient overlay
-- Restaurant name (truncated), cuisine type, star rating
-- Tap navigates to `/eats/restaurant/:id`
+### useQueueAwareEta enhancement
 
-### Query efficiency
+New optional param: `surgeMultiplier?: number`
 
-All 4 queries run in parallel via separate `useQuery` calls inside the hook. Each has `staleTime: 60_000` (1 minute) since restaurant data doesn't change frequently. The time context is computed client-side with no query — just `new Date().getHours()`.
+```
+// In driver minutes calculation:
+const surgeInflation = surgeMultiplier && surgeMultiplier > 1
+  ? Math.min(1 + (surgeMultiplier - 1) * 0.5, 1.3)
+  : 1.0;
+const adjustedDriverMinutes = Math.round(baseDriverMinutes * surgeInflation);
+```
+
+This ensures that when delivery fees go up due to demand, the ETA honestly reflects longer delivery times too.
+
+### EtaBreakdownCard enhancement
+
+New optional prop: `surgeActive?: boolean`
+
+When true, appends a note below the breakdown:
+"Delivery times may be longer due to high demand in your area."
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/hooks/usePersonalizedHome.ts` | Create | Hook with time-of-day logic, 4 personalized queries (time suggestions, order again, favorites, recommended) |
-| `src/pages/app/AppHome.tsx` | Update | Replace Zone 2 with 4 personalized rows using the new hook; remove old recentActivity/recommendations queries |
+| `src/pages/EatsCart.tsx` | Update | Add demand-adjusted ETA, demand banner, replace hardcoded "30-45 min" |
+| `src/hooks/useQueueAwareEta.ts` | Update | Accept surgeMultiplier param, inflate driverMinutes during surge |
+| `src/components/eats/EtaBreakdownCard.tsx` | Update | Add surgeActive prop with demand note |
 
-Two file changes. No new routes, no schema changes. All data comes from existing `food_orders`, `restaurants`, `user_favorites`, and `eats_reviews` tables.
+Three file changes. No new files, hooks, or database changes needed — this wires existing infrastructure together.
