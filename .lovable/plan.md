@@ -1,421 +1,331 @@
 
 
-# Multi-Brand Support — Implementation Plan
+# Affiliate Link Tracking — Implementation Plan
 
 ## Overview
-Add automatic branding adaptation based on domain detection. When the app is accessed from different domains, it automatically loads the corresponding brand configuration (logo, colors, app name) and applies the brand theme to headers, buttons, and primary elements.
+Add tracking for customers who join ZIVO through affiliate/partner links. When a user signs up with an `affiliate_code` URL parameter, capture and store this attribution. Show a subtle acknowledgment on the Account page ("You were referred by a partner").
+
+---
 
 ## Current State Analysis
 
 ### Existing Infrastructure
 | Component | Status | Purpose |
 |-----------|--------|---------|
-| `brands` table | Exists | Stores brand configurations with domain mapping |
-| `tenants` table | Exists | Multi-tenant with logo_url, primary_color, settings |
-| `index.css` | Exists | CSS custom properties for theming |
-| `ZivoLogo` component | Exists | Hardcoded ZIVO branding |
-| `TenantContext` | Exists | Multi-tenant state for admin users |
+| `profiles` table | Exists | Stores user profile data |
+| `useReferrals` hook | Exists | Handles user-to-user referral codes (`ref=` param) |
+| `drivers` table | Exists | Already has affiliate tracking fields |
+| UTM tracking (`subidGenerator.ts`) | Exists | Captures marketing attribution |
+| Profile page (`src/pages/Profile.tsx`) | Exists | Account settings display |
+| Setup page (`src/pages/Setup.tsx`) | Exists | Onboarding flow |
 
-### Database Schema (brands table)
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | uuid | Primary key |
-| `name` | text | Brand display name (e.g., "ZIVO", "Partner A") |
-| `logo_url` | text | URL to brand logo image |
-| `primary_color` | text | Primary brand color (hex/hsl) |
-| `domain` | text | Domain mapping (e.g., "hizovo.com", "partner.com") |
-
-### Current Theming (index.css)
-CSS custom properties defined in `:root`:
-- `--primary` — Primary brand color (blue)
-- `--primary-foreground` — Text on primary
-- `--background`, `--foreground`, etc.
+### Key Insight
+The `drivers` table already has affiliate tracking fields (`affiliate_code`, `affiliate_partner_id`, `affiliate_partner_name`, `affiliate_captured_at`). The `profiles` table (for customers) does **not** have these fields yet.
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Brand Context
+### 1) Database Migration — Add Affiliate Fields to Profiles
 
-**File to Create:** `src/contexts/BrandContext.tsx`
+Add four new columns to the `profiles` table to track affiliate attribution:
 
-**Purpose:** Provide brand configuration based on current domain.
+| Column | Type | Description |
+|--------|------|-------------|
+| `affiliate_code` | text | The affiliate/partner code from URL |
+| `affiliate_partner_name` | text | Human-readable partner name (optional) |
+| `affiliate_captured_at` | timestamptz | When the code was captured |
 
-**Implementation:**
-```text
-interface BrandConfig {
-  id: string;
-  name: string;
-  logoUrl: string | null;
-  primaryColor: string | null;
-  domain: string | null;
-}
+```sql
+ALTER TABLE public.profiles
+ADD COLUMN affiliate_code text,
+ADD COLUMN affiliate_partner_name text,
+ADD COLUMN affiliate_captured_at timestamptz;
 
-interface BrandContextValue {
-  brand: BrandConfig;
-  isLoading: boolean;
-  isCustomBrand: boolean;
-}
-
-Detection logic:
-1. Get current domain: window.location.hostname
-2. Query brands table: WHERE domain = hostname
-3. If found → use brand config
-4. If not found → use default ZIVO config
-
-Caching:
-- staleTime: 5 minutes (brand rarely changes)
-- Store in sessionStorage for instant reload
+-- Index for admin queries
+CREATE INDEX idx_profiles_affiliate_code ON public.profiles (affiliate_code)
+WHERE affiliate_code IS NOT NULL;
 ```
 
-### 2) Create Brand Hook
+### 2) Capture Affiliate Code on Signup
 
-**File to Create:** `src/hooks/useBrand.ts`
-
-**Purpose:** Lightweight hook to access brand configuration.
-
-**Implementation:**
-```text
-export function useBrand() {
-  const context = useContext(BrandContext);
-  if (!context) {
-    // Return default ZIVO brand if outside provider
-    return {
-      brand: DEFAULT_BRAND,
-      isLoading: false,
-      isCustomBrand: false,
-    };
-  }
-  return context;
-}
-```
-
-### 3) Create CSS Theme Applicator
-
-**File to Create:** `src/lib/brandTheme.ts`
-
-**Purpose:** Apply brand colors to CSS custom properties at runtime.
-
-**Implementation:**
-```text
-export function applyBrandTheme(primaryColor: string | null) {
-  if (!primaryColor) return;
-  
-  const root = document.documentElement;
-  
-  // Parse color (supports hex: #3B82F6 or hsl: 221 83% 53%)
-  const hsl = parseToHSL(primaryColor);
-  
-  // Apply to CSS custom properties
-  root.style.setProperty('--primary', hsl);
-  root.style.setProperty('--ring', hsl);
-  root.style.setProperty('--sidebar-primary', hsl);
-  
-  // Generate lighter/darker variants
-  root.style.setProperty('--primary-light', lighten(hsl, 30));
-}
-
-export function resetBrandTheme() {
-  // Remove custom properties to restore defaults
-  const root = document.documentElement;
-  root.style.removeProperty('--primary');
-  root.style.removeProperty('--ring');
-  // etc.
-}
-```
-
-### 4) Create Dynamic Brand Logo Component
-
-**File to Create:** `src/components/shared/BrandLogo.tsx`
-
-**Purpose:** Display brand logo dynamically based on brand config.
-
-**Implementation:**
-```text
-interface BrandLogoProps {
-  size?: "sm" | "md" | "lg" | "xl";
-  showText?: boolean;
-  className?: string;
-}
-
-export function BrandLogo({ size = "md", showText = true, className }: BrandLogoProps) {
-  const { brand, isLoading } = useBrand();
-  
-  // If custom logo exists, show image
-  if (brand.logoUrl) {
-    return (
-      <div className={cn("flex items-center gap-2", sizeClasses[size].container, className)}>
-        <img 
-          src={brand.logoUrl} 
-          alt={brand.name}
-          className={cn("object-contain", sizeClasses[size].icon)}
-        />
-        {showText && (
-          <span className={cn("font-bold", sizeClasses[size].text)}>
-            {brand.name}
-          </span>
-        )}
-      </div>
-    );
-  }
-  
-  // Fall back to default ZIVO logo
-  return <ZivoLogo size={size} showText={showText} className={className} />;
-}
-```
-
-### 5) Integrate Brand Provider in App
-
-**File to Modify:** `src/App.tsx`
+**File to Modify:** `src/pages/Login.tsx`
 
 **Changes:**
-- Wrap app with `BrandProvider`
-- Apply theme on brand load
+- Read `affiliate_code` from URL search params
+- Store in sessionStorage for persistence through OAuth/verification flows
+- Pass to signup flow
 
 **Pattern:**
 ```text
-function App() {
-  return (
-    <BrandProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {/* existing providers */}
-          <BrandThemeApplicator />
-          <Routes>...</Routes>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrandProvider>
-  );
-}
+const [searchParams] = useSearchParams();
 
-// Component that applies theme when brand changes
-function BrandThemeApplicator() {
-  const { brand } = useBrand();
-  
-  useEffect(() => {
-    if (brand.primaryColor) {
-      applyBrandTheme(brand.primaryColor);
-    } else {
-      resetBrandTheme();
-    }
-  }, [brand.primaryColor]);
-  
-  return null;
-}
+// On component mount, capture affiliate_code if present
+useEffect(() => {
+  const affiliateCode = searchParams.get('affiliate_code');
+  if (affiliateCode) {
+    sessionStorage.setItem('signup_affiliate_code', affiliateCode);
+  }
+}, [searchParams]);
 ```
 
-### 6) Update Header Components to Use Brand Logo
+### 3) Store Affiliate Code During Profile Creation
 
-**Files to Modify:**
-- `src/components/app/AppHeader.tsx`
-- `src/components/app/ZivoSuperAppLayout.tsx`
-- `src/components/app/HizovoAppHeader.tsx`
+**File to Modify:** `src/pages/Setup.tsx`
 
 **Changes:**
-Replace `<ZivoLogo />` with `<BrandLogo />`:
+- On profile setup completion, check for stored affiliate code
+- Include affiliate fields in profile upsert
 
+**Pattern:**
 ```text
-// Before
-import ZivoLogo from "@/components/ZivoLogo";
-<ZivoLogo size="sm" />
+// In handleComplete():
+const affiliateCode = sessionStorage.getItem('signup_affiliate_code');
 
-// After
-import { BrandLogo } from "@/components/shared/BrandLogo";
-<BrandLogo size="sm" />
+const payload = {
+  user_id: user.id,
+  full_name: fullName,
+  phone: phone || null,
+  setup_complete: true,
+  // Affiliate tracking
+  affiliate_code: affiliateCode || null,
+  affiliate_captured_at: affiliateCode ? new Date().toISOString() : null,
+};
+
+// Clear after use
+if (affiliateCode) {
+  sessionStorage.removeItem('signup_affiliate_code');
+}
 ```
 
-### 7) Update Page Title with Brand Name
+### 4) Handle OAuth Signups
 
-**File to Create:** `src/components/shared/BrandHead.tsx`
+**File to Modify:** `src/pages/AuthCallback.tsx`
 
-**Purpose:** Dynamically set page title with brand name.
+**Changes:**
+- Preserve affiliate code through OAuth redirect
+- Store in profile after successful OAuth authentication
+
+**Note:** The affiliate code is already stored in sessionStorage before OAuth redirect, so it persists through the flow.
+
+### 5) Create Affiliate Attribution Hook
+
+**File to Create:** `src/hooks/useAffiliateAttribution.ts`
+
+**Purpose:** Fetch and expose affiliate attribution status for the current user.
 
 **Implementation:**
 ```text
-import { useEffect } from "react";
-import { useBrand } from "@/hooks/useBrand";
-
-export function BrandHead({ title }: { title?: string }) {
-  const { brand } = useBrand();
+export function useAffiliateAttribution() {
+  const { user } = useAuth();
   
-  useEffect(() => {
-    document.title = title 
-      ? `${title} | ${brand.name}`
-      : brand.name;
-  }, [title, brand.name]);
+  const { data, isLoading } = useQuery({
+    queryKey: ['affiliate-attribution', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('affiliate_code, affiliate_partner_name, affiliate_captured_at')
+        .eq('user_id', user.id)
+        .single();
+      
+      return {
+        hasAffiliateAttribution: !!data?.affiliate_code,
+        affiliateCode: data?.affiliate_code,
+        partnerName: data?.affiliate_partner_name || 'a partner',
+        capturedAt: data?.affiliate_captured_at,
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: Infinity, // Attribution never changes
+  });
   
-  return null;
+  return {
+    hasAffiliateAttribution: data?.hasAffiliateAttribution ?? false,
+    partnerName: data?.partnerName ?? 'a partner',
+    isLoading,
+  };
 }
+```
+
+### 6) Display Partner Attribution on Account Page
+
+**File to Modify:** `src/pages/Profile.tsx`
+
+**Changes:**
+- Import and use `useAffiliateAttribution` hook
+- Add subtle info card below Account Status section
+
+**Design:**
+```text
+┌────────────────────────────────────────────────────┐
+│  🤝  Referred by Partner                           │
+│  You joined through a partner link.                │
+│  Enjoy exclusive partner benefits!                 │
+└────────────────────────────────────────────────────┘
+```
+
+**Pattern:**
+```text
+// After Account Status card:
+{affiliateAttribution.hasAffiliateAttribution && (
+  <Card className="relative border-0 bg-gradient-to-br from-violet-500/10 to-purple-500/10 ...">
+    <CardContent className="p-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-violet-500/20 flex ...">
+          <Users className="w-5 h-5 text-violet-400" />
+        </div>
+        <div>
+          <p className="font-semibold">Referred by Partner</p>
+          <p className="text-xs text-muted-foreground">
+            You joined through {affiliateAttribution.partnerName}
+          </p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)}
 ```
 
 ---
 
 ## File Summary
 
-### New Files (5)
+### Database Changes (1)
+| Change | Description |
+|--------|-------------|
+| Migration | Add `affiliate_code`, `affiliate_partner_name`, `affiliate_captured_at` to `profiles` |
+
+### New Files (1)
 | File | Purpose |
 |------|---------|
-| `src/contexts/BrandContext.tsx` | Brand configuration provider with domain detection |
-| `src/hooks/useBrand.ts` | Lightweight hook to access brand config |
-| `src/lib/brandTheme.ts` | CSS custom property applicator |
-| `src/components/shared/BrandLogo.tsx` | Dynamic brand logo component |
-| `src/components/shared/BrandHead.tsx` | Dynamic page title component |
+| `src/hooks/useAffiliateAttribution.ts` | Query and expose affiliate attribution |
 
-### Modified Files (4)
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add BrandProvider wrapper + theme applicator |
-| `src/components/app/AppHeader.tsx` | Use BrandLogo instead of ZivoLogo |
-| `src/components/app/ZivoSuperAppLayout.tsx` | Use BrandLogo instead of ZivoLogo |
-| `src/components/app/HizovoAppHeader.tsx` | Use BrandLogo instead of ZivoLogo |
+| `src/pages/Login.tsx` | Capture `affiliate_code` from URL params |
+| `src/pages/Setup.tsx` | Store affiliate code in profile on setup |
+| `src/pages/Profile.tsx` | Display "Referred by Partner" card |
 
 ---
 
-## Domain Detection Logic
+## URL Parameter Format
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                     Domain Detection Flow                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. App loads → Get hostname: window.location.hostname          │
-│                                                                 │
-│  2. Query brands table:                                         │
-│     SELECT * FROM brands WHERE domain = 'hostname'              │
-│                                                                 │
-│  3. If brand found:                                             │
-│     ├─ Apply brand.primaryColor to CSS variables                │
-│     ├─ Use brand.logoUrl in BrandLogo component                 │
-│     └─ Use brand.name in page titles                            │
-│                                                                 │
-│  4. If no brand found:                                          │
-│     └─ Use default ZIVO configuration                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Users arriving via affiliate links will have URLs like:
 ```
-
-### Domain Matching Examples
-| Hostname | Brand Matched | Theme Applied |
-|----------|---------------|---------------|
-| `hizovo.com` | ZIVO (default) | Blue (#3B82F6) |
-| `partner-a.com` | Partner A | Green (#10B981) |
-| `partner-b.com` | Partner B | Purple (#8B5CF6) |
-| `localhost` | ZIVO (default) | Blue (#3B82F6) |
-
----
-
-## CSS Variables Affected
-
-When a custom brand color is applied:
-
-| Variable | Default (ZIVO) | Custom Brand |
-|----------|----------------|--------------|
-| `--primary` | 221 83% 53% | Brand primary |
-| `--ring` | 221 83% 53% | Brand primary |
-| `--sidebar-primary` | 221 83% 53% | Brand primary |
-| `--chart-1` | 221 83% 53% | Brand primary |
-
-### Elements Automatically Themed
-- Primary buttons (`bg-primary`)
-- Focus rings (`ring-primary`)
-- Links and accents
-- Header logo background
-- Progress indicators
-- Active states
-
----
-
-## Default Brand Configuration
-
-```text
-const DEFAULT_BRAND: BrandConfig = {
-  id: "default",
-  name: "ZIVO",
-  logoUrl: null, // Uses ZivoLogo component
-  primaryColor: null, // Uses CSS defaults
-  domain: null,
-};
+https://hizivo.com/signup?affiliate_code=PARTNER123
+https://hizivo.com/login?affiliate_code=travelagent
+https://hizivo.com/?affiliate_code=blogger_deal
 ```
 
 ---
 
-## Caching Strategy
+## Data Flow
 
-| Layer | Duration | Purpose |
-|-------|----------|---------|
-| TanStack Query | 5 minutes staleTime | Prevent redundant DB calls |
-| sessionStorage | Session lifetime | Instant theme on page reload |
-| CSS Variables | Runtime | Applied once per session |
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Affiliate Tracking Flow                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. User lands with ?affiliate_code=PARTNER123                          │
+│     └─> Login.tsx captures and stores in sessionStorage                 │
+│                                                                         │
+│  2. User signs up (email or OAuth)                                      │
+│     └─> Code persists in sessionStorage through redirects               │
+│                                                                         │
+│  3. User completes onboarding (Setup.tsx)                               │
+│     └─> Code saved to profiles.affiliate_code                           │
+│     └─> sessionStorage cleared                                          │
+│                                                                         │
+│  4. User visits Profile page                                            │
+│     └─> useAffiliateAttribution fetches attribution                     │
+│     └─> "Referred by Partner" card displayed                            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Account Page Display
+
+### Before (existing Account Status card)
+```text
+┌────────────────────────────────────────────────────┐
+│  🛡️  Account Status                      Active   │
+│  Member since Jan 15, 2025                         │
+└────────────────────────────────────────────────────┘
+```
+
+### After (new Partner Attribution card)
+```text
+┌────────────────────────────────────────────────────┐
+│  🛡️  Account Status                      Active   │
+│  Member since Jan 15, 2025                         │
+└────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────┐
+│  🤝  Referred by Partner                           │
+│  You joined through a partner                      │
+└────────────────────────────────────────────────────┘
+```
+
+Only shown when `affiliate_code` exists on the user's profile.
+
+---
+
+## Edge Cases Handled
+
+| Scenario | Behavior |
+|----------|----------|
+| No affiliate code in URL | Nothing captured, no card shown |
+| User already has account | Code not applied (existing users) |
+| OAuth flow | Code persists in sessionStorage |
+| Email verification flow | Code persists through OTP/verify |
+| User clears sessionStorage | Attribution lost (acceptable) |
+
+---
+
+## No Ordering Flow Changes
+
+As specified, the affiliate attribution is **invisible during ordering**. It's only:
+1. Captured silently on signup
+2. Displayed in the Profile/Account page
 
 ---
 
 ## Technical Details
 
-### Color Parsing (brandTheme.ts)
+### UserProfile Type Update
+The `useUserProfile` hook will automatically pick up new fields from the database once the migration runs.
+
+### sessionStorage Key
 ```text
-function parseToHSL(color: string): string {
-  // Handle hex: #3B82F6
-  if (color.startsWith("#")) {
-    const rgb = hexToRgb(color);
-    return rgbToHsl(rgb);
-  }
-  
-  // Handle HSL: 221 83% 53% or hsl(221, 83%, 53%)
-  if (color.includes("%")) {
-    return color.replace(/hsl\(|\)/g, "").trim();
-  }
-  
-  return color;
-}
+Key: signup_affiliate_code
+Value: The raw affiliate code string
+Lifecycle: Set on landing → Cleared after profile setup
 ```
 
-### Theme Application
-```text
-function applyBrandTheme(primaryColor: string) {
-  const hsl = parseToHSL(primaryColor);
-  const root = document.documentElement;
-  
-  // Core primary color
-  root.style.setProperty("--primary", hsl);
-  root.style.setProperty("--ring", hsl);
-  
-  // Sidebar
-  root.style.setProperty("--sidebar-primary", hsl);
-  root.style.setProperty("--sidebar-ring", hsl);
-  
-  // Charts
-  root.style.setProperty("--chart-1", hsl);
-}
+### Index for Admin Queries
+```sql
+CREATE INDEX idx_profiles_affiliate_code 
+ON public.profiles (affiliate_code) 
+WHERE affiliate_code IS NOT NULL;
 ```
 
----
-
-## Admin Setup
-
-To configure a new brand, admins add a row to the `brands` table:
-
-| Column | Example Value |
-|--------|---------------|
-| `name` | Partner Airways |
-| `logo_url` | https://storage.../partner-logo.png |
-| `primary_color` | #10B981 |
-| `domain` | partner-airways.com |
-
-Once added, any user visiting `partner-airways.com` will see the Partner Airways branding automatically.
+This enables efficient admin reporting on affiliate signups.
 
 ---
 
 ## Summary
 
-This implementation provides:
+This implementation:
 
-1. **Brand Context** — Domain-based brand detection with database lookup
-2. **Dynamic Theming** — CSS custom properties updated at runtime
-3. **Brand Logo** — Automatic logo switching based on brand config
-4. **Page Titles** — Dynamic titles with brand name
-5. **Header Integration** — All headers use dynamic branding
-6. **Default Fallback** — ZIVO branding when no custom brand matches
-7. **Caching** — Efficient query caching + sessionStorage for fast reloads
+1. **Database** — Adds affiliate tracking columns to `profiles` table
+2. **Capture** — Reads `affiliate_code` from URL on Login page
+3. **Persist** — Stores in sessionStorage through OAuth/verification flows
+4. **Save** — Writes to profile during onboarding setup
+5. **Display** — Shows subtle "Referred by Partner" card on Account page
+6. **No ordering impact** — Affiliate attribution is invisible during checkout
 
-The system automatically adapts the entire UI to match the brand associated with the current domain, requiring no code changes to add new white-label partners.
+The feature enables tracking affiliate-driven signups while maintaining a clean user experience.
 
