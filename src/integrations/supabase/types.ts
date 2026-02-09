@@ -10780,6 +10780,7 @@ export type Database = {
           delivery_pin_verified: boolean | null
           discount_amount: number | null
           discount_type: string | null
+          dispatch_at: string | null
           dispute_id: string | null
           dispute_status: string | null
           distance_miles: number | null
@@ -10829,6 +10830,7 @@ export type Database = {
           points_awarded_at: string | null
           prep_minutes: number | null
           prepared_at: string | null
+          previous_driver_id: string | null
           pricing_breakdown: Json | null
           pricing_locked: boolean | null
           pricing_version: string | null
@@ -10843,6 +10845,7 @@ export type Database = {
           quoted_total: number | null
           rating: number | null
           ready_at: string | null
+          reassignment_count: number | null
           refund_amount: number | null
           refund_status: string | null
           refunded_at: string | null
@@ -10884,6 +10887,7 @@ export type Database = {
           tracking_code: string | null
           updated_at: string | null
           wallet_transaction_id: string | null
+          was_reassigned: boolean | null
           zone_code: string | null
         }
         Insert: {
@@ -10925,6 +10929,7 @@ export type Database = {
           delivery_pin_verified?: boolean | null
           discount_amount?: number | null
           discount_type?: string | null
+          dispatch_at?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
@@ -10974,6 +10979,7 @@ export type Database = {
           points_awarded_at?: string | null
           prep_minutes?: number | null
           prepared_at?: string | null
+          previous_driver_id?: string | null
           pricing_breakdown?: Json | null
           pricing_locked?: boolean | null
           pricing_version?: string | null
@@ -10988,6 +10994,7 @@ export type Database = {
           quoted_total?: number | null
           rating?: number | null
           ready_at?: string | null
+          reassignment_count?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -11029,6 +11036,7 @@ export type Database = {
           tracking_code?: string | null
           updated_at?: string | null
           wallet_transaction_id?: string | null
+          was_reassigned?: boolean | null
           zone_code?: string | null
         }
         Update: {
@@ -11070,6 +11078,7 @@ export type Database = {
           delivery_pin_verified?: boolean | null
           discount_amount?: number | null
           discount_type?: string | null
+          dispatch_at?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
@@ -11119,6 +11128,7 @@ export type Database = {
           points_awarded_at?: string | null
           prep_minutes?: number | null
           prepared_at?: string | null
+          previous_driver_id?: string | null
           pricing_breakdown?: Json | null
           pricing_locked?: boolean | null
           pricing_version?: string | null
@@ -11133,6 +11143,7 @@ export type Database = {
           quoted_total?: number | null
           rating?: number | null
           ready_at?: string | null
+          reassignment_count?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -11174,6 +11185,7 @@ export type Database = {
           tracking_code?: string | null
           updated_at?: string | null
           wallet_transaction_id?: string | null
+          was_reassigned?: boolean | null
           zone_code?: string | null
         }
         Relationships: [
@@ -11231,6 +11243,20 @@ export type Database = {
             columns: ["merchant_coupon_id"]
             isOneToOne: false
             referencedRelation: "merchant_coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_previous_driver_id_fkey"
+            columns: ["previous_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_previous_driver_id_fkey"
+            columns: ["previous_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
           {
@@ -12552,6 +12578,36 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number | null
+          business_id: string | null
+          due_at: string | null
+          id: string
+          invoice_number: string | null
+          issued_at: string | null
+          status: string | null
+        }
+        Insert: {
+          amount?: number | null
+          business_id?: string | null
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number | null
+          business_id?: string | null
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       item_option_groups: {
         Row: {
           id: string
@@ -13130,6 +13186,95 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           version?: string
+        }
+        Relationships: []
+      }
+      live_chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_read: boolean | null
+          message: string | null
+          sender_id: string | null
+          sender_type: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          sender_id?: string | null
+          sender_type: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          sender_id?: string | null
+          sender_type?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_chat_sessions: {
+        Row: {
+          agent_id: string | null
+          agent_joined_at: string | null
+          context_id: string | null
+          context_type: string | null
+          created_at: string | null
+          ended_at: string | null
+          ended_by: string | null
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_joined_at?: string | null
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agent_joined_at?: string | null
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -19232,6 +19377,7 @@ export type Database = {
         Row: {
           admin_2fa_enabled: boolean | null
           admin_2fa_secret: string | null
+          admin_role: string | null
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
@@ -19262,6 +19408,7 @@ export type Database = {
         Insert: {
           admin_2fa_enabled?: boolean | null
           admin_2fa_secret?: string | null
+          admin_role?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
@@ -19292,6 +19439,7 @@ export type Database = {
         Update: {
           admin_2fa_enabled?: boolean | null
           admin_2fa_secret?: string | null
+          admin_role?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string

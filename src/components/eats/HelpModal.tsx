@@ -3,7 +3,7 @@
  * Support options for order issues with inline ticket creation
  */
 import { useState } from "react";
-import { Phone, MessageCircle, RefreshCw, HelpCircle, AlertTriangle, Send, CheckCircle } from "lucide-react";
+import { Phone, MessageCircle, RefreshCw, HelpCircle, AlertTriangle, Send, CheckCircle, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -224,11 +224,31 @@ export function HelpModal({
                 </motion.button>
               ))}
 
-              {/* Contact Support - Navigate to full support page */}
+              {/* Live Chat - Real-time support */}
               <motion.button
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 }}
+                onClick={() => {
+                  handleClose();
+                  navigate(`/support/chat?context=eats&orderId=${orderId}`);
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-emerald-500/30 transition-all text-left active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <Headphones className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Live Chat</p>
+                  <p className="text-xs text-zinc-500">Chat with an agent now</p>
+                </div>
+              </motion.button>
+
+              {/* Contact Support - Navigate to full support page */}
+              <motion.button
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
                 onClick={handleContactSupport}
                 className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all text-left active:scale-[0.98]"
               >
@@ -236,8 +256,8 @@ export function HelpModal({
                   <MessageCircle className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-sm">Contact Support</p>
-                  <p className="text-xs text-zinc-500">Chat with our support team</p>
+                  <p className="font-medium text-sm">Submit Ticket</p>
+                  <p className="text-xs text-zinc-500">Create a support ticket</p>
                 </div>
               </motion.button>
 
