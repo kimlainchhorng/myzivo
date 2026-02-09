@@ -2,9 +2,10 @@
  * ETA Countdown Component
  * Shows estimated arrival time with countdown and dynamic recalculation
  * Includes demand-awareness messaging when delivery times may be longer
+ * Supports batch position display for grouped deliveries
  */
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Zap, Flame } from "lucide-react";
+import { Clock, Zap, Flame, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
@@ -17,6 +18,10 @@ interface EtaCountdownProps {
   className?: string;
   demandLevel?: SurgeLevel;
   showDemandNote?: boolean;
+  /** ETA for this specific stop in a batch (more accurate when batched) */
+  batchStopEta?: string | null;
+  /** Stop position when order is part of a batch */
+  batchPosition?: { current: number; total: number } | null;
 }
 
 // Haversine formula for distance calculation
@@ -51,6 +56,8 @@ export function EtaCountdown({
   className = "",
   demandLevel,
   showDemandNote = false,
+  batchStopEta,
+  batchPosition,
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -82,12 +89,14 @@ export function EtaCountdown({
   }, [driverLat, driverLng, deliveryLat, deliveryLng]);
 
   // Calculate time-based ETA from eta_dropoff timestamp
+  // Prefer batchStopEta when available (more accurate for grouped orders)
   const timestampEtaMinutes = useMemo(() => {
-    if (!etaDropoff) return null;
-    const dropoffTime = new Date(etaDropoff).getTime();
+    const etaSource = batchStopEta || etaDropoff;
+    if (!etaSource) return null;
+    const dropoffTime = new Date(etaSource).getTime();
     const remaining = Math.max(0, dropoffTime - now);
     return Math.ceil(remaining / 60000);
-  }, [etaDropoff, now]);
+  }, [etaDropoff, batchStopEta, now]);
 
   // Use dynamic ETA if available, otherwise fall back to timestamp-based
   const etaMinutes = dynamicEtaMinutes ?? timestampEtaMinutes;
@@ -153,10 +162,18 @@ export function EtaCountdown({
           </div>
         </div>
 
-        {/* Live indicator */}
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs text-zinc-500">Live</span>
+        {/* Live indicator and batch position */}
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs text-zinc-500">Live</span>
+          </div>
+          {batchPosition && (
+            <div className="flex items-center gap-1 text-xs text-blue-400">
+              <Layers className="w-3 h-3" />
+              <span>Stop {batchPosition.current} of {batchPosition.total}</span>
+            </div>
+          )}
         </div>
       </div>
 
