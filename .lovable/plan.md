@@ -1,284 +1,213 @@
 
 
-# Automated Marketing Messages — Implementation Plan
+# Dynamic Pricing Display — Implementation Plan
 
 ## Overview
-Create backend automation triggers for abandoned carts, re-engagement (no orders in 7 days), and birthday/special event coupons. Add an "Automated Messages" preference category to the existing `/account/notifications` page so users can opt in/out.
+Replace the hardcoded `$3.99` delivery fee in Eats checkout with a real-time dynamic delivery fee breakdown that accounts for base fee, distance, and demand (surge). Show a clear transparency message when demand adjustment is active.
 
 ---
 
-## Current State
+## Problem
 
-### Already Built
-| Component | Status |
-|-----------|--------|
-| `/account/notifications` page | Full Push/SMS/Email toggles + category toggles |
-| `notification_preferences` table | Has `marketing_enabled`, `email_enabled`, `sms_enabled`, `in_app_enabled` |
-| `automation_rules` table | Exists with `trigger_type`, `action_type`, `conditions`, `trigger_config`, `action_config` |
-| `marketing_campaigns` table | Supports campaign types, push/email flags |
-| `execute-campaign` edge function | Sends notifications to targeted users |
-| `campaign-scheduler` edge function | Polls for scheduled campaigns |
-| `notification_templates` table | Templates with `template_key`, `category`, channel support flags |
+The checkout page (`EatsCheckout.tsx`, line 68) currently has:
 
-### What's Missing
-- No `abandoned_cart_events` tracking table
-- No edge function for automated trigger evaluation
-- No "Automated Messages" toggle in notification settings UI
-- No birthday field on profiles (need to check)
+```text
+const deliveryFee = 3.99;
+```
+
+This ignores all existing dynamic pricing infrastructure:
+- `useEatsSurgePricing` hook (fetches real-time surge multiplier)
+- `calculateEatsFare()` in `src/lib/pricing.ts` (computes delivery fee from base + per-mile)
+- `EatsPriceBreakdown` component (shows detailed breakdown with service fee, tax, etc.)
+
+---
+
+## What Already Exists (No Changes Needed)
+
+| Component | Purpose |
+|-----------|---------|
+| `useEatsSurgePricing` hook | Fetches surge multiplier, provides `calculateDeliveryFee()` |
+| `calculateEatsFare()` | Zone-based pricing: base fee + per-mile + service fee + tax |
+| `EatsPriceBreakdown` component | Full order summary UI with all line items |
+| `DEFAULT_EATS_ZONE` | Base: $2.99, Per-mile: $0.50, Service: 15%, Tax: 8.25% |
 
 ---
 
 ## Implementation Plan
 
-### 1) Database Migration — Add Supporting Tables and Seed Rules
+### 1) Create `useEatsDeliveryPricing` Hook
 
-**New table: `automated_message_log`**
-Tracks which automated messages were sent to prevent duplicates.
+**File to Create:** `src/hooks/useEatsDeliveryPricing.ts`
 
-```text
-id              uuid PK
-user_id         uuid FK -> auth.users
-trigger_type    text  -- 'abandoned_cart', 'reengagement', 'birthday'
-trigger_ref     text  -- order_id or date reference
-channel         text  -- 'push', 'email', 'sms'
-sent_at         timestamptz
-message_preview text
-```
+**Purpose:** Combine zone-based pricing with surge to produce a complete delivery fee breakdown.
 
-**Add `date_of_birth` column to `profiles`** (if not already present — will verify).
-
-**Seed automation_rules** with three trigger rules:
-1. `abandoned_cart` — trigger_type: "schedule", action_type: "notification", trigger_config: `{ delay_minutes: 30 }`
-2. `reengagement_7d` — trigger_type: "schedule", action_type: "notification_with_promo", trigger_config: `{ inactive_days: 7 }`
-3. `birthday_coupon` — trigger_type: "schedule", action_type: "coupon", trigger_config: `{ days_before: 0 }`
-
-**Add `automated_messages_enabled` column to `notification_preferences`**
-Default: `true` — users can opt out.
-
-### 2) Create Edge Function: `process-automated-triggers`
-
-**File:** `supabase/functions/process-automated-triggers/index.ts`
-
-**Purpose:** Cron-callable function that evaluates all three trigger types and sends messages to eligible users.
-
-**Logic:**
-
-```text
-1. ABANDONED CART
-   - Query food_orders with status = 'cart' or 'pending'
-     where created_at is 30-60 min ago
-   - Check automated_message_log to avoid duplicates
-   - Check user's notification_preferences.automated_messages_enabled
-   - Send push/email reminder: "You left items in your cart!"
-
-2. RE-ENGAGEMENT (7 days inactive)
-   - Find users whose latest order (any service) is > 7 days ago
-   - Exclude users already messaged for reengagement in past 14 days
-   - Check preferences
-   - Send push/email with promo: "We miss you! Here's 10% off"
-
-3. BIRTHDAY COUPON
-   - Query profiles where date_of_birth month/day = today
-   - Exclude already-sent this year
-   - Check preferences
-   - Create promo code and send: "Happy Birthday! Enjoy a treat on us"
-
-4. Log all sent messages to automated_message_log
-```
-
-**Respects user preferences:**
-- Checks `automated_messages_enabled` flag
-- Checks individual channel toggles (`push_enabled`, `email_enabled`, `sms_enabled`)
-- Respects quiet hours
-
-### 3) Update Notification Settings UI
-
-**File to Modify:** `src/pages/account/NotificationSettings.tsx`
-
-**Changes:**
-- Add new category "Automated Messages" to `NOTIFICATION_CATEGORIES` array
-- Add a dedicated card section for automated message types with sub-toggles
-
-**New category entry:**
+**Returned data:**
 ```text
 {
-  id: "automated_messages",
-  label: "Automated Reminders",
-  description: "Cart reminders, re-engagement offers, and birthday rewards",
-  icon: Sparkles,
-  defaultEnabled: true,
+  baseFee: number;          // Zone base ($2.99)
+  distanceFee: number;      // Per-mile component
+  demandAdjustment: number; // Surge markup amount ($0 if no surge)
+  totalDeliveryFee: number; // Sum of above
+  serviceFee: number;
+  smallOrderFee: number;
+  tax: number;
+  orderTotal: number;       // Everything included
+  surgeActive: boolean;
+  surgeLabel: string;       // "Delivery fee adjusted due to high demand."
+  isLoading: boolean;
 }
 ```
 
-**New section below "Notification Types":**
+**Logic:**
+- Use `DEFAULT_EATS_ZONE` for base/per-mile rates (distance defaults to estimated ~2 miles for MVP, can be enhanced later with geocoding)
+- Apply surge multiplier from `useEatsSurgePricing` to delivery fee only
+- Calculate service fee, small order fee, and tax per existing `calculateEatsFare` logic
+
+### 2) Create `DeliveryFeeBreakdownCard` Component
+
+**File to Create:** `src/components/eats/DeliveryFeeBreakdownCard.tsx`
+
+**Purpose:** Display the delivery fee breakdown with demand adjustment messaging.
+
+**Design:**
 ```text
 +----------------------------------------------+
-|  Automated Messages                          |
-+----------------------------------------------+
-|  Cart Reminders                              |
-|  Remind me about unfinished orders    [ON]   |
+|  Delivery Fee Breakdown                      |
 |                                              |
-|  Re-engagement Offers                        |
-|  Special offers when I haven't ordered [ON]  |
+|  Base delivery fee              $2.99        |
+|  Distance fee (~2 mi)           $1.00        |
+|  Demand adjustment              $1.20        |  <-- orange if active
 |                                              |
-|  Birthday & Special Events                   |
-|  Birthday coupons and seasonal gifts  [ON]   |
+|  ! Delivery fee adjusted due to high demand. |  <-- only if surge
+|                                              |
+|  Delivery fee total             $5.19        |
 +----------------------------------------------+
 ```
 
-### 4) Update Notification Preferences Hook
+- Shows demand adjustment line only when surge > 1.0
+- Amber/orange styling for demand line and message
+- Tooltip or info icon explaining demand pricing
 
-**File to Modify:** `src/hooks/useNotificationPreferences.ts`
+### 3) Update `EatsCheckout.tsx` — Replace Hardcoded Fee
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
 
 **Changes:**
-- Add `automatedMessagesEnabled` to `NotificationPreferences` interface
-- Add mapping in `mapToPreferences` for `automated_messages_enabled`
-- Add to `UpdatePreferencesInput` interface
-- Add to mutation logic
+- Import `useEatsDeliveryPricing` hook
+- Remove hardcoded `const deliveryFee = 3.99`
+- Use hook values for all fee calculations
+- Replace the simple "Subtotal / Delivery Fee / Total" display with `DeliveryFeeBreakdownCard` + full breakdown
+- Add surge demand banner when active
+- Update the `total` calculation to use dynamic values
+- Pass dynamic fees to `createOrder.mutateAsync()` call
 
-### 5) Update Notification Preferences Hook for Sub-Categories
-
-**File to Modify:** `src/hooks/useNotificationPreferences.ts`
-
-Add three sub-preference fields to support granular control:
-
+**Before (current):**
 ```text
-automatedCartReminders: boolean;
-automatedReengagement: boolean;
-automatedBirthday: boolean;
+const deliveryFee = 3.99;
+const total = subtotal + deliveryFee;
 ```
 
-These will be stored in the `notification_preferences` table as new columns.
+**After:**
+```text
+const pricing = useEatsDeliveryPricing(subtotal);
+const total = pricing.orderTotal;
+```
+
+**Order Summary section update:** Replace the simple 3-line breakdown (lines 598-611) with the full dynamic breakdown showing base fee, distance fee, demand adjustment, service fee, tax, and final total.
+
+### 4) Add Demand Adjustment Banner
+
+**Where:** Inside the Order Summary card in `EatsCheckout.tsx`, above the price breakdown.
+
+**When visible:** Only when surge is active (multiplier > 1.0).
+
+**Design:**
+```text
++----------------------------------------------+
+|  ! Delivery fee adjusted due to high demand. |
+|    Demand is higher than usual in your area.  |
++----------------------------------------------+
+```
+
+- Amber background with warning icon
+- Concise, transparent language
 
 ---
 
 ## File Summary
 
-### Database Changes (1 migration)
-| Change | Description |
-|--------|-------------|
-| New table | `automated_message_log` for deduplication |
-| New columns on `notification_preferences` | `automated_messages_enabled`, `automated_cart_reminders`, `automated_reengagement`, `automated_birthday` |
-| New column on `profiles` | `date_of_birth` (date, nullable) |
-| Seed data | 3 rows in `automation_rules` for the triggers |
-
-### New Files (1)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `supabase/functions/process-automated-triggers/index.ts` | Evaluates and sends automated messages |
+| `src/hooks/useEatsDeliveryPricing.ts` | Combines zone pricing + surge for complete fee calculation |
+| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Visual breakdown of delivery fees with demand messaging |
 
-### Modified Files (2)
+### Modified Files (1)
 | File | Changes |
 |------|---------|
-| `src/pages/account/NotificationSettings.tsx` | Add "Automated Messages" section with sub-toggles |
-| `src/hooks/useNotificationPreferences.ts` | Add automated message preference fields |
+| `src/pages/EatsCheckout.tsx` | Replace hardcoded $3.99 with dynamic pricing hook, show breakdown card and demand banner |
 
 ---
 
-## Data Flow
-
-```text
-Cron / Manual Invoke
-       |
-       v
-process-automated-triggers (Edge Function)
-       |
-       ├── Query food_orders for abandoned carts (30-60 min old)
-       ├── Query profiles for inactive users (7+ days)
-       ├── Query profiles for birthdays (today)
-       |
-       v
-  For each eligible user:
-       |
-       ├── Check notification_preferences.automated_messages_enabled
-       ├── Check sub-preferences (cart/reengagement/birthday)
-       ├── Check channel preferences (push/email/sms)
-       ├── Check automated_message_log for duplicates
-       |
-       v
-  Send notification via preferred channel(s)
-       |
-       v
-  Log to automated_message_log
-```
-
----
-
-## Notification Settings Page — Updated Layout
+## Updated Checkout Order Summary
 
 ```text
 +----------------------------------------------+
-|  <- Notifications                            |
-+----------------------------------------------+
+|  Order Summary                               |
+|  Burger Palace                               |
 |                                              |
-|  [Push Notifications]          [Enabled]     |
-|  [SMS Notifications]           [Toggle]      |
-|  [Email Notifications]         [Toggle]      |
+|  [Item list with +/- buttons]                |
 |                                              |
-|  --- Notification Types ---                  |
-|  Order Updates                 [ON]          |
-|  Chat & Support                [ON]          |
-|  Price Alerts                  [ON]          |
-|  Deals & Promotions            [OFF]         |
+|  --- ETA Breakdown ---                       |
 |                                              |
-|  --- Automated Messages ---  (NEW)           |
-|  Cart Reminders                [ON]          |
-|  Re-engagement Offers          [ON]          |
-|  Birthday & Events             [ON]          |
+|  --- Price Breakdown ---                     |
+|  Subtotal                      $28.50        |
+|  Base delivery fee              $2.99        |
+|  Distance fee                   $1.00        |
+|  Demand adjustment              $1.20   (*)  |
+|  Service fee                    $4.28        |
+|  Tax                            $2.35        |
 |                                              |
-|  [Quiet Hours]                               |
-|  [Install App CTA]                           |
+|  (*) amber banner if active:                 |
+|  "Delivery fee adjusted due to high demand." |
+|                                              |
+|  Total                         $40.32        |
+|                                              |
+|  [Place Order Request]                       |
 +----------------------------------------------+
 ```
 
 ---
 
-## Edge Function: Trigger Details
+## Pricing Calculation Flow
 
-### Abandoned Cart
-| Field | Value |
-|-------|-------|
-| Delay | 30 minutes after cart created |
-| Max sends | 1 per cart session |
-| Message | "You left items in your cart! Complete your order before prices change." |
-| Channel | Push (primary), Email (fallback) |
-
-### Re-engagement
-| Field | Value |
-|-------|-------|
-| Trigger | No orders in 7 days |
-| Cooldown | 14 days between messages |
-| Message | "We miss you! Here's a special offer to welcome you back." |
-| Channel | Push + Email |
-
-### Birthday
-| Field | Value |
-|-------|-------|
-| Trigger | `date_of_birth` matches today |
-| Frequency | Once per year |
-| Message | "Happy Birthday! Enjoy a special treat on us." |
-| Channel | Push + Email |
+```text
+Cart Subtotal ($28.50)
+       |
+       v
+useEatsDeliveryPricing hook
+       |
+       ├── Base delivery fee: $2.99 (from DEFAULT_EATS_ZONE)
+       ├── Distance fee: $1.00 (est. 2 mi x $0.50/mi)
+       ├── Demand adjustment: surge multiplier applied to delivery fee
+       │      e.g. 1.3x surge on $3.99 base = $1.20 extra
+       ├── Service fee: 15% of subtotal = $4.28
+       ├── Small order fee: $2.00 if subtotal < $15
+       ├── Tax: 8.25% of subtotal = $2.35
+       |
+       v
+  Final total = subtotal + deliveryFee + serviceFee + smallOrderFee + tax
+```
 
 ---
 
-## Edge Cases
+## Transparency Guarantees
 
-| Scenario | Behavior |
-|----------|----------|
-| User opts out of automated messages | No automated messages sent |
-| User opts out of specific sub-type | Only that type skipped |
-| Cart completed before reminder | Check order status before sending |
-| No birthday on file | Skip birthday trigger |
-| User already received reengagement this week | Skip (14-day cooldown) |
-| Quiet hours active | Defer to next allowed window |
-
----
-
-## Summary
-
-1. **Database** — Add `automated_message_log` table, preference columns, and `date_of_birth` to profiles
-2. **Edge Function** — `process-automated-triggers` evaluates abandoned carts, inactive users, and birthdays
-3. **UI** — New "Automated Messages" section on `/account/notifications` with sub-toggles
-4. **Preferences Hook** — Extended with automated message fields
-5. **User Control** — Full opt-in/opt-out at both category and sub-category level
-
+| Requirement | How Addressed |
+|-------------|--------------|
+| Show base delivery fee | Separate line item in breakdown |
+| Show distance fee | Separate line with approximate distance |
+| Show demand adjustment | Orange-highlighted line, only when active |
+| Demand message | Amber banner: "Delivery fee adjusted due to high demand." |
+| Final total before payment | Bold total at bottom, always visible |
+| No hidden fees | Every fee component shown as individual line |
