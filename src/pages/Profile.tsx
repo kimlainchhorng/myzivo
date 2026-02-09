@@ -127,6 +127,7 @@ const Profile = () => {
 
   const quickLinks = [
     { icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
+    { icon: Sparkles, label: "Activity", href: "/account/activity", description: "Your personal stats" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },

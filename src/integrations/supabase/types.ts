@@ -13127,6 +13127,47 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_updates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          incident_id: string
+          message: string
+          new_value: string | null
+          old_value: string | null
+          update_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id: string
+          message: string
+          new_value?: string | null
+          old_value?: string | null
+          update_type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id?: string
+          message?: string
+          new_value?: string | null
+          old_value?: string | null
+          update_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incidents: {
         Row: {
           affected_service: string | null
@@ -24582,17 +24623,51 @@ export type Database = {
         }
         Relationships: []
       }
+      service_health_history: {
+        Row: {
+          error_rate: number | null
+          id: string
+          recorded_at: string
+          response_time_ms: number | null
+          service_key: string
+          status: string
+        }
+        Insert: {
+          error_rate?: number | null
+          id?: string
+          recorded_at?: string
+          response_time_ms?: number | null
+          service_key: string
+          status: string
+        }
+        Update: {
+          error_rate?: number | null
+          id?: string
+          recorded_at?: string
+          response_time_ms?: number | null
+          service_key?: string
+          status?: string
+        }
+        Relationships: []
+      }
       service_health_status: {
         Row: {
           created_at: string
+          error_rate: number | null
           id: string
           incident_count: number | null
           is_paused: boolean | null
           last_check_at: string | null
+          last_checked_at: string | null
+          manual_override: boolean | null
           metadata: Json | null
+          override_by: string | null
+          override_reason: string | null
           paused_at: string | null
           paused_by: string | null
           paused_reason: string | null
+          response_time_ms: number | null
+          service_key: string
           service_name: string
           status: string
           updated_at: string
@@ -24600,14 +24675,21 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          error_rate?: number | null
           id?: string
           incident_count?: number | null
           is_paused?: boolean | null
           last_check_at?: string | null
+          last_checked_at?: string | null
+          manual_override?: boolean | null
           metadata?: Json | null
+          override_by?: string | null
+          override_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
           paused_reason?: string | null
+          response_time_ms?: number | null
+          service_key: string
           service_name: string
           status?: string
           updated_at?: string
@@ -24615,14 +24697,21 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          error_rate?: number | null
           id?: string
           incident_count?: number | null
           is_paused?: boolean | null
           last_check_at?: string | null
+          last_checked_at?: string | null
+          manual_override?: boolean | null
           metadata?: Json | null
+          override_by?: string | null
+          override_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
           paused_reason?: string | null
+          response_time_ms?: number | null
+          service_key?: string
           service_name?: string
           status?: string
           updated_at?: string
@@ -33722,6 +33811,10 @@ export type Database = {
       }
       check_sla_breaches: { Args: never; Returns: number }
       check_sms_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
+      check_user_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: boolean
+      }
       check_withdrawal_allowed: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
