@@ -30,6 +30,7 @@ import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
 import { useCartValidation } from "@/hooks/useCartValidation";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
 import { useBusinessMembership } from "@/hooks/useBusinessMembership";
+import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
@@ -37,6 +38,7 @@ import { UnavailableItemBanner } from "@/components/eats/UnavailableItemBanner";
 import { EtaBreakdownCard } from "@/components/eats/EtaBreakdownCard";
 import { BillingTypeSelector } from "@/components/checkout/BillingTypeSelector";
 import { CompanyBillingBadge } from "@/components/checkout/CompanyBillingBadge";
+import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -56,17 +58,11 @@ function EatsCheckoutContent() {
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
   const createOrder = useCreateFoodOrder();
   const { data: businessMembership } = useBusinessMembership();
+  const { isInMaintenance, isLoading: maintenanceLoading } = useServiceMaintenance("eats");
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
-
-  // Set default billing type based on membership preference
-  useEffect(() => {
-    if (businessMembership?.isMember && businessMembership.paymentPreference) {
-      setBillingType(businessMembership.paymentPreference);
-    }
-  }, [businessMembership]);
 
   const subtotal = getSubtotal();
   const deliveryFee = 3.99;
@@ -86,13 +82,6 @@ function EatsCheckoutContent() {
   const { validateCart, unavailableItems, isValidating } = useCartValidation();
   const [hasValidated, setHasValidated] = useState(false);
   
-  // Validate cart on page load
-  useEffect(() => {
-    if (items.length > 0 && !hasValidated) {
-      validateCart(items).then(() => setHasValidated(true));
-    }
-  }, [items, hasValidated, validateCart]);
-  
   // Risk assessment for fraud protection
   const riskAssessment = useCheckoutRiskAssessment({
     orderTotal: total,
@@ -102,21 +91,6 @@ function EatsCheckoutContent() {
     isNewAccount: false,
     failedPaymentAttempts: 0,
   });
-
-  // Handle removing all unavailable items
-  const handleRemoveUnavailable = () => {
-    unavailableItems.forEach((item) => {
-      removeItem(item.id);
-    });
-    // Re-validate after removal
-    setTimeout(() => {
-      validateCart(items.filter(i => !unavailableItems.find(u => u.id === i.id)));
-    }, 100);
-    toast.success("Unavailable items removed from cart");
-  };
-
-  // Check if cart has unavailable items
-  const hasUnavailableItems = unavailableItems.length > 0;
 
   const {
     register,
@@ -133,6 +107,58 @@ function EatsCheckoutContent() {
 
   const preferredTime = watch("preferred_time");
   const customerPhone = watch("customer_phone");
+
+  // Set default billing type based on membership preference
+  useEffect(() => {
+    if (businessMembership?.isMember && businessMembership.paymentPreference) {
+      setBillingType(businessMembership.paymentPreference);
+    }
+  }, [businessMembership]);
+  
+  // Validate cart on page load
+  useEffect(() => {
+    if (items.length > 0 && !hasValidated) {
+      validateCart(items).then(() => setHasValidated(true));
+    }
+  }, [items, hasValidated, validateCart]);
+
+  // Check if cart has unavailable items
+  const hasUnavailableItems = unavailableItems.length > 0;
+
+  // Show maintenance screen if eats service is paused
+  if (maintenanceLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-eats" />
+      </div>
+    );
+  }
+
+  if (isInMaintenance) {
+    return (
+      <MaintenanceScreen
+        serviceName="ZIVO Eats"
+        browseUrl="/eats/restaurants"
+        browseLabel="Browse Restaurants"
+        ordersUrl="/eats/orders"
+        ordersLabel="View Past Orders"
+        showBrowse
+        showOrders
+      />
+    );
+  }
+
+  // Handle removing all unavailable items
+  const handleRemoveUnavailable = () => {
+    unavailableItems.forEach((item) => {
+      removeItem(item.id);
+    });
+    // Re-validate after removal
+    setTimeout(() => {
+      validateCart(items.filter(i => !unavailableItems.find(u => u.id === i.id)));
+    }, 100);
+    toast.success("Unavailable items removed from cart");
+  };
 
   const handlePhoneVerified = () => {
     setPhoneVerified(true);

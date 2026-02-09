@@ -20,18 +20,21 @@ import { CartProvider, useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
+import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
 import { BusyRestaurantBanner } from "@/components/eats/BusyRestaurantBanner";
 import { UnavailableBanner } from "@/components/eats/UnavailableBanner";
+import { MaintenanceBanner } from "@/components/eats/MaintenanceBanner";
 import { ItemAvailabilityBadge } from "@/components/eats/ItemAvailabilityBadge";
 import { HighVolumeBanner } from "@/components/eats/HighVolumeBanner";
 import { useRestaurantQueueLength } from "@/hooks/useRestaurantQueueLength";
 
-function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: { 
+function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
   restaurantId: string;
   restaurantName: string;
   canOrder?: boolean;
+  isServiceMaintenance?: boolean;
 }) {
   const { addItem, items } = useCart();
   const [added, setAdded] = useState(false);
@@ -39,9 +42,9 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
   const cartItem = items.find(i => i.id === item.id);
   const quantity = cartItem?.quantity || 0;
   
-  // Check if item is available (respect both item availability and restaurant availability)
+  // Check if item is available (respect item availability, restaurant availability, and service maintenance)
   const isItemAvailable = item.is_available !== false;
-  const canAdd = canOrder && isItemAvailable;
+  const canAdd = canOrder && isItemAvailable && !isServiceMaintenance;
 
   const handleAdd = () => {
     if (!canAdd) return;
@@ -61,7 +64,8 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
   return (
     <Card className={cn(
       "overflow-hidden transition-all duration-300 border-2 border-transparent",
-      canAdd ? "hover:shadow-lg hover:border-eats/30" : "opacity-60"
+      canAdd ? "hover:shadow-lg hover:border-eats/30" : "opacity-60",
+      isServiceMaintenance && "opacity-70"
     )}>
       <div className="flex">
         {/* Image */}
@@ -107,7 +111,7 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
                 disabled
                 className="h-8 px-4 rounded-lg gap-1 opacity-50 cursor-not-allowed"
               >
-                {!isItemAvailable ? "Out of Stock" : "Unavailable"}
+                {isServiceMaintenance ? "Paused" : !isItemAvailable ? "Out of Stock" : "Unavailable"}
               </Button>
             ) : quantity > 0 ? (
               <div className="flex items-center gap-2">
@@ -231,6 +235,9 @@ function EatsRestaurantMenuContent() {
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(id);
   const { getItemCount, getSubtotal } = useCart();
   
+  // Check if eats service is in maintenance
+  const { isInMaintenance: isServiceMaintenance } = useServiceMaintenance("eats");
+  
   // Get availability status
   const availability = useRestaurantAvailability(restaurant);
   
@@ -344,14 +351,17 @@ function EatsRestaurantMenuContent() {
             </div>
             
             {/* Availability Banners */}
-            {availability.status === "busy" && (
+            {isServiceMaintenance && (
+              <MaintenanceBanner className="mt-4" />
+            )}
+            {!isServiceMaintenance && availability.status === "busy" && (
               <BusyRestaurantBanner
                 adjustedPrepTime={availability.adjustedPrepTime}
                 bonusMinutes={availability.prepTimeBonus}
                 className="mt-4"
               />
             )}
-            {availability.status === "unavailable" && (
+            {!isServiceMaintenance && availability.status === "unavailable" && (
               <UnavailableBanner
                 message={availability.detailMessage}
                 className="mt-4"
@@ -359,7 +369,7 @@ function EatsRestaurantMenuContent() {
             )}
             
             {/* High Volume Banner - shows when queue is high but not in busy mode */}
-            {availability.status !== "busy" && queue.isHighVolume && (
+            {!isServiceMaintenance && availability.status !== "busy" && queue.isHighVolume && (
               <HighVolumeBanner
                 queueLength={queue.queueLength}
                 estimatedWait={queue.queueWaitMinutes}
@@ -385,6 +395,7 @@ function EatsRestaurantMenuContent() {
                       restaurantId={restaurant.id}
                       restaurantName={restaurant.name}
                       canOrder={availability.canOrder}
+                      isServiceMaintenance={isServiceMaintenance}
                     />
                   ))}
                 </div>

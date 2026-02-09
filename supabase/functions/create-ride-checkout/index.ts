@@ -116,6 +116,23 @@ serve(async (req) => {
       duration_minutes,
     } = body;
 
+    // Check if rides service is in maintenance
+    const { data: serviceStatus } = await supabase
+      .from("service_health_status")
+      .select("status, is_paused")
+      .eq("service_name", "rides")
+      .maybeSingle();
+
+    if (serviceStatus?.status === "maintenance" || serviceStatus?.status === "outage" || serviceStatus?.is_paused) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Service temporarily unavailable",
+          maintenance: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
+      );
+    }
+
     // Validate required fields
     if (!customer_name || !customer_phone || !pickup_address || !dropoff_address || !estimated_fare) {
       throw new Error("Missing required fields");

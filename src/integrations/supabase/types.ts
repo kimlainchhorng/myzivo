@@ -128,6 +128,36 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          condition_type: string | null
+          condition_value: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string | null
+          reward_json: Json | null
+        }
+        Insert: {
+          condition_type?: string | null
+          condition_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          reward_json?: Json | null
+        }
+        Update: {
+          condition_type?: string | null
+          condition_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          reward_json?: Json | null
+        }
+        Relationships: []
+      }
       ad_billing_events: {
         Row: {
           ad_id: string
@@ -8471,6 +8501,11 @@ export type Database = {
           acceptance_count: number
           acceptance_rate: number | null
           activity_status: string | null
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_id: string | null
+          affiliate_partner_name: string | null
+          affiliate_signup_bonus_points: number | null
           allowed_regions: string[] | null
           apns_token: string | null
           application_id: string | null
@@ -8556,6 +8591,11 @@ export type Database = {
           acceptance_count?: number
           acceptance_rate?: number | null
           activity_status?: string | null
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_id?: string | null
+          affiliate_partner_name?: string | null
+          affiliate_signup_bonus_points?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null
@@ -8641,6 +8681,11 @@ export type Database = {
           acceptance_count?: number
           acceptance_rate?: number | null
           activity_status?: string | null
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_id?: string | null
+          affiliate_partner_name?: string | null
+          affiliate_signup_bonus_points?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null
@@ -8723,6 +8768,13 @@ export type Database = {
           zone_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "drivers_affiliate_partner_id_fkey"
+            columns: ["affiliate_partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "drivers_application_id_fkey"
             columns: ["application_id"]
@@ -24489,6 +24541,33 @@ export type Database = {
         }
         Relationships: []
       }
+      share_events: {
+        Row: {
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          platform: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          platform?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          platform?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shift_slots: {
         Row: {
           bonus_amount: number | null
@@ -33474,6 +33553,21 @@ export type Database = {
             }
             Returns: string
           }
+        | {
+            Args: {
+              p_affiliate_code?: string
+              p_email: string
+              p_full_name: string
+              p_license_number: string
+              p_phone: string
+              p_referral_code?: string
+              p_user_id: string
+              p_vehicle_model?: string
+              p_vehicle_plate: string
+              p_vehicle_type: string
+            }
+            Returns: string
+          }
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
@@ -33606,6 +33700,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_admin_role: { Args: { _user_id: string }; Returns: string }
       get_batch_details: { Args: { p_batch_id: string }; Returns: Json }
       get_country_services: {
         Args: { p_country_code: string }
@@ -33851,6 +33946,10 @@ export type Database = {
       }
       has_accepted_policy: {
         Args: { p_policy_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      has_admin_permission: {
+        Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
       has_policy_consent: {
@@ -34146,6 +34245,8 @@ export type Database = {
         | "driver"
         | "merchant"
         | "customer"
+        | "owner"
+        | "manager"
       approval_status: "pending" | "approved" | "rejected"
       beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
@@ -34476,6 +34577,8 @@ export const Constants = {
         "driver",
         "merchant",
         "customer",
+        "owner",
+        "manager",
       ],
       approval_status: ["pending", "approved", "rejected"],
       beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],
