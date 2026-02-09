@@ -2,11 +2,11 @@
  * ZIVO Mobile Account Screen
  * Streamlined account settings and profile
  */
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Users, Mail, Bell, CreditCard, Gift, 
   HelpCircle, FileText, Shield, ChevronRight, LogOut, 
-  Settings, Star, ExternalLink
+  Settings, Star, ExternalLink, Crown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMembership } from "@/hooks/useMembership";
+import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { cn } from "@/lib/utils";
 
 interface MenuItem {
   icon: typeof User;
@@ -27,6 +30,7 @@ interface MenuItem {
 export default function MobileAccount() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, signOut } = useAuth();
+  const { isActive: isMember } = useMembership();
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
@@ -40,6 +44,7 @@ export default function MobileAccount() {
     .toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
   const accountItems: MenuItem[] = [
+    { icon: Crown, label: isMember ? "ZIVO+ Member" : "Join ZIVO+", path: "/account/membership" },
     { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
@@ -59,33 +64,57 @@ export default function MobileAccount() {
     navigate("/");
   };
 
-  const MenuItem = ({ item }: { item: MenuItem }) => (
-    <button
-      onClick={() => {
-        if (item.external) {
-          window.open(item.path, '_blank');
-        } else {
-          navigate(item.path);
-        }
-      }}
-      className="flex items-center justify-between w-full py-3 px-1 hover:bg-muted/50 rounded-lg transition-colors touch-manipulation"
-    >
-      <div className="flex items-center gap-3">
-        <item.icon className="w-5 h-5 text-muted-foreground" />
-        <span className="text-sm font-medium">{item.label}</span>
-        {item.badge && (
-          <Badge variant="default" className="h-5 px-1.5 text-xs">
-            {item.badge}
-          </Badge>
+  const MenuItem = ({ item }: { item: MenuItem }) => {
+    const isMembershipItem = item.path === "/account/membership";
+    const shouldHighlight = isMembershipItem && isMember;
+    
+    return (
+      <button
+        onClick={() => {
+          if (item.external) {
+            window.open(item.path, '_blank');
+          } else {
+            navigate(item.path);
+          }
+        }}
+        className={cn(
+          "flex items-center justify-between w-full py-3 px-1 rounded-lg transition-colors touch-manipulation",
+          shouldHighlight 
+            ? "bg-amber-500/10 hover:bg-amber-500/15" 
+            : "hover:bg-muted/50"
         )}
-      </div>
-      {item.external ? (
-        <ExternalLink className="w-4 h-4 text-muted-foreground" />
-      ) : (
-        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-      )}
-    </button>
-  );
+      >
+        <div className="flex items-center gap-3">
+          <item.icon className={cn(
+            "w-5 h-5",
+            shouldHighlight ? "text-amber-500" : "text-muted-foreground"
+          )} />
+          <span className={cn(
+            "text-sm font-medium",
+            shouldHighlight && "text-amber-500"
+          )}>
+            {item.label}
+          </span>
+          {item.badge && (
+            <Badge variant="default" className="h-5 px-1.5 text-xs">
+              {item.badge}
+            </Badge>
+          )}
+          {shouldHighlight && (
+            <ZivoPlusBadge variant="small" className="w-4 h-4" />
+          )}
+        </div>
+        {item.external ? (
+          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronRight className={cn(
+            "w-4 h-4",
+            shouldHighlight ? "text-amber-500" : "text-muted-foreground"
+          )} />
+        )}
+      </button>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">

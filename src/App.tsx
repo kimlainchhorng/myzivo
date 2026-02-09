@@ -960,6 +960,10 @@ const App = () => (
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/rewards/redeem" element={<RewardsPage />} />
                 
+                {/* ZIVO+ Membership */}
+                <Route path="/membership" element={<MembershipPage />} />
+                <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                
                 {/* Eats Analytics Routes */}
                 <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AnalyticsHub /></ProtectedRoute>} />
                 <Route path="/admin/analytics/orders" element={<ProtectedRoute requireAdmin><AnalyticsOrders /></ProtectedRoute>} />
