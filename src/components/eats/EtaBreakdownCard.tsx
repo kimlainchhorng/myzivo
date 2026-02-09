@@ -20,6 +20,7 @@ interface EtaBreakdownCardProps {
   totalMaxRange: number;
   isHighVolume: boolean;
   queueLength?: number;
+  surgeActive?: boolean;
   className?: string;
 }
 
@@ -80,6 +81,7 @@ export function EtaBreakdownCard({
   totalMaxRange,
   isHighVolume,
   queueLength = 0,
+  surgeActive = false,
   className,
 }: EtaBreakdownCardProps) {
   const totalMinutes = queueMinutes + prepMinutes + driverMinutes;
@@ -134,12 +136,21 @@ export function EtaBreakdownCard({
         />
       </div>
 
-      {/* Footer note */}
+      {/* Footer notes */}
       {isHighVolume && queueLength > 0 && (
         <div className="flex items-start gap-2 pt-2 border-t border-border/50">
           <Info className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground">
             ETA includes {queueLength} order{queueLength !== 1 ? "s" : ""} ahead of yours.
+          </p>
+        </div>
+      )}
+
+      {surgeActive && (
+        <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+          <Info className="w-3.5 h-3.5 text-orange-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            Delivery times may be longer due to high demand in your area.
           </p>
         </div>
       )}
