@@ -1,6 +1,7 @@
 /**
  * ZIVO Eats — Order Detail Page
  * Real-time status updates with driver tracking, live map, and scheduled delivery support
+ * Includes demand awareness messaging for high-traffic periods
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,10 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { useEatsDriver } from "@/hooks/useEatsDriver";
 import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
+import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
+import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
@@ -29,11 +32,13 @@ export default function EatsOrderDetail() {
   const { order, loading, error } = useLiveEatsOrder(id);
   const { driver } = useEatsDriver(order?.driver_id);
   const { location: liveDriverLocation, isStale } = useLiveDriverLocation(order?.driver_id, order?.status);
+  const { level: demandLevel, isActive: demandActive } = useEatsSurgePricing();
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
 
-  // Determine if we should show the map
+  // Determine if we should show the map or demand banner
   const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
+  const isActiveOrder = order && order.status !== "delivered" && order.status !== "cancelled";
   const isDelivering = order?.status === "out_for_delivery";
   
   // Use live location when available, fall back to driver profile location
@@ -265,6 +270,11 @@ export default function EatsOrderDetail() {
             </div>
           </motion.div>
         )}
+
+        {/* High Demand Banner - show when demand is active for non-completed orders */}
+        {demandActive && isActiveOrder && (
+          <HighDemandBanner level={demandLevel} orderId={order.id} />
+        )}
         {/* Delivery PIN Display - Customer sees PIN when order is out for delivery */}
         {order.status === "out_for_delivery" && order.delivery_pin && !order.delivery_pin_verified && (
           <motion.div
@@ -288,6 +298,8 @@ export default function EatsOrderDetail() {
             driverLng={driverLng}
             deliveryLat={order.delivery_lat ?? undefined}
             deliveryLng={order.delivery_lng ?? undefined}
+            demandLevel={demandLevel}
+            showDemandNote={demandActive}
           />
         )}
 
