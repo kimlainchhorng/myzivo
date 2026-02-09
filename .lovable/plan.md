@@ -1,295 +1,253 @@
 
-# Customer Role Enforcement — Implementation Plan
+# Customer Reliability Messaging — Implementation Plan
 
 ## Overview
-Add explicit `customer` role verification to customer-facing endpoints to ensure that only users with the `customer` role can access customer functionality. This provides role-based isolation so admin role changes don't affect customer access patterns.
+Add a customer-facing reliability banner that displays when any system service is experiencing an incident. The banner shows the message: **"Some services may be temporarily slower than usual."** This keeps customers informed without alarming them during minor degradations.
 
 ## Current State Analysis
 
-### Existing Role System
-| Role | Purpose |
-|------|---------|
-| `admin` | Full platform access |
-| `super_admin` | Super administrator |
-| `operations` | Operations team |
-| `finance` | Finance team |
-| `support` | Customer support |
-| `driver` | Delivery drivers |
-| `merchant` | Restaurant/business owners |
-| `customer` | End users/customers |
+### Existing Infrastructure
+| Component | Status | Location |
+|-----------|--------|----------|
+| `service_health_status` table | Exists | Supabase DB with status, is_paused fields |
+| `useServiceHealthStatus()` hook | Exists (admin-only) | `src/hooks/useDisasterRecovery.ts` |
+| `AnnouncementBanner` component | Exists | `src/components/shared/AnnouncementBanner.tsx` |
+| Layout components | Exists | `AppLayout`, `HizovoAppLayout`, `ZivoSuperAppLayout` |
 
-### Current Authorization Pattern
-| Endpoint Type | Current Check | Gap |
-|--------------|---------------|-----|
-| Admin endpoints | `has_role(user.id, 'admin')` | None |
-| Driver endpoints | `driver_id = user.id` via drivers table | None |
-| Customer endpoints | `customer_id = auth.uid()` (ownership only) | No explicit role check |
+### Database Schema (service_health_status)
+| Column | Type | Description |
+|--------|------|-------------|
+| `service_name` | text | flights, hotels, cars, rides, eats, auth, payments, storage |
+| `status` | text | operational, degraded, outage, maintenance |
+| `is_paused` | boolean | Manual service pause |
+| `paused_reason` | text | Reason for pause |
 
-### What's Missing
-Customer-facing endpoints rely solely on **ownership checks** but do not verify the user has the `customer` role. This means:
-- An admin could theoretically access customer flows without the customer role
-- Role revocation doesn't affect customer access if ownership exists
+### RLS Policy
+```sql
+CREATE POLICY "Anyone can read service health" 
+  ON public.service_health_status 
+  FOR SELECT TO authenticated 
+  USING (true);
+```
+Customers can already read service health data.
 
 ---
 
 ## Implementation Plan
 
-### 1) Create `is_customer` Helper Function
+### 1) Create Customer System Status Hook
 
-**Purpose:** Security definer function to check if a user has the customer role.
+**File to Create:** `src/hooks/useSystemStatus.ts`
 
-```sql
-CREATE OR REPLACE FUNCTION public.is_customer(_user_id UUID DEFAULT auth.uid())
-RETURNS BOOLEAN
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.user_roles
-    WHERE user_id = _user_id
-      AND role = 'customer'
-  )
-$$;
+**Purpose:** Lightweight hook for customers to check if any system incident is active.
+
+**Implementation:**
+```text
+Query service_health_status table
+Check for any service where:
+  - status = 'degraded' OR status = 'outage' OR status = 'maintenance'
+  - OR is_paused = true
+
+Return:
+  - hasActiveIncident: boolean
+  - incidentMessage: string (standardized message)
+  - isLoading: boolean
 ```
 
-### 2) Auto-Assign Customer Role on Signup
+**Caching Strategy:**
+- `staleTime: 60000` (1 minute)
+- `refetchInterval: 60000` (poll every minute)
+- Lightweight query with minimal fields
 
-**Purpose:** Ensure all new users automatically receive the `customer` role.
+---
 
-**Trigger on auth.users insert:**
-```sql
-CREATE OR REPLACE FUNCTION public.assign_customer_role_on_signup()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  -- Auto-assign customer role to all new users
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (NEW.id, 'customer')
-  ON CONFLICT (user_id, role) DO NOTHING;
+### 2) Create Customer Reliability Banner Component
+
+**File to Create:** `src/components/shared/SystemStatusBanner.tsx`
+
+**Purpose:** Non-intrusive banner informing customers of service issues.
+
+**Design:**
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ ⚠️ Some services may be temporarily slower than usual.    [×]  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Features:**
+- Amber/warning color scheme (not alarming)
+- Dismissible with X button
+- Uses localStorage to remember dismissal (per session)
+- Only shows when `hasActiveIncident = true`
+- Non-sticky (doesn't follow scroll)
+
+**Styling:**
+```text
+Background: bg-amber-50 dark:bg-amber-950/30
+Border: border-amber-200 dark:border-amber-800
+Icon: AlertTriangle (Lucide)
+Text: "Some services may be temporarily slower than usual."
+```
+
+---
+
+### 3) Integrate Banner into Layout Components
+
+**Files to Modify:**
+- `src/components/app/AppLayout.tsx`
+- `src/components/app/HizovoAppLayout.tsx`
+- `src/components/app/ZivoSuperAppLayout.tsx`
+
+**Placement:** Below header, above main content.
+
+**Integration Pattern:**
+```text
+<div className="min-h-screen bg-background flex flex-col">
+  {!hideHeader && <Header ... />}
   
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_auth_user_created_assign_customer
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.assign_customer_role_on_signup();
-```
-
-### 3) Backfill Existing Users with Customer Role
-
-**Purpose:** Ensure all existing users have the `customer` role.
-
-```sql
--- Backfill customer role for all existing users who don't have it
-INSERT INTO public.user_roles (user_id, role)
-SELECT id, 'customer'::app_role
-FROM auth.users
-WHERE id NOT IN (
-  SELECT user_id FROM public.user_roles WHERE role = 'customer'
-)
-ON CONFLICT (user_id, role) DO NOTHING;
-```
-
-### 4) Update RLS Policies for Customer Tables
-
-**Tables to Update:**
-- `food_orders` — add `is_customer(auth.uid())` check
-- `trips` — add customer role check to rider policies
-- `travel_orders` — add customer role check
-- `hotel_bookings` — add customer role check
-- `flight_bookings` — add customer role check
-- `customer_wallets` — add customer role check
-- `customer_feedback` — add customer role check (for insert)
-
-**Example Policy Update:**
-```sql
--- Current policy
-CREATE POLICY "Customers can view own food orders"
-  ON public.food_orders FOR SELECT
-  USING (customer_id = auth.uid());
-
--- Updated policy with role check
-DROP POLICY IF EXISTS "Customers can view own food orders" ON public.food_orders;
-CREATE POLICY "Customers can view own food orders"
-  ON public.food_orders FOR SELECT
-  USING (
-    customer_id = auth.uid() 
-    AND is_customer(auth.uid())
-  );
-```
-
-### 5) Update Edge Functions with Customer Role Check
-
-**Customer-Facing Functions to Update:**
-
-| Function | Current Auth | Add |
-|----------|-------------|-----|
-| `update-eats-order` | `user.id === order.customer_id` | `has_role(user.id, 'customer')` |
-| `request-travel-cancellation` | `order.user_id === user.id` | `has_role(user.id, 'customer')` |
-| `create-membership-checkout` | `user.email` exists | `has_role(user.id, 'customer')` |
-| `customer-portal-membership` | `user` authenticated | `has_role(user.id, 'customer')` |
-
-**Example Update Pattern:**
-```typescript
-// Add after user authentication
-const { data: isCustomer } = await supabase.rpc("has_role", {
-  _user_id: user.id,
-  _role: "customer",
-});
-
-if (!isCustomer) {
-  return new Response(
-    JSON.stringify({ success: false, error: "Customer role required" }),
-    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
-}
-```
-
-### 6) Create Frontend Hook for Customer Role
-
-**File:** `src/hooks/useCustomerRole.ts`
-
-```typescript
-export function useCustomerRole() {
-  const { user } = useAuth();
+  {/* NEW: System Status Banner (customer-facing) */}
+  <SystemStatusBanner />
   
-  const { data: isCustomer, isLoading } = useQuery({
-    queryKey: ["customer-role", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return false;
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "customer",
-      });
-      return data ?? false;
-    },
-    enabled: !!user?.id,
-  });
+  <main className={...}>
+    {children}
+  </main>
   
-  return { isCustomer: isCustomer ?? false, isLoading };
-}
+  {!hideNav && <BottomNav />}
+</div>
 ```
 
 ---
 
 ## File Summary
 
-### Database Changes (1 migration)
-| Change | Description |
-|--------|-------------|
-| Create function | `is_customer()` helper function |
-| Create trigger | Auto-assign customer role on signup |
-| Backfill data | Assign customer role to existing users |
-| Update policies | Add role checks to customer table policies |
-
-### Edge Functions to Update (4)
-| Function | Change |
-|----------|--------|
-| `update-eats-order/index.ts` | Add `has_role(..., 'customer')` check |
-| `request-travel-cancellation/index.ts` | Add customer role verification |
-| `create-membership-checkout/index.ts` | Add customer role verification |
-| `customer-portal-membership/index.ts` | Add customer role verification |
-
-### New Frontend File (1)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useCustomerRole.ts` | Check if current user has customer role |
+| `src/hooks/useSystemStatus.ts` | Check for active incidents |
+| `src/components/shared/SystemStatusBanner.tsx` | Customer reliability banner |
+
+### Modified Files (3)
+| File | Changes |
+|------|---------|
+| `src/components/app/AppLayout.tsx` | Add SystemStatusBanner |
+| `src/components/app/HizovoAppLayout.tsx` | Add SystemStatusBanner |
+| `src/components/app/ZivoSuperAppLayout.tsx` | Add SystemStatusBanner |
 
 ---
 
-## RLS Policy Updates Detail
+## Hook Implementation Details
 
-### food_orders Table
-```sql
--- SELECT: Own orders + customer role
-DROP POLICY IF EXISTS "Customers can view own food orders" ON public.food_orders;
-CREATE POLICY "Customers can view own food orders"
-  ON public.food_orders FOR SELECT
-  USING (customer_id = auth.uid() AND is_customer());
+### useSystemStatus Hook
+```text
+export function useSystemStatus() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["system-status-customer"],
+    queryFn: async () => {
+      const { data: services } = await supabase
+        .from("service_health_status")
+        .select("status, is_paused")
+        .or("status.neq.operational,is_paused.eq.true");
+      
+      return {
+        hasActiveIncident: services && services.length > 0,
+      };
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
 
--- INSERT: Customer role required
-DROP POLICY IF EXISTS "Customers can create food orders" ON public.food_orders;
-CREATE POLICY "Customers can create food orders"
-  ON public.food_orders FOR INSERT
-  WITH CHECK (auth.uid() = customer_id AND is_customer());
-```
-
-### trips Table
-```sql
--- SELECT: Rider owns trip + customer role
-DROP POLICY IF EXISTS "Users can view their own trips" ON public.trips;
-CREATE POLICY "Users can view their own trips"
-  ON public.trips FOR SELECT
-  USING (auth.uid() = rider_id AND is_customer());
-```
-
-### travel_orders Table
-```sql
--- SELECT: User owns order + customer role
-CREATE POLICY "Customers can view own travel orders"
-  ON public.travel_orders FOR SELECT
-  USING (user_id = auth.uid() AND is_customer());
+  return {
+    hasActiveIncident: data?.hasActiveIncident ?? false,
+    incidentMessage: "Some services may be temporarily slower than usual.",
+    isLoading,
+  };
+}
 ```
 
 ---
 
-## Security Model
-
-### Before (Ownership Only)
-```
-Customer Access = (user_id == record.customer_id)
-```
-
-### After (Role + Ownership)
-```
-Customer Access = (user_id == record.customer_id) AND has_role('customer')
-```
-
-### Benefits
-1. **Role Revocation** — Removing customer role immediately blocks access
-2. **Separation of Concerns** — Admin/support can't accidentally use customer flows
-3. **Audit Trail** — Clear role-based access control
-4. **Future Flexibility** — Can add customer tiers or restrictions per role
-
----
-
-## Edge Cases
+## Banner Dismissal Logic
 
 | Scenario | Behavior |
 |----------|----------|
-| New user signup | Auto-assigned `customer` role via trigger |
-| Existing user without role | Backfill migration assigns role |
-| Admin accessing customer endpoint | Blocked unless they also have `customer` role |
-| User loses customer role | Immediately loses access to customer endpoints |
+| User dismisses banner | Store dismissal timestamp in localStorage |
+| Same session, incident still active | Banner stays hidden |
+| New session (page refresh) | Banner reappears if incident still active |
+| Incident resolves | Banner auto-hides (query returns false) |
+
+**Storage Key:** `zivo-system-status-dismissed`
 
 ---
 
-## Rollout Strategy
+## Visual Design
 
-1. **Phase 1:** Create helper function + trigger + backfill (no breaking changes)
-2. **Phase 2:** Update RLS policies with new role checks
-3. **Phase 3:** Update edge functions with role verification
-4. **Phase 4:** Add frontend hook for customer role checks
+### Banner States
+
+**Active Incident:**
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ ⚠️ Some services may be temporarily slower than usual.    [×]  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**No Incident:**
+```text
+(Banner not rendered)
+```
+
+### Color Scheme
+| Element | Light Mode | Dark Mode |
+|---------|------------|-----------|
+| Background | `bg-amber-50` | `bg-amber-950/30` |
+| Border | `border-amber-200` | `border-amber-800` |
+| Icon | `text-amber-600` | `text-amber-400` |
+| Text | `text-amber-700` | `text-amber-300` |
+
+---
+
+## Incident Triggers
+
+The banner will appear when ANY of the following are true in `service_health_status`:
+
+| Condition | Example |
+|-----------|---------|
+| `status = 'degraded'` | Flights API slow |
+| `status = 'outage'` | Payments down |
+| `status = 'maintenance'` | Hotels scheduled maintenance |
+| `is_paused = true` | Rides manually paused |
+
+---
+
+## Performance Considerations
+
+1. **Minimal Query:** Only fetches `status` and `is_paused` columns
+2. **Polling Interval:** 60 seconds (not aggressive)
+3. **Stale Time:** 60 seconds (reduces redundant fetches)
+4. **Conditional Render:** Banner component returns `null` when no incident
+
+---
+
+## Admin Control
+
+Admins control incident status via:
+- **Recovery Dashboard** → Service Health tab
+- **Disaster Recovery Dashboard** → Pause/unpause services
+- **Direct DB updates** to `service_health_status` table
+
+No new admin UI needed — existing tools control the data.
 
 ---
 
 ## Summary
 
-This implementation adds explicit customer role verification to all customer-facing endpoints:
+This implementation provides:
 
-1. **Helper Function** — `is_customer()` for RLS policies
-2. **Auto-Assignment** — New users get customer role automatically
-3. **Backfill** — Existing users receive customer role
-4. **RLS Updates** — All customer tables require role + ownership
-5. **Edge Function Updates** — Server-side role verification
-6. **Frontend Hook** — Client-side role awareness
+1. **Customer Hook** — `useSystemStatus()` for lightweight incident detection
+2. **Reliability Banner** — Amber warning banner with dismissal capability
+3. **Layout Integration** — Banner appears in all customer-facing layouts
+4. **Non-Alarming UX** — Soft messaging that informs without scaring
+5. **Session Dismissal** — Users can dismiss; reappears on new session
+6. **Real-time Data** — Reads from existing `service_health_status` table
+7. **Admin-Controlled** — Incidents triggered by existing admin tools
 
-The feature ensures that admin role changes don't affect customer access and provides clear role-based isolation between user types.
+The feature ensures customers are informed when services are impacted while maintaining a calm, professional user experience.
