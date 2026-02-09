@@ -26,7 +26,8 @@ import {
   Store,
   ExternalLink,
   Users,
-  TrendingUp
+  TrendingUp,
+  Trophy
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
@@ -128,6 +129,7 @@ const Profile = () => {
   const quickLinks = [
     { icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
     { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
+    { icon: Trophy, label: "Achievements", href: "/account/achievements", description: "Badges & rewards" },
     { icon: Sparkles, label: "Activity", href: "/account/activity", description: "Your personal stats" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },

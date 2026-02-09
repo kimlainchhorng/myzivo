@@ -695,6 +695,82 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_clicks: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          referrer_url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          referrer_url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          referrer_url?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_conversions: {
+        Row: {
+          affiliate_id: string
+          commission_cents: number
+          conversion_type: string
+          created_at: string
+          id: string
+          order_id: string | null
+          order_total_cents: number | null
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          commission_cents?: number
+          conversion_type: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_total_cents?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          commission_cents?: number
+          conversion_type?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_total_cents?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_conversions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_events: {
         Row: {
           affiliate_id: string | null
@@ -727,33 +803,101 @@ export type Database = {
           },
         ]
       }
-      affiliates: {
+      affiliate_payouts: {
         Row: {
-          commission_type: string | null
-          commission_value: number | null
-          created_at: string | null
-          email: string | null
+          affiliate_id: string
+          amount_cents: number
+          created_at: string
           id: string
-          name: string | null
-          referral_code: string | null
+          notes: string | null
+          paid_at: string | null
+          paid_by: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
         }
         Insert: {
-          commission_type?: string | null
-          commission_value?: number | null
-          created_at?: string | null
-          email?: string | null
+          affiliate_id: string
+          amount_cents: number
+          created_at?: string
           id?: string
-          name?: string | null
-          referral_code?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
         }
         Update: {
+          affiliate_id?: string
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          commission_percentage: number
+          commission_type: string | null
+          commission_value: number | null
+          commission_value_cents: number
+          company: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          referral_code: string | null
+          signup_bonus_cents: number
+          updated_at: string
+        }
+        Insert: {
+          commission_percentage?: number
           commission_type?: string | null
           commission_value?: number | null
+          commission_value_cents?: number
+          company?: string | null
           created_at?: string | null
-          email?: string | null
+          created_by?: string | null
+          email: string
           id?: string
-          name?: string | null
+          is_active?: boolean
+          name: string
           referral_code?: string | null
+          signup_bonus_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_percentage?: number
+          commission_type?: string | null
+          commission_value?: number | null
+          commission_value_cents?: number
+          company?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          referral_code?: string | null
+          signup_bonus_cents?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -19204,6 +19348,7 @@ export type Database = {
           id: string
           payee_type: string | null
           run_type: string
+          schedule_id: string | null
           started_at: string
           status: string
           total_amount: number
@@ -19219,6 +19364,7 @@ export type Database = {
           id?: string
           payee_type?: string | null
           run_type?: string
+          schedule_id?: string | null
           started_at?: string
           status?: string
           total_amount?: number
@@ -19234,10 +19380,73 @@ export type Database = {
           id?: string
           payee_type?: string | null
           run_type?: string
+          schedule_id?: string | null
           started_at?: string
           status?: string
           total_amount?: number
           triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_runs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "payout_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day_of_month: number | null
+          day_of_week: number | null
+          frequency: string
+          id: string
+          is_enabled: boolean
+          last_run_at: string | null
+          last_run_status: string | null
+          min_payout_threshold_cents: number
+          payee_type: string
+          require_risk_check: boolean
+          require_stripe_verified: boolean
+          time_utc: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          frequency?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          last_run_status?: string | null
+          min_payout_threshold_cents?: number
+          payee_type: string
+          require_risk_check?: boolean
+          require_stripe_verified?: boolean
+          time_utc?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          frequency?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          last_run_status?: string | null
+          min_payout_threshold_cents?: number
+          payee_type?: string
+          require_risk_check?: boolean
+          require_stripe_verified?: boolean
+          time_utc?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -34452,6 +34661,8 @@ export type Database = {
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_uuid: string }; Returns: boolean }
+      is_admin_manager_plus: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_user: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_business_admin: {
         Args: { _business_id: string; _user_id: string }
