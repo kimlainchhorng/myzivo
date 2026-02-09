@@ -136,6 +136,7 @@ self.addEventListener('notificationclick', (event) => {
       break;
     default:
       urlToOpen = data?.url || '/';
+  }
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
