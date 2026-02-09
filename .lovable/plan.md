@@ -1,135 +1,96 @@
 
 
-# Achievements & Badges — Implementation Plan
+# Social Sharing — Implementation Plan
 
 ## Overview
-Create a `/account/achievements` page showing earned badges with progress toward the next badge, using the existing `zivo_badges` and `zivo_user_badges` database tables. Seed new customer-focused badge definitions and build a hook to calculate progress. Optionally award loyalty points when a badge is unlocked.
+Add a reusable social sharing component for restaurants and meals, integrate it into the restaurant menu page, log all share events to the existing `share_events` table, and add referral sharing with tracking for link opened and order attribution.
 
 ---
 
 ## Current State
 
-### Already Exists (No Changes Needed)
-| Component | Details |
-|-----------|---------|
-| `zivo_badges` table | Badge definitions with `criteria_type`, `criteria_threshold`, `category`, `tier` |
-| `zivo_user_badges` table | User-earned badges with `earned_at`, `is_featured` |
-| 1 customer badge seeded | "Loyal Traveler" — 25+ bookings |
-| `useLoyaltyPoints` hook | Points earning and balance management |
-| `useSpendingStats` hook | Unified order history across eats, rides, travel |
-| Routing pattern | `/account/*` pages with `ProtectedRoute` wrapper |
+| What Exists | Where |
+|-------------|-------|
+| `share_events` DB table | `entity_id`, `entity_type`, `platform`, `user_id` |
+| `ReferralCard` component | Full referral share UI (copy, email, WhatsApp, native) |
+| `FlightSocialShare` component | Social share for flights (Twitter, FB, copy link) |
+| `useReferrals` hook | `shareReferral`, `copyReferralLink`, `getShareUrl` |
+| `navigator.share` pattern | Used in 4+ components already |
 
 ### What's Missing
-- No customer achievement badges (First Order, 5/10 Orders, Order Streak)
-- No achievements page UI
-- No hook to compute badge progress from order history
-- No points reward on badge unlock
+- No share button on restaurant pages
+- No reusable share sheet component for Eats
+- No share event logging (table exists but nothing writes to it)
+- No tracking for "link opened" or "order from shared link"
 
 ---
 
 ## Implementation Plan
 
-### 1) Seed Customer Badges into `zivo_badges`
+### 1) Create Reusable `SocialShareSheet` Component
 
-**Database migration** to insert new customer achievement badges:
+**File to Create:** `src/components/shared/SocialShareSheet.tsx`
 
-| Badge ID | Name | Criteria Type | Threshold | Category | Tier |
-|----------|------|--------------|-----------|----------|------|
-| `first_order` | First Order | `order_count` | 1 | customer | bronze |
-| `orders_5` | Regular | `order_count` | 5 | customer | silver |
-| `orders_10` | Super Fan | `order_count` | 10 | customer | gold |
-| `orders_25` | Loyal Traveler | (already exists) | 25 | customer | gold |
-| `streak_3` | Hot Streak | `order_streak` | 3 | customer | silver |
-| `first_eats` | Foodie | `eats_count` | 1 | customer | bronze |
-| `first_ride` | Rider | `ride_count` | 1 | customer | bronze |
-| `first_travel` | Jet Setter | `travel_count` | 1 | customer | bronze |
+A bottom-sheet style share dialog usable across Eats, restaurants, and referrals. Options:
+- **Copy Link** — clipboard copy with toast
+- **WhatsApp** — `https://wa.me/?text=...`
+- **SMS** — `sms:?body=...`
+- **Facebook** — `https://facebook.com/sharer/sharer.php?u=...`
+- **Native Share** — `navigator.share()` fallback for mobile
 
-### 2) Create `useCustomerAchievements` Hook
-
-**New file:** `src/hooks/useCustomerAchievements.ts`
-
-**Purpose:** Fetch all customer-category badges from `zivo_badges`, user's earned badges from `zivo_user_badges`, and compute progress for each from order data.
-
-**Returns:**
+Props:
 ```text
 {
-  badges: Array<{
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    tier: string;
-    earned: boolean;
-    earnedAt: string | null;
-    progress: number;       // 0-100
-    currentValue: number;   // e.g. 3 orders
-    threshold: number;      // e.g. 5 orders
-  }>;
-  totalEarned: number;
-  totalAvailable: number;
-  isLoading: boolean;
+  title: string;          // "Check out Burger Palace on ZIVO!"
+  text: string;           // Share message body
+  url: string;            // The shareable URL
+  entityId: string;       // For tracking (restaurant ID, menu item ID)
+  entityType: string;     // "restaurant" | "menu_item" | "referral"
+  trigger?: ReactNode;    // Custom trigger button
 }
 ```
 
-**Progress computation:**
-- `order_count`: Total delivered food orders + completed rides + confirmed travel orders
-- `eats_count` / `ride_count` / `travel_count`: Per-service counts
-- `order_streak`: Consecutive days with at least one order (calculated from order dates)
+Uses a Radix Dialog/Sheet (vaul) for mobile-friendly bottom sheet.
 
-### 3) Create `AchievementsPage` Component
+### 2) Create `useShareTracking` Hook
 
-**New file:** `src/pages/account/AchievementsPage.tsx`
+**File to Create:** `src/hooks/useShareTracking.ts`
 
-**Layout:**
+Logs share events to the existing `share_events` table.
+
 ```text
-+----------------------------------------------+
-|  <- Achievements                             |
-|  Track your progress                         |
-+----------------------------------------------+
-|                                              |
-|  [Summary Card]                              |
-|  X / Y Badges Earned                         |
-|                                              |
-|  --- Earned Badges ---                       |
-|  [Badge] [Badge] [Badge]                     |
-|  (golden glow, earned date)                  |
-|                                              |
-|  --- In Progress ---                         |
-|  [Badge Card]                                |
-|  "Regular" — 3 / 5 orders [=====----] 60%   |
-|                                              |
-|  [Badge Card]                                |
-|  "Hot Streak" — 1 / 3 days [===-------] 33% |
-|                                              |
-|  --- Locked ---                              |
-|  [Badge] [Badge] (greyed out)                |
-+----------------------------------------------+
+logShare({ entityId, entityType, platform })
+  → INSERT into share_events (user_id, entity_id, entity_type, platform)
 ```
 
-**Design:**
-- Summary card showing earned count with a progress ring
-- Earned badges shown as icons with golden highlight and earned date
-- In-progress badges shown as cards with progress bars
-- Locked badges shown greyed out with lock icon
+Also handles UTM-tagged share URLs:
+- Generates shareable URLs with `?utm_source=share&utm_medium={platform}&utm_content={entityId}`
+- These UTM params enable "link opened" tracking via existing `initUTMTracking` on page load
 
-### 4) Add Route and Navigation
+### 3) Add Share Button to Restaurant Menu Page
 
-**Modified files:**
-- `src/App.tsx` — Add lazy import and route for `/account/achievements`
-- `src/pages/Profile.tsx` — Add "Achievements" quick link with Trophy icon
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
 
-### 5) Optional: Points Reward on Badge Unlock
+Add a Share button next to the `RestaurantAvailabilityBadge` in the restaurant header area (line ~350). When tapped, opens the `SocialShareSheet` with:
+- Title: restaurant name
+- URL: `/eats/restaurant/{id}`
+- Entity type: `restaurant`
 
-Inside the `useCustomerAchievements` hook, add a mutation `claimBadge` that:
-1. Inserts into `zivo_user_badges`
-2. Awards bonus loyalty points via `loyalty_points` update
-3. Shows a toast celebration
+### 4) Add Referral CTA to Share Sheet
 
-| Badge Tier | Points Reward |
-|-----------|---------------|
-| Bronze | 50 points |
-| Silver | 100 points |
-| Gold | 250 points |
+When sharing a restaurant, include a secondary section: "Invite friends and earn credits" with the user's referral link (from `useReferrals`). This reuses the existing referral code system.
+
+### 5) Track "Link Opened" via UTM Parameters
+
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+
+On page mount, check for `utm_source=share` in URL params. If present, log a "link_opened" event to `share_events` with entity_type "restaurant_view".
+
+### 6) Track "Order from Shared Link"
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
+
+When placing an order, check if the session has share UTM attribution (from `getPersistedUTMParams`). If `utm_source=share`, include `shared_entity_id` in the order metadata or log a "share_conversion" event.
 
 ---
 
@@ -138,43 +99,72 @@ Inside the `useCustomerAchievements` hook, add a mutation `claimBadge` that:
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useCustomerAchievements.ts` | Fetch badges, compute progress, claim badges |
-| `src/pages/account/AchievementsPage.tsx` | Full achievements page UI |
+| `src/components/shared/SocialShareSheet.tsx` | Reusable share bottom sheet with platform options |
+| `src/hooks/useShareTracking.ts` | Log share/open/conversion events to `share_events` table |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add lazy import and `/account/achievements` route |
-| `src/pages/Profile.tsx` | Add "Achievements" quick link |
-
-### Database Changes (1 migration)
-| Change | Details |
-|--------|---------|
-| Seed `zivo_badges` | 7 new customer badge definitions |
+| `src/pages/EatsRestaurantMenu.tsx` | Add Share button in header, track link opens |
+| `src/pages/EatsCheckout.tsx` | Track order conversion from shared links |
 
 ---
 
-## Badge Progress Calculation
+## Share Flow
 
 ```text
-User's order history (from Supabase)
+User taps "Share" on restaurant page
        |
        v
-  Count by service:
-       ├── food_orders (status = 'delivered') → eats_count
-       ├── trips (status = 'completed') → ride_count
-       ├── travel_orders (status IN 'confirmed','completed') → travel_count
+SocialShareSheet opens (bottom sheet)
        |
-       ├── Total = eats + rides + travel → order_count
-       |
-       ├── Consecutive days with orders → order_streak
+       ├── Copy Link → clipboard + log share_event (platform: "copy")
+       ├── WhatsApp → wa.me link + log share_event (platform: "whatsapp")
+       ├── SMS → sms: link + log share_event (platform: "sms")
+       ├── Facebook → fb sharer + log share_event (platform: "facebook")
+       └── Native → navigator.share + log share_event (platform: "native")
        |
        v
-  For each badge definition:
-       ├── progress = min(currentValue / threshold * 100, 100)
-       ├── earned = user has row in zivo_user_badges
-       └── claimable = progress >= 100 AND NOT earned
+Shared URL includes: ?utm_source=share&utm_medium=whatsapp&utm_content=restaurant_123
+       |
+       v
+Recipient opens link
+       |
+       ├── Restaurant page detects utm_source=share → logs "link_opened" event
+       └── UTM params persisted in sessionStorage
+       |
+       v
+If recipient places order
+       └── Checkout detects share attribution → logs "share_conversion" event
 ```
+
+---
+
+## Share Sheet Design
+
+```text
++----------------------------------------------+
+|  Share Burger Palace                         |
+|                                              |
+|  [Copy Link]  [WhatsApp]  [SMS]  [Facebook]  |
+|                                              |
+|  ─────────────────────────────────────────── |
+|                                              |
+|  Invite friends & earn credits               |
+|  Share your referral link:                   |
+|  [Copy Referral Link]  [Share Referral]      |
++----------------------------------------------+
+```
+
+---
+
+## Tracking Events Logged
+
+| Event | When | Fields |
+|-------|------|--------|
+| `share` | User shares a restaurant/meal | entity_id, entity_type, platform |
+| `link_opened` | Someone opens a shared link | entity_id, entity_type=restaurant_view, platform=web |
+| `share_conversion` | Order placed from shared link | entity_id=order_id, entity_type=share_conversion |
 
 ---
 
@@ -182,9 +172,8 @@ User's order history (from Supabase)
 
 | Scenario | Behavior |
 |----------|----------|
-| No orders yet | All badges locked, show encouraging message |
-| Badge already claimed | Show as earned with date, no re-claim |
-| Multiple badges unlockable at once | Allow claiming each individually |
-| User not logged in | Redirect to login |
-| Points reward fails | Badge still marked earned, toast error for points |
+| Not logged in | Share still works; event logged without user_id |
+| Native share unavailable | Button hidden, other options remain |
+| Facebook blocked/unavailable | Button still renders, opens in new tab |
+| No referral code | Referral section hidden in share sheet |
 
