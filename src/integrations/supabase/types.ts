@@ -14588,27 +14588,57 @@ export type Database = {
       loyalty_tiers: {
         Row: {
           benefits_json: Json | null
+          bonus_points_multiplier: number | null
           created_at: string | null
+          description: string | null
+          discount_pct: number | null
+          free_delivery: boolean | null
+          free_delivery_min_order: number | null
+          icon_color: string | null
           id: string
+          is_active: boolean | null
           min_orders: number | null
           min_spend: number | null
           name: string | null
+          slug: string | null
+          sort_order: number | null
+          updated_at: string | null
         }
         Insert: {
           benefits_json?: Json | null
+          bonus_points_multiplier?: number | null
           created_at?: string | null
+          description?: string | null
+          discount_pct?: number | null
+          free_delivery?: boolean | null
+          free_delivery_min_order?: number | null
+          icon_color?: string | null
           id?: string
+          is_active?: boolean | null
           min_orders?: number | null
           min_spend?: number | null
           name?: string | null
+          slug?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
         }
         Update: {
           benefits_json?: Json | null
+          bonus_points_multiplier?: number | null
           created_at?: string | null
+          description?: string | null
+          discount_pct?: number | null
+          free_delivery?: boolean | null
+          free_delivery_min_order?: number | null
+          icon_color?: string | null
           id?: string
+          is_active?: boolean | null
           min_orders?: number | null
           min_spend?: number | null
           name?: string | null
+          slug?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
