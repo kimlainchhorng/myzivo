@@ -1,270 +1,320 @@
 
-# Item Availability — Implementation Plan
+# Queue-Aware ETA — Implementation Plan
 
 ## Overview
-Implement menu item availability management so customers only see items that are orderable, with clear visual feedback for out-of-stock items and cart validation to prevent ordering unavailable items.
+Improve delivery ETA accuracy by factoring in restaurant queue length (active orders) into all ETA calculations. This provides more realistic expectations for customers when restaurants are experiencing high order volume.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `is_available` field on MenuItem | Complete | `menu_items` table, types in `eatsApi.ts` |
-| Menu query filters available items | Complete | `useMenuItems()` filters by `is_available=true` |
-| MenuItemCard component | Complete | `src/pages/EatsRestaurantMenu.tsx` |
-| MenuItemModal component | Complete | `src/components/eats/MenuItemModal.tsx` |
-| Cart Context | Complete | `src/contexts/CartContext.tsx` |
-
-### Current Behavior
-- The `useMenuItems()` hook already filters to `is_available=true`, meaning out-of-stock items are **hidden** entirely
-- No visual indicator for items that become unavailable after being added to cart
-- No cart validation against current item availability
+| Smart ETA hook | Complete | `src/hooks/useSmartEta.ts` |
+| SmartEtaDisplay component | Complete | `src/components/eats/SmartEtaDisplay.tsx` |
+| Busy restaurant banner | Complete | `src/components/eats/BusyRestaurantBanner.tsx` |
+| Restaurant availability hook | Complete | `src/hooks/useRestaurantAvailability.ts` |
+| Learned prep time hook | Complete | `src/hooks/useLearnedPrepTime.ts` |
+| Zone stats (pending orders) | Complete | `src/hooks/useZoneStats.ts` |
+| Restaurant table fields | Complete | `busy_mode`, `max_active_orders`, `auto_busy_enabled` |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Show out-of-stock items visually | Missing | Display items with "Out of Stock" indicator |
-| Disable add-to-cart for unavailable | Missing | Grey out button when `is_available=false` |
-| Cart validation hook | Missing | Check cart items against current availability |
-| Unavailable item warning in cart | Missing | Show message when item is no longer available |
-| Real-time availability updates | Missing | Refresh availability before checkout |
+| Restaurant queue length hook | Missing | Fetch active order count for a restaurant |
+| Queue-aware prep time calculation | Missing | Adjust prep time based on queue length |
+| High volume banner for restaurant page | Missing | "High order volume" message |
+| Checkout ETA breakdown | Missing | Show prep + cooking + driver time |
+| ETA breakdown component | Missing | Visual display of ETA components |
 
 ---
 
 ## Implementation Plan
 
-### 1) Update Menu Query to Include All Items
+### 1) Create Restaurant Queue Hook
 
-**File to Modify:** `src/hooks/useEatsOrders.ts` (lines 147-166)
+**File to Create:** `src/hooks/useRestaurantQueueLength.ts`
 
-**Changes:**
-- Remove the `is_available=true` filter from `useMenuItems()`
-- Return **all** menu items so out-of-stock ones can be displayed with a badge
-- Items will be marked visually based on `is_available` flag
+**Purpose:** Fetch the count of active orders for a specific restaurant.
 
-```typescript
-// Before: .eq("is_available", true)
-// After: No filter - show all items, handle display in UI
+**Logic:**
+- Query `food_orders` table for orders in active states (placed, confirmed, preparing, ready)
+- Filter by restaurant_id
+- Return count and estimated queue time
+
+```text
+Interface:
+┌─────────────────────────────────────────────────┐
+│ useRestaurantQueueLength(restaurantId)          │
+├─────────────────────────────────────────────────┤
+│ Returns:                                        │
+│   - queueLength: number                         │
+│   - queueWaitMinutes: number (calculated)       │
+│   - isHighVolume: boolean (>3 orders)           │
+│   - isLoading: boolean                          │
+└─────────────────────────────────────────────────┘
 ```
 
-**Also Update:** `src/lib/eatsApi.ts` `getMenu()` function (line 143)
+**Queue Time Formula:**
+```text
+For each order in queue:
+  If status = "placed" or "confirmed":
+    Add full prep time (learned or default)
+  If status = "preparing":
+    Add 50% of prep time (partially done)
+  If status = "ready":
+    Add 0 (waiting for pickup only)
+
+Queue Wait = Sum of queue order times
+```
 
 ---
 
-### 2) Create Item Availability Badge Component
+### 2) Create Queue-Aware ETA Hook
 
-**File to Create:** `src/components/eats/ItemAvailabilityBadge.tsx`
+**File to Create:** `src/hooks/useQueueAwareEta.ts`
 
-**Purpose:** Visual indicator showing "Available" or "Out of Stock" status.
+**Purpose:** Combine queue length, learned prep time, and delivery factors into a comprehensive ETA.
 
-**Variants:**
-- **Available:** Green checkmark (shown optionally or not at all)
-- **Out of Stock:** Red badge with crossed-out icon
+**ETA Components:**
+1. **Queue Time** — Time waiting for orders ahead
+2. **Prep Time** — Cooking time for this order
+3. **Driver Time** — Travel time from restaurant to customer
 
+```text
+Total ETA = Queue Wait + Prep Time + Driver Time
+
+Example:
+  Queue: 2 orders ahead × 15 min avg = 30 min queue
+  Prep: 20 min (from learned prep time)
+  Driver: 12 min (from distance/traffic)
+  
+  Total: 30 + 20 + 12 = 62 min
+  Range: 52–72 min (with variability buffer)
 ```
-+---------------------------+
-| ⊘ Out of Stock           |
-+---------------------------+
+
+**Returned Data:**
+```text
+┌─────────────────────────────────────────────────┐
+│ useQueueAwareEta(restaurantId, options)         │
+├─────────────────────────────────────────────────┤
+│ Returns:                                        │
+│   - etaMinRange: number                         │
+│   - etaMaxRange: number                         │
+│   - breakdown: {                                │
+│       queueMinutes: number                      │
+│       prepMinutes: number                       │
+│       driverMinutes: number                     │
+│     }                                           │
+│   - isHighVolume: boolean                       │
+│   - queueMessage: string | null                 │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 3) Update MenuItemCard Component
+### 3) Create High Volume Banner Component
+
+**File to Create:** `src/components/eats/HighVolumeBanner.tsx`
+
+**Purpose:** Display contextual banner on restaurant page when queue is high.
+
+**Message:**
+```text
+"High order volume — preparation may take longer."
+```
+
+**Trigger Conditions:**
+- Queue length ≥ 3 active orders, OR
+- Restaurant `busy_mode` = true
+
+**UI Design:**
+```text
++------------------------------------------------+
+| 📋 HIGH ORDER VOLUME                       [×] |
+|                                                |
+| Preparation may take longer.                   |
+| Current wait: ~25 min before your order starts.|
++------------------------------------------------+
+```
+
+---
+
+### 4) Create ETA Breakdown Component
+
+**File to Create:** `src/components/eats/EtaBreakdownCard.tsx`
+
+**Purpose:** Visual breakdown of ETA components at checkout.
+
+**Design:**
+```text
+┌──────────────────────────────────────────────┐
+│ 📦 Estimated Delivery                        │
+│                                              │
+│ ┌────────────────────────────────────────┐   │
+│ │  Queue Wait         ~15 min   ▓▓▓░░░   │   │
+│ │  Cooking Time       ~20 min   ▓▓▓▓░░   │   │
+│ │  Driver Delivery    ~12 min   ▓▓░░░░   │   │
+│ └────────────────────────────────────────┘   │
+│                                              │
+│ Total: 42–52 min                             │
+│                                              │
+│ ℹ️ ETA includes orders ahead of yours.       │
+└──────────────────────────────────────────────┘
+```
+
+**Features:**
+- Progress bar segments for each phase
+- Tooltip explaining each component
+- Updates when queue changes
+
+---
+
+### 5) Update Restaurant Menu Page
 
 **File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
 
-**Changes to `MenuItemCard`:**
-- Accept `is_available` from the `MenuItem` object directly
-- If `is_available === false`:
-  - Apply `opacity-50` to the card
-  - Show "Out of Stock" badge overlay
-  - Disable "Add" button with disabled state
-  - Prevent `handleAdd()` from executing
-
-**UI when out of stock:**
-```
-+------------------------------------------+
-| [Image - dimmed]                         |
-|   🚫 OUT OF STOCK                        |
-|                                          |
-|   Item Name                              |
-|   Description text...                    |
-|                                          |
-|   $12.99        [Add] ← disabled/greyed  |
-+------------------------------------------+
-```
-
----
-
-### 4) Update MenuItemModal Component
-
-**File to Modify:** `src/components/eats/MenuItemModal.tsx`
-
 **Changes:**
-- Add availability check before allowing add to cart
-- Show warning message if item is unavailable
-- Disable "Add to Cart" button if `item.is_available === false`
+- Import and use `useRestaurantQueueLength` hook
+- Show `HighVolumeBanner` when queue is high (in addition to existing BusyRestaurantBanner)
+- Display current queue wait time in prep time indicator
 
-```tsx
-{!item.is_available && (
-  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
-    <p className="text-red-400 font-medium">This item is currently out of stock</p>
-  </div>
+**Integration Point (after availability banners, ~line 348):**
+```text
+{/* High Volume Banner */}
+{queueLength.isHighVolume && (
+  <HighVolumeBanner
+    queueLength={queueLength.queueLength}
+    estimatedWait={queueLength.queueWaitMinutes}
+    className="mt-4"
+  />
 )}
 ```
 
 ---
 
-### 5) Create Cart Validation Hook
-
-**File to Create:** `src/hooks/useCartValidation.ts`
-
-**Purpose:** Check cart items against current menu availability before checkout.
-
-**Logic:**
-1. Fetch current menu for the restaurant in cart
-2. Compare cart item IDs against menu items
-3. Mark unavailable items with a flag
-4. Return validation result
-
-```typescript
-interface CartValidationResult {
-  isValid: boolean;
-  unavailableItems: CartItem[];
-  availableItems: CartItem[];
-  isValidating: boolean;
-}
-```
-
-**Triggers:**
-- On checkout page load
-- Before order submission
-- On cart drawer open (optional)
-
----
-
-### 6) Update Cart Context with Validation
-
-**File to Modify:** `src/contexts/CartContext.tsx`
-
-**Changes:**
-- Add `validateCart()` method that checks item availability
-- Add `unavailableItems` state
-- Add `removeUnavailable()` helper to remove all unavailable items
-
-```typescript
-interface CartContextType {
-  // ... existing
-  validateCart: () => Promise<void>;
-  unavailableItems: string[]; // IDs of unavailable items
-  removeUnavailable: () => void;
-}
-```
-
----
-
-### 7) Create Unavailable Item Banner Component
-
-**File to Create:** `src/components/eats/UnavailableItemBanner.tsx`
-
-**Purpose:** Warning banner shown in cart/checkout when items are unavailable.
-
-**UI:**
-```
-+--------------------------------------------------+
-| ⚠️  Some items are no longer available           |
-|                                                  |
-|   • Crispy Chicken Sandwich                      |
-|   • Large Fries                                  |
-|                                                  |
-|   [Remove Unavailable Items]                     |
-+--------------------------------------------------+
-```
-
----
-
-### 8) Update Checkout Page with Validation
+### 6) Update Checkout Page with ETA Breakdown
 
 **File to Modify:** `src/pages/EatsCheckout.tsx`
 
 **Changes:**
-- Call `validateCart()` on page load
-- Show `UnavailableItemBanner` if items are unavailable
-- Block order submission if cart has unavailable items
-- Allow user to remove unavailable items and continue
+- Import `useQueueAwareEta` hook
+- Add `EtaBreakdownCard` component to order summary
+- Show breakdown of: queue time + cooking time + driver time
+- Update estimated delivery text with queue-aware timing
+
+**Integration Point (in Order Summary card, after items list):**
+```text
+{/* ETA Breakdown */}
+<EtaBreakdownCard
+  queueMinutes={eta.breakdown.queueMinutes}
+  prepMinutes={eta.breakdown.prepMinutes}
+  driverMinutes={eta.breakdown.driverMinutes}
+  totalMinRange={eta.etaMinRange}
+  totalMaxRange={eta.etaMaxRange}
+  isHighVolume={eta.isHighVolume}
+/>
+```
 
 ---
 
-### 9) Update Cart Drawer with Validation
+### 7) Update Restaurant Availability Hook
 
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx` (CartDrawer component)
+**File to Modify:** `src/hooks/useRestaurantAvailability.ts`
 
 **Changes:**
-- Add availability indicator per item
-- Show warning if item is no longer available
-- Strike through unavailable item names
-- Show "Remove" button prominently for unavailable items
+- Add optional `queueLength` parameter
+- Include queue info in availability response
+- Add `queueWaitMinutes` to return type
 
 ---
 
 ## File Summary
 
-### New Files (3)
+### New Files (4)
 | File | Purpose |
 |------|---------|
-| `src/components/eats/ItemAvailabilityBadge.tsx` | Visual badge for availability status |
-| `src/hooks/useCartValidation.ts` | Hook to validate cart against current menu |
-| `src/components/eats/UnavailableItemBanner.tsx` | Warning banner for unavailable cart items |
+| `src/hooks/useRestaurantQueueLength.ts` | Fetch active order count for restaurant |
+| `src/hooks/useQueueAwareEta.ts` | Calculate comprehensive ETA with queue |
+| `src/components/eats/HighVolumeBanner.tsx` | "High order volume" warning banner |
+| `src/components/eats/EtaBreakdownCard.tsx` | Visual ETA breakdown for checkout |
 
-### Modified Files (6)
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsOrders.ts` | Remove `is_available=true` filter from `useMenuItems()` |
-| `src/lib/eatsApi.ts` | Remove `is_available=true` filter from `getMenu()` |
-| `src/pages/EatsRestaurantMenu.tsx` | Update MenuItemCard and CartDrawer for availability |
-| `src/components/eats/MenuItemModal.tsx` | Add availability check and disable button |
-| `src/contexts/CartContext.tsx` | Add validation methods |
-| `src/pages/EatsCheckout.tsx` | Add pre-submit validation with banner |
+| `src/pages/EatsRestaurantMenu.tsx` | Add queue length hook and high volume banner |
+| `src/pages/EatsCheckout.tsx` | Add ETA breakdown display |
+| `src/hooks/useRestaurantAvailability.ts` | Add queue awareness to availability |
 
 ---
 
-## UI Behavior Matrix
+## Queue Length Thresholds
 
-| Scenario | Menu Display | Add Button | Cart Display | Checkout |
-|----------|--------------|------------|--------------|----------|
-| Available item | Normal | Enabled | Normal | Allowed |
-| Out of stock item | Dimmed + badge | Disabled | N/A (can't add) | N/A |
-| Item in cart becomes unavailable | N/A | N/A | Strikethrough + warning | Blocked until removed |
+| Queue Length | Status | Message |
+|--------------|--------|---------|
+| 0-2 orders | Normal | No banner shown |
+| 3-5 orders | High Volume | "High order volume — preparation may take longer." |
+| 6+ orders | Very High | "Very high demand — expect extended wait times." |
 
 ---
 
-## Technical Details
+## ETA Calculation Formula
 
-### Availability Check Flow
-```
-1. User opens menu page
-   └─> Fetch ALL menu items (available + unavailable)
-   └─> Display with appropriate styling
+### Queue Wait Time
+```text
+queue_wait = 0
 
-2. User adds item to cart
-   └─> Check is_available before adding
-   └─> Block if unavailable
-
-3. User opens checkout
-   └─> Validate cart against current menu
-   └─> Show warning for unavailable items
-   └─> Require removal before proceeding
-
-4. User submits order
-   └─> Final validation check
-   └─> Block submission if any items unavailable
+For each active_order in restaurant queue:
+  base_prep = learned_avg_prep_time OR 20 (default)
+  
+  If order.status = "placed":
+    queue_wait += base_prep × 1.0  (full prep)
+  If order.status = "confirmed":
+    queue_wait += base_prep × 0.8  (80% remaining)
+  If order.status = "preparing":
+    queue_wait += base_prep × 0.5  (50% remaining)
+  If order.status = "ready":
+    queue_wait += 0  (no cooking wait)
 ```
 
-### Real-Time Considerations
-- Menu items are refetched when user navigates to menu page
-- Cart validation queries the database on checkout load
-- No real-time subscriptions (acceptable for MVP)
-- Consider adding refresh button for long sessions
+### Total ETA Range
+```text
+base_eta = queue_wait + prep_time + driver_travel
+
+eta_min = base_eta × 0.85  (optimistic)
+eta_max = base_eta × 1.20  (pessimistic)
+
+// Cap range spread
+If (eta_max - eta_min) > 25:
+  eta_max = eta_min + 25
+```
+
+---
+
+## UI Components
+
+### High Volume Banner
+```text
+┌─────────────────────────────────────────────────┐
+│ 📋                                          [×] │
+│ High order volume — preparation may take longer.│
+│                                                 │
+│ Estimated wait: ~25 min before your order       │
+│ starts cooking.                                 │
+└─────────────────────────────────────────────────┘
+```
+
+### Checkout ETA Breakdown
+```text
+┌─────────────────────────────────────────────────┐
+│ 📦 Estimated Delivery: 42–52 min               │
+│                                                 │
+│   📋 Queue Wait      15 min   ████░░░░░░       │
+│   🍳 Cooking Time    20 min   ██████░░░░       │
+│   🚗 Driver Time     12 min   ████░░░░░░       │
+│                                                 │
+│ ℹ️ Includes 3 orders ahead of yours.           │
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -272,11 +322,21 @@ interface CartContextType {
 
 | Scenario | Behavior |
 |----------|----------|
-| Item becomes unavailable while in cart | Show warning on next cart view |
-| All cart items unavailable | Show empty cart message after removal |
-| Item re-becomes available | Validation passes, no action needed |
-| User offline during validation | Show error, allow retry |
-| Restaurant closes while ordering | Handled by existing restaurant availability system |
+| No active orders | Show prep + driver only (no queue) |
+| Restaurant just opened | Use default prep time (20 min) |
+| All orders are "ready" | Queue wait = 0 |
+| Very high queue (10+) | Cap queue message at reasonable time |
+| Queue changes during checkout | Refresh on page focus |
+
+---
+
+## Real-Time Updates
+
+The queue hook will:
+- Refresh every 30 seconds
+- Subscribe to `food_orders` table changes for the restaurant
+- Update ETA breakdown when queue changes
+- Show loading state during initial fetch
 
 ---
 
@@ -284,11 +344,11 @@ interface CartContextType {
 
 This implementation provides:
 
-1. **Visual availability indicators** — Clear "Out of Stock" badges on menu items
-2. **Disabled add-to-cart** — Cannot add unavailable items to cart
-3. **Cart validation** — Check availability before checkout
-4. **Warning banners** — Clear messaging when items become unavailable
-5. **One-click removal** — Easy way to remove all unavailable items
-6. **Graceful degradation** — Show all items with status rather than hiding unavailable ones
+1. **Restaurant queue length tracking** — Count active orders per restaurant
+2. **Queue-aware ETA calculation** — Factor queue wait into total ETA
+3. **High volume banner** — Clear warning on restaurant pages
+4. **ETA breakdown at checkout** — Show prep queue + cooking + driver time
+5. **Transparent timing** — Customers understand why ETA is longer
+6. **Real-time updates** — Queue changes reflected immediately
 
-The feature ensures customers never unknowingly order items that can't be fulfilled while maintaining a smooth browsing experience.
+The feature improves customer expectations by clearly showing that their order enters a queue, with transparent timing for each phase of the delivery process.
