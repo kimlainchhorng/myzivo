@@ -1,6 +1,7 @@
 /**
  * useNotificationPreferences Hook
  * Manages user notification preferences for push, SMS, and email channels
+ * Including quiet hours, consent tracking, and opt-out re-enable
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +19,10 @@ export interface NotificationPreferences {
   operationalEnabled: boolean;
   phoneNumber: string | null;
   phoneVerified: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string | null; // "22:00"
+  quietHoursEnd: string | null;   // "08:00"
+  smsConsentAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +37,10 @@ interface RawNotificationPreferences {
   operational_enabled: boolean;
   phone_number: string | null;
   phone_verified: boolean;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+  sms_consent_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +56,10 @@ function mapToPreferences(raw: RawNotificationPreferences): NotificationPreferen
     operationalEnabled: raw.operational_enabled,
     phoneNumber: raw.phone_number,
     phoneVerified: raw.phone_verified,
+    quietHoursEnabled: raw.quiet_hours_enabled ?? false,
+    quietHoursStart: raw.quiet_hours_start,
+    quietHoursEnd: raw.quiet_hours_end,
+    smsConsentAt: raw.sms_consent_at,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };
@@ -85,6 +98,11 @@ export interface UpdatePreferencesInput {
   marketingEnabled?: boolean;
   operationalEnabled?: boolean;
   phoneNumber?: string | null;
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+  smsConsentAt?: string;
+  smsConsentText?: string;
 }
 
 export function useUpdateNotificationPreferences() {
@@ -105,6 +123,11 @@ export function useUpdateNotificationPreferences() {
       if (updates.marketingEnabled !== undefined) updateData.marketing_enabled = updates.marketingEnabled;
       if (updates.operationalEnabled !== undefined) updateData.operational_enabled = updates.operationalEnabled;
       if (updates.phoneNumber !== undefined) updateData.phone_number = updates.phoneNumber;
+      if (updates.quietHoursEnabled !== undefined) updateData.quiet_hours_enabled = updates.quietHoursEnabled;
+      if (updates.quietHoursStart !== undefined) updateData.quiet_hours_start = updates.quietHoursStart;
+      if (updates.quietHoursEnd !== undefined) updateData.quiet_hours_end = updates.quietHoursEnd;
+      if (updates.smsConsentAt !== undefined) updateData.sms_consent_at = updates.smsConsentAt;
+      if (updates.smsConsentText !== undefined) updateData.sms_consent_text = updates.smsConsentText;
 
       // Check if preferences exist
       const { data: existing } = await supabase
@@ -139,6 +162,11 @@ export function useUpdateNotificationPreferences() {
             operational_enabled: updates.operationalEnabled ?? true,
             phone_number: updates.phoneNumber ?? null,
             phone_verified: false,
+            quiet_hours_enabled: updates.quietHoursEnabled ?? false,
+            quiet_hours_start: updates.quietHoursStart ?? "22:00",
+            quiet_hours_end: updates.quietHoursEnd ?? "08:00",
+            sms_consent_at: updates.smsConsentAt ?? null,
+            sms_consent_text: updates.smsConsentText ?? null,
           })
           .select()
           .single();
@@ -148,10 +176,12 @@ export function useUpdateNotificationPreferences() {
       }
 
       // Also sync sms_consent to profiles
-      if (updates.smsEnabled !== undefined) {
+      if (updates.smsEnabled !== undefined || updates.smsConsentAt !== undefined) {
         await supabase
           .from("profiles")
-          .update({ sms_consent: updates.smsEnabled })
+          .update({ 
+            sms_consent: updates.smsEnabled ?? true,
+          })
           .eq("user_id", user.id);
       }
 
@@ -159,6 +189,7 @@ export function useUpdateNotificationPreferences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
     },
     onError: (error: Error) => {
       toast.error(`Failed to update preferences: ${error.message}`);
@@ -216,10 +247,59 @@ export function useVerifyPhoneOTP() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       toast.success("Phone number verified successfully! 🎉");
     },
     onError: (error: Error) => {
       toast.error(error.message);
+    },
+  });
+}
+
+/**
+ * Re-enable SMS after user has opted out
+ * Clears the opt-out flag and re-enables SMS notifications
+ */
+export function useReenableSMS() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<{ success: boolean }> => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Clear opt-out flag on profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          sms_opted_out: false,
+          sms_opted_out_at: null,
+          sms_consent: true,
+        })
+        .eq("user_id", user.id);
+
+      if (profileError) throw profileError;
+
+      // Re-enable SMS in preferences
+      const { error: prefsError } = await supabase
+        .from("notification_preferences")
+        .update({ 
+          sms_enabled: true,
+          sms_consent_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (prefsError) throw prefsError;
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      toast.success("SMS notifications re-enabled");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to re-enable SMS: ${error.message}`);
     },
   });
 }
@@ -234,7 +314,7 @@ export function useUserProfile() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("phone, phone_e164, phone_verified, email")
+        .select("phone, phone_e164, phone_verified, email, sms_consent, sms_opted_out, sms_opted_out_at")
         .eq("user_id", user.id)
         .single();
 

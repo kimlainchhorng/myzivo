@@ -148,6 +148,18 @@ serve(async (req: Request): Promise<Response> => {
     const smsBody = `Your ZIVO verification code is ${code}. Expires in 10 minutes. Reply STOP to opt out.`;
     const smsResult = await sendSMS(phone_e164, smsBody);
 
+    // Log to notification_audit
+    const maskedPhone = "***-***-" + phone_e164.slice(-4);
+    await supabase.from("notification_audit").insert({
+      user_id,
+      channel: "sms",
+      event_type: "otp",
+      destination_masked: maskedPhone,
+      provider_id: smsResult.sid || null,
+      status: smsResult.success ? "sent" : "failed",
+      error: smsResult.error || null,
+    });
+
     if (!smsResult.success) {
       console.error("SMS send failed:", smsResult.error);
       return new Response(
@@ -156,7 +168,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`OTP sent to ${phone_e164} for user ${user_id}, SMS SID: ${smsResult.sid}`);
+    console.log(`OTP sent to ${maskedPhone} for user ${user_id}, SMS SID: ${smsResult.sid}`);
 
     return new Response(
       JSON.stringify({

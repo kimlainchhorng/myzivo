@@ -1,6 +1,7 @@
 /**
  * Send Notification Edge Function
  * Multi-channel notification system with push → SMS → email fallback
+ * Includes compliance checks for SMS: verified, consent, opt-out, quiet hours
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -29,6 +30,132 @@ interface NotificationRequest {
   action_url?: string;
   priority?: "critical" | "normal" | "low";
   event_type?: string;
+}
+
+// Mask phone for audit logs
+function maskPhone(phone: string): string {
+  if (phone.length >= 4) {
+    return "***-***-" + phone.slice(-4);
+  }
+  return "***";
+}
+
+// Mask email for audit logs
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (local && local.length > 1 && domain) {
+    return local[0] + "***@" + domain;
+  }
+  return "***";
+}
+
+// Check if current time is within quiet hours
+function isWithinQuietHours(currentTime: string, start: string | null, end: string | null): boolean {
+  if (!start || !end) return false;
+  
+  const current = parseInt(currentTime.replace(":", ""));
+  const startTime = parseInt(start.replace(":", ""));
+  const endTime = parseInt(end.replace(":", ""));
+  
+  // Handle overnight quiet hours (e.g., 22:00 - 08:00)
+  if (startTime > endTime) {
+    return current >= startTime || current < endTime;
+  }
+  
+  return current >= startTime && current < endTime;
+}
+
+// Log to notification_audit table
+async function logNotificationAudit(
+  supabase: ReturnType<typeof createClient>,
+  data: {
+    userId: string | null;
+    channel: "push" | "sms" | "email" | "call";
+    eventType: string;
+    destination: string;
+    providerId?: string;
+    status: "sent" | "failed" | "skipped";
+    error?: string;
+    skipReason?: string;
+  }
+): Promise<void> {
+  try {
+    let maskedDestination = data.destination;
+    if (data.channel === "sms" || data.channel === "call") {
+      maskedDestination = maskPhone(data.destination);
+    } else if (data.channel === "email") {
+      maskedDestination = maskEmail(data.destination);
+    }
+
+    await supabase.from("notification_audit").insert({
+      user_id: data.userId,
+      channel: data.channel,
+      event_type: data.eventType,
+      destination_masked: maskedDestination,
+      provider_id: data.providerId || null,
+      status: data.status,
+      error: data.error || null,
+      skip_reason: data.skipReason || null,
+    });
+  } catch (err) {
+    console.error("Failed to log notification audit:", err);
+  }
+}
+
+// Check SMS compliance: verified, consent, opt-out, quiet hours, rate limit
+async function canSendSMS(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  priority: string
+): Promise<{ allowed: boolean; reason?: string; phone?: string }> {
+  // 1. Get profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("phone_e164, phone_verified, sms_consent, sms_opted_out")
+    .eq("user_id", userId)
+    .single();
+
+  if (!profile?.phone_e164) {
+    return { allowed: false, reason: "no_phone" };
+  }
+
+  if (!profile.phone_verified) {
+    return { allowed: false, reason: "not_verified" };
+  }
+
+  if (!profile.sms_consent) {
+    return { allowed: false, reason: "no_consent" };
+  }
+
+  if (profile.sms_opted_out) {
+    return { allowed: false, reason: "opted_out" };
+  }
+
+  // 2. Check quiet hours (skip for critical)
+  if (priority !== "critical") {
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
+      .eq("user_id", userId)
+      .single();
+
+    if (prefs?.quiet_hours_enabled) {
+      const now = new Date();
+      const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
+      
+      if (isWithinQuietHours(currentTime, prefs.quiet_hours_start, prefs.quiet_hours_end)) {
+        return { allowed: false, reason: "quiet_hours", phone: profile.phone_e164 };
+      }
+    }
+  }
+
+  // 3. Check rate limit
+  const withinLimit = await checkSMSRateLimit(supabase, userId);
+  if (!withinLimit) {
+    return { allowed: false, reason: "rate_limited", phone: profile.phone_e164 };
+  }
+
+  return { allowed: true, phone: profile.phone_e164 };
 }
 
 async function sendEmail(to: string, subject: string, html: string, text: string): Promise<{ success: boolean; id?: string; error?: string }> {
@@ -317,37 +444,53 @@ serve(async (req: Request): Promise<Response> => {
       }
 
       // 2. Fallback to SMS if push failed AND event is critical
-      if (!pushSuccess && isCriticalEvent && prefs.sms_enabled && prefs.phone_verified && user_id) {
-        const phone = profile?.phone_e164;
-        const optedOut = profile?.sms_opted_out;
+      if (!pushSuccess && isCriticalEvent && prefs.sms_enabled && user_id) {
+        const smsCheck = await canSendSMS(supabase, user_id, priority);
+        
+        if (smsCheck.allowed && smsCheck.phone) {
+          const smsResult = await sendSms(smsCheck.phone, bodyText);
+          results.push({ channel: "sms", ...smsResult });
 
-        if (phone && !optedOut) {
-          const withinLimit = await checkSMSRateLimit(supabase, user_id);
-          if (withinLimit) {
-            const smsResult = await sendSms(phone, bodyText);
-            results.push({ channel: "sms", ...smsResult });
-
-            if (smsResult.success) {
-              await incrementSMSCount(supabase, user_id);
-            }
-
-            // Log SMS
-            await supabase.from("notifications").insert({
-              user_id,
-              order_id,
-              channel: "sms",
-              category: templateData?.category || "transactional",
-              template: template || "custom",
-              title,
-              body: bodyText,
-              action_url,
-              status: smsResult.success ? "queued" : "failed",
-              provider_message_id: smsResult.sid,
-              error_message: smsResult.error
-            });
-          } else {
-            results.push({ channel: "sms", success: false, error: "Rate limited" });
+          if (smsResult.success) {
+            await incrementSMSCount(supabase, user_id);
           }
+
+          // Log SMS to audit
+          await logNotificationAudit(supabase, {
+            userId: user_id,
+            channel: "sms",
+            eventType: event_type || "notification",
+            destination: smsCheck.phone,
+            providerId: smsResult.sid,
+            status: smsResult.success ? "sent" : "failed",
+            error: smsResult.error,
+          });
+
+          // Log SMS to notifications table
+          await supabase.from("notifications").insert({
+            user_id,
+            order_id,
+            channel: "sms",
+            category: templateData?.category || "transactional",
+            template: template || "custom",
+            title,
+            body: bodyText,
+            action_url,
+            status: smsResult.success ? "queued" : "failed",
+            provider_message_id: smsResult.sid,
+            error_message: smsResult.error
+          });
+        } else if (smsCheck.reason) {
+          // Log skipped SMS to audit
+          await logNotificationAudit(supabase, {
+            userId: user_id,
+            channel: "sms",
+            eventType: event_type || "notification",
+            destination: smsCheck.phone || "unknown",
+            status: "skipped",
+            skipReason: smsCheck.reason,
+          });
+          results.push({ channel: "sms", success: false, error: `Skipped: ${smsCheck.reason}` });
         }
       }
 

@@ -109,6 +109,7 @@ const PushSegmentsPage = lazy(() => import("./pages/admin/push/SegmentsPage"));
 const PushCampaignsPage = lazy(() => import("./pages/admin/push/CampaignsPage"));
 const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDetailPage"));
 const NotificationsOutboxPage = lazy(() => import("./pages/admin/NotificationsOutboxPage"));
+const NotificationAuditPage = lazy(() => import("./pages/admin/NotificationAuditPage"));
 
 // Admin Loyalty
 const AdminLoyaltyPage = lazy(() => import("./pages/admin/AdminLoyaltyPage"));
@@ -976,8 +977,9 @@ const App = () => (
                 <Route path="/admin/push/campaigns" element={<PushCampaignsPage />} />
                 <Route path="/admin/push/campaigns/:id" element={<PushCampaignDetailPage />} />
                 
-                {/* Admin Notifications Outbox */}
+                {/* Admin Notifications Outbox & Audit */}
                 <Route path="/admin/notifications/outbox" element={<ProtectedRoute requireAdmin><NotificationsOutboxPage /></ProtectedRoute>} />
+                <Route path="/admin/notifications/audit" element={<ProtectedRoute requireAdmin><NotificationAuditPage /></ProtectedRoute>} />
                 
                 {/* Driver Analytics */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
