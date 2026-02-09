@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +9,7 @@ import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
+import { BrandProvider } from "@/contexts/BrandContext";
 import { RideStoreProvider } from "@/stores/rideStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
@@ -18,6 +19,8 @@ import { PWAInstallPrompt } from "./components/mobile";
 import { Loader2 } from "lucide-react";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { GoogleMapProvider } from "./components/maps";
+import { useBrand } from "@/hooks/useBrand";
+import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -580,7 +583,23 @@ const PageLoader = () => (
   </div>
 );
 
+// Component that applies brand theme when brand changes
+function BrandThemeApplicator() {
+  const { brand } = useBrand();
+
+  useEffect(() => {
+    if (brand.primaryColor) {
+      applyBrandTheme(brand.primaryColor);
+    } else {
+      resetBrandTheme();
+    }
+  }, [brand.primaryColor]);
+
+  return null;
+}
+
 const App = () => (
+  <BrandProvider>
   <QueryClientProvider client={queryClient}>
     <GoogleMapProvider>
     <TooltipProvider>
@@ -1601,11 +1620,13 @@ const App = () => (
           <CookieConsent />
           <PWAInstallPrompt />
           <SpatialCursor />
+          <BrandThemeApplicator />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
     </GoogleMapProvider>
   </QueryClientProvider>
+  </BrandProvider>
 );
 
 export default App;

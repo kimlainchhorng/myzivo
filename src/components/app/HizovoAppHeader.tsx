@@ -6,6 +6,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 interface HizovoAppHeaderProps {
   title?: string;
@@ -52,9 +53,7 @@ const HizovoAppHeader = ({
             </button>
           ) : (
             <div className="flex items-center">
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Hizovo
-              </span>
+              <BrandLogo size="sm" showText={true} />
             </div>
           )}
         </div>
