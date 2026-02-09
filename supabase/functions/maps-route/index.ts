@@ -43,10 +43,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Add departure_time=now for real-time traffic data
     const url = `https://maps.googleapis.com/maps/api/directions/json` +
       `?origin=${origin_lat},${origin_lng}` +
       `&destination=${dest_lat},${dest_lng}` +
       `&mode=driving` +
+      `&departure_time=now` +
       `&key=${encodeURIComponent(key)}`;
 
     console.log(`[maps-route] Fetching route: (${origin_lat},${origin_lng}) → (${dest_lat},${dest_lng})`);
@@ -76,16 +78,32 @@ Deno.serve(async (req) => {
     const distanceMeters = leg.distance?.value ?? 0;
     const distanceMiles = distanceMeters / 1609.344;
 
-    // Convert seconds to minutes
+    // Convert seconds to minutes (base duration without traffic)
     const durationSeconds = leg.duration?.value ?? 0;
     const durationMinutes = durationSeconds / 60;
 
-    console.log(`[maps-route] Route found: ${distanceMiles.toFixed(2)} miles, ${Math.round(durationMinutes)} min`);
+    // Traffic-aware duration (when available)
+    const durationInTrafficSeconds = leg.duration_in_traffic?.value ?? durationSeconds;
+    const durationInTrafficMinutes = durationInTrafficSeconds / 60;
+
+    // Calculate traffic ratio and level
+    const trafficRatio = durationSeconds > 0 ? durationInTrafficSeconds / durationSeconds : 1.0;
+    let trafficLevel: "light" | "moderate" | "heavy" = "moderate";
+    if (trafficRatio < 1.1) {
+      trafficLevel = "light";
+    } else if (trafficRatio > 1.3) {
+      trafficLevel = "heavy";
+    }
+
+    console.log(`[maps-route] Route found: ${distanceMiles.toFixed(2)} miles, ${Math.round(durationMinutes)} min (traffic: ${Math.round(durationInTrafficMinutes)} min, ${trafficLevel})`);
 
     return new Response(JSON.stringify({
       ok: true,
       distance_miles: Number(distanceMiles.toFixed(2)),
       duration_minutes: Math.max(1, Math.round(durationMinutes)),
+      duration_in_traffic_minutes: Math.max(1, Math.round(durationInTrafficMinutes)),
+      traffic_ratio: Number(trafficRatio.toFixed(2)),
+      traffic_level: trafficLevel,
       polyline: route.overview_polyline?.points ?? null,
       start_address: leg.start_address,
       end_address: leg.end_address,

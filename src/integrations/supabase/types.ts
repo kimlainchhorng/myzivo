@@ -10745,6 +10745,7 @@ export type Database = {
           accepted_at: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
+          almost_ready_at: string | null
           assigned_at: string | null
           at_risk_reason: string | null
           base_fare: number | null
@@ -10894,6 +10895,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          almost_ready_at?: string | null
           assigned_at?: string | null
           at_risk_reason?: string | null
           base_fare?: number | null
@@ -11043,6 +11045,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          almost_ready_at?: string | null
           assigned_at?: string | null
           at_risk_reason?: string | null
           base_fare?: number | null
