@@ -1,9 +1,9 @@
 
 
-# Voice Search & Ordering — Implementation Plan
+# Offline Mode — Implementation Plan
 
 ## Overview
-Add voice-to-text capability to the Eats search bars (both desktop and mobile), enabling customers to speak queries like "Find pizza near me" or "Show burgers." Uses the browser's built-in Web Speech API (`SpeechRecognition`) — no external services or API keys needed. Includes a "Reorder my last order" voice command that navigates to order history.
+Enable customers to browse restaurants, menus, and past orders when offline by caching Supabase API responses in localStorage, showing a non-intrusive offline banner, and automatically retrying failed actions when connectivity returns.
 
 ---
 
@@ -11,83 +11,84 @@ Add voice-to-text capability to the Eats search bars (both desktop and mobile), 
 
 | What Exists | Details |
 |-------------|---------|
-| Desktop search bar | `EatsRestaurants.tsx` — text input with Search icon (line 103) |
-| Mobile search bar | `MobileEatsPremium.tsx` — text input with Search icon (line 98) |
-| `searchQuery` state | Both components filter restaurants by name/cuisine from this state |
-| Order history | `EatsOrders.tsx` page at `/eats/orders` |
+| `useNetworkStatus` hook | Full offline queue with retry (max 3), Capacitor + web support |
+| PWA service worker (`sw.js`) | Workbox precaching, image/font/map caching already working |
+| `Offline.tsx` page | Full-page fallback for uncached routes |
+| TanStack Query | All data fetching uses `useQuery` with queryKeys |
+| `AppLayout` | Global shell with `SystemStatusBanner` slot |
 
 ### What's Missing
-- No microphone icon on either search bar
-- No speech recognition integration
-- No voice command parsing (e.g., "reorder last order")
-- No fallback handling when mic is unavailable
+- No Supabase API response caching (restaurants/menus/orders lost when offline)
+- No offline banner in the main app layout
+- `useNetworkStatus` hook exists but is not wired into any consumer components
+- TanStack Query has no `gcTime`/`staleTime` or `placeholderData` from localStorage
 
 ---
 
 ## Implementation Plan
 
-### 1) Create `useVoiceSearch` Hook
+### 1) Create `useOfflineCache` Hook
 
-**New file:** `src/hooks/useVoiceSearch.ts`
+**New file:** `src/hooks/useOfflineCache.ts`
 
-Uses the browser's `webkitSpeechRecognition` / `SpeechRecognition` API (no external dependencies).
+A lightweight localStorage cache layer for TanStack Query data. Provides two functions:
 
-**Returns:**
+- `cacheData(key, data)` -- Saves data + timestamp to localStorage under a `zivo-cache-` prefix
+- `getCachedData<T>(key)` -- Retrieves cached data if it exists (returns `{ data, cachedAt }` or `null`)
+
+Cache keys map to TanStack Query keys (e.g., `zivo-cache-restaurants`, `zivo-cache-menu-{id}`, `zivo-cache-my-orders`). Entries expire after 24 hours to avoid stale data buildup.
+
+### 2) Add localStorage Caching to Key Queries
+
+**File to modify:** `src/hooks/useEatsOrders.ts`
+
+Update these three hooks to read/write the offline cache:
+
+| Hook | Cache Key | What's Cached |
+|------|-----------|---------------|
+| `useRestaurants` | `restaurants-{city}` | Full restaurant list |
+| `useMenuItems` | `menu-{restaurantId}` | Menu items for a restaurant |
+| `useMyOrders` (or equivalent) | `my-orders` | User's recent orders |
+
+For each hook:
+- On successful fetch: save to localStorage via `cacheData()`
+- Set `placeholderData` to the cached version so it renders instantly while refetching
+- Set `staleTime: 5 * 60 * 1000` (5 min) to reduce unnecessary refetches
+- Set `gcTime: 30 * 60 * 1000` (30 min) so TanStack Query keeps data in memory longer
+
+This means: if offline, TanStack Query shows the last-fetched data from localStorage instead of a loading spinner or error state.
+
+### 3) Create `OfflineBanner` Component
+
+**New file:** `src/components/shared/OfflineBanner.tsx`
+
+A slim, non-intrusive banner that appears at the top of the app when offline:
+
 ```text
-{
-  isListening: boolean;       // Currently recording
-  isSupported: boolean;       // Browser supports speech recognition
-  transcript: string;         // Latest recognized text
-  startListening: () => void; // Begin voice capture
-  stopListening: () => void;  // Stop manually
-  error: string | null;       // Permission denied, etc.
-}
++--------------------------------------------------------------+
+|  [WifiOff icon]  You are offline. Some features may be limited.  |
++--------------------------------------------------------------+
 ```
 
-**Behavior:**
-- Sets language to `en-US`
-- Auto-stops after silence (built-in browser behavior)
-- On result: sets transcript, calls `onResult` callback
-- On error: sets error state, shows toast for permission issues
-- Checks `window.SpeechRecognition || window.webkitSpeechRecognition` for support
+Design:
+- Amber/yellow background (consistent with `SystemStatusBanner` style)
+- Fixed below the header, auto-hides when back online
+- Uses `useNetworkStatus` to detect connectivity
+- Animated entrance/exit with framer-motion
 
-### 2) Create `VoiceSearchButton` Component
+### 4) Wire `OfflineBanner` into `AppLayout`
 
-**New file:** `src/components/eats/VoiceSearchButton.tsx`
+**File to modify:** `src/components/app/AppLayout.tsx`
 
-A small mic icon button that:
-- Shows a `Mic` icon (from lucide) when idle
-- Pulses/animates red when listening
-- Hidden entirely when `isSupported === false` (graceful fallback)
-- Accepts `onTranscript(text: string)` callback
+Add `OfflineBanner` right after `SystemStatusBanner`. It only renders when `isOnline === false`.
 
-### 3) Add Voice Command Parser
+### 5) Add Action Queue Integration
 
-Inside `useVoiceSearch` or as a utility, parse common voice commands:
+**File to modify:** `src/components/app/AppLayout.tsx`
 
-| Voice Input | Action |
-|-------------|--------|
-| "Find pizza near me" | Sets search query to "pizza" |
-| "Show burgers" | Sets search query to "burgers" |
-| "Reorder my last order" | Navigates to `/eats/orders` |
-| Any other phrase | Sets as search query directly |
-
-Simple keyword matching — strips filler words like "find", "show", "search for", "near me".
-
-### 4) Integrate into Desktop Search Bar
-
-**File to modify:** `src/pages/EatsRestaurants.tsx`
-
-Add `VoiceSearchButton` inside the search input container (next to the Search icon, on the right side). On transcript result:
-- Parse voice command
-- Set `searchQuery` state
-- If "reorder" detected, navigate to `/eats/orders`
-
-### 5) Integrate into Mobile Search Bar
-
-**File to modify:** `src/components/eats/MobileEatsPremium.tsx`
-
-Add `VoiceSearchButton` inside the mobile search bar container (right side of input). Same behavior as desktop.
+Import `useNetworkStatus` at the layout level so the offline queue (pending actions, auto-retry on reconnect) is active globally. This means:
+- Toast notifications for "Back online" / "No internet" are app-wide
+- Any component can use `useNetworkStatus().queueAction()` to queue writes
 
 ---
 
@@ -96,82 +97,75 @@ Add `VoiceSearchButton` inside the mobile search bar container (right side of in
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useVoiceSearch.ts` | Web Speech API hook with support detection and error handling |
-| `src/components/eats/VoiceSearchButton.tsx` | Animated mic button with listening state |
+| `src/hooks/useOfflineCache.ts` | localStorage read/write for Supabase query results |
+| `src/components/shared/OfflineBanner.tsx` | Offline connectivity banner |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsRestaurants.tsx` | Add VoiceSearchButton next to search input |
-| `src/components/eats/MobileEatsPremium.tsx` | Add VoiceSearchButton next to mobile search input |
+| `src/hooks/useEatsOrders.ts` | Add cache read/write to `useRestaurants`, `useMenuItems`, and order queries |
+| `src/components/app/AppLayout.tsx` | Add `OfflineBanner` and wire `useNetworkStatus` globally |
 
 ---
 
-## Voice Search Flow
+## Offline Behavior
 
 ```text
-User taps mic icon on search bar
-       |
-       v
-  Browser requests microphone permission (first time only)
-       |
-       ├── Denied → Toast: "Microphone access needed for voice search"
-       │             Mic icon stays hidden or shows disabled state
-       │             Text input remains fully functional
-       |
-       ├── Granted → Mic icon pulses red, listening begins
-       |
-       v
-  User speaks: "Find pizza near me"
-       |
-       v
-  SpeechRecognition returns transcript
-       |
-       v
-  Voice command parser:
-       ├── Strips filler: "find", "show", "search for", "near me"
-       ├── Result: "pizza"
-       ├── Sets searchQuery → restaurants filter instantly
-       |
-       v
-  Special commands:
-       ├── "reorder" / "last order" → navigate to /eats/orders
-       └── Everything else → search query
+App loads online:
+  -> Restaurants fetched from Supabase
+  -> Saved to localStorage (zivo-cache-restaurants-{city})
+  -> Menu items cached per restaurant visit
+  -> Orders cached on orders page visit
+
+Connection drops:
+  -> OfflineBanner appears: "You are offline. Some features may be limited."
+  -> Restaurant list renders from localStorage cache
+  -> Menu pages render from localStorage cache
+  -> Past orders render from localStorage cache
+  -> New order attempts show toast: "Action queued, will sync when online"
+
+Connection restored:
+  -> OfflineBanner hides
+  -> Toast: "Back online"
+  -> Queued actions auto-retry (up to 3 attempts)
+  -> TanStack Query refetches stale data in background
 ```
 
 ---
 
-## Accessibility & Fallback
+## Technical Details
+
+### Cache Structure in localStorage
+```text
+Key: zivo-cache-restaurants-null       -> { data: [...], cachedAt: "2026-02-09T..." }
+Key: zivo-cache-restaurants-Miami      -> { data: [...], cachedAt: "2026-02-09T..." }
+Key: zivo-cache-menu-abc123            -> { data: [...], cachedAt: "2026-02-09T..." }
+Key: zivo-cache-my-orders              -> { data: [...], cachedAt: "2026-02-09T..." }
+```
+
+### TanStack Query Config per Cached Hook
+```text
+staleTime: 5 minutes   (don't refetch if data is fresh)
+gcTime: 30 minutes      (keep in memory for offline use)
+placeholderData: cached localStorage data (instant render)
+```
+
+### Why localStorage Over IndexedDB
+- Restaurant lists and menus are small (< 100KB typically)
+- Simpler implementation, no extra dependencies
+- Consistent with existing patterns (`googleMaps.ts` already caches to localStorage)
+- The 24-hour expiry prevents storage bloat
+
+---
+
+## Edge Cases
 
 | Scenario | Behavior |
 |----------|----------|
-| Browser doesn't support Speech API | Mic button not rendered; text search works normally |
-| Microphone permission denied | Toast notification; mic button shows disabled state |
-| No speech detected (timeout) | Auto-stops, no change to search |
-| Poor recognition | Transcript set as-is; user can edit in text field |
-| Desktop Chrome/Edge | Full support via `webkitSpeechRecognition` |
-| Safari/Firefox | Limited or no support; mic button hidden automatically |
-
----
-
-## Design Details
-
-### Desktop (EatsRestaurants)
-```text
-+------------------------------------------+
-| [Search icon]  Search restaurants...  [Mic] |
-+------------------------------------------+
-```
-
-### Mobile (MobileEatsPremium)
-```text
-+------------------------------------------+
-| [Search]  Craving... (e.g. Ramen)   [Mic] |
-+------------------------------------------+
-```
-
-### Listening State
-- Mic icon turns orange/red with a pulse animation
-- Placeholder text changes to "Listening..."
-- Returns to normal after speech ends
+| First visit (no cache) | Normal loading state; no offline data available |
+| Cache expired (> 24h) | Treated as no cache; loading state shown |
+| Offline + no cache | Shows standard TanStack Query error/empty state |
+| Very large restaurant list | Cache capped; oldest entries pruned if localStorage nears quota |
+| User logs out | Cache persists (anonymous data); cleared on explicit cache clear |
+| Multiple cities cached | Each city has its own cache key |
 
