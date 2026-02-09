@@ -15,6 +15,7 @@ import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { useDriverIncentives } from "@/hooks/useDriverIncentives";
 import { useScheduledDriverForecast } from "@/hooks/useScheduledDriverForecast";
+import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type DriverSupplyLevel = "low" | "moderate" | "high";
@@ -45,6 +46,11 @@ export interface DeliveryFactors {
   showPeakBanner: boolean;
   peakMessage: string | null;
   scheduleForecastMultiplier: number;
+  
+  // Forecasted demand (prediction-based)
+  isForecastedDemand: boolean;
+  isLowCoverage: boolean;
+  forecastMultiplier: number;
   
   // Loading states
   isLoading: boolean;
@@ -114,6 +120,13 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
     isLoading: forecastLoading,
   } = useScheduledDriverForecast();
 
+  const {
+    isHighDemandPredicted: isForecastedDemand,
+    isLowCoverage,
+    demandMultiplier: forecastMultiplier,
+    isLoading: demandAlertLoading,
+  } = useUpcomingDemandAlert();
+
   const factors = useMemo(() => {
     const supply = getSupplyFactors(nearbyDriverCount);
     
@@ -173,7 +186,10 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
       showPeakBanner,
       peakMessage: showPeakBanner ? peakMessage : null,
       scheduleForecastMultiplier,
-      isLoading: driversLoading || demandLoading || incentivesLoading || forecastLoading,
+      isForecastedDemand: isForecastedDemand && !demandActive,
+      isLowCoverage,
+      forecastMultiplier,
+      isLoading: driversLoading || demandLoading || incentivesLoading || forecastLoading || demandAlertLoading,
     };
   }, [
     nearbyDriverCount, 
@@ -189,6 +205,10 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
     peakMessage,
     scheduleForecastMultiplier,
     forecastLoading,
+    isForecastedDemand,
+    isLowCoverage,
+    forecastMultiplier,
+    demandAlertLoading,
   ]);
 
   return factors;
