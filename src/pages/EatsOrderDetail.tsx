@@ -16,6 +16,7 @@ import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { useDriverProximity } from "@/hooks/useDriverProximity";
+import { useSmartEta } from "@/hooks/useSmartEta";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -104,10 +105,18 @@ export default function EatsOrderDetail() {
     orderStatus: order?.status || "",
   });
 
-  // Determine ETA to show based on order phase
-  const etaMinutes = order?.status === "out_for_delivery"
-    ? proximity.etaToDelivery
-    : proximity.etaToPickup;
+  // Smart ETA with range calculation
+  const smartEta = useSmartEta({
+    orderStatus: order?.status || "",
+    driverAssigned: !!order?.driver_id,
+    driverLat,
+    driverLng,
+    pickupLat,
+    pickupLng,
+    deliveryLat: order?.delivery_lat,
+    deliveryLng: order?.delivery_lng,
+    supplyMultiplier: deliveryFactors.supplyMultiplier,
+  });
   
   const etaLabel: "to pickup" | "to you" | undefined = order?.status === "out_for_delivery"
     ? "to you"
@@ -255,14 +264,16 @@ export default function EatsOrderDetail() {
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {/* Enhanced Live Status Banner */}
+        {/* Enhanced Live Status Banner with Smart ETA Range */}
         <EnhancedStatusBanner
           phase={dispatchStatus.phase}
           message={dispatchStatus.message}
           subMessage={dispatchStatus.subMessage}
-          etaMinutes={order.driver_id ? etaMinutes : null}
+          etaMinRange={order.driver_id ? smartEta.etaMinRange : null}
+          etaMaxRange={order.driver_id ? smartEta.etaMaxRange : null}
           etaLabel={etaLabel}
-          isLocationBased={driverLat != null && driverLng != null}
+          isLocationBased={smartEta.isLive}
+          showEtaExplanation={smartEta.isLive}
         />
 
         {/* Scheduled Delivery Banner */}

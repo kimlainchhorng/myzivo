@@ -7,14 +7,19 @@ import { motion } from "framer-motion";
 import { Clock, Search, Navigation, MapPin, Truck, Package, ChefHat, Ban, Zap } from "lucide-react";
 import type { DispatchPhase } from "@/hooks/useEatsDispatchStatus";
 import { cn } from "@/lib/utils";
+// MapPin already imported above
 
 interface EnhancedStatusBannerProps {
   phase: DispatchPhase;
   message: string;
   subMessage: string;
+  /** @deprecated Use etaMinRange/etaMaxRange instead */
   etaMinutes?: number | null;
+  etaMinRange?: number | null;
+  etaMaxRange?: number | null;
   etaLabel?: "to pickup" | "to you";
   isLocationBased?: boolean;
+  showEtaExplanation?: boolean;
   className?: string;
 }
 
@@ -99,12 +104,20 @@ export function EnhancedStatusBanner({
   message,
   subMessage,
   etaMinutes,
+  etaMinRange,
+  etaMaxRange,
   etaLabel,
   isLocationBased = false,
+  showEtaExplanation = false,
   className,
 }: EnhancedStatusBannerProps) {
   const style = PHASE_STYLES[phase] || PHASE_STYLES.pending;
   const Icon = style.icon;
+  
+  // Use range values if provided, otherwise fall back to single value
+  const hasRange = etaMinRange != null && etaMaxRange != null;
+  const displayMin = hasRange ? etaMinRange : etaMinutes;
+  const displayMax = hasRange ? etaMaxRange : etaMinutes;
   
   return (
     <motion.div
@@ -140,23 +153,43 @@ export function EnhancedStatusBanner({
           )}
         </div>
         
-        {/* ETA display */}
-        {etaMinutes != null && phase !== "delivered" && phase !== "cancelled" && (
+        {/* ETA display - Range or Single */}
+        {displayMin != null && phase !== "delivered" && phase !== "cancelled" && (
           <div className="text-right shrink-0">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 justify-end">
               {isLocationBased && (
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <MapPin className="w-3 h-3 text-emerald-400" />
               )}
-              <p className="text-lg font-bold text-white">
-                {etaMinutes} <span className="text-sm font-normal text-zinc-400">min</span>
-              </p>
+              <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wide">
+                Live ETA
+              </span>
             </div>
+            <p className="text-lg font-bold text-white">
+              {hasRange ? (
+                <>
+                  {displayMin}–{displayMax}{" "}
+                  <span className="text-sm font-normal text-zinc-400">min</span>
+                </>
+              ) : (
+                <>
+                  {displayMin}{" "}
+                  <span className="text-sm font-normal text-zinc-400">min</span>
+                </>
+              )}
+            </p>
             {etaLabel && (
               <p className="text-xs text-zinc-500">{etaLabel}</p>
             )}
           </div>
         )}
       </div>
+      
+      {/* ETA explanation message */}
+      {showEtaExplanation && displayMin != null && phase !== "delivered" && phase !== "cancelled" && (
+        <p className="text-xs text-zinc-500 mt-2">
+          ETA updated based on traffic and demand.
+        </p>
+      )}
       
       {/* Live indicator for location-based updates */}
       {isLocationBased && phase !== "delivered" && phase !== "cancelled" && (

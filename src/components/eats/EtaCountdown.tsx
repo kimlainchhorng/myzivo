@@ -6,7 +6,7 @@
  * Traffic-aware ETA adjustments based on time of day
  */
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Zap, Flame, Layers, TrafficCone, Car, Sparkles } from "lucide-react";
+import { Clock, Zap, Flame, Layers, TrafficCone, Car, Sparkles, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
@@ -159,14 +159,28 @@ export function EtaCountdown({
   }, [etaDropoff, batchStopEta, now]);
 
   // Use dynamic ETA if available, otherwise fall back to timestamp-based
-  const etaMinutes = dynamicEtaMinutes ?? timestampEtaMinutes;
+  const etaSingleMinutes = dynamicEtaMinutes ?? timestampEtaMinutes;
 
-  if (etaMinutes == null) {
+  // Calculate ETA range
+  const etaRange = useMemo(() => {
+    if (etaSingleMinutes == null) return null;
+    
+    const combinedFactor = Math.min(traffic.multiplier * supplyMultiplier, 2.0);
+    const minEta = Math.max(1, Math.floor(etaSingleMinutes * 0.85));
+    const maxEta = Math.max(minEta + 2, Math.ceil(etaSingleMinutes * combinedFactor * 1.15));
+    
+    // Cap range spread to be reasonable
+    const cappedMax = maxEta - minEta > 20 ? minEta + 20 : maxEta;
+    
+    return { min: minEta, max: cappedMax };
+  }, [etaSingleMinutes, traffic.multiplier, supplyMultiplier]);
+
+  if (etaRange == null) {
     return null;
   }
 
-  const isArrivingSoon = etaMinutes <= 2;
-  const isNearby = etaMinutes <= 5;
+  const isArrivingSoon = etaRange.max <= 2;
+  const isNearby = etaRange.max <= 5;
   const hasDemandBuffer = showDemandNote && demandLevel && demandLevel !== "Low";
   const showTrafficNote = traffic.isRushHour && dynamicEtaMinutes != null && !isArrivingSoon;
   // Show supply note only if no traffic note and supply is low
@@ -203,7 +217,7 @@ export function EtaCountdown({
             </p>
             <AnimatePresence mode="wait">
               <motion.p
-                key={etaMinutes}
+                key={`${etaRange.min}-${etaRange.max}`}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
@@ -219,7 +233,7 @@ export function EtaCountdown({
                   "Arriving soon!"
                 ) : (
                   <>
-                    {etaMinutes} <span className="text-lg font-normal">min</span>
+                    {etaRange.min}–{etaRange.max} <span className="text-lg font-normal">min</span>
                   </>
                 )}
               </motion.p>
@@ -227,11 +241,15 @@ export function EtaCountdown({
           </div>
         </div>
 
-        {/* Live indicator and batch position */}
+        {/* Live ETA badge and batch position */}
         <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs text-zinc-500">Live</span>
+          <div className="flex items-center gap-1.5">
+            {isLocationBased && (
+              <MapPin className="w-3 h-3 text-emerald-400" />
+            )}
+            <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wide">
+              Live ETA
+            </span>
           </div>
           {batchPosition && (
             <div className="flex items-center gap-1 text-xs text-blue-400">
@@ -282,12 +300,17 @@ export function EtaCountdown({
         </div>
       )}
 
+      {/* ETA explanation message */}
+      <p className="text-xs text-zinc-500 mt-3">
+        ETA updated based on traffic and demand.
+      </p>
+
       {/* Progress bar for visual feedback */}
-      {!isArrivingSoon && etaMinutes <= 30 && (
+      {!isArrivingSoon && etaRange.max <= 30 && (
         <div className="mt-3 h-1 bg-zinc-800 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${Math.max(5, 100 - etaMinutes * 3)}%` }}
+            animate={{ width: `${Math.max(5, 100 - etaRange.max * 3)}%` }}
             transition={{ duration: 0.5 }}
             className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full"
           />
