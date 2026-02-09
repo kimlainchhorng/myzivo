@@ -12693,6 +12693,36 @@ export type Database = {
           },
         ]
       }
+      geofence_events: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          event_type: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          order_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          event_type?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          event_type?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+        }
+        Relationships: []
+      }
       gift_card_transactions: {
         Row: {
           amount: number

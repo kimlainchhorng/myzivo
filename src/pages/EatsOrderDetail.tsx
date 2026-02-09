@@ -17,6 +17,7 @@ import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { useDriverProximity } from "@/hooks/useDriverProximity";
+import { useEatsArrivalAlert } from "@/hooks/useEatsArrivalAlert";
 import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
 import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
 import { usePrepProgress } from "@/hooks/usePrepProgress";
@@ -177,6 +178,15 @@ function EatsOrderDetailContent() {
     deliveryLat: order?.delivery_lat,
     deliveryLng: order?.delivery_lng,
     orderStatus: order?.status || "",
+  });
+
+  // Eats arrival alert — toast + push when driver enters delivery zone
+  useEatsArrivalAlert({
+    isNearDelivery: proximity.isNearDelivery,
+    orderId: order?.id,
+    orderStatus: order?.status,
+    customerId: order?.customer_id,
+    restaurantName: order?.restaurants?.name || "Restaurant",
   });
 
   // Determine order phase for ETA calculation
