@@ -1,6 +1,6 @@
 /**
  * Send Notification Edge Function
- * Handles email, in-app, and SMS notifications
+ * Multi-channel notification system with push → SMS → email fallback
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,76 +11,124 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
 
-async function sendEmail(to: string, subject: string, html: string, text: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from: "ZIVO Travel <noreply@hizivo.com>",
-      to: [to],
-      subject,
-      html,
-      text
-    })
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to send email");
-  }
-  
-  return response.json();
-}
-
-async function sendSms(to: string, body: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
-    throw new Error("Twilio not configured");
-  }
-
-  const response = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        To: to,
-        From: TWILIO_FROM_NUMBER,
-        Body: body
-      })
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "SMS send failed");
-  }
-
-  return response.json();
-}
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-
 interface NotificationRequest {
   user_id?: string;
   user_email?: string;
   order_id?: string;
-  template: string;
-  channel?: "email" | "in_app" | "sms";
+  template?: string;
+  channel?: "email" | "in_app" | "sms" | "multi"; // multi = smart fallback
   variables?: Record<string, string>;
   title?: string;
   body?: string;
   action_url?: string;
+  priority?: "critical" | "normal" | "low";
+  event_type?: string;
+}
+
+async function sendEmail(to: string, subject: string, html: string, text: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: "ZIVO Travel <noreply@hizivo.com>",
+        to: [to],
+        subject,
+        html,
+        text
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      return { success: false, error: error.message || "Failed to send email" };
+    }
+    
+    const data = await response.json();
+    return { success: true, id: data.id };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Email send error";
+    return { success: false, error: msg };
+  }
+}
+
+async function sendSms(to: string, body: string): Promise<{ success: boolean; sid?: string; error?: string }> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+    return { success: false, error: "Twilio not configured" };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          To: to,
+          From: TWILIO_FROM_NUMBER,
+          Body: body,
+          StatusCallback: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-sms-status`
+        })
+      }
+    );
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, error: data.message || "SMS send failed" };
+    }
+
+    return { success: true, sid: data.sid };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "SMS error";
+    return { success: false, error: msg };
+  }
+}
+
+async function sendPush(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  title: string,
+  body: string,
+  actionUrl?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Call the existing push notification function
+    const response = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          title,
+          body,
+          url: actionUrl
+        })
+      }
+    );
+
+    const data = await response.json();
+    return { success: data.success, error: data.error };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Push error";
+    return { success: false, error: msg };
+  }
 }
 
 // Email wrapper with ZIVO branding
@@ -95,7 +143,6 @@ function wrapEmailHtml(content: string, supportUrl: string): string {
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 0; background: #f5f5f5; }
     .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
     .header { background: linear-gradient(135deg, #0066FF 0%, #00D4AA 100%); padding: 32px; text-align: center; }
-    .header img { height: 40px; }
     .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; }
     .content { padding: 32px; }
     .content h1 { color: #0066FF; font-size: 24px; margin-top: 0; }
@@ -129,13 +176,22 @@ function wrapEmailHtml(content: string, supportUrl: string): string {
 </html>`;
 }
 
-// Replace template variables
 function replaceVariables(text: string, variables: Record<string, string>): string {
   let result = text;
   for (const [key, value] of Object.entries(variables)) {
     result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
   }
   return result;
+}
+
+async function checkSMSRateLimit(supabase: ReturnType<typeof createClient>, userId: string): Promise<boolean> {
+  const { data } = await supabase.rpc("check_sms_rate_limit", { p_user_id: userId });
+  return data === true;
+}
+
+async function incrementSMSCount(supabase: ReturnType<typeof createClient>, userId: string): Promise<void> {
+  const today = new Date().toISOString().split("T")[0];
+  await supabase.rpc("increment_sms_count", { p_user_id: userId, p_date: today });
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -158,7 +214,9 @@ serve(async (req: Request): Promise<Response> => {
       variables = {},
       title: customTitle,
       body: customBody,
-      action_url
+      action_url,
+      priority = "normal",
+      event_type
     } = request;
 
     // Validate required fields
@@ -170,23 +228,35 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Either user_id or user_email is required");
     }
 
-    // Get user email if only user_id provided
-    let recipientEmail = user_email;
-    if (!recipientEmail && user_id) {
-      const { data: profile } = await supabase
+    // Get user profile
+    let profile: { email: string; phone_e164: string | null; sms_opted_out: boolean } | null = null;
+    if (user_id) {
+      const { data } = await supabase
         .from("profiles")
-        .select("email")
+        .select("email, phone_e164, sms_opted_out")
         .eq("user_id", user_id)
         .single();
-      
-      if (!profile?.email) {
-        throw new Error("User email not found");
-      }
-      recipientEmail = profile.email;
+      profile = data;
     }
 
-    // Check user preferences (except for transactional)
-    let templateData: any = null;
+    const recipientEmail = user_email || profile?.email;
+    if (!recipientEmail) {
+      throw new Error("User email not found");
+    }
+
+    // Get user notification preferences
+    let prefs = { email_enabled: true, sms_enabled: false, in_app_enabled: true, phone_verified: false };
+    if (user_id) {
+      const { data: prefsData } = await supabase
+        .from("notification_preferences")
+        .select("*")
+        .eq("user_id", user_id)
+        .single();
+      if (prefsData) prefs = prefsData;
+    }
+
+    // Get template if provided
+    let templateData: { subject: string; body_html: string; body_text: string; category: string } | null = null;
     if (template) {
       const { data: tpl } = await supabase
         .from("notification_templates")
@@ -203,32 +273,122 @@ serve(async (req: Request): Promise<Response> => {
 
     // Check preferences for non-transactional
     if (templateData && templateData.category !== 'transactional' && user_id) {
-      const { data: prefs } = await supabase
-        .from("notification_preferences")
-        .select("*")
-        .eq("user_id", user_id)
-        .single();
-
-      if (prefs) {
-        if (channel === 'email' && !prefs.email_enabled) {
-          return new Response(
-            JSON.stringify({ success: true, skipped: true, reason: "Email disabled by user" }),
-            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-          );
-        }
-        if (templateData.category === 'marketing' && !prefs.marketing_enabled) {
-          return new Response(
-            JSON.stringify({ success: true, skipped: true, reason: "Marketing disabled by user" }),
-            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-          );
-        }
+      if (channel === 'email' && !prefs.email_enabled) {
+        return new Response(
+          JSON.stringify({ success: true, skipped: true, reason: "Email disabled by user" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       }
     }
 
     // Build notification content
-    const title = customTitle || replaceVariables(templateData.subject, variables);
-    const bodyHtml = customBody || replaceVariables(templateData.body_html, variables);
+    const title = customTitle || replaceVariables(templateData?.subject || "", variables);
+    const bodyHtml = customBody || replaceVariables(templateData?.body_html || "", variables);
     const bodyText = replaceVariables(templateData?.body_text || bodyHtml.replace(/<[^>]*>/g, ''), variables);
+
+    const results: { channel: string; success: boolean; id?: string; error?: string }[] = [];
+
+    // Multi-channel logic for critical events
+    if (channel === "multi" || priority === "critical") {
+      const isCriticalEvent = priority === "critical" || 
+        ["out_for_delivery", "delivered", "cancelled", "support_reply", "refund"].includes(event_type || "");
+
+      // 1. Try push first
+      let pushSuccess = false;
+      if (prefs.in_app_enabled && user_id) {
+        const pushResult = await sendPush(supabase, user_id, title, bodyText, action_url);
+        pushSuccess = pushResult.success;
+        results.push({ channel: "push", ...pushResult });
+
+        // Log push notification
+        await supabase.from("notifications").insert({
+          user_id,
+          order_id,
+          channel: "in_app",
+          category: templateData?.category || "transactional",
+          template: template || "custom",
+          title,
+          body: bodyText,
+          action_url,
+          status: pushResult.success ? "sent" : "failed",
+          error_message: pushResult.error,
+          sent_at: pushResult.success ? new Date().toISOString() : null
+        });
+      }
+
+      // 2. Fallback to SMS if push failed AND event is critical
+      if (!pushSuccess && isCriticalEvent && prefs.sms_enabled && prefs.phone_verified && user_id) {
+        const phone = profile?.phone_e164;
+        const optedOut = profile?.sms_opted_out;
+
+        if (phone && !optedOut) {
+          const withinLimit = await checkSMSRateLimit(supabase, user_id);
+          if (withinLimit) {
+            const smsResult = await sendSms(phone, bodyText);
+            results.push({ channel: "sms", ...smsResult });
+
+            if (smsResult.success) {
+              await incrementSMSCount(supabase, user_id);
+            }
+
+            // Log SMS
+            await supabase.from("notifications").insert({
+              user_id,
+              order_id,
+              channel: "sms",
+              category: templateData?.category || "transactional",
+              template: template || "custom",
+              title,
+              body: bodyText,
+              action_url,
+              status: smsResult.success ? "queued" : "failed",
+              provider_message_id: smsResult.sid,
+              error_message: smsResult.error
+            });
+          } else {
+            results.push({ channel: "sms", success: false, error: "Rate limited" });
+          }
+        }
+      }
+
+      // 3. Send email for receipts, refunds, support updates
+      const emailEvents = ["order_confirmed", "delivered", "cancelled", "support_reply", "refund", "receipt"];
+      if (prefs.email_enabled && (emailEvents.includes(event_type || "") || priority === "critical")) {
+        const supportUrl = `https://hizivo.com/support${order_id ? `?order=${order_id}` : ''}`;
+        const emailHtml = wrapEmailHtml(bodyHtml, supportUrl);
+        
+        const emailResult = await sendEmail(recipientEmail, title, emailHtml, bodyText);
+        results.push({ channel: "email", ...emailResult });
+
+        // Log email
+        await supabase.from("notifications").insert({
+          user_id,
+          order_id,
+          channel: "email",
+          category: templateData?.category || "transactional",
+          template: template || "custom",
+          title,
+          body: bodyText,
+          action_url,
+          status: emailResult.success ? "sent" : "failed",
+          provider_message_id: emailResult.id,
+          error_message: emailResult.error,
+          sent_at: emailResult.success ? new Date().toISOString() : null
+        });
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: results.some(r => r.success),
+          results
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Single channel mode (backwards compatible)
+    let providerMessageId: string | null = null;
+    let error: string | null = null;
 
     // Create notification record
     const { data: notification, error: insertError } = await supabase
@@ -252,20 +412,31 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error(`Failed to create notification: ${insertError.message}`);
     }
 
-    let providerMessageId: string | null = null;
-    let error: string | null = null;
-
     // Send based on channel
     if (channel === 'email' && recipientEmail) {
-      try {
-        const supportUrl = `https://hizivo.com/support${order_id ? `?order=${order_id}` : ''}`;
-        const emailHtml = wrapEmailHtml(bodyHtml, supportUrl);
+      const supportUrl = `https://hizivo.com/support${order_id ? `?order=${order_id}` : ''}`;
+      const emailHtml = wrapEmailHtml(bodyHtml, supportUrl);
+      const emailResult = await sendEmail(recipientEmail, title, emailHtml, bodyText);
+      
+      if (emailResult.success) {
+        providerMessageId = emailResult.id || null;
+      } else {
+        error = emailResult.error || null;
+      }
+    }
 
-        const emailResponse = await sendEmail(recipientEmail, title, emailHtml, bodyText);
-        providerMessageId = emailResponse.id || null;
-      } catch (emailError: any) {
-        error = emailError.message;
-        console.error("Email send error:", emailError);
+    if (channel === 'sms' && user_id) {
+      const phone = profile?.phone_e164;
+      if (phone && prefs.phone_verified) {
+        const smsResult = await sendSms(phone, bodyText);
+        if (smsResult.success) {
+          providerMessageId = smsResult.sid || null;
+          await incrementSMSCount(supabase, user_id);
+        } else {
+          error = smsResult.error || null;
+        }
+      } else {
+        error = "Phone not verified or not available";
       }
     }
 
@@ -280,7 +451,7 @@ serve(async (req: Request): Promise<Response> => {
       })
       .eq("id", notification.id);
 
-    // For in-app, the notification is already created and visible
+    // For in-app, mark as sent
     if (channel === 'in_app') {
       await supabase
         .from("notifications")
@@ -298,10 +469,11 @@ serve(async (req: Request): Promise<Response> => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Notification error:", error);
+    const msg = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: msg }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
