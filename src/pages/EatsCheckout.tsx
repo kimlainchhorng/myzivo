@@ -5,7 +5,7 @@
  * Supports business account billing
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePromotionValidation } from "@/hooks/usePromotionValidation";
 import { useWinBackOffer } from "@/hooks/useWinBackOffer";
@@ -50,6 +50,10 @@ import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { toast } from "sonner";
 import { useShareTracking } from "@/hooks/useShareTracking";
 import { getPersistedUTMParams } from "@/lib/subidGenerator";
+import { useAutoRewards } from "@/hooks/useAutoRewards";
+import { RewardSelector } from "@/components/checkout/RewardSelector";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -108,6 +112,7 @@ function PromoCodeInputInline({
 }
 function EatsCheckoutContent() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
   const createOrder = useCreateFoodOrder();
   const { logConversion } = useShareTracking();
@@ -117,7 +122,15 @@ function EatsCheckoutContent() {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
+  const [selectedReward, setSelectedReward] = useState<any>(null);
 
+  // Auto-rewards: detect milestones and get active rewards
+  const { activeRewards, isLoading: rewardsLoading } = useAutoRewards();
+  const rewardDiscount = selectedReward?.reward_value ?? 0;
+
+  const handleRewardSelect = useCallback((reward: any) => {
+    setSelectedReward(reward);
+  }, []);
   const subtotal = getSubtotal();
   const pricing = useEatsDeliveryPricing(subtotal);
   const deliveryFee = pricing.totalDeliveryFee;
@@ -128,7 +141,8 @@ function EatsCheckoutContent() {
   // Promo code validation
   const promoValidation = usePromotionValidation({ serviceType: 'eats', restaurantId: restaurantId || undefined });
   const { discountAmount, finalTotal: promoFinalTotal, isFreeDel } = promoValidation.calculateFinalTotal(subtotal, deliveryFee);
-  const total = promoValidation.appliedPromo?.valid ? promoFinalTotal : pricing.orderTotal;
+  const totalBeforeReward = promoValidation.appliedPromo?.valid ? promoFinalTotal : pricing.orderTotal;
+  const total = Math.max(0, totalBeforeReward - rewardDiscount);
 
   // Win-back offer auto-apply
   const winBackOffer = useWinBackOffer();
@@ -292,6 +306,27 @@ function EatsCheckoutContent() {
 
       clearCart();
       toast.success("Order placed successfully!");
+
+      // Redeem selected reward
+      if (selectedReward && order?.id) {
+        try {
+          await supabase
+            .from("rewards")
+            .update({ status: "redeemed" })
+            .eq("id", selectedReward.id);
+          await supabase
+            .from("reward_redemptions")
+            .insert({
+              user_id: user!.id,
+              reward_id: selectedReward.id,
+              points_spent: 0,
+              status: "redeemed",
+              applied_to_order_id: order.id,
+            });
+        } catch (e) {
+          console.error("Reward redemption error:", e);
+        }
+      }
       
       // Track share conversion if user arrived via shared link
       if (order?.id) {
@@ -684,6 +719,15 @@ function EatsCheckoutContent() {
 
                     <hr />
 
+                    {/* Reward Selector */}
+                    {activeRewards.length > 0 && (
+                      <RewardSelector
+                        rewards={activeRewards}
+                        selectedReward={selectedReward}
+                        onSelect={handleRewardSelect}
+                      />
+                    )}
+
                     {/* Promo Code Input */}
                     <div className="space-y-3">
                       {promoValidation.appliedPromo?.valid ? (
@@ -757,6 +801,18 @@ function EatsCheckoutContent() {
                         </span>
                         <span className="font-medium text-emerald-600 dark:text-emerald-400">
                           -${discountAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Reward discount line item */}
+                    {selectedReward && rewardDiscount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-primary">
+                          Reward Applied
+                        </span>
+                        <span className="font-medium text-primary">
+                          -${rewardDiscount.toFixed(2)}
                         </span>
                       </div>
                     )}
