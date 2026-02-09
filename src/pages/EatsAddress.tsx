@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, MapPin, Home, Briefcase, Star, Trash2, Edit2, Check, L
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,8 @@ interface AddressFormData {
   address: string;
   notes: string;
   icon: string;
+  lat: number;
+  lng: number;
 }
 
 function EatsAddressContent() {
@@ -60,6 +63,8 @@ function EatsAddressContent() {
     address: "",
     notes: "",
     icon: "home",
+    lat: 0,
+    lng: 0,
   });
 
   // Get current user
@@ -77,6 +82,8 @@ function EatsAddressContent() {
         address: address.address,
         notes: "",
         icon: address.icon || "home",
+        lat: address.lat || 0,
+        lng: address.lng || 0,
       });
     } else {
       setEditingAddress(null);
@@ -85,6 +92,8 @@ function EatsAddressContent() {
         address: "",
         notes: "",
         icon: "home",
+        lat: 0,
+        lng: 0,
       });
     }
     setIsModalOpen(true);
@@ -96,8 +105,8 @@ function EatsAddressContent() {
     const locationData: SavedLocationInput = {
       label: formData.label.trim(),
       address: formData.address.trim(),
-      lat: 0, // Would be geocoded in production
-      lng: 0,
+      lat: formData.lat,
+      lng: formData.lng,
       icon: formData.icon,
     };
 
@@ -297,11 +306,11 @@ function EatsAddressContent() {
             {/* Address */}
             <div className="space-y-2">
               <Label className="text-zinc-400 text-sm">Full Address</Label>
-              <Input
+              <AddressAutocomplete
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="123 Main St, Apt 4B, City, State ZIP"
-                className="bg-zinc-800 border-white/10 text-white placeholder-zinc-500 h-12 rounded-xl"
+                onSelect={(place) => setFormData({ ...formData, address: place.address, lat: place.lat, lng: place.lng })}
+                placeholder="Start typing an address..."
+                className="[&_input]:bg-zinc-800 [&_input]:border-white/10 [&_input]:text-white [&_input]:placeholder-zinc-500 [&_input]:h-12 [&_input]:rounded-xl [&_.absolute.z-50]:bg-zinc-900 [&_.absolute.z-50]:border-white/10 [&_.absolute.z-50_button]:text-white [&_.absolute.z-50_button:hover]:bg-zinc-800"
               />
             </div>
 

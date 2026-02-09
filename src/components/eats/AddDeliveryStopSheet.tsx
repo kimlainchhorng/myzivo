@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -134,16 +135,19 @@ export function AddDeliveryStopSheet({
           
           {/* Address Input */}
           <div>
-            <Label htmlFor="new-stop-address">Address *</Label>
-            <Input
-              id="new-stop-address"
+            <Label>Address *</Label>
+            <AddressAutocomplete
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Main St, City, State"
+              onSelect={(place) => {
+                setAddress(place.address);
+                setLat(place.lat);
+                setLng(place.lng);
+              }}
+              placeholder="Start typing an address..."
               className="mt-1.5"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Enter the full street address including city and state
+              Start typing to see address suggestions
             </p>
           </div>
           
