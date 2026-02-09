@@ -1,95 +1,156 @@
 
-# Faster Pickup Timing — Implementation Plan
+# Driver Reassignment Transparency — Implementation Plan
 
 ## Overview
-Enhance the order screen with smoother status transitions and dynamic ETA adjustments based on real-time restaurant prep speed. The system will show granular preparation states (Preparing → Almost ready → Driver arriving for pickup) and automatically adjust the ETA when the restaurant is running faster or slower than its learned average.
+Keep customers informed when their delivery driver changes. When a driver cancels or is reassigned, the customer should see:
+1. Clear messaging: "Finding another driver near you..."
+2. Status transitions: Searching for new driver → New driver assigned
+3. Automatic ETA recalculation after the new driver is assigned
 
 ---
 
 ## Current State Analysis
 
-### What We Have
-| Component | Current Behavior |
-|-----------|------------------|
-| `useEatsDispatchStatus` | Returns phase: preparing, searching, assigned, near_pickup, at_pickup, en_route, arrived, delivered |
-| `StatusTimeline` | Shows driver substeps (searching → assigned → near pickup → at pickup) |
-| `useSmartEta` | Calculates ETA using learned prep time + travel time with traffic/demand factors |
-| `useLearnedPrepTime` | Fetches historical average prep time for restaurant |
-| `food_orders.accepted_at` | When restaurant confirmed the order |
-| `food_orders.ready_at` | When order was marked ready |
+### Data Available
+| Field | Location | Purpose |
+|-------|----------|---------|
+| `driver_id` | `food_orders` table | Current assigned driver (null if none) |
+| `previous_driver_id` | `food_orders` table | Previous driver before reassignment |
+| `assigned_at` | `food_orders` table | When current driver was assigned |
+| `order_events` | Audit table | Logs `driver_assigned` and `driver_unassigned` events |
 
-### Current Status Flow
-```
-Preparing → Ready → Out for Delivery → Delivered
-```
-
-### Target Status Flow (Smoother Transitions)
-```
-Preparing → Almost ready → Driver arriving for pickup → Picked up → On the way
-```
+### Current Behavior
+- When driver is unassigned, `driver_id` becomes null
+- `DispatchSearchBanner` shows "Finding the best driver near you..." when `showSearching` is true
+- `useSmartEta` already recalculates when `driverAssigned` changes
+- **Missing**: No detection of driver *change* (old driver → null → new driver)
+- **Missing**: No specific messaging for reassignment scenario
 
 ---
 
 ## Implementation Plan
 
-### 1) Create usePrepProgress Hook
+### 1) Create useDriverReassignment Hook
 
-**File to Create:** `src/hooks/usePrepProgress.ts`
+**File to Create:** `src/hooks/useDriverReassignment.ts`
 
-**Purpose:** Calculate preparation progress and detect if restaurant is running faster or slower than average.
+**Purpose:** Track driver changes and detect reassignment scenarios.
 
 ```typescript
-export type PrepStatus = "starting" | "preparing" | "almost_ready" | "ready";
+export interface DriverReassignmentState {
+  // Reassignment detection
+  wasReassigned: boolean;           // A previous driver existed before current
+  isSearchingForNewDriver: boolean; // Driver was unassigned, searching for new one
+  previousDriverId: string | null;
+  
+  // Timestamps
+  reassignedAt: Date | null;
+  
+  // For display
+  showReassignmentBanner: boolean;
+  reassignmentMessage: string;
+  reassignmentSubMessage: string;
+}
 
-export interface PrepProgressResult {
-  // Progress tracking
-  status: PrepStatus;
-  progressPercent: number;     // 0-100
-  elapsedMinutes: number;      // Time since order confirmed
-  remainingMinutes: number;    // Estimated remaining prep time
-  
-  // Speed deviation
-  prepSpeedFactor: number;     // 1.0 = on track, <1 = faster, >1 = slower
-  isRunningFast: boolean;      // More than 20% faster than average
-  isRunningSlow: boolean;      // More than 20% slower than average
-  speedMessage: string | null; // "Kitchen is ahead of schedule" or "Taking a bit longer"
-  
-  // For ETA adjustment
-  adjustedPrepMinutes: number; // Real-time adjusted prep estimate
+interface UseDriverReassignmentOptions {
+  currentDriverId: string | null | undefined;
+  previousDriverId?: string | null;
+  orderStatus: string;
 }
 ```
 
 **Key Logic:**
 ```typescript
-// Calculate elapsed time since order confirmed
-const elapsedMinutes = (Date.now() - acceptedAt.getTime()) / 60000;
+// Detect when driver changes
+const prevDriverRef = useRef(currentDriverId);
 
-// Estimate progress based on elapsed vs expected
-const progressPercent = Math.min(100, (elapsedMinutes / learnedPrepMinutes) * 100);
-
-// Determine prep status
-if (progressPercent < 30) return "starting";
-if (progressPercent < 75) return "preparing";
-if (progressPercent < 100) return "almost_ready";
-return "ready";
-
-// Detect speed deviation (compare actual vs expected pace)
-// If 75% through expected time but order marked ready → running fast
-// If 120% through expected time and not ready → running slow
+useEffect(() => {
+  // Had a driver, now searching (driver cancelled/unassigned)
+  if (prevDriverRef.current && !currentDriverId) {
+    setIsSearchingForNewDriver(true);
+    setWasReassigned(true);
+    setPreviousDriverId(prevDriverRef.current);
+    setReassignedAt(new Date());
+  }
+  
+  // New driver assigned after searching
+  if (isSearchingForNewDriver && currentDriverId) {
+    setIsSearchingForNewDriver(false);
+    // Clear after 10 seconds to reset state
+    setTimeout(() => setWasReassigned(false), 10000);
+  }
+  
+  prevDriverRef.current = currentDriverId;
+}, [currentDriverId]);
 ```
 
-### 2) Update useEatsDispatchStatus Hook
+### 2) Create ReassignmentBanner Component
+
+**File to Create:** `src/components/eats/ReassignmentBanner.tsx`
+
+**Purpose:** Dedicated banner for driver reassignment scenarios with clear messaging.
+
+**UI Design - Searching State:**
+```
++-----------------------------------------------------+
+| 🔄 Finding another driver near you...               |
+|                                                     |
+| [==================>------] Searching...            |
+|                                                     |
+| Your previous driver had to cancel. We're finding   |
+| someone new!                                        |
++-----------------------------------------------------+
+```
+
+**UI Design - New Driver Assigned:**
+```
++-----------------------------------------------------+
+| ✅ New driver assigned!                             |
+|                                                     |
+| Your order is back on track                         |
++-----------------------------------------------------+
+```
+
+**Props:**
+```typescript
+interface ReassignmentBannerProps {
+  isSearching: boolean;
+  newDriverAssigned: boolean;
+  nearbyCount?: number | null;
+  className?: string;
+}
+```
+
+**Styling:**
+| State | Icon | Colors | Animation |
+|-------|------|--------|-----------|
+| Searching | RefreshCw | Amber/Orange | Rotating + pulse |
+| New assigned | CheckCircle | Emerald | Brief scale-in |
+
+### 3) Update useEatsDispatchStatus Hook
 
 **File to Modify:** `src/hooks/useEatsDispatchStatus.ts`
 
-**New Phase:** Add `almost_ready` phase for smoother transitions.
+**New Props:**
+```typescript
+interface UseEatsDispatchStatusOptions {
+  // ... existing props
+  
+  // Reassignment context
+  wasReassigned?: boolean;
+  isSearchingForNewDriver?: boolean;
+}
+```
+
+**New Phase:** Add `reassigning` phase for clarity.
 
 ```typescript
 export type DispatchPhase = 
   | "pending"
   | "preparing"
-  | "almost_ready"      // NEW: 75%+ through prep time
+  | "almost_ready"
   | "searching"
+  | "reassigning"     // NEW: Looking for replacement driver
   | "assigned"
   | "near_pickup"
   | "at_pickup"
@@ -99,146 +160,95 @@ export type DispatchPhase =
   | "cancelled";
 ```
 
-**New Props:**
+**Updated Messaging:**
 ```typescript
-interface UseEatsDispatchStatusOptions {
-  // ... existing
-  prepProgressPercent?: number;  // From usePrepProgress
-  isAlmostReady?: boolean;       // 75%+ through prep
+// Reassignment scenario
+if (isSearchingForNewDriver) {
+  return {
+    phase: "reassigning",
+    message: "Finding another driver near you...",
+    subMessage: "Your previous driver had to cancel",
+    showSearching: true,
+  };
+}
+
+// Normal searching
+if (!driverId) {
+  return {
+    phase: "searching",
+    message: "Finding the best driver near you...",
+    subMessage: "We're matching you with a nearby driver",
+    showSearching: true,
+  };
 }
 ```
 
-**New Messaging:**
-| Phase | Message | Sub-message |
-|-------|---------|-------------|
-| preparing | "Restaurant is preparing your order" | "Your food is being made fresh" |
-| almost_ready | "Almost ready!" | "Final touches on your order" |
-| near_pickup | "Driver arriving for pickup" | "Order will be picked up shortly" |
-
-### 3) Update useSmartEta Hook for Real-time Adjustment
-
-**File to Modify:** `src/hooks/useSmartEta.ts`
-
-**New Props:**
-```typescript
-interface UseSmartEtaOptions {
-  // ... existing
-  
-  // Real-time prep adjustment
-  actualPrepElapsed?: number;     // Minutes since confirmed
-  prepSpeedFactor?: number;       // From usePrepProgress
-}
-```
-
-**New Recalc Reason:**
-```typescript
-export type RecalcReason = 
-  | "initial" 
-  | "driver_assigned" 
-  | "pickup_complete" 
-  | "location_change" 
-  | "interval"
-  | "prep_speed_change";  // NEW: Restaurant pace changed
-```
-
-**Adjusted Prep Calculation:**
-```typescript
-// If restaurant is running 20% faster, reduce prep estimate by 20%
-const adjustedPrep = learnedPrepMinutes * prepSpeedFactor;
-
-// Example: learned = 20 min, speedFactor = 0.8 (running fast)
-// adjustedPrep = 20 * 0.8 = 16 min
-```
-
-### 4) Create PrepProgressBanner Component
-
-**File to Create:** `src/components/eats/PrepProgressBanner.tsx`
-
-**Purpose:** Visual indicator showing preparation progress with speed context.
-
-**UI Design:**
-```
-+-----------------------------------------------------+
-| 🍳 Preparing your order                             |
-|                                                     |
-| [=============>--------] 65%                        |
-|                                                     |
-| ⚡ Kitchen is ahead of schedule                     |
-+-----------------------------------------------------+
-```
-
-**Props:**
-```typescript
-interface PrepProgressBannerProps {
-  status: PrepStatus;
-  progressPercent: number;
-  isRunningFast?: boolean;
-  isRunningSlow?: boolean;
-  speedMessage?: string | null;
-  className?: string;
-}
-```
-
-**Visual States:**
-| Status | Icon | Color | Message |
-|--------|------|-------|---------|
-| starting | ChefHat | Orange | "Starting your order" |
-| preparing | Flame | Orange | "Preparing your order" |
-| almost_ready | Sparkles | Amber | "Almost ready!" |
-| ready | Check | Emerald | "Ready for pickup!" |
-
-### 5) Update EnhancedStatusBanner Component
+### 4) Update EnhancedStatusBanner Component
 
 **File to Modify:** `src/components/eats/EnhancedStatusBanner.tsx`
 
-**Add `almost_ready` phase styling:**
+**Add `reassigning` phase styling:**
 ```typescript
 const PHASE_STYLES: Record<DispatchPhase, {...}> = {
   // ... existing phases
-  almost_ready: {
-    icon: Sparkles,
+  reassigning: {
+    icon: RefreshCw,
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     border: "border-amber-500/30",
-    animate: true,
+    animate: true,  // Rotating animation
   },
 };
 ```
 
-### 6) Update StatusTimeline Component
+### 5) Update useSmartEta Hook
 
-**File to Modify:** `src/components/eats/StatusTimeline.tsx`
+**File to Modify:** `src/hooks/useSmartEta.ts`
 
-**Add prep progress substep:**
+**Add new recalc reason:**
 ```typescript
-// Under "Preparing" step, show prep progress substeps
-{showPrepSubsteps && (
-  <div className="ml-5 pl-4 border-l-2 border-dashed border-zinc-700 space-y-2 py-2">
-    {/* Starting prep */}
-    <SubStep 
-      icon={ChefHat}
-      label="Starting preparation"
-      completed={prepProgress >= 30}
-      active={prepProgress < 30}
-    />
-    
-    {/* Cooking */}
-    <SubStep 
-      icon={Flame}
-      label="Cooking your order"
-      completed={prepProgress >= 75}
-      active={prepProgress >= 30 && prepProgress < 75}
-    />
-    
-    {/* Almost ready */}
-    <SubStep 
-      icon={Sparkles}
-      label="Almost ready!"
-      completed={prepProgress >= 100}
-      active={prepProgress >= 75 && prepProgress < 100}
-    />
-  </div>
-)}
+export type RecalcReason = 
+  | "initial" 
+  | "driver_assigned" 
+  | "driver_reassigned"  // NEW
+  | "pickup_complete" 
+  | "location_change" 
+  | "interval"
+  | "prep_speed_change";
+```
+
+**Update recalc trigger logic:**
+```typescript
+// Detect driver reassignment (had driver → no driver → new driver)
+if (prevDriverAssigned.current && !driverAssigned) {
+  reason = "driver_reassigned";
+}
+// New driver assigned (triggers full ETA recalc)
+if (!prevDriverAssigned.current && driverAssigned) {
+  reason = "driver_assigned";
+}
+```
+
+### 6) Update useLiveEatsOrder Hook
+
+**File to Modify:** `src/hooks/useLiveEatsOrder.ts`
+
+**Add `previous_driver_id` to interface and query:**
+```typescript
+export interface LiveEatsOrder {
+  // ... existing fields
+  previous_driver_id?: string | null;  // NEW
+}
+
+// Update select query to include it
+const { data } = await supabase
+  .from(EATS_TABLES.orders)
+  .select(`
+    *,
+    restaurants:restaurant_id(name, logo_url, phone, address, lat, lng, avg_prep_time)
+  `)
+  .eq("id", orderId)
+  .single();
 ```
 
 ### 7) Update EatsOrderDetail Page
@@ -247,45 +257,29 @@ const PHASE_STYLES: Record<DispatchPhase, {...}> = {
 
 **Integration:**
 ```typescript
-// Calculate prep progress
-const prepProgress = usePrepProgress({
-  acceptedAt: order?.accepted_at,
-  learnedPrepMinutes: learnedPrep.avgPrepMinutes,
-  isOrderReady: order?.status === "ready_for_pickup" || order?.status === "ready",
+import { useDriverReassignment } from "@/hooks/useDriverReassignment";
+import { ReassignmentBanner } from "@/components/eats/ReassignmentBanner";
+
+// Track driver reassignment
+const reassignment = useDriverReassignment({
+  currentDriverId: order?.driver_id,
+  previousDriverId: order?.previous_driver_id,
+  orderStatus: order?.status || "",
 });
 
-// Enhanced dispatch status with prep progress
+// Pass to dispatch status
 const dispatchStatus = useEatsDispatchStatus({
-  status: order?.status || "",
-  driverId: order?.driver_id,
-  driverLat,
-  driverLng,
-  deliveryLat: order?.delivery_lat,
-  deliveryLng: order?.delivery_lng,
-  pickupLat,
-  pickupLng,
-  // NEW: Prep progress integration
-  prepProgressPercent: prepProgress.progressPercent,
-  isAlmostReady: prepProgress.status === "almost_ready",
+  // ... existing props
+  wasReassigned: reassignment.wasReassigned,
+  isSearchingForNewDriver: reassignment.isSearchingForNewDriver,
 });
 
-// Smart ETA with real-time prep adjustment
-const smartEta = useSmartEta({
-  // ... existing
-  actualPrepElapsed: prepProgress.elapsedMinutes,
-  prepSpeedFactor: prepProgress.prepSpeedFactor,
-});
-```
-
-**Show prep progress banner during preparing phase:**
-```typescript
-{order.status === "preparing" && (
-  <PrepProgressBanner
-    status={prepProgress.status}
-    progressPercent={prepProgress.progressPercent}
-    isRunningFast={prepProgress.isRunningFast}
-    isRunningSlow={prepProgress.isRunningSlow}
-    speedMessage={prepProgress.speedMessage}
+// Show reassignment banner when applicable
+{reassignment.showReassignmentBanner && isActiveOrder && (
+  <ReassignmentBanner
+    isSearching={reassignment.isSearchingForNewDriver}
+    newDriverAssigned={reassignment.wasReassigned && !!order.driver_id}
+    nearbyCount={deliveryFactors.nearbyDriverCount}
   />
 )}
 ```
@@ -297,66 +291,52 @@ const smartEta = useSmartEta({
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/usePrepProgress.ts` | Calculate prep progress & speed deviation |
-| `src/components/eats/PrepProgressBanner.tsx` | Visual prep progress with speed context |
+| `src/hooks/useDriverReassignment.ts` | Track driver changes and detect reassignment |
+| `src/components/eats/ReassignmentBanner.tsx` | Visual banner for reassignment scenarios |
 
 ### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsDispatchStatus.ts` | Add `almost_ready` phase, accept prep progress props |
-| `src/hooks/useSmartEta.ts` | Add real-time prep speed adjustment, new recalc reason |
-| `src/components/eats/EnhancedStatusBanner.tsx` | Add `almost_ready` phase styling |
-| `src/components/eats/StatusTimeline.tsx` | Add prep progress substeps |
-| `src/pages/EatsOrderDetail.tsx` | Integrate prep progress, show banner |
+| `src/hooks/useEatsDispatchStatus.ts` | Add `reassigning` phase, accept reassignment props |
+| `src/hooks/useSmartEta.ts` | Add `driver_reassigned` recalc reason |
+| `src/hooks/useLiveEatsOrder.ts` | Include `previous_driver_id` in interface |
+| `src/components/eats/EnhancedStatusBanner.tsx` | Add `reassigning` phase styling |
+| `src/pages/EatsOrderDetail.tsx` | Integrate reassignment tracking and banner |
 
 ---
 
-## Prep Speed Adjustment Logic
+## Status Flow for Reassignment
 
 ```
-Learned Average Prep Time: 20 minutes
-Order Accepted At: 10:00 AM
-Current Time: 10:12 AM (12 min elapsed)
+Original Flow:
+  Driver Assigned → En Route → Delivered
 
-Expected Progress: 12/20 = 60%
-
-Scenario A: Order already marked "almost ready" at 60%
-  → Running FAST (speedFactor = 0.75)
-  → Adjusted prep = 20 × 0.75 = 15 min total
-  → Remaining = 15 - 12 = 3 min
-  → Message: "Kitchen is ahead of schedule"
-
-Scenario B: Still at "preparing" at 100%+ elapsed
-  → Running SLOW (speedFactor = 1.25)
-  → Adjusted prep = 20 × 1.25 = 25 min total
-  → Remaining = 25 - 20 = 5 min
-  → Message: "Taking a bit longer than usual"
+Reassignment Flow:
+  Driver Assigned → [Driver Cancels] → "Finding another driver..." 
+                                      → New Driver Assigned → En Route → Delivered
 ```
 
 ---
 
-## Status Message Summary
+## Message Summary
 
-| Phase | Main Message | Sub-message |
-|-------|--------------|-------------|
-| preparing | "Restaurant is preparing your order" | "Your food is being made fresh" |
-| almost_ready | "Almost ready!" | "Final touches on your order" |
-| searching | "Finding the best driver near you..." | "We're matching you with a nearby driver" |
-| assigned | "Driver heading to restaurant" | "Your driver will pick up your order soon" |
-| near_pickup | "Driver arriving for pickup" | "Order will be picked up shortly" |
-| at_pickup | "Driver picking up your order" | "Almost on the way!" |
-| en_route | "Driver is on the way!" | "Your food is coming to you" |
-| arrived | "Driver arriving now!" | "Get ready for your delivery" |
+| Scenario | Main Message | Sub-message |
+|----------|--------------|-------------|
+| Driver cancelled, searching | "Finding another driver near you..." | "Your previous driver had to cancel" |
+| New driver assigned | "New driver assigned!" | "Your order is back on track" |
+| ETA after reassignment | (Updated range) | "ETA recalculated for new driver" |
 
 ---
 
-## Speed Messages
+## ETA Recalculation Behavior
 
-| Condition | Message | Icon |
-|-----------|---------|------|
-| Running 20%+ faster | "Kitchen is ahead of schedule" | ⚡ Zap |
-| Running 20%+ slower | "Taking a bit longer than usual" | ⏳ Hourglass |
-| On track | (no message) | — |
+When driver reassignment occurs:
+1. `driver_id` changes from old ID → null → new ID
+2. `useSmartEta` detects `driverAssigned` transition
+3. Full ETA recalculation triggers with `reason: "driver_assigned"`
+4. New range displayed based on new driver's location
+
+The existing Smart ETA system already handles this automatically since it tracks `driverAssigned` state changes.
 
 ---
 
@@ -364,10 +344,8 @@ Scenario B: Still at "preparing" at 100%+ elapsed
 
 This implementation provides:
 
-1. **Smoother status transitions**: Preparing → Almost ready → Driver arriving for pickup
-2. **Real-time prep progress tracking**: Visual progress bar showing kitchen progress
-3. **Dynamic ETA adjustment**: ETA updates when restaurant runs faster or slower than average
-4. **Speed context messaging**: "Kitchen is ahead of schedule" or "Taking a bit longer"
-5. **Timeline substeps**: Granular prep steps (Starting → Cooking → Almost ready)
-
-The system creates a more transparent and accurate experience by reflecting actual kitchen pace rather than relying solely on historical averages.
+1. **Clear reassignment messaging**: "Finding another driver near you..." with context
+2. **Dedicated `reassigning` phase**: Distinct from normal searching
+3. **Automatic ETA recalculation**: Leverages existing Smart ETA recalc triggers
+4. **Visual reassignment banner**: Shows progress and nearby driver count
+5. **Smooth status transitions**: Searching → New driver assigned confirmation
