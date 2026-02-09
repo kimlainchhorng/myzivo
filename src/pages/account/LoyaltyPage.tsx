@@ -15,6 +15,7 @@ import {
   TrendingDown,
   Loader2,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import {
   PointsBalanceCard,
   TierProgressCard,
   ReferralCard,
+  TierComparisonTable,
 } from "@/components/loyalty";
 import { POINTS_COMPLIANCE, type ZivoTier } from "@/config/zivoPoints";
 import { cn } from "@/lib/utils";
@@ -116,10 +118,14 @@ export default function LoyaltyPage() {
 
               {/* Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="overview" className="gap-1.5">
                     <Sparkles className="w-4 h-4" />
                     <span className="hidden sm:inline">Overview</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="levels" className="gap-1.5">
+                    <Layers className="w-4 h-4" />
+                    <span className="hidden sm:inline">Levels</span>
                   </TabsTrigger>
                   <TabsTrigger value="history" className="gap-1.5">
                     <Clock className="w-4 h-4" />
@@ -201,6 +207,11 @@ export default function LoyaltyPage() {
                       </CardContent>
                     </Card>
                   )}
+                </TabsContent>
+
+                {/* Levels Tab */}
+                <TabsContent value="levels">
+                  <TierComparisonTable currentTier={mapTier(points.tier)} />
                 </TabsContent>
 
                 {/* History Tab */}
