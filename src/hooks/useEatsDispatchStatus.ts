@@ -11,6 +11,7 @@ export type DispatchPhase =
   | "preparing"     // Restaurant preparing order
   | "almost_ready"  // 75%+ through prep time - smoother transitions
   | "searching"     // Looking for driver
+  | "matched"       // Driver just assigned (brief ~3s transition)
   | "reassigning"   // Looking for replacement driver after cancellation
   | "assigned"      // Driver heading to restaurant
   | "near_pickup"   // Driver near restaurant (< 0.2mi)
@@ -45,6 +46,8 @@ interface UseEatsDispatchStatusOptions {
   wasReassigned?: boolean;
   /** Currently searching for a replacement driver */
   isSearchingForNewDriver?: boolean;
+  /** Driver was just assigned (for matched transition) */
+  justAssigned?: boolean;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -84,8 +87,19 @@ export function useEatsDispatchStatus({
   isAlmostReady,
   wasReassigned,
   isSearchingForNewDriver,
+  justAssigned,
 }: UseEatsDispatchStatusOptions): DispatchStatus {
   return useMemo(() => {
+    // Matched transition (brief ~3s window after driver assignment)
+    if (justAssigned && driverId) {
+      return {
+        phase: "matched" as DispatchPhase,
+        message: "Matched with your driver!",
+        subMessage: "They're heading to the restaurant now",
+        showSearching: false,
+      };
+    }
+
     // Cancelled orders
     if (status === "cancelled") {
       return {
@@ -338,5 +352,5 @@ export function useEatsDispatchStatus({
       subMessage: "",
       showSearching: false,
     };
-  }, [status, driverId, driverLat, driverLng, deliveryLat, deliveryLng, pickupLat, pickupLng, prepProgressPercent, isAlmostReady]);
+  }, [status, driverId, driverLat, driverLng, deliveryLat, deliveryLng, pickupLat, pickupLng, prepProgressPercent, isAlmostReady, justAssigned]);
 }
