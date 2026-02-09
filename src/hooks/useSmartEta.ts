@@ -56,6 +56,9 @@ interface UseSmartEtaOptions {
   // Real-time prep speed adjustment
   actualPrepElapsed?: number;
   prepSpeedFactor?: number;
+  // Forecast and real traffic multipliers
+  forecastMultiplier?: number;
+  realTrafficMultiplier?: number;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -124,6 +127,8 @@ export function useSmartEta({
   orderPhase,
   actualPrepElapsed,
   prepSpeedFactor = 1.0,
+  forecastMultiplier = 1.0,
+  realTrafficMultiplier,
 }: UseSmartEtaOptions): SmartEtaResult {
   const [lastRecalcAt, setLastRecalcAt] = useState(new Date());
   const [lastRecalcReason, setLastRecalcReason] = useState<RecalcReason>("initial");
@@ -215,17 +220,22 @@ export function useSmartEta({
     
     const phase = orderPhase || "preparing";
     
+    // Use real traffic multiplier when available, otherwise fall back to time-of-day factor
+    const effectiveTrafficFactor = realTrafficMultiplier != null && realTrafficMultiplier > 0
+      ? realTrafficMultiplier
+      : traffic.factor;
+
     if (phase === "preparing") {
-      // Add prep time + travel time, with prep speed adjustment
-      const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor * prepSpeedFactor;
-      const adjustedTravel = (travelEtaMinutes || 10) * traffic.factor;
+      // Add prep time + travel time, with prep speed and forecast adjustment
+      const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor * forecastMultiplier * prepSpeedFactor;
+      const adjustedTravel = (travelEtaMinutes || 10) * effectiveTrafficFactor;
       prepComponent = Math.ceil(adjustedPrep);
       travelComponent = Math.ceil(adjustedTravel);
       totalEtaMinutes = Math.ceil(adjustedPrep + adjustedTravel);
     } else if (phase === "ready" || phase === "out_for_delivery") {
       // Travel only
       prepComponent = 0;
-      travelComponent = travelEtaMinutes ? Math.ceil(travelEtaMinutes * traffic.factor) : null;
+      travelComponent = travelEtaMinutes ? Math.ceil(travelEtaMinutes * effectiveTrafficFactor) : null;
       totalEtaMinutes = travelComponent;
     } else {
       // Default
@@ -284,6 +294,8 @@ export function useSmartEta({
     learnedPrepMinutes,
     isPrepLearned,
     prepSpeedFactor,
+    forecastMultiplier,
+    realTrafficMultiplier,
     lastRecalcAt,
     lastRecalcReason,
   ]);

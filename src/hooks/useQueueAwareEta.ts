@@ -35,6 +35,8 @@ interface UseQueueAwareEtaOptions {
   incentiveMultiplier?: number;
   /** Surge multiplier (1.0+) — inflates driver time to reflect high-demand delays */
   surgeMultiplier?: number;
+  /** Forecast multiplier (1.0-1.3) — inflates prep time when demand is predicted to rise */
+  forecastMultiplier?: number;
 }
 
 // Default values
@@ -48,6 +50,7 @@ export function useQueueAwareEta({
   demandMultiplier = 1.0,
   incentiveMultiplier = 1.0,
   surgeMultiplier = 1.0,
+  forecastMultiplier = 1.0,
 }: UseQueueAwareEtaOptions): QueueAwareEtaResult {
   // Get learned prep time
   const learnedPrep = useLearnedPrepTime(restaurantId);
@@ -57,8 +60,8 @@ export function useQueueAwareEta({
   const queue = useRestaurantQueueLength(restaurantId, prepMinutes);
 
   return useMemo(() => {
-    // Apply demand forecast multiplier to prep time
-    const adjustedPrepMinutes = Math.round(prepMinutes * demandMultiplier);
+    // Apply demand forecast multiplier and forecast multiplier to prep time
+    const adjustedPrepMinutes = Math.round(prepMinutes * demandMultiplier * forecastMultiplier);
     // Apply schedule forecast, incentive, and surge multipliers to driver time
     // Surge inflation is dampened (50% of raw multiplier) and capped at 1.3x
     const surgeInflation = surgeMultiplier > 1
@@ -112,6 +115,7 @@ export function useQueueAwareEta({
     demandMultiplier,
     incentiveMultiplier,
     surgeMultiplier,
+    forecastMultiplier,
     learnedPrep.loading,
   ]);
 }

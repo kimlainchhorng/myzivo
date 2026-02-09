@@ -6653,6 +6653,7 @@ export type Database = {
         Row: {
           dispatch_enabled: boolean | null
           distance_weight: number | null
+          eta_weight: number | null
           id: number
           idle_time_weight: number | null
           max_attempts: number | null
@@ -6667,10 +6668,13 @@ export type Database = {
           rating_weight: number | null
           updated_at: string | null
           updated_by: string | null
+          workload_weight: number | null
+          zone_demand_weight: number | null
         }
         Insert: {
           dispatch_enabled?: boolean | null
           distance_weight?: number | null
+          eta_weight?: number | null
           id?: number
           idle_time_weight?: number | null
           max_attempts?: number | null
@@ -6685,10 +6689,13 @@ export type Database = {
           rating_weight?: number | null
           updated_at?: string | null
           updated_by?: string | null
+          workload_weight?: number | null
+          zone_demand_weight?: number | null
         }
         Update: {
           dispatch_enabled?: boolean | null
           distance_weight?: number | null
+          eta_weight?: number | null
           id?: number
           idle_time_weight?: number | null
           max_attempts?: number | null
@@ -6703,6 +6710,8 @@ export type Database = {
           rating_weight?: number | null
           updated_at?: string | null
           updated_by?: string | null
+          workload_weight?: number | null
+          zone_demand_weight?: number | null
         }
         Relationships: []
       }
@@ -13316,6 +13325,36 @@ export type Database = {
           id?: string
           restaurant_id?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      growth_actions: {
+        Row: {
+          action_type: string | null
+          created_at: string | null
+          executed_at: string | null
+          id: string
+          parameters: Json | null
+          status: string | null
+          target_scope: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          parameters?: Json | null
+          status?: string | null
+          target_scope?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          parameters?: Json | null
+          status?: string | null
+          target_scope?: string | null
         }
         Relationships: []
       }
