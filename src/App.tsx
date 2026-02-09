@@ -20,6 +20,7 @@ import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
+import { PreferencesSync } from "./components/shared/PreferencesSync";
 import { GoogleMapProvider } from "./components/maps";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
@@ -342,6 +343,7 @@ const Company = lazy(() => import("./pages/Company"));
 const Security = lazy(() => import("./pages/Security"));
 const PrivacySecurity = lazy(() => import("./pages/PrivacySecurity"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
+const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
@@ -642,6 +644,7 @@ const App = () => (
           <UTMProvider>
           <RealtimeSyncProvider>
           <RideStoreProvider>
+            <PreferencesSync />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Eager loaded routes */}
@@ -874,6 +877,7 @@ const App = () => (
                 <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
                 <Route path="/account/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
                 <Route path="/account/rewards" element={<ProtectedRoute><AccountRewardsPage /></ProtectedRoute>} />
+                <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
                 <Route path="/admin/loyalty" element={<ProtectedRoute><AdminLoyaltyPage /></ProtectedRoute>} />
 
                 {/* Restaurant Ads Routes */}

@@ -27,7 +27,8 @@ import {
   ExternalLink,
   Users,
   TrendingUp,
-  Trophy
+  Trophy,
+  Globe
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
@@ -131,6 +132,7 @@ const Profile = () => {
     { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks" },
     { icon: Trophy, label: "Achievements", href: "/account/achievements", description: "Badges & rewards" },
     { icon: Sparkles, label: "Activity", href: "/account/activity", description: "Your personal stats" },
+    { icon: Globe, label: "Language & Currency", href: "/account/preferences", description: "Display preferences" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
