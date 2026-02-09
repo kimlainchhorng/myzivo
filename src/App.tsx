@@ -599,8 +599,8 @@ function BrandThemeApplicator() {
 }
 
 const App = () => (
-  <BrandProvider>
   <QueryClientProvider client={queryClient}>
+  <BrandProvider>
     <GoogleMapProvider>
     <TooltipProvider>
       <Toaster />
@@ -1625,8 +1625,8 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
     </GoogleMapProvider>
-  </QueryClientProvider>
   </BrandProvider>
+  </QueryClientProvider>
 );
 
 export default App;

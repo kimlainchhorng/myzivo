@@ -378,6 +378,7 @@ export type Database = {
       admin_audit_logs: {
         Row: {
           action: string
+          actor_role: string | null
           admin_id: string
           created_at: string
           entity_id: string | null
@@ -391,6 +392,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          actor_role?: string | null
           admin_id: string
           created_at?: string
           entity_id?: string | null
@@ -404,6 +406,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          actor_role?: string | null
           admin_id?: string
           created_at?: string
           entity_id?: string | null
@@ -1648,6 +1651,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      audit_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          audit_log_id: string | null
+          created_at: string
+          id: string
+          message: string
+          severity: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          audit_log_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          severity: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          audit_log_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_alerts_audit_log_id_fkey"
+            columns: ["audit_log_id"]
+            isOneToOne: false
+            referencedRelation: "admin_audit_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -6341,6 +6388,39 @@ export type Database = {
           id?: string
           remind_at?: string
           sent?: boolean
+        }
+        Relationships: []
+      }
+      disputes: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          reason: string | null
+          resolved_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
