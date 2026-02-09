@@ -1,82 +1,61 @@
 
 
-# Use Demand Forecast to Improve ETA Accuracy
+# Batched Delivery Transparency
 
 ## Overview
 
-Wire the existing `demand_forecasts` data (predicted order volume per zone per hour) into the ETA calculation so that estimated delivery times account for upcoming demand surges -- not just the current queue snapshot. No UI changes; this is a behind-the-scenes accuracy improvement.
+Most of the infrastructure is already built. The `GroupedDeliveryBanner` already shows "Your driver is completing another nearby delivery" and the `EtaCountdown` already receives batch-specific ETA data with real-time updates. The main gap is that the `MultiStopTrackingProgress` component (fully built) is never rendered on the order detail page, and the `StatusTimeline` lacks batch context.
 
-## Current State
+## What Already Works
 
-- **`useQueueAwareEta`** calculates ETA as: `queueWait + prepTime + driverTime`
-- **Queue wait** comes from `useRestaurantQueueLength`, which counts *current* active orders -- it has no forward-looking signal
-- **Driver time** already uses `scheduleForecastMultiplier` from driver schedule predictions (0.85-1.0)
-- **`demand_forecasts`** table stores per-zone, per-hour predictions (`predicted_orders`, `predicted_drivers_needed`, `surge_predicted`, `confidence`) -- currently only used in the admin Dispatch dashboard, never in the customer-facing ETA
+- **Banner message**: `GroupedDeliveryBanner` displays contextual messages like "Your driver is completing another nearby delivery first" or "Driver has X stops before yours"
+- **Dynamic ETA**: `EtaCountdown` receives `batchStopEta` and `batchPosition` from `useOrderBatchInfo`, which subscribes to real-time `batch_stops` changes
+- **Badge**: `GroupedDeliveryBadge` shows "Grouped route" label in the header
+- **Batch data hook**: `useOrderBatchInfo` fetches stop position, ETA, and current stop via a secure RPC
 
 ## What Changes
 
-### 1. New hook: `src/hooks/useDemandAdjustedEta.ts`
+### 1. Wire `MultiStopTrackingProgress` into `EatsOrderDetail.tsx`
 
-A small hook that:
-- Fetches the nearest upcoming `demand_forecasts` row for the restaurant's zone (by matching the restaurant's `region_id` to `zone_code`)
-- Returns a `demandMultiplier` (1.0-1.3) based on predicted order volume relative to driver supply:
-  - If `predicted_orders / predicted_drivers_needed > 3`: multiplier = 1.3 (high strain)
-  - If ratio > 2: multiplier = 1.15
-  - If `surge_predicted` is true: multiplier = max(current, 1.1)
-  - Otherwise: 1.0 (no adjustment)
-- Also returns a confidence-weighted flag so low-confidence forecasts have a dampened effect (multiplier moves toward 1.0 proportionally)
-- Uses React Query with a 2-minute stale time to avoid excessive fetches
+The component exists but is never rendered. Add it to the order detail page when `batchInfo.isBatched` is true and the order is active. It will show the visual stop-by-stop progress (Stop 1 delivered, heading to Stop 2, etc.) directly on the tracking page.
 
-### 2. Update: `src/hooks/useQueueAwareEta.ts`
+This requires mapping the batch info into the component's `TrackingStop[]` format. Since we only have the customer's stop details (not other customers' data, for privacy), we'll show numbered stops with status indicators -- delivered, current, or pending.
 
-- Accept a new optional `demandMultiplier` parameter (default 1.0)
-- Apply it to the `prepMinutes` component of the ETA: `adjustedPrepMinutes = prepMinutes * demandMultiplier`
-- This inflates the prep estimate when high demand is forecast, making the displayed range more realistic during peak periods
+### 2. Add batch substep to `StatusTimeline`
 
-### 3. Update: `src/pages/EatsCheckout.tsx`
-
-- Import `useDemandAdjustedEta` and pass the restaurant's zone/region to it
-- Pass the returned `demandMultiplier` into `useQueueAwareEta`
-- No visual changes -- the ETA range displayed simply becomes more accurate
-
-## Technical Details
-
-### Demand multiplier calculation (in `useDemandAdjustedEta`)
-
-```text
-ratio = predicted_orders / max(predicted_drivers_needed, 1)
-rawMultiplier =
-  ratio > 3  -> 1.30
-  ratio > 2  -> 1.15
-  surge_predicted -> max(1.10, current)
-  else       -> 1.00
-
-// Dampen by forecast confidence (0-1)
-demandMultiplier = 1 + (rawMultiplier - 1) * confidence
-```
-
-### ETA formula change (in `useQueueAwareEta`)
-
-```text
-Before: baseEta = queueWait + prepMinutes + driverMinutes
-After:  baseEta = queueWait + (prepMinutes * demandMultiplier) + driverMinutes
-```
-
-### Restaurant zone lookup
-
-The hook needs the restaurant's `region_id` to match against `demand_forecasts.zone_code`. This can be fetched from the `restaurants` table or passed in from the checkout page context where the restaurant is already loaded.
+Add a new optional prop to `StatusTimeline` for batch context. When the order is batched and out for delivery, inject a substep between "Picked Up" and "Delivered" showing "Delivering stop X of Y" with dynamic progress.
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useDemandAdjustedEta.ts` | Create | Fetches forecast, computes demand multiplier |
-| `src/hooks/useQueueAwareEta.ts` | Update | Accept and apply `demandMultiplier` to prep time |
-| `src/pages/EatsCheckout.tsx` | Update | Wire the new hook into the existing ETA call |
+| `src/pages/EatsOrderDetail.tsx` | Update | Import and render `MultiStopTrackingProgress` when order is batched |
+| `src/components/eats/StatusTimeline.tsx` | Update | Add batch-aware substep showing multi-stop progress |
+
+## Technical Details
+
+### MultiStopTrackingProgress integration
+
+Build a `TrackingStop[]` array from `batchInfo`:
+
+```text
+For i in 1..totalStops:
+  if i < currentStopOrder -> status = "delivered"
+  if i === currentStopOrder -> status = "current"  
+  if i > currentStopOrder -> status = "pending"
+  address = (i === customerStopOrder) ? order.delivery_address : "Stop i"
+```
+
+Place it between the GroupedDeliveryBanner and the ETA countdown for visual flow.
+
+### StatusTimeline batch substep
+
+Add two new optional props: `batchPosition` (current/total) and `isBatched`. When present and order status is `out_for_delivery`, render a substep under "Out for Delivery" showing "Stop X of Y -- delivering nearby order" or "Stop X of Y -- heading to you next".
 
 ## Edge Cases
 
-- **No forecast data available**: multiplier defaults to 1.0 (no change to current behavior)
-- **Low confidence forecast**: multiplier is dampened toward 1.0 proportionally
-- **Restaurant has no region assigned**: falls back to 1.0
-- **Multiple forecast rows for same time window**: uses the one closest to the current hour
+- **Not batched**: No changes to current behavior (components hidden)
+- **Customer is first stop**: `MultiStopTrackingProgress` shows their stop as current, no "another delivery" message
+- **All stops delivered**: Progress shows completion state
+- **Privacy**: Only stop numbers and the customer's own address are shown; other customers' addresses are not exposed
+
