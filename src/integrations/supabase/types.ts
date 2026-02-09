@@ -754,6 +754,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_conversations: {
+        Row: {
+          answer: string | null
+          created_at: string | null
+          escalated: boolean | null
+          id: string
+          question: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string | null
+          escalated?: boolean | null
+          id?: string
+          question?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string | null
+          escalated?: boolean | null
+          id?: string
+          question?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_fraud_alerts: {
         Row: {
           action_taken: string | null
@@ -26462,6 +26492,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_logs: {
+        Row: {
+          device_role: string | null
+          event_type: string | null
+          id: string
+          status: string | null
+          synced_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          device_role?: string | null
+          event_type?: string | null
+          id?: string
+          status?: string | null
+          synced_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          device_role?: string | null
+          event_type?: string | null
+          id?: string
+          status?: string | null
+          synced_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       system_health_history: {
         Row: {
           active_incidents: number | null
@@ -29877,6 +29934,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_events: {
+        Row: {
+          command: string | null
+          created_at: string | null
+          id: string
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          command?: string | null
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          command?: string | null
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       waitlist: {
         Row: {

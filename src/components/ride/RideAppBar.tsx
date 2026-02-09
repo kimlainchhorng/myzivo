@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import { motion } from "framer-motion";
-import ZivoLogo from "@/components/ZivoLogo";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 interface RideAppBarProps {
   onMenuClick?: () => void;
@@ -13,7 +13,7 @@ const RideAppBar = ({ onMenuClick }: RideAppBarProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-transparent"
     >
-      <ZivoLogo size="sm" showText={true} />
+      <BrandLogo size="sm" showText={true} />
       
       <motion.button
         whileTap={{ scale: 0.9 }}

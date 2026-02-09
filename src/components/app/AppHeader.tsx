@@ -4,7 +4,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { Bell, ChevronLeft } from "lucide-react";
-import ZivoLogo from "@/components/ZivoLogo";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import CitySelector from "@/components/city/CitySelector";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ const AppHeader = ({
             onClick={() => navigate("/")}
             className="cursor-pointer active:scale-95 transition-transform touch-manipulation"
           >
-            <ZivoLogo size="sm" />
+            <BrandLogo size="sm" />
           </div>
         )}
 
