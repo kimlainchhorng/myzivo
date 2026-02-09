@@ -27,10 +27,12 @@ import { useCreateFoodOrder, useRestaurant } from "@/hooks/useEatsOrders";
 import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
 import { useCartValidation } from "@/hooks/useCartValidation";
+import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
 import { UnavailableItemBanner } from "@/components/eats/UnavailableItemBanner";
+import { EtaBreakdownCard } from "@/components/eats/EtaBreakdownCard";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -63,6 +65,9 @@ function EatsCheckoutContent() {
   // Fetch restaurant to check availability
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
   const availability = useRestaurantAvailability(restaurant);
+  
+  // Queue-aware ETA calculation
+  const eta = useQueueAwareEta({ restaurantId: restaurantId || undefined });
   
   // Cart validation for item availability
   const { validateCart, unavailableItems, isValidating } = useCartValidation();
@@ -514,7 +519,18 @@ function EatsCheckoutContent() {
 
                     <hr />
 
-                    {/* Totals */}
+                    {/* ETA Breakdown */}
+                    <EtaBreakdownCard
+                      queueMinutes={eta.breakdown.queueMinutes}
+                      prepMinutes={eta.breakdown.prepMinutes}
+                      driverMinutes={eta.breakdown.driverMinutes}
+                      totalMinRange={eta.etaMinRange}
+                      totalMaxRange={eta.etaMaxRange}
+                      isHighVolume={eta.isHighVolume}
+                      queueLength={eta.queueLength}
+                    />
+
+                    <hr />
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
