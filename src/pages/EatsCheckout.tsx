@@ -42,6 +42,8 @@ import { BillingTypeSelector } from "@/components/checkout/BillingTypeSelector";
 import { CompanyBillingBadge } from "@/components/checkout/CompanyBillingBadge";
 import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { toast } from "sonner";
+import { useShareTracking } from "@/hooks/useShareTracking";
+import { getPersistedUTMParams } from "@/lib/subidGenerator";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -59,6 +61,7 @@ function EatsCheckoutContent() {
   const navigate = useNavigate();
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
   const createOrder = useCreateFoodOrder();
+  const { logConversion } = useShareTracking();
   const { data: businessMembership } = useBusinessMembership();
   const { isInMaintenance, isLoading: maintenanceLoading } = useServiceMaintenance("eats");
   const [orderSubmitted, setOrderSubmitted] = useState(false);
@@ -203,6 +206,15 @@ function EatsCheckoutContent() {
 
       clearCart();
       toast.success("Order placed successfully!");
+      
+      // Track share conversion if user arrived via shared link
+      if (order?.id) {
+        const utm = getPersistedUTMParams();
+        if (utm.utm_source === "share") {
+          logConversion(order.id);
+        }
+      }
+      
       // Redirect to order detail page
       if (order?.id) {
         navigate(`/eats/orders/${order.id}`);

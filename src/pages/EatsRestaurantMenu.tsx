@@ -2,11 +2,11 @@
  * ZIVO Eats — Restaurant Menu Page
  */
 
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { 
   UtensilsCrossed, MapPin, Clock, Star, Phone, ArrowLeft, 
-  Plus, Minus, ShoppingCart, Loader2, Check 
+  Plus, Minus, ShoppingCart, Loader2, Check, Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,8 @@ import { MaintenanceBanner } from "@/components/eats/MaintenanceBanner";
 import { ItemAvailabilityBadge } from "@/components/eats/ItemAvailabilityBadge";
 import { HighVolumeBanner } from "@/components/eats/HighVolumeBanner";
 import { useRestaurantQueueLength } from "@/hooks/useRestaurantQueueLength";
+import { SocialShareSheet } from "@/components/shared/SocialShareSheet";
+import { useShareTracking } from "@/hooks/useShareTracking";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -243,6 +245,18 @@ function EatsRestaurantMenuContent() {
   
   // Get queue length for high volume banner
   const queue = useRestaurantQueueLength(id, restaurant?.avg_prep_time || 20);
+  
+  // Share tracking — log "link_opened" if arrived via share link
+  const [searchParams] = useSearchParams();
+  const { logLinkOpened } = useShareTracking();
+  const hasLoggedOpen = useRef(false);
+  
+  useEffect(() => {
+    if (id && searchParams.get("utm_source") === "share" && !hasLoggedOpen.current) {
+      hasLoggedOpen.current = true;
+      logLinkOpened(id, "restaurant_view");
+    }
+  }, [id, searchParams, logLinkOpened]);
 
   const isLoading = restaurantLoading || menuLoading;
   const cartCount = getItemCount();
@@ -347,7 +361,22 @@ function EatsRestaurantMenuContent() {
                 </div>
               </div>
 
-              <RestaurantAvailabilityBadge restaurant={restaurant} className="self-start" />
+              <div className="flex items-center gap-2 self-start">
+                <SocialShareSheet
+                  title={restaurant.name}
+                  text={`Check out ${restaurant.name} on ZIVO Eats!`}
+                  url={`/eats/restaurant/${restaurant.id}`}
+                  entityId={restaurant.id}
+                  entityType="restaurant"
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </Button>
+                  }
+                />
+                <RestaurantAvailabilityBadge restaurant={restaurant} className="" />
+              </div>
             </div>
             
             {/* Availability Banners */}
