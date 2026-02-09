@@ -1,104 +1,44 @@
 
 
-# Fix Mobile App Updates — Implementation Plan
+# Add Address Autocomplete to Eats Address Page
 
 ## Problem
-The PWA is configured with `vite-plugin-pwa` and a service worker (`sw.js`), but **there is no code in the app that registers the service worker or detects updates**. This means:
+The address input on the Eats Address page (`/eats/address`) is a plain text field with no autocomplete. Customers must type the full address manually, and coordinates are hardcoded to `lat: 0, lng: 0` -- meaning saved addresses have no real location data.
 
-1. The browser caches old app files
-2. When you publish an update, customers keep seeing the old version
-3. The only fix for customers right now is to delete and re-download the app
-
-## Root Cause
-- `vite-plugin-pwa` has `registerType: "autoUpdate"` and `strategies: "injectManifest"` configured
-- The service worker has `skipWaiting()` and `clients.claim()` (good)
-- But **no code in `src/`** actually calls `registerSW()` from the PWA plugin — so the browser never knows about updates
+## Solution
+Replace the plain `<Input>` with the existing `AddressAutocomplete` component (already built at `src/components/shared/AddressAutocomplete.tsx`) which uses the Google Places API via the `maps-autocomplete` edge function. Also store actual coordinates when an address is selected.
 
 ---
 
-## Fix
+## Changes
 
-### 1) Register the Service Worker with Update Detection
+### 1) Modify `src/pages/EatsAddress.tsx`
 
-**New file:** `src/hooks/usePWAUpdate.ts`
+- Import `AddressAutocomplete` from `@/components/shared/AddressAutocomplete.tsx`
+- Add `lat` and `lng` fields to the `AddressFormData` interface
+- Replace the plain `<Input>` for the "Full Address" field with the `<AddressAutocomplete>` component
+- When a suggestion is selected, store address text + real lat/lng in form state
+- Use those real coordinates in `handleSave` instead of hardcoded `0, 0`
+- Style the autocomplete dropdown to match the dark theme (zinc-900 background, white text)
 
-Uses `virtual:pwa-register` (provided by vite-plugin-pwa) to:
-- Register the service worker on app load
-- Detect when a new version is available
-- Auto-apply the update (call `updateSW(true)`) since `registerType` is `autoUpdate`
-- Show a brief toast: "App updated! Refreshing..." before reload
+### 2) Modify `src/components/eats/AddDeliveryStopSheet.tsx`
 
-### 2) Create Update Prompt Component
+- Import and use the same `AddressAutocomplete` component for the stop address input
+- When a suggestion is selected, set `address`, `lat`, and `lng` from the result
+- This ensures multi-stop delivery addresses also get real coordinates
 
-**New file:** `src/components/shared/PWAUpdatePrompt.tsx`
+### 3) Style fix for `AddressAutocomplete` dropdown in dark contexts
 
-A small toast/banner that appears when a new version is ready:
-- Shows: "A new version is available"
-- Button: "Update now"
-- On click: applies the update and reloads
-- Auto-updates after 10 seconds if user doesn't interact (since autoUpdate is configured)
-
-### 3) Wire into App Entry Point
-
-**File to modify:** `src/App.tsx`
-
-Add `PWAUpdatePrompt` component at the root level so it's always active, detecting updates on every page.
-
-### 4) Fix Service Worker for Proper Cache Busting
-
-**File to modify:** `public/sw.js`
-
-Add a `message` listener for `SKIP_WAITING` (already exists) and ensure the activate event cleans old caches, so stale files don't persist.
-
----
-
-## How It Works After the Fix
-
-```text
-You publish an update on Lovable
-       |
-       v
-New service worker file is generated with new hash
-       |
-       v
-Customer opens the app (or it checks in background)
-       |
-       v
-vite-plugin-pwa detects new SW version
-       |
-       v
-PWAUpdatePrompt shows: "A new version is available"
-       |
-       v
-  Auto-updates after 10 seconds OR user taps "Update now"
-       |
-       v
-  Page reloads with latest version — no delete/reinstall needed
-```
-
----
-
-## File Summary
-
-### New Files (2)
-| File | Purpose |
-|------|---------|
-| `src/hooks/usePWAUpdate.ts` | Registers SW and detects updates via `virtual:pwa-register` |
-| `src/components/shared/PWAUpdatePrompt.tsx` | Banner/toast prompting user to update |
-
-### Modified Files (1)
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add `PWAUpdatePrompt` at root level |
+- Add dark-theme compatible class overrides so the dropdown renders correctly on the zinc-950 Eats pages (the component currently uses `bg-popover` which adapts to theme)
 
 ---
 
 ## What Customers Will Experience
 
-| Before (Current) | After (Fixed) |
-|-------------------|---------------|
-| Updates never appear | Updates detected automatically |
-| Must delete and reinstall app | Quick reload applies update |
-| Stale cached pages shown | Fresh content after brief reload |
-| No feedback about versions | "A new version is available" prompt |
+| Before | After |
+|--------|-------|
+| Must type full address manually | Type a few characters, see suggestions |
+| No address validation | Google Places validates real addresses |
+| Coordinates saved as 0, 0 | Real lat/lng stored for routing and delivery |
+| Easy to make typos | Select from dropdown, no typos |
 
