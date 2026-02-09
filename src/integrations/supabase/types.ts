@@ -17104,6 +17104,24 @@ export type Database = {
           },
         ]
       }
+      order_batches: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       order_bundles: {
         Row: {
           created_at: string | null
@@ -17775,6 +17793,7 @@ export type Database = {
       orders: {
         Row: {
           almost_ready_at: string | null
+          batch_id: string | null
           brand_id: string | null
           bundle_id: string | null
           cancelled_by_user: boolean | null
@@ -17793,6 +17812,7 @@ export type Database = {
         }
         Insert: {
           almost_ready_at?: string | null
+          batch_id?: string | null
           brand_id?: string | null
           bundle_id?: string | null
           cancelled_by_user?: boolean | null
@@ -17811,6 +17831,7 @@ export type Database = {
         }
         Update: {
           almost_ready_at?: string | null
+          batch_id?: string | null
           brand_id?: string | null
           bundle_id?: string | null
           cancelled_by_user?: boolean | null
@@ -17828,6 +17849,13 @@ export type Database = {
           scheduled_for?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "order_batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_brand_id_fkey"
             columns: ["brand_id"]

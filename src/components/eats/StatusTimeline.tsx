@@ -5,7 +5,7 @@
  * Includes enhanced driver assignment sub-steps for transparency
  * Shows near_pickup and at_pickup phases
  */
-import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck, MapPin, Navigation, Flame, Sparkles } from "lucide-react";
+import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck, MapPin, Navigation, Flame, Sparkles, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -56,6 +56,10 @@ interface StatusTimelineProps {
   dispatchPhase?: DispatchPhase;
   /** Prep progress percentage (0-100) for prep substeps */
   prepProgressPercent?: number;
+  /** Whether this order is part of a batched delivery */
+  isBatched?: boolean;
+  /** Batch position info: current stop and total stops */
+  batchPosition?: { current: number; total: number; customerStop: number } | null;
 }
 
 function formatTimestamp(timestamp: string | null | undefined): string | null {
@@ -75,6 +79,8 @@ export function StatusTimeline({
   assignedAt,
   dispatchPhase,
   prepProgressPercent = 0,
+  isBatched = false,
+  batchPosition,
 }: StatusTimelineProps) {
   // Normalize legacy status values to standard ones
   const normalizedStatus = normalizeStatus(currentStatus);
@@ -406,12 +412,33 @@ export function StatusTimeline({
                   </motion.div>
                 )}
 
+                {/* Batch stop progress - shown when batched and out for delivery */}
+                {isEnRoute && isBatched && batchPosition && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-blue-500/30">
+                      <Layers className="w-3 h-3 text-blue-400 animate-pulse" />
+                    </div>
+                    <span className="text-xs text-blue-300">
+                      {batchPosition.current === batchPosition.customerStop
+                        ? `Stop ${batchPosition.current} of ${batchPosition.total} — heading to you`
+                        : batchPosition.current === batchPosition.customerStop - 1
+                        ? `Stop ${batchPosition.current} of ${batchPosition.total} — you're next!`
+                        : `Stop ${batchPosition.current} of ${batchPosition.total} — delivering nearby order`}
+                    </span>
+                  </motion.div>
+                )}
+
                 {/* En route to customer */}
                 {isEnRoute && (
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.25 }}
+                    transition={{ delay: isBatched ? 0.3 : 0.25 }}
                     className="flex items-center gap-3"
                   >
                     <div className="w-6 h-6 rounded-full flex items-center justify-center bg-orange-500/30">
