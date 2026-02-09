@@ -1,155 +1,119 @@
 
 
-# Wallet Enhancement — Payment Integration and Notifications
+# Payment Breakdown Transparency
 
 ## Overview
 
-The wallet infrastructure is already well-built:
-- **`/account/wallet` page** (`WalletPage.tsx`): Shows balance, lifetime earned, transaction history, and "How to Earn" section
-- **`useCustomerWallet` hook**: Fetches wallet, transactions, and has `applyCredit` mutation (calls `apply_wallet_credit` RPC)
-- **`CreditSelector` component**: Toggle to apply wallet credits at checkout (used in `EatsCart.tsx` but NOT in `EatsCheckout.tsx`)
-- **`PaymentTypeSelector` component**: Currently shows Card vs Cash options only
+There are two separate receipt systems that need enhancement:
 
-What's missing:
-1. The wallet page doesn't distinguish reward-added transactions or show a "Rewards added" section
-2. Checkout (`EatsCheckout.tsx`) has no wallet payment option -- only the older `EatsCart.tsx` uses `CreditSelector`
-3. No wallet + card split payment logic
-4. No notifications when wallet is credited
+1. **In-app Order Receipt** (`OrderReceipt.tsx`) — shown on the Eats order detail/receipt page. Already displays subtotal, discount, delivery fee, tax, and total. Missing: service fee, tip, and wallet credit lines.
+
+2. **Downloadable Receipt** (`receiptUtils.ts`) — generates a printable HTML receipt from the spending dashboard. Currently only shows service name and status with no line-item breakdown at all. The `UnifiedOrder` type lacks breakdown fields.
 
 ## What Changes
 
-### 1. Update Wallet Page with Rewards Section
+### 1. Enhance the in-app Order Receipt with missing fee lines
 
-Update `WalletPage.tsx` to:
-- Add a "Rewards Added" summary card showing total credits from rewards
-- Add "reward" as a recognized transaction type with a distinct icon (Trophy) and label
-- Add a link to `/account/rewards` in the "How to Earn" section
-- Show pending credits if any exist
+Update `OrderReceipt.tsx` to show:
+- Service fee (from `order.service_fee`)
+- Tip amount (from `order.tip_amount`)
+- Wallet credit deduction (if applicable)
 
-### 2. Add Wallet Payment Option to Checkout
+These fields already exist on `LiveEatsOrder` — they just aren't rendered.
 
-Update `PaymentTypeSelector.tsx` to support a "wallet" payment type:
-- Add a third option: "Wallet" (shown only if balance > 0)
-- When wallet balance covers the full order: single "Wallet" payment
-- When wallet balance is insufficient: show "Wallet + Card" as a combined option that uses wallet balance first, then charges the remainder to card
-- Pass wallet balance as a prop so the component can show "$X.XX available"
+### 2. Add breakdown fields to UnifiedOrder
 
-### 3. Integrate Wallet Payment into EatsCheckout
+Update `UnifiedOrder` interface in `useSpendingStats.ts` with optional breakdown fields:
+- `subtotal`, `deliveryFee`, `serviceFee`, `tax`, `tip`, `discount`, `promoCode`
 
-Update `EatsCheckout.tsx` to:
-- Import `useCustomerWallet` and wallet payment logic
-- Add payment type state (`card` | `wallet` | `wallet_card`)
-- Show `PaymentTypeSelector` with wallet option when balance > 0
-- On submit with wallet payment: call `applyCredit` RPC to deduct wallet balance
-- On submit with wallet + card: deduct wallet balance first, then process card for remainder
-- Show wallet deduction as a line item in order summary
+Populate these from the `food_orders` query (already fetches `total_amount` — expand the select to include `subtotal`, `delivery_fee`, `service_fee`, `tax`, `tip_amount`, `discount_amount`, `promo_code`). For rides and travel, populate what's available and leave others undefined.
 
-### 4. Wallet Credit Notifications
+### 3. Rewrite downloadable receipt with full breakdown
 
-Update `useCustomerWallet` hook to:
-- Subscribe to real-time changes on `customer_wallet_transactions` table for the current user
-- When a new credit transaction is detected (positive amount), show a toast notification: "Your wallet was credited $X.XX"
-- Invalidate wallet queries so balance updates immediately
+Update `generateReceiptHTML` in `receiptUtils.ts` to render a proper invoice-style receipt with all available line items: food total, delivery fee, service fee, tax, tip, discount, wallet credit, and final total. Only show lines where values exist and are non-zero.
+
+### 4. Add a "Download Invoice" button to OrderReceipt
+
+Add a download button alongside the existing "Print Receipt" that generates the full HTML invoice and triggers a print dialog — using the same `receiptUtils` pattern but with the richer `LiveEatsOrder` data.
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/pages/account/WalletPage.tsx` | Update | Add rewards section, reward transaction type, link to rewards page |
-| `src/components/eats/PaymentTypeSelector.tsx` | Update | Add wallet and wallet+card payment options |
-| `src/pages/EatsCheckout.tsx` | Update | Integrate wallet payment flow with applyCredit |
-| `src/hooks/useCustomerWallet.ts` | Update | Add real-time subscription for credit notifications |
+| `src/hooks/useSpendingStats.ts` | Update | Add breakdown fields to UnifiedOrder, expand food_orders select |
+| `src/lib/receiptUtils.ts` | Update | Full line-item breakdown in generated HTML receipt |
+| `src/components/eats/OrderReceipt.tsx` | Update | Add service fee, tip, wallet credit lines |
+| `src/components/account/OrderReceiptCard.tsx` | No change | Already works with updated receiptUtils |
 
 ## Technical Details
 
-### PaymentTypeSelector updates
+### UnifiedOrder expanded interface
 
 ```text
-Current types: "card" | "cash"
-New types: "card" | "cash" | "wallet" | "wallet_card"
-
-New props:
-  walletBalanceCents?: number  // Shows wallet option when > 0
-  orderTotalCents?: number     // Determines if full wallet or split
-
-Logic:
-  If walletBalanceCents >= orderTotalCents:
-    Show "Pay with Wallet" option ($XX.XX available)
-  If walletBalanceCents > 0 but < orderTotalCents:
-    Show "Wallet + Card" option (Use $XX.XX, card for rest)
-  If walletBalanceCents === 0:
-    Don't show wallet options
+export interface UnifiedOrder {
+  id: string;
+  type: "eats" | "rides" | "travel";
+  title: string;
+  amount: number;
+  date: string;
+  status: string;
+  // Breakdown (optional — populated when available)
+  subtotal?: number;
+  deliveryFee?: number;
+  serviceFee?: number;
+  tax?: number;
+  tip?: number;
+  discount?: number;
+  promoCode?: string;
+}
 ```
 
-### Checkout wallet payment flow
+### Eats query expansion
 
 ```text
-On submit:
-  If paymentType === "wallet":
-    Call applyCredit({ amount_cents: totalCents, order_id })
-    Create order with payment_type: "wallet", payment_status: "paid"
-
-  If paymentType === "wallet_card":
-    Call applyCredit({ amount_cents: walletBalanceCents, order_id })
-    Remaining = totalCents - walletBalanceCents
-    Process card payment for remaining amount
-    Create order with payment_type: "wallet_card"
-
-  If paymentType === "card":
-    Existing card flow (unchanged)
-
-  If paymentType === "cash":
-    Existing cash flow (unchanged)
+Current select: "id, total_amount, status, created_at, restaurant:restaurants(name)"
+New select:     "id, total_amount, subtotal, delivery_fee, service_fee, tax, tip_amount, discount_amount, promo_code, status, created_at, restaurant:restaurants(name)"
 ```
 
-### Real-time wallet notifications
+Map into UnifiedOrder:
+- subtotal -> subtotal
+- delivery_fee -> deliveryFee
+- service_fee -> serviceFee
+- tax -> tax
+- tip_amount -> tip
+- discount_amount -> discount
+- promo_code -> promoCode
+
+### Receipt HTML breakdown
+
+The `generateReceiptHTML` function will render each line item conditionally:
 
 ```text
-In useCustomerWallet, add:
-
-useEffect(() => {
-  if (!user?.id) return;
-
-  const channel = supabase
-    .channel('wallet-credits')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'customer_wallet_transactions',
-      filter: `user_id=eq.${user.id}`,
-    }, (payload) => {
-      const tx = payload.new;
-      if (tx.amount_cents > 0) {
-        toast.success(`Your wallet was credited $${(tx.amount_cents / 100).toFixed(2)}`, {
-          description: tx.description || 'Credit added to your wallet',
-        });
-      }
-      // Refresh wallet data
-      queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
-    })
-    .subscribe();
-
-  return () => { supabase.removeChannel(channel); };
-}, [user?.id]);
+Items/Subtotal:  $XX.XX
+Delivery Fee:    $X.XX
+Service Fee:     $X.XX
+Tax:             $X.XX
+Tip:             $X.XX
+Discount:       -$X.XX  (green, shown only if > 0)
+─────────────────────────
+Total Paid:      $XX.XX
 ```
 
-### Wallet page rewards section
+Lines with zero or undefined values are hidden. Discount shown in green with a minus sign. Promo code name shown in parentheses if available.
 
-Add between the balance card and "How to Earn":
-- A summary card showing total reward credits earned (filter transactions by type === "reward")
-- Link to `/account/rewards` page
+### OrderReceipt.tsx additions
 
-Add "reward" to the transaction type mapping:
-- Icon: Trophy
-- Label: "Reward Credit"
-- Color: primary (same as the rewards theme)
+Add between the existing Tax row and Total row:
+
+- Service fee row: shows `order.service_fee` if > 0
+- Tip row: shows `order.tip_amount` if > 0
+
+Both use the same styling pattern as existing rows.
 
 ### Edge cases
 
-- Wallet balance changes between page load and submit: `applyCredit` RPC validates balance server-side and fails gracefully
-- Max $25 credit per order cap still applies when using wallet
-- If wallet payment fails, fall back to showing error without creating the order
-- Real-time subscription cleanup on unmount to prevent memory leaks
-- Wallet option hidden when balance is 0
+- Rides and travel orders have no subtotal/delivery breakdown — receipt falls back to showing just "Service" label and total amount (current behavior preserved)
+- Orders with no service fee or tip simply omit those rows
+- Discount of 0 is hidden
+- All amounts use `.toFixed(2)` for consistent formatting
 
