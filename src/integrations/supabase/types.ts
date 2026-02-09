@@ -130,31 +130,49 @@ export type Database = {
       }
       achievements: {
         Row: {
+          category: string | null
           condition_type: string | null
           condition_value: number | null
           created_at: string | null
           description: string | null
+          icon: string | null
+          icon_color: string | null
           id: string
+          is_active: boolean | null
           name: string | null
           reward_json: Json | null
+          sort_order: number | null
+          updated_at: string | null
         }
         Insert: {
+          category?: string | null
           condition_type?: string | null
           condition_value?: number | null
           created_at?: string | null
           description?: string | null
+          icon?: string | null
+          icon_color?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string | null
           reward_json?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
         }
         Update: {
+          category?: string | null
           condition_type?: string | null
           condition_value?: number | null
           created_at?: string | null
           description?: string | null
+          icon?: string | null
+          icon_color?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string | null
           reward_json?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
