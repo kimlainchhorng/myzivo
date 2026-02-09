@@ -1,453 +1,381 @@
 
-# Multi-Stop Delivery — Implementation Plan
+# Business Accounts — Implementation Plan
 
 ## Overview
-Enable customers to add multiple delivery addresses when placing an order, allowing food to be dropped off at different locations during a single trip. This feature includes dynamic pricing based on distance and stops, and a progressive tracking UI showing route progress.
+Enable users to join or create a company account for corporate billing, allowing payment to be charged to the company instead of personal payment methods. This includes a Business Account section in account settings with invite code functionality and checkout integration.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Single delivery address in checkout | Complete | `src/pages/EatsCheckout.tsx` |
-| Saved locations system | Complete | `src/hooks/useSavedLocations.ts` |
-| CartContext with deliveryAddress | Complete | `src/contexts/CartContext.tsx` |
-| Batch stops system (admin) | Complete | `batch_stops` table, `useBatches.ts` |
-| Order batch info hook | Complete | `src/hooks/useOrderBatchInfo.ts` |
-| DeliveryMap component | Complete | `src/components/eats/DeliveryMap.tsx` |
-| Order tracking page | Complete | `src/pages/track/OrderTrackingPage.tsx` |
-| Haversine distance calculation | Complete | Multiple locations |
-| Food order creation | Complete | `src/hooks/useEatsOrders.ts` |
+| Business accounts table | Exists | `business_accounts` (id, company_name, billing_email) |
+| Business account users table | Exists | `business_account_users` (business_id, user_id, role) |
+| Business renter accounts | Exists | `business_renter_accounts` (full corporate profile) |
+| Invite code system | Exists | `useRenterInvites.ts` (for P2P invites) |
+| Account settings pages | Exists | `src/pages/account/` |
+| EatsCheckout | Exists | `src/pages/EatsCheckout.tsx` |
+| B2B config | Exists | `src/config/b2bTravelConfig.ts` |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Multi-stop address management in cart | Missing | Store array of delivery addresses |
-| "Add another address" UI in checkout | Missing | Button and form to add stops |
-| Multi-stop order summary display | Missing | Show Stop 1, Stop 2, etc. |
-| Distance-based delivery fee calculation | Missing | Fee = base + per-mile + per-stop |
-| Multi-stop tracking progress UI | Missing | "Delivered Stop 1 → Heading to Stop 2" |
-| Multi-stop DeliveryMap support | Missing | Show multiple dropoff markers |
-| Database schema for customer stops | Missing | Separate from admin batch_stops |
+| Business Account settings page | Missing | Section for joining/creating company |
+| Company invite codes table | Missing | Table for company-specific invite codes |
+| User business membership hook | Missing | Check if user belongs to a company |
+| Payment method selector | Missing | Personal vs Company toggle |
+| Checkout company billing display | Missing | "Billed to company" indicator |
 
 ---
 
 ## Implementation Plan
 
-### 1) Update CartContext for Multi-Stop Addresses
+### 1) Database Schema Updates
 
-**File to Modify:** `src/contexts/CartContext.tsx`
+**New Table: `company_invite_codes`**
 
-**Purpose:** Store an array of delivery stops instead of a single address.
+Stores invite codes that allow users to join specific companies.
 
-**New Interface:**
-```text
-interface DeliveryStop {
-  id: string;              // UUID for UI key
-  address: string;
-  lat: number | null;
-  lng: number | null;
-  instructions?: string;
-  label?: string;          // e.g., "Home", "Office"
-}
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| business_id | uuid (FK) | Links to business_accounts |
+| invite_code | text | 8-char alphanumeric code (e.g., "ACME2024") |
+| created_by | uuid (FK) | User who created the code |
+| expires_at | timestamp | Optional expiration |
+| max_uses | integer | Max number of times code can be used |
+| uses_count | integer | Current number of uses |
+| is_active | boolean | Whether code is active |
+| created_at | timestamp | Creation timestamp |
 
-interface CartContextType {
-  // Existing...
-  deliveryStops: DeliveryStop[];
-  addDeliveryStop: (stop: Omit<DeliveryStop, "id">) => void;
-  updateDeliveryStop: (id: string, updates: Partial<DeliveryStop>) => void;
-  removeDeliveryStop: (id: string) => void;
-  reorderDeliveryStops: (stopIds: string[]) => void;
-  clearDeliveryStops: () => void;
-  // Backward compatibility
-  deliveryAddress: string; // First stop's address
-}
-```
+**Updates to `business_accounts`:**
+- Add `invite_code_enabled` (boolean) — whether company allows invite joins
+- Add `owner_id` (uuid FK to auth.users) — company owner/admin
 
-**Storage Key:** `zivo-eats-delivery-stops`
+**Updates to `business_account_users`:**
+- Add `payment_preference` (text) — "personal" or "company"
+- Add `joined_via` (text) — "invite_code" or "direct"
+- Add `joined_at` (timestamp)
 
----
-
-### 2) Create Multi-Stop Delivery Fee Calculator
-
-**File to Create:** `src/lib/multiStopDeliveryFee.ts`
-
-**Purpose:** Calculate dynamic delivery fee based on distance and number of stops.
-
-**Pricing Formula:**
-```text
-Base Fee: $3.99 (single stop)
-Per Additional Stop: +$1.50
-Per Mile (beyond first 2 mi): +$0.50/mi
-
-Total = baseFee + (additionalStops × stopFee) + (extraMiles × perMileFee)
-
-Example: 3 stops, 8 total miles
-Base: $3.99
-Extra stops: 2 × $1.50 = $3.00
-Extra miles: (8 - 2) × $0.50 = $3.00
-Total: $9.99
-```
-
-**Function Signature:**
-```text
-interface MultiStopFeeResult {
-  baseFee: number;
-  additionalStopFee: number;
-  distanceFee: number;
-  totalFee: number;
-  totalDistance: number;
-  breakdown: {
-    label: string;
-    amount: number;
-  }[];
-}
-
-function calculateMultiStopDeliveryFee(
-  stops: { lat: number; lng: number }[],
-  restaurantLocation: { lat: number; lng: number }
-): MultiStopFeeResult
-```
+**RLS Policies:**
+- Users can read their own business membership
+- Company admins can manage invite codes
+- Company admins can view all company members
 
 ---
 
-### 3) Create Multi-Stop Address Manager Component
+### 2) Create Business Account Settings Page
 
-**File to Create:** `src/components/eats/MultiStopAddressManager.tsx`
+**File to Create:** `src/pages/account/BusinessAccountPage.tsx`
 
-**Purpose:** UI for adding, editing, and reordering delivery stops.
+**Purpose:** Section in account settings for managing business account membership.
 
-**Features:**
-- List of current stops with drag-drop reordering
-- "Add another delivery address" button
-- Remove stop button (if > 1 stop)
-- Stop numbering badges (1, 2, 3...)
-- Instructions field per stop
-- Saved address quick-select
+**States:**
+1. **No Business Account** — Show options to join or create
+2. **Member of Company** — Show company info, role, payment preference
+3. **Company Admin** — Additional management options
 
-**UI Design:**
+**UI Layout:**
+
 ```text
 ┌─────────────────────────────────────────────────┐
-│ Delivery Stops                                  │
-├─────────────────────────────────────────────────┤
-│ ① 123 Main St, City, State           [Remove]  │
-│    Instructions: Leave at door                  │
-├─────────────────────────────────────────────────┤
-│ ② 456 Oak Ave, City, State           [Remove]  │
-│    Instructions: Ring bell                      │
-├─────────────────────────────────────────────────┤
-│ [+ Add another delivery address]                │
+│ ← Business Account                    [Building]│
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ 🏢 Join a Company                         │  │
+│ │ Enter your company's invite code          │  │
+│ │                                           │  │
+│ │ [ENTER CODE          ]    [Join]         │  │
+│ └───────────────────────────────────────────┘  │
+│                                                 │
+│ ─────────────── OR ────────────────            │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ 🆕 Create a Business Account              │  │
+│ │ Set up company billing for your team      │  │
+│ │                                           │  │
+│ │ [Get Started →]                           │  │
+│ └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+**When Member:**
+
+```text
+┌─────────────────────────────────────────────────┐
+│ ← Business Account                              │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ 🏢 Acme Corporation                       │  │
+│ │ Member since Jan 2024 • Employee          │  │
+│ └───────────────────────────────────────────┘  │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ 💳 Payment Method                         │  │
+│ │                                           │  │
+│ │ (○) Personal — Use my own card            │  │
+│ │ (●) Company — Billed to Acme Corp         │  │
+│ └───────────────────────────────────────────┘  │
+│                                                 │
+│ [Leave Company]                                 │
 └─────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 4) Create Stop Address Input Sheet
+### 3) Create Business Membership Hook
 
-**File to Create:** `src/components/eats/AddDeliveryStopSheet.tsx`
+**File to Create:** `src/hooks/useBusinessMembership.ts`
 
-**Purpose:** Bottom sheet for entering a new delivery stop.
+**Purpose:** Fetch and manage user's business account membership.
 
-**Features:**
-- Address autocomplete input
-- Saved address quick-select
-- Delivery instructions field
-- Validate address before adding
-- Geocode address to lat/lng
+**Functions:**
+- `useBusinessMembership()` — Get current user's business membership
+- `useJoinCompanyWithCode()` — Join company using invite code
+- `useLeaveCompany()` — Leave current company
+- `useUpdatePaymentPreference()` — Toggle personal/company payment
+
+**Return Type:**
+```text
+interface BusinessMembership {
+  isMember: boolean;
+  company: {
+    id: string;
+    name: string;
+    billingEmail: string;
+  } | null;
+  role: "admin" | "member" | "viewer";
+  paymentPreference: "personal" | "company";
+  joinedAt: string;
+  isLoading: boolean;
+}
+```
 
 ---
 
-### 5) Update EatsCheckout for Multi-Stop
+### 4) Create Company Invite Code Validation Hook
+
+**File to Create:** `src/hooks/useCompanyInviteCode.ts`
+
+**Purpose:** Validate and redeem company invite codes.
+
+**Functions:**
+- `useValidateCompanyCode()` — Check if code is valid
+- `useRedeemCompanyCode()` — Join company with code
+
+**Validation Logic:**
+1. Check code exists and is active
+2. Check code hasn't expired
+3. Check max uses not exceeded
+4. Check user not already in this company
+
+---
+
+### 5) Update EatsCheckout for Business Billing
 
 **File to Modify:** `src/pages/EatsCheckout.tsx`
 
 **Changes:**
-- Replace single address input with MultiStopAddressManager
-- Update delivery fee calculation to use multi-stop calculator
-- Update order summary to show numbered stops
-- Update form validation for multiple addresses
-- Pass stops array to order creation
+- Import `useBusinessMembership` hook
+- Add payment method selector when user is company member
+- Show "Billed to company" badge in order summary
+- Pass billing type to order creation
 
-**Order Summary Updates:**
+**New UI Section (before order summary):**
+
 ```text
-Delivery Stops:
-  Stop 1 – 123 Main St
-  Stop 2 – 456 Oak Ave
+┌───────────────────────────────────────────────┐
+│ 💳 Payment Method                              │
+│                                                │
+│ ┌──────────────────┐ ┌──────────────────┐    │
+│ │ Personal         │ │ ✓ Company        │    │
+│ │ My payment       │ │ Acme Corp        │    │
+│ └──────────────────┘ └──────────────────┘    │
+└───────────────────────────────────────────────┘
+```
 
-Subtotal: $45.00
-Delivery Fee (2 stops, 6.2 mi): $7.49
-Total: $52.49
+**In Order Summary:**
+
+```text
+Payment: Billed to Acme Corporation
 ```
 
 ---
 
-### 6) Update CreateFoodOrderInput and Mutation
+### 6) Update Order Creation
 
 **File to Modify:** `src/hooks/useEatsOrders.ts`
 
 **Changes:**
-- Add `delivery_stops` array to CreateFoodOrderInput
-- Store stops as JSONB in order record
-- Calculate and store total distance
-- Generate customer-side stops for tracking
+- Add `billing_type` field: "personal" | "company"
+- Add `business_account_id` field when billing to company
+- Store company billing info in order record
 
-**New Field:**
+**New Fields in CreateFoodOrderInput:**
 ```text
-interface DeliveryStopInput {
-  address: string;
-  lat: number;
-  lng: number;
-  instructions?: string;
-  label?: string;
-  stop_order: number;
-}
-
-interface CreateFoodOrderInput {
-  // Existing...
-  delivery_stops: DeliveryStopInput[];
-  total_distance_miles: number;
-  is_multi_stop: boolean;
-}
+billing_type?: "personal" | "company";
+business_account_id?: string;
+business_account_name?: string;
 ```
 
 ---
 
-### 7) Database Schema Updates
+### 7) Add Route and Navigation
 
-**New Column on food_orders:**
-```text
-delivery_stops JSONB DEFAULT NULL
-is_multi_stop BOOLEAN DEFAULT FALSE
-total_distance_miles NUMERIC DEFAULT NULL
-current_stop_index INTEGER DEFAULT 0
-```
-
-**delivery_stops JSONB Structure:**
-```json
-[
-  {
-    "stop_order": 1,
-    "address": "123 Main St",
-    "lat": 40.7128,
-    "lng": -74.0060,
-    "instructions": "Leave at door",
-    "status": "pending",
-    "delivered_at": null
-  },
-  {
-    "stop_order": 2,
-    "address": "456 Oak Ave",
-    "lat": 40.7200,
-    "lng": -74.0100,
-    "instructions": "Ring bell",
-    "status": "pending",
-    "delivered_at": null
-  }
-]
-```
-
----
-
-### 8) Create Multi-Stop Tracking Progress Component
-
-**File to Create:** `src/components/eats/MultiStopTrackingProgress.tsx`
-
-**Purpose:** Show route progress for multi-stop orders.
-
-**States:**
-| Current Stop | Display |
-|--------------|---------|
-| On way to 1 | "Heading to Stop 1 of 2" |
-| Delivered 1 | "Delivered Stop 1 ✓ → Heading to Stop 2" |
-| All done | "All 2 stops delivered ✓" |
-
-**UI Design:**
-```text
-┌─────────────────────────────────────────────────┐
-│ 📍 Route Progress                               │
-├─────────────────────────────────────────────────┤
-│  ✓ Stop 1 – 123 Main St          Delivered 2:15pm │
-│  → Stop 2 – 456 Oak Ave              Arriving...   │
-└─────────────────────────────────────────────────┘
-```
-
-**Features:**
-- Visual timeline with stop markers
-- Checkmarks for completed stops
-- Delivery time for each stop
-- Current stop highlighted
-- ETA for next stop
-
----
-
-### 9) Update DeliveryMap for Multi-Stop
-
-**File to Modify:** `src/components/eats/DeliveryMap.tsx`
+**File to Modify:** `src/App.tsx`
 
 **Changes:**
-- Accept array of delivery stops instead of single point
-- Show numbered markers for each stop (1, 2, 3...)
-- Color code: completed (green), current (orange), pending (gray)
-- Draw route through all stops
-- Update legend for multi-stop
+- Import lazy-loaded `BusinessAccountPage`
+- Add route: `/account/business`
 
-**New Props:**
-```text
-interface DeliveryMapProps {
-  // Existing...
-  deliveryStops?: Array<{
-    lat: number;
-    lng: number;
-    stopOrder: number;
-    status: "pending" | "current" | "delivered";
-  }>;
-  isMultiStop?: boolean;
-}
-```
-
----
-
-### 10) Update Order Detail Page for Multi-Stop
-
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+**File to Update:** `src/pages/mobile/MobileAccount.tsx`
 
 **Changes:**
-- Show MultiStopTrackingProgress when multi-stop order
-- Pass stops array to DeliveryMap
-- Update delivery status to show current stop
-- Show stop-by-stop delivery confirmation
-
----
-
-### 11) Update Order Tracking Page (Public)
-
-**File to Modify:** `src/pages/track/OrderTrackingPage.tsx`
-
-**Changes:**
-- Support multi-stop display for public tracking
-- Show route progress component
-- Update map with multiple markers
+- Add "Business Account" menu item in Account Settings section
+- Show company badge if user is a member
 
 ---
 
 ## File Summary
 
-### New Files (5)
+### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/lib/multiStopDeliveryFee.ts` | Calculate delivery fee for multiple stops |
-| `src/components/eats/MultiStopAddressManager.tsx` | Manage multiple delivery addresses |
-| `src/components/eats/AddDeliveryStopSheet.tsx` | Bottom sheet for adding a stop |
-| `src/components/eats/MultiStopTrackingProgress.tsx` | Route progress display |
-| `src/components/eats/StopMarker.tsx` | Numbered map marker for stops |
+| `src/pages/account/BusinessAccountPage.tsx` | Business account settings section |
+| `src/hooks/useBusinessMembership.ts` | User's business membership state |
+| `src/hooks/useCompanyInviteCode.ts` | Invite code validation/redemption |
 
-### Modified Files (7)
+### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/contexts/CartContext.tsx` | Add deliveryStops array and methods |
-| `src/pages/EatsCheckout.tsx` | Multi-stop UI and fee calculation |
-| `src/hooks/useEatsOrders.ts` | Handle multi-stop order creation |
-| `src/components/eats/DeliveryMap.tsx` | Multi-stop markers and route |
-| `src/pages/EatsOrderDetail.tsx` | Multi-stop tracking display |
-| `src/pages/track/OrderTrackingPage.tsx` | Public multi-stop tracking |
-| Database migration | Add new columns to food_orders |
+| `src/pages/EatsCheckout.tsx` | Payment method selector, company billing display |
+| `src/hooks/useEatsOrders.ts` | Add billing type to order creation |
+| `src/App.tsx` | Add /account/business route |
+| `src/pages/mobile/MobileAccount.tsx` | Add Business Account menu item |
+
+### Database Changes (1 migration)
+| Change | Description |
+|--------|-------------|
+| New table | `company_invite_codes` |
+| Alter table | `business_accounts` — add owner_id, invite_code_enabled |
+| Alter table | `business_account_users` — add payment_preference, joined_via, joined_at |
+| RLS policies | For all new/modified tables |
 
 ---
 
-## Delivery Fee Calculation Details
+## Invite Code Flow
 
-### Base Pricing
+### Joining a Company
+
 ```text
-BASE_FEE = $3.99
-PER_ADDITIONAL_STOP = $1.50
-FREE_MILES = 2.0
-PER_MILE_RATE = $0.50
-MAX_STOPS = 5
+1. User enters invite code in Business Account settings
+2. System validates code:
+   - Code exists and is_active = true
+   - Not expired (expires_at is null or > now)
+   - Uses remaining (uses_count < max_uses or max_uses is null)
+   - User not already a member
+3. If valid:
+   - Create row in business_account_users
+   - Increment uses_count on invite code
+   - Show success, display company info
+4. If invalid:
+   - Show specific error message
 ```
 
-### Route Distance Calculation
-```text
-1. Start at restaurant
-2. Calculate Haversine distance to Stop 1
-3. Calculate distance from Stop 1 to Stop 2
-4. Sum all segments for total route distance
-5. Apply pricing formula
-```
-
-### Example Calculations
-| Scenario | Stops | Distance | Delivery Fee |
-|----------|-------|----------|--------------|
-| Single stop, 1.5 mi | 1 | 1.5 mi | $3.99 |
-| Single stop, 5 mi | 1 | 5 mi | $5.49 |
-| Two stops, 4 mi | 2 | 4 mi | $6.49 |
-| Three stops, 8 mi | 3 | 8 mi | $9.99 |
+### Code Format
+- 8 alphanumeric characters
+- Uppercase only
+- No confusing characters (0/O, 1/I, L)
+- Example: `ACME2024`, `TECH8K4M`
 
 ---
 
-## Multi-Stop Order Flow
+## Payment Method Logic
 
-### Customer Flow
+### Selection Rules
+| Condition | Available Options |
+|-----------|------------------|
+| Not a company member | Personal only (no UI shown) |
+| Company member, preference = personal | Both options, Personal selected |
+| Company member, preference = company | Both options, Company selected |
+
+### Checkout Display
+- Personal: Standard checkout (no changes)
+- Company: Show "Billed to {Company Name}" badge near total
+
+### Order Record
+- `billing_type`: "personal" or "company"
+- `business_account_id`: null or company UUID
+- `business_account_name`: null or company name
+
+---
+
+## Security Considerations
+
+### RLS Policies
+
 ```text
-1. Add items to cart
-2. Go to checkout
-3. Enter first delivery address (required)
-4. Click "Add another delivery address"
-5. Enter second address with instructions
-6. Review stop order (drag to reorder)
-7. See updated delivery fee
-8. Place order
-9. Track route progress in real-time
+company_invite_codes:
+- SELECT: Company admins can view their company's codes
+- INSERT: Company admins can create codes
+- UPDATE: Company admins can modify their codes
+- DELETE: Company admins can delete their codes
+
+business_account_users:
+- SELECT: Users can view their own membership
+- SELECT: Company admins can view all company members
+- INSERT: Via invite code redemption (RPC function)
+- DELETE: User can leave, admin can remove members
 ```
 
-### Driver Flow
+### Server-Side Validation
+- Invite code validation in secure RPC function
+- Payment preference stored server-side
+- Company billing requires active membership verification
+
+---
+
+## UI Components
+
+### PaymentMethodSelector Component
+
+**File to Create:** `src/components/checkout/PaymentMethodSelector.tsx`
+
 ```text
-1. Accept multi-stop order
-2. See all stops with route
-3. Navigate to Stop 1
-4. Confirm delivery at Stop 1
-5. Navigate to Stop 2
-6. Confirm delivery at Stop 2
-7. Complete order
+Props:
+- membership: BusinessMembership
+- selected: "personal" | "company"
+- onSelect: (type) => void
+- disabled?: boolean
+
+Features:
+- Two toggle cards (Personal / Company)
+- Company option shows company name
+- Only visible when user is company member
+```
+
+### CompanyBillingBadge Component
+
+**File to Create:** `src/components/checkout/CompanyBillingBadge.tsx`
+
+```text
+Props:
+- companyName: string
+
+Display:
+- Building2 icon + "Billed to {companyName}"
+- Muted styling, informational
 ```
 
 ---
 
-## Tracking Status Messages
+## Empty States
 
-| Phase | Message |
+| State | Display |
 |-------|---------|
-| Picking up | "Picking up your order from {restaurant}" |
-| En route to Stop 1 | "Heading to Stop 1 of {total}" |
-| Arriving Stop 1 | "Arriving at Stop 1 — {address}" |
-| Delivered Stop 1 | "Delivered to Stop 1 ✓ — Heading to Stop 2" |
-| Arriving Stop 2 | "Arriving at Stop 2 — {address}" |
-| All delivered | "All {total} stops delivered! ✓" |
-
----
-
-## Edge Cases
-
-| Scenario | Behavior |
-|----------|----------|
-| Remove only stop | Prevent (must have at least 1) |
-| Max stops reached | Hide "Add another" button (max 5) |
-| Same address twice | Show warning, allow if intentional |
-| Invalid address | Block addition, show geocoding error |
-| Stop too far (>15 mi from previous) | Show warning about extended fee |
-| Order cancelled mid-delivery | Driver completes current stop, returns |
-
----
-
-## Validation Rules
-
-| Rule | Validation |
-|------|------------|
-| Minimum stops | 1 (required) |
-| Maximum stops | 5 |
-| Address format | Must geocode successfully |
-| Distance limit | Each stop within 15 mi of previous |
-| Total route | Under 30 mi |
-| Instructions length | Max 200 characters |
+| No membership | Join/Create options |
+| Pending invite | "Invite sent to company admin for approval" |
+| Left company | Confirmation + option to rejoin |
 
 ---
 
@@ -455,12 +383,11 @@ MAX_STOPS = 5
 
 This implementation provides:
 
-1. **Multi-stop address management** — Add up to 5 delivery stops per order
-2. **Dynamic pricing** — Fee adjusts based on distance and number of stops
-3. **Clear order summary** — Shows numbered stops with addresses
-4. **Route progress tracking** — "Delivered Stop 1 → Heading to Stop 2"
-5. **Multi-stop map** — Visual route with numbered markers
-6. **Driver support** — Sequential stop-by-stop navigation
-7. **Public tracking** — Works for guest order tracking too
+1. **Business Account settings page** — Join company with invite code or create new
+2. **Payment method toggle** — Personal or Company billing preference
+3. **Checkout integration** — "Billed to company" indicator when company payment selected
+4. **Invite code system** — Secure codes for company membership
+5. **Membership management** — View company, change preference, leave company
+6. **Order tracking** — Billing type stored with each order
 
-The feature enables scenarios like delivering food to multiple offices, splitting an order between friends, or party deliveries at different venues.
+The feature enables corporate users to easily expense orders to their company while maintaining personal account flexibility.
