@@ -1,244 +1,270 @@
 
-# Smart Recommendations for ZIVO Eats — Implementation Plan
+# Item Availability — Implementation Plan
 
 ## Overview
-Add personalized recommendations to help customers reorder faster and discover relevant meals based on their order history, favorites, and time-of-day patterns.
+Implement menu item availability management so customers only see items that are orderable, with clear visual feedback for out-of-stock items and cart validation to prevent ordering unavailable items.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Reorder button on orders | Complete | `src/pages/EatsOrders.tsx` |
-| Reorder hook | Complete | `src/hooks/useReorder.ts` |
-| Favorites hook | Complete | `src/hooks/useEatsFavorites.ts` |
-| Orders hook | Complete | `src/hooks/useEatsOrders.ts` |
-| Mobile home screen | Complete | `src/components/eats/MobileEatsPremium.tsx` |
-| Restaurant data | Complete | `src/lib/eatsApi.ts` |
+| `is_available` field on MenuItem | Complete | `menu_items` table, types in `eatsApi.ts` |
+| Menu query filters available items | Complete | `useMenuItems()` filters by `is_available=true` |
+| MenuItemCard component | Complete | `src/pages/EatsRestaurantMenu.tsx` |
+| MenuItemModal component | Complete | `src/components/eats/MenuItemModal.tsx` |
+| Cart Context | Complete | `src/contexts/CartContext.tsx` |
+
+### Current Behavior
+- The `useMenuItems()` hook already filters to `is_available=true`, meaning out-of-stock items are **hidden** entirely
+- No visual indicator for items that become unavailable after being added to cart
+- No cart validation against current item availability
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| "Recommended for you" section | Missing | Personalized recommendations on home screen |
-| Timing suggestions | Missing | "Popular for lunch/dinner" labels |
-| Smart recommendations hook | Missing | Logic to compute recommendations |
-| Recommendation card component | Missing | UI for individual recommendations |
+| Show out-of-stock items visually | Missing | Display items with "Out of Stock" indicator |
+| Disable add-to-cart for unavailable | Missing | Grey out button when `is_available=false` |
+| Cart validation hook | Missing | Check cart items against current availability |
+| Unavailable item warning in cart | Missing | Show message when item is no longer available |
+| Real-time availability updates | Missing | Refresh availability before checkout |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Smart Recommendations Hook
+### 1) Update Menu Query to Include All Items
 
-**File to Create:** `src/hooks/useEatsRecommendations.ts`
+**File to Modify:** `src/hooks/useEatsOrders.ts` (lines 147-166)
 
-**Purpose:** Calculate personalized recommendations from multiple data sources.
+**Changes:**
+- Remove the `is_available=true` filter from `useMenuItems()`
+- Return **all** menu items so out-of-stock ones can be displayed with a badge
+- Items will be marked visually based on `is_available` flag
 
-**Data Sources:**
-1. **Previous Orders** — Last 10 orders to identify frequent restaurants/items
-2. **Favorite Restaurants** — User's saved favorites
-3. **Time-Based Popularity** — Tag restaurants as "lunch" or "dinner" based on cuisine and time
-
-**Returned Data:**
+```typescript
+// Before: .eq("is_available", true)
+// After: No filter - show all items, handle display in UI
 ```
-interface EatsRecommendations {
-  // Top picks based on order history
-  reorderSuggestions: Array<{
-    restaurant: Restaurant;
-    orderCount: number;
-    lastOrderedAt: Date;
-    topItems: string[];
-  }>;
-  
-  // From favorites
-  favoriteSuggestions: Restaurant[];
-  
-  // Time-based
-  timingSuggestions: Array<{
-    restaurant: Restaurant;
-    timing: "lunch" | "dinner" | "late_night";
-    reason: string;
-  }>;
-  
-  // Loading states
-  isLoading: boolean;
+
+**Also Update:** `src/lib/eatsApi.ts` `getMenu()` function (line 143)
+
+---
+
+### 2) Create Item Availability Badge Component
+
+**File to Create:** `src/components/eats/ItemAvailabilityBadge.tsx`
+
+**Purpose:** Visual indicator showing "Available" or "Out of Stock" status.
+
+**Variants:**
+- **Available:** Green checkmark (shown optionally or not at all)
+- **Out of Stock:** Red badge with crossed-out icon
+
+```
++---------------------------+
+| ⊘ Out of Stock           |
++---------------------------+
+```
+
+---
+
+### 3) Update MenuItemCard Component
+
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+
+**Changes to `MenuItemCard`:**
+- Accept `is_available` from the `MenuItem` object directly
+- If `is_available === false`:
+  - Apply `opacity-50` to the card
+  - Show "Out of Stock" badge overlay
+  - Disable "Add" button with disabled state
+  - Prevent `handleAdd()` from executing
+
+**UI when out of stock:**
+```
++------------------------------------------+
+| [Image - dimmed]                         |
+|   🚫 OUT OF STOCK                        |
+|                                          |
+|   Item Name                              |
+|   Description text...                    |
+|                                          |
+|   $12.99        [Add] ← disabled/greyed  |
++------------------------------------------+
+```
+
+---
+
+### 4) Update MenuItemModal Component
+
+**File to Modify:** `src/components/eats/MenuItemModal.tsx`
+
+**Changes:**
+- Add availability check before allowing add to cart
+- Show warning message if item is unavailable
+- Disable "Add to Cart" button if `item.is_available === false`
+
+```tsx
+{!item.is_available && (
+  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+    <p className="text-red-400 font-medium">This item is currently out of stock</p>
+  </div>
+)}
+```
+
+---
+
+### 5) Create Cart Validation Hook
+
+**File to Create:** `src/hooks/useCartValidation.ts`
+
+**Purpose:** Check cart items against current menu availability before checkout.
+
+**Logic:**
+1. Fetch current menu for the restaurant in cart
+2. Compare cart item IDs against menu items
+3. Mark unavailable items with a flag
+4. Return validation result
+
+```typescript
+interface CartValidationResult {
+  isValid: boolean;
+  unavailableItems: CartItem[];
+  availableItems: CartItem[];
+  isValidating: boolean;
 }
 ```
 
-**Recommendation Logic:**
-1. **Order Frequency** — Count orders per restaurant from last 10 orders
-2. **Recency** — Boost restaurants ordered in the last 7 days
-3. **Time Matching** — Match cuisine to meal time (e.g., coffee shops for morning, fast food for lunch, fine dining for dinner)
+**Triggers:**
+- On checkout page load
+- Before order submission
+- On cart drawer open (optional)
 
 ---
 
-### 2) Create Recommendation Card Component
+### 6) Update Cart Context with Validation
 
-**File to Create:** `src/components/eats/RecommendationCard.tsx`
-
-**Purpose:** Compact, visually appealing card for a single recommendation.
-
-**Variants:**
-- **Reorder Card** — Shows restaurant with "Order again" button
-- **Favorite Card** — Shows favorite with heart icon
-- **Timing Card** — Shows "Popular for lunch" badge
-
-**UI Design:**
-```
-+------------------------------------------+
-| [Image]  Restaurant Name        [Reorder]|
-|          2 orders · Last week            |
-|          ⭐ 4.8 · Italian                |
-+------------------------------------------+
-```
-
----
-
-### 3) Create Recommendations Section Component
-
-**File to Create:** `src/components/eats/RecommendedForYouSection.tsx`
-
-**Purpose:** "Recommended for you" section with horizontal scrollable cards.
-
-**Sections:**
-1. **Order Again** — From previous orders (limit 3)
-2. **Your Favorites** — From saved favorites (limit 3)
-3. **Popular Now** — Time-based suggestions
-
-**UI Structure:**
-```
-Recommended for you
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Order Again
-[Card 1]  [Card 2]  [Card 3]  →
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Popular for Lunch
-[Card 1]  [Card 2]  →
-```
-
----
-
-### 4) Create Timing Suggestions Component
-
-**File to Create:** `src/components/eats/TimingSuggestionBadge.tsx`
-
-**Purpose:** Show contextual badges like "Popular for lunch" or "Great for dinner".
-
-**Time Ranges:**
-| Period | Hours | Label |
-|--------|-------|-------|
-| Breakfast | 6 AM - 11 AM | "Popular for breakfast" |
-| Lunch | 11 AM - 3 PM | "Popular for lunch" |
-| Dinner | 5 PM - 9 PM | "Popular tonight" |
-| Late Night | 9 PM - 2 AM | "Late night craving?" |
-
-**Cuisine Mapping:**
-- **Breakfast:** Coffee, Bakery, Brunch
-- **Lunch:** Fast Food, Healthy, Asian, American
-- **Dinner:** Italian, Fine Dining, Steakhouse
-- **Late Night:** Fast Food, Pizza, Mexican
-
----
-
-### 5) Update Mobile Home Screen
-
-**File to Modify:** `src/components/eats/MobileEatsPremium.tsx`
+**File to Modify:** `src/contexts/CartContext.tsx`
 
 **Changes:**
-- Add "Recommended for you" section after surge banner, before categories
-- Show only when user has order history or favorites
-- Horizontal scroll with snap points
+- Add `validateCart()` method that checks item availability
+- Add `unavailableItems` state
+- Add `removeUnavailable()` helper to remove all unavailable items
 
-**Integration Point (after line 112, before category pills):**
-```tsx
-{/* Smart Recommendations */}
-<RecommendedForYouSection />
+```typescript
+interface CartContextType {
+  // ... existing
+  validateCart: () => Promise<void>;
+  unavailableItems: string[]; // IDs of unavailable items
+  removeUnavailable: () => void;
+}
 ```
 
 ---
 
-### 6) Add Time-Based Labels to Restaurant Cards
+### 7) Create Unavailable Item Banner Component
 
-**File to Modify:** `src/components/eats/MobileEatsPremium.tsx`
+**File to Create:** `src/components/eats/UnavailableItemBanner.tsx`
+
+**Purpose:** Warning banner shown in cart/checkout when items are unavailable.
+
+**UI:**
+```
++--------------------------------------------------+
+| ⚠️  Some items are no longer available           |
+|                                                  |
+|   • Crispy Chicken Sandwich                      |
+|   • Large Fries                                  |
+|                                                  |
+|   [Remove Unavailable Items]                     |
++--------------------------------------------------+
+```
+
+---
+
+### 8) Update Checkout Page with Validation
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
 
 **Changes:**
-- Add timing badge to restaurant cards when relevant
-- Show "Popular for lunch" during lunch hours for matching cuisines
-- Non-intrusive small badge in top-left corner
+- Call `validateCart()` on page load
+- Show `UnavailableItemBanner` if items are unavailable
+- Block order submission if cart has unavailable items
+- Allow user to remove unavailable items and continue
+
+---
+
+### 9) Update Cart Drawer with Validation
+
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx` (CartDrawer component)
+
+**Changes:**
+- Add availability indicator per item
+- Show warning if item is no longer available
+- Strike through unavailable item names
+- Show "Remove" button prominently for unavailable items
 
 ---
 
 ## File Summary
 
-### New Files (4)
+### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useEatsRecommendations.ts` | Calculate personalized recommendations |
-| `src/components/eats/RecommendationCard.tsx` | Individual recommendation card |
-| `src/components/eats/RecommendedForYouSection.tsx` | "Recommended for you" section |
-| `src/components/eats/TimingSuggestionBadge.tsx` | Time-based popularity badge |
+| `src/components/eats/ItemAvailabilityBadge.tsx` | Visual badge for availability status |
+| `src/hooks/useCartValidation.ts` | Hook to validate cart against current menu |
+| `src/components/eats/UnavailableItemBanner.tsx` | Warning banner for unavailable cart items |
 
-### Modified Files (1)
+### Modified Files (6)
 | File | Changes |
 |------|---------|
-| `src/components/eats/MobileEatsPremium.tsx` | Add recommendations section and timing badges |
+| `src/hooks/useEatsOrders.ts` | Remove `is_available=true` filter from `useMenuItems()` |
+| `src/lib/eatsApi.ts` | Remove `is_available=true` filter from `getMenu()` |
+| `src/pages/EatsRestaurantMenu.tsx` | Update MenuItemCard and CartDrawer for availability |
+| `src/components/eats/MenuItemModal.tsx` | Add availability check and disable button |
+| `src/contexts/CartContext.tsx` | Add validation methods |
+| `src/pages/EatsCheckout.tsx` | Add pre-submit validation with banner |
 
 ---
 
-## Recommendation Algorithm
+## UI Behavior Matrix
 
-### Restaurant Frequency Score
-```
-For each restaurant in last 10 orders:
-  frequency_score = order_count * 10
-  
-  If ordered within 7 days:
-    recency_bonus = 5
-  Else if ordered within 30 days:
-    recency_bonus = 2
-  Else:
-    recency_bonus = 0
-  
-  total_score = frequency_score + recency_bonus
-```
-
-### Time Matching Score
-```
-current_hour = new Date().getHours()
-
-If 6 <= hour < 11:  // Breakfast
-  Match: Coffee, Bakery, Brunch → +10
-  
-If 11 <= hour < 15:  // Lunch
-  Match: Fast Food, Healthy, Asian → +10
-  
-If 17 <= hour < 21:  // Dinner
-  Match: Italian, Fine Dining, Mexican → +10
-  
-If 21 <= hour OR hour < 2:  // Late Night
-  Match: Pizza, Fast Food → +10
-```
-
-### Final Ranking
-```
-final_score = frequency_score + recency_bonus + timing_score
-Sort by final_score descending
-Return top 3-5 restaurants
-```
+| Scenario | Menu Display | Add Button | Cart Display | Checkout |
+|----------|--------------|------------|--------------|----------|
+| Available item | Normal | Enabled | Normal | Allowed |
+| Out of stock item | Dimmed + badge | Disabled | N/A (can't add) | N/A |
+| Item in cart becomes unavailable | N/A | N/A | Strikethrough + warning | Blocked until removed |
 
 ---
 
-## Time Context Display
+## Technical Details
 
-| Current Time | Label Shown |
-|--------------|-------------|
-| 7:30 AM | "Great for breakfast" |
-| 12:15 PM | "Popular for lunch" |
-| 6:45 PM | "Popular tonight" |
-| 10:30 PM | "Late night craving?" |
+### Availability Check Flow
+```
+1. User opens menu page
+   └─> Fetch ALL menu items (available + unavailable)
+   └─> Display with appropriate styling
+
+2. User adds item to cart
+   └─> Check is_available before adding
+   └─> Block if unavailable
+
+3. User opens checkout
+   └─> Validate cart against current menu
+   └─> Show warning for unavailable items
+   └─> Require removal before proceeding
+
+4. User submits order
+   └─> Final validation check
+   └─> Block submission if any items unavailable
+```
+
+### Real-Time Considerations
+- Menu items are refetched when user navigates to menu page
+- Cart validation queries the database on checkout load
+- No real-time subscriptions (acceptable for MVP)
+- Consider adding refresh button for long sessions
 
 ---
 
@@ -246,59 +272,11 @@ Return top 3-5 restaurants
 
 | Scenario | Behavior |
 |----------|----------|
-| New user (no orders) | Hide "Order Again", show only time-based |
-| No favorites | Hide favorites section |
-| All restaurants closed | Show with "Opens at X" badge |
-| Guest user | Show only time-based recommendations |
-| Low order history (<3) | Pad with popular nearby |
-
----
-
-## UI Components
-
-### Recommendation Card (Compact)
-```
-+------------------------------------------------+
-| [32x32 Logo]                                   |
-|   Restaurant Name              [🔄 Reorder]    |
-|   ⭐ 4.8 · Italian · 20-30 min                 |
-|   "Ordered 3 times"                            |
-+------------------------------------------------+
-```
-
-### Section Header
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔄 Order Again                        See all →
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-### Timing Badge
-```
-+------------------+
-| 🕐 Popular for lunch |
-+------------------+
-```
-
----
-
-## Technical Details
-
-### Data Fetching Strategy
-- Use existing `useMyEatsOrders()` hook for order history
-- Use existing `useEatsFavorites()` hook for favorites
-- Use existing `useRestaurants()` hook for restaurant data
-- Combine all in `useEatsRecommendations()` with `useMemo`
-
-### Caching
-- Recommendations are derived from cached queries
-- No additional API calls needed
-- Recomputes when dependencies change
-
-### Performance
-- Limit to 10 orders for calculation
-- Limit display to 3-5 recommendations per section
-- Lazy load images
+| Item becomes unavailable while in cart | Show warning on next cart view |
+| All cart items unavailable | Show empty cart message after removal |
+| Item re-becomes available | Validation passes, no action needed |
+| User offline during validation | Show error, allow retry |
+| Restaurant closes while ordering | Handled by existing restaurant availability system |
 
 ---
 
@@ -306,11 +284,11 @@ Return top 3-5 restaurants
 
 This implementation provides:
 
-1. **"Recommended for you" section** — Personalized suggestions on home screen
-2. **Order Again cards** — Quick reorder from frequent restaurants  
-3. **Timing suggestions** — "Popular for lunch/dinner" context
-4. **Smart ranking algorithm** — Frequency + recency + time matching
-5. **One-tap reorder** — Already implemented via `useReorder` hook
-6. **No new API calls** — Uses existing cached data
+1. **Visual availability indicators** — Clear "Out of Stock" badges on menu items
+2. **Disabled add-to-cart** — Cannot add unavailable items to cart
+3. **Cart validation** — Check availability before checkout
+4. **Warning banners** — Clear messaging when items become unavailable
+5. **One-click removal** — Easy way to remove all unavailable items
+6. **Graceful degradation** — Show all items with status rather than hiding unavailable ones
 
-The feature respects user privacy (all recommendations computed client-side) while providing a personalized experience that speeds up ordering.
+The feature ensures customers never unknowingly order items that can't be fulfilled while maintaining a smooth browsing experience.
