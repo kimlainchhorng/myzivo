@@ -6268,6 +6268,30 @@ export type Database = {
           },
         ]
       }
+      demand_metrics: {
+        Row: {
+          drivers_online: number | null
+          id: string
+          orders_count: number | null
+          recorded_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          drivers_online?: number | null
+          id?: string
+          orders_count?: number | null
+          recorded_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          drivers_online?: number | null
+          id?: string
+          orders_count?: number | null
+          recorded_at?: string | null
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
       demand_snapshots: {
         Row: {
           avg_assign_seconds: number | null
@@ -21060,6 +21084,7 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_id: string | null
+          zone_id: string | null
         }
         Insert: {
           admin_2fa_enabled?: boolean | null
@@ -21096,6 +21121,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          zone_id?: string | null
         }
         Update: {
           admin_2fa_enabled?: boolean | null
@@ -21132,6 +21158,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -21146,6 +21173,13 @@ export type Database = {
             columns: ["selected_city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
             referencedColumns: ["id"]
           },
         ]
@@ -26776,6 +26810,30 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          benefits_json: Json | null
+          created_at: string | null
+          id: string
+          name: string | null
+          price: number | null
+        }
+        Insert: {
+          benefits_json?: Json | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          price?: number | null
+        }
+        Update: {
+          benefits_json?: Json | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          price?: number | null
+        }
+        Relationships: []
+      }
       supplier_payouts: {
         Row: {
           created_at: string
@@ -30374,6 +30432,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          id: string
+          plan_id: string | null
+          renews_at: string | null
+          started_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          plan_id?: string | null
+          renews_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          plan_id?: string | null
+          renews_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_availability: {
         Row: {

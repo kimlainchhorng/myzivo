@@ -26,6 +26,7 @@ export interface Restaurant {
   busy_prep_time_bonus_minutes: number | null;
   pause_new_orders: boolean | null;
   closed_reason: string | null;
+  region_id: string | null;
 }
 
 export interface MenuItem {
