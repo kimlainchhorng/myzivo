@@ -27768,6 +27768,62 @@ export type Database = {
         }
         Relationships: []
       }
+      time_based_pricing_rules: {
+        Row: {
+          created_at: string | null
+          days_of_week: number[] | null
+          description: string | null
+          end_hour: number
+          flat_adjustment: number | null
+          id: string
+          is_active: boolean | null
+          multiplier: number
+          name: string
+          priority: number | null
+          start_hour: number
+          updated_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          days_of_week?: number[] | null
+          description?: string | null
+          end_hour?: number
+          flat_adjustment?: number | null
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number
+          name: string
+          priority?: number | null
+          start_hour?: number
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          days_of_week?: number[] | null
+          description?: string | null
+          end_hour?: number
+          flat_adjustment?: number | null
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number
+          name?: string
+          priority?: number | null
+          start_hour?: number
+          updated_at?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_based_pricing_rules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_entries: {
         Row: {
           approved_at: string | null
