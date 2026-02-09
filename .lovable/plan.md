@@ -1,280 +1,295 @@
 
-# Invoice Access for Business Users — Implementation Plan
+# Customer Role Enforcement — Implementation Plan
 
 ## Overview
-Add an invoices section at `/account/invoices` where business account members can view and download their company invoices as PDFs. This page will display invoice number, date, amount, and status (paid/unpaid), with PDF download functionality.
+Add explicit `customer` role verification to customer-facing endpoints to ensure that only users with the `customer` role can access customer functionality. This provides role-based isolation so admin role changes don't affect customer access patterns.
 
 ## Current State Analysis
 
-### What Already Exists
-| Feature | Status | Location |
-|---------|--------|----------|
-| `invoices` database table | Exists | Supabase (id, business_id, invoice_number, amount, status, issued_at, due_at) |
-| `BusinessInvoiceList` component | Exists | `src/components/business/BusinessInvoiceList.tsx` (uses mock data) |
-| Business membership hook | Exists | `src/hooks/useBusinessMembership.ts` |
-| PDF export pattern | Exists | `src/hooks/useItineraryExport.ts` (print dialog approach) |
-| Account page patterns | Exists | `src/pages/account/` directory |
+### Existing Role System
+| Role | Purpose |
+|------|---------|
+| `admin` | Full platform access |
+| `super_admin` | Super administrator |
+| `operations` | Operations team |
+| `finance` | Finance team |
+| `support` | Customer support |
+| `driver` | Delivery drivers |
+| `merchant` | Restaurant/business owners |
+| `customer` | End users/customers |
+
+### Current Authorization Pattern
+| Endpoint Type | Current Check | Gap |
+|--------------|---------------|-----|
+| Admin endpoints | `has_role(user.id, 'admin')` | None |
+| Driver endpoints | `driver_id = user.id` via drivers table | None |
+| Customer endpoints | `customer_id = auth.uid()` (ownership only) | No explicit role check |
 
 ### What's Missing
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Dedicated invoices page | Missing | `/account/invoices` route |
-| Real invoices hook | Missing | Fetch from `invoices` table |
-| PDF generation for invoices | Missing | Generate downloadable invoice PDF |
-| Navigation link | Missing | Add to MobileAccount menu |
+Customer-facing endpoints rely solely on **ownership checks** but do not verify the user has the `customer` role. This means:
+- An admin could theoretically access customer flows without the customer role
+- Role revocation doesn't affect customer access if ownership exists
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Business Invoices Hook
+### 1) Create `is_customer` Helper Function
 
-**File to Create:** `src/hooks/useBusinessInvoices.ts`
+**Purpose:** Security definer function to check if a user has the customer role.
 
-**Purpose:** Fetch invoices from the database for the user's business account.
-
-**Implementation:**
-```text
-- Query `invoices` table filtered by business_id
-- Join with business_account_users to verify membership
-- Return invoice list with sorting by date
-- Include loading and error states
+```sql
+CREATE OR REPLACE FUNCTION public.is_customer(_user_id UUID DEFAULT auth.uid())
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = 'customer'
+  )
+$$;
 ```
 
-**Return Interface:**
-```text
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  amount: number;
-  status: "paid" | "pending" | "overdue";
-  issuedAt: string;
-  dueAt: string | null;
-}
+### 2) Auto-Assign Customer Role on Signup
 
-interface UseBusinessInvoicesReturn {
-  invoices: Invoice[];
-  isLoading: boolean;
-  error: Error | null;
-  totalPaid: number;
-  totalPending: number;
-  totalOverdue: number;
-}
+**Purpose:** Ensure all new users automatically receive the `customer` role.
+
+**Trigger on auth.users insert:**
+```sql
+CREATE OR REPLACE FUNCTION public.assign_customer_role_on_signup()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Auto-assign customer role to all new users
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (NEW.id, 'customer')
+  ON CONFLICT (user_id, role) DO NOTHING;
+  
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created_assign_customer
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.assign_customer_role_on_signup();
 ```
 
----
+### 3) Backfill Existing Users with Customer Role
 
-### 2) Create Invoice PDF Generator Hook
+**Purpose:** Ensure all existing users have the `customer` role.
 
-**File to Create:** `src/hooks/useInvoicePdfExport.ts`
-
-**Purpose:** Generate and download invoice PDFs using the print dialog pattern.
-
-**Implementation:**
-- Generate styled HTML invoice document
-- Include company name, invoice number, date, line items, total
-- Open in new window and trigger print dialog (Save as PDF)
-- Follow pattern from `useItineraryExport.ts`
-
-**Template Structure:**
-```text
-ZIVO INVOICE
-─────────────────────
-Invoice #: INV-2024-0042
-Date: March 1, 2024
-Due Date: March 15, 2024
-
-Bill To:
-[Company Name]
-[Billing Email]
-
-Amount Due: $2,450.00
-Status: PAID / PENDING
-
-─────────────────────
-Powered by ZIVO
+```sql
+-- Backfill customer role for all existing users who don't have it
+INSERT INTO public.user_roles (user_id, role)
+SELECT id, 'customer'::app_role
+FROM auth.users
+WHERE id NOT IN (
+  SELECT user_id FROM public.user_roles WHERE role = 'customer'
+)
+ON CONFLICT (user_id, role) DO NOTHING;
 ```
 
----
+### 4) Update RLS Policies for Customer Tables
 
-### 3) Create Business Invoices Page
+**Tables to Update:**
+- `food_orders` — add `is_customer(auth.uid())` check
+- `trips` — add customer role check to rider policies
+- `travel_orders` — add customer role check
+- `hotel_bookings` — add customer role check
+- `flight_bookings` — add customer role check
+- `customer_wallets` — add customer role check
+- `customer_feedback` — add customer role check (for insert)
 
-**File to Create:** `src/pages/account/BusinessInvoicesPage.tsx`
+**Example Policy Update:**
+```sql
+-- Current policy
+CREATE POLICY "Customers can view own food orders"
+  ON public.food_orders FOR SELECT
+  USING (customer_id = auth.uid());
 
-**Purpose:** Dedicated page for viewing and downloading invoices.
-
-**UI Layout:**
-```text
-┌─────────────────────────────────────────────────┐
-│ ← Invoices                         [FileText]   │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│ ┌───────────┐ ┌───────────┐ ┌───────────┐      │
-│ │ Paid      │ │ Pending   │ │ Overdue   │      │
-│ │ $3,340    │ │ $1,250    │ │ $325      │      │
-│ └───────────┘ └───────────┘ └───────────┘      │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ [Search invoices...]      [Filter: All ▾] │  │
-│ └───────────────────────────────────────────┘  │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ INV-2024-0042            Paid    $2,450  │  │
-│ │ Mar 1, 2024                      [PDF ↓] │  │
-│ ├───────────────────────────────────────────┤  │
-│ │ INV-2024-0043          Pending   $1,250  │  │
-│ │ Mar 5, 2024                      [PDF ↓] │  │
-│ ├───────────────────────────────────────────┤  │
-│ │ INV-2024-0041          Overdue     $325  │  │
-│ │ Feb 15, 2024                     [PDF ↓] │  │
-│ └───────────────────────────────────────────┘  │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ ⓘ Invoices are generated for orders      │  │
-│ │   billed to your company account.        │  │
-│ └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
-
-**Features:**
-- Summary cards showing paid, pending, overdue totals
-- Search by invoice number
-- Filter by status (all, paid, pending, overdue)
-- List of invoices with key details
-- PDF download button per invoice
-- Empty state when no invoices
-- Redirect to business account page if not a member
-
----
-
-### 4) Update Navigation and Routes
-
-**File to Modify:** `src/pages/mobile/MobileAccount.tsx`
-
-**Changes:**
-- Add "Invoices" menu item under Business Account (only visible if member)
-- Icon: `FileText`
-- Path: `/account/invoices`
-
-**Updated accountItems array:**
-```text
-{ 
-  icon: Building2, 
-  label: businessMembership?.company?.name || "Business Account", 
-  path: "/account/business"
-},
-// NEW: Only show if business member
-...(businessMembership?.isMember ? [{
-  icon: FileText,
-  label: "Invoices",
-  path: "/account/invoices"
-}] : []),
-```
-
-**File to Modify:** `src/App.tsx`
-
-**Changes:**
-- Add lazy import for BusinessInvoicesPage
-- Add protected route: `/account/invoices`
-
----
-
-### 5) Database RLS Policy (if needed)
-
-**Migration:** Add RLS policy to ensure users can only view invoices for their business.
-
-```text
-CREATE POLICY "Users can view invoices for their business"
-  ON public.invoices
-  FOR SELECT
+-- Updated policy with role check
+DROP POLICY IF EXISTS "Customers can view own food orders" ON public.food_orders;
+CREATE POLICY "Customers can view own food orders"
+  ON public.food_orders FOR SELECT
   USING (
-    business_id IN (
-      SELECT business_id 
-      FROM public.business_account_users 
-      WHERE user_id = auth.uid()
-    )
+    customer_id = auth.uid() 
+    AND is_customer(auth.uid())
   );
+```
+
+### 5) Update Edge Functions with Customer Role Check
+
+**Customer-Facing Functions to Update:**
+
+| Function | Current Auth | Add |
+|----------|-------------|-----|
+| `update-eats-order` | `user.id === order.customer_id` | `has_role(user.id, 'customer')` |
+| `request-travel-cancellation` | `order.user_id === user.id` | `has_role(user.id, 'customer')` |
+| `create-membership-checkout` | `user.email` exists | `has_role(user.id, 'customer')` |
+| `customer-portal-membership` | `user` authenticated | `has_role(user.id, 'customer')` |
+
+**Example Update Pattern:**
+```typescript
+// Add after user authentication
+const { data: isCustomer } = await supabase.rpc("has_role", {
+  _user_id: user.id,
+  _role: "customer",
+});
+
+if (!isCustomer) {
+  return new Response(
+    JSON.stringify({ success: false, error: "Customer role required" }),
+    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+```
+
+### 6) Create Frontend Hook for Customer Role
+
+**File:** `src/hooks/useCustomerRole.ts`
+
+```typescript
+export function useCustomerRole() {
+  const { user } = useAuth();
+  
+  const { data: isCustomer, isLoading } = useQuery({
+    queryKey: ["customer-role", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "customer",
+      });
+      return data ?? false;
+    },
+    enabled: !!user?.id,
+  });
+  
+  return { isCustomer: isCustomer ?? false, isLoading };
+}
 ```
 
 ---
 
 ## File Summary
 
-### New Files (3)
-| File | Purpose |
-|------|---------|
-| `src/hooks/useBusinessInvoices.ts` | Fetch invoices from database |
-| `src/hooks/useInvoicePdfExport.ts` | Generate PDF for download |
-| `src/pages/account/BusinessInvoicesPage.tsx` | Invoices list page |
-
-### Modified Files (2)
-| File | Changes |
-|------|---------|
-| `src/pages/mobile/MobileAccount.tsx` | Add Invoices menu item |
-| `src/App.tsx` | Add route and lazy import |
-
 ### Database Changes (1 migration)
 | Change | Description |
 |--------|-------------|
-| RLS policy | Ensure users can only view their company's invoices |
+| Create function | `is_customer()` helper function |
+| Create trigger | Auto-assign customer role on signup |
+| Backfill data | Assign customer role to existing users |
+| Update policies | Add role checks to customer table policies |
+
+### Edge Functions to Update (4)
+| Function | Change |
+|----------|--------|
+| `update-eats-order/index.ts` | Add `has_role(..., 'customer')` check |
+| `request-travel-cancellation/index.ts` | Add customer role verification |
+| `create-membership-checkout/index.ts` | Add customer role verification |
+| `customer-portal-membership/index.ts` | Add customer role verification |
+
+### New Frontend File (1)
+| File | Purpose |
+|------|---------|
+| `src/hooks/useCustomerRole.ts` | Check if current user has customer role |
 
 ---
 
-## Invoice Status Logic
+## RLS Policy Updates Detail
 
-| Status | Condition | Display |
-|--------|-----------|---------|
-| Paid | `status = 'paid'` | Green badge with checkmark |
-| Pending | `status = 'pending'` AND `due_at >= now()` | Amber badge with clock |
-| Overdue | `status = 'pending'` AND `due_at < now()` | Red badge with alert |
+### food_orders Table
+```sql
+-- SELECT: Own orders + customer role
+DROP POLICY IF EXISTS "Customers can view own food orders" ON public.food_orders;
+CREATE POLICY "Customers can view own food orders"
+  ON public.food_orders FOR SELECT
+  USING (customer_id = auth.uid() AND is_customer());
+
+-- INSERT: Customer role required
+DROP POLICY IF EXISTS "Customers can create food orders" ON public.food_orders;
+CREATE POLICY "Customers can create food orders"
+  ON public.food_orders FOR INSERT
+  WITH CHECK (auth.uid() = customer_id AND is_customer());
+```
+
+### trips Table
+```sql
+-- SELECT: Rider owns trip + customer role
+DROP POLICY IF EXISTS "Users can view their own trips" ON public.trips;
+CREATE POLICY "Users can view their own trips"
+  ON public.trips FOR SELECT
+  USING (auth.uid() = rider_id AND is_customer());
+```
+
+### travel_orders Table
+```sql
+-- SELECT: User owns order + customer role
+CREATE POLICY "Customers can view own travel orders"
+  ON public.travel_orders FOR SELECT
+  USING (user_id = auth.uid() AND is_customer());
+```
 
 ---
 
-## PDF Content Structure
+## Security Model
 
-The generated PDF will include:
+### Before (Ownership Only)
+```
+Customer Access = (user_id == record.customer_id)
+```
 
-1. **Header**: ZIVO logo/branding
-2. **Invoice Details**: Number, issue date, due date
-3. **Bill To**: Company name, billing email
-4. **Amount**: Total amount with currency
-5. **Status**: Clear paid/pending indicator
-6. **Footer**: ZIVO contact info, compliance note
+### After (Role + Ownership)
+```
+Customer Access = (user_id == record.customer_id) AND has_role('customer')
+```
 
----
-
-## Access Control
-
-| User State | Behavior |
-|------------|----------|
-| Not logged in | Redirect to login |
-| Not a business member | Show message with link to join company |
-| Business member | Show invoices for their company |
-| Business admin | Same view (admin features in future) |
+### Benefits
+1. **Role Revocation** — Removing customer role immediately blocks access
+2. **Separation of Concerns** — Admin/support can't accidentally use customer flows
+3. **Audit Trail** — Clear role-based access control
+4. **Future Flexibility** — Can add customer tiers or restrictions per role
 
 ---
 
-## Empty States
+## Edge Cases
 
-| State | Display |
-|-------|---------|
-| No invoices yet | "No invoices yet. Invoices will appear here when you make orders billed to your company." |
-| No matching search | "No invoices match your search." |
-| Error loading | "Failed to load invoices. Please try again." |
+| Scenario | Behavior |
+|----------|----------|
+| New user signup | Auto-assigned `customer` role via trigger |
+| Existing user without role | Backfill migration assigns role |
+| Admin accessing customer endpoint | Blocked unless they also have `customer` role |
+| User loses customer role | Immediately loses access to customer endpoints |
+
+---
+
+## Rollout Strategy
+
+1. **Phase 1:** Create helper function + trigger + backfill (no breaking changes)
+2. **Phase 2:** Update RLS policies with new role checks
+3. **Phase 3:** Update edge functions with role verification
+4. **Phase 4:** Add frontend hook for customer role checks
 
 ---
 
 ## Summary
 
-This implementation provides:
+This implementation adds explicit customer role verification to all customer-facing endpoints:
 
-1. **Dedicated invoices page** at `/account/invoices`
-2. **Real-time data** from the `invoices` database table
-3. **Key invoice details** — number, date, amount, status
-4. **PDF download** via print dialog (Save as PDF)
-5. **Search and filter** for easy navigation
-6. **Summary cards** showing totals by status
-7. **Proper access control** — only business members can view
-8. **Navigation integration** — accessible from account menu
+1. **Helper Function** — `is_customer()` for RLS policies
+2. **Auto-Assignment** — New users get customer role automatically
+3. **Backfill** — Existing users receive customer role
+4. **RLS Updates** — All customer tables require role + ownership
+5. **Edge Function Updates** — Server-side role verification
+6. **Frontend Hook** — Client-side role awareness
 
-The feature leverages existing patterns (BusinessInvoiceList component design, useItineraryExport PDF approach) while connecting to the real invoices table in the database.
+The feature ensures that admin role changes don't affect customer access and provides clear role-based isolation between user types.
