@@ -96,6 +96,10 @@ export interface CreateFoodOrderInput {
   deliver_by?: string | null;
   pickup_window_start?: string | null;
   pickup_window_end?: string | null;
+  // Business account billing fields
+  billing_type?: "personal" | "company";
+  business_account_id?: string;
+  business_account_name?: string;
 }
 
 // Fetch all active restaurants (including closed ones for display)
@@ -282,6 +286,10 @@ export function useCreateFoodOrder() {
           deliver_by: input.deliver_by || null,
           pickup_window_start: input.pickup_window_start || null,
           pickup_window_end: input.pickup_window_end || null,
+          // Business account billing
+          billing_type: input.billing_type || 'personal',
+          business_account_id: input.business_account_id || null,
+          business_account_name: input.business_account_name || null,
         })
         .select()
         .single();

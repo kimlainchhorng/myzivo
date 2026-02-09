@@ -6,7 +6,7 @@ import { useNavigate, Navigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Users, Mail, Bell, CreditCard, Gift, 
   HelpCircle, FileText, Shield, ChevronRight, LogOut, 
-  Settings, Star, ExternalLink, Crown, Tag
+  Settings, Star, ExternalLink, Crown, Tag, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMembership } from "@/hooks/useMembership";
+import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ export default function MobileAccount() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, signOut } = useAuth();
   const { isActive: isMember } = useMembership();
+  const { data: businessMembership } = useBusinessMembership();
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
@@ -45,6 +47,12 @@ export default function MobileAccount() {
 
   const accountItems: MenuItem[] = [
     { icon: Crown, label: isMember ? "ZIVO+ Member" : "Join ZIVO+", path: "/account/membership" },
+    { 
+      icon: Building2, 
+      label: businessMembership?.isMember ? businessMembership.company?.name || "Business Account" : "Business Account", 
+      path: "/account/business",
+      badge: businessMembership?.isMember ? undefined : undefined
+    },
     { icon: Tag, label: "My Promos", path: "/account/promos" },
     { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
