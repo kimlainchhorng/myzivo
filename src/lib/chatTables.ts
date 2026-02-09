@@ -26,6 +26,7 @@ export const QUICK_REPLIES: Record<ChatRole, readonly string[]> = {
     "Please leave at door",
     "Call me when you arrive",
     "I'm coming down now",
+    "Need help",
   ],
   driver: [
     "Arriving in 5 min",

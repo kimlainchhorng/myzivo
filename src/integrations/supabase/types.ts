@@ -17460,6 +17460,33 @@ export type Database = {
           },
         ]
       }
+      order_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          order_id: string | null
+          sender_id: string | null
+          sender_role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          sender_id?: string | null
+          sender_role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          sender_id?: string | null
+          sender_role?: string | null
+        }
+        Relationships: []
+      }
       order_offers: {
         Row: {
           created_at: string | null
@@ -23992,6 +24019,36 @@ export type Database = {
           },
         ]
       }
+      retention_events: {
+        Row: {
+          campaign_type: string | null
+          converted: boolean | null
+          created_at: string | null
+          id: string
+          inactivity_days: number | null
+          offer_value: number | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_type?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          id?: string
+          inactivity_days?: number | null
+          offer_value?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_type?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          id?: string
+          inactivity_days?: number | null
+          offer_value?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -27132,6 +27189,30 @@ export type Database = {
           tickets_by_priority?: Json | null
           tickets_created?: number | null
           tickets_resolved?: number | null
+        }
+        Relationships: []
+      }
+      support_sessions: {
+        Row: {
+          ended_at: string | null
+          id: string
+          order_id: string | null
+          started_at: string | null
+          support_agent_id: string | null
+        }
+        Insert: {
+          ended_at?: string | null
+          id?: string
+          order_id?: string | null
+          started_at?: string | null
+          support_agent_id?: string | null
+        }
+        Update: {
+          ended_at?: string | null
+          id?: string
+          order_id?: string | null
+          started_at?: string | null
+          support_agent_id?: string | null
         }
         Relationships: []
       }
