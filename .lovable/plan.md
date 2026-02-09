@@ -1,9 +1,9 @@
 
 
-# AI Support Assistant — Implementation Plan
+# Voice Search & Ordering — Implementation Plan
 
 ## Overview
-Replace the existing static `LiveChatWidget` with a real AI-powered support assistant using Lovable AI (already configured). The assistant will answer common questions about orders, ETAs, payments, and troubleshooting, with a clear escalation path to human support.
+Add voice-to-text capability to the Eats search bars (both desktop and mobile), enabling customers to speak queries like "Find pizza near me" or "Show burgers." Uses the browser's built-in Web Speech API (`SpeechRecognition`) — no external services or API keys needed. Includes a "Reorder my last order" voice command that navigates to order history.
 
 ---
 
@@ -11,138 +11,167 @@ Replace the existing static `LiveChatWidget` with a real AI-powered support assi
 
 | What Exists | Details |
 |-------------|---------|
-| `LiveChatWidget` | Static mock — hardcoded bot reply, no AI |
-| `LOVABLE_API_KEY` | Already provisioned as a Supabase secret |
-| `ai-trip-suggestions` edge function | Working Lovable AI pattern to follow |
-| Support ticket system | Full ticket CRUD with `support_tickets` table |
-| Eats/Rider support hooks | `useEatsSupport`, `useRiderSupport` for ticket creation |
+| Desktop search bar | `EatsRestaurants.tsx` — text input with Search icon (line 103) |
+| Mobile search bar | `MobileEatsPremium.tsx` — text input with Search icon (line 98) |
+| `searchQuery` state | Both components filter restaurants by name/cuisine from this state |
+| Order history | `EatsOrders.tsx` page at `/eats/orders` |
 
 ### What's Missing
-- No AI-powered chat — widget just returns a canned response
-- No streaming — messages appear all at once
-- No escalation flow from AI to human support ticket
-- No context awareness (order status, user info)
+- No microphone icon on either search bar
+- No speech recognition integration
+- No voice command parsing (e.g., "reorder last order")
+- No fallback handling when mic is unavailable
 
 ---
 
 ## Implementation Plan
 
-### 1) Create `ai-support-chat` Edge Function
+### 1) Create `useVoiceSearch` Hook
 
-**File:** `supabase/functions/ai-support-chat/index.ts`
+**New file:** `src/hooks/useVoiceSearch.ts`
 
-A streaming edge function that:
-- Accepts conversation `messages` array and optional `context` (recent orders, user tier)
-- Sends to Lovable AI gateway with a ZIVO support system prompt
-- Streams SSE response back to client
-- Handles 429/402 errors gracefully
+Uses the browser's `webkitSpeechRecognition` / `SpeechRecognition` API (no external dependencies).
 
-**System prompt covers:**
-- Order status explanations (placed, confirmed, preparing, out for delivery, delivered)
-- ETA explanation (prep time + delivery time, surge delays)
-- Payment help (refunds take 5-10 business days, contact partner for flights)
-- Basic troubleshooting (app issues, login problems, missing items)
-- When to escalate: safety issues, complex refunds, account problems
-- Always offer "Connect to human support" when unsure
-
-### 2) Rewrite `LiveChatWidget` with Streaming AI
-
-**File to Modify:** `src/components/shared/LiveChatWidget.tsx`
-
-Replace the static mock with:
-- Real streaming chat using `fetch` + SSE parsing (same pattern as useful-context docs)
-- Typing indicator while AI streams
-- Auto-scroll to latest message
-- Updated quick replies: "Order status", "Payment help", "ETA info", "Talk to human"
-- "Connect to human support" button always visible at bottom
-- Rate limit / credit error handling with user-friendly toasts
-
-### 3) Add Escalation Flow
-
-**Within `LiveChatWidget`:**
-
-When user clicks "Talk to human" or AI suggests escalation:
-- Show a small form: category selector + optional message
-- Create a support ticket via existing `support_tickets` table
-- Show ticket number confirmation
-- Transition chat header to "Connecting to agent..."
-
-### 4) Register Edge Function in Config
-
-**File to Modify:** `supabase/config.toml`
-
-Add:
+**Returns:**
+```text
+{
+  isListening: boolean;       // Currently recording
+  isSupported: boolean;       // Browser supports speech recognition
+  transcript: string;         // Latest recognized text
+  startListening: () => void; // Begin voice capture
+  stopListening: () => void;  // Stop manually
+  error: string | null;       // Permission denied, etc.
+}
 ```
-[functions.ai-support-chat]
-verify_jwt = false
-```
+
+**Behavior:**
+- Sets language to `en-US`
+- Auto-stops after silence (built-in browser behavior)
+- On result: sets transcript, calls `onResult` callback
+- On error: sets error state, shows toast for permission issues
+- Checks `window.SpeechRecognition || window.webkitSpeechRecognition` for support
+
+### 2) Create `VoiceSearchButton` Component
+
+**New file:** `src/components/eats/VoiceSearchButton.tsx`
+
+A small mic icon button that:
+- Shows a `Mic` icon (from lucide) when idle
+- Pulses/animates red when listening
+- Hidden entirely when `isSupported === false` (graceful fallback)
+- Accepts `onTranscript(text: string)` callback
+
+### 3) Add Voice Command Parser
+
+Inside `useVoiceSearch` or as a utility, parse common voice commands:
+
+| Voice Input | Action |
+|-------------|--------|
+| "Find pizza near me" | Sets search query to "pizza" |
+| "Show burgers" | Sets search query to "burgers" |
+| "Reorder my last order" | Navigates to `/eats/orders` |
+| Any other phrase | Sets as search query directly |
+
+Simple keyword matching — strips filler words like "find", "show", "search for", "near me".
+
+### 4) Integrate into Desktop Search Bar
+
+**File to modify:** `src/pages/EatsRestaurants.tsx`
+
+Add `VoiceSearchButton` inside the search input container (next to the Search icon, on the right side). On transcript result:
+- Parse voice command
+- Set `searchQuery` state
+- If "reorder" detected, navigate to `/eats/orders`
+
+### 5) Integrate into Mobile Search Bar
+
+**File to modify:** `src/components/eats/MobileEatsPremium.tsx`
+
+Add `VoiceSearchButton` inside the mobile search bar container (right side of input). Same behavior as desktop.
 
 ---
 
 ## File Summary
 
-### New Files (1)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `supabase/functions/ai-support-chat/index.ts` | Streaming AI support edge function |
+| `src/hooks/useVoiceSearch.ts` | Web Speech API hook with support detection and error handling |
+| `src/components/eats/VoiceSearchButton.tsx` | Animated mic button with listening state |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/components/shared/LiveChatWidget.tsx` | Full rewrite: streaming AI chat + escalation |
-| `supabase/config.toml` | Register new edge function |
+| `src/pages/EatsRestaurants.tsx` | Add VoiceSearchButton next to search input |
+| `src/components/eats/MobileEatsPremium.tsx` | Add VoiceSearchButton next to mobile search input |
 
 ---
 
-## Chat Flow
+## Voice Search Flow
 
 ```text
-User opens chat widget
+User taps mic icon on search bar
        |
        v
-  Welcome message: "Hi! I'm ZIVO AI Assistant."
-  Quick replies: [Order status] [Payment help] [ETA info] [Talk to human]
+  Browser requests microphone permission (first time only)
+       |
+       ├── Denied → Toast: "Microphone access needed for voice search"
+       │             Mic icon stays hidden or shows disabled state
+       │             Text input remains fully functional
+       |
+       ├── Granted → Mic icon pulses red, listening begins
        |
        v
-  User sends message (or taps quick reply)
+  User speaks: "Find pizza near me"
        |
        v
-  POST to ai-support-chat edge function (streaming)
-       |
-       ├── AI streams response token by token
-       ├── Typing indicator shown during stream
-       └── Response rendered progressively
+  SpeechRecognition returns transcript
        |
        v
-  If AI suggests escalation or user taps "Talk to human":
+  Voice command parser:
+       ├── Strips filler: "find", "show", "search for", "near me"
+       ├── Result: "pizza"
+       ├── Sets searchQuery → restaurants filter instantly
        |
-       ├── Show category picker (Payment, Order, Safety, Other)
-       ├── Create support ticket in DB
-       ├── Show: "Ticket ZS-XXXXXX created. A human agent will reply shortly."
-       └── Chat remains open for continued AI help
+       v
+  Special commands:
+       ├── "reorder" / "last order" → navigate to /eats/orders
+       └── Everything else → search query
 ```
 
 ---
 
-## AI System Prompt Summary
-
-The edge function system prompt will instruct the AI to:
-- Be concise, friendly, and helpful
-- Answer from ZIVO's known policies (order flow, ETA calculation, refund timelines)
-- Never make up specific order details — say "I can help explain how X works" rather than fabricating data
-- Suggest "Connect to human support" for: safety concerns, complex disputes, account issues, anything it cannot confidently answer
-- Keep responses under 150 words
-- Use simple language, no jargon
-
----
-
-## Edge Cases
+## Accessibility & Fallback
 
 | Scenario | Behavior |
 |----------|----------|
-| Rate limit (429) | Toast: "AI busy, please try again in a moment" |
-| Credits exhausted (402) | Toast: "Service temporarily unavailable" |
-| Network error | Show retry button, keep previous messages |
-| User not logged in | AI still works; escalation prompts login |
-| Very long conversation | Send last 20 messages to AI (context window management) |
-| User spams messages | Disable send button while AI is streaming |
+| Browser doesn't support Speech API | Mic button not rendered; text search works normally |
+| Microphone permission denied | Toast notification; mic button shows disabled state |
+| No speech detected (timeout) | Auto-stops, no change to search |
+| Poor recognition | Transcript set as-is; user can edit in text field |
+| Desktop Chrome/Edge | Full support via `webkitSpeechRecognition` |
+| Safari/Firefox | Limited or no support; mic button hidden automatically |
+
+---
+
+## Design Details
+
+### Desktop (EatsRestaurants)
+```text
++------------------------------------------+
+| [Search icon]  Search restaurants...  [Mic] |
++------------------------------------------+
+```
+
+### Mobile (MobileEatsPremium)
+```text
++------------------------------------------+
+| [Search]  Craving... (e.g. Ramen)   [Mic] |
++------------------------------------------+
+```
+
+### Listening State
+- Mic icon turns orange/red with a pulse animation
+- Placeholder text changes to "Listening..."
+- Returns to normal after speech ends
+
