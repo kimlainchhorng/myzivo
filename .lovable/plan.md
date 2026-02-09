@@ -1,220 +1,458 @@
 
-# Web Push Notifications End-to-End Implementation Plan
+# Segmented Push Notifications & Broadcast System Implementation Plan
 
 ## Overview
-Complete the Web Push notification system by adding missing VAPID secrets, fixing database constraints, implementing real push triggers for order/chat events, and enhancing the unsubscribe flow to clean up server-side subscriptions.
+Build a comprehensive admin-facing push notification broadcast system that enables sending targeted push notifications to user segments (customers, drivers, merchants), individual users, or all users. The system includes segment rule building, campaign management, scheduled sends, delivery logging, and safety controls.
 
 ---
 
 ## Current State Analysis
 
-### Already Exists ✅
+### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `push_subscriptions` table | Available | id, user_id, endpoint, p256dh, auth, created_at |
-| `send-push-notification` edge function | Complete | Full VAPID web push with web-push npm package |
-| `register-web-push` edge function | Complete | Saves subscription with upsert on endpoint |
-| `useWebPush` hook | Complete | Subscribe/unsubscribe/test methods |
-| `NotificationSettings.tsx` | Complete | Toggle push on/off, test button, category preferences |
-| `public/sw.js` | Complete | Push handler, notification click routing |
-| `/eats/alerts` page | Complete | Full alerts UI with real-time updates |
-| `EatsBottomNav` | Complete | Unread badge on Alerts tab |
-| Real-time subscriptions | Complete | `useEatsAlerts` with postgres_changes |
+| `push_subscriptions` table | Complete | user_id, endpoint, p256dh, auth, is_active, platform |
+| `push_notification_logs` table | Complete | user_id, title, body, status, sent_at, error_message |
+| `send-push-notification` edge function | Complete | VAPID web push + FCM/APNs support |
+| `profiles` table | Complete | user_id, email, full_name, phone, status, city-related data |
+| `user_roles` table | Complete | user_id, role (admin, driver, etc.) |
+| `drivers` table | Complete | user_id, is_online, status, city data |
+| `notifications` table | Complete | user_id, title, body, channel, is_read |
+| Marketing campaigns system | Complete | `/admin/marketing/*` with targeting engine |
+| `CampaignTargetCriteria` | Complete | last_order_days_ago, city, membership_status |
+| `getTargetedUsers()` function | Complete | Resolves users from criteria |
+| `execute-campaign` edge function | Complete | Sends to targeted users |
+| `campaign-scheduler` edge function | Complete | Scheduled campaign execution |
+| AdminProtectedRoute | Complete | Role-based admin access control |
 
-### Missing ❌
+### Missing
 | Feature | Status |
 |---------|--------|
-| VAPID secrets (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT) | Not configured |
-| `VITE_VAPID_PUBLIC_KEY` env variable | Not in .env |
-| Unique constraint on (user_id, endpoint) | Only (driver_id, endpoint) exists |
-| `is_active` column in push_subscriptions | Needs verification |
-| Push triggers for order status changes | Not implemented |
-| Push triggers for chat messages | Not implemented |
-| Push triggers for support ticket replies | Not implemented |
-| Server-side test notification | Only local browser test |
-| Unsubscribe cleanup on Supabase | Not deleting server subscription |
+| `push_segments` table | Need to create |
+| `push_campaigns` table | Need to create |
+| `push_delivery_log` table | Need to create |
+| `/admin/push` dashboard | Need to create |
+| `/admin/push/segments` management | Need to create |
+| `/admin/push/campaigns` listing | Need to create |
+| `/admin/push/campaigns/[id]` detail | Need to create |
+| Segment rule builder UI | Need to create |
+| `send-segment-push` edge function | Need to create |
+| `push-campaign-scheduler` edge function | Need to create |
+| Rate limiting per user | Need to add |
+| Unsubscribe checking | Need to add |
+
+---
+
+## Database Schema
+
+### New Table: `push_segments`
+Reusable audience segments with JSON rules:
+
+```sql
+CREATE TABLE push_segments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  rules_json JSONB NOT NULL DEFAULT '{}',
+  estimated_count INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE INDEX idx_push_segments_active ON push_segments(is_active) WHERE is_active = true;
+```
+
+### New Table: `push_campaigns`
+Push notification campaigns with scheduling:
+
+```sql
+CREATE TABLE push_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT, -- Deep link or action URL
+  icon TEXT, -- Custom icon (optional)
+  segment_id UUID REFERENCES push_segments(id),
+  target_type TEXT DEFAULT 'segment', -- 'segment', 'all', 'test'
+  status TEXT DEFAULT 'draft', -- 'draft', 'scheduled', 'sending', 'sent', 'failed'
+  send_at TIMESTAMPTZ, -- NULL = send now
+  sent_at TIMESTAMPTZ,
+  targeted_count INTEGER DEFAULT 0,
+  sent_count INTEGER DEFAULT 0,
+  failed_count INTEGER DEFAULT 0,
+  skipped_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE INDEX idx_push_campaigns_status ON push_campaigns(status);
+CREATE INDEX idx_push_campaigns_scheduled ON push_campaigns(status, send_at) 
+  WHERE status = 'scheduled';
+```
+
+### New Table: `push_delivery_log`
+Delivery results for each user:
+
+```sql
+CREATE TABLE push_delivery_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID NOT NULL REFERENCES push_campaigns(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  status TEXT NOT NULL, -- 'sent', 'failed', 'skipped'
+  error TEXT,
+  skip_reason TEXT, -- 'no_subscription', 'rate_limited', 'unsubscribed'
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_push_delivery_log_campaign ON push_delivery_log(campaign_id);
+CREATE INDEX idx_push_delivery_log_user ON push_delivery_log(user_id);
+```
+
+### New Table: `push_user_daily_limits`
+Track daily push count per user for rate limiting:
+
+```sql
+CREATE TABLE push_user_daily_limits (
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  date DATE NOT NULL,
+  push_count INTEGER DEFAULT 0,
+  PRIMARY KEY (user_id, date)
+);
+
+CREATE INDEX idx_push_daily_limits_date ON push_user_daily_limits(date);
+```
+
+---
+
+## Segment Rules Schema
+
+The `rules_json` field supports these MVP rules:
+
+```typescript
+interface SegmentRules {
+  // Role-based targeting
+  roles?: ('customer' | 'driver' | 'merchant' | 'admin')[];
+  
+  // Driver-specific
+  driver_is_online?: boolean;
+  driver_status?: 'active' | 'inactive' | 'suspended';
+  
+  // Customer activity
+  last_order_days_ago?: number; // Inactive if > this value
+  has_ordered_ever?: boolean;
+  
+  // Membership
+  has_membership?: boolean;
+  
+  // Location (if available)
+  city?: string;
+  
+  // Custom SQL filter (advanced, admin only)
+  custom_filter?: string;
+}
+```
+
+**Example Segments:**
+| Segment Name | Rules |
+|--------------|-------|
+| All Drivers Online | `{ "roles": ["driver"], "driver_is_online": true }` |
+| Inactive Customers (14+ days) | `{ "roles": ["customer"], "last_order_days_ago": 14 }` |
+| All Merchants | `{ "roles": ["merchant"] }` |
+| Baton Rouge Customers | `{ "roles": ["customer"], "city": "Baton Rouge" }` |
+| ZIVO+ Members | `{ "has_membership": true }` |
 
 ---
 
 ## Implementation Plan
 
-### 1) Database Schema Updates
+### A) Push Data Library
 
-**Add missing columns and constraints to `push_subscriptions`:**
-
-```sql
--- Add is_active and platform columns if missing
-ALTER TABLE push_subscriptions 
-  ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
-  ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT 'web';
-
--- Add unique constraint on (user_id, endpoint) for upserts
-ALTER TABLE push_subscriptions
-  ADD CONSTRAINT push_subscriptions_user_id_endpoint_key 
-  UNIQUE (user_id, endpoint);
-
--- Index for fast lookups
-CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_active 
-  ON push_subscriptions(user_id, is_active) 
-  WHERE is_active = true;
-```
-
-### 2) VAPID Keys Configuration
-
-**Required secrets to add via Edge Functions secrets UI:**
-
-| Secret | Value | Description |
-|--------|-------|-------------|
-| `VAPID_PUBLIC_KEY` | (generated) | Base64 VAPID public key |
-| `VAPID_PRIVATE_KEY` | (generated) | Base64 VAPID private key |
-| `VAPID_SUBJECT` | `mailto:info@hizivo.com` | Contact for push service |
-
-**Also add to `.env`:**
-```
-VITE_VAPID_PUBLIC_KEY="<public_key_here>"
-```
-
-**Generate VAPID keys using:**
-```bash
-npx web-push generate-vapid-keys
-```
-
-### 3) Unsubscribe Cleanup Edge Function
-
-**Create:** `supabase/functions/unregister-web-push/index.ts`
-
-Deletes the subscription from Supabase when user disables push:
+**File to Create:** `src/lib/pushBroadcast.ts`
 
 ```typescript
-// Accept endpoint or subscription_id
-// Delete from push_subscriptions where user_id matches
-// Return success
+// Interfaces
+export interface PushSegment {
+  id: string;
+  name: string;
+  description: string | null;
+  rulesJson: SegmentRules;
+  estimatedCount: number;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+export interface PushCampaign {
+  id: string;
+  name: string;
+  title: string;
+  body: string;
+  url: string | null;
+  segmentId: string | null;
+  targetType: 'segment' | 'all' | 'test';
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+  sendAt: string | null;
+  sentAt: string | null;
+  targetedCount: number;
+  sentCount: number;
+  failedCount: number;
+  skippedCount: number;
+  createdAt: string;
+  segment?: PushSegment;
+}
+
+export interface PushDeliveryLog {
+  id: string;
+  campaignId: string;
+  userId: string;
+  status: 'sent' | 'failed' | 'skipped';
+  error: string | null;
+  skipReason: string | null;
+  createdAt: string;
+}
+
+// Segment CRUD
+export async function getSegments(): Promise<PushSegment[]>
+export async function getSegment(id: string): Promise<PushSegment | null>
+export async function createSegment(segment: Partial<PushSegment>): Promise<PushSegment>
+export async function updateSegment(id: string, updates: Partial<PushSegment>): Promise<void>
+export async function deleteSegment(id: string): Promise<void>
+export async function estimateSegmentSize(rules: SegmentRules): Promise<number>
+export async function previewSegmentUsers(rules: SegmentRules, limit?: number): Promise<User[]>
+
+// Campaign CRUD
+export async function getCampaigns(): Promise<PushCampaign[]>
+export async function getCampaign(id: string): Promise<PushCampaign | null>
+export async function createCampaign(campaign: Partial<PushCampaign>): Promise<PushCampaign>
+export async function updateCampaign(id: string, updates: Partial<PushCampaign>): Promise<void>
+export async function deleteCampaign(id: string): Promise<void>
+export async function sendCampaignNow(id: string): Promise<{ sent: number; failed: number }>
+export async function scheduleCampaign(id: string, sendAt: Date): Promise<void>
+
+// Delivery Logs
+export async function getCampaignDeliveryLogs(campaignId: string, limit?: number): Promise<PushDeliveryLog[]>
+export async function getPushStats(): Promise<PushStats>
 ```
 
-**Update `useWebPush.ts`:**
-- Call `unregister-web-push` edge function in `unsubscribe()` method
-- Pass the endpoint to delete the correct subscription
+### B) Push Broadcast Hooks
 
-### 4) Push Notification Triggers
-
-**A) Order Status Changes**
-
-Modify `useUpdateFoodOrder` hook to send push after status update:
+**File to Create:** `src/hooks/usePushBroadcast.ts`
 
 ```typescript
-// After successful status update, call send-push-notification
-const statusMessages = {
-  confirmed: "Your order has been confirmed!",
-  preparing: "Your order is being prepared",
-  ready_for_pickup: "Your order is ready for pickup",
-  out_for_delivery: "Your order is on the way!",
-  completed: "Your order has been delivered",
-};
+// Segment hooks
+export function useSegments()
+export function useSegment(id: string | undefined)
+export function useCreateSegment()
+export function useUpdateSegment()
+export function useDeleteSegment()
+export function useSegmentPreview(rules: SegmentRules, enabled?: boolean)
 
-await supabase.functions.invoke("send-push-notification", {
-  body: {
-    user_id: order.customer_id,
-    notification_type: "order_status",
-    title: `Order ${newStatus.replace(/_/g, " ")}`,
-    body: statusMessages[newStatus],
-    data: { type: "order_status", order_id: order.id },
-  },
-});
+// Campaign hooks
+export function usePushCampaigns()
+export function usePushCampaign(id: string | undefined)
+export function useCreatePushCampaign()
+export function useUpdatePushCampaign()
+export function useDeletePushCampaign()
+export function useSendPushCampaign()
+export function useSchedulePushCampaign()
+
+// Delivery & Stats hooks
+export function usePushDeliveryLogs(campaignId: string | undefined)
+export function usePushStats()
 ```
 
-**B) New Chat Messages**
+### C) Admin Push Dashboard
 
-Modify `useOrderChat` hook to send push on new message:
+**File to Create:** `src/pages/admin/push/PushDashboard.tsx`
 
-```typescript
-// After inserting chat message
-await supabase.functions.invoke("send-push-notification", {
-  body: {
-    user_id: recipientId,
-    notification_type: "chat_message",
-    title: `New message from ${senderName}`,
-    body: message.substring(0, 100),
-    data: { type: "chat_message", order_id: orderId },
-  },
-});
+**Route:** `/admin/push`
+
+**Layout:**
+```text
++----------------------------------------------------------+
+|  Push Notifications                   [+ New Campaign]    |
++----------------------------------------------------------+
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | TOTAL SENT       |  | ACTIVE SEGMENTS  |               |
+|  | 12,450           |  | 8                |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | SCHEDULED        |  | DELIVERY RATE    |               |
+|  | 3 campaigns      |  | 94.5%            |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  Quick Actions                                            |
+|  +------------------------------------------------------+|
+|  | [Manage Segments] [All Campaigns] [Send Test]        ||
+|  +------------------------------------------------------+|
+|                                                           |
+|  Recent Campaigns                                         |
+|  +------------------------------------------------------+|
+|  | Flash Sale Alert | Sent | 2,345 delivered | 2 hrs ago||
+|  | Driver Boost     | Sent | 128 delivered   | 5 hrs ago||
+|  | Weekend Special  | Scheduled | Feb 10     | [Cancel] ||
+|  +------------------------------------------------------+|
+|                                                           |
++----------------------------------------------------------+
 ```
 
-**C) Support Ticket Replies**
+### D) Segments Management Page
 
-Modify support ticket reply flow to send push:
+**File to Create:** `src/pages/admin/push/SegmentsPage.tsx`
 
-```typescript
-// After agent replies to ticket
-await supabase.functions.invoke("send-push-notification", {
-  body: {
-    user_id: ticketOwnerId,
-    notification_type: "support_reply",
-    title: "Support team replied",
-    body: `Re: ${ticketSubject}`,
-    data: { type: "support_reply", ticket_id: ticketId },
-  },
-});
+**Route:** `/admin/push/segments`
+
+**Features:**
+- List all segments with estimated user counts
+- Create new segment with rule builder
+- Edit/delete segments
+- Preview matching users
+
+### E) Segment Rule Builder Component
+
+**File to Create:** `src/components/admin/push/SegmentRuleBuilder.tsx`
+
+**Features:**
+- Visual rule builder (no JSON editing required for MVP rules)
+- Role selector (Customer, Driver, Merchant checkboxes)
+- Driver online toggle
+- Inactive days slider
+- Membership toggle
+- City dropdown (from available cities)
+- Real-time estimated count
+
+**Layout:**
+```text
++------------------------------------------------------+
+| Segment Rules                                         |
++------------------------------------------------------+
+| Target Roles:                                         |
+| [x] Customers  [ ] Drivers  [ ] Merchants            |
+|                                                       |
+| Driver Status: (only if Driver selected)              |
+| ( ) All  (•) Online Only  ( ) Offline Only           |
+|                                                       |
+| Customer Activity:                                    |
+| [ ] Inactive for [14] days or more                   |
+| [ ] Has placed at least one order                    |
+|                                                       |
+| Membership:                                           |
+| ( ) Any  (•) ZIVO+ Members Only  ( ) Non-Members     |
+|                                                       |
+| Location:                                             |
+| [All Cities         ▼]                                |
+|                                                       |
+| Estimated Reach: ~2,345 users                         |
++------------------------------------------------------+
 ```
 
-### 5) Server-Side Test Notification
+### F) Campaigns Listing Page
 
-**Update `useWebPush.ts` `sendTestNotification` method:**
+**File to Create:** `src/pages/admin/push/CampaignsPage.tsx`
+
+**Route:** `/admin/push/campaigns`
+
+**Features:**
+- List all push campaigns with status badges
+- Filter by status (draft, scheduled, sent)
+- Quick actions: Send Now, Schedule, Delete
+- Link to detail page
+
+### G) Campaign Detail/Create Page
+
+**File to Create:** `src/pages/admin/push/CampaignDetailPage.tsx`
+
+**Route:** `/admin/push/campaigns/:id` (or `/admin/push/campaigns/new`)
+
+**Features:**
+- Campaign name input
+- Title & Body inputs with character counters
+- URL input (optional deep link)
+- Segment selector (dropdown of saved segments)
+- Or "Send to All Users" toggle
+- Schedule picker or "Send Now" button
+- Test send to current user
+- Preview notification appearance
+- Delivery stats after sent
+
+### H) Send to Segment Edge Function
+
+**File to Create:** `supabase/functions/send-segment-push/index.ts`
+
+**Logic:**
+1. Accept `campaign_id` or `{ segment_id, title, body, url }`
+2. Load segment rules
+3. Resolve matching users via SQL query
+4. For each user:
+   - Check rate limit (max 5 pushes/day)
+   - Check if has active subscription
+   - Check if unsubscribed
+   - Call `send-push-notification` or inline VAPID send
+5. Log to `push_delivery_log`
+6. Update campaign stats
+7. Return results
 
 ```typescript
-const sendTestNotification = useCallback(async () => {
-  if (!user?.id) {
-    // Fallback to local notification
-    const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification("hiZIVO Test", { ... });
-    return;
+// User resolution query based on rules
+async function resolveSegmentUsers(rules: SegmentRules): Promise<string[]> {
+  let query = supabase.from("profiles").select("user_id");
+  
+  if (rules.roles?.includes("driver")) {
+    // Join with drivers table
+    const { data: drivers } = await supabase
+      .from("drivers")
+      .select("user_id")
+      .eq("is_online", rules.driver_is_online ?? true);
+    return drivers?.map(d => d.user_id) || [];
   }
-
-  // Send real push via edge function
-  await supabase.functions.invoke("send-push-notification", {
-    body: {
-      user_id: user.id,
-      notification_type: "test",
-      title: "hiZIVO Push Test 🔔",
-      body: "Push notifications are working end-to-end!",
-      data: { type: "test", url: "/account/notifications" },
-    },
-  });
-}, [user]);
+  
+  if (rules.last_order_days_ago) {
+    // Find inactive customers (similar to marketing.ts logic)
+    // ...
+  }
+  
+  // More rule processing...
+  
+  return userIds;
+}
 ```
 
-### 6) Service Worker Enhancements
+### I) Push Campaign Scheduler
 
-**Update `public/sw.js` notification click handler:**
+**File to Create:** `supabase/functions/push-campaign-scheduler/index.ts`
 
-Add handling for support ticket clicks:
+**Runs:** Every 5 minutes (configured via pg_cron or external scheduler)
 
-```javascript
-case 'support_reply':
-  urlToOpen = `/support/tickets/${data.ticket_id}`;
-  break;
+**Logic:**
+1. Find campaigns where `status = 'scheduled'` AND `send_at <= now()`
+2. For each:
+   - Set status = 'sending'
+   - Call `send-segment-push`
+   - Set status = 'sent' or 'failed'
+
+### J) Routes Configuration
+
+**File to Modify:** `src/App.tsx`
+
+```typescript
+// Lazy imports
+const PushDashboard = lazy(() => import("./pages/admin/push/PushDashboard"));
+const PushSegmentsPage = lazy(() => import("./pages/admin/push/SegmentsPage"));
+const PushCampaignsPage = lazy(() => import("./pages/admin/push/CampaignsPage"));
+const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDetailPage"));
+
+// Routes
+<Route path="/admin/push" element={<ProtectedRoute requireAdmin><PushDashboard /></ProtectedRoute>} />
+<Route path="/admin/push/segments" element={<ProtectedRoute requireAdmin><PushSegmentsPage /></ProtectedRoute>} />
+<Route path="/admin/push/campaigns" element={<ProtectedRoute requireAdmin><PushCampaignsPage /></ProtectedRoute>} />
+<Route path="/admin/push/campaigns/:id" element={<ProtectedRoute requireAdmin><PushCampaignDetailPage /></ProtectedRoute>} />
 ```
-
-Already handles:
-- `order_status` → `/eats/orders/${order_id}`
-- `chat_message` → `/support/tickets/${ticket_id}`
-- `price_drop` → `/flights` or custom URL
-- `booking_update` → `/trips/${booking_id}`
-
-### 7) Enhanced Alerts Page
-
-The `/eats/alerts` page already exists and works. Ensure it handles all notification types:
-
-- Order status updates ✅
-- Chat messages (add icon differentiation)
-- Support ticket replies (add icon differentiation)
-- Price alerts
-- Promotional notifications
-
-### 8) Unread Badge in Bottom Nav
-
-Already implemented in `EatsBottomNav.tsx`:
-- Uses `useEatsAlerts().unreadCount`
-- Displays badge on Alerts tab when > 0
 
 ---
 
@@ -223,117 +461,176 @@ Already implemented in `EatsBottomNav.tsx`:
 ### Database Migration
 | Change | Purpose |
 |--------|---------|
-| Add `is_active`, `platform` columns | Track subscription status |
-| Add unique constraint `(user_id, endpoint)` | Enable upsert behavior |
-| Add index on `(user_id, is_active)` | Fast subscription lookups |
+| Create `push_segments` table | Store reusable audience segments |
+| Create `push_campaigns` table | Push campaign management |
+| Create `push_delivery_log` table | Per-user delivery tracking |
+| Create `push_user_daily_limits` table | Rate limiting |
+| RLS policies | Admin-only access |
 
-### Secrets to Add
-| Secret | Purpose |
-|--------|---------|
-| `VAPID_PUBLIC_KEY` | Client subscription creation |
-| `VAPID_PRIVATE_KEY` | Server-side push signing |
-| `VAPID_SUBJECT` | Push service contact |
-
-### New Files (1)
+### New Files (12)
 | File | Purpose |
 |------|---------|
-| `supabase/functions/unregister-web-push/index.ts` | Delete subscription on unsubscribe |
+| `src/lib/pushBroadcast.ts` | Data layer for segments & campaigns |
+| `src/hooks/usePushBroadcast.ts` | React Query hooks |
+| `src/pages/admin/push/PushDashboard.tsx` | Main push admin hub |
+| `src/pages/admin/push/SegmentsPage.tsx` | Segment management |
+| `src/pages/admin/push/CampaignsPage.tsx` | Campaign listing |
+| `src/pages/admin/push/CampaignDetailPage.tsx` | Campaign create/edit/view |
+| `src/components/admin/push/SegmentRuleBuilder.tsx` | Visual rule builder |
+| `src/components/admin/push/NotificationPreview.tsx` | Live preview |
+| `src/components/admin/push/CampaignStats.tsx` | Delivery stats display |
+| `supabase/functions/send-segment-push/index.ts` | Send to segment |
+| `supabase/functions/push-campaign-scheduler/index.ts` | Scheduled sender |
+| Migration SQL file | Schema changes |
 
-### Modified Files (4)
+### Modified Files (1)
 | File | Changes |
 |------|---------|
-| `.env` | Add `VITE_VAPID_PUBLIC_KEY` |
-| `src/hooks/useWebPush.ts` | Call unregister function, use server-side test push |
-| `src/hooks/useEatsOrders.ts` | Add push trigger on order status change |
-| `src/hooks/useOrderChat.ts` | Add push trigger on new message |
+| `src/App.tsx` | Add push admin routes |
 
 ---
 
 ## Data Flow
 
 ```text
-User Enables Push Notifications
+Admin Creates Segment
+  └── Define rules (roles, activity, location)
+  └── Save to push_segments
         ↓
-Browser requests permission
+Admin Creates Campaign
+  └── Select segment or "All Users"
+  └── Write title, body, URL
+  └── Choose: Send Now OR Schedule
         ↓
-Service Worker subscribes with VAPID key
+[Send Now]                    [Schedule]
+    ↓                              ↓
+send-segment-push         Save with status='scheduled'
+    ↓                              ↓
+Resolve users from rules    push-campaign-scheduler (cron)
+    ↓                              ↓
+For each user:              When send_at <= now()
+├── Check rate limit           ↓
+├── Check subscription      send-segment-push
+├── Send via VAPID              ↓
+└── Log to push_delivery_log    (same flow)
         ↓
-register-web-push edge function
+Update campaign stats
         ↓
-Save to push_subscriptions table
-        ↓
-Event occurs (order status / chat message)
-        ↓
-App code calls send-push-notification
-        ↓
-Edge function reads push_subscriptions
-        ↓
-Sends VAPID-signed push via web-push library
-        ↓
-Service Worker receives push event
-        ↓
-Shows native notification
-        ↓
-User clicks → SW opens correct URL
+Admin sees results in dashboard
 ```
 
 ---
 
-## Push Trigger Integration Points
+## Safety Controls
 
-| Event | Location | Trigger |
-|-------|----------|---------|
-| Order placed | `useCreateFoodOrder` | After successful insert |
-| Order status change | `useUpdateFoodOrder` | After status update |
-| New chat message | `useOrderChat` → send | After message insert |
-| Support ticket reply | Admin ticket panel | After agent reply |
-| Price drop | Price monitoring job | Scheduled edge function |
+### 1. Rate Limiting (5 pushes/user/day)
+```sql
+-- Before sending, check:
+SELECT push_count FROM push_user_daily_limits
+WHERE user_id = $1 AND date = CURRENT_DATE;
+
+-- If >= 5, skip with reason 'rate_limited'
+```
+
+### 2. Unsubscribe Checking
+```sql
+-- Only send to users with active subscriptions
+SELECT * FROM push_subscriptions
+WHERE user_id = $1 AND is_active = true;
+```
+
+### 3. Admin-Only Access
+All push admin pages wrapped in `AdminProtectedRoute`:
+```typescript
+<Route path="/admin/push/*" element={
+  <AdminProtectedRoute allowedRoles={["admin", "super_admin", "operations"]}>
+    ...
+  </AdminProtectedRoute>
+} />
+```
+
+### 4. Test Send First
+Campaign creation includes "Send Test to Me" button that sends only to the current admin's user_id.
+
+### 5. Confirmation Dialogs
+All "Send Now" actions require confirmation modal showing:
+- Estimated recipients count
+- Campaign title/body preview
+- "Are you sure?" with Cancel/Confirm buttons
 
 ---
 
-## Testing Checklist
+## Segment Resolution SQL Examples
 
-1. **VAPID Setup**
-   - [ ] Generate VAPID keys
-   - [ ] Add secrets to Supabase Edge Functions
-   - [ ] Add `VITE_VAPID_PUBLIC_KEY` to .env
+**All Online Drivers:**
+```sql
+SELECT user_id FROM drivers 
+WHERE is_online = true AND status = 'active';
+```
 
-2. **Subscribe Flow**
-   - [ ] User enables notifications on `/account/notifications`
-   - [ ] Browser permission granted
-   - [ ] Subscription saved to `push_subscriptions`
+**Inactive Customers (14+ days):**
+```sql
+SELECT DISTINCT p.user_id FROM profiles p
+LEFT JOIN food_orders fo ON fo.customer_id = p.user_id 
+  AND fo.created_at > NOW() - INTERVAL '14 days'
+  AND fo.status = 'completed'
+WHERE fo.id IS NULL
+  AND EXISTS (SELECT 1 FROM food_orders WHERE customer_id = p.user_id);
+```
 
-3. **Unsubscribe Flow**
-   - [ ] User disables notifications
-   - [ ] Browser subscription unregistered
-   - [ ] Row deleted from `push_subscriptions`
+**Customers in Baton Rouge:**
+```sql
+SELECT DISTINCT p.user_id FROM profiles p
+JOIN saved_locations sl ON sl.user_id = p.user_id
+WHERE sl.city ILIKE '%Baton Rouge%';
+```
 
-4. **Test Notification**
-   - [ ] Click "Send Test" button
-   - [ ] Receive native push notification
-   - [ ] Clicking opens `/account/notifications`
+---
 
-5. **Real Event Triggers**
-   - [ ] Order status change → customer receives push
-   - [ ] Chat message → recipient receives push
-   - [ ] Support reply → customer receives push
+## UI Component Details
 
-6. **Notification Click Actions**
-   - [ ] Order notification → opens order detail
-   - [ ] Chat notification → opens chat
-   - [ ] Support notification → opens ticket
+### NotificationPreview
+Shows how the push will appear on device:
+```text
++---------------------------+
+| 📱 iOS / Android Preview  |
++---------------------------+
+| [ZIVO icon]               |
+| Weekend Flash Sale! 🔥    |
+| 50% off all rides this... |
+| now                       |
++---------------------------+
+```
+
+### CampaignStats
+After campaign is sent:
+```text
++------------------------------------------+
+| Delivery Results                         |
++------------------------------------------+
+| Targeted: 2,500 | Sent: 2,345 | Rate: 94%|
+| Failed: 55      | Skipped: 100           |
+|                                          |
+| Skip Reasons:                            |
+| - No subscription: 80                    |
+| - Rate limited: 15                       |
+| - Unsubscribed: 5                        |
++------------------------------------------+
+```
 
 ---
 
 ## Summary
 
-This implementation completes the Web Push notification system by:
+This implementation creates a complete push notification broadcast system with:
 
-1. **Configuring VAPID secrets** for server-side push signing
-2. **Adding database constraints** for proper subscription management
-3. **Creating unregister function** to clean up on unsubscribe
-4. **Integrating push triggers** into order, chat, and support flows
-5. **Enhancing test notification** to use real server-side push
-6. **Leveraging existing UI** (`/eats/alerts`, bottom nav badge, settings page)
+1. **Reusable Segments** - Define once, use across campaigns
+2. **Visual Rule Builder** - No JSON editing required for common rules
+3. **Campaign Management** - Draft, schedule, or send immediately
+4. **Delivery Tracking** - Per-user logs with failure reasons
+5. **Safety Controls** - Rate limits, unsubscribe checks, admin-only
+6. **Test Mode** - Send to yourself before broadcasting
+7. **Scheduling** - Set future send times with automatic execution
+8. **Real-time Stats** - See delivery rates and skip reasons
 
-All integrated with existing `push_subscriptions` table, `send-push-notification` edge function, and `sw.js` service worker.
+All integrated with existing `send-push-notification` edge function and `push_subscriptions` table.
