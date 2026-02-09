@@ -2,9 +2,10 @@
  * ZIVO Eats — Restaurant Listing Page
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2, Heart } from "lucide-react";
+import { VoiceSearchButton } from "@/components/eats/VoiceSearchButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,8 +107,14 @@ function EatsRestaurantsContent() {
                 placeholder="Search restaurants or cuisines..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 rounded-xl"
+                className="pl-10 pr-9 rounded-xl"
               />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <VoiceSearchButton
+                  onTranscript={setSearchQuery}
+                  onReorder={() => navigate("/eats/orders")}
+                />
+              </div>
             </div>
 
             {/* Cuisine Filters */}
