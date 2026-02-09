@@ -26,6 +26,8 @@ export default function WalletPage() {
         return <ShoppingBag className="w-4 h-4" />;
       case "redemption":
         return <Gift className="w-4 h-4" />;
+      case "gift_card":
+        return <Gift className="w-4 h-4" />;
       case "reward":
         return <Trophy className="w-4 h-4" />;
       default:
@@ -62,6 +64,8 @@ export default function WalletPage() {
         return "Order Payment";
       case "redemption":
         return "Redeemed";
+      case "gift_card":
+        return "Gift Card";
       case "reward":
         return "Reward Credit";
       default:
@@ -226,6 +230,19 @@ export default function WalletPage() {
               <div className="flex-1">
                 <p className="font-medium">Promo Codes</p>
                 <p className="text-xs text-zinc-500">View your available codes</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-zinc-600" />
+            </button>
+            <button
+              onClick={() => navigate("/account/gift-cards")}
+              className="w-full flex items-center gap-4 p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 transition-colors text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <Gift className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Gift Cards</p>
+                <p className="text-xs text-zinc-500">Buy, send, or redeem gift cards</p>
               </div>
               <ExternalLink className="w-4 h-4 text-zinc-600" />
             </button>

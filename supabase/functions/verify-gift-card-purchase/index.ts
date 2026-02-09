@@ -1,0 +1,103 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { session_id } = await req.json();
+
+    if (!session_id) {
+      return new Response(
+        JSON.stringify({ error: "Missing session_id" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+      apiVersion: "2023-10-16",
+    });
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status !== "paid") {
+      return new Response(
+        JSON.stringify({ error: "Payment not completed" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const giftCardId = session.metadata?.gift_card_id;
+    if (!giftCardId) {
+      return new Response(
+        JSON.stringify({ error: "No gift card associated with this session" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Activate the gift card
+    const { data: giftCard, error: updateError } = await supabase
+      .from("gift_cards")
+      .update({ is_active: true })
+      .eq("id", giftCardId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Update error:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to activate gift card" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create a purchase transaction record
+    await supabase.from("gift_card_transactions").insert({
+      gift_card_id: giftCardId,
+      transaction_type: "purchase",
+      amount: giftCard.initial_balance,
+      balance_after: giftCard.current_balance,
+      notes: `Gift card purchased${giftCard.recipient_email ? ` for ${giftCard.recipient_email}` : ""}`,
+    });
+
+    // Log email send attempt (actual email integration can be added later)
+    if (giftCard.recipient_email) {
+      console.log(`Gift card ${giftCard.code} should be emailed to ${giftCard.recipient_email}`);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        gift_card: {
+          id: giftCard.id,
+          code: giftCard.code,
+          amount: giftCard.initial_balance,
+          recipient_email: giftCard.recipient_email,
+          recipient_name: giftCard.recipient_name,
+          message: giftCard.message,
+        },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Error:", err);
+    return new Response(
+      JSON.stringify({ error: err.message || "Internal server error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

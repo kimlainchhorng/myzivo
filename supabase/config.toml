@@ -215,3 +215,12 @@ verify_jwt = false
 
 [functions.ai-support-chat]
 verify_jwt = false
+
+[functions.purchase-gift-card]
+verify_jwt = false
+
+[functions.verify-gift-card-purchase]
+verify_jwt = false
+
+[functions.redeem-gift-card]
+verify_jwt = false
