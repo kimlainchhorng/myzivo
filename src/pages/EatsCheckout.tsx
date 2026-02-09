@@ -9,8 +9,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
-  UtensilsCrossed, MapPin, Clock, User, Phone, Mail, 
-  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck
+  UtensilsCrossed, Clock, User, 
+  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { CartProvider, useCart } from "@/contexts/CartContext";
-import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
+import { useCreateFoodOrder, useRestaurant } from "@/hooks/useEatsOrders";
+import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -49,7 +50,10 @@ function EatsCheckoutContent() {
 
   const restaurantId = items.length > 0 ? items[0].restaurantId : null;
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
-
+  
+  // Fetch restaurant to check availability
+  const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
+  const availability = useRestaurantAvailability(restaurant);
   const {
     register,
     handleSubmit,
@@ -179,6 +183,36 @@ function EatsCheckoutContent() {
               className="bg-gradient-to-r from-eats to-orange-500"
             >
               Browse Restaurants
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Restaurant unavailable - block checkout
+  if (!restaurantLoading && !availability.canOrder) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-20 pb-16">
+          <div className="container mx-auto px-4 text-center py-16">
+            <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <h1 className="font-bold text-2xl mb-2">Restaurant Unavailable</h1>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              {restaurantName} is temporarily not accepting orders.
+              {availability.detailMessage && (
+                <span className="block mt-2 text-sm">{availability.detailMessage}</span>
+              )}
+            </p>
+            <Button 
+              onClick={() => navigate("/eats/restaurants")}
+              className="bg-gradient-to-r from-eats to-orange-500"
+            >
+              Browse Other Restaurants
             </Button>
           </div>
         </main>

@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UtensilsCrossed, MapPin, Clock, Star, Search, Filter, ArrowLeft, Loader2 } from "lucide-react";
+import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import SEOHead from "@/components/SEOHead";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
+import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
+import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 
 function EatsRestaurantsContent() {
   const navigate = useNavigate();
@@ -169,11 +171,9 @@ function EatsRestaurantsContent() {
                     ) : (
                       <UtensilsCrossed className="w-16 h-16 text-eats/30" />
                     )}
-                    {restaurant.is_open && (
-                      <Badge className="absolute top-3 right-3 bg-emerald-500">
-                        Open
-                      </Badge>
-                    )}
+                    <div className="absolute top-3 right-3">
+                      <RestaurantAvailabilityBadge restaurant={restaurant} size="sm" />
+                    </div>
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-bold text-lg mb-1 line-clamp-1">{restaurant.name}</h3>
@@ -187,12 +187,16 @@ function EatsRestaurantsContent() {
                           <span className="font-medium">{restaurant.rating}</span>
                         </div>
                       )}
-                      {restaurant.avg_prep_time && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span>{restaurant.avg_prep_time} min</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const availability = getRestaurantAvailability(restaurant);
+                        const prepTime = availability.adjustedPrepTime || restaurant.avg_prep_time;
+                        return prepTime ? (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>{prepTime} min</span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                     <Button
                       className="w-full mt-4 rounded-xl bg-gradient-to-r from-eats to-orange-500"

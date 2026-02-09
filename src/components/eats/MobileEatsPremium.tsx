@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, Clock, Star, Flame, ShoppingBag, 
-  MapPin, Plus, Zap, ArrowLeft, Loader2, Package, Heart, Bell
+  MapPin, Plus, Zap, ArrowLeft, Package, Heart, Bell
 } from "lucide-react";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { useSponsoredRestaurants } from "@/hooks/useRestaurantAds";
@@ -18,6 +18,8 @@ import { useCustomerCity } from "@/contexts/CustomerCityContext";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { FavoriteButton } from "./FavoriteButton";
 import { EatsSurgeBadge } from "./EatsSurgeBadge";
+import { RestaurantAvailabilityBadge } from "./RestaurantAvailabilityBadge";
+import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { Skeleton } from "@/components/ui/skeleton";
 import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
 import CitySelectionModal from "@/components/city/CitySelectionModal";
@@ -242,26 +244,24 @@ export default function MobileEatsPremium() {
               {/* Floating Time Badge & Favorite */}
               <div className="absolute top-6 right-6 flex items-center gap-2">
                 <FavoriteButton restaurant={restaurant} size="sm" />
-                <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-orange-400" />
-                  <span className="text-xs font-bold">
-                    {restaurant.avg_prep_time ? `${restaurant.avg_prep_time}-${restaurant.avg_prep_time + 10} min` : "25-35 min"}
-                  </span>
-                </div>
+                {(() => {
+                  const availability = getRestaurantAvailability(restaurant);
+                  const prepTime = availability.adjustedPrepTime || restaurant.avg_prep_time;
+                  return (
+                    <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-orange-400" />
+                      <span className="text-xs font-bold">
+                        {prepTime ? `${prepTime}-${prepTime + 10} min` : "25-35 min"}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
-              {/* Open/Closed Badge */}
-              {restaurant.is_open !== null && (
-                <div className="absolute top-6 left-6">
-                  <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                    restaurant.is_open 
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
-                      : "bg-red-500/20 text-red-400 border border-red-500/30"
-                  }`}>
-                    {restaurant.is_open ? "Open Now" : "Closed"}
-                  </div>
-                </div>
-              )}
+              {/* Availability Badge */}
+              <div className="absolute top-6 left-6">
+                <RestaurantAvailabilityBadge restaurant={restaurant} size="sm" />
+              </div>
 
               {/* Content Overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent pt-20">
