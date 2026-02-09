@@ -50,6 +50,7 @@ import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { SocialShareSheet } from "@/components/shared/SocialShareSheet";
 
 // Haversine formula for distance calculation (miles)
 function calculateDistanceMiles(
@@ -215,17 +216,6 @@ function EatsOrderDetailContent() {
   const isActiveOrder = order && order.status !== "delivered" && order.status !== "cancelled";
   const isDelivering = order?.status === "out_for_delivery";
 
-  // Copy order link to clipboard for support/sharing
-  const handleShareOrderLink = async () => {
-    const orderLink = `https://hizivo.com/eats/orders/${id}`;
-    try {
-      await navigator.clipboard.writeText(orderLink);
-      toast.success("Order link copied to clipboard");
-    } catch (err) {
-      // Fallback for older browsers
-      toast.error("Failed to copy link");
-    }
-  };
 
   // Order Again handler
   const handleOrderAgain = () => {
@@ -334,13 +324,21 @@ function EatsOrderDetailContent() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleShareOrderLink}
-              className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
-              title="Copy order link"
-            >
-              <Share2 className="w-5 h-5" />
-            </button>
+            <SocialShareSheet
+              title="My ZIVO Eats Order"
+              text="Check out my order on ZIVO Eats!"
+              url={`/eats/orders/${id}`}
+              entityId={id || ""}
+              entityType="food_order"
+              trigger={
+                <button
+                  className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+                  title="Share order"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              }
+            />
             <button
               onClick={() => setHelpModalOpen(true)}
               className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
