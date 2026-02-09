@@ -200,3 +200,9 @@ verify_jwt = false
 
 [functions.twilio-sms-inbound]
 verify_jwt = false
+
+[functions.run-database-backup]
+verify_jwt = false
+
+[functions.run-storage-backup]
+verify_jwt = false

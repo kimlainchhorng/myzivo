@@ -47,6 +47,8 @@ const SecurityDashboard = lazy(() => import("./pages/admin/SecurityDashboard"));
 const GlobalDashboard = lazy(() => import("./pages/admin/GlobalDashboard"));
 const AIInsightsDashboard = lazy(() => import("./pages/admin/AIInsightsDashboard"));
 const RecoveryDashboard = lazy(() => import("./pages/admin/RecoveryDashboard"));
+const BackupsPage = lazy(() => import("./pages/admin/BackupsPage"));
+const RecoveryGuidePage = lazy(() => import("./pages/admin/RecoveryGuidePage"));
 const LegalControlDashboard = lazy(() => import("./pages/admin/LegalControlDashboard"));
 // Master Admin Control Center
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
@@ -1296,6 +1298,24 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <RecoveryDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Backups Page */}
+                <Route
+                  path="/admin/backups"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <BackupsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Recovery Guide */}
+                <Route
+                  path="/admin/system/recovery"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <RecoveryGuidePage />
                     </ProtectedRoute>
                   }
                 />
