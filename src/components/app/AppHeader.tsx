@@ -1,11 +1,12 @@
 /**
  * App Header Component
- * Mobile-first header with logo, city selector, and help
+ * Mobile-first header with logo, city selector, and notifications
  */
 import { useNavigate } from "react-router-dom";
-import { HelpCircle, ChevronLeft } from "lucide-react";
+import { Bell, ChevronLeft } from "lucide-react";
 import ZivoLogo from "@/components/ZivoLogo";
 import CitySelector from "@/components/city/CitySelector";
+import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
@@ -26,6 +27,7 @@ const AppHeader = ({
   hideLocation = false
 }: AppHeaderProps) => {
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications(20);
 
   const handleBack = () => {
     if (onBack) {
@@ -70,14 +72,19 @@ const AppHeader = ({
           <CitySelector />
         )}
 
-        {/* Right */}
+        {/* Right - Notifications Bell */}
         {rightAction || (
           <button
-            onClick={() => navigate("/help")}
-            className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-colors active:scale-90 touch-manipulation"
-            aria-label="Help"
+            onClick={() => navigate("/notifications")}
+            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-colors active:scale-90 touch-manipulation"
+            aria-label="Notifications"
           >
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         )}
       </div>
