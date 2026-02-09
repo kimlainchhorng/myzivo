@@ -1,318 +1,326 @@
 
-# Queue-Aware ETA — Implementation Plan
+# Delay Detection — Implementation Plan
 
 ## Overview
-Improve delivery ETA accuracy by factoring in restaurant queue length (active orders) into all ETA calculations. This provides more realistic expectations for customers when restaurants are experiencing high order volume.
+Implement automatic delay detection that identifies when orders are running late compared to their estimated delivery time, displays clear messaging to customers, recalculates ETAs dynamically, and sends push notifications when delays occur.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Smart ETA hook | Complete | `src/hooks/useSmartEta.ts` |
-| SmartEtaDisplay component | Complete | `src/components/eats/SmartEtaDisplay.tsx` |
-| Busy restaurant banner | Complete | `src/components/eats/BusyRestaurantBanner.tsx` |
-| Restaurant availability hook | Complete | `src/hooks/useRestaurantAvailability.ts` |
-| Learned prep time hook | Complete | `src/hooks/useLearnedPrepTime.ts` |
-| Zone stats (pending orders) | Complete | `src/hooks/useZoneStats.ts` |
-| Restaurant table fields | Complete | `busy_mode`, `max_active_orders`, `auto_busy_enabled` |
+| ETA Countdown component | Complete | `src/components/eats/EtaCountdown.tsx` |
+| Smart ETA calculation | Complete | `src/hooks/useSmartEta.ts` |
+| Live order tracking hook | Complete | `src/hooks/useLiveEatsOrder.ts` |
+| Order detail page | Complete | `src/pages/EatsOrderDetail.tsx` |
+| Order tracking page | Complete | `src/pages/track/OrderTrackingPage.tsx` |
+| Push notification system | Complete | `supabase/functions/send-notification/index.ts` |
+| Order events table | Complete | `order_events` table |
+| `eta_dropoff` field on orders | Complete | `food_orders.eta_dropoff` |
+| Traffic-aware ETA adjustments | Complete | In `EtaCountdown` component |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Restaurant queue length hook | Missing | Fetch active order count for a restaurant |
-| Queue-aware prep time calculation | Missing | Adjust prep time based on queue length |
-| High volume banner for restaurant page | Missing | "High order volume" message |
-| Checkout ETA breakdown | Missing | Show prep + cooking + driver time |
-| ETA breakdown component | Missing | Visual display of ETA components |
+| Delay detection hook | Missing | Compare current time to ETA, detect if late |
+| Delay detection banner | Missing | "Your order is taking longer than expected" |
+| Automatic ETA recalculation on delay | Missing | Adjust ETA when delay detected |
+| Delay push notification | Missing | "Your delivery is delayed" notification |
+| Order delay event logging | Missing | Log delay events for analytics |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Restaurant Queue Hook
+### 1) Create Order Delay Detection Hook
 
-**File to Create:** `src/hooks/useRestaurantQueueLength.ts`
+**File to Create:** `src/hooks/useOrderDelayDetection.ts`
 
-**Purpose:** Fetch the count of active orders for a specific restaurant.
+**Purpose:** Monitor order timing and detect when delivery is running late.
 
-**Logic:**
-- Query `food_orders` table for orders in active states (placed, confirmed, preparing, ready)
-- Filter by restaurant_id
-- Return count and estimated queue time
-
+**Detection Logic:**
 ```text
-Interface:
-┌─────────────────────────────────────────────────┐
-│ useRestaurantQueueLength(restaurantId)          │
-├─────────────────────────────────────────────────┤
-│ Returns:                                        │
-│   - queueLength: number                         │
-│   - queueWaitMinutes: number (calculated)       │
-│   - isHighVolume: boolean (>3 orders)           │
-│   - isLoading: boolean                          │
-└─────────────────────────────────────────────────┘
-```
+Current Time > ETA Dropoff + Buffer → Order is delayed
 
-**Queue Time Formula:**
-```text
-For each order in queue:
-  If status = "placed" or "confirmed":
-    Add full prep time (learned or default)
-  If status = "preparing":
-    Add 50% of prep time (partially done)
-  If status = "ready":
-    Add 0 (waiting for pickup only)
-
-Queue Wait = Sum of queue order times
-```
-
----
-
-### 2) Create Queue-Aware ETA Hook
-
-**File to Create:** `src/hooks/useQueueAwareEta.ts`
-
-**Purpose:** Combine queue length, learned prep time, and delivery factors into a comprehensive ETA.
-
-**ETA Components:**
-1. **Queue Time** — Time waiting for orders ahead
-2. **Prep Time** — Cooking time for this order
-3. **Driver Time** — Travel time from restaurant to customer
-
-```text
-Total ETA = Queue Wait + Prep Time + Driver Time
-
-Example:
-  Queue: 2 orders ahead × 15 min avg = 30 min queue
-  Prep: 20 min (from learned prep time)
-  Driver: 12 min (from distance/traffic)
-  
-  Total: 30 + 20 + 12 = 62 min
-  Range: 52–72 min (with variability buffer)
+Buffer thresholds:
+- Warning: 5 minutes past ETA (soft delay)
+- Delayed: 10 minutes past ETA (confirmed delay)
+- Significantly Delayed: 20+ minutes past ETA (critical)
 ```
 
 **Returned Data:**
 ```text
-┌─────────────────────────────────────────────────┐
-│ useQueueAwareEta(restaurantId, options)         │
-├─────────────────────────────────────────────────┤
-│ Returns:                                        │
-│   - etaMinRange: number                         │
-│   - etaMaxRange: number                         │
-│   - breakdown: {                                │
-│       queueMinutes: number                      │
-│       prepMinutes: number                       │
-│       driverMinutes: number                     │
-│     }                                           │
-│   - isHighVolume: boolean                       │
-│   - queueMessage: string | null                 │
-└─────────────────────────────────────────────────┘
+interface OrderDelayResult {
+  isDelayed: boolean;
+  delayLevel: "none" | "warning" | "delayed" | "critical";
+  delayMinutes: number;
+  originalEtaTime: Date | null;
+  newEstimatedEta: number | null;
+  delayMessage: string | null;
+  shouldNotify: boolean; // true if notification needed
+}
 ```
+
+**ETA Recalculation:**
+- When delay detected, recalculate from current driver position
+- Add buffer based on delay severity (10-20% extra)
+- Update display with new range
 
 ---
 
-### 3) Create High Volume Banner Component
+### 2) Create Delay Detection Banner Component
 
-**File to Create:** `src/components/eats/HighVolumeBanner.tsx`
+**File to Create:** `src/components/eats/OrderDelayBanner.tsx`
 
-**Purpose:** Display contextual banner on restaurant page when queue is high.
+**Purpose:** Display customer-facing delay message on order tracking.
 
-**Message:**
-```text
-"High order volume — preparation may take longer."
-```
-
-**Trigger Conditions:**
-- Queue length ≥ 3 active orders, OR
-- Restaurant `busy_mode` = true
+**Message Variants:**
+| Delay Level | Message |
+|-------------|---------|
+| warning | "Your order is running slightly behind schedule." |
+| delayed | "Your order is taking longer than expected." |
+| critical | "We apologize — your order is significantly delayed." |
 
 **UI Design:**
 ```text
-+------------------------------------------------+
-| 📋 HIGH ORDER VOLUME                       [×] |
-|                                                |
-| Preparation may take longer.                   |
-| Current wait: ~25 min before your order starts.|
-+------------------------------------------------+
-```
-
----
-
-### 4) Create ETA Breakdown Component
-
-**File to Create:** `src/components/eats/EtaBreakdownCard.tsx`
-
-**Purpose:** Visual breakdown of ETA components at checkout.
-
-**Design:**
-```text
-┌──────────────────────────────────────────────┐
-│ 📦 Estimated Delivery                        │
-│                                              │
-│ ┌────────────────────────────────────────┐   │
-│ │  Queue Wait         ~15 min   ▓▓▓░░░   │   │
-│ │  Cooking Time       ~20 min   ▓▓▓▓░░   │   │
-│ │  Driver Delivery    ~12 min   ▓▓░░░░   │   │
-│ └────────────────────────────────────────┘   │
-│                                              │
-│ Total: 42–52 min                             │
-│                                              │
-│ ℹ️ ETA includes orders ahead of yours.       │
-└──────────────────────────────────────────────┘
++--------------------------------------------------+
+| ⏰ ORDER DELAYED                                  |
+|                                                  |
+| Your order is taking longer than expected.       |
+| Updated ETA: 25–30 min                           |
+|                                                  |
+| We're working to get your order to you ASAP.    |
++--------------------------------------------------+
 ```
 
 **Features:**
-- Progress bar segments for each phase
-- Tooltip explaining each component
-- Updates when queue changes
+- Dismissible (but reappears if delay worsens)
+- Shows updated ETA range
+- Amber background for warning, red for delayed/critical
+- Links to support if critical
 
 ---
 
-### 5) Update Restaurant Menu Page
+### 3) Create Delay Notification Trigger Hook
 
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+**File to Create:** `src/hooks/useDelayNotification.ts`
+
+**Purpose:** Trigger push notification when delay is first detected.
+
+**Logic:**
+- Call notification API when `isDelayed` transitions to `true`
+- Use `order_delayed` event type
+- Only notify once per delay level (prevent spam)
+- Store notification state in localStorage to prevent duplicates
+
+**Notification Template:**
+```text
+Title: "Delivery Delayed ⏰"
+Body: "Your order from {restaurant} is delayed. Updated ETA: {eta_min}–{eta_max} min."
+Action URL: "/eats/orders/{order_id}"
+```
+
+---
+
+### 4) Update Order Detail Page with Delay Detection
+
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
 **Changes:**
-- Import and use `useRestaurantQueueLength` hook
-- Show `HighVolumeBanner` when queue is high (in addition to existing BusyRestaurantBanner)
-- Display current queue wait time in prep time indicator
+- Import and use `useOrderDelayDetection` hook
+- Show `OrderDelayBanner` when delay detected
+- Pass updated ETA to existing ETA components
+- Log delay event to `order_events` table
 
-**Integration Point (after availability banners, ~line 348):**
-```text
-{/* High Volume Banner */}
-{queueLength.isHighVolume && (
-  <HighVolumeBanner
-    queueLength={queueLength.queueLength}
-    estimatedWait={queueLength.queueWaitMinutes}
-    className="mt-4"
+**Integration Point (after stale location warning, ~line 480):**
+```tsx
+{/* Order Delay Banner */}
+{delay.isDelayed && isActiveOrder && (
+  <OrderDelayBanner
+    delayLevel={delay.delayLevel}
+    delayMinutes={delay.delayMinutes}
+    newEtaMin={delay.newEstimatedEtaMin}
+    newEtaMax={delay.newEstimatedEtaMax}
+    onContactSupport={() => setHelpModalOpen(true)}
   />
 )}
 ```
 
 ---
 
-### 6) Update Checkout Page with ETA Breakdown
+### 5) Update EtaCountdown Component for Delay Awareness
 
-**File to Modify:** `src/pages/EatsCheckout.tsx`
+**File to Modify:** `src/components/eats/EtaCountdown.tsx`
 
 **Changes:**
-- Import `useQueueAwareEta` hook
-- Add `EtaBreakdownCard` component to order summary
-- Show breakdown of: queue time + cooking time + driver time
-- Update estimated delivery text with queue-aware timing
+- Add `isDelayed` and `delayMinutes` props
+- Show delay indicator badge when late
+- Change color scheme to amber/red when delayed
+- Display "Delayed" label instead of "Arriving in"
 
-**Integration Point (in Order Summary card, after items list):**
-```text
-{/* ETA Breakdown */}
-<EtaBreakdownCard
-  queueMinutes={eta.breakdown.queueMinutes}
-  prepMinutes={eta.breakdown.prepMinutes}
-  driverMinutes={eta.breakdown.driverMinutes}
-  totalMinRange={eta.etaMinRange}
-  totalMaxRange={eta.etaMaxRange}
-  isHighVolume={eta.isHighVolume}
-/>
+---
+
+### 6) Create Delay Event Logging
+
+**Integration in hook:** `useOrderDelayDetection.ts`
+
+**Purpose:** Log delay events for analytics and support visibility.
+
+**Event Types:**
+- `order_delayed_warning` — 5+ min late
+- `order_delayed` — 10+ min late
+- `order_delayed_critical` — 20+ min late
+
+**Logged to:** `order_events` table with metadata:
+```json
+{
+  "delay_minutes": 15,
+  "original_eta": "2026-02-09T14:30:00Z",
+  "detected_at": "2026-02-09T14:40:00Z"
+}
 ```
 
 ---
 
-### 7) Update Restaurant Availability Hook
+### 7) Update Order Tracking Page (Public)
 
-**File to Modify:** `src/hooks/useRestaurantAvailability.ts`
+**File to Modify:** `src/pages/track/OrderTrackingPage.tsx`
 
 **Changes:**
-- Add optional `queueLength` parameter
-- Include queue info in availability response
-- Add `queueWaitMinutes` to return type
+- Add delay detection for public tracking
+- Show delay banner when applicable
+- Update ETA display with recalculated time
 
 ---
 
 ## File Summary
 
-### New Files (4)
+### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useRestaurantQueueLength.ts` | Fetch active order count for restaurant |
-| `src/hooks/useQueueAwareEta.ts` | Calculate comprehensive ETA with queue |
-| `src/components/eats/HighVolumeBanner.tsx` | "High order volume" warning banner |
-| `src/components/eats/EtaBreakdownCard.tsx` | Visual ETA breakdown for checkout |
+| `src/hooks/useOrderDelayDetection.ts` | Detect order delays and recalculate ETA |
+| `src/components/eats/OrderDelayBanner.tsx` | Customer-facing delay notification banner |
+| `src/hooks/useDelayNotification.ts` | Trigger push notification on delay |
 
 ### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsRestaurantMenu.tsx` | Add queue length hook and high volume banner |
-| `src/pages/EatsCheckout.tsx` | Add ETA breakdown display |
-| `src/hooks/useRestaurantAvailability.ts` | Add queue awareness to availability |
+| `src/pages/EatsOrderDetail.tsx` | Add delay detection and banner |
+| `src/components/eats/EtaCountdown.tsx` | Add delay-aware styling |
+| `src/pages/track/OrderTrackingPage.tsx` | Add delay detection for public tracking |
 
 ---
 
-## Queue Length Thresholds
+## Delay Detection Algorithm
 
-| Queue Length | Status | Message |
-|--------------|--------|---------|
-| 0-2 orders | Normal | No banner shown |
-| 3-5 orders | High Volume | "High order volume — preparation may take longer." |
-| 6+ orders | Very High | "Very high demand — expect extended wait times." |
-
----
-
-## ETA Calculation Formula
-
-### Queue Wait Time
+### Phase 1: Compare Current Time to ETA
 ```text
-queue_wait = 0
+current_time = now()
+original_eta = order.eta_dropoff
 
-For each active_order in restaurant queue:
-  base_prep = learned_avg_prep_time OR 20 (default)
-  
-  If order.status = "placed":
-    queue_wait += base_prep × 1.0  (full prep)
-  If order.status = "confirmed":
-    queue_wait += base_prep × 0.8  (80% remaining)
-  If order.status = "preparing":
-    queue_wait += base_prep × 0.5  (50% remaining)
-  If order.status = "ready":
-    queue_wait += 0  (no cooking wait)
+If original_eta is null:
+  Use calculated ETA from created_at + duration_minutes
+
+time_past_eta = current_time - original_eta
 ```
 
-### Total ETA Range
+### Phase 2: Determine Delay Level
 ```text
-base_eta = queue_wait + prep_time + driver_travel
+If time_past_eta < 5 min:
+  delay_level = "none"
+  
+If 5 min <= time_past_eta < 10 min:
+  delay_level = "warning"
+  
+If 10 min <= time_past_eta < 20 min:
+  delay_level = "delayed"
+  
+If time_past_eta >= 20 min:
+  delay_level = "critical"
+```
 
-eta_min = base_eta × 0.85  (optimistic)
-eta_max = base_eta × 1.20  (pessimistic)
+### Phase 3: Recalculate ETA
+```text
+If driver location available:
+  distance = haversine(driver_lat, driver_lng, delivery_lat, delivery_lng)
+  travel_time = distance / 0.5 mph
+  
+  // Add delay buffer based on severity
+  If delay_level = "warning":
+    buffer = 1.1 (10% extra)
+  If delay_level = "delayed":
+    buffer = 1.15 (15% extra)
+  If delay_level = "critical":
+    buffer = 1.2 (20% extra)
+  
+  new_eta = travel_time × traffic_factor × buffer
+  
+Else:
+  // Estimate based on average progression
+  new_eta = delay_minutes + original_remaining_estimate
+```
 
-// Cap range spread
-If (eta_max - eta_min) > 25:
-  eta_max = eta_min + 25
+---
+
+## Notification Flow
+
+```text
+1. Order placed with eta_dropoff
+   └─> Hook monitors time vs ETA
+
+2. Current time passes eta_dropoff + 10 min
+   └─> delay.isDelayed = true
+   └─> delay.shouldNotify = true
+
+3. Check localStorage for notification flag
+   └─> If not notified for this delay level:
+       └─> Call send-notification edge function
+       └─> Set localStorage flag
+       └─> Log order_delayed event
+
+4. User receives push notification
+   └─> "Your delivery is delayed. Updated ETA: 25–30 min."
+   └─> Tap opens order detail page
 ```
 
 ---
 
 ## UI Components
 
-### High Volume Banner
+### Delay Banner (Warning Level)
 ```text
 ┌─────────────────────────────────────────────────┐
-│ 📋                                          [×] │
-│ High order volume — preparation may take longer.│
+│ ⏰                                              │
+│ Your order is running slightly behind schedule. │
 │                                                 │
-│ Estimated wait: ~25 min before your order       │
-│ starts cooking.                                 │
+│ Updated ETA: 22–28 min                         │
 └─────────────────────────────────────────────────┘
 ```
 
-### Checkout ETA Breakdown
+### Delay Banner (Delayed Level)
 ```text
 ┌─────────────────────────────────────────────────┐
-│ 📦 Estimated Delivery: 42–52 min               │
+│ ⏰ ORDER DELAYED                               │
 │                                                 │
-│   📋 Queue Wait      15 min   ████░░░░░░       │
-│   🍳 Cooking Time    20 min   ██████░░░░       │
-│   🚗 Driver Time     12 min   ████░░░░░░       │
+│ Your order is taking longer than expected.     │
 │                                                 │
-│ ℹ️ Includes 3 orders ahead of yours.           │
+│ Updated ETA: 25–32 min                         │
+│                                                 │
+│ ℹ️ We're working to get your order to you ASAP │
+└─────────────────────────────────────────────────┘
+```
+
+### Delay Banner (Critical Level)
+```text
+┌─────────────────────────────────────────────────┐
+│ ⚠️ SIGNIFICANT DELAY                           │
+│                                                 │
+│ We apologize — your order is significantly     │
+│ delayed.                                        │
+│                                                 │
+│ Updated ETA: 35–45 min                         │
+│                                                 │
+│ [Contact Support]                              │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -322,21 +330,34 @@ If (eta_max - eta_min) > 25:
 
 | Scenario | Behavior |
 |----------|----------|
-| No active orders | Show prep + driver only (no queue) |
-| Restaurant just opened | Use default prep time (20 min) |
-| All orders are "ready" | Queue wait = 0 |
-| Very high queue (10+) | Cap queue message at reasonable time |
-| Queue changes during checkout | Refresh on page focus |
+| No eta_dropoff set | Calculate from created_at + duration_minutes |
+| Order already delivered | No delay detection (skip) |
+| Order cancelled | No delay detection (skip) |
+| Driver not assigned yet | Use prep time + estimated pickup time |
+| Network offline | Continue showing last known delay state |
+| Delay resolves (driver speeds up) | Clear delay banner if new ETA is met |
 
 ---
 
-## Real-Time Updates
+## Push Notification Templates
 
-The queue hook will:
-- Refresh every 30 seconds
-- Subscribe to `food_orders` table changes for the restaurant
-- Update ETA breakdown when queue changes
-- Show loading state during initial fetch
+### Delay Notification
+```text
+Title: "Delivery Delayed ⏰"
+Body: "Your order from {restaurant_name} is delayed. Updated ETA: {eta_min}–{eta_max} min."
+Action: Opens /eats/orders/{order_id}
+Priority: normal
+Event Type: order_delayed
+```
+
+### Critical Delay Notification
+```text
+Title: "Order Significantly Delayed"
+Body: "We're sorry — your {restaurant_name} order is taking longer than expected. Tap for details."
+Action: Opens /eats/orders/{order_id}
+Priority: critical
+Event Type: order_delayed_critical
+```
 
 ---
 
@@ -344,11 +365,12 @@ The queue hook will:
 
 This implementation provides:
 
-1. **Restaurant queue length tracking** — Count active orders per restaurant
-2. **Queue-aware ETA calculation** — Factor queue wait into total ETA
-3. **High volume banner** — Clear warning on restaurant pages
-4. **ETA breakdown at checkout** — Show prep queue + cooking + driver time
-5. **Transparent timing** — Customers understand why ETA is longer
-6. **Real-time updates** — Queue changes reflected immediately
+1. **Automatic delay detection** — Compare current time to original ETA
+2. **Multi-level delay classification** — warning/delayed/critical thresholds
+3. **Clear customer messaging** — "Your order is taking longer than expected"
+4. **Dynamic ETA recalculation** — Adjust based on current driver location
+5. **Push notifications** — Alert customers when delays occur
+6. **Event logging** — Track delays for analytics and support
+7. **Public tracking support** — Delay detection on guest tracking page
 
-The feature improves customer expectations by clearly showing that their order enters a queue, with transparent timing for each phase of the delivery process.
+The feature keeps customers informed proactively, reducing support inquiries and improving trust by providing transparent, updated timing information.
