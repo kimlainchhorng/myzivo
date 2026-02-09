@@ -139,6 +139,7 @@ const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
 const EatsAlerts = lazy(() => import("./pages/EatsAlerts"));
 const EatsFavorites = lazy(() => import("./pages/EatsFavorites"));
 const EatsOrderChatPage = lazy(() => import("./pages/eats/EatsOrderChatPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -636,6 +637,9 @@ const App = () => (
                 <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
                 <Route path="/eats/alerts" element={<EatsAlerts />} />
                 <Route path="/eats/favorites" element={<EatsFavorites />} />
+                
+                {/* Unified Notifications Center */}
+                <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 
                 {/* Driver Chat Route */}
                 <Route path="/driver/orders/:id/chat" element={<ProtectedRoute><DriverOrderChatPage /></ProtectedRoute>} />
