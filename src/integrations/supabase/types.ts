@@ -7910,6 +7910,7 @@ export type Database = {
           vehicle_plate: string
           vehicle_type: string
           zip_code: string | null
+          zone_code: string | null
         }
         Insert: {
           acceptance_count?: number
@@ -7993,6 +7994,7 @@ export type Database = {
           vehicle_plate: string
           vehicle_type: string
           zip_code?: string | null
+          zone_code?: string | null
         }
         Update: {
           acceptance_count?: number
@@ -8076,6 +8078,7 @@ export type Database = {
           vehicle_plate?: string
           vehicle_type?: string
           zip_code?: string | null
+          zone_code?: string | null
         }
         Relationships: [
           {
@@ -8190,6 +8193,7 @@ export type Database = {
       eats_zones: {
         Row: {
           at_risk_threshold_minutes: number | null
+          city_id: string | null
           city_name: string
           created_at: string
           delivery_fee_base: number
@@ -8208,6 +8212,7 @@ export type Database = {
         }
         Insert: {
           at_risk_threshold_minutes?: number | null
+          city_id?: string | null
           city_name: string
           created_at?: string
           delivery_fee_base?: number
@@ -8226,6 +8231,7 @@ export type Database = {
         }
         Update: {
           at_risk_threshold_minutes?: number | null
+          city_id?: string | null
           city_name?: string
           created_at?: string
           delivery_fee_base?: number
@@ -8242,7 +8248,15 @@ export type Database = {
           updated_at?: string
           zone_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "eats_zones_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_consents: {
         Row: {
@@ -10354,6 +10368,8 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          city_id: string | null
+          city_name: string | null
           commission_amount_cents: number | null
           commission_percent: number | null
           created_at: string | null
@@ -10495,6 +10511,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          city_id?: string | null
+          city_name?: string | null
           commission_amount_cents?: number | null
           commission_percent?: number | null
           created_at?: string | null
@@ -10636,6 +10654,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          city_id?: string | null
+          city_name?: string | null
           commission_amount_cents?: number | null
           commission_percent?: number | null
           created_at?: string | null
@@ -10776,6 +10796,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "restaurant_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {
@@ -18517,6 +18544,8 @@ export type Database = {
           phone_e164: string | null
           phone_verified: boolean
           phone_verified_at: string | null
+          selected_city_id: string | null
+          selected_city_name: string | null
           setup_complete: boolean | null
           sms_consent: boolean
           sms_opted_out: boolean
@@ -18545,6 +18574,8 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          selected_city_id?: string | null
+          selected_city_name?: string | null
           setup_complete?: boolean | null
           sms_consent?: boolean
           sms_opted_out?: boolean
@@ -18573,6 +18604,8 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          selected_city_id?: string | null
+          selected_city_name?: string | null
           setup_complete?: boolean | null
           sms_consent?: boolean
           sms_opted_out?: boolean
@@ -18581,7 +18614,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_selected_city_id_fkey"
+            columns: ["selected_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promo_codes: {
         Row: {
@@ -20964,6 +21005,7 @@ export type Database = {
           total_orders: number | null
           updated_at: string | null
           zip: string | null
+          zone_id: string | null
         }
         Insert: {
           accepts_delivery?: boolean | null
@@ -21032,6 +21074,7 @@ export type Database = {
           total_orders?: number | null
           updated_at?: string | null
           zip?: string | null
+          zone_id?: string | null
         }
         Update: {
           accepts_delivery?: boolean | null
@@ -21100,6 +21143,7 @@ export type Database = {
           total_orders?: number | null
           updated_at?: string | null
           zip?: string | null
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -21121,6 +21165,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "eats_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -21586,6 +21637,7 @@ export type Database = {
           status: string | null
           stripe_payment_intent_id: string | null
           trip_started_at: string | null
+          zone_code: string | null
         }
         Insert: {
           actual_distance_miles?: number | null
@@ -21622,6 +21674,7 @@ export type Database = {
           status?: string | null
           stripe_payment_intent_id?: string | null
           trip_started_at?: string | null
+          zone_code?: string | null
         }
         Update: {
           actual_distance_miles?: number | null
@@ -21658,6 +21711,7 @@ export type Database = {
           status?: string | null
           stripe_payment_intent_id?: string | null
           trip_started_at?: string | null
+          zone_code?: string | null
         }
         Relationships: [
           {
@@ -24317,6 +24371,36 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_events: {
+        Row: {
+          city_id: string | null
+          ended_at: string | null
+          id: string
+          multiplier: number
+          reason: string | null
+          started_at: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          ended_at?: string | null
+          id?: string
+          multiplier: number
+          reason?: string | null
+          started_at?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          ended_at?: string | null
+          id?: string
+          multiplier?: number
+          reason?: string | null
+          started_at?: string | null
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
       surge_history: {
         Row: {
           available_drivers: number | null
@@ -26206,6 +26290,7 @@ export type Database = {
           surged_fare: number | null
           tenant_id: string | null
           updated_at: string | null
+          zone_code: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -26265,6 +26350,7 @@ export type Database = {
           surged_fare?: number | null
           tenant_id?: string | null
           updated_at?: string | null
+          zone_code?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -26324,6 +26410,7 @@ export type Database = {
           surged_fare?: number | null
           tenant_id?: string | null
           updated_at?: string | null
+          zone_code?: string | null
         }
         Relationships: [
           {
@@ -31467,6 +31554,20 @@ export type Database = {
               driver_id: string
               performance_score: number
               priority_score: number
+            }[]
+          }
+        | {
+            Args: {
+              p_lat: number
+              p_limit?: number
+              p_lng: number
+              p_mode?: string
+              p_radius?: number
+              p_zone_code?: string
+            }
+            Returns: {
+              distance_miles: number
+              driver_id: string
             }[]
           }
         | {

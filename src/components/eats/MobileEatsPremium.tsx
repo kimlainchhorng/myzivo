@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats Premium - Mobile "Curated Dining" Experience
- * Real data from Supabase with dark glass UI
+ * Real data from Supabase with dark glass UI, filtered by city
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -13,9 +13,11 @@ import { useRestaurants } from "@/hooks/useEatsOrders";
 import { useSponsoredRestaurants } from "@/hooks/useRestaurantAds";
 import { useCart } from "@/contexts/CartContext";
 import { useEatsAlerts } from "@/hooks/useEatsAlerts";
+import { useCustomerCity } from "@/contexts/CustomerCityContext";
 import { FavoriteButton } from "./FavoriteButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
+import CitySelectionModal from "@/components/city/CitySelectionModal";
 
 const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
 
@@ -23,7 +25,10 @@ export default function MobileEatsPremium() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { data: restaurants, isLoading, error } = useRestaurants();
+  const { selectedCity } = useCustomerCity();
+  
+  // Filter restaurants by selected city
+  const { data: restaurants, isLoading, error } = useRestaurants(selectedCity?.name || undefined);
   const { data: sponsoredRestaurants } = useSponsoredRestaurants("homepage");
   const { getItemCount } = useCart();
   const { unreadCount } = useEatsAlerts();
@@ -294,6 +299,9 @@ export default function MobileEatsPremium() {
           ))}
         </div>
       )}
+      
+      {/* City Selection Modal for first visit */}
+      <CitySelectionModal />
     </div>
   );
 }
