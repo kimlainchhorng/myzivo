@@ -1,170 +1,138 @@
 
 
-# Social Sharing — Implementation Plan
+# AI Support Assistant — Implementation Plan
 
 ## Overview
-Add a reusable social sharing component for restaurants and meals, integrate it into the restaurant menu page, log all share events to the existing `share_events` table, and add referral sharing with tracking for link opened and order attribution.
+Replace the existing static `LiveChatWidget` with a real AI-powered support assistant using Lovable AI (already configured). The assistant will answer common questions about orders, ETAs, payments, and troubleshooting, with a clear escalation path to human support.
 
 ---
 
 ## Current State
 
-| What Exists | Where |
-|-------------|-------|
-| `share_events` DB table | `entity_id`, `entity_type`, `platform`, `user_id` |
-| `ReferralCard` component | Full referral share UI (copy, email, WhatsApp, native) |
-| `FlightSocialShare` component | Social share for flights (Twitter, FB, copy link) |
-| `useReferrals` hook | `shareReferral`, `copyReferralLink`, `getShareUrl` |
-| `navigator.share` pattern | Used in 4+ components already |
+| What Exists | Details |
+|-------------|---------|
+| `LiveChatWidget` | Static mock — hardcoded bot reply, no AI |
+| `LOVABLE_API_KEY` | Already provisioned as a Supabase secret |
+| `ai-trip-suggestions` edge function | Working Lovable AI pattern to follow |
+| Support ticket system | Full ticket CRUD with `support_tickets` table |
+| Eats/Rider support hooks | `useEatsSupport`, `useRiderSupport` for ticket creation |
 
 ### What's Missing
-- No share button on restaurant pages
-- No reusable share sheet component for Eats
-- No share event logging (table exists but nothing writes to it)
-- No tracking for "link opened" or "order from shared link"
+- No AI-powered chat — widget just returns a canned response
+- No streaming — messages appear all at once
+- No escalation flow from AI to human support ticket
+- No context awareness (order status, user info)
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Reusable `SocialShareSheet` Component
+### 1) Create `ai-support-chat` Edge Function
 
-**File to Create:** `src/components/shared/SocialShareSheet.tsx`
+**File:** `supabase/functions/ai-support-chat/index.ts`
 
-A bottom-sheet style share dialog usable across Eats, restaurants, and referrals. Options:
-- **Copy Link** — clipboard copy with toast
-- **WhatsApp** — `https://wa.me/?text=...`
-- **SMS** — `sms:?body=...`
-- **Facebook** — `https://facebook.com/sharer/sharer.php?u=...`
-- **Native Share** — `navigator.share()` fallback for mobile
+A streaming edge function that:
+- Accepts conversation `messages` array and optional `context` (recent orders, user tier)
+- Sends to Lovable AI gateway with a ZIVO support system prompt
+- Streams SSE response back to client
+- Handles 429/402 errors gracefully
 
-Props:
-```text
-{
-  title: string;          // "Check out Burger Palace on ZIVO!"
-  text: string;           // Share message body
-  url: string;            // The shareable URL
-  entityId: string;       // For tracking (restaurant ID, menu item ID)
-  entityType: string;     // "restaurant" | "menu_item" | "referral"
-  trigger?: ReactNode;    // Custom trigger button
-}
+**System prompt covers:**
+- Order status explanations (placed, confirmed, preparing, out for delivery, delivered)
+- ETA explanation (prep time + delivery time, surge delays)
+- Payment help (refunds take 5-10 business days, contact partner for flights)
+- Basic troubleshooting (app issues, login problems, missing items)
+- When to escalate: safety issues, complex refunds, account problems
+- Always offer "Connect to human support" when unsure
+
+### 2) Rewrite `LiveChatWidget` with Streaming AI
+
+**File to Modify:** `src/components/shared/LiveChatWidget.tsx`
+
+Replace the static mock with:
+- Real streaming chat using `fetch` + SSE parsing (same pattern as useful-context docs)
+- Typing indicator while AI streams
+- Auto-scroll to latest message
+- Updated quick replies: "Order status", "Payment help", "ETA info", "Talk to human"
+- "Connect to human support" button always visible at bottom
+- Rate limit / credit error handling with user-friendly toasts
+
+### 3) Add Escalation Flow
+
+**Within `LiveChatWidget`:**
+
+When user clicks "Talk to human" or AI suggests escalation:
+- Show a small form: category selector + optional message
+- Create a support ticket via existing `support_tickets` table
+- Show ticket number confirmation
+- Transition chat header to "Connecting to agent..."
+
+### 4) Register Edge Function in Config
+
+**File to Modify:** `supabase/config.toml`
+
+Add:
 ```
-
-Uses a Radix Dialog/Sheet (vaul) for mobile-friendly bottom sheet.
-
-### 2) Create `useShareTracking` Hook
-
-**File to Create:** `src/hooks/useShareTracking.ts`
-
-Logs share events to the existing `share_events` table.
-
-```text
-logShare({ entityId, entityType, platform })
-  → INSERT into share_events (user_id, entity_id, entity_type, platform)
+[functions.ai-support-chat]
+verify_jwt = false
 ```
-
-Also handles UTM-tagged share URLs:
-- Generates shareable URLs with `?utm_source=share&utm_medium={platform}&utm_content={entityId}`
-- These UTM params enable "link opened" tracking via existing `initUTMTracking` on page load
-
-### 3) Add Share Button to Restaurant Menu Page
-
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
-
-Add a Share button next to the `RestaurantAvailabilityBadge` in the restaurant header area (line ~350). When tapped, opens the `SocialShareSheet` with:
-- Title: restaurant name
-- URL: `/eats/restaurant/{id}`
-- Entity type: `restaurant`
-
-### 4) Add Referral CTA to Share Sheet
-
-When sharing a restaurant, include a secondary section: "Invite friends and earn credits" with the user's referral link (from `useReferrals`). This reuses the existing referral code system.
-
-### 5) Track "Link Opened" via UTM Parameters
-
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
-
-On page mount, check for `utm_source=share` in URL params. If present, log a "link_opened" event to `share_events` with entity_type "restaurant_view".
-
-### 6) Track "Order from Shared Link"
-
-**File to Modify:** `src/pages/EatsCheckout.tsx`
-
-When placing an order, check if the session has share UTM attribution (from `getPersistedUTMParams`). If `utm_source=share`, include `shared_entity_id` in the order metadata or log a "share_conversion" event.
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (1)
 | File | Purpose |
 |------|---------|
-| `src/components/shared/SocialShareSheet.tsx` | Reusable share bottom sheet with platform options |
-| `src/hooks/useShareTracking.ts` | Log share/open/conversion events to `share_events` table |
+| `supabase/functions/ai-support-chat/index.ts` | Streaming AI support edge function |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsRestaurantMenu.tsx` | Add Share button in header, track link opens |
-| `src/pages/EatsCheckout.tsx` | Track order conversion from shared links |
+| `src/components/shared/LiveChatWidget.tsx` | Full rewrite: streaming AI chat + escalation |
+| `supabase/config.toml` | Register new edge function |
 
 ---
 
-## Share Flow
+## Chat Flow
 
 ```text
-User taps "Share" on restaurant page
+User opens chat widget
        |
        v
-SocialShareSheet opens (bottom sheet)
-       |
-       ├── Copy Link → clipboard + log share_event (platform: "copy")
-       ├── WhatsApp → wa.me link + log share_event (platform: "whatsapp")
-       ├── SMS → sms: link + log share_event (platform: "sms")
-       ├── Facebook → fb sharer + log share_event (platform: "facebook")
-       └── Native → navigator.share + log share_event (platform: "native")
+  Welcome message: "Hi! I'm ZIVO AI Assistant."
+  Quick replies: [Order status] [Payment help] [ETA info] [Talk to human]
        |
        v
-Shared URL includes: ?utm_source=share&utm_medium=whatsapp&utm_content=restaurant_123
+  User sends message (or taps quick reply)
        |
        v
-Recipient opens link
+  POST to ai-support-chat edge function (streaming)
        |
-       ├── Restaurant page detects utm_source=share → logs "link_opened" event
-       └── UTM params persisted in sessionStorage
+       ├── AI streams response token by token
+       ├── Typing indicator shown during stream
+       └── Response rendered progressively
        |
        v
-If recipient places order
-       └── Checkout detects share attribution → logs "share_conversion" event
+  If AI suggests escalation or user taps "Talk to human":
+       |
+       ├── Show category picker (Payment, Order, Safety, Other)
+       ├── Create support ticket in DB
+       ├── Show: "Ticket ZS-XXXXXX created. A human agent will reply shortly."
+       └── Chat remains open for continued AI help
 ```
 
 ---
 
-## Share Sheet Design
+## AI System Prompt Summary
 
-```text
-+----------------------------------------------+
-|  Share Burger Palace                         |
-|                                              |
-|  [Copy Link]  [WhatsApp]  [SMS]  [Facebook]  |
-|                                              |
-|  ─────────────────────────────────────────── |
-|                                              |
-|  Invite friends & earn credits               |
-|  Share your referral link:                   |
-|  [Copy Referral Link]  [Share Referral]      |
-+----------------------------------------------+
-```
-
----
-
-## Tracking Events Logged
-
-| Event | When | Fields |
-|-------|------|--------|
-| `share` | User shares a restaurant/meal | entity_id, entity_type, platform |
-| `link_opened` | Someone opens a shared link | entity_id, entity_type=restaurant_view, platform=web |
-| `share_conversion` | Order placed from shared link | entity_id=order_id, entity_type=share_conversion |
+The edge function system prompt will instruct the AI to:
+- Be concise, friendly, and helpful
+- Answer from ZIVO's known policies (order flow, ETA calculation, refund timelines)
+- Never make up specific order details — say "I can help explain how X works" rather than fabricating data
+- Suggest "Connect to human support" for: safety concerns, complex disputes, account issues, anything it cannot confidently answer
+- Keep responses under 150 words
+- Use simple language, no jargon
 
 ---
 
@@ -172,8 +140,9 @@ If recipient places order
 
 | Scenario | Behavior |
 |----------|----------|
-| Not logged in | Share still works; event logged without user_id |
-| Native share unavailable | Button hidden, other options remain |
-| Facebook blocked/unavailable | Button still renders, opens in new tab |
-| No referral code | Referral section hidden in share sheet |
-
+| Rate limit (429) | Toast: "AI busy, please try again in a moment" |
+| Credits exhausted (402) | Toast: "Service temporarily unavailable" |
+| Network error | Show retry button, keep previous messages |
+| User not logged in | AI still works; escalation prompts login |
+| Very long conversation | Send last 20 messages to AI (context window management) |
+| User spams messages | Disable send button while AI is streaming |
