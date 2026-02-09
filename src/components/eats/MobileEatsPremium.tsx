@@ -10,6 +10,7 @@ import {
   Search, Clock, Star, Flame, ShoppingBag, 
   MapPin, Plus, Zap, ArrowLeft, Package, Heart, Bell
 } from "lucide-react";
+import { VoiceSearchButton } from "./VoiceSearchButton";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { useSponsoredRestaurants } from "@/hooks/useRestaurantAds";
 import { useCart } from "@/contexts/CartContext";
@@ -101,6 +102,11 @@ export default function MobileEatsPremium() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Craving... (e.g. Spicy Ramen, Truffle Pizza)" 
               className="bg-transparent w-full outline-none text-white placeholder-zinc-500 font-medium text-base"
+            />
+            <VoiceSearchButton
+              onTranscript={setSearchQuery}
+              onReorder={() => navigate("/eats/orders")}
+              className="text-zinc-400 hover:text-white"
             />
           </div>
         </div>
