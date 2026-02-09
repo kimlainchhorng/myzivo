@@ -1,93 +1,54 @@
 
-# Fix: PWA Not Auto-Updating on Mobile (Requires Reinstall)
 
-## Root Cause
+# Delivery Replay -- See Where Your Order Traveled
 
-There are **two conflicting problems** preventing your installed PWA from updating on phones:
+## Overview
 
-### 1. Service Worker Navigation Not Handled
-The service worker uses `CacheFirst` for assets but has **no navigation route handler**. When the app is opened from the home screen, the browser serves the old cached `index.html` forever. Without a network-first strategy for navigation (HTML pages), the new service worker installs in the background but the user never sees the new content.
+After an order is delivered, customers can tap "View Delivery Route" on the order detail page to see a full-screen map showing the route the driver took from restaurant to their door, with key event markers and timestamps.
 
-### 2. Aggressive CacheFirst Without Versioned Cleanup
-All assets (JS, CSS, images) use `CacheFirst`, meaning once cached they are never re-fetched from the network. The activate event's cache cleanup only targets "unknown" caches but keeps all workbox-managed precache entries. Old precached files persist indefinitely.
+## Data Source
 
-### 3. Missing `clients.claim()` on First Activation
-While `skipWaiting()` runs on install, the `clients.claim()` in the activate handler is buried after cache cleanup. If cleanup takes time, the new service worker may not control the page quickly enough.
+The `driver_location_history` table already records driver GPS positions with timestamps. The `food_orders` table stores all key timestamps (`picked_up_at`, `delivered_at`) and coordinates (`pickup_lat/lng`, `delivery_lat/lng`). No new database tables are needed.
 
-## Fix (3 Changes)
+## Changes
 
-### Change 1: Add Navigation Route to `public/sw.js`
-Add a `NetworkFirst` strategy for navigation requests (HTML pages) so the app always tries to fetch the latest `index.html` from the network first, falling back to cache only when offline.
+### 1. New Hook: `src/hooks/useDeliveryReplay.ts`
 
-```javascript
-// After the existing routing rules, add:
-workbox.routing.registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  new workbox.strategies.NetworkFirst({
-    cacheName: 'navigation-cache',
-    networkTimeoutSeconds: 3,
-    plugins: [
-      new workbox.cacheableResponse.CacheableResponsePlugin({
-        statuses: [0, 200],
-      }),
-    ],
-  })
-);
-```
+Fetches the driver's location trail for a completed order:
+- Query `driver_location_history` filtered by `driver_id`, between `picked_up_at` and `delivered_at` timestamps
+- Returns an array of `{lat, lng, recorded_at}` points sorted chronologically
+- Also returns key event markers (pickup, out-for-delivery, delivered) with timestamps from the order record
 
-### Change 2: Add API/Supabase NetworkFirst Route in `public/sw.js`
-Ensure API calls are never stale-cached:
+### 2. New Page: `src/pages/EatsDeliveryReplay.tsx`
 
-```javascript
-workbox.routing.registerRoute(
-  /^https:\/\/.*\.supabase\.co\/.*/i,
-  new workbox.strategies.NetworkFirst({
-    cacheName: 'api-cache',
-    networkTimeoutSeconds: 5,
-  })
-);
-```
+Full-screen map page at `/eats/orders/:id/replay`:
+- Google Map (dark mode) showing:
+  - **Route polyline** connecting all recorded driver GPS points (orange line)
+  - **Pickup marker** (orange dot) at restaurant location with timestamp
+  - **Delivery marker** (green dot) at customer address with timestamp
+  - **Key event markers** along the route for "Out for Delivery" and "Delivered"
+- Header with back button and order info
+- Bottom legend card showing event timestamps in a mini vertical timeline
+- Loading and empty states (e.g., "No route data available for this order")
 
-### Change 3: Force Cache Bust on SW Activation in `public/sw.js`
-Update the activate handler to also purge old precache entries so stale JS/CSS bundles are replaced:
+### 3. Update: `src/pages/EatsOrderDetail.tsx`
 
-```javascript
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => {
-            // Keep only current workbox precache revision; delete everything else stale
-            const keepCaches = [
-              'google-fonts-stylesheets',
-              'google-fonts-webfonts',
-              'navigation-cache',
-              'api-cache',
-            ];
-            return !keepCaches.some((keep) => name === keep);
-          })
-          .map((name) => caches.delete(name))
-      );
-    }).then(() => clients.claim())
-  );
-});
-```
+Add a "View Delivery Route" button for delivered orders, placed between the "Order Again" and "Get Help" buttons:
+- Only visible when `order.status === "delivered"`
+- Navigates to `/eats/orders/:id/replay`
+- Styled with a Map icon and outline variant matching the existing design
 
-### Change 4: Add Version Header to `index.html`
-Add a cache-control meta tag to discourage browser HTTP cache from holding stale HTML:
+### 4. Update: Route Registration
 
-```html
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-```
+Add the new `/eats/orders/:id/replay` route to the app router.
 
-## How It Works After the Fix
+## UI Design
 
-1. User opens PWA from home screen
-2. Service worker fetches fresh `index.html` from network (NetworkFirst, 3s timeout)
-3. New `index.html` references new JS/CSS bundles with new hashes
-4. If a new service worker is detected, `skipWaiting()` + `clients.claim()` activate it immediately
-5. The `PWAUpdatePrompt` toast shows, and auto-refreshes after 10 seconds
-6. Old caches are purged on activation so no stale assets linger
+The replay map will use the same dark map styles already used by `DeliveryMap.tsx`. The route line will be drawn as a Google Maps Polyline (orange, semi-transparent). Event markers will use colored circles consistent with the existing marker design language (orange for restaurant, green for delivery).
 
-Users will no longer need to delete and reinstall -- the app will update automatically within seconds of opening it.
+## Edge Cases
+
+- **No location history**: If the driver had no GPS records during the delivery window, show a fallback with just the pickup and delivery markers connected by a straight dashed line, with a note "Detailed route not available"
+- **Very few points**: If fewer than 3 GPS points, still draw the line but note it's approximate
+- **Missing timestamps**: If `picked_up_at` or `delivered_at` is null, the button won't appear
+
