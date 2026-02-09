@@ -125,6 +125,7 @@ const AdminAdsPage = lazy(() => import("./pages/admin/AdminAdsPage"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
+const AchievementsPage = lazy(() => import("./pages/account/AchievementsPage"));
 
 // Merchant Ads
 const MerchantAdsPage = lazy(() => import("./pages/merchant/MerchantAdsPage"));
@@ -842,6 +843,7 @@ const App = () => (
                 
                 {/* Loyalty Routes */}
                 <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
+                <Route path="/account/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
                 <Route path="/admin/loyalty" element={<ProtectedRoute><AdminLoyaltyPage /></ProtectedRoute>} />
 
                 {/* Restaurant Ads Routes */}
