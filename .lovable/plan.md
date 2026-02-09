@@ -1,108 +1,135 @@
 
 
-# Loyalty Levels — Implementation Plan
+# Achievements & Badges — Implementation Plan
 
 ## Overview
-Enhance the existing `/account/loyalty` page with a full tier benefits comparison, add automatic perk application at Eats checkout (free delivery, extra discounts, bonus points), and create a reusable loyalty tier badge component.
+Create a `/account/achievements` page showing earned badges with progress toward the next badge, using the existing `zivo_badges` and `zivo_user_badges` database tables. Seed new customer-focused badge definitions and build a hook to calculate progress. Optionally award loyalty points when a badge is unlocked.
 
 ---
 
 ## Current State
 
-The loyalty system already has significant infrastructure:
-
-| What Exists | Where |
-|-------------|-------|
-| `/account/loyalty` page | `src/pages/account/LoyaltyPage.tsx` — shows balance, history, rewards, referral |
-| Tier progress visualization | `TierProgressCard` — Explorer/Traveler/Elite timeline |
-| Points balance card | `PointsBalanceCard` — balance, tier badge, progress bar |
-| Tier config with benefits | `src/config/zivoPoints.ts` — 3 tiers with benefits lists |
-| Points hook | `useLoyaltyPoints` — balance, earn, redeem, tier calculation |
-| Checkout reminder | `PointsCheckoutReminder` — "You'll earn X points" widget |
-| Dynamic pricing hook | `useEatsDeliveryPricing` — delivery fee breakdown |
+### Already Exists (No Changes Needed)
+| Component | Details |
+|-----------|---------|
+| `zivo_badges` table | Badge definitions with `criteria_type`, `criteria_threshold`, `category`, `tier` |
+| `zivo_user_badges` table | User-earned badges with `earned_at`, `is_featured` |
+| 1 customer badge seeded | "Loyal Traveler" — 25+ bookings |
+| `useLoyaltyPoints` hook | Points earning and balance management |
+| `useSpendingStats` hook | Unified order history across eats, rides, travel |
+| Routing pattern | `/account/*` pages with `ProtectedRoute` wrapper |
 
 ### What's Missing
-- No **side-by-side tier comparison** showing all levels and their perks
-- No **automatic checkout perks** — free delivery, discounts, bonus points are not applied
-- No **reusable loyalty badge** for headers, profile, etc.
-- Tier benefits in config are text-only — need structured perk definitions for checkout logic
+- No customer achievement badges (First Order, 5/10 Orders, Order Streak)
+- No achievements page UI
+- No hook to compute badge progress from order history
+- No points reward on badge unlock
 
 ---
 
 ## Implementation Plan
 
-### 1) Extend Tier Config with Checkout Perks
+### 1) Seed Customer Badges into `zivo_badges`
 
-**File to Modify:** `src/config/zivoPoints.ts`
+**Database migration** to insert new customer achievement badges:
 
-Add structured perk definitions to each tier so checkout can programmatically apply them:
+| Badge ID | Name | Criteria Type | Threshold | Category | Tier |
+|----------|------|--------------|-----------|----------|------|
+| `first_order` | First Order | `order_count` | 1 | customer | bronze |
+| `orders_5` | Regular | `order_count` | 5 | customer | silver |
+| `orders_10` | Super Fan | `order_count` | 10 | customer | gold |
+| `orders_25` | Loyal Traveler | (already exists) | 25 | customer | gold |
+| `streak_3` | Hot Streak | `order_streak` | 3 | customer | silver |
+| `first_eats` | Foodie | `eats_count` | 1 | customer | bronze |
+| `first_ride` | Rider | `ride_count` | 1 | customer | bronze |
+| `first_travel` | Jet Setter | `travel_count` | 1 | customer | bronze |
 
+### 2) Create `useCustomerAchievements` Hook
+
+**New file:** `src/hooks/useCustomerAchievements.ts`
+
+**Purpose:** Fetch all customer-category badges from `zivo_badges`, user's earned badges from `zivo_user_badges`, and compute progress for each from order data.
+
+**Returns:**
 ```text
-interface TierPerks {
-  freeDelivery: boolean;
-  discountPercent: number;        // e.g. 0, 5, 10
-  bonusPointsMultiplier: number;  // e.g. 1, 1.5, 2
-  prioritySupport: boolean;
+{
+  badges: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    tier: string;
+    earned: boolean;
+    earnedAt: string | null;
+    progress: number;       // 0-100
+    currentValue: number;   // e.g. 3 orders
+    threshold: number;      // e.g. 5 orders
+  }>;
+  totalEarned: number;
+  totalAvailable: number;
+  isLoading: boolean;
 }
-
-Explorer: { freeDelivery: false, discountPercent: 0,  bonusPointsMultiplier: 1,   prioritySupport: false }
-Traveler: { freeDelivery: false, discountPercent: 5,  bonusPointsMultiplier: 1.5, prioritySupport: true  }
-Elite:    { freeDelivery: true,  discountPercent: 10, bonusPointsMultiplier: 2,   prioritySupport: true  }
 ```
 
-Also add a helper: `getTierPerks(tier: ZivoTier): TierPerks`
+**Progress computation:**
+- `order_count`: Total delivered food orders + completed rides + confirmed travel orders
+- `eats_count` / `ride_count` / `travel_count`: Per-service counts
+- `order_streak`: Consecutive days with at least one order (calculated from order dates)
 
-### 2) Create Tier Comparison Component
+### 3) Create `AchievementsPage` Component
 
-**File to Create:** `src/components/loyalty/TierComparisonTable.tsx`
+**New file:** `src/pages/account/AchievementsPage.tsx`
 
-A visual side-by-side comparison of all three tiers showing:
-- Tier name, icon, and point threshold
-- Benefits list with check/lock icons
-- Checkout perks (free delivery, discount %, bonus multiplier)
-- Current tier highlighted
+**Layout:**
+```text
++----------------------------------------------+
+|  <- Achievements                             |
+|  Track your progress                         |
++----------------------------------------------+
+|                                              |
+|  [Summary Card]                              |
+|  X / Y Badges Earned                         |
+|                                              |
+|  --- Earned Badges ---                       |
+|  [Badge] [Badge] [Badge]                     |
+|  (golden glow, earned date)                  |
+|                                              |
+|  --- In Progress ---                         |
+|  [Badge Card]                                |
+|  "Regular" — 3 / 5 orders [=====----] 60%   |
+|                                              |
+|  [Badge Card]                                |
+|  "Hot Streak" — 1 / 3 days [===-------] 33% |
+|                                              |
+|  --- Locked ---                              |
+|  [Badge] [Badge] (greyed out)                |
++----------------------------------------------+
+```
 
-### 3) Add Tier Comparison to Loyalty Page
+**Design:**
+- Summary card showing earned count with a progress ring
+- Earned badges shown as icons with golden highlight and earned date
+- In-progress badges shown as cards with progress bars
+- Locked badges shown greyed out with lock icon
 
-**File to Modify:** `src/pages/account/LoyaltyPage.tsx`
+### 4) Add Route and Navigation
 
-Add a new "Levels" tab (or add to Overview) showing `TierComparisonTable`.
+**Modified files:**
+- `src/App.tsx` — Add lazy import and route for `/account/achievements`
+- `src/pages/Profile.tsx` — Add "Achievements" quick link with Trophy icon
 
-### 4) Create Loyalty Level Badge Component
+### 5) Optional: Points Reward on Badge Unlock
 
-**File to Create:** `src/components/shared/LoyaltyLevelBadge.tsx`
+Inside the `useCustomerAchievements` hook, add a mutation `claimBadge` that:
+1. Inserts into `zivo_user_badges`
+2. Awards bonus loyalty points via `loyalty_points` update
+3. Shows a toast celebration
 
-Small reusable badge showing user's tier with icon and color. Variants:
-- `inline` — tiny badge for headers/nav
-- `card` — compact card for profile pages
-
-Uses the tier config colors/icons from `zivoPoints.ts`.
-
-### 5) Apply Tier Perks at Checkout
-
-**File to Modify:** `src/hooks/useEatsDeliveryPricing.ts`
-
-Integrate tier perks into the pricing calculation:
-- Import `useLoyaltyPoints` to get user's current tier
-- If tier grants `freeDelivery`, set delivery fee to $0
-- If tier grants `discountPercent`, apply discount to subtotal
-- Show loyalty discount as a separate line item
-
-**File to Modify:** `src/components/eats/DeliveryFeeBreakdownCard.tsx`
-
-Add new line items:
-- "Loyalty discount (Elite -10%)" — green, when active
-- "Free delivery (Elite perk)" — replaces delivery fee line, when active
-
-**File to Modify:** `src/pages/EatsCheckout.tsx`
-
-Add `PointsCheckoutReminder` below the breakdown card showing bonus points multiplier from tier.
-
-### 6) Add Badge to Profile Page
-
-**File to Modify:** `src/pages/Profile.tsx`
-
-Show `LoyaltyLevelBadge` next to user's name/avatar area and add "Loyalty" to quickLinks.
+| Badge Tier | Points Reward |
+|-----------|---------------|
+| Bronze | 50 points |
+| Silver | 100 points |
+| Gold | 250 points |
 
 ---
 
@@ -111,78 +138,43 @@ Show `LoyaltyLevelBadge` next to user's name/avatar area and add "Loyalty" to qu
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/components/loyalty/TierComparisonTable.tsx` | Side-by-side tier comparison with perks |
-| `src/components/shared/LoyaltyLevelBadge.tsx` | Reusable tier badge for headers/profile |
+| `src/hooks/useCustomerAchievements.ts` | Fetch badges, compute progress, claim badges |
+| `src/pages/account/AchievementsPage.tsx` | Full achievements page UI |
 
-### Modified Files (6)
+### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/config/zivoPoints.ts` | Add `TierPerks` interface and structured perks to each tier |
-| `src/pages/account/LoyaltyPage.tsx` | Add "Levels" tab with tier comparison |
-| `src/hooks/useEatsDeliveryPricing.ts` | Apply free delivery and discount based on tier |
-| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Show loyalty discount and free delivery lines |
-| `src/pages/EatsCheckout.tsx` | Add points checkout reminder with tier bonus |
-| `src/pages/Profile.tsx` | Show loyalty badge + add quickLink |
+| `src/App.tsx` | Add lazy import and `/account/achievements` route |
+| `src/pages/Profile.tsx` | Add "Achievements" quick link |
+
+### Database Changes (1 migration)
+| Change | Details |
+|--------|---------|
+| Seed `zivo_badges` | 7 new customer badge definitions |
 
 ---
 
-## Checkout Pricing with Tier Perks
+## Badge Progress Calculation
 
 ```text
-Cart Subtotal ($28.50)
+User's order history (from Supabase)
        |
        v
-  Tier perks applied:
+  Count by service:
+       ├── food_orders (status = 'delivered') → eats_count
+       ├── trips (status = 'completed') → ride_count
+       ├── travel_orders (status IN 'confirmed','completed') → travel_count
        |
-       ├── Elite discount: -10% of subtotal (-$2.85)
-       ├── Free delivery (Elite perk): $0.00
-       ├── Service fee: 15% of discounted subtotal
-       ├── Tax: 8.25%
+       ├── Total = eats + rides + travel → order_count
+       |
+       ├── Consecutive days with orders → order_streak
        |
        v
-  Breakdown shown:
-       |
-       Subtotal                      $28.50
-       Loyalty discount (Elite)      -$2.85   (green)
-       Delivery fee                   FREE    (green, was $3.99)
-       Service fee                    $3.85
-       Tax                            $2.12
-       ─────────────────────────────────────
-       Total                         $31.62
-
-       You'll earn 400 points (2x Elite bonus)
+  For each badge definition:
+       ├── progress = min(currentValue / threshold * 100, 100)
+       ├── earned = user has row in zivo_user_badges
+       └── claimable = progress >= 100 AND NOT earned
 ```
-
----
-
-## Tier Comparison Table Design
-
-```text
-+----------------+----------------+----------------+
-|   Explorer     |   Traveler     |    Elite       |
-|   (current)    |                |                |
-+----------------+----------------+----------------+
-|   0+ pts       |   5,000+ pts   |  25,000+ pts   |
-+----------------+----------------+----------------+
-|  1x points     |  1.5x points   |  2x points     |
-|  Basic alerts  |  Priority      |  Exclusive     |
-|                |  alerts        |  previews      |
-|  No discount   |  5% off orders |  10% off       |
-|  Standard      |  Priority      |  Priority      |
-|  delivery      |  delivery      |  FREE delivery |
-|                |  Early deals   |  Birthday pts  |
-+----------------+----------------+----------------+
-```
-
----
-
-## Loyalty Badge Variants
-
-**Inline (for header/nav):**
-A small pill badge: `[crown icon] Elite` with amber styling.
-
-**Card (for profile):**
-A compact card showing tier icon, name, lifetime points, and progress bar to next tier.
 
 ---
 
@@ -190,8 +182,9 @@ A compact card showing tier icon, name, lifetime points, and progress bar to nex
 
 | Scenario | Behavior |
 |----------|----------|
-| User not logged in | No perks applied, no badge shown |
-| Explorer tier (no perks) | Standard pricing, badge says "Explorer" |
-| Tier upgrade mid-session | Invalidate loyalty query, new perks apply on next checkout |
-| Free delivery + surge active | Free delivery overrides surge — delivery fee is $0 |
+| No orders yet | All badges locked, show encouraging message |
+| Badge already claimed | Show as earned with date, no re-claim |
+| Multiple badges unlockable at once | Allow claiming each individually |
+| User not logged in | Redirect to login |
+| Points reward fails | Badge still marked earned, toast error for points |
 
