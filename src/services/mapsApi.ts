@@ -23,6 +23,8 @@ export interface PlaceDetails {
 export interface RouteResult {
   distance_miles: number;
   duration_minutes: number;
+  duration_in_traffic_minutes: number | null;
+  traffic_level: "light" | "moderate" | "heavy" | null;
   polyline: string | null;
   start_address?: string;
   end_address?: string;
@@ -126,6 +128,8 @@ export async function getRoute(
     return {
       distance_miles: data.distance_miles,
       duration_minutes: data.duration_minutes,
+      duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
+      traffic_level: data.traffic_level ?? null,
       polyline: data.polyline,
       start_address: data.start_address,
       end_address: data.end_address,

@@ -94,7 +94,19 @@ export function useOrderBatchInfo(
           filter: `batch_id=eq.${batchId}`,
         },
         () => {
-          // Refetch when any stop in this batch changes
+          fetchBatchInfo();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "delivery_batches",
+          filter: `id=eq.${batchId}`,
+        },
+        () => {
+          // Catch stop reorder events from dispatch
           fetchBatchInfo();
         }
       )
@@ -104,6 +116,17 @@ export function useOrderBatchInfo(
       supabase.removeChannel(channel);
     };
   }, [batchId, fetchBatchInfo]);
+
+  // Periodic refetch during active delivery to catch missed updates
+  useEffect(() => {
+    if (!batchId || !orderId) return;
+
+    const interval = setInterval(() => {
+      fetchBatchInfo();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [batchId, orderId, fetchBatchInfo]);
 
   return { batchInfo, loading, refetch: fetchBatchInfo };
 }

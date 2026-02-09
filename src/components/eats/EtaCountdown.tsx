@@ -41,6 +41,10 @@ interface EtaCountdownProps {
   isDelayed?: boolean;
   /** Delay level for styling */
   delayLevel?: "none" | "warning" | "delayed" | "critical";
+  /** Live traffic level from Google Directions API */
+  trafficLevel?: "light" | "moderate" | "heavy" | null;
+  /** Whether the ETA uses real traffic data (vs time-of-day guess) */
+  isTrafficBased?: boolean;
 }
 
 // Haversine formula for distance calculation
@@ -106,6 +110,8 @@ export function EtaCountdown({
   isLocationBased = false,
   isDelayed = false,
   delayLevel = "none",
+  trafficLevel,
+  isTrafficBased: isTrafficBasedProp = false,
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -125,8 +131,20 @@ export function EtaCountdown({
     return () => clearInterval(interval);
   }, []);
 
-  // Get traffic conditions
-  const traffic = useMemo(() => getTrafficMultiplier(), []);
+  // Get traffic conditions — prefer live data, fall back to time-of-day
+  const traffic = useMemo(() => {
+    if (trafficLevel) {
+      const liveMultipliers: Record<string, number> = { light: 1.0, moderate: 1.2, heavy: 1.5 };
+      return {
+        multiplier: liveMultipliers[trafficLevel] ?? 1.0,
+        isRushHour: trafficLevel === "heavy",
+        isLateNight: false,
+        isLive: true,
+      };
+    }
+    const fallback = getTrafficMultiplier();
+    return { ...fallback, isLive: false };
+  }, [trafficLevel]);
 
   // Calculate dynamic ETA based on live driver distance with traffic, supply, and incentive adjustment
   const dynamicEtaMinutes = useMemo(() => {
@@ -188,7 +206,10 @@ export function EtaCountdown({
   const isArrivingSoon = etaRange.max <= 2;
   const isNearby = etaRange.max <= 5;
   const hasDemandBuffer = showDemandNote && demandLevel && demandLevel !== "Low";
-  const showTrafficNote = traffic.isRushHour && dynamicEtaMinutes != null && !isArrivingSoon;
+  const showTrafficNote = (traffic.isRushHour || isTrafficBasedProp) && dynamicEtaMinutes != null && !isArrivingSoon;
+  const trafficNoteLabel = isTrafficBasedProp
+    ? (trafficLevel === "heavy" ? "Heavy traffic — adjusted ETA" : trafficLevel === "moderate" ? "Moderate traffic — adjusted ETA" : "Light traffic")
+    : "Rush hour — adjusted for traffic";
   // Show supply note only if no traffic note and supply is low
   const showSupplyNote = showLowSupplyNote && !showTrafficNote && !isArrivingSoon;
   // Show incentive note only if no other notes are showing and incentive is active
@@ -293,8 +314,11 @@ export function EtaCountdown({
         <div className="mt-3 flex items-center gap-2 text-xs">
           <TrafficCone className="w-3 h-3 text-amber-500" />
           <span className="text-amber-400/80">
-            Rush hour — adjusted for traffic
+            {trafficNoteLabel}
           </span>
+          {isTrafficBasedProp && (
+            <span className="text-[10px] text-emerald-400/60 ml-auto">Live</span>
+          )}
         </div>
       )}
 

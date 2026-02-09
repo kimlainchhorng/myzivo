@@ -6565,6 +6565,33 @@ export type Database = {
           },
         ]
       }
+      dispatch_ai_logs: {
+        Row: {
+          candidate_drivers: Json | null
+          created_at: string | null
+          estimated_eta_minutes: number | null
+          id: string
+          order_id: string | null
+          selected_driver_id: string | null
+        }
+        Insert: {
+          candidate_drivers?: Json | null
+          created_at?: string | null
+          estimated_eta_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          selected_driver_id?: string | null
+        }
+        Update: {
+          candidate_drivers?: Json | null
+          created_at?: string | null
+          estimated_eta_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          selected_driver_id?: string | null
+        }
+        Relationships: []
+      }
       dispatch_logs: {
         Row: {
           created_at: string | null
