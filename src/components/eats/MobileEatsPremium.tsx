@@ -1,6 +1,7 @@
 /**
  * ZIVO Eats Premium - Mobile "Curated Dining" Experience
  * Real data from Supabase with dark glass UI, filtered by city
+ * Includes surge pricing banner when demand is high
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -14,7 +15,9 @@ import { useSponsoredRestaurants } from "@/hooks/useRestaurantAds";
 import { useCart } from "@/contexts/CartContext";
 import { useEatsAlerts } from "@/hooks/useEatsAlerts";
 import { useCustomerCity } from "@/contexts/CustomerCityContext";
+import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { FavoriteButton } from "./FavoriteButton";
+import { EatsSurgeBadge } from "./EatsSurgeBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
 import CitySelectionModal from "@/components/city/CitySelectionModal";
@@ -32,6 +35,9 @@ export default function MobileEatsPremium() {
   const { data: sponsoredRestaurants } = useSponsoredRestaurants("homepage");
   const { getItemCount } = useCart();
   const { unreadCount } = useEatsAlerts();
+  
+  // Surge pricing
+  const { isActive: surgeActive, level: surgeLevel, multiplier: surgeMultiplier } = useEatsSurgePricing();
   
   const cartCount = getItemCount();
 
@@ -95,6 +101,13 @@ export default function MobileEatsPremium() {
           </div>
         </div>
       </div>
+
+      {/* SURGE PRICING BANNER */}
+      {surgeActive && (
+        <div className="px-6 mb-4">
+          <EatsSurgeBadge level={surgeLevel} multiplier={surgeMultiplier} variant="banner" />
+        </div>
+      )}
 
       {/* 2. CATEGORY PILLS */}
       <div className="pl-6 mb-6 overflow-x-auto hide-scrollbar">
