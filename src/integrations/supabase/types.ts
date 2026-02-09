@@ -5616,6 +5616,33 @@ export type Database = {
           },
         ]
       }
+      dispatch_logs: {
+        Row: {
+          created_at: string | null
+          distance_km: number | null
+          driver_id: string | null
+          id: string
+          order_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance_km?: number | null
+          driver_id?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance_km?: number | null
+          driver_id?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       dispute_audit_logs: {
         Row: {
           action: string
@@ -8171,6 +8198,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      earnings_forecasts: {
+        Row: {
+          avg_payout: number | null
+          created_at: string | null
+          expected_drivers: number | null
+          expected_orders: number | null
+          forecast_hour: string | null
+          id: string
+          zone_id: string | null
+        }
+        Insert: {
+          avg_payout?: number | null
+          created_at?: string | null
+          expected_drivers?: number | null
+          expected_orders?: number | null
+          forecast_hour?: string | null
+          id?: string
+          zone_id?: string | null
+        }
+        Update: {
+          avg_payout?: number | null
+          created_at?: string | null
+          expected_drivers?: number | null
+          expected_orders?: number | null
+          forecast_hour?: string | null
+          id?: string
+          zone_id?: string | null
+        }
+        Relationships: []
       }
       eats_reviews: {
         Row: {
@@ -15365,6 +15422,9 @@ export type Database = {
           contact_back: boolean | null
           created_at: string
           customer_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
           driver_id: string | null
           driver_rating: number | null
           flag_reason: string | null
@@ -15383,6 +15443,9 @@ export type Database = {
           contact_back?: boolean | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
           driver_id?: string | null
           driver_rating?: number | null
           flag_reason?: string | null
@@ -15401,6 +15464,9 @@ export type Database = {
           contact_back?: boolean | null
           created_at?: string
           customer_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
           driver_id?: string | null
           driver_rating?: number | null
           flag_reason?: string | null

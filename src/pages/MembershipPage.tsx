@@ -38,6 +38,8 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useMembershipSavings } from "@/hooks/useMembershipSavings";
+import { Link } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +85,7 @@ export default function MembershipPage() {
 
   const { membership, isActive, isPastDue, isLoading: membershipLoading, refetch } = useMembership();
   const { data: plans, isLoading: plansLoading } = useMembershipPlans();
+  const { data: savingsData } = useMembershipSavings();
   const createCheckout = useCreateMembershipCheckout();
   const cancelMembership = useCancelMembership();
   const openPortal = useOpenCustomerPortal();
@@ -283,6 +286,42 @@ export default function MembershipPage() {
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Monthly Savings Card - Show for active members with savings */}
+          {isActive && savingsData && savingsData.thisMonthCents > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/5 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">Your savings this month</p>
+                      <p className="text-2xl font-bold text-amber-400">
+                        ${savingsData.thisMonthDollars.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {savingsData.orderCount} order{savingsData.orderCount !== 1 ? 's' : ''} with ZIVO+ benefits
+                    </span>
+                    <Link 
+                      to="/eats/orders" 
+                      className="text-sm text-amber-500 hover:text-amber-400 font-medium"
+                    >
+                      View Orders →
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { 
   Plane, Hotel, CarFront, 
   Menu, X, User, ChevronDown, HelpCircle, ExternalLink,
-  Sparkles, Users, Award
+  Sparkles, Users, Award, Crown
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMembership } from "@/hooks/useMembership";
+import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +48,7 @@ const legalItems = [
 export default function NavBar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isActive: isMember } = useMembership();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   
@@ -175,13 +178,32 @@ export default function NavBar() {
                       size="sm"
                       className="gap-2 rounded-lg"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary" />
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        {isMember && (
+                          <div className="absolute -top-1 -right-1">
+                            <ZivoPlusBadge variant="small" className="w-4 h-4" />
+                          </div>
+                        )}
                       </div>
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                    {isMember && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/account/membership")}
+                          className="cursor-pointer text-amber-500"
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          ZIVO+ Member
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem
                       onClick={() => navigate("/profile")}
                       className="cursor-pointer"
@@ -194,6 +216,15 @@ export default function NavBar() {
                     >
                       My Trips
                     </DropdownMenuItem>
+                    {!isMember && (
+                      <DropdownMenuItem
+                        onClick={() => navigate("/membership")}
+                        className="cursor-pointer text-amber-500"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        Join ZIVO+
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => signOut()}
