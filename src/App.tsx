@@ -16,6 +16,7 @@ import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAInstallPrompt } from "./components/mobile";
+import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { Loader2 } from "lucide-react";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { GoogleMapProvider } from "./components/maps";
@@ -1627,6 +1628,7 @@ const App = () => (
           </CustomerCityProvider>
           <CookieConsent />
           <PWAInstallPrompt />
+          <PWAUpdatePrompt />
           <SpatialCursor />
           <BrandThemeApplicator />
         </AuthProvider>
