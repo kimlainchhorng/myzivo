@@ -1,9 +1,8 @@
 
-
-# Affiliate Link Tracking — Implementation Plan
+# Spending Summary & Receipts — Implementation Plan
 
 ## Overview
-Add tracking for customers who join ZIVO through affiliate/partner links. When a user signs up with an `affiliate_code` URL parameter, capture and store this attribution. Show a subtle acknowledgment on the Account page ("You were referred by a partner").
+Add a customer spending history page at `/account/spending` that shows monthly spending stats and enables receipt downloads for all order types (Eats, Rides, Travel).
 
 ---
 
@@ -12,211 +11,217 @@ Add tracking for customers who join ZIVO through affiliate/partner links. When a
 ### Existing Infrastructure
 | Component | Status | Purpose |
 |-----------|--------|---------|
-| `profiles` table | Exists | Stores user profile data |
-| `useReferrals` hook | Exists | Handles user-to-user referral codes (`ref=` param) |
-| `drivers` table | Exists | Already has affiliate tracking fields |
-| UTM tracking (`subidGenerator.ts`) | Exists | Captures marketing attribution |
-| Profile page (`src/pages/Profile.tsx`) | Exists | Account settings display |
-| Setup page (`src/pages/Setup.tsx`) | Exists | Onboarding flow |
+| `useMyEatsOrders` hook | Exists | Fetches customer's food orders |
+| `useRiderTripHistory` hook | Exists | Fetches customer's ride history |
+| `useMyOrders` hook | Exists | Fetches customer's travel orders |
+| `OrderReceipt` component | Exists | Eats receipt with print support |
+| `TripReceiptModal` component | Exists | Rides receipt modal with download button |
+| `/account/wallet` page | Exists | Similar UI pattern for account section |
 
-### Key Insight
-The `drivers` table already has affiliate tracking fields (`affiliate_code`, `affiliate_partner_id`, `affiliate_partner_name`, `affiliate_captured_at`). The `profiles` table (for customers) does **not** have these fields yet.
+### Data Sources for Spending
+| Service | Table | Amount Field | Status Filter |
+|---------|-------|--------------|---------------|
+| Eats | `food_orders` | `total_amount` | `delivered` |
+| Rides | `trips` | `fare_amount` | `completed` |
+| Travel | `travel_orders` | `total` | `confirmed`, `completed` |
 
 ---
 
 ## Implementation Plan
 
-### 1) Database Migration — Add Affiliate Fields to Profiles
+### 1) Create Spending Stats Hook
 
-Add four new columns to the `profiles` table to track affiliate attribution:
+**File to Create:** `src/hooks/useSpendingStats.ts`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `affiliate_code` | text | The affiliate/partner code from URL |
-| `affiliate_partner_name` | text | Human-readable partner name (optional) |
-| `affiliate_captured_at` | timestamptz | When the code was captured |
+**Purpose:** Aggregate spending data across all services for the current user.
 
-```sql
-ALTER TABLE public.profiles
-ADD COLUMN affiliate_code text,
-ADD COLUMN affiliate_partner_name text,
-ADD COLUMN affiliate_captured_at timestamptz;
-
--- Index for admin queries
-CREATE INDEX idx_profiles_affiliate_code ON public.profiles (affiliate_code)
-WHERE affiliate_code IS NOT NULL;
-```
-
-### 2) Capture Affiliate Code on Signup
-
-**File to Modify:** `src/pages/Login.tsx`
-
-**Changes:**
-- Read `affiliate_code` from URL search params
-- Store in sessionStorage for persistence through OAuth/verification flows
-- Pass to signup flow
-
-**Pattern:**
+**Data Returned:**
 ```text
-const [searchParams] = useSearchParams();
-
-// On component mount, capture affiliate_code if present
-useEffect(() => {
-  const affiliateCode = searchParams.get('affiliate_code');
-  if (affiliateCode) {
-    sessionStorage.setItem('signup_affiliate_code', affiliateCode);
-  }
-}, [searchParams]);
-```
-
-### 3) Store Affiliate Code During Profile Creation
-
-**File to Modify:** `src/pages/Setup.tsx`
-
-**Changes:**
-- On profile setup completion, check for stored affiliate code
-- Include affiliate fields in profile upsert
-
-**Pattern:**
-```text
-// In handleComplete():
-const affiliateCode = sessionStorage.getItem('signup_affiliate_code');
-
-const payload = {
-  user_id: user.id,
-  full_name: fullName,
-  phone: phone || null,
-  setup_complete: true,
-  // Affiliate tracking
-  affiliate_code: affiliateCode || null,
-  affiliate_captured_at: affiliateCode ? new Date().toISOString() : null,
-};
-
-// Clear after use
-if (affiliateCode) {
-  sessionStorage.removeItem('signup_affiliate_code');
+interface SpendingStats {
+  thisMonth: {
+    total: number;
+    orderCount: number;
+    averageOrder: number;
+    byService: {
+      eats: number;
+      rides: number;
+      travel: number;
+    };
+  };
+  allTime: {
+    total: number;
+    orderCount: number;
+  };
+  recentOrders: UnifiedOrder[];
+  isLoading: boolean;
 }
 ```
 
-### 4) Handle OAuth Signups
+**Queries:**
+- Food orders: `food_orders` where `customer_id = user.id` and `status = 'delivered'`
+- Rides: `trips` where `rider_id = user.id` and `status = 'completed'`
+- Travel: `travel_orders` where `user_id = user.id` and `status in ('confirmed', 'completed')`
 
-**File to Modify:** `src/pages/AuthCallback.tsx`
+### 2) Create Unified Order Type
 
-**Changes:**
-- Preserve affiliate code through OAuth redirect
-- Store in profile after successful OAuth authentication
+**File to Update:** `src/hooks/useSpendingStats.ts` (same file)
 
-**Note:** The affiliate code is already stored in sessionStorage before OAuth redirect, so it persists through the flow.
+**Purpose:** Normalize different order types into a single interface for display.
 
-### 5) Create Affiliate Attribution Hook
-
-**File to Create:** `src/hooks/useAffiliateAttribution.ts`
-
-**Purpose:** Fetch and expose affiliate attribution status for the current user.
-
-**Implementation:**
 ```text
-export function useAffiliateAttribution() {
-  const { user } = useAuth();
-  
-  const { data, isLoading } = useQuery({
-    queryKey: ['affiliate-attribution', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('affiliate_code, affiliate_partner_name, affiliate_captured_at')
-        .eq('user_id', user.id)
-        .single();
-      
-      return {
-        hasAffiliateAttribution: !!data?.affiliate_code,
-        affiliateCode: data?.affiliate_code,
-        partnerName: data?.affiliate_partner_name || 'a partner',
-        capturedAt: data?.affiliate_captured_at,
-      };
-    },
-    enabled: !!user?.id,
-    staleTime: Infinity, // Attribution never changes
-  });
-  
-  return {
-    hasAffiliateAttribution: data?.hasAffiliateAttribution ?? false,
-    partnerName: data?.partnerName ?? 'a partner',
-    isLoading,
+interface UnifiedOrder {
+  id: string;
+  type: 'eats' | 'rides' | 'travel';
+  title: string;        // Restaurant name / "Ride to X" / Hotel name
+  amount: number;
+  date: string;
+  status: string;
+  receiptUrl?: string;  // Deep link to receipt page
+  meta: {
+    orderId: string;
+    serviceSpecificData: any;
   };
 }
 ```
 
-### 6) Display Partner Attribution on Account Page
+### 3) Create Spending Summary Page
+
+**File to Create:** `src/pages/account/SpendingPage.tsx`
+
+**Design:**
+```text
+┌────────────────────────────────────────────────────────────┐
+│  ←  Spending History                                       │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  February 2026                                       │  │
+│  │                                                      │  │
+│  │  $1,247.50           12           $103.96           │  │
+│  │  Total Spent       Orders     Avg. Order            │  │
+│  │                                                      │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐                │  │
+│  │  │ Eats    │ │ Rides   │ │ Travel  │                │  │
+│  │  │ $342.50 │ │ $155.00 │ │ $750.00 │                │  │
+│  │  └─────────┘ └─────────┘ └─────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                            │
+│  Recent Orders                                             │
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ 🍔 Burger Palace              $32.50   Feb 8        │  │
+│  │    Delivered                           [Receipt]    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ 🚗 Ride to SFO Airport        $45.00   Feb 7        │  │
+│  │    Completed                           [Receipt]    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ 🏨 Le Grand Hotel (Paris)    $750.00   Feb 5        │  │
+│  │    Confirmed                           [Receipt]    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Features:**
+- Monthly summary card with total spent, order count, average
+- Breakdown by service (Eats, Rides, Travel) with visual indicators
+- List of recent orders with receipt download buttons
+- Filter by service type (All / Eats / Rides / Travel tabs)
+
+### 4) Add Route to App.tsx
+
+**File to Modify:** `src/App.tsx`
+
+**Changes:**
+- Import `SpendingPage` lazy component
+- Add route `/account/spending` with `ProtectedRoute` wrapper
+
+```text
+const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
+
+// In routes:
+<Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
+```
+
+### 5) Add Quick Link to Profile Page
 
 **File to Modify:** `src/pages/Profile.tsx`
 
 **Changes:**
-- Import and use `useAffiliateAttribution` hook
-- Add subtle info card below Account Status section
+- Add "Spending History" to the quick links array
+
+```text
+{ icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
+```
+
+### 6) Create Receipt Download Utilities
+
+**File to Create:** `src/lib/receiptUtils.ts`
+
+**Purpose:** Generate downloadable PDF receipts for all order types.
+
+**Functions:**
+```text
+// Generate receipt HTML for print/download
+export function generateEatsReceiptHTML(order: EatsOrder): string;
+export function generateRideReceiptHTML(trip: Trip): string;
+export function generateTravelReceiptHTML(order: TravelOrder): string;
+
+// Trigger download via print dialog
+export function downloadReceipt(html: string, filename: string): void;
+```
+
+**Pattern (using window.print() approach like existing itinerary export):**
+```text
+function downloadReceipt(html: string, filename: string) {
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  }
+}
+```
+
+### 7) Create Order Receipt Card Component
+
+**File to Create:** `src/components/account/OrderReceiptCard.tsx`
+
+**Purpose:** Reusable card component for displaying a single order with receipt download.
+
+**Props:**
+```text
+interface OrderReceiptCardProps {
+  order: UnifiedOrder;
+  onDownloadReceipt: () => void;
+}
+```
 
 **Design:**
-```text
-┌────────────────────────────────────────────────────┐
-│  🤝  Referred by Partner                           │
-│  You joined through a partner link.                │
-│  Enjoy exclusive partner benefits!                 │
-└────────────────────────────────────────────────────┘
-```
-
-**Pattern:**
-```text
-// After Account Status card:
-{affiliateAttribution.hasAffiliateAttribution && (
-  <Card className="relative border-0 bg-gradient-to-br from-violet-500/10 to-purple-500/10 ...">
-    <CardContent className="p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-violet-500/20 flex ...">
-          <Users className="w-5 h-5 text-violet-400" />
-        </div>
-        <div>
-          <p className="font-semibold">Referred by Partner</p>
-          <p className="text-xs text-muted-foreground">
-            You joined through {affiliateAttribution.partnerName}
-          </p>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-)}
-```
+- Service icon (fork for Eats, car for Rides, hotel for Travel)
+- Title and date
+- Amount with status badge
+- Download/View Receipt button
 
 ---
 
 ## File Summary
 
-### Database Changes (1)
-| Change | Description |
-|--------|-------------|
-| Migration | Add `affiliate_code`, `affiliate_partner_name`, `affiliate_captured_at` to `profiles` |
-
-### New Files (1)
+### New Files (4)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useAffiliateAttribution.ts` | Query and expose affiliate attribution |
+| `src/hooks/useSpendingStats.ts` | Aggregate spending data across services |
+| `src/pages/account/SpendingPage.tsx` | Main spending summary page |
+| `src/lib/receiptUtils.ts` | PDF/print receipt generation |
+| `src/components/account/OrderReceiptCard.tsx` | Reusable order card component |
 
-### Modified Files (3)
+### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/pages/Login.tsx` | Capture `affiliate_code` from URL params |
-| `src/pages/Setup.tsx` | Store affiliate code in profile on setup |
-| `src/pages/Profile.tsx` | Display "Referred by Partner" card |
-
----
-
-## URL Parameter Format
-
-Users arriving via affiliate links will have URLs like:
-```
-https://hizivo.com/signup?affiliate_code=PARTNER123
-https://hizivo.com/login?affiliate_code=travelagent
-https://hizivo.com/?affiliate_code=blogger_deal
-```
+| `src/App.tsx` | Add route for `/account/spending` |
+| `src/pages/Profile.tsx` | Add quick link to spending page |
 
 ---
 
@@ -224,108 +229,142 @@ https://hizivo.com/?affiliate_code=blogger_deal
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Affiliate Tracking Flow                          │
+│                        Spending Summary Flow                            │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  1. User lands with ?affiliate_code=PARTNER123                          │
-│     └─> Login.tsx captures and stores in sessionStorage                 │
+│  SpendingPage                                                           │
+│     │                                                                   │
+│     └─> useSpendingStats()                                              │
+│            │                                                            │
+│            ├─> Query food_orders (Eats)                                 │
+│            ├─> Query trips (Rides)                                      │
+│            └─> Query travel_orders (Travel)                             │
+│                      │                                                  │
+│                      └─> Aggregate into UnifiedOrder[]                  │
+│                                │                                        │
+│                                └─> Calculate:                           │
+│                                    • Total spent this month             │
+│                                    • Order count                        │
+│                                    • Average order value                │
+│                                    • Breakdown by service               │
 │                                                                         │
-│  2. User signs up (email or OAuth)                                      │
-│     └─> Code persists in sessionStorage through redirects               │
-│                                                                         │
-│  3. User completes onboarding (Setup.tsx)                               │
-│     └─> Code saved to profiles.affiliate_code                           │
-│     └─> sessionStorage cleared                                          │
-│                                                                         │
-│  4. User visits Profile page                                            │
-│     └─> useAffiliateAttribution fetches attribution                     │
-│     └─> "Referred by Partner" card displayed                            │
+│  User clicks "Receipt" button                                           │
+│     │                                                                   │
+│     └─> generateReceipt(order)                                          │
+│            │                                                            │
+│            └─> Opens print dialog with formatted receipt                │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Account Page Display
+## Monthly Stats Calculation
 
-### Before (existing Account Status card)
 ```text
-┌────────────────────────────────────────────────────┐
-│  🛡️  Account Status                      Active   │
-│  Member since Jan 15, 2025                         │
-└────────────────────────────────────────────────────┘
+// Get current month boundaries
+const now = new Date();
+const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+// Filter orders by date
+const thisMonthOrders = allOrders.filter(order => {
+  const orderDate = new Date(order.date);
+  return orderDate >= monthStart && orderDate <= monthEnd;
+});
+
+// Calculate stats
+const total = thisMonthOrders.reduce((sum, o) => sum + o.amount, 0);
+const count = thisMonthOrders.length;
+const average = count > 0 ? total / count : 0;
 ```
-
-### After (new Partner Attribution card)
-```text
-┌────────────────────────────────────────────────────┐
-│  🛡️  Account Status                      Active   │
-│  Member since Jan 15, 2025                         │
-└────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────┐
-│  🤝  Referred by Partner                           │
-│  You joined through a partner                      │
-└────────────────────────────────────────────────────┘
-```
-
-Only shown when `affiliate_code` exists on the user's profile.
 
 ---
 
-## Edge Cases Handled
+## Receipt Generation Pattern
 
-| Scenario | Behavior |
-|----------|----------|
-| No affiliate code in URL | Nothing captured, no card shown |
-| User already has account | Code not applied (existing users) |
-| OAuth flow | Code persists in sessionStorage |
-| Email verification flow | Code persists through OTP/verify |
-| User clears sessionStorage | Attribution lost (acceptable) |
+Following the existing pattern from `useItineraryExport.ts`:
 
----
-
-## No Ordering Flow Changes
-
-As specified, the affiliate attribution is **invisible during ordering**. It's only:
-1. Captured silently on signup
-2. Displayed in the Profile/Account page
-
----
-
-## Technical Details
-
-### UserProfile Type Update
-The `useUserProfile` hook will automatically pick up new fields from the database once the migration runs.
-
-### sessionStorage Key
 ```text
-Key: signup_affiliate_code
-Value: The raw affiliate code string
-Lifecycle: Set on landing → Cleared after profile setup
+// Generate styled HTML receipt
+const receiptHTML = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Receipt - ${order.id}</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 40px; }
+      .header { text-align: center; margin-bottom: 30px; }
+      .logo { font-size: 24px; font-weight: bold; }
+      .order-id { color: #666; font-size: 14px; }
+      .items { margin: 20px 0; }
+      .item { display: flex; justify-content: space-between; padding: 10px 0; }
+      .total { font-size: 24px; font-weight: bold; text-align: right; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">ZIVO</div>
+      <div class="order-id">Order #${order.id.slice(0, 8).toUpperCase()}</div>
+    </div>
+    <!-- Order details... -->
+  </body>
+  </html>
+`;
 ```
 
-### Index for Admin Queries
-```sql
-CREATE INDEX idx_profiles_affiliate_code 
-ON public.profiles (affiliate_code) 
-WHERE affiliate_code IS NOT NULL;
+---
+
+## Service Icons and Colors
+
+| Service | Icon | Color | Gradient |
+|---------|------|-------|----------|
+| Eats | `UtensilsCrossed` | Orange | `from-orange-500/20` |
+| Rides | `Car` | Primary | `from-primary/20` |
+| Travel | `Plane` / `Hotel` | Violet | `from-violet-500/20` |
+
+---
+
+## Filter Tabs Design
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  [ All ]  [ Eats ]  [ Rides ]  [ Travel ]                    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-This enables efficient admin reporting on affiliate signups.
+Using the existing `Tabs` component from `@/components/ui/tabs`.
+
+---
+
+## Empty States
+
+| Scenario | Message |
+|----------|---------|
+| No orders ever | "No spending history yet. Start exploring ZIVO!" |
+| No orders this month | "No orders this month. Your spending will appear here." |
+| Filtered with no results | "No {service} orders found." |
+
+---
+
+## Accessibility
+
+- Semantic headings for screen readers
+- ARIA labels on receipt download buttons
+- Keyboard navigation for filter tabs
+- Color contrast compliance for spending amounts
 
 ---
 
 ## Summary
 
-This implementation:
+This implementation provides:
 
-1. **Database** — Adds affiliate tracking columns to `profiles` table
-2. **Capture** — Reads `affiliate_code` from URL on Login page
-3. **Persist** — Stores in sessionStorage through OAuth/verification flows
-4. **Save** — Writes to profile during onboarding setup
-5. **Display** — Shows subtle "Referred by Partner" card on Account page
-6. **No ordering impact** — Affiliate attribution is invisible during checkout
+1. **Spending Hook** — `useSpendingStats()` aggregates data from Eats, Rides, and Travel
+2. **Spending Page** — `/account/spending` with monthly summary and order list
+3. **Receipt Downloads** — Print-friendly receipts for all order types
+4. **Order Cards** — Unified display for orders across services
+5. **Quick Access** — Link from Profile page to spending history
+6. **Filters** — Tab-based filtering by service type
 
-The feature enables tracking affiliate-driven signups while maintaining a clean user experience.
-
+The feature gives customers full visibility into their spending across all ZIVO services with easy receipt access for expense tracking.
