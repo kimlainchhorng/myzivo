@@ -13044,6 +13044,8 @@ export type Database = {
           id: string
           invoice_number: string | null
           issued_at: string | null
+          notes: string | null
+          paid_at: string | null
           status: string | null
         }
         Insert: {
@@ -13053,6 +13055,8 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
+          notes?: string | null
+          paid_at?: string | null
           status?: string | null
         }
         Update: {
@@ -13062,6 +13066,8 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
+          notes?: string | null
+          paid_at?: string | null
           status?: string | null
         }
         Relationships: []
@@ -14112,6 +14118,33 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      loyalty_tiers: {
+        Row: {
+          benefits_json: Json | null
+          created_at: string | null
+          id: string
+          min_orders: number | null
+          min_spend: number | null
+          name: string | null
+        }
+        Insert: {
+          benefits_json?: Json | null
+          created_at?: string | null
+          id?: string
+          min_orders?: number | null
+          min_spend?: number | null
+          name?: string | null
+        }
+        Update: {
+          benefits_json?: Json | null
+          created_at?: string | null
+          id?: string
+          min_orders?: number | null
+          min_spend?: number | null
+          name?: string | null
         }
         Relationships: []
       }
@@ -19930,6 +19963,7 @@ export type Database = {
           kyc_status: string
           kyc_verified_at: string | null
           last_admin_login: string | null
+          loyalty_tier_id: string | null
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null
@@ -19961,6 +19995,7 @@ export type Database = {
           kyc_status?: string
           kyc_verified_at?: string | null
           last_admin_login?: string | null
+          loyalty_tier_id?: string | null
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -19992,6 +20027,7 @@ export type Database = {
           kyc_status?: string
           kyc_verified_at?: string | null
           last_admin_login?: string | null
+          loyalty_tier_id?: string | null
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -20008,6 +20044,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_loyalty_tier_id_fkey"
+            columns: ["loyalty_tier_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_tiers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_selected_city_id_fkey"
             columns: ["selected_city_id"]

@@ -5,6 +5,7 @@
 import { ReactNode } from "react";
 import AppBottomNav from "./AppBottomNav";
 import AppHeader from "./AppHeader";
+import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
@@ -41,6 +42,9 @@ const AppLayout = ({
           rightAction={headerRightAction}
         />
       )}
+
+      {/* System Status Banner (customer-facing) */}
+      <SystemStatusBanner />
 
       <main className={cn(
         "flex-1",
