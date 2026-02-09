@@ -8079,6 +8079,7 @@ export type Database = {
         Row: {
           acceptance_count: number
           acceptance_rate: number | null
+          activity_status: string | null
           allowed_regions: string[] | null
           apns_token: string | null
           application_id: string | null
@@ -8163,6 +8164,7 @@ export type Database = {
         Insert: {
           acceptance_count?: number
           acceptance_rate?: number | null
+          activity_status?: string | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null
@@ -8247,6 +8249,7 @@ export type Database = {
         Update: {
           acceptance_count?: number
           acceptance_rate?: number | null
+          activity_status?: string | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           application_id?: string | null

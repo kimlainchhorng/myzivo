@@ -13,6 +13,7 @@
 import { useMemo } from "react";
 import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
+import { useDriverIncentives } from "@/hooks/useDriverIncentives";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type DriverSupplyLevel = "low" | "moderate" | "high";
@@ -29,6 +30,12 @@ export interface DeliveryFactors {
   showLowSupplyWarning: boolean;
   warningMessage: string | null;
   warningType: "demand" | "supply" | null;
+  
+  // Incentive awareness
+  isIncentivePeriod: boolean;
+  incentiveMultiplier: number;
+  showIncentiveBanner: boolean;
+  incentiveMessage: string | null;
   
   // Loading states
   isLoading: boolean;
@@ -84,6 +91,11 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
     isLoading: demandLoading 
   } = useEatsSurgePricing();
 
+  const {
+    isIncentivePeriod,
+    isLoading: incentivesLoading,
+  } = useDriverIncentives();
+
   const factors = useMemo(() => {
     const supply = getSupplyFactors(nearbyDriverCount);
     
@@ -98,6 +110,20 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
       warningType = "supply";
     }
 
+    // Incentive period adjustments
+    // Only show incentive banner when:
+    // 1. Incentive is active
+    // 2. Supply is good (not low)
+    // 3. No negative banners are showing
+    const incentiveMultiplier = isIncentivePeriod ? 0.85 : 1.0;
+    const showIncentiveBanner = 
+      isIncentivePeriod && 
+      supply.level === "high" && 
+      !demandActive;
+    const incentiveMessage = showIncentiveBanner 
+      ? "More drivers online in your area — faster delivery times." 
+      : null;
+
     return {
       demandLevel,
       demandActive,
@@ -107,9 +133,13 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
       showLowSupplyWarning,
       warningMessage: showLowSupplyWarning ? supply.message : null,
       warningType,
-      isLoading: driversLoading || demandLoading,
+      isIncentivePeriod,
+      incentiveMultiplier,
+      showIncentiveBanner,
+      incentiveMessage,
+      isLoading: driversLoading || demandLoading || incentivesLoading,
     };
-  }, [nearbyDriverCount, demandLevel, demandActive, driversLoading, demandLoading]);
+  }, [nearbyDriverCount, demandLevel, demandActive, driversLoading, demandLoading, isIncentivePeriod, incentivesLoading]);
 
   return factors;
 }
