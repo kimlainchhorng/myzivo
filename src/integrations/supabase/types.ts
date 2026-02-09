@@ -3819,6 +3819,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cities: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
       city_pricing: {
         Row: {
           base_fare: number | null
@@ -29787,6 +29814,47 @@ export type Database = {
             columns: ["zone_id"]
             isOneToOne: false
             referencedRelation: "pricing_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zones: {
+        Row: {
+          city_id: string | null
+          created_at: string | null
+          delivery_fee_base: number | null
+          delivery_fee_per_km: number | null
+          id: string
+          is_active: boolean | null
+          min_order_amount: number | null
+          name: string
+        }
+        Insert: {
+          city_id?: string | null
+          created_at?: string | null
+          delivery_fee_base?: number | null
+          delivery_fee_per_km?: number | null
+          id?: string
+          is_active?: boolean | null
+          min_order_amount?: number | null
+          name: string
+        }
+        Update: {
+          city_id?: string | null
+          created_at?: string | null
+          delivery_fee_base?: number | null
+          delivery_fee_per_km?: number | null
+          id?: string
+          is_active?: boolean | null
+          min_order_amount?: number | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zones_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]
