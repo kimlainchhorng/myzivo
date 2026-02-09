@@ -4,7 +4,7 @@
  * Includes fraud protection verification gate
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,9 +26,11 @@ import { CartProvider, useCart } from "@/contexts/CartContext";
 import { useCreateFoodOrder, useRestaurant } from "@/hooks/useEatsOrders";
 import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
+import { useCartValidation } from "@/hooks/useCartValidation";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
+import { UnavailableItemBanner } from "@/components/eats/UnavailableItemBanner";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -45,7 +47,7 @@ type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
 function EatsCheckoutContent() {
   const navigate = useNavigate();
-  const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress } = useCart();
+  const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
   const createOrder = useCreateFoodOrder();
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
@@ -62,6 +64,17 @@ function EatsCheckoutContent() {
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(restaurantId || undefined);
   const availability = useRestaurantAvailability(restaurant);
   
+  // Cart validation for item availability
+  const { validateCart, unavailableItems, isValidating } = useCartValidation();
+  const [hasValidated, setHasValidated] = useState(false);
+  
+  // Validate cart on page load
+  useEffect(() => {
+    if (items.length > 0 && !hasValidated) {
+      validateCart(items).then(() => setHasValidated(true));
+    }
+  }, [items, hasValidated, validateCart]);
+  
   // Risk assessment for fraud protection
   const riskAssessment = useCheckoutRiskAssessment({
     orderTotal: total,
@@ -71,6 +84,21 @@ function EatsCheckoutContent() {
     isNewAccount: false,
     failedPaymentAttempts: 0,
   });
+
+  // Handle removing all unavailable items
+  const handleRemoveUnavailable = () => {
+    unavailableItems.forEach((item) => {
+      removeItem(item.id);
+    });
+    // Re-validate after removal
+    setTimeout(() => {
+      validateCart(items.filter(i => !unavailableItems.find(u => u.id === i.id)));
+    }, 100);
+    toast.success("Unavailable items removed from cart");
+  };
+
+  // Check if cart has unavailable items
+  const hasUnavailableItems = unavailableItems.length > 0;
 
   const {
     register,
@@ -270,6 +298,15 @@ function EatsCheckoutContent() {
           <h1 className="font-display text-3xl font-bold mb-6">
             Checkout
           </h1>
+
+          {/* Unavailable Items Warning */}
+          {hasUnavailableItems && (
+            <UnavailableItemBanner
+              unavailableItems={unavailableItems}
+              onRemoveAll={handleRemoveUnavailable}
+              className="mb-6"
+            />
+          )}
 
           {/* Security Verification Banner - shown when risk score is high */}
           {riskAssessment.requiresPhoneVerification && !phoneVerified && customerPhone && (
@@ -503,14 +540,21 @@ function EatsCheckoutContent() {
                     {/* Submit */}
                     <Button
                       type="submit"
-                      disabled={isSubmitting || (riskAssessment.requiresPhoneVerification && !phoneVerified)}
+                      disabled={isSubmitting || (riskAssessment.requiresPhoneVerification && !phoneVerified) || hasUnavailableItems || isValidating}
                       className="w-full h-12 rounded-xl font-bold bg-gradient-to-r from-eats to-orange-500"
                     >
-                      {isSubmitting ? (
+                      {isValidating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Validating...
+                        </>
+                      ) : isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Submitting...
                         </>
+                      ) : hasUnavailableItems ? (
+                        "Remove Unavailable Items"
                       ) : riskAssessment.requiresPhoneVerification && !phoneVerified ? (
                         "Verify Phone to Continue"
                       ) : (

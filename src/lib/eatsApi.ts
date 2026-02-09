@@ -133,14 +133,14 @@ export const eatsApi = {
   // ==================== MENU ====================
 
   /**
-   * Fetch menu items for a restaurant
+   * Fetch menu items for a restaurant (includes unavailable items for display)
    */
   async getMenu(restaurantId: string): Promise<MenuItem[]> {
     const { data, error } = await supabase
       .from(EATS_TABLES.menuItems)
       .select("*")
       .eq("restaurant_id", restaurantId)
-      .eq("is_available", true)
+      .order("is_available", { ascending: false }) // Available items first
       .order("category")
       .order("is_featured", { ascending: false });
 
