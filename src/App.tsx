@@ -348,6 +348,8 @@ const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
+const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
+const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
 const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"));
 const AccountBusinessPage = lazy(() => import("./pages/account/BusinessAccountPage"));
@@ -981,6 +983,8 @@ const App = () => (
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
+                <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
+                <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
                 <Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />

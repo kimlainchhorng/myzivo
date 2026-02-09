@@ -12954,6 +12954,38 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_card_redemptions: {
+        Row: {
+          amount: number | null
+          gift_card_id: string | null
+          id: string
+          redeemed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          gift_card_id?: string | null
+          id?: string
+          redeemed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          gift_card_id?: string | null
+          id?: string
+          redeemed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_card_redemptions_gift_card_id_fkey"
+            columns: ["gift_card_id"]
+            isOneToOne: false
+            referencedRelation: "gift_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_card_transactions: {
         Row: {
           amount: number
@@ -13007,9 +13039,10 @@ export type Database = {
           message: string | null
           purchaser_email: string | null
           purchaser_name: string | null
+          purchaser_user_id: string | null
           recipient_email: string | null
           recipient_name: string | null
-          restaurant_id: string
+          restaurant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -13023,9 +13056,10 @@ export type Database = {
           message?: string | null
           purchaser_email?: string | null
           purchaser_name?: string | null
+          purchaser_user_id?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
-          restaurant_id: string
+          restaurant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -13039,9 +13073,10 @@ export type Database = {
           message?: string | null
           purchaser_email?: string | null
           purchaser_name?: string | null
+          purchaser_user_id?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
-          restaurant_id?: string
+          restaurant_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -31057,6 +31092,41 @@ export type Database = {
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "loyalty_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_memberships: {
+        Row: {
+          expires_at: string | null
+          id: string
+          membership_id: string | null
+          started_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string
+          membership_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string
+          membership_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memberships_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
             referencedColumns: ["id"]
           },
         ]

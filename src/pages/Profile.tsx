@@ -133,6 +133,7 @@ const Profile = () => {
     { icon: Trophy, label: "Achievements", href: "/account/achievements", description: "Badges & rewards" },
     { icon: Sparkles, label: "Activity", href: "/account/activity", description: "Your personal stats" },
     { icon: Globe, label: "Language & Currency", href: "/account/preferences", description: "Display preferences" },
+    { icon: Gift, label: "Gift Cards", href: "/account/gift-cards", description: "Buy, send, or redeem" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
