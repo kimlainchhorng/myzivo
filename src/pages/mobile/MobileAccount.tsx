@@ -19,6 +19,7 @@ import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { TrustLevelCard } from "@/components/account/TrustLevelCard";
+import { LoyaltyLevelSection } from "@/components/account/LoyaltyLevelSection";
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
@@ -182,6 +183,9 @@ export default function MobileAccount() {
 
       {/* Trust Level Card */}
       <TrustLevelCard />
+
+      {/* My Loyalty Level */}
+      <LoyaltyLevelSection />
 
       {/* Account Settings */}
       <div className="px-4">
