@@ -3,6 +3,7 @@
  * CRUD for delivery addresses using saved_locations table
  */
 import { useState } from "react";
+import { CartProvider } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, MapPin, Home, Briefcase, Star, Trash2, Edit2, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ interface AddressFormData {
   icon: string;
 }
 
-export default function EatsAddress() {
+function EatsAddressContent() {
   const navigate = useNavigate();
   const [userId, setUserId] = useReactState<string | undefined>(undefined);
   const { data: addresses, isLoading } = useSavedLocations(userId);
@@ -339,5 +340,13 @@ export default function EatsAddress() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function EatsAddress() {
+  return (
+    <CartProvider>
+      <EatsAddressContent />
+    </CartProvider>
   );
 }
