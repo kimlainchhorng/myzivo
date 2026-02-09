@@ -141,7 +141,7 @@ function EatsAddressContent() {
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center justify-between px-6 py-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/eats")}
             className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
