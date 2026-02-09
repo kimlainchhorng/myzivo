@@ -14183,33 +14183,39 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
-          destination: string | null
+          destination_masked: string | null
           error: string | null
           event_type: string | null
           id: string
+          metadata: Json | null
           provider_id: string | null
+          skip_reason: string | null
           status: string
           user_id: string | null
         }
         Insert: {
           channel: string
           created_at?: string
-          destination?: string | null
+          destination_masked?: string | null
           error?: string | null
           event_type?: string | null
           id?: string
+          metadata?: Json | null
           provider_id?: string | null
+          skip_reason?: string | null
           status: string
           user_id?: string | null
         }
         Update: {
           channel?: string
           created_at?: string
-          destination?: string | null
+          destination_masked?: string | null
           error?: string | null
           event_type?: string | null
           id?: string
+          metadata?: Json | null
           provider_id?: string | null
+          skip_reason?: string | null
           status?: string
           user_id?: string | null
         }

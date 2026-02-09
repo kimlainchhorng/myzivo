@@ -1,6 +1,7 @@
 /**
  * NotificationSettings Page
  * User notification preferences and controls for push, SMS, and email
+ * Includes SMS consent checkbox, quiet hours, and masked phone display
  */
 
 import { useState, useEffect } from "react";
@@ -23,6 +24,8 @@ import {
   Phone,
   ExternalLink,
   Loader2,
+  Moon,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,12 +33,21 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useWebPush } from "@/hooks/useWebPush";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useNotificationPreferences,
   useUpdateNotificationPreferences,
   useUserProfile,
+  useReenableSMS,
 } from "@/hooks/useNotificationPreferences";
 import { NotificationChannelCard } from "@/components/account/NotificationChannelCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
@@ -82,7 +94,23 @@ const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
 
 const PREFS_KEY = "zivo_notification_prefs";
 
-// Format phone number for display
+const TIME_OPTIONS = [
+  { value: "20:00", label: "8:00 PM" },
+  { value: "21:00", label: "9:00 PM" },
+  { value: "22:00", label: "10:00 PM" },
+  { value: "23:00", label: "11:00 PM" },
+  { value: "00:00", label: "12:00 AM" },
+];
+
+const END_TIME_OPTIONS = [
+  { value: "06:00", label: "6:00 AM" },
+  { value: "07:00", label: "7:00 AM" },
+  { value: "08:00", label: "8:00 AM" },
+  { value: "09:00", label: "9:00 AM" },
+  { value: "10:00", label: "10:00 AM" },
+];
+
+// Format phone number for display (masked when verified)
 function formatPhoneDisplay(phone: string | null): string {
   if (!phone) return "";
   // Simple format: +1 (555) 123-4567
@@ -92,6 +120,18 @@ function formatPhoneDisplay(phone: string | null): string {
   }
   return phone;
 }
+
+// Mask phone for display after verification
+function maskPhoneDisplay(phone: string | null): string {
+  if (!phone) return "•••-•••-••••";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length >= 4) {
+    return `***-***-${cleaned.slice(-4)}`;
+  }
+  return "•••";
+}
+
+const SMS_CONSENT_TEXT = "I agree to receive SMS notifications from ZIVO for order updates, support, and alerts. Standard message rates may apply. Reply STOP to unsubscribe at any time.";
 
 export default function NotificationSettings() {
   const navigate = useNavigate();
@@ -128,6 +168,17 @@ export default function NotificationSettings() {
   // Phone verification
   const [phoneInput, setPhoneInput] = useState("");
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+  
+  // SMS consent
+  const [smsConsentChecked, setSmsConsentChecked] = useState(false);
+  
+  // Quiet hours
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(false);
+  const [quietHoursStart, setQuietHoursStart] = useState("22:00");
+  const [quietHoursEnd, setQuietHoursEnd] = useState("08:00");
+
+  // Re-enable SMS after opt-out
+  const reenableSMS = useReenableSMS();
 
   // Sync phone from profile
   useEffect(() => {
@@ -136,10 +187,15 @@ export default function NotificationSettings() {
     }
   }, [profile]);
 
-  // Save preferences when they change
+  // Sync quiet hours from prefs
   useEffect(() => {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
-  }, [preferences]);
+    if (prefs) {
+      setQuietHoursEnabled(prefs.quietHoursEnabled ?? false);
+      setQuietHoursStart(prefs.quietHoursStart ?? "22:00");
+      setQuietHoursEnd(prefs.quietHoursEnd ?? "08:00");
+      setSmsConsentChecked(!!prefs.smsConsentAt);
+    }
+  }, [prefs]);
 
   const handleToggleCategory = (id: string) => {
     setPreferences((prev) => {
