@@ -1,114 +1,158 @@
 
 
-# Smart Service Adjustments — Transparent AI Response Messaging
+# Real-Time Service Feedback — Metric-Driven ETA and Demand Transparency
 
 ## Overview
 
-When the platform activates surge pricing or driver incentives in response to high demand, update customer-facing banners to show transparent "we're responding" messaging instead of just warning about delays. This tells customers the system is actively working to fix the situation — e.g., "High demand in your area -- additional drivers are being notified."
+Close the gap between the platform's real-time metrics (traffic, demand forecasts, driver supply) and the customer experience by (1) feeding all available signals into the ETA calculation for better accuracy, and (2) showing a clear "High demand right now" banner on checkout and cart pages when conditions warrant it.
 
 ## Current Gaps
 
-- **HighDemandBanner** says "Delivery time may be slightly longer" but never mentions that the platform is responding (notifying drivers, activating incentives)
-- **LowDriverSupplyBanner** says "We're actively finding drivers" only when driver count is 0, but shows nothing about incentive activation for low/moderate supply
-- **PeakDemandAlert** (pre-order) says "Order early for fastest delivery" but doesn't mention platform response
-- **IncentiveBoostBanner** is a separate positive-only banner — its signal is never combined with the demand/supply warnings to show "we're fixing it"
-- The `useEatsDeliveryFactors` hook already tracks both `demandActive` and `isIncentivePeriod` but banners never cross-reference them
+- **useSmartEta** uses `supplyMultiplier` and time-of-day traffic but ignores `forecastMultiplier` from demand predictions and the real `trafficMultiplier` from Google Directions API via `useTrafficAwareEta`
+- **Checkout and Cart pages** show surge pricing badges and incentive/peak banners, but never show a "high demand right now" warning banner -- customers only see that on the order tracking page after placing an order
+- **deliveryFactors.isForecastedDemand** and **forecastMultiplier** are computed by `useEatsDeliveryFactors` but never consumed by any customer-facing page
+- **Real traffic data** (from `useTrafficAwareEta`) runs in parallel with the static time-of-day traffic factor in `useSmartEta` -- they never combine, so the "smart" ETA misses real route data
 
 ## What Changes
 
-### 1. Update `src/components/eats/HighDemandBanner.tsx` — Add "drivers being notified" line
+### 1. Update `src/hooks/useSmartEta.ts` -- Incorporate forecast and real traffic multipliers
 
-Add an optional `isRespondingWithIncentives` prop. When true, append a reassuring sub-line:
+Add two new optional props:
+- `forecastMultiplier` (from `useUpcomingDemandAlert` or `useEatsDeliveryFactors`) -- inflates prep time when demand is predicted to rise
+- `realTrafficMultiplier` (from `useTrafficAwareEta`) -- replaces the static time-of-day traffic factor when real route data is available
 
-- **High demand + incentives active**: "Additional drivers are being notified."
-- **Medium demand + incentives active**: "We're bringing more drivers online."
-
-This turns the banner from a warning into a "we see it and we're handling it" message.
-
+Updated ETA logic:
 ```
-Updated messaging:
+Prep component:
+  adjustedPrep = basePrepMinutes * demandFactor * forecastMultiplier * prepSpeedFactor
 
-High + incentives:
-  Title: "High demand in your area"
-  Body: "Delivery time may be slightly longer. Additional drivers are being notified."
-
-Medium + incentives:
-  Title: "Busy area right now"  
-  Body: "We're bringing more drivers online to speed things up."
-
-High (no incentives, unchanged):
-  Title: "High demand in your area"
-  Body: "Delivery time may be slightly longer. We appreciate your patience!"
+Travel component:
+  if realTrafficMultiplier is available (route data exists):
+    adjustedTravel = travelEtaMinutes * realTrafficMultiplier
+  else:
+    adjustedTravel = travelEtaMinutes * timeOfDayTrafficFactor (existing behavior)
 ```
 
-### 2. Update `src/components/eats/LowDriverSupplyBanner.tsx` — Add incentive-aware messaging
+This means the ETA gets more accurate as more signals become available -- starts with time-of-day heuristics, upgrades to real route data once a driver is assigned.
 
-Add an optional `isIncentiveActive` prop. When true and supply is low, update the subtitle to mention that additional drivers are being recruited:
+### 2. Update `src/pages/EatsOrderDetail.tsx` -- Pass new multipliers to useSmartEta
 
-```
-Low supply + incentives:
-  Title: "High demand — delivery may take longer"
-  Subtitle: "Additional drivers are being notified to your area."
-
-Critical (0 drivers) + incentives:
-  Title: "No drivers nearby"
-  Subtitle: "We're actively notifying additional drivers. Hang tight!"
-```
-
-### 3. Update `src/components/eats/PeakDemandAlert.tsx` — Add proactive response line
-
-Add an optional `isSystemResponding` prop. When true, append a second line under the existing body text showing platform response:
+Pass `forecastMultiplier` from `deliveryFactors` and the active `trafficMultiplier` from `useTrafficAwareEta` to `useSmartEta`:
 
 ```
-High demand predicted + system responding:
-  Title: "High demand expected soon"
-  Body: "Order early for the fastest delivery."
-  Response line: "We're pre-positioning drivers to keep things moving."
+const smartEta = useSmartEta({
+  ...existing props,
+  forecastMultiplier: deliveryFactors.forecastMultiplier,
+  realTrafficMultiplier: activeTrafficMultiplier,
+});
 ```
 
-This is a small addition — just one extra `<p>` tag when the prop is true.
+This connects the two existing data streams so ETA calculations on the order detail page use all available real-time data.
 
-### 4. Update `src/pages/EatsOrderDetail.tsx` — Pass incentive state to banners
+### 3. Create `src/components/eats/LiveDemandBanner.tsx` -- "High demand right now" banner for pre-order pages
 
-Pass `deliveryFactors.isIncentivePeriod` to both `HighDemandBanner` and `LowDriverSupplyBanner` so they can show the "drivers being notified" messaging:
+A new banner component for checkout and cart pages that shows when demand is active (surge) or forecasted. Unlike `HighDemandBanner` (which is order-specific and dismissible per order), this is a lightweight, session-dismissible banner for pre-order contexts.
+
+Two states:
+- **Active surge**: "High demand right now -- delivery times may vary." (orange)
+- **Forecasted demand**: "Demand is increasing -- delivery times may change." (amber)
+
+Both include incentive-aware sub-text when `isIncentivePeriod` is true:
+- "We're bringing additional drivers online."
+
+The banner is dismissible per session.
+
+### 4. Update `src/pages/EatsCheckout.tsx` -- Add LiveDemandBanner and pass forecast multiplier to ETA
+
+- Import and render `LiveDemandBanner` above the ETA breakdown when demand is active or forecasted
+- Pass `deliveryFactors.forecastMultiplier` to `useQueueAwareEta` so checkout ETA reflects predicted demand
+- Show the banner between the promo section and ETA breakdown for visibility
+
+### 5. Update `src/pages/EatsCart.tsx` -- Add LiveDemandBanner
+
+- Import and render `LiveDemandBanner` at the top of the cart summary when demand is active or forecasted
+- This gives customers early awareness before they reach checkout
+
+### 6. Update `src/hooks/useQueueAwareEta.ts` -- Accept forecast multiplier
+
+Add an optional `forecastMultiplier` prop that inflates the prep time estimate, matching the pattern already used for `demandMultiplier` and `scheduleForecastMultiplier`. This ensures the checkout ETA accounts for predicted demand increases.
+
+## Technical Detail
+
+### useSmartEta new props
+
+```typescript
+interface UseSmartEtaOptions {
+  // ...existing props
+  forecastMultiplier?: number;      // From useEatsDeliveryFactors (1.0-1.3)
+  realTrafficMultiplier?: number;   // From useTrafficAwareEta (1.0-1.5)
+}
+```
+
+Updated travel calculation:
+```typescript
+const effectiveTrafficFactor = realTrafficMultiplier != null && realTrafficMultiplier > 0
+  ? realTrafficMultiplier
+  : traffic.factor;
+
+const effectiveForecast = forecastMultiplier ?? 1.0;
+
+// Prep phase
+const adjustedPrep = basePrepMinutes * demandFactor * effectiveForecast * prepSpeedFactor;
+const adjustedTravel = travelEtaMinutes * effectiveTrafficFactor;
+```
+
+### LiveDemandBanner component
+
+```typescript
+interface LiveDemandBannerProps {
+  isActive: boolean;           // Current surge active
+  isForecastedDemand: boolean; // Predicted upcoming demand
+  isIncentivePeriod: boolean;  // Platform responding with incentives
+  className?: string;
+}
+```
+
+Messaging:
+```
+Active surge:
+  "High demand right now -- delivery times may vary."
+  + incentives: "We're bringing additional drivers online."
+
+Forecasted only:
+  "Demand is increasing -- delivery times may change."
+  + incentives: "We're pre-positioning drivers in your area."
+```
+
+### EatsCheckout integration
 
 ```tsx
-<HighDemandBanner 
-  level={deliveryFactors.demandLevel} 
-  orderId={order.id}
-  isRespondingWithIncentives={deliveryFactors.isIncentivePeriod}
-/>
-
-<LowDriverSupplyBanner
-  supplyLevel={deliveryFactors.driverSupply}
-  driverCount={deliveryFactors.nearbyDriverCount}
-  orderId={order.id}
-  isIncentiveActive={deliveryFactors.isIncentivePeriod}
-/>
+{(deliveryFactors.demandActive || deliveryFactors.isForecastedDemand) && (
+  <LiveDemandBanner
+    isActive={deliveryFactors.demandActive}
+    isForecastedDemand={deliveryFactors.isForecastedDemand}
+    isIncentivePeriod={deliveryFactors.isIncentivePeriod}
+  />
+)}
 ```
 
-### 5. Update `src/pages/EatsRestaurants.tsx` and `src/pages/EatsRestaurantMenu.tsx` — Pass system responding flag to PeakDemandAlert
+### useQueueAwareEta change
 
-Both pages already render `PeakDemandAlert`. Add the new `isSystemResponding` prop using data from `useDriverIncentives` or from `useEatsDeliveryFactors`:
+Add `forecastMultiplier` to the options interface and multiply it into the prep time component alongside the existing `demandMultiplier`:
 
-```tsx
-<PeakDemandAlert
-  ...existing props
-  isSystemResponding={demandAlert.isHighDemandPredicted && isIncentivePeriod}
-/>
+```typescript
+const effectivePrep = basePrepTime * demandMultiplier * (forecastMultiplier ?? 1.0);
 ```
-
-For the restaurants listing page, import `useDriverIncentives` to check if incentives are active alongside the demand alert.
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/components/eats/HighDemandBanner.tsx` | Update | Add `isRespondingWithIncentives` prop, show "additional drivers being notified" |
-| `src/components/eats/LowDriverSupplyBanner.tsx` | Update | Add `isIncentiveActive` prop, show incentive-aware subtitle |
-| `src/components/eats/PeakDemandAlert.tsx` | Update | Add `isSystemResponding` prop, show proactive response line |
-| `src/pages/EatsOrderDetail.tsx` | Update | Pass `isIncentivePeriod` to demand and supply banners |
-| `src/pages/EatsRestaurants.tsx` | Update | Import `useDriverIncentives`, pass `isSystemResponding` to `PeakDemandAlert` |
-| `src/pages/EatsRestaurantMenu.tsx` | Update | Import `useDriverIncentives`, pass `isSystemResponding` to `PeakDemandAlert` |
+| `src/hooks/useSmartEta.ts` | Update | Add `forecastMultiplier` and `realTrafficMultiplier` props, use in ETA calculation |
+| `src/pages/EatsOrderDetail.tsx` | Update | Pass forecast and traffic multipliers to `useSmartEta` |
+| `src/components/eats/LiveDemandBanner.tsx` | Create | Pre-order demand banner with active/forecast states |
+| `src/pages/EatsCheckout.tsx` | Update | Add `LiveDemandBanner`, pass `forecastMultiplier` to queue ETA |
+| `src/pages/EatsCart.tsx` | Update | Add `LiveDemandBanner` for early demand awareness |
+| `src/hooks/useQueueAwareEta.ts` | Update | Accept and apply `forecastMultiplier` to prep time |
 
-Six file updates, no new files, no schema changes, no new edge functions.
+One new file, five updates. No schema changes, no new edge functions.
