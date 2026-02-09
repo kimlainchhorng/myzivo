@@ -2,6 +2,7 @@
  * ZIVO Eats — Checkout Page
  * MVP: Submit order request — no payment processing
  * Includes fraud protection verification gate
+ * Supports business account billing
  */
 
 import { useState, useEffect } from "react";
@@ -28,11 +29,14 @@ import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
 import { useCartValidation } from "@/hooks/useCartValidation";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
+import { useBusinessMembership } from "@/hooks/useBusinessMembership";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
 import { UnavailableItemBanner } from "@/components/eats/UnavailableItemBanner";
 import { EtaBreakdownCard } from "@/components/eats/EtaBreakdownCard";
+import { BillingTypeSelector } from "@/components/checkout/BillingTypeSelector";
+import { CompanyBillingBadge } from "@/components/checkout/CompanyBillingBadge";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -51,9 +55,18 @@ function EatsCheckoutContent() {
   const navigate = useNavigate();
   const { items, updateQuantity, getSubtotal, clearCart, deliveryAddress, removeItem } = useCart();
   const createOrder = useCreateFoodOrder();
+  const { data: businessMembership } = useBusinessMembership();
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [billingType, setBillingType] = useState<"personal" | "company">("personal");
+
+  // Set default billing type based on membership preference
+  useEffect(() => {
+    if (businessMembership?.isMember && businessMembership.paymentPreference) {
+      setBillingType(businessMembership.paymentPreference);
+    }
+  }, [businessMembership]);
 
   const subtotal = getSubtotal();
   const deliveryFee = 3.99;
@@ -153,6 +166,10 @@ function EatsCheckoutContent() {
         subtotal,
         delivery_fee: deliveryFee,
         total,
+        // Business account billing
+        billing_type: billingType,
+        business_account_id: billingType === "company" && businessMembership?.company ? businessMembership.company.id : undefined,
+        business_account_name: billingType === "company" && businessMembership?.company ? businessMembership.company.name : undefined,
       });
 
       clearCart();
@@ -468,6 +485,27 @@ function EatsCheckoutContent() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Business Account Billing */}
+                {businessMembership?.isMember && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-eats" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Payment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <BillingTypeSelector
+                        membership={businessMembership}
+                        selected={billingType}
+                        onSelect={setBillingType}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Right: Order Summary */}
@@ -546,6 +584,11 @@ function EatsCheckoutContent() {
                         <span>${total.toFixed(2)}</span>
                       </div>
                     </div>
+
+                    {/* Company Billing Badge */}
+                    {billingType === "company" && businessMembership?.company && (
+                      <CompanyBillingBadge companyName={businessMembership.company.name} />
+                    )}
 
                     {/* Note */}
                     <div className="bg-amber-500/10 text-amber-700 dark:text-amber-400 p-3 rounded-xl text-xs">

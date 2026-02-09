@@ -338,6 +338,7 @@ const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"))
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
 const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"));
+const AccountBusinessPage = lazy(() => import("./pages/account/BusinessAccountPage"));
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
 const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const ScaleProtection = lazy(() => import("./pages/security/ScaleProtection"));
@@ -974,6 +975,9 @@ const App = () => (
                 {/* ZIVO+ Membership */}
                 <Route path="/membership" element={<MembershipPage />} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                
+                {/* Business Account */}
+                <Route path="/account/business" element={<ProtectedRoute><AccountBusinessPage /></ProtectedRoute>} />
                 
                 {/* Promo Codes */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />

@@ -2865,6 +2865,9 @@ export type Database = {
           business_id: string | null
           created_at: string | null
           id: string
+          joined_at: string
+          joined_via: string | null
+          payment_preference: string
           role: string | null
           user_id: string | null
         }
@@ -2872,6 +2875,9 @@ export type Database = {
           business_id?: string | null
           created_at?: string | null
           id?: string
+          joined_at?: string
+          joined_via?: string | null
+          payment_preference?: string
           role?: string | null
           user_id?: string | null
         }
@@ -2879,6 +2885,9 @@ export type Database = {
           business_id?: string | null
           created_at?: string | null
           id?: string
+          joined_at?: string
+          joined_via?: string | null
+          payment_preference?: string
           role?: string | null
           user_id?: string | null
         }
@@ -2898,18 +2907,24 @@ export type Database = {
           company_name: string
           created_at: string | null
           id: string
+          invite_code_enabled: boolean
+          owner_id: string | null
         }
         Insert: {
           billing_email?: string | null
           company_name: string
           created_at?: string | null
           id?: string
+          invite_code_enabled?: boolean
+          owner_id?: string | null
         }
         Update: {
           billing_email?: string | null
           company_name?: string
           created_at?: string | null
           id?: string
+          invite_code_enabled?: boolean
+          owner_id?: string | null
         }
         Relationships: []
       }
@@ -4266,6 +4281,50 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_invite_codes: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          invite_code: string
+          is_active: boolean
+          max_uses: number | null
+          uses_count: number
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_code: string
+          is_active?: boolean
+          max_uses?: number | null
+          uses_count?: number
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_code?: string
+          is_active?: boolean
+          max_uses?: number | null
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invite_codes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -10924,8 +10983,11 @@ export type Database = {
           at_risk_reason: string | null
           base_fare: number | null
           batch_id: string | null
+          billing_type: string | null
           branch_id: string | null
           breached_reason: string | null
+          business_account_id: string | null
+          business_account_name: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
           cancelled_at: string | null
@@ -11087,8 +11149,11 @@ export type Database = {
           at_risk_reason?: string | null
           base_fare?: number | null
           batch_id?: string | null
+          billing_type?: string | null
           branch_id?: string | null
           breached_reason?: string | null
+          business_account_id?: string | null
+          business_account_name?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -11250,8 +11315,11 @@ export type Database = {
           at_risk_reason?: string | null
           base_fare?: number | null
           batch_id?: string | null
+          billing_type?: string | null
           branch_id?: string | null
           breached_reason?: string | null
+          business_account_id?: string | null
+          business_account_name?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -11416,6 +11484,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "restaurant_branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_business_account_id_fkey"
+            columns: ["business_account_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -26137,6 +26212,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_incidents: {
+        Row: {
+          affected_zones: string[] | null
+          affects_dispatch: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          message: string
+          resolved_at: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          affected_zones?: string[] | null
+          affects_dispatch?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message: string
+          resolved_at?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          affected_zones?: string[] | null
+          affects_dispatch?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       system_metrics: {
         Row: {
           id: string
@@ -33590,6 +33701,10 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { user_uuid: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_business_admin: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
@@ -33684,6 +33799,7 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: undefined
       }
+      redeem_company_invite_code: { Args: { _code: string }; Returns: Json }
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
