@@ -1,370 +1,169 @@
 
-# Spending Summary & Receipts — Implementation Plan
+# Activity Insights — Implementation Plan
 
 ## Overview
-Add a customer spending history page at `/account/spending` that shows monthly spending stats and enables receipt downloads for all order types (Eats, Rides, Travel).
+Add a simple personal stats page at `/account/activity` showing customers their orders this month, favorite restaurant, and total savings from promos/membership.
 
 ---
 
 ## Current State Analysis
 
-### Existing Infrastructure
-| Component | Status | Purpose |
-|-----------|--------|---------|
-| `useMyEatsOrders` hook | Exists | Fetches customer's food orders |
-| `useRiderTripHistory` hook | Exists | Fetches customer's ride history |
-| `useMyOrders` hook | Exists | Fetches customer's travel orders |
-| `OrderReceipt` component | Exists | Eats receipt with print support |
-| `TripReceiptModal` component | Exists | Rides receipt modal with download button |
-| `/account/wallet` page | Exists | Similar UI pattern for account section |
+### Reusable Infrastructure
+| Component | What it provides |
+|-----------|-----------------|
+| `useSpendingStats` hook | Orders this month count, amounts, unified order list |
+| `useMembershipSavings` hook | Monthly ZIVO+ membership discount total |
+| `SpendingPage` | Similar account page pattern to follow |
+| `Profile.tsx` quickLinks array | Where to add navigation link |
 
-### Data Sources for Spending
-| Service | Table | Amount Field | Status Filter |
-|---------|-------|--------------|---------------|
-| Eats | `food_orders` | `total_amount` | `delivered` |
-| Rides | `trips` | `fare_amount` | `completed` |
-| Travel | `travel_orders` | `total` | `confirmed`, `completed` |
+### Data Sources for Each Stat
+| Stat | Source | How |
+|------|--------|-----|
+| Orders this month | `useSpendingStats` | `thisMonth.orderCount` (already computed) |
+| Favorite restaurant | `food_orders` | Group by `restaurant_id`, pick most frequent |
+| Promo savings | `food_orders.discount_amount` | Sum for current month |
+| Membership savings | `useMembershipSavings` | `thisMonthDollars` (already computed) |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Spending Stats Hook
+### 1) Create Activity Insights Hook
 
-**File to Create:** `src/hooks/useSpendingStats.ts`
+**File to Create:** `src/hooks/useActivityInsights.ts`
 
-**Purpose:** Aggregate spending data across all services for the current user.
+**Purpose:** Combine spending stats with favorite restaurant and savings data.
 
-**Data Returned:**
+**Queries:**
+- Reuse `useSpendingStats()` for order counts
+- Reuse `useMembershipSavings()` for ZIVO+ savings
+- New query: `food_orders` grouped by restaurant to find favorite
+- New query: `food_orders.discount_amount` sum for promo savings
+
+**Returned data:**
 ```text
-interface SpendingStats {
-  thisMonth: {
-    total: number;
-    orderCount: number;
-    averageOrder: number;
-    byService: {
-      eats: number;
-      rides: number;
-      travel: number;
-    };
-  };
-  allTime: {
-    total: number;
-    orderCount: number;
-  };
-  recentOrders: UnifiedOrder[];
+{
+  ordersThisMonth: number;
+  favoriteRestaurant: { name: string; orderCount: number } | null;
+  totalSaved: number;           // Combined promo + membership
+  membershipSaved: number;
+  promoSaved: number;
   isLoading: boolean;
 }
 ```
 
-**Queries:**
-- Food orders: `food_orders` where `customer_id = user.id` and `status = 'delivered'`
-- Rides: `trips` where `rider_id = user.id` and `status = 'completed'`
-- Travel: `travel_orders` where `user_id = user.id` and `status in ('confirmed', 'completed')`
+### 2) Create Activity Page
 
-### 2) Create Unified Order Type
-
-**File to Update:** `src/hooks/useSpendingStats.ts` (same file)
-
-**Purpose:** Normalize different order types into a single interface for display.
-
-```text
-interface UnifiedOrder {
-  id: string;
-  type: 'eats' | 'rides' | 'travel';
-  title: string;        // Restaurant name / "Ride to X" / Hotel name
-  amount: number;
-  date: string;
-  status: string;
-  receiptUrl?: string;  // Deep link to receipt page
-  meta: {
-    orderId: string;
-    serviceSpecificData: any;
-  };
-}
-```
-
-### 3) Create Spending Summary Page
-
-**File to Create:** `src/pages/account/SpendingPage.tsx`
+**File to Create:** `src/pages/account/ActivityPage.tsx`
 
 **Design:**
 ```text
-┌────────────────────────────────────────────────────────────┐
-│  ←  Spending History                                       │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  February 2026                                       │  │
-│  │                                                      │  │
-│  │  $1,247.50           12           $103.96           │  │
-│  │  Total Spent       Orders     Avg. Order            │  │
-│  │                                                      │  │
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐                │  │
-│  │  │ Eats    │ │ Rides   │ │ Travel  │                │  │
-│  │  │ $342.50 │ │ $155.00 │ │ $750.00 │                │  │
-│  │  └─────────┘ └─────────┘ └─────────┘                │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                            │
-│  Recent Orders                                             │
-│                                                            │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ 🍔 Burger Palace              $32.50   Feb 8        │  │
-│  │    Delivered                           [Receipt]    │  │
-│  └──────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ 🚗 Ride to SFO Airport        $45.00   Feb 7        │  │
-│  │    Completed                           [Receipt]    │  │
-│  └──────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ 🏨 Le Grand Hotel (Paris)    $750.00   Feb 5        │  │
-│  │    Confirmed                           [Receipt]    │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
++----------------------------------------------+
+|  <-   Activity Insights                      |
++----------------------------------------------+
+|                                              |
+|  +----------------------------------------+  |
+|  |  Orders This Month              12     |  |
+|  +----------------------------------------+  |
+|                                              |
+|  +----------------------------------------+  |
+|  |  Favorite Restaurant                   |  |
+|  |  Burger Palace          (5 orders)     |  |
+|  +----------------------------------------+  |
+|                                              |
+|  +----------------------------------------+  |
+|  |  Total Saved This Month       $24.50   |  |
+|  |  ZIVO+ savings: $15.00                 |  |
+|  |  Promo savings: $9.50                  |  |
+|  +----------------------------------------+  |
+|                                              |
++----------------------------------------------+
 ```
 
 **Features:**
-- Monthly summary card with total spent, order count, average
-- Breakdown by service (Eats, Rides, Travel) with visual indicators
-- List of recent orders with receipt download buttons
-- Filter by service type (All / Eats / Rides / Travel tabs)
+- Three stat cards with icons and colors
+- Follows SpendingPage layout pattern (max-w-lg, back button, gradient bg)
+- Empty states when no data
 
-### 4) Add Route to App.tsx
+### 3) Add Route
 
 **File to Modify:** `src/App.tsx`
 
-**Changes:**
-- Import `SpendingPage` lazy component
-- Add route `/account/spending` with `ProtectedRoute` wrapper
+- Add lazy import for `ActivityPage`
+- Add route `/account/activity` with `ProtectedRoute`
 
-```text
-const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
-
-// In routes:
-<Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
-```
-
-### 5) Add Quick Link to Profile Page
+### 4) Add Quick Link to Profile
 
 **File to Modify:** `src/pages/Profile.tsx`
 
-**Changes:**
-- Add "Spending History" to the quick links array
-
-```text
-{ icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
-```
-
-### 6) Create Receipt Download Utilities
-
-**File to Create:** `src/lib/receiptUtils.ts`
-
-**Purpose:** Generate downloadable PDF receipts for all order types.
-
-**Functions:**
-```text
-// Generate receipt HTML for print/download
-export function generateEatsReceiptHTML(order: EatsOrder): string;
-export function generateRideReceiptHTML(trip: Trip): string;
-export function generateTravelReceiptHTML(order: TravelOrder): string;
-
-// Trigger download via print dialog
-export function downloadReceipt(html: string, filename: string): void;
-```
-
-**Pattern (using window.print() approach like existing itinerary export):**
-```text
-function downloadReceipt(html: string, filename: string) {
-  const printWindow = window.open('', '_blank');
-  if (printWindow) {
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
-  }
-}
-```
-
-### 7) Create Order Receipt Card Component
-
-**File to Create:** `src/components/account/OrderReceiptCard.tsx`
-
-**Purpose:** Reusable card component for displaying a single order with receipt download.
-
-**Props:**
-```text
-interface OrderReceiptCardProps {
-  order: UnifiedOrder;
-  onDownloadReceipt: () => void;
-}
-```
-
-**Design:**
-- Service icon (fork for Eats, car for Rides, hotel for Travel)
-- Title and date
-- Amount with status badge
-- Download/View Receipt button
+- Add "Activity" entry to `quickLinks` array
 
 ---
 
 ## File Summary
 
-### New Files (4)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useSpendingStats.ts` | Aggregate spending data across services |
-| `src/pages/account/SpendingPage.tsx` | Main spending summary page |
-| `src/lib/receiptUtils.ts` | PDF/print receipt generation |
-| `src/components/account/OrderReceiptCard.tsx` | Reusable order card component |
+| `src/hooks/useActivityInsights.ts` | Aggregate activity stats (favorite restaurant, savings) |
+| `src/pages/account/ActivityPage.tsx` | Activity insights page UI |
 
 ### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add route for `/account/spending` |
-| `src/pages/Profile.tsx` | Add quick link to spending page |
+| `src/App.tsx` | Add lazy import and route for `/account/activity` |
+| `src/pages/Profile.tsx` | Add "Activity" quick link |
 
 ---
 
-## Data Flow
+## Favorite Restaurant Detection
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Spending Summary Flow                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  SpendingPage                                                           │
-│     │                                                                   │
-│     └─> useSpendingStats()                                              │
-│            │                                                            │
-│            ├─> Query food_orders (Eats)                                 │
-│            ├─> Query trips (Rides)                                      │
-│            └─> Query travel_orders (Travel)                             │
-│                      │                                                  │
-│                      └─> Aggregate into UnifiedOrder[]                  │
-│                                │                                        │
-│                                └─> Calculate:                           │
-│                                    • Total spent this month             │
-│                                    • Order count                        │
-│                                    • Average order value                │
-│                                    • Breakdown by service               │
-│                                                                         │
-│  User clicks "Receipt" button                                           │
-│     │                                                                   │
-│     └─> generateReceipt(order)                                          │
-│            │                                                            │
-│            └─> Opens print dialog with formatted receipt                │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+// Query food_orders for this month, group by restaurant
+const { data } = await supabase
+  .from("food_orders")
+  .select("restaurant_id, restaurant:restaurants(name)")
+  .eq("customer_id", user.id)
+  .eq("status", "delivered")
+  .gte("created_at", monthStart.toISOString());
 
----
-
-## Monthly Stats Calculation
-
-```text
-// Get current month boundaries
-const now = new Date();
-const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-// Filter orders by date
-const thisMonthOrders = allOrders.filter(order => {
-  const orderDate = new Date(order.date);
-  return orderDate >= monthStart && orderDate <= monthEnd;
+// Count per restaurant, pick the one with most orders
+const counts = {};
+data.forEach(o => {
+  const id = o.restaurant_id;
+  counts[id] = counts[id] || { name: o.restaurant?.name, count: 0 };
+  counts[id].count++;
 });
-
-// Calculate stats
-const total = thisMonthOrders.reduce((sum, o) => sum + o.amount, 0);
-const count = thisMonthOrders.length;
-const average = count > 0 ? total / count : 0;
+// Return the max
 ```
 
 ---
 
-## Receipt Generation Pattern
-
-Following the existing pattern from `useItineraryExport.ts`:
+## Savings Calculation
 
 ```text
-// Generate styled HTML receipt
-const receiptHTML = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>Receipt - ${order.id}</title>
-    <style>
-      body { font-family: system-ui, sans-serif; padding: 40px; }
-      .header { text-align: center; margin-bottom: 30px; }
-      .logo { font-size: 24px; font-weight: bold; }
-      .order-id { color: #666; font-size: 14px; }
-      .items { margin: 20px 0; }
-      .item { display: flex; justify-content: space-between; padding: 10px 0; }
-      .total { font-size: 24px; font-weight: bold; text-align: right; }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <div class="logo">ZIVO</div>
-      <div class="order-id">Order #${order.id.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <!-- Order details... -->
-  </body>
-  </html>
-`;
+Total Saved = Membership Savings (from useMembershipSavings)
+            + Promo Savings (sum of food_orders.discount_amount this month)
 ```
 
----
-
-## Service Icons and Colors
-
-| Service | Icon | Color | Gradient |
-|---------|------|-------|----------|
-| Eats | `UtensilsCrossed` | Orange | `from-orange-500/20` |
-| Rides | `Car` | Primary | `from-primary/20` |
-| Travel | `Plane` / `Hotel` | Violet | `from-violet-500/20` |
-
----
-
-## Filter Tabs Design
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  [ All ]  [ Eats ]  [ Rides ]  [ Travel ]                    │
-└──────────────────────────────────────────────────────────────┘
-```
-
-Using the existing `Tabs` component from `@/components/ui/tabs`.
+Both values are queried independently and combined in the hook.
 
 ---
 
 ## Empty States
 
-| Scenario | Message |
+| Scenario | Display |
 |----------|---------|
-| No orders ever | "No spending history yet. Start exploring ZIVO!" |
-| No orders this month | "No orders this month. Your spending will appear here." |
-| Filtered with no results | "No {service} orders found." |
+| No orders this month | "0" with "Place your first order!" subtitle |
+| No favorite restaurant | "No orders yet" message |
+| No savings | "$0.00" with "Use promos or join ZIVO+ to save" |
 
 ---
 
-## Accessibility
+## Card Design
 
-- Semantic headings for screen readers
-- ARIA labels on receipt download buttons
-- Keyboard navigation for filter tabs
-- Color contrast compliance for spending amounts
-
----
-
-## Summary
-
-This implementation provides:
-
-1. **Spending Hook** — `useSpendingStats()` aggregates data from Eats, Rides, and Travel
-2. **Spending Page** — `/account/spending` with monthly summary and order list
-3. **Receipt Downloads** — Print-friendly receipts for all order types
-4. **Order Cards** — Unified display for orders across services
-5. **Quick Access** — Link from Profile page to spending history
-6. **Filters** — Tab-based filtering by service type
-
-The feature gives customers full visibility into their spending across all ZIVO services with easy receipt access for expense tracking.
+| Card | Icon | Color |
+|------|------|-------|
+| Orders This Month | `ShoppingBag` | Primary/teal |
+| Favorite Restaurant | `UtensilsCrossed` | Orange |
+| Total Saved | `PiggyBank` | Emerald/green |
