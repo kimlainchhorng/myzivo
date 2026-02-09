@@ -18,6 +18,7 @@ import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAInstallPrompt } from "./components/mobile";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { Loader2 } from "lucide-react";
+import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { GoogleMapProvider } from "./components/maps";
 import { useBrand } from "@/hooks/useBrand";
@@ -571,7 +572,25 @@ const CarsLP = lazy(() => import("./pages/lp/CarsLP"));
 const ExtrasLP = lazy(() => import("./pages/lp/ExtrasLP"));
 const ExtrasCreatorLanding = lazy(() => import("./pages/creators/ExtrasCreatorLanding"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: (failureCount, error) => {
+        const info = categorizeError(error);
+        if (info.type === "auth") return false;
+        return failureCount < 2;
+      },
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        const info = categorizeError(error);
+        return info.type === "network" && failureCount < 1;
+      },
+    },
+  },
+});
 
 // Premium loading fallback
 const PageLoader = () => (
