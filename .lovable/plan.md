@@ -1,132 +1,115 @@
 
 
-# Super App Home — Unified Home Screen
+# Universal Search — Cross-Service Search Hub
 
 ## Overview
 
-Redesign the `AppHome` mobile screen to be a true super-app hub with three distinct zones: large service buttons, a personalized section, and smart quick actions.
+Replace the current search bar behavior on the mobile home screen with a full-screen Universal Search overlay that searches across all ZIVO services (Eats, Rides, Hotels, Flights, Rentals, Delivery) from a single input, with suggestion sections and result tabs.
 
 ## Current State
 
-The existing `AppHome.tsx` has a bento grid of service cards, a "Book a Ride" live activity island, a search bar, and two quick-action buttons (Past Trips, Payment). It lacks:
-- A **Delivery** service button (separate from Move/Package)
-- A **Rentals** button (car rentals)
-- Personalized recent activity or recommended services
-- Context-aware quick actions (reorder meal, rebook ride, upcoming bookings)
+- The home screen search bar (`AppHome.tsx` line 257) navigates to `/search` (the travel search page with Flights/Hotels/Cars tabs)
+- The existing `PremiumSearchOverlay` is a full-screen overlay but only covers Flights, Hotels, and Cars — no Eats, Rides, or Delivery
+- Recent searches are stored in localStorage under `zivo_recent_searches`
+- Restaurant data is available via `eatsApi.ts` (`getRestaurants`)
+- No unified cross-service search exists
 
 ## What Changes
 
-### Single file update: `src/pages/app/AppHome.tsx`
+### New File: `src/components/search/UniversalSearchOverlay.tsx`
 
-The page structure becomes three clear zones:
+A full-screen overlay triggered from the home screen search bar. Contains:
+
+**Search Input**: Placeholder reads "Search food, rides, hotels, flights..."
+
+**Suggestion Sections** (shown when input is empty):
+1. **Recent Searches** — loaded from localStorage (`zivo_recent_searches`), same format as existing, displayed with service-specific icons and colors
+2. **Popular Services** — static list of 6 service pills (Ride, Eats, Delivery, Flights, Hotels, Rentals) that navigate directly to each service
+3. **Nearby Restaurants** — fetches top 5 active restaurants from Supabase `restaurants` table via `eatsApi.getRestaurants()`, displayed as compact cards with name and cuisine type
+
+**Result Tabs** (shown when input has text):
+Tabs: All | Eats | Rides | Hotels | Flights | Rentals
+
+Filtering logic (client-side, lightweight):
+- **Eats**: Searches restaurants table by name (case-insensitive `ilike`)
+- **Rides**: Matches if query contains ride-related keywords — shows a "Book a ride to [query]" action card
+- **Hotels**: Shows "Search hotels in [query]" action card linking to `/search?tab=hotels`
+- **Flights**: Shows "Search flights to [query]" action card linking to `/search?tab=flights`
+- **Rentals**: Shows "Rent a car in [query]" action card linking to `/rent-car`
+- **All tab**: Combines all of the above
+
+This keeps it fast — restaurant results come from a single Supabase query, while other services show smart action cards that deep-link to the appropriate service page.
+
+### Updated File: `src/pages/app/AppHome.tsx`
+
+- Import `UniversalSearchOverlay`
+- Add `isSearchOpen` state
+- Change the search bar button from `navigate("/search")` to `setIsSearchOpen(true)`
+- Render `<UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />`
+
+### Updated File: `src/components/search/index.ts`
+
+- Add export for `UniversalSearchOverlay`
+
+## Technical Detail
+
+### UniversalSearchOverlay structure
 
 ```text
-[Profile Bar + Notifications]
+Props:
+  isOpen: boolean
+  onClose: () => void
 
-[Search Bar]
+State:
+  query: string (search input)
+  activeTab: "all" | "eats" | "rides" | "hotels" | "flights" | "rentals"
 
---- ZONE 1: Services Grid (6 large buttons) ---
-| Ride      | Eats      |
-| Delivery  | Flights   |
-| Hotels    | Rentals   |
+Queries:
+  1. Restaurant search (React Query)
+     - queryKey: ["universal-search-restaurants", debouncedQuery]
+     - Calls supabase.from("restaurants").select("id, name, cuisine_type, logo_url")
+       .ilike("name", `%${query}%`).eq("status", "active").limit(5)
+     - enabled: query.length >= 2
+     - staleTime: 30_000
 
---- ZONE 2: Personalized (logged-in users) ---
-  Recent Activity (last 3 items from trips/food/deliveries)
-  Recommended Services (based on usage patterns)
-
---- ZONE 3: Quick Actions ---
-  [Reorder Last Meal]  [Book Last Ride]
-  [View Upcoming Bookings]
-
-[Recommended Deals]
-[Bottom Nav]
+  2. Nearby restaurants (React Query)
+     - queryKey: ["nearby-restaurants"]
+     - Calls supabase.from("restaurants").select("id, name, cuisine_type, logo_url")
+       .eq("status", "active").order("rating", { ascending: false }).limit(5)
+     - enabled: query === "" (only when suggestions are shown)
+     - staleTime: 60_000
 ```
 
-### Zone 1 — Large Service Buttons (6 items)
+### Tab filtering in "All" view
 
-Replace the current mixed bento grid with a clean 2-column grid of equally-sized image-backed cards:
+When the user types a query, each service generates result cards:
 
-| Button | Route | Image |
+| Service | Result Card | Action |
 |---|---|---|
-| Ride | /rides | Existing rides image |
-| Eats | /eats | Existing food image |
-| Delivery | /move | Existing move/package image |
-| Flights | /search?tab=flights | Existing flights image |
-| Hotels | /search?tab=hotels | Existing hotels image |
-| Rentals | /rent-car | New car rental image |
+| Eats | Restaurant name + cuisine from DB | Navigate to `/eats/restaurant/:id` |
+| Rides | "Book a ride to [query]" | Navigate to `/rides?dropoff=[query]` |
+| Hotels | "Search hotels in [query]" | Navigate to `/search?tab=hotels` |
+| Flights | "Search flights to [query]" | Navigate to `/search?tab=flights` |
+| Rentals | "Rent a car in [query]" | Navigate to `/rent-car?pickup=[query]` |
 
-Each card is taller than current (h-28 vs h-24) for easier tapping.
+The "All" tab shows all of these together. Individual tabs filter to just that service type.
 
-### Zone 2 — Personalized Section (auth-gated)
+### Visual Design
 
-For logged-in users, show two sub-sections:
-
-**Recent Activity**: Fetches last 3 items across `trips`, `food_orders`, and `package_deliveries` tables, sorted by `created_at` desc. Displays as a horizontal scroll of compact cards with emoji, title, and relative time.
-
-**Recommended Services**: Simple logic — if user has no rides, suggest "Try ZIVO Ride"; if no food orders, suggest "Order your first meal"; etc. Shows as pill badges linking to the respective service.
-
-### Zone 3 — Quick Actions (auth-gated)
-
-Three contextual buttons in a grid:
-
-1. **Reorder Last Meal**: Queries `food_orders` for latest completed order. Shows restaurant name. Tapping navigates to that restaurant's menu page (`/eats/restaurant/:id`). Falls back to "Order Food" if no history.
-
-2. **Book Last Ride**: Queries `trips` for latest completed trip. Shows pickup address. Tapping navigates to `/rides` with pickup pre-filled via query param. Falls back to "Book a Ride" if no history.
-
-3. **View Upcoming Bookings**: Static link to `/trips`. Shows count of upcoming bookings from `trips` + `hotel_bookings` + `food_orders` where status is active/upcoming.
-
-### Removed Elements
-
-- The "Live Activity Island" (Book a Ride floating banner) — replaced by the Ride service card
-- The Premium card — moved out of the main grid (users can access via Account)
-- The Cars/Hotels bottom row — absorbed into the main 6-button grid
-- Past Trips and Payment quick actions — replaced by the new contextual actions
-
-## Technical Details
-
-### Data fetching
-
-All personalization queries use React Query with the existing pattern:
-
-```text
-useQuery({
-  queryKey: ["home-recent", user?.id],
-  queryFn: async () => {
-    // Parallel fetch from trips, food_orders, package_deliveries
-    // Normalize into { id, title, subtitle, emoji, timestamp }
-    // Sort by timestamp desc, take top 3
-  },
-  enabled: !!user?.id,
-  staleTime: 30_000,
-})
-```
-
-Quick action queries follow the same pattern, fetching the single most recent completed item from each service.
-
-### Upcoming bookings count
-
-```text
-useQuery({
-  queryKey: ["home-upcoming-count", user?.id],
-  queryFn: async () => {
-    // Count trips with status in ['accepted','in_progress','scheduled']
-    // + hotel_bookings with check_in_date >= today
-    // + food_orders with status in ['pending','preparing','ready']
-    return totalCount;
-  },
-  enabled: !!user?.id,
-})
-```
-
-### Visual style
-
-Maintains the existing dark zinc-950 theme, white/10 borders, backdrop-blur cards. Service cards keep the image-background style with gradient overlays. Quick action cards use the DarkCard style (zinc-900/80 bg).
+- Full-screen overlay matching existing dark theme (zinc-950)
+- AnimatePresence slide-up animation (consistent with PremiumSearchOverlay)
+- Auto-focus on input when opened
+- ESC key and back button to close
+- Body scroll lock when open
+- Tab bar uses horizontal scroll with service-colored active states
+- 300ms debounce on search input before querying restaurants
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/pages/app/AppHome.tsx` | Update | Restructure into 3 zones: services grid, personalized section, quick actions. Add data-fetching queries for recent activity, quick actions context, and upcoming count |
+| `src/components/search/UniversalSearchOverlay.tsx` | Create | Full-screen universal search with suggestions, restaurant search, action cards, and 6 result tabs |
+| `src/pages/app/AppHome.tsx` | Update | Wire search bar to open the overlay instead of navigating to /search |
+| `src/components/search/index.ts` | Update | Add UniversalSearchOverlay export |
 
-Single file change. No new files, hooks, or routes needed — all data fetching is inline with React Query matching the existing pattern already in `QuickActionsSection.tsx`.
-
+Three file changes total. Restaurant data comes from existing Supabase table. Other services use smart action cards that deep-link — no new APIs needed.
