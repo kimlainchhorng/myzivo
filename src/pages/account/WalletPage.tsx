@@ -145,15 +145,19 @@ export default function WalletPage() {
               </div>
               <ExternalLink className="w-4 h-4 text-zinc-600" />
             </button>
-            <div className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30">
+            <button
+              onClick={() => navigate("/account/promos")}
+              className="w-full flex items-center gap-4 p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 transition-colors text-left"
+            >
               <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
                 <Tag className="w-5 h-5 text-amber-400" />
               </div>
               <div className="flex-1">
                 <p className="font-medium">Promo Codes</p>
-                <p className="text-xs text-zinc-500">Enter codes for bonus credits</p>
+                <p className="text-xs text-zinc-500">View your available codes</p>
               </div>
-            </div>
+              <ExternalLink className="w-4 h-4 text-zinc-600" />
+            </button>
           </div>
         </motion.div>
 

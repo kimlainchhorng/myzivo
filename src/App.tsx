@@ -357,6 +357,7 @@ const BusinessLandingPage = lazy(() => import("./pages/business/BusinessLandingP
 const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
+const PromosPage = lazy(() => import("./pages/account/PromosPage"));
 const Vision = lazy(() => import("./pages/Vision"));
 const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
 // Corporate & Brand pages
@@ -963,6 +964,9 @@ const App = () => (
                 {/* ZIVO+ Membership */}
                 <Route path="/membership" element={<MembershipPage />} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                
+                {/* Promo Codes */}
+                <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 
                 {/* Eats Analytics Routes */}
                 <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AnalyticsHub /></ProtectedRoute>} />
