@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
+import { useI18n } from "@/hooks/useI18n";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePersonalizationSettings } from "@/hooks/usePersonalizationSettings";
 
 const languages = [
   { code: "en", name: "English", native: "English", flag: "🇺🇸" },
@@ -15,7 +18,10 @@ const languages = [
 ];
 
 const LanguageSelector = () => {
-  const [selected, setSelected] = useState(languages[0]);
+  const { currentLanguage, changeLanguage } = useI18n();
+  const { user } = useAuth();
+  const { updateSettings } = usePersonalizationSettings();
+  const selected = languages.find(l => l.code === currentLanguage) || languages[0];
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -45,7 +51,10 @@ const LanguageSelector = () => {
                 <button
                   key={language.code}
                   onClick={() => {
-                    setSelected(language);
+                    changeLanguage(language.code);
+                    if (user) {
+                      updateSettings({ preferred_language: language.code });
+                    }
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
