@@ -17,6 +17,7 @@ import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { useDriverProximity } from "@/hooks/useDriverProximity";
+import { useTrafficAwareEta } from "@/hooks/useTrafficAwareEta";
 import { useEatsArrivalAlert } from "@/hooks/useEatsArrivalAlert";
 import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
 import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
@@ -185,7 +186,16 @@ function EatsOrderDetailContent() {
     isSearchingForNewDriver: reassignment.isSearchingForNewDriver,
   });
 
-  // Driver proximity tracking for enhanced ETA
+  // Traffic-aware ETA (only during active delivery)
+  const trafficEta = useTrafficAwareEta({
+    driverLat,
+    driverLng,
+    destLat: order?.delivery_lat,
+    destLng: order?.delivery_lng,
+    enabled: order?.status === "out_for_delivery",
+  });
+
+  // Driver proximity tracking for enhanced ETA — now with traffic multiplier
   const proximity = useDriverProximity({
     driverLat,
     driverLng,
@@ -194,6 +204,7 @@ function EatsOrderDetailContent() {
     deliveryLat: order?.delivery_lat,
     deliveryLng: order?.delivery_lng,
     orderStatus: order?.status || "",
+    trafficMultiplier: trafficEta.trafficMultiplier,
   });
 
   // Eats arrival alert — toast + push when driver enters delivery zone
@@ -542,6 +553,8 @@ function EatsOrderDetailContent() {
             isLocationBased={driverLat != null && driverLng != null}
             isDelayed={delayDetection.isDelayed}
             delayLevel={delayDetection.delayLevel}
+            trafficLevel={trafficEta.trafficLevel}
+            isTrafficBased={trafficEta.isTrafficBased}
           />
         )}
 

@@ -64,6 +64,8 @@ interface UseDriverProximityOptions {
   deliveryLat: number | null | undefined;
   deliveryLng: number | null | undefined;
   orderStatus: string;
+  /** Traffic multiplier for speed adjustment (1.0 = normal, 1.5 = heavy traffic) */
+  trafficMultiplier?: number;
 }
 
 export function useDriverProximity({
@@ -74,6 +76,7 @@ export function useDriverProximity({
   deliveryLat,
   deliveryLng,
   orderStatus,
+  trafficMultiplier = 1.0,
 }: UseDriverProximityOptions): ProximityState {
   // Recalculates immediately when any coordinate changes
   return useMemo(() => {
@@ -118,15 +121,18 @@ export function useDriverProximity({
     const isArrivingSoon = distanceToDelivery != null && distanceToDelivery <= THRESHOLDS.AT_DELIVERY;
     
     // Calculate ETA to pickup (when driver is heading to restaurant)
+    // Apply traffic multiplier for more accurate estimates
+    const effectiveMultiplier = Math.max(0.5, Math.min(trafficMultiplier, 2.0));
+    
     let etaToPickup: number | null = null;
     if (distanceToPickup != null) {
-      etaToPickup = Math.max(1, Math.ceil(distanceToPickup / AVG_SPEED_MILES_PER_MIN));
+      etaToPickup = Math.max(1, Math.ceil((distanceToPickup / AVG_SPEED_MILES_PER_MIN) * effectiveMultiplier));
     }
     
     // Calculate ETA to delivery (when driver is out for delivery)
     let etaToDelivery: number | null = null;
     if (distanceToDelivery != null) {
-      etaToDelivery = Math.max(1, Math.ceil(distanceToDelivery / AVG_SPEED_MILES_PER_MIN));
+      etaToDelivery = Math.max(1, Math.ceil((distanceToDelivery / AVG_SPEED_MILES_PER_MIN) * effectiveMultiplier));
     }
     
     return {
@@ -140,5 +146,5 @@ export function useDriverProximity({
       etaToDelivery,
       lastEtaUpdate: now,
     };
-  }, [driverLat, driverLng, pickupLat, pickupLng, deliveryLat, deliveryLng, orderStatus]);
+  }, [driverLat, driverLng, pickupLat, pickupLng, deliveryLat, deliveryLng, orderStatus, trafficMultiplier]);
 }
