@@ -9727,6 +9727,33 @@ export type Database = {
           },
         ]
       }
+      financial_snapshots: {
+        Row: {
+          commissions: number | null
+          gross_revenue: number | null
+          id: string
+          payouts: number | null
+          profit_estimate: number | null
+          snapshot_time: string | null
+        }
+        Insert: {
+          commissions?: number | null
+          gross_revenue?: number | null
+          id?: string
+          payouts?: number | null
+          profit_estimate?: number | null
+          snapshot_time?: string | null
+        }
+        Update: {
+          commissions?: number | null
+          gross_revenue?: number | null
+          id?: string
+          payouts?: number | null
+          profit_estimate?: number | null
+          snapshot_time?: string | null
+        }
+        Relationships: []
+      }
       fleet_owner_profiles: {
         Row: {
           address: string | null
@@ -24288,6 +24315,33 @@ export type Database = {
           service_type?: string
           updated_at?: string | null
           vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      service_status: {
+        Row: {
+          id: string
+          message: string | null
+          service_name: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          message?: string | null
+          service_name: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          message?: string | null
+          service_name?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

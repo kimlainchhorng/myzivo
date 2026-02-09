@@ -339,6 +339,7 @@ const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
 const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"));
 const AccountBusinessPage = lazy(() => import("./pages/account/BusinessAccountPage"));
+const AccountInvoicesPage = lazy(() => import("./pages/account/BusinessInvoicesPage"));
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
 const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const ScaleProtection = lazy(() => import("./pages/security/ScaleProtection"));
@@ -978,6 +979,7 @@ const App = () => (
                 
                 {/* Business Account */}
                 <Route path="/account/business" element={<ProtectedRoute><AccountBusinessPage /></ProtectedRoute>} />
+                <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
                 
                 {/* Promo Codes */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
