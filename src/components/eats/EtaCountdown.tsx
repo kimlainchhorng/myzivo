@@ -37,6 +37,10 @@ interface EtaCountdownProps {
   lastLocationUpdate?: number;
   /** Whether ETA is based on live location (shows Live indicator more prominently) */
   isLocationBased?: boolean;
+  /** Whether order is delayed */
+  isDelayed?: boolean;
+  /** Delay level for styling */
+  delayLevel?: "none" | "warning" | "delayed" | "critical";
 }
 
 // Haversine formula for distance calculation
@@ -100,6 +104,8 @@ export function EtaCountdown({
   showIncentiveNote = false,
   lastLocationUpdate,
   isLocationBased = false,
+  isDelayed = false,
+  delayLevel = "none",
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -188,11 +194,33 @@ export function EtaCountdown({
   // Show incentive note only if no other notes are showing and incentive is active
   const displayIncentiveNote = showIncentiveNote && !showTrafficNote && !showSupplyNote && !hasDemandBuffer && !isArrivingSoon;
 
+  // Delay-aware styling
+  const getContainerClass = () => {
+    if (isDelayed && delayLevel === "critical") {
+      return "bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30";
+    }
+    if (isDelayed && delayLevel === "delayed") {
+      return "bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30";
+    }
+    if (isDelayed && delayLevel === "warning") {
+      return "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30";
+    }
+    return "bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20";
+  };
+
+  // Delay-aware label
+  const getArrivalLabel = () => {
+    if (isDelayed && delayLevel !== "none") {
+      return "Delayed — Arriving in";
+    }
+    return isArrivingSoon ? "Almost there!" : "Arriving in";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 rounded-2xl p-4 ${className}`}
+      className={`${getContainerClass()} rounded-2xl p-4 ${className}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -212,8 +240,8 @@ export function EtaCountdown({
             )}
           </div>
           <div>
-            <p className="text-sm text-zinc-400">
-              {isArrivingSoon ? "Almost there!" : "Arriving in"}
+            <p className={`text-sm ${isDelayed ? (delayLevel === 'critical' ? 'text-red-400' : 'text-amber-400') : 'text-zinc-400'}`}>
+              {getArrivalLabel()}
             </p>
             <AnimatePresence mode="wait">
               <motion.p

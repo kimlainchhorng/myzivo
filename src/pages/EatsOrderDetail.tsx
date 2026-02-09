@@ -22,6 +22,8 @@ import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
 import { usePrepProgress } from "@/hooks/usePrepProgress";
 import { useDriverReassignment } from "@/hooks/useDriverReassignment";
 import { useOrderEditWindow } from "@/hooks/useOrderEditWindow";
+import { useOrderDelayDetection } from "@/hooks/useOrderDelayDetection";
+import { useDelayNotification } from "@/hooks/useDelayNotification";
 import { useOrderEditing } from "@/hooks/useOrderEditing";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
@@ -39,6 +41,7 @@ import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
 import { OrderEditBanner } from "@/components/eats/OrderEditBanner";
 import { OrderEditSheet } from "@/components/eats/OrderEditSheet";
 import { CancelOrderDialog } from "@/components/eats/CancelOrderDialog";
+import { OrderDelayBanner } from "@/components/eats/OrderDelayBanner";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
@@ -122,6 +125,31 @@ export default function EatsOrderDetail() {
   // Order editing mutations (items must be cast from JSONB)
   const orderItems = useMemo(() => (order?.items as any[]) || [], [order?.items]);
   const orderEditing = useOrderEditing(order?.id, orderItems);
+
+  // Order delay detection
+  const delayDetection = useOrderDelayDetection({
+    etaDropoff: order?.eta_dropoff,
+    createdAt: order?.created_at,
+    durationMinutes: order?.eta_minutes,
+    orderStatus: order?.status,
+    driverLat,
+    driverLng,
+    deliveryLat: order?.delivery_lat,
+    deliveryLng: order?.delivery_lng,
+    orderId: order?.id,
+    restaurantName: order?.restaurants?.name,
+  });
+
+  // Trigger push notification on delay
+  useDelayNotification({
+    orderId: order?.id,
+    isDelayed: delayDetection.isDelayed,
+    delayLevel: delayDetection.delayLevel,
+    newEtaMin: delayDetection.newEstimatedEtaMin,
+    newEtaMax: delayDetection.newEstimatedEtaMax,
+    restaurantName: order?.restaurants?.name,
+    customerId: order?.customer_id,
+  });
 
   // Dispatch status for transparent messaging (enhanced with pickup coordinates and prep progress)
   const dispatchStatus = useEatsDispatchStatus({
@@ -463,6 +491,8 @@ export default function EatsOrderDetail() {
             showIncentiveNote={deliveryFactors.isIncentivePeriod && deliveryFactors.driverSupply === "high"}
             lastLocationUpdate={proximity.lastEtaUpdate.getTime()}
             isLocationBased={driverLat != null && driverLng != null}
+            isDelayed={delayDetection.isDelayed}
+            delayLevel={delayDetection.delayLevel}
           />
         )}
 
@@ -477,6 +507,17 @@ export default function EatsOrderDetail() {
               Updating driver location...
             </p>
           </motion.div>
+        )}
+
+        {/* Order Delay Banner */}
+        {delayDetection.isDelayed && isActiveOrder && (
+          <OrderDelayBanner
+            delayLevel={delayDetection.delayLevel}
+            delayMinutes={delayDetection.delayMinutes}
+            newEtaMin={delayDetection.newEstimatedEtaMin}
+            newEtaMax={delayDetection.newEstimatedEtaMax}
+            onContactSupport={() => setHelpModalOpen(true)}
+          />
         )}
 
         {/* Live Delivery Map */}
