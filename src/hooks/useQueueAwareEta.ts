@@ -27,6 +27,8 @@ export interface QueueAwareEtaResult {
 interface UseQueueAwareEtaOptions {
   restaurantId: string | undefined;
   driverMinutes?: number;
+  /** Optional schedule forecast multiplier (0.85-1.0) to adjust driver time */
+  scheduleForecastMultiplier?: number;
 }
 
 // Default values
@@ -36,6 +38,7 @@ const DEFAULT_PREP_MINUTES = 20;
 export function useQueueAwareEta({
   restaurantId,
   driverMinutes = DEFAULT_DRIVER_MINUTES,
+  scheduleForecastMultiplier = 1.0,
 }: UseQueueAwareEtaOptions): QueueAwareEtaResult {
   // Get learned prep time
   const learnedPrep = useLearnedPrepTime(restaurantId);
@@ -45,10 +48,13 @@ export function useQueueAwareEta({
   const queue = useRestaurantQueueLength(restaurantId, prepMinutes);
 
   return useMemo(() => {
+    // Apply schedule forecast multiplier to driver time
+    const adjustedDriverMinutes = Math.round(driverMinutes * scheduleForecastMultiplier);
+    
     const breakdown: EtaBreakdown = {
       queueMinutes: queue.queueWaitMinutes,
       prepMinutes: Math.round(prepMinutes),
-      driverMinutes: Math.round(driverMinutes),
+      driverMinutes: adjustedDriverMinutes,
     };
 
     // Total base ETA
@@ -87,6 +93,7 @@ export function useQueueAwareEta({
     queue.isLoading,
     prepMinutes,
     driverMinutes,
+    scheduleForecastMultiplier,
     learnedPrep.loading,
   ]);
 }

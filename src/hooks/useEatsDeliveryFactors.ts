@@ -1,8 +1,8 @@
 /**
  * useEatsDeliveryFactors Hook
  * 
- * Combines demand level and driver supply into comprehensive delivery factors
- * for ETA adjustment and customer messaging.
+ * Combines demand level, driver supply, and schedule forecasts into comprehensive
+ * delivery factors for ETA adjustment and customer messaging.
  * 
  * Supply Levels:
  * - low: 0-2 drivers → 1.5x ETA multiplier
@@ -14,6 +14,7 @@ import { useMemo } from "react";
 import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { useDriverIncentives } from "@/hooks/useDriverIncentives";
+import { useScheduledDriverForecast } from "@/hooks/useScheduledDriverForecast";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type DriverSupplyLevel = "low" | "moderate" | "high";
@@ -36,6 +37,14 @@ export interface DeliveryFactors {
   incentiveMultiplier: number;
   showIncentiveBanner: boolean;
   incentiveMessage: string | null;
+  
+  // Peak period (schedule-based)
+  isPeakPeriod: boolean;
+  isPeakApproaching: boolean;
+  peakStartsIn: number | null;
+  showPeakBanner: boolean;
+  peakMessage: string | null;
+  scheduleForecastMultiplier: number;
   
   // Loading states
   isLoading: boolean;
@@ -96,6 +105,15 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
     isLoading: incentivesLoading,
   } = useDriverIncentives();
 
+  const {
+    isPeakPeriod,
+    isPeakApproaching,
+    peakStartsIn,
+    peakMessage,
+    scheduleForecastMultiplier,
+    isLoading: forecastLoading,
+  } = useScheduledDriverForecast();
+
   const factors = useMemo(() => {
     const supply = getSupplyFactors(nearbyDriverCount);
     
@@ -124,6 +142,18 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
       ? "More drivers online in your area — faster delivery times." 
       : null;
 
+    // Peak period banner (schedule-based)
+    // Banner priority: demand > supply > incentive > peak
+    // Only show peak banner when:
+    // 1. Peak period is active or approaching
+    // 2. No warning banners showing
+    // 3. No incentive banner showing (incentive is more specific)
+    const showPeakBanner = 
+      (isPeakPeriod || isPeakApproaching) &&
+      !demandActive &&
+      supply.level !== "low" &&
+      !showIncentiveBanner;
+
     return {
       demandLevel,
       demandActive,
@@ -137,9 +167,29 @@ export function useEatsDeliveryFactors(): DeliveryFactors {
       incentiveMultiplier,
       showIncentiveBanner,
       incentiveMessage,
-      isLoading: driversLoading || demandLoading || incentivesLoading,
+      isPeakPeriod,
+      isPeakApproaching,
+      peakStartsIn,
+      showPeakBanner,
+      peakMessage: showPeakBanner ? peakMessage : null,
+      scheduleForecastMultiplier,
+      isLoading: driversLoading || demandLoading || incentivesLoading || forecastLoading,
     };
-  }, [nearbyDriverCount, demandLevel, demandActive, driversLoading, demandLoading, isIncentivePeriod, incentivesLoading]);
+  }, [
+    nearbyDriverCount, 
+    demandLevel, 
+    demandActive, 
+    driversLoading, 
+    demandLoading, 
+    isIncentivePeriod, 
+    incentivesLoading,
+    isPeakPeriod,
+    isPeakApproaching,
+    peakStartsIn,
+    peakMessage,
+    scheduleForecastMultiplier,
+    forecastLoading,
+  ]);
 
   return factors;
 }
