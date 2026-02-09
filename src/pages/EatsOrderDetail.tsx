@@ -12,11 +12,14 @@ import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { useEatsDriver } from "@/hooks/useEatsDriver";
 import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
+import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
+import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
+import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
@@ -33,6 +36,7 @@ export default function EatsOrderDetail() {
   const { driver } = useEatsDriver(order?.driver_id);
   const { location: liveDriverLocation, isStale } = useLiveDriverLocation(order?.driver_id, order?.status);
   const { level: demandLevel, isActive: demandActive } = useEatsSurgePricing();
+  const { batchInfo } = useOrderBatchInfo(order?.id, (order as any)?.batch_id);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
 
@@ -181,7 +185,10 @@ export default function EatsOrderDetail() {
           </button>
           <div className="text-center">
             <h1 className="font-bold text-lg">Order Details</h1>
-            <p className="text-xs text-zinc-500">#{order.id.slice(0, 8).toUpperCase()}</p>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-xs text-zinc-500">#{order.id.slice(0, 8).toUpperCase()}</p>
+              {batchInfo.isBatched && <GroupedDeliveryBadge />}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -275,6 +282,15 @@ export default function EatsOrderDetail() {
         {demandActive && isActiveOrder && (
           <HighDemandBanner level={demandLevel} orderId={order.id} />
         )}
+
+        {/* Grouped Delivery Banner - show when order is part of a batch with other stops first */}
+        {batchInfo.isBatched && batchInfo.stopsBeforeCustomer > 0 && isActiveOrder && (
+          <GroupedDeliveryBanner
+            stopsBeforeCustomer={batchInfo.stopsBeforeCustomer}
+            isDriverOnEarlierStop={batchInfo.isDriverOnEarlierStop}
+            orderId={order.id}
+          />
+        )}
         {/* Delivery PIN Display - Customer sees PIN when order is out for delivery */}
         {order.status === "out_for_delivery" && order.delivery_pin && !order.delivery_pin_verified && (
           <motion.div
@@ -300,6 +316,12 @@ export default function EatsOrderDetail() {
             deliveryLng={order.delivery_lng ?? undefined}
             demandLevel={demandLevel}
             showDemandNote={demandActive}
+            batchStopEta={batchInfo.customerStopEta}
+            batchPosition={
+              batchInfo.isBatched && batchInfo.customerStopOrder
+                ? { current: batchInfo.customerStopOrder, total: batchInfo.totalStops }
+                : null
+            }
           />
         )}
 

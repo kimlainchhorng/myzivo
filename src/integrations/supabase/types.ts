@@ -8688,6 +8688,30 @@ export type Database = {
           },
         ]
       }
+      eta_logs: {
+        Row: {
+          actual_minutes: number | null
+          id: string
+          order_id: string | null
+          predicted_minutes: number | null
+          recorded_at: string | null
+        }
+        Insert: {
+          actual_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          predicted_minutes?: number | null
+          recorded_at?: string | null
+        }
+        Update: {
+          actual_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          predicted_minutes?: number | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       event_zones: {
         Row: {
           center_lat: number
@@ -18994,6 +19018,7 @@ export type Database = {
           max_uses: number | null
           max_uses_per_user: number | null
           min_fare: number | null
+          segment_id: string | null
           start_at: string | null
           uses: number | null
         }
@@ -19011,6 +19036,7 @@ export type Database = {
           max_uses?: number | null
           max_uses_per_user?: number | null
           min_fare?: number | null
+          segment_id?: string | null
           start_at?: string | null
           uses?: number | null
         }
@@ -19028,10 +19054,19 @@ export type Database = {
           max_uses?: number | null
           max_uses_per_user?: number | null
           min_fare?: number | null
+          segment_id?: string | null
           start_at?: string | null
           uses?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "push_segments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promo_redemptions: {
         Row: {
@@ -21152,6 +21187,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_prep_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string | null
+          prep_minutes: number | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          prep_minutes?: number | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          prep_minutes?: number | null
+          restaurant_id?: string | null
+        }
+        Relationships: []
       }
       restaurant_status_log: {
         Row: {
@@ -25113,6 +25172,27 @@ export type Database = {
           overall_health?: string
           recorded_at?: string
           service_statuses?: Json
+        }
+        Relationships: []
+      }
+      system_metrics: {
+        Row: {
+          id: string
+          metric_name: string | null
+          metric_value: number | null
+          recorded_at: string | null
+        }
+        Insert: {
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          recorded_at?: string | null
+        }
+        Update: {
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          recorded_at?: string | null
         }
         Relationships: []
       }
@@ -32259,6 +32339,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: string
       }
+      get_order_batch_info: { Args: { p_order_id: string }; Returns: Json }
       get_order_driver_location: {
         Args: { p_order_id: string }
         Returns: {
