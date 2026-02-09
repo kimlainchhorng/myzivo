@@ -1,8 +1,8 @@
 
-# Bundled Orders Visibility — Implementation Plan
+# Smart Dispatch Transparency — Implementation Plan
 
 ## Overview
-Enable customers to understand when their order is part of a grouped (batched) delivery route, with transparent messaging about why the driver may be making another stop first and dynamic ETA updates based on their position in the route.
+Enhance customer visibility during the driver assignment process with clear status messaging ("Finding the best driver near you..."), explicit status updates (Searching → Assigned → En Route), and improved ETA calculations using driver distance and traffic estimates.
 
 ---
 
@@ -11,293 +11,284 @@ Enable customers to understand when their order is part of a grouped (batched) d
 ### Already Complete
 | Feature | Status | Location |
 |---------|--------|----------|
-| `delivery_batches` table | Complete | Stores batch metadata with driver, route optimization |
-| `batch_stops` table | Complete | Stop-by-stop sequence with ETAs per stop |
-| `food_orders.batch_id` | Complete | Links order to its batch |
-| `useBatches` / `useBatchDetails` | Complete | Admin/dispatch batch management |
-| `useDriverBatch` | Complete | Driver-side batch execution with stop status updates |
-| Driver batch view | Complete | `/driver/batch` for multi-stop navigation |
-| Dispatch batch management | Complete | `/dispatch/batches` for route optimization |
-| EtaCountdown component | Complete | Dynamic ETA with demand awareness |
-| HighDemandBanner component | Complete | Contextual messaging pattern to follow |
-| Order tracking page | Complete | `EatsOrderDetail.tsx` with live map and status |
+| `EtaCountdown` component | Complete | Dynamic ETA with distance-based calculation (25 mph) |
+| `DriverInfoCard` component | Complete | Shows "Driver Assigned" / "Driver En Route" |
+| `StatusTimeline` component | Complete | Visual progress for order status |
+| `useLiveEatsOrder` hook | Complete | Real-time order updates with `assigned_at` |
+| `useLiveDriverTracking` hook | Complete | Distance-based ETA via Haversine formula |
+| `useEatsDriver` hook | Complete | Fetches assigned driver details |
+| Auto-dispatch RPC | Complete | `auto_assign_order_v2` in database |
+| Ride searching UI | Complete | `RideSearchingPage.tsx` with animated progress |
+| Live driver location | Complete | Real-time updates via Supabase Realtime |
 
 ### Missing
 | Feature | What's Needed |
 |---------|---------------|
-| Customer batch awareness hook | Fetch batch info + position in route for customer's order |
-| Grouped delivery banner | Show message: "Driver is completing another nearby delivery first" |
-| Grouped delivery badge | Show "Grouped delivery" badge on order detail |
-| Dynamic ETA from batch | Use stop-level ETA instead of order-level when batched |
-| Route position indicator | Show "Your order is stop X of Y" |
+| "Searching for driver" UI | Show animated search state when order ready but no driver yet |
+| Driver search status banner | "Finding the best driver near you..." message |
+| Status step: Searching | Add pre-assignment status to timeline when applicable |
+| Driver distance in ETA | Use driver's actual location for more accurate ETA |
+| Traffic-aware ETA | Apply time-of-day traffic multipliers |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Customer Batch Info Hook
+### 1) Create DispatchSearchBanner Component
 
-**File to Create:** `src/hooks/useOrderBatchInfo.ts`
+**File to Create:** `src/components/eats/DispatchSearchBanner.tsx`
 
-**Purpose:** Fetch batch details for a customer order, including position in route and stops before their delivery.
+**Purpose:** Animated banner shown when order is ready for pickup but no driver has been assigned yet.
+
+**UI Design:**
+```
++----------------------------------------------------------+
+| [🔍 ↻]  Finding the best driver near you...              |
+|         We're matching you with a nearby driver          |
+|                                                          |
+| ═══════════════════════════░░░░░░░░                      |
+| [🚗 12 drivers nearby]                                   |
++----------------------------------------------------------+
+```
+
+**Features:**
+- Animated search icon with pulse
+- Progress bar animation (indeterminate)
+- Show nearby driver count when available (via `useNearbyDriversCount`)
+- Blue/indigo theme (searching phase)
+- Auto-hide when driver is assigned
+
+**Display Conditions:**
+- Order status is `confirmed`, `preparing`, or `ready`
+- `driver_id` is null
+- Order is not cancelled or delivered
+
+### 2) Create useEatsDispatchStatus Hook
+
+**File to Create:** `src/hooks/useEatsDispatchStatus.ts`
+
+**Purpose:** Determine dispatch phase and provide messaging for the order.
 
 ```typescript
-interface OrderBatchInfo {
-  isBatched: boolean;
-  batchId: string | null;
-  totalStops: number;
-  customerStopOrder: number;  // Their dropoff position in sequence
-  stopsBeforeCustomer: number;  // How many stops before theirs
-  isDriverOnEarlierStop: boolean;  // Driver completing another stop first
-  customerStopEta: string | null;  // Their specific stop ETA
-  currentStopOrder: number | null;  // Driver's current stop
+interface DispatchStatus {
+  phase: "pending" | "searching" | "assigned" | "en_route" | "arrived";
+  message: string;
+  subMessage: string;
+  showSearching: boolean;
+  nearbyDriverCount: number | null;
 }
 ```
 
 **Logic:**
-1. Check if order has `batch_id`
-2. If batched, query `batch_stops` for the batch
-3. Find customer's dropoff stop by `food_order_id`
-4. Count stops before customer's dropoff
-5. Determine if driver is still on an earlier stop
+- `pending`: Order placed but not confirmed by restaurant
+- `searching`: Order confirmed/ready but no `driver_id` assigned
+- `assigned`: `driver_id` set but status not "out_for_delivery"
+- `en_route`: Status is "out_for_delivery"
+- `arrived`: Driver within 0.1 miles of delivery location
 
-### 2) Create Grouped Delivery Banner Component
+### 3) Enhance StatusTimeline with Driver Phases
 
-**File to Create:** `src/components/eats/GroupedDeliveryBanner.tsx`
+**File to Modify:** `src/components/eats/StatusTimeline.tsx`
 
-**Purpose:** Contextual message when driver is completing other deliveries first.
+**Changes:**
+Add optional driver-specific sub-steps that show:
+- "🔍 Searching for driver..." (when ready but no driver)
+- "✓ Driver assigned" (when driver_id set)
+- "🚗 Driver en route" (when out_for_delivery)
 
-**UI Design (matches HighDemandBanner style):**
-```text
-+----------------------------------------------------------+
-| [📦]  Grouped delivery                                   |
-|       Your driver has 1 other stop before yours.         |
-|       ETA updates as they complete each delivery.        |
-|                                                      [X] |
-+----------------------------------------------------------+
+**New Props:**
+```typescript
+interface StatusTimelineProps {
+  currentStatus: string;
+  timestamps?: OrderTimestamps;
+  className?: string;
+  // New props for dispatch transparency
+  driverId?: string | null;
+  assignedAt?: string | null;
+  pickedUpAt?: string | null;
+}
 ```
 
-**Variants:**
-| Scenario | Icon | Message |
-|----------|------|---------|
-| Driver on earlier stop | Package | "Your driver is completing another nearby delivery first." |
-| Multiple stops before | Package | "Your driver has X stops before yours." |
-| Driver on their stop | Truck | "Driver is heading to you next!" |
-
-**Features:**
-- Animated entry with Framer Motion
-- Dismissible (stores in sessionStorage)
-- Show only when `stopsBeforeCustomer > 0` and driver is active
-- Color: Blue-500/10 with blue border (neutral/info tone)
-
-### 3) Create Grouped Delivery Badge Component
-
-**File to Create:** `src/components/eats/GroupedDeliveryBadge.tsx`
-
-**Purpose:** Small badge indicator for order header/status area.
-
-**UI:**
+**Sub-step Logic:**
+Under the "Ready for Pickup" step, show driver substeps:
 ```text
-┌──────────────────┐
-│ 📦 Grouped route │
-└──────────────────┘
+[✓] Ready for Pickup         2:45 PM
+    └─ [🔍] Searching...      (pulsing)
+    └─ [✓] Driver assigned    2:47 PM
+    └─ [🚗] Driver en route   2:50 PM
 ```
 
-**Styling:**
-- `bg-blue-500/10 border-blue-500/30 text-blue-400`
-- Icon: `Layers` or `Package`
-- Compact badge format
+### 4) Enhance EtaCountdown with Traffic Multiplier
 
-### 4) Integrate Batch Info in Order Detail Page
+**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+
+**Changes:**
+Add traffic-aware ETA calculation based on time of day.
+
+**Traffic Multipliers:**
+```typescript
+function getTrafficMultiplier(): number {
+  const hour = new Date().getHours();
+  // Rush hours: 7-9 AM and 4-7 PM
+  if ((hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19)) {
+    return 1.4; // 40% longer during rush hour
+  }
+  // Late night: 10 PM - 6 AM (faster)
+  if (hour >= 22 || hour <= 6) {
+    return 0.8; // 20% faster at night
+  }
+  return 1.0; // Normal
+}
+```
+
+**Updated Calculation:**
+```typescript
+const dynamicEtaMinutes = useMemo(() => {
+  if (driverLat && driverLng && deliveryLat && deliveryLng) {
+    const distance = calculateDistanceMiles(...);
+    const baseMinutes = distance / AVG_SPEED_MILES_PER_MIN;
+    const withTraffic = baseMinutes * getTrafficMultiplier();
+    return Math.max(1, Math.ceil(withTraffic));
+  }
+  return null;
+}, [driverLat, driverLng, deliveryLat, deliveryLng]);
+```
+
+**New UI Element:**
+Show small indicator when traffic adjustment is applied:
+```
+Arriving in 15 min
+[🚦 Rush hour — adjusted for traffic]
+```
+
+### 5) Integrate DispatchSearchBanner in EatsOrderDetail
 
 **File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
 **Changes:**
-1. Import and use `useOrderBatchInfo` hook
-2. Add `GroupedDeliveryBadge` in order header (near order ID)
-3. Add `GroupedDeliveryBanner` after demand banner (before ETA)
-4. Pass batch ETA to `EtaCountdown` when available
+1. Import `DispatchSearchBanner` and `useEatsDispatchStatus`
+2. Show `DispatchSearchBanner` when in searching phase
+3. Update status message to reflect dispatch phase
 
-**New imports:**
+**Placement (after high demand banner, before ETA):**
 ```typescript
-import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
-import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
-import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
-```
-
-**Hook usage:**
-```typescript
-const batchInfo = useOrderBatchInfo(order?.id, order?.batch_id);
-```
-
-**Badge placement (in header):**
-```typescript
-<div className="text-center">
-  <h1 className="font-bold text-lg">Order Details</h1>
-  <div className="flex items-center justify-center gap-2">
-    <p className="text-xs text-zinc-500">#{order.id.slice(0, 8).toUpperCase()}</p>
-    {batchInfo?.isBatched && <GroupedDeliveryBadge />}
-  </div>
-</div>
-```
-
-**Banner placement (after demand banner):**
-```typescript
-{batchInfo?.isBatched && batchInfo?.stopsBeforeCustomer > 0 && isActiveOrder && (
-  <GroupedDeliveryBanner
-    stopsBeforeCustomer={batchInfo.stopsBeforeCustomer}
-    isDriverOnEarlierStop={batchInfo.isDriverOnEarlierStop}
+{/* Dispatch Search Banner - show when looking for driver */}
+{dispatchStatus.showSearching && isActiveOrder && (
+  <DispatchSearchBanner
+    nearbyCount={dispatchStatus.nearbyDriverCount}
     orderId={order.id}
   />
 )}
 ```
 
-### 5) Enhance EtaCountdown with Batch Stop ETA
+**Updated Status Messages:**
+```typescript
+const getStatusMessage = () => {
+  // Add dispatch-aware messages
+  if (order.status === "ready" && !order.driver_id) {
+    return "Finding the best driver near you...";
+  }
+  if (order.driver_id && order.status !== "out_for_delivery") {
+    return "Driver assigned — heading to restaurant";
+  }
+  // ... existing messages
+};
+```
 
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+### 6) Update DriverInfoCard with Arrival Proximity
+
+**File to Modify:** `src/components/eats/DriverInfoCard.tsx`
 
 **Changes:**
-- Add optional `batchStopEta` prop
-- Prefer batch stop ETA when available (more accurate for position in route)
-- Show "Stop X of Y" indicator when batched
+Add new status when driver is very close (< 0.2 miles):
 
-**New Props:**
 ```typescript
-interface EtaCountdownProps {
-  // ... existing props
-  batchStopEta?: string | null;  // ETA for this specific stop in batch
-  batchPosition?: { current: number; total: number } | null;  // Stop X of Y
+// New prop
+interface DriverInfoCardProps {
+  driver: EatsDriver;
+  isDelivering: boolean;
+  orderId?: string;
+  distanceToDelivery?: number; // miles
+  className?: string;
 }
 ```
 
-**UI Enhancement:**
+**New Status Display:**
 ```text
-+------------------------------------------+
-| [🕐]  Arriving in                        |
-|       12 min                             |
-|                                          |
-| [📦 Stop 2 of 3]                   Live  |
-+------------------------------------------+
-```
-
-### 6) Create Database RPC for Customer Batch Info (Optional but Recommended)
-
-**File to Create:** `supabase/migrations/xxx_add_get_order_batch_info_rpc.sql`
-
-**Purpose:** Secure RPC to fetch batch info without exposing full batch_stops table to customers.
-
-```sql
-CREATE OR REPLACE FUNCTION get_order_batch_info(p_order_id UUID)
-RETURNS JSON AS $$
-DECLARE
-  v_batch_id UUID;
-  v_customer_stop_order INT;
-  v_total_stops INT;
-  v_current_stop INT;
-  v_customer_stop_eta TIMESTAMPTZ;
-BEGIN
-  -- Get batch_id from order
-  SELECT batch_id INTO v_batch_id
-  FROM food_orders
-  WHERE id = p_order_id;
-  
-  IF v_batch_id IS NULL THEN
-    RETURN json_build_object('is_batched', false);
-  END IF;
-  
-  -- Get customer's dropoff stop order
-  SELECT stop_order, eta INTO v_customer_stop_order, v_customer_stop_eta
-  FROM batch_stops
-  WHERE batch_id = v_batch_id
-    AND food_order_id = p_order_id
-    AND stop_type = 'dropoff';
-  
-  -- Get total stops
-  SELECT COUNT(*) INTO v_total_stops
-  FROM batch_stops
-  WHERE batch_id = v_batch_id;
-  
-  -- Get current stop (first non-completed stop)
-  SELECT MIN(stop_order) INTO v_current_stop
-  FROM batch_stops
-  WHERE batch_id = v_batch_id
-    AND status != 'completed';
-  
-  RETURN json_build_object(
-    'is_batched', true,
-    'batch_id', v_batch_id,
-    'total_stops', v_total_stops,
-    'customer_stop_order', v_customer_stop_order,
-    'stops_before_customer', v_customer_stop_order - 1,
-    'current_stop_order', COALESCE(v_current_stop, v_customer_stop_order),
-    'is_driver_on_earlier_stop', COALESCE(v_current_stop, v_customer_stop_order) < v_customer_stop_order,
-    'customer_stop_eta', v_customer_stop_eta
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+When distanceToDelivery < 0.2:
+┌────────────────────────────────┐
+│ [🟢] DRIVER ARRIVING           │
+│ Your driver is almost here!    │
+└────────────────────────────────┘
 ```
 
 ---
 
 ## File Summary
 
-### New Files (4)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useOrderBatchInfo.ts` | Fetch batch position and ETA for customer order |
-| `src/components/eats/GroupedDeliveryBanner.tsx` | Contextual message about other stops |
-| `src/components/eats/GroupedDeliveryBadge.tsx` | Small badge for order header |
-| `supabase/migrations/xxx_get_order_batch_info.sql` | Secure RPC for batch info |
+| `src/components/eats/DispatchSearchBanner.tsx` | Animated "Finding driver..." UI |
+| `src/hooks/useEatsDispatchStatus.ts` | Dispatch phase detection and messaging |
 
-### Modified Files (2)
+### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsOrderDetail.tsx` | Add batch info hook, banner, and badge |
-| `src/components/eats/EtaCountdown.tsx` | Add batch stop ETA and position indicator |
+| `src/components/eats/StatusTimeline.tsx` | Add driver sub-steps under "Ready for Pickup" |
+| `src/components/eats/EtaCountdown.tsx` | Add traffic multiplier for time-of-day accuracy |
+| `src/pages/EatsOrderDetail.tsx` | Integrate dispatch banner and improved messaging |
+| `src/components/eats/DriverInfoCard.tsx` | Add "arriving" proximity indicator |
 
 ---
 
 ## UI Components
 
-### GroupedDeliveryBadge
-```text
-┌────────────────────┐
-│ 📦 Grouped route   │
-└────────────────────┘
-```
-- Small inline badge
-- Blue theme (informational)
-- Shows in order header
-
-### GroupedDeliveryBanner (Driver on earlier stop)
+### DispatchSearchBanner (New)
 ```text
 +----------------------------------------------------------+
-| [📦]  Grouped delivery                               [X] |
-|       Your driver is completing another nearby           |
-|       delivery first. Your order is next!                |
+| [🔍↻]  Finding the best driver near you...               |
+|        We're matching you with a nearby driver           |
+|                                                          |
+| ══════════════════════░░░░░░░░░░░░░ (animated)          |
+|                                                          |
+| [🚗 8 drivers nearby]               [View map →]         |
 +----------------------------------------------------------+
 ```
-- Background: `bg-blue-500/10`
-- Border: `border-blue-500/30`
-- Dismissible
+- Background: `bg-indigo-500/10 border-indigo-500/30`
+- Animated progress bar (indeterminate shimmer)
+- Nearby driver count fetched via existing hook
 
-### GroupedDeliveryBanner (Multiple stops before)
+### Status Timeline with Driver Substeps
 ```text
-+----------------------------------------------------------+
-| [📦]  Grouped delivery                               [X] |
-|       Your driver has 2 stops before yours.              |
-|       ETA updates as each delivery completes.            |
-+----------------------------------------------------------+
+[✓] Order Placed          2:30 PM
+[✓] Confirmed             2:32 PM
+[✓] Preparing             2:35 PM
+[◉] Ready for Pickup      2:45 PM
+    ├─ [✓] Driver assigned    2:47 PM
+    └─ [↻] Driver en route    (now)
+[ ] Delivered
 ```
 
-### EtaCountdown with batch position
+### ETA with Traffic Indicator
 ```text
 +------------------------------------------+
 | [🕐]  Arriving in                        |
-|       15 min                             |
+|       18 min                             |
 |                                          |
-| ─────────────────────────────────────────|
-| 📦 Stop 3 of 4                     Live  |
+| 🚦 Rush hour — adjusted for traffic      |
++------------------------------------------+
+```
+
+### Driver Arriving Alert (DriverInfoCard Enhancement)
+```text
++------------------------------------------+
+| [🟢 pulse]  DRIVER ARRIVING              |
++------------------------------------------+
+| [Avatar]  John D.  ⭐ 4.9                 |
+|           Gray Honda Civic • ABC123      |
+|                                          |
+| 🎯 Almost here! Get ready for delivery   |
 +------------------------------------------+
 ```
 
@@ -306,112 +297,82 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ## Data Flow
 
 ```text
-Order with batch_id
-       ↓
-useOrderBatchInfo(orderId, batchId)
-       ↓
-RPC: get_order_batch_info(orderId)
-       ↓
-Returns:
-├── is_batched: true
-├── total_stops: 4
-├── customer_stop_order: 3
-├── stops_before_customer: 2
-├── current_stop_order: 1
-├── is_driver_on_earlier_stop: true
-└── customer_stop_eta: "2026-02-09T15:30:00Z"
-       ↓
-UI Rendering:
-├── Header badge: "Grouped route"
-├── Banner: "Driver has 2 stops before yours"
-├── EtaCountdown: Uses customer_stop_eta
-└── Position: "Stop 3 of 4"
-```
-
----
-
-## Real-Time Updates
-
-The `useOrderBatchInfo` hook will:
-1. Subscribe to `batch_stops` changes for the batch
-2. Recalculate position when stops are completed
-3. Update ETA as driver progresses through route
-
-**Realtime subscription:**
-```typescript
-supabase.channel(`batch-customer-${batchId}`)
-  .on("postgres_changes", {
-    event: "*",
-    schema: "public",
-    table: "batch_stops",
-    filter: `batch_id=eq.${batchId}`,
-  }, refetch)
-  .subscribe();
-```
-
----
-
-## User Experience Flow
-
-```text
-Customer places order
-       ↓
-Order gets batched with nearby orders
-(batch_id set on food_orders)
-       ↓
 Customer opens order tracking
-       ↓
-Sees: "Grouped route" badge in header
-       ↓
-Sees banner: "Driver is completing another nearby delivery first"
-       ↓
-ETA shows: 15 min (based on their stop position)
-Position shows: "Stop 3 of 4"
-       ↓
-Driver completes stop 1
-       ↓
-Banner updates: "Driver has 1 stop before yours"
-       ↓
-Driver completes stop 2
-       ↓
-Banner changes: "Driver is heading to you next!"
-(or banner dismissed, ETA prominent)
-       ↓
-Driver arrives at customer's stop
-       ↓
-Normal delivery flow continues
+        ↓
+useLiveEatsOrder(orderId)
+        ↓
+useEatsDispatchStatus(order)
+        ↓
+Returns: { phase: "searching", showSearching: true, nearbyDriverCount: 8 }
+        ↓
+UI shows: DispatchSearchBanner + "Finding the best driver..."
+        ↓
+Driver gets assigned (realtime update)
+        ↓
+useEatsDispatchStatus returns: { phase: "assigned", showSearching: false }
+        ↓
+UI shows: DriverInfoCard with "Driver assigned — heading to restaurant"
+        ↓
+Driver picks up (status → out_for_delivery)
+        ↓
+useEatsDispatchStatus returns: { phase: "en_route" }
+        ↓
+UI shows: EtaCountdown with traffic-adjusted ETA + "Driver en route"
+        ↓
+Driver gets close (< 0.2 mi)
+        ↓
+UI shows: "DRIVER ARRIVING" alert
 ```
+
+---
+
+## Dispatch Phase Mapping
+
+| Order Status | driver_id | Dispatch Phase | Customer Message |
+|--------------|-----------|----------------|------------------|
+| placed | null | pending | "Waiting for restaurant confirmation..." |
+| confirmed | null | searching | "Finding the best driver near you..." |
+| preparing | null | searching | "Finding the best driver near you..." |
+| ready | null | searching | "Finding the best driver near you..." |
+| ready | set | assigned | "Driver assigned — heading to restaurant" |
+| out_for_delivery | set | en_route | "Driver is on the way!" |
+| out_for_delivery | set (< 0.2 mi) | arrived | "Driver arriving now!" |
+| delivered | set | delivered | "Order delivered. Enjoy!" |
 
 ---
 
 ## Technical Notes
 
-### Why an RPC?
-Using an RPC instead of direct table access:
-1. Security: Customers shouldn't see other customers' stops/addresses
-2. Efficiency: Single query instead of multiple client-side joins
-3. Logic encapsulation: Stop counting and position calculation in one place
+### Traffic Multiplier Rationale
+Based on typical urban traffic patterns:
+- **Rush hours (7-9 AM, 4-7 PM)**: 40% slower (multiplier 1.4)
+- **Late night (10 PM - 6 AM)**: 20% faster (multiplier 0.8)
+- **Normal hours**: No adjustment (multiplier 1.0)
 
-### ETA Accuracy
-When batched:
-- Use stop-level `eta` from `batch_stops` table (calculated during route optimization)
-- This is more accurate than order-level `eta_dropoff` as it accounts for preceding stops
+This provides more realistic ETAs without requiring external traffic API.
 
-### Banner Dismissal
-- Stores in `sessionStorage` per order
-- Reappears if stop count changes (new batch member)
-- Auto-hides when customer is next in line
+### Nearby Driver Count
+Uses existing `useNearbyDriversCount` from `useLiveDriverTracking.ts`:
+- Queries drivers table for online drivers within radius
+- Updates in real-time via Supabase subscription
+- Shows count like "12 drivers nearby" for reassurance
+
+### Real-time Updates
+All dispatch phase changes trigger via existing Supabase Realtime subscription on `food_orders`:
+- `driver_id` changes → Phase moves from "searching" to "assigned"
+- `status` changes → Phase moves through lifecycle
+- No additional subscriptions needed
 
 ---
 
 ## Summary
 
-This implementation provides customers with full transparency about grouped deliveries:
+This implementation provides transparent dispatch visibility:
 
-1. **GroupedDeliveryBadge** — Small "Grouped route" badge in order header
-2. **GroupedDeliveryBanner** — Contextual message explaining multi-stop route
-3. **useOrderBatchInfo hook** — Fetches batch position and ETA from secure RPC
-4. **Enhanced EtaCountdown** — Shows stop position "Stop X of Y" with accurate ETA
-5. **Real-time updates** — Banner and ETA update as driver completes stops
+1. **DispatchSearchBanner** — Animated "Finding the best driver near you..." with nearby count
+2. **useEatsDispatchStatus** — Determines phase: pending → searching → assigned → en_route → arrived
+3. **StatusTimeline driver substeps** — Shows "Driver assigned", "Driver en route" under Ready status
+4. **Traffic-aware ETA** — Adjusts for rush hour and late night conditions
+5. **Driver arriving alert** — Prominent indicator when driver is < 0.2 miles away
 
-The messaging is friendly and transparent: "Your driver is completing another nearby delivery first" rather than making customers wonder why the driver isn't coming directly to them.
+Customers will clearly see each stage of driver assignment and receive more accurate arrival estimates based on actual driver distance and time-of-day traffic conditions.
