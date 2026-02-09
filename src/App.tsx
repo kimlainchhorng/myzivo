@@ -100,8 +100,14 @@ const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
 
 // Admin Marketing Pages
 const MarketingHub = lazy(() => import("./pages/admin/marketing/MarketingHub"));
-const CampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
-const CampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
+const MarketingCampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
+const MarketingCampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
+
+// Admin Push Broadcast Pages
+const PushDashboard = lazy(() => import("./pages/admin/push/PushDashboard"));
+const PushSegmentsPage = lazy(() => import("./pages/admin/push/SegmentsPage"));
+const PushCampaignsPage = lazy(() => import("./pages/admin/push/CampaignsPage"));
+const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDetailPage"));
 
 // Admin Loyalty
 const AdminLoyaltyPage = lazy(() => import("./pages/admin/AdminLoyaltyPage"));
@@ -960,8 +966,14 @@ const App = () => (
                 
                 {/* Admin Marketing */}
                 <Route path="/admin/marketing" element={<ProtectedRoute requireAdmin><MarketingHub /></ProtectedRoute>} />
-                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin><CampaignsPage /></ProtectedRoute>} />
-                <Route path="/admin/marketing/campaigns/:id" element={<ProtectedRoute requireAdmin><CampaignDetailPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin><MarketingCampaignsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns/:id" element={<ProtectedRoute requireAdmin><MarketingCampaignDetailPage /></ProtectedRoute>} />
+                
+                {/* Admin Push Notifications */}
+                <Route path="/admin/push" element={<PushDashboard />} />
+                <Route path="/admin/push/segments" element={<PushSegmentsPage />} />
+                <Route path="/admin/push/campaigns" element={<PushCampaignsPage />} />
+                <Route path="/admin/push/campaigns/:id" element={<PushCampaignDetailPage />} />
                 
                 {/* Driver Analytics */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />

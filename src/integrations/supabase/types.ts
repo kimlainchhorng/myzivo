@@ -18930,6 +18930,115 @@ export type Database = {
           },
         ]
       }
+      push_campaigns: {
+        Row: {
+          body: string
+          created_at: string | null
+          created_by: string | null
+          failed_count: number | null
+          icon: string | null
+          id: string
+          name: string
+          segment_id: string | null
+          send_at: string | null
+          sent_at: string | null
+          sent_count: number | null
+          skipped_count: number | null
+          status: string | null
+          target_type: string | null
+          targeted_count: number | null
+          title: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          segment_id?: string | null
+          send_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          skipped_count?: number | null
+          status?: string | null
+          target_type?: string | null
+          targeted_count?: number | null
+          title: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          segment_id?: string | null
+          send_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          skipped_count?: number | null
+          status?: string | null
+          target_type?: string | null
+          targeted_count?: number | null
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_campaigns_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "push_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_delivery_log: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          error: string | null
+          id: string
+          skip_reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          skip_reason?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          skip_reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_delivery_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "push_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_notification_logs: {
         Row: {
           body: string | null
@@ -19037,6 +19146,42 @@ export type Database = {
           },
         ]
       }
+      push_segments: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_count: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          rules_json: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          rules_json?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          rules_json?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -19123,6 +19268,24 @@ export type Database = {
           platform?: string
           token?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_user_daily_limits: {
+        Row: {
+          date: string
+          push_count: number | null
+          user_id: string
+        }
+        Insert: {
+          date: string
+          push_count?: number | null
+          user_id: string
+        }
+        Update: {
+          date?: string
+          push_count?: number | null
           user_id?: string
         }
         Relationships: []
