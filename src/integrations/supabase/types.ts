@@ -26017,6 +26017,36 @@ export type Database = {
         }
         Relationships: []
       }
+      settlements: {
+        Row: {
+          customer_paid: number | null
+          driver_payout: number | null
+          id: string
+          merchant_payout: number | null
+          order_id: string | null
+          platform_commission: number | null
+          recorded_at: string | null
+        }
+        Insert: {
+          customer_paid?: number | null
+          driver_payout?: number | null
+          id?: string
+          merchant_payout?: number | null
+          order_id?: string | null
+          platform_commission?: number | null
+          recorded_at?: string | null
+        }
+        Update: {
+          customer_paid?: number | null
+          driver_payout?: number | null
+          id?: string
+          merchant_payout?: number | null
+          order_id?: string | null
+          platform_commission?: number | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       share_events: {
         Row: {
           created_at: string | null
@@ -28130,6 +28160,33 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      tax_records: {
+        Row: {
+          id: string
+          jurisdiction: string | null
+          order_id: string | null
+          recorded_at: string | null
+          tax_amount: number | null
+          tax_rate: number | null
+        }
+        Insert: {
+          id?: string
+          jurisdiction?: string | null
+          order_id?: string | null
+          recorded_at?: string | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+        }
+        Update: {
+          id?: string
+          jurisdiction?: string | null
+          order_id?: string | null
+          recorded_at?: string | null
+          tax_amount?: number | null
+          tax_rate?: number | null
         }
         Relationships: []
       }

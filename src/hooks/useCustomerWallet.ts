@@ -1,7 +1,8 @@
 /**
  * Customer Wallet Hook
- * Manages wallet balance, transaction history, and credit application
+ * Manages wallet balance, transaction history, credit application, and real-time notifications
  */
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,7 +50,6 @@ export function useCustomerWallet() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      // Try to get existing wallet
       const { data: existing, error: fetchError } = await supabase
         .from("customer_wallets")
         .select("*")
@@ -59,7 +59,6 @@ export function useCustomerWallet() {
       if (fetchError) throw fetchError;
       if (existing) return existing as CustomerWallet;
 
-      // Create new wallet if none exists
       const { data: newWallet, error: createError } = await supabase
         .from("customer_wallets")
         .insert({
@@ -95,6 +94,41 @@ export function useCustomerWallet() {
     },
     enabled: !!user?.id,
   });
+
+  // Real-time subscription for wallet credit notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel("wallet-credits")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "customer_wallet_transactions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const tx = payload.new as WalletTransaction;
+          if (tx.amount_cents > 0) {
+            toast.success(
+              `Your wallet was credited $${(tx.amount_cents / 100).toFixed(2)}`,
+              {
+                description: tx.description || "Credit added to your wallet",
+              }
+            );
+          }
+          queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+          queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   // Apply credit to order (calls apply_wallet_credit RPC)
   const applyCredit = useMutation({
@@ -141,7 +175,6 @@ export function useCustomerWallet() {
     isLoading: walletLoading || transactionsLoading,
   };
 }
-
 // Hook for calculating credit to apply based on toggle state
 export function useAppliedCredit(
   useCredits: boolean,

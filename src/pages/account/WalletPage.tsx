@@ -2,7 +2,7 @@
  * Account Wallet Page
  * Shows credit balance and transaction history
  */
-import { ArrowLeft, Wallet, Users, Tag, RotateCcw, ShoppingBag, Gift, TrendingUp, ExternalLink } from "lucide-react";
+import { ArrowLeft, Wallet, Users, Tag, RotateCcw, ShoppingBag, Gift, TrendingUp, ExternalLink, Trophy, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCustomerWallet, type WalletTransaction } from "@/hooks/useCustomerWallet";
@@ -26,6 +26,8 @@ export default function WalletPage() {
         return <ShoppingBag className="w-4 h-4" />;
       case "redemption":
         return <Gift className="w-4 h-4" />;
+      case "reward":
+        return <Trophy className="w-4 h-4" />;
       default:
         return <Wallet className="w-4 h-4" />;
     }
@@ -60,10 +62,20 @@ export default function WalletPage() {
         return "Order Payment";
       case "redemption":
         return "Redeemed";
+      case "reward":
+        return "Reward Credit";
       default:
         return "Credit";
     }
   };
+
+  // Calculate reward credits total
+  const rewardCreditsCents = (transactions || [])
+    .filter((tx) => tx.type === "reward" && tx.amount_cents > 0)
+    .reduce((sum, tx) => sum + tx.amount_cents, 0);
+  const rewardCreditsDollars = rewardCreditsCents / 100;
+
+  const pendingCreditsDollars = (wallet?.pending_credits_cents || 0) / 100;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
@@ -123,6 +135,52 @@ export default function WalletPage() {
           </div>
         </motion.div>
 
+        {/* Rewards Added Summary */}
+        {rewardCreditsCents > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-gradient-to-br from-primary/10 to-zinc-900 border border-primary/20 rounded-2xl p-5"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Rewards Added</p>
+                  <p className="text-xs text-zinc-400">Total credits from rewards</p>
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-primary">${rewardCreditsDollars.toFixed(2)}</p>
+            </div>
+            <button
+              onClick={() => navigate("/account/rewards")}
+              className="mt-3 w-full text-center text-xs text-primary hover:underline"
+            >
+              View all rewards →
+            </button>
+          </motion.div>
+        )}
+
+        {/* Pending Credits */}
+        {pendingCreditsDollars > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="bg-zinc-900/80 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-3"
+          >
+            <Clock className="w-5 h-5 text-amber-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Pending Credits</p>
+              <p className="text-xs text-zinc-500">Will be available soon</p>
+            </div>
+            <p className="font-bold text-amber-400">${pendingCreditsDollars.toFixed(2)}</p>
+          </motion.div>
+        )}
+
         {/* How to Earn */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -142,6 +200,19 @@ export default function WalletPage() {
               <div className="flex-1">
                 <p className="font-medium">Refer Friends</p>
                 <p className="text-xs text-zinc-500">Earn credits when they book</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-zinc-600" />
+            </button>
+            <button
+              onClick={() => navigate("/account/rewards")}
+              className="w-full flex items-center gap-4 p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 transition-colors text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Rewards</p>
+                <p className="text-xs text-zinc-500">Earn rewards for milestones</p>
               </div>
               <ExternalLink className="w-4 h-4 text-zinc-600" />
             </button>
