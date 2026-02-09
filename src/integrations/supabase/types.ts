@@ -7553,6 +7553,7 @@ export type Database = {
         Row: {
           auto_accept_delay_seconds: number | null
           auto_accept_enabled: boolean | null
+          auto_accept_max_distance_miles: number | null
           auto_arrived_enabled: boolean | null
           auto_sync_enabled: boolean | null
           cache_trips_days: number | null
@@ -7578,6 +7579,7 @@ export type Database = {
         Insert: {
           auto_accept_delay_seconds?: number | null
           auto_accept_enabled?: boolean | null
+          auto_accept_max_distance_miles?: number | null
           auto_arrived_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
@@ -7603,6 +7605,7 @@ export type Database = {
         Update: {
           auto_accept_delay_seconds?: number | null
           auto_accept_enabled?: boolean | null
+          auto_accept_max_distance_miles?: number | null
           auto_arrived_enabled?: boolean | null
           auto_sync_enabled?: boolean | null
           cache_trips_days?: number | null
@@ -15733,24 +15736,39 @@ export type Database = {
       }
       orders: {
         Row: {
+          almost_ready_at: string | null
           bundle_id: string | null
           created_at: string | null
+          credit_used_amount: number
+          discount_amount: number
+          driver_dispatched_at: string | null
           id: string
           is_scheduled: boolean | null
+          promo_code: string | null
           scheduled_for: string | null
         }
         Insert: {
+          almost_ready_at?: string | null
           bundle_id?: string | null
           created_at?: string | null
+          credit_used_amount?: number
+          discount_amount?: number
+          driver_dispatched_at?: string | null
           id?: string
           is_scheduled?: boolean | null
+          promo_code?: string | null
           scheduled_for?: string | null
         }
         Update: {
+          almost_ready_at?: string | null
           bundle_id?: string | null
           created_at?: string | null
+          credit_used_amount?: number
+          discount_amount?: number
+          driver_dispatched_at?: string | null
           id?: string
           is_scheduled?: boolean | null
+          promo_code?: string | null
           scheduled_for?: string | null
         }
         Relationships: [

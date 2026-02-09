@@ -2,8 +2,9 @@
  * ZIVO Eats — Order Detail Page
  * Real-time status updates with driver tracking, live map, and scheduled delivery support
  * Includes demand awareness messaging for high-traffic periods
+ * Smart dispatch transparency with clear driver assignment status
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { useEatsDriver } from "@/hooks/useEatsDriver";
 import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
+import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -20,14 +22,32 @@ import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
+import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
 import { useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+
+// Haversine formula for distance calculation (miles)
+function calculateDistanceMiles(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 3958.7613; // Earth radius in miles
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export default function EatsOrderDetail() {
   const navigate = useNavigate();
@@ -40,15 +60,33 @@ export default function EatsOrderDetail() {
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
 
-  // Determine if we should show the map or demand banner
-  const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
-  const isActiveOrder = order && order.status !== "delivered" && order.status !== "cancelled";
-  const isDelivering = order?.status === "out_for_delivery";
-  
   // Use live location when available, fall back to driver profile location
   const driverLat = liveDriverLocation?.lat ?? driver?.current_lat;
   const driverLng = liveDriverLocation?.lng ?? driver?.current_lng;
   const driverHeading = liveDriverLocation?.heading;
+
+  // Calculate distance from driver to delivery
+  const distanceToDelivery = useMemo(() => {
+    if (driverLat != null && driverLng != null && order?.delivery_lat != null && order?.delivery_lng != null) {
+      return calculateDistanceMiles(driverLat, driverLng, order.delivery_lat, order.delivery_lng);
+    }
+    return undefined;
+  }, [driverLat, driverLng, order?.delivery_lat, order?.delivery_lng]);
+
+  // Dispatch status for transparent messaging
+  const dispatchStatus = useEatsDispatchStatus({
+    status: order?.status || "",
+    driverId: order?.driver_id,
+    driverLat,
+    driverLng,
+    deliveryLat: order?.delivery_lat,
+    deliveryLng: order?.delivery_lng,
+  });
+
+  // Determine if we should show the map or demand banner
+  const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
+  const isActiveOrder = order && order.status !== "delivered" && order.status !== "cancelled";
+  const isDelivering = order?.status === "out_for_delivery";
 
   // Copy order link to clipboard for support/sharing
   const handleShareOrderLink = async () => {
@@ -145,8 +183,13 @@ export default function EatsOrderDetail() {
     delivered_at: order.delivered_at,
   };
 
-  // Get status-specific messaging
+  // Get status-specific messaging (enhanced with dispatch awareness)
   const getStatusMessage = () => {
+    // Use dispatch-aware messages for active orders
+    if (isActiveOrder && dispatchStatus.message) {
+      return dispatchStatus.message;
+    }
+    
     switch (order.status) {
       case "pending":
         return "Waiting for restaurant confirmation...";
@@ -283,6 +326,13 @@ export default function EatsOrderDetail() {
           <HighDemandBanner level={demandLevel} orderId={order.id} />
         )}
 
+        {/* Dispatch Search Banner - show when looking for a driver */}
+        <AnimatePresence>
+          {dispatchStatus.showSearching && isActiveOrder && (
+            <DispatchSearchBanner orderId={order.id} />
+          )}
+        </AnimatePresence>
+
         {/* Grouped Delivery Banner - show when order is part of a batch with other stops first */}
         {batchInfo.isBatched && batchInfo.stopsBeforeCustomer > 0 && isActiveOrder && (
           <GroupedDeliveryBanner
@@ -366,6 +416,7 @@ export default function EatsOrderDetail() {
               driver={driver}
               isDelivering={isDelivering}
               orderId={order.id}
+              distanceToDelivery={distanceToDelivery}
             />
             {/* Chat button for active orders */}
             {order.status !== "delivered" && order.status !== "cancelled" && (
@@ -389,7 +440,12 @@ export default function EatsOrderDetail() {
             <Clock className="w-4 h-4 text-orange-500" />
             Order Status
           </h2>
-          <StatusTimeline currentStatus={order.status} timestamps={timestamps} />
+          <StatusTimeline 
+            currentStatus={order.status} 
+            timestamps={timestamps}
+            driverId={order.driver_id}
+            assignedAt={order.assigned_at}
+          />
         </motion.div>
 
         {/* Restaurant Info */}
