@@ -12,7 +12,9 @@ import { EatsBottomNav } from "@/components/eats/EatsBottomNav";
 import { FavoriteButton } from "@/components/eats/FavoriteButton";
 import SEOHead from "@/components/SEOHead";
 
-export default function EatsFavorites() {
+import { CartProvider } from "@/contexts/CartContext";
+
+function EatsFavoritesContent() {
   const navigate = useNavigate();
   const { favorites, isLoading, removeFavorite } = useEatsFavorites();
 
@@ -132,5 +134,13 @@ export default function EatsFavorites() {
 
       <EatsBottomNav />
     </div>
+  );
+}
+
+export default function EatsFavorites() {
+  return (
+    <CartProvider>
+      <EatsFavoritesContent />
+    </CartProvider>
   );
 }
