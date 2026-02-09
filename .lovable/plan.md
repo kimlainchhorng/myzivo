@@ -1,24 +1,32 @@
 
 
-# Upgrade Order Share to Social Share Sheet
+# Fix: Admin Role Check Fails Due to Duplicate `has_role` Functions
 
-## What Changes
+## Problem
 
-Replace the basic "copy link" share button on the Eats Order Detail page with the full `SocialShareSheet` bottom-sheet component. This gives users options to share via Copy Link, WhatsApp, SMS, Facebook, and native share -- plus the referral CTA if logged in.
+The console shows this error on every page load for logged-in users:
 
-## Technical Details
+> Could not choose the best candidate function between: public.has_role(\_user\_id => uuid, \_role => public.app\_role), public.has_role(\_user\_id => uuid, \_role => text)
 
-**File:** `src/pages/EatsOrderDetail.tsx`
+PostgREST cannot decide which overload to call because `text` and `app_role` (an enum) are ambiguous when a string like `"admin"` is passed via the RPC. This means **admin detection silently fails** -- admins are treated as regular users.
 
-1. Import `SocialShareSheet` from `@/components/shared/SocialShareSheet`
-2. Remove the `handleShareOrderLink` function (no longer needed)
-3. Replace the share `<button>` element with `<SocialShareSheet>`, passing:
-   - `title`: "My ZIVO Eats Order"
-   - `text`: "Check out my order on ZIVO Eats!"
-   - `url`: `/eats/orders/${id}`
-   - `entityId`: order ID
-   - `entityType`: "food_order"
-   - `trigger`: the existing round share button (preserving the current icon style)
+## Fix
 
-This follows the same pattern already used elsewhere in the app with `SocialShareSheet`.
+Drop the redundant `text` overload, keeping only the `app_role` version (which is the correct, type-safe one). PostgREST will then auto-cast the string `"admin"` to the `app_role` enum without ambiguity.
+
+### Database Migration (single SQL statement)
+
+```sql
+DROP FUNCTION IF EXISTS public.has_role(uuid, text);
+```
+
+### No Frontend Changes
+
+`AuthContext.tsx` already calls `supabase.rpc("has_role", { _user_id: userId, _role: "admin" })` which will work correctly once the ambiguity is resolved.
+
+## Result
+
+- The console error disappears
+- Admin users are correctly detected on login
+- `isAdmin` flag in AuthContext works as intended
 
