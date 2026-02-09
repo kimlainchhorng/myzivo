@@ -15334,6 +15334,30 @@ export type Database = {
         }
         Relationships: []
       }
+      order_delays: {
+        Row: {
+          delay_minutes: number | null
+          delay_reason: string | null
+          id: string
+          order_id: string | null
+          recorded_at: string | null
+        }
+        Insert: {
+          delay_minutes?: number | null
+          delay_reason?: string | null
+          id?: string
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Update: {
+          delay_minutes?: number | null
+          delay_reason?: string | null
+          id?: string
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       order_disputes: {
         Row: {
           approved_refund_amount: number | null
