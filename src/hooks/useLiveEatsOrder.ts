@@ -13,6 +13,7 @@ export interface LiveEatsOrder {
   customer_id: string;
   restaurant_id: string;
   driver_id?: string | null;
+  previous_driver_id?: string | null;
   status: string;
   payment_status?: string | null;
   payment_type?: string | null;

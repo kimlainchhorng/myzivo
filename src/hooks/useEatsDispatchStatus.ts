@@ -9,8 +9,9 @@ import { useMemo } from "react";
 export type DispatchPhase = 
   | "pending"       // Waiting for restaurant confirmation
   | "preparing"     // Restaurant preparing order
-  | "almost_ready"  // 75%+ through prep time - NEW for smoother transitions
+  | "almost_ready"  // 75%+ through prep time - smoother transitions
   | "searching"     // Looking for driver
+  | "reassigning"   // Looking for replacement driver after cancellation
   | "assigned"      // Driver heading to restaurant
   | "near_pickup"   // Driver near restaurant (< 0.2mi)
   | "at_pickup"     // Driver at restaurant (< 0.05mi)
@@ -40,6 +41,10 @@ interface UseEatsDispatchStatusOptions {
   prepProgressPercent?: number;
   /** Whether order is almost ready (75%+ through prep) */
   isAlmostReady?: boolean;
+  /** Reassignment context - driver was recently reassigned */
+  wasReassigned?: boolean;
+  /** Currently searching for a replacement driver */
+  isSearchingForNewDriver?: boolean;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -77,6 +82,8 @@ export function useEatsDispatchStatus({
   pickupLng,
   prepProgressPercent,
   isAlmostReady,
+  wasReassigned,
+  isSearchingForNewDriver,
 }: UseEatsDispatchStatusOptions): DispatchStatus {
   return useMemo(() => {
     // Cancelled orders
@@ -111,6 +118,16 @@ export function useEatsDispatchStatus({
 
     // Confirmed but not yet preparing
     if (status === "confirmed") {
+      // Check if driver is being reassigned
+      if (isSearchingForNewDriver) {
+        return {
+          phase: "reassigning",
+          message: "Finding another driver near you...",
+          subMessage: "Your previous driver had to cancel",
+          showSearching: true,
+        };
+      }
+      
       // Check if driver assigned
       if (!driverId) {
         return {
@@ -187,6 +204,16 @@ export function useEatsDispatchStatus({
         };
       }
       
+      // Check if driver is being reassigned
+      if (isSearchingForNewDriver) {
+        return {
+          phase: "reassigning",
+          message: "Finding another driver near you...",
+          subMessage: "Your previous driver had to cancel",
+          showSearching: true,
+        };
+      }
+      
       // Check if driver assigned
       if (!driverId) {
         return {
@@ -230,6 +257,16 @@ export function useEatsDispatchStatus({
 
     // Ready for pickup
     if (status === "ready" || status === "ready_for_pickup") {
+      // Check if driver is being reassigned
+      if (isSearchingForNewDriver) {
+        return {
+          phase: "reassigning",
+          message: "Finding another driver near you...",
+          subMessage: "Your previous driver had to cancel",
+          showSearching: true,
+        };
+      }
+      
       if (!driverId) {
         return {
           phase: "searching",
