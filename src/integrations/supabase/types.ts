@@ -10897,6 +10897,7 @@ export type Database = {
           pricing_version: string | null
           promo_code: string | null
           promotion_id: string | null
+          queue_priority: number | null
           quoted_delivery_fee: number | null
           quoted_service_fee: number | null
           quoted_small_order_fee: number | null
@@ -11055,6 +11056,7 @@ export type Database = {
           pricing_version?: string | null
           promo_code?: string | null
           promotion_id?: string | null
+          queue_priority?: number | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
@@ -11213,6 +11215,7 @@ export type Database = {
           pricing_version?: string | null
           promo_code?: string | null
           promotion_id?: string | null
+          queue_priority?: number | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
