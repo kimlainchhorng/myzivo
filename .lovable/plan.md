@@ -1,95 +1,98 @@
 
 
-# Promotions Display — Badges, Restaurant Section, and Checkout Integration
+# Recommended Deals Section -- Home Page
 
 ## Overview
 
-The system has a rich `promotions` table with `merchant_id` (links promos to specific restaurants), `applicable_services` (e.g., "eats"), `discount_type`, `discount_value`, `min_order_amount`, and active date ranges. The `usePromotionValidation` hook and `validate_promo_code` RPC already handle validation. However, three gaps exist:
-
-1. **Restaurant cards** on the listing page (`EatsRestaurants.tsx`) show no promotion badges
-2. **Restaurant menu page** (`EatsRestaurantMenu.tsx`) has no "Active Promotions" section
-3. **Checkout** (`EatsCheckout.tsx`) has no promo code input — it exists as a component (`PromoCodeInput.tsx`) but is never rendered on the checkout page
+Neither the desktop home page (`Index.tsx`) nor the mobile app home (`AppHome.tsx`) currently display any personalized deal content. The `promotions` table and `useAllEatsPromotions` hook exist but only target eats. The `useUserBehavior` hook provides search history, budget tier, and destination preferences. The `FlashDealCard` component and `FlashDeal` type are fully built for travel deals but only used on the standalone `/deals` page.
 
 ## What Changes
 
-### 1. Fetch active promotions per restaurant (`src/hooks/useRestaurantPromotions.ts` — new file)
+### 1. Create `useRecommendedDeals` hook (new file)
 
-Create a hook that queries the `promotions` table filtered by `merchant_id`, `is_active = true`, valid date range, and `applicable_services` containing "eats". Returns a list of active promos and a helper that generates badge labels like "20% OFF", "Free Delivery", or "$5 OFF".
+A hook that fetches all active promotions from the database across all service types, then scores and sorts them client-side using three signals:
 
-### 2. Add promo badges to restaurant cards (`src/pages/EatsRestaurants.tsx`)
+- **Order/search history**: Boost deals matching the user's recent search destinations or preferred service categories (from `useUserBehavior`)
+- **Time of day**: Boost food/eats deals during meal windows (11am-2pm, 5pm-9pm), travel deals during evening browse hours (7pm-11pm)
+- **Budget tier**: Boost deals whose discount value aligns with the user's tracked budget preference (budget users see higher-discount deals first, luxury users see premium deals first)
 
-For each restaurant in the grid, call `useRestaurantPromotions` (batched query for all visible restaurants) to overlay badges on the card image. Badges use the existing gradient styling (orange for discount, emerald for free delivery, violet for limited time). Maximum 2 badges per card to avoid clutter.
+For first-time visitors with no history, falls back to a curated sort: highest discount percentage first, with urgency (ending soon) as a tiebreaker.
 
-### 3. Add "Active Promotions" section to restaurant page (`src/pages/EatsRestaurantMenu.tsx`)
+Returns the top 6 scored deals as a unified `RecommendedDeal` type that normalizes both database promotions and flash deals into a single card format.
 
-Between the restaurant header and the menu categories, render a horizontally scrollable row of promotion cards when the restaurant has active promos. Each card shows the promo name, discount description, minimum order requirement, and an expiry countdown if ending within 48 hours. Uses the same dark glass aesthetic.
+### 2. Create `RecommendedDealsSection` component (new file)
 
-### 4. Add promo code input to checkout (`src/pages/EatsCheckout.tsx`)
+A self-contained section component with:
+- Heading: "Recommended Deals" with a sparkle icon
+- Subheading that adapts: "Based on your recent searches" (if history exists) or "Trending deals for you" (if no history)
+- Horizontal scrollable row on mobile, 3-column grid on desktop
+- Each card shows: deal title, discount badge, service category icon, expiry countdown (if within 48h), and a CTA button
+- "View All Deals" link that navigates to `/deals`
 
-Wire the existing `PromoCodeInput` component and `usePromotionValidation` hook into the checkout page. Place the promo input in the Order Summary column, between the item list and the delivery fee breakdown. When a valid promo is applied, show the discount as a line item in the summary and adjust the total.
+Uses the existing dark glass card aesthetic consistent with the rest of the home page.
+
+### 3. Add section to desktop home page (`Index.tsx`)
+
+Insert `RecommendedDealsSection` between "Popular Routes" and "Price Alert Promo" -- this is where deal-browsing intent is highest after users have seen route options.
+
+### 4. Add section to mobile home page (`AppHome.tsx`)
+
+Add a compact version of `RecommendedDealsSection` after the Quick Actions row and before the bottom nav padding. Uses horizontal scroll with snap-scrolling cards sized for mobile.
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useRestaurantPromotions.ts` | Create | Hook to fetch active promos for a restaurant (or batch of restaurants) |
-| `src/components/eats/PromoBadgeOverlay.tsx` | Create | Small component rendering 1-2 promo badges on restaurant cards |
-| `src/components/eats/ActivePromotionsSection.tsx` | Create | Horizontal scrollable promo cards for restaurant menu page |
-| `src/pages/EatsRestaurants.tsx` | Update | Add promo badges to each restaurant card |
-| `src/pages/EatsRestaurantMenu.tsx` | Update | Add ActivePromotionsSection between header and menu |
-| `src/pages/EatsCheckout.tsx` | Update | Add PromoCodeInput + usePromotionValidation, adjust totals |
+| `src/hooks/useRecommendedDeals.ts` | Create | Hook to fetch + score deals by history, time, budget |
+| `src/components/home/RecommendedDealsSection.tsx` | Create | Desktop/mobile section rendering scored deal cards |
+| `src/pages/Index.tsx` | Update | Add RecommendedDealsSection between Popular Routes and Price Alert Promo |
+| `src/pages/app/AppHome.tsx` | Update | Add compact RecommendedDealsSection after Quick Actions |
 
 ## Technical Details
 
-### useRestaurantPromotions hook
+### Scoring algorithm
+
+Each deal gets a base score of 50, then adjustments:
 
 ```text
-Query: promotions table
-  WHERE merchant_id = restaurantId (or IN [...ids] for batch)
-  AND is_active = true
-  AND 'eats' = ANY(applicable_services)
-  AND (starts_at IS NULL OR starts_at <= now())
-  AND (ends_at IS NULL OR ends_at >= now())
-  AND (usage_limit IS NULL OR usage_count < usage_limit)
-
-Returns: { promos, badgeLabels, isLoading }
++20  if deal destination matches a recent search destination
++15  if deal service category matches user's most-searched category
++10  if time of day matches deal type (meals during lunch/dinner, travel in evening)
++10  if discount_value aligns with budget tier (>30% for budget, 15-30% for mid, <15% for luxury)
++15  if deal ends within 24 hours (urgency boost)
++5   if deal ends within 48 hours
 ```
 
-Badge label generation logic:
-- `discount_type = 'free_delivery'` => "Free Delivery"
-- `discount_type = 'percent'` => "{value}% OFF"
-- `discount_type = 'fixed'` => "${value} OFF"
-- If `ends_at` is within 48 hours => append "Limited time deal" badge
+Final list sorted by score descending, top 6 returned.
 
-### Batch query for restaurant listing
+### Data source
 
-Instead of N+1 queries, fetch all active eats promotions in a single query (no merchant_id filter), then group by `merchant_id` client-side. This gives O(1) database calls for the listing page.
+Query the `promotions` table with no `applicable_services` filter (to get all service types), then map each row to a normalized `RecommendedDeal`:
 
-### Checkout promo integration
+```text
+RecommendedDeal {
+  id, name, description, code,
+  discountLabel (e.g. "20% OFF", "$5 OFF", "Free Delivery"),
+  serviceType (derived from applicable_services[0]),
+  expiresAt (from ends_at),
+  score (calculated),
+  href (deep link to relevant page)
+}
+```
 
-- Import `usePromotionValidation` with `serviceType: 'eats'`
-- Render `PromoCodeInput` in the order summary card
-- On successful validation, display a discount line item: "Promo (CODE) -$X.XX"
-- Adjust the total: `finalTotal = subtotal + deliveryFee - discountAmount`
-- Pass the `promotion_id` into the `createOrder` mutation for backend tracking
+### Routing from deal cards
 
-### PromoBadgeOverlay component
+- Flights/Hotels/Cars deals link to `/deals` with the deal pre-selected
+- Eats deals link to `/eats` (or specific restaurant if merchant_id exists)
+- Rides deals link to `/ride` with the promo code pre-filled
 
-Renders absolutely positioned badges (bottom-left of restaurant card image). Prioritizes: free delivery badge first (emerald), then discount badge (orange gradient). Max 2 badges. Uses the existing Badge component with consistent styling.
+### No-deals state
 
-### ActivePromotionsSection component
-
-Horizontal scroll row with snap scrolling. Each promo card shows:
-- Promo name/description
-- Discount value (prominent)
-- Min order requirement (if any)
-- "Ends in X hours" countdown if expiring within 48h
-- "Apply" button that copies the code to clipboard with toast feedback
+If no active promotions exist in the database, the section renders nothing (hidden entirely). No empty state needed.
 
 ## Edge Cases
 
-- **No promos for restaurant**: Badge overlay and section hidden — zero change to current UI
-- **Expired during session**: The validation RPC re-checks server-side, so stale client display won't result in invalid discounts
-- **Multiple promos**: Only one promo code can be applied at checkout (enforced by usePromotionValidation)
-- **Free delivery + discount**: Badge overlay shows both; at checkout only one code applies
-- **Merchant-specific vs global promos**: Promos with `merchant_id = NULL` are global and show on all restaurants; merchant-specific ones only on their restaurant
+- **New user, no history**: Falls back to discount-percentage + urgency sorting with generic "Trending deals" heading
+- **All deals expired during session**: Cards show countdown hitting zero, CTA disables
+- **Only eats deals active**: Section still shows, just all eats cards
+- **Mobile performance**: Horizontal scroll with CSS snap, no extra re-renders from scoring (memoized in hook)
