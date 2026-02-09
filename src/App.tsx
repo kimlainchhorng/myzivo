@@ -495,6 +495,7 @@ const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard
 // Rewards/Loyalty
 const RewardsPage = lazy(() => import("./pages/RewardsPage"));
 const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
+const ActivityPage = lazy(() => import("./pages/account/ActivityPage"));
 
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
@@ -947,6 +948,7 @@ const App = () => (
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
                 <Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
+                <Route path="/account/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
