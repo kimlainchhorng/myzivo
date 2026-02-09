@@ -1,154 +1,143 @@
 
-
-# ZIVO+ Membership Implementation Plan
+# Coupons & Promo Codes - Implementation Status
 
 ## Executive Summary
-The ZIVO+ membership feature is **90% complete** with robust infrastructure already built. This plan addresses the remaining gaps: adding the `/account/membership` route, activating the Stripe plan, creating a monthly savings summary, and ensuring the badge is visible across the platform.
+The promo code system is **95% complete**. All checkout integration, validation, discount display, and success messaging are already implemented. The only missing piece is the dedicated `/account/promos` page to view available coupons.
 
 ---
 
 ## Current State Analysis
 
-### Already Built
-| Component | Status | Details |
-|-----------|--------|---------|
-| Membership Page | Complete | Full UI at `src/pages/MembershipPage.tsx` with plan pricing, benefits, management |
-| Hooks | Complete | `useMembership`, `useMembershipPlans`, `useCreateMembershipCheckout`, `useCancelMembership`, `useOpenCustomerPortal` |
-| Edge Functions | Complete | `create-membership-checkout`, `cancel-membership`, `customer-portal-membership`, `stripe-webhook` |
-| Checkout Integration | Complete | EatsCart.tsx applies free delivery + 50% off service fees |
-| Database Tables | Complete | `zivo_subscription_plans`, `zivo_subscriptions`, `membership_usage` |
-| Order Tracking | Complete | `membership_applied`, `membership_discount_cents` columns |
-| Badges | Complete | `ZivoPlusBadge`, `MembershipSavingsBadge` components |
+### Already Complete
 
-### Missing Pieces
+| Feature | Status | Location |
+|---------|--------|----------|
+| Promo code input field | Complete | `src/components/eats/PromoCodeInput.tsx` (Eats) |
+| Promo code input field | Complete | `src/components/ride/PromoCodeInput.tsx` (Rides) |
+| Promo validation service | Complete | `src/lib/promoCodeService.ts` |
+| Eats promo hook | Complete | `src/hooks/useEatsPromo.ts` |
+| Rides promo validation | Complete | `src/hooks/useRidePromoValidation.ts` |
+| Discount calculation | Complete | Shows discount amount and updated total |
+| Success message | Complete | "Promo applied successfully" toast |
+| User promo wallet component | Complete | `src/components/eats/UserPromoWallet.tsx` |
+| User promo wallet hook | Complete | `src/hooks/useMarketing.ts` (`useUserPromoWallet`) |
+| Database tables | Complete | `promo_codes`, `user_promo_wallet` |
+| Credit wallet page | Complete | `/account/wallet` for credits |
+
+### Checkout Flow (Already Working)
+```text
++------------------------------------------+
+| [🏷️] Enter promo code                    |
+|      [          ] [Apply]                |
++------------------------------------------+
+          ↓ (on success)
++------------------------------------------+
+| [✓] SUMMER20                             |
+|     20% off                  -$4.50   X  |
++------------------------------------------+
+          ↓
+Order Summary shows:
+- Discount line: -$4.50
+- Updated total with discount applied
+- Toast: "Promo applied successfully"
+```
+
+### Missing Piece
+
 | Item | What's Needed |
 |------|---------------|
-| Route | Add `/account/membership` and `/membership` routes to App.tsx |
-| Stripe Prices | Create ZIVO+ product and prices in Stripe, update plan record |
-| Plan Activation | Set `is_active = true` on the plan |
-| Monthly Savings Hook | Create hook to aggregate savings from orders |
-| Savings Card on Membership Page | Show "You saved $X this month" |
-| Member Badge Visibility | Show badge in header/profile for active members |
+| `/account/promos` page | Dedicated page showing available coupons, expiration dates, usage rules |
 
 ---
 
-## Implementation Steps
+## Implementation Plan
 
-### 1) Add Membership Routes to App.tsx
+### 1) Create Promos Page
+
+**File to Create:** `src/pages/account/PromosPage.tsx`
+
+**Purpose:** Show all available promo codes assigned to the user, with expiration dates and usage rules.
+
+**UI Design:**
+```text
++------------------------------------------+
+|   ←        My Promos                     |
++------------------------------------------+
+|                                          |
+|  ┌────────────────────────────────────┐  |
+|  │  [🏷️]  You have 3 promos          │  |
+|  │                                    │  |
+|  │  Use them at checkout to save!     │  |
+|  └────────────────────────────────────┘  |
+|                                          |
+|  Available Promos                        |
+|  ┌────────────────────────────────────┐  |
+|  │ [🏷️] SUMMER20                      │  |
+|  │      20% off                       │  |
+|  │  ─────────────────────────────────  │  |
+|  │  [📅] Expires Feb 28               │  |
+|  │  [💰] Min order: $15               │  |
+|  │                                    │  |
+|  │      [Copy]  [Use Now →]           │  |
+|  └────────────────────────────────────┘  |
+|  ┌────────────────────────────────────┐  |
+|  │ [🏷️] FIRST50                       │  |
+|  │      $50 off                       │  |
+|  │  ─────────────────────────────────  │  |
+|  │  [⚡] No expiration                 │  |
+|  │  [💰] First order only             │  |
+|  │                                    │  |
+|  │      [Copy]  [Use Now →]           │  |
+|  └────────────────────────────────────┘  |
+|                                          |
+|  How to Use                              |
+|  • Enter code at checkout                |
+|  • Discount applies automatically        |
+|  • One promo per order                   |
++------------------------------------------+
+```
+
+**Features:**
+- Fetches from `user_promo_wallet` (assigned promos) via existing `useUserPromoWallet` hook
+- Also fetches general available promos from `promo_codes` table
+- Shows expiration dates with color coding (expiring soon = amber)
+- Shows min order/usage rules when applicable
+- Copy button for each code
+- "Use Now" button navigates to Eats or relevant checkout
+- Empty state when no promos available
+
+### 2) Add Route to App.tsx
 
 **File to Modify:** `src/App.tsx`
 
-Add routes for both public membership page and account-level access:
-
+Add route for the promos page:
 ```typescript
-// Add near other account routes (around line 915)
-<Route path="/membership" element={<MembershipPage />} />
-<Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+<Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
 ```
 
-### 2) Create Stripe Products and Prices
-
-Using Stripe tools:
-- Create product: "ZIVO Plus" with description
-- Create monthly price: $9.99/month recurring
-- Create annual price: $79.99/year recurring
-- Get price IDs and update database
-
-**SQL to execute after creating Stripe prices:**
-```sql
-UPDATE zivo_subscription_plans
-SET 
-  stripe_price_id_monthly = 'price_xxx_monthly',
-  stripe_price_id_yearly = 'price_xxx_yearly',
-  is_active = true
-WHERE slug = 'zivo-plus';
-```
-
-### 3) Create Monthly Savings Hook
-
-**File to Create:** `src/hooks/useMembershipSavings.ts`
-
-Query `food_orders` to aggregate membership savings for the current month:
-
-```typescript
-export function useMembershipSavings() {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ["membership-savings", user?.id],
-    queryFn: async () => {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      
-      const { data, error } = await supabase
-        .from("food_orders")
-        .select("membership_discount_cents")
-        .eq("customer_id", user.id)
-        .eq("membership_applied", true)
-        .gte("created_at", startOfMonth.toISOString());
-      
-      if (error) throw error;
-      
-      const totalCents = data?.reduce((sum, order) => 
-        sum + (order.membership_discount_cents || 0), 0) || 0;
-      
-      return {
-        thisMonthCents: totalCents,
-        thisMonthDollars: totalCents / 100,
-        orderCount: data?.length || 0,
-      };
-    },
-    enabled: !!user?.id,
-  });
-}
-```
-
-### 4) Add Savings Summary Card to MembershipPage
-
-**File to Modify:** `src/pages/MembershipPage.tsx`
-
-For active members, show a card with this month's savings:
-
-```text
-+------------------------------------------+
-| 📊 Your Savings This Month               |
-+------------------------------------------+
-|                                          |
-|   $12.47 saved                           |
-|   across 5 orders                        |
-|                                          |
-|   [View Order History →]                 |
-+------------------------------------------+
-```
-
-### 5) Add Member Badge to Header
-
-**File to Modify:** `src/components/home/NavBar.tsx` (or `Header.tsx`)
-
-For logged-in members, show small badge next to avatar:
-
-```typescript
-// Import useMembership hook
-const { isActive } = useMembership();
-
-// In render, near user avatar:
-{isActive && <ZivoPlusBadge variant="small" />}
-```
-
-### 6) Add Member Badge to Mobile Account Page
+### 3) Add Link to Mobile Account
 
 **File to Modify:** `src/pages/mobile/MobileAccount.tsx`
 
-Show member status in profile section:
-
+Add promos link to account menu items:
 ```typescript
-{isActive && (
-  <Link to="/account/membership" className="...">
-    <ZivoPlusBadge />
-    <span>Manage Membership</span>
-  </Link>
-)}
+{ icon: Tag, label: "My Promos", path: "/account/promos" },
+```
+
+### 4) Add Link to Wallet Page
+
+**File to Modify:** `src/pages/account/WalletPage.tsx`
+
+Update the "Promo Codes" section to link to the new page:
+```typescript
+<button onClick={() => navigate("/account/promos")} className="...">
+  <Tag className="w-5 h-5 text-amber-400" />
+  <div>
+    <p className="font-medium">Promo Codes</p>
+    <p className="text-xs text-zinc-500">View your available codes</p>
+  </div>
+  <ExternalLink className="w-4 h-4 text-zinc-600" />
+</button>
 ```
 
 ---
@@ -158,148 +147,103 @@ Show member status in profile section:
 ### New Files (1)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useMembershipSavings.ts` | Aggregate monthly savings from orders |
+| `src/pages/account/PromosPage.tsx` | Full-page view of available promo codes |
 
-### Modified Files (4)
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add `/membership` and `/account/membership` routes |
-| `src/pages/MembershipPage.tsx` | Add savings summary card using `useMembershipSavings` |
-| `src/components/home/NavBar.tsx` | Show member badge for active subscribers |
-| `src/pages/mobile/MobileAccount.tsx` | Show membership link with badge |
-
-### Database Updates (via Stripe + SQL)
-| Action | Details |
-|--------|---------|
-| Create Stripe Product | "ZIVO Plus" membership product |
-| Create Monthly Price | $9.99/month recurring |
-| Create Annual Price | $79.99/year recurring |
-| Update Plan Record | Set price IDs and `is_active = true` |
+| `src/App.tsx` | Add `/account/promos` route |
+| `src/pages/mobile/MobileAccount.tsx` | Add promos link to menu |
+| `src/pages/account/WalletPage.tsx` | Make promo section clickable |
 
 ---
 
-## UI Components
+## Data Sources
 
-### Savings Summary Card (MembershipPage)
-```text
-+------------------------------------------+
-| [📊]  Your Savings                       |
-+------------------------------------------+
-|                                          |
-|   $12.47                                 |
-|   saved this month                       |
-|                                          |
-|   ─────────────────────────────────────  |
-|   5 orders with ZIVO+ benefits           |
-|                                          |
-+------------------------------------------+
-```
-- Gradient background (amber/orange theme)
-- Crown icon
-- Animated entry
+### User Promo Wallet (Assigned Promos)
+Uses existing `useUserPromoWallet` hook which fetches from `user_promo_wallet` table:
+- Promos assigned to user via campaigns
+- Shows expiration from `expires_at`
+- Filter by `is_active = true` and not used
 
-### Member Badge in NavBar
-```text
-[Avatar] 👑   ← Small crown badge overlay
-```
-- ZivoPlusBadge variant="small"
-- Tooltip on hover: "ZIVO Plus Member"
-
-### Mobile Account Link
-```text
-+------------------------------------------+
-| [👑 ZIVO Plus]                           |
-|      Manage your membership          →   |
-+------------------------------------------+
-```
-
----
-
-## Technical Details
-
-### Membership Benefits (from plan)
-| Benefit | Config |
-|---------|--------|
-| Free delivery | Orders $15+ (`free_delivery_min_order`) |
-| Delivery fee discount | 100% off if threshold met |
-| Service fee discount | 50% off (`service_fee_discount_pct`) |
-| Priority support | Enabled (`priority_support = true`) |
-
-### Savings Calculation (already implemented)
+### General Available Promos
+New query to fetch publicly available promo codes:
 ```typescript
-// calculateMembershipSavings in useMembership.ts
-if (subtotal >= plan.free_delivery_min_order) {
-  deliverySavings = deliveryFee; // 100% off
-}
-serviceSavings = serviceFee * (plan.service_fee_discount_pct / 100);
-```
-
-### Edge Function Flow
-```text
-User clicks "Join ZIVO+"
-       ↓
-useMembershipCheckout.mutate()
-       ↓
-create-membership-checkout (edge function)
-       ↓
-Returns Stripe Checkout URL
-       ↓
-User completes payment on Stripe
-       ↓
-Stripe webhook → stripe-webhook (edge function)
-       ↓
-Inserts/updates zivo_subscriptions table
-       ↓
-useMembership() returns isActive = true
-       ↓
-EatsCart applies discounts automatically
+const { data: publicPromos } = await supabase
+  .from("promo_codes")
+  .select("*")
+  .eq("is_active", true)
+  .is("city", null)  // Not city-restricted
+  .gt("expires_at", new Date().toISOString())
+  .or("expires_at.is.null");
 ```
 
 ---
 
-## Stripe Setup Required
+## Promo Card Details
 
-Before the plan works, Stripe products/prices must be created:
+Each promo card shows:
 
-1. **Product**: ZIVO Plus
-   - Description: "Premium membership with free delivery and reduced fees"
+| Field | Source | Display |
+|-------|--------|---------|
+| Code | `promo_code.code` | Bold monospace text |
+| Discount | `discount_type` + `discount_value` | "20% off" or "$5 off" |
+| Expiration | `expires_at` | "Expires Feb 28" or "No expiration" |
+| Min Order | `min_fare` | "Min order: $15" if set |
+| Max Discount | `max_discount` | "Up to $25 off" if set |
+| Usage | `max_uses`, `uses` | Progress or "Unlimited" |
 
-2. **Monthly Price**: 
-   - Amount: $9.99
-   - Interval: month
-   - Usage: licensed (subscription)
+**Expiration Colors:**
+- Expiring within 3 days: Amber warning
+- Expiring within 7 days: Normal
+- No expiration: Green "No expiration"
 
-3. **Annual Price**:
-   - Amount: $79.99
-   - Interval: year
-   - Usage: licensed (subscription)
+---
 
-4. **Update Database**:
-   ```sql
-   UPDATE zivo_subscription_plans
-   SET 
-     stripe_price_id_monthly = '[monthly_price_id]',
-     stripe_price_id_yearly = '[yearly_price_id]',
-     is_active = true
-   WHERE slug = 'zivo-plus';
-   ```
+## Technical Notes
+
+### Existing Infrastructure Leveraged
+The page reuses existing hooks and components:
+- `useUserPromoWallet` - Already fetches user's assigned promos
+- `UserPromoWallet` component patterns - For card UI consistency
+- Copy functionality from existing component
+
+### Navigation Flow
+```text
+Mobile Account
+     ↓
+"My Promos" link
+     ↓
+/account/promos (new page)
+     ↓
+"Use Now" button
+     ↓
+/eats (or /rides with code in state)
+```
+
+### Success Toast (Already Implemented)
+When user applies promo at checkout:
+- `useEatsPromo` shows "Promo applied successfully" toast
+- `usePromoCode` shows "Promo applied successfully" toast
+- Both use `sonner` toast library
 
 ---
 
 ## Summary
 
-The ZIVO+ membership system is **largely built** with:
-- Complete checkout and subscription management flow
-- Working checkout integration with automatic discounts
-- Database tracking of per-order savings
+The promo code system is **nearly complete**:
 
-**Remaining work**:
-1. Add routes to App.tsx (2 lines)
-2. Create Stripe prices (via tools)
-3. Activate the plan (1 SQL update)
-4. Create savings aggregation hook (new file)
-5. Add savings card to membership page (UI addition)
-6. Show member badge in header/account (small UI updates)
+| Requirement | Status |
+|-------------|--------|
+| Enter promo code field at checkout | Complete (Eats + Rides) |
+| Show discount amount | Complete |
+| Show updated total | Complete |
+| "Promo applied successfully" message | Complete |
+| `/account/promos` page | **Need to create** |
+| Show available coupons | **Need to create** |
+| Show expiration dates | **Need to create** |
+| Show usage rules | **Need to create** |
 
-Total estimated implementation: 4 files modified, 1 new file, Stripe setup
+**Implementation scope:** 1 new file (PromosPage), 3 small modifications to add routing and links.
 
+The checkout promo functionality, validation, discount calculation, and success messaging are all working - only the dedicated promos management page needs to be built.
