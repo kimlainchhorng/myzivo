@@ -1,136 +1,108 @@
 
 
-# Dynamic Pricing Display — Implementation Plan
+# Loyalty Levels — Implementation Plan
 
 ## Overview
-Replace the hardcoded `$3.99` delivery fee in Eats checkout with a real-time dynamic delivery fee breakdown that accounts for base fee, distance, and demand (surge). Show a clear transparency message when demand adjustment is active.
+Enhance the existing `/account/loyalty` page with a full tier benefits comparison, add automatic perk application at Eats checkout (free delivery, extra discounts, bonus points), and create a reusable loyalty tier badge component.
 
 ---
 
-## Problem
+## Current State
 
-The checkout page (`EatsCheckout.tsx`, line 68) currently has:
+The loyalty system already has significant infrastructure:
 
-```text
-const deliveryFee = 3.99;
-```
+| What Exists | Where |
+|-------------|-------|
+| `/account/loyalty` page | `src/pages/account/LoyaltyPage.tsx` — shows balance, history, rewards, referral |
+| Tier progress visualization | `TierProgressCard` — Explorer/Traveler/Elite timeline |
+| Points balance card | `PointsBalanceCard` — balance, tier badge, progress bar |
+| Tier config with benefits | `src/config/zivoPoints.ts` — 3 tiers with benefits lists |
+| Points hook | `useLoyaltyPoints` — balance, earn, redeem, tier calculation |
+| Checkout reminder | `PointsCheckoutReminder` — "You'll earn X points" widget |
+| Dynamic pricing hook | `useEatsDeliveryPricing` — delivery fee breakdown |
 
-This ignores all existing dynamic pricing infrastructure:
-- `useEatsSurgePricing` hook (fetches real-time surge multiplier)
-- `calculateEatsFare()` in `src/lib/pricing.ts` (computes delivery fee from base + per-mile)
-- `EatsPriceBreakdown` component (shows detailed breakdown with service fee, tax, etc.)
-
----
-
-## What Already Exists (No Changes Needed)
-
-| Component | Purpose |
-|-----------|---------|
-| `useEatsSurgePricing` hook | Fetches surge multiplier, provides `calculateDeliveryFee()` |
-| `calculateEatsFare()` | Zone-based pricing: base fee + per-mile + service fee + tax |
-| `EatsPriceBreakdown` component | Full order summary UI with all line items |
-| `DEFAULT_EATS_ZONE` | Base: $2.99, Per-mile: $0.50, Service: 15%, Tax: 8.25% |
+### What's Missing
+- No **side-by-side tier comparison** showing all levels and their perks
+- No **automatic checkout perks** — free delivery, discounts, bonus points are not applied
+- No **reusable loyalty badge** for headers, profile, etc.
+- Tier benefits in config are text-only — need structured perk definitions for checkout logic
 
 ---
 
 ## Implementation Plan
 
-### 1) Create `useEatsDeliveryPricing` Hook
+### 1) Extend Tier Config with Checkout Perks
 
-**File to Create:** `src/hooks/useEatsDeliveryPricing.ts`
+**File to Modify:** `src/config/zivoPoints.ts`
 
-**Purpose:** Combine zone-based pricing with surge to produce a complete delivery fee breakdown.
+Add structured perk definitions to each tier so checkout can programmatically apply them:
 
-**Returned data:**
 ```text
-{
-  baseFee: number;          // Zone base ($2.99)
-  distanceFee: number;      // Per-mile component
-  demandAdjustment: number; // Surge markup amount ($0 if no surge)
-  totalDeliveryFee: number; // Sum of above
-  serviceFee: number;
-  smallOrderFee: number;
-  tax: number;
-  orderTotal: number;       // Everything included
-  surgeActive: boolean;
-  surgeLabel: string;       // "Delivery fee adjusted due to high demand."
-  isLoading: boolean;
+interface TierPerks {
+  freeDelivery: boolean;
+  discountPercent: number;        // e.g. 0, 5, 10
+  bonusPointsMultiplier: number;  // e.g. 1, 1.5, 2
+  prioritySupport: boolean;
 }
+
+Explorer: { freeDelivery: false, discountPercent: 0,  bonusPointsMultiplier: 1,   prioritySupport: false }
+Traveler: { freeDelivery: false, discountPercent: 5,  bonusPointsMultiplier: 1.5, prioritySupport: true  }
+Elite:    { freeDelivery: true,  discountPercent: 10, bonusPointsMultiplier: 2,   prioritySupport: true  }
 ```
 
-**Logic:**
-- Use `DEFAULT_EATS_ZONE` for base/per-mile rates (distance defaults to estimated ~2 miles for MVP, can be enhanced later with geocoding)
-- Apply surge multiplier from `useEatsSurgePricing` to delivery fee only
-- Calculate service fee, small order fee, and tax per existing `calculateEatsFare` logic
+Also add a helper: `getTierPerks(tier: ZivoTier): TierPerks`
 
-### 2) Create `DeliveryFeeBreakdownCard` Component
+### 2) Create Tier Comparison Component
 
-**File to Create:** `src/components/eats/DeliveryFeeBreakdownCard.tsx`
+**File to Create:** `src/components/loyalty/TierComparisonTable.tsx`
 
-**Purpose:** Display the delivery fee breakdown with demand adjustment messaging.
+A visual side-by-side comparison of all three tiers showing:
+- Tier name, icon, and point threshold
+- Benefits list with check/lock icons
+- Checkout perks (free delivery, discount %, bonus multiplier)
+- Current tier highlighted
 
-**Design:**
-```text
-+----------------------------------------------+
-|  Delivery Fee Breakdown                      |
-|                                              |
-|  Base delivery fee              $2.99        |
-|  Distance fee (~2 mi)           $1.00        |
-|  Demand adjustment              $1.20        |  <-- orange if active
-|                                              |
-|  ! Delivery fee adjusted due to high demand. |  <-- only if surge
-|                                              |
-|  Delivery fee total             $5.19        |
-+----------------------------------------------+
-```
+### 3) Add Tier Comparison to Loyalty Page
 
-- Shows demand adjustment line only when surge > 1.0
-- Amber/orange styling for demand line and message
-- Tooltip or info icon explaining demand pricing
+**File to Modify:** `src/pages/account/LoyaltyPage.tsx`
 
-### 3) Update `EatsCheckout.tsx` — Replace Hardcoded Fee
+Add a new "Levels" tab (or add to Overview) showing `TierComparisonTable`.
+
+### 4) Create Loyalty Level Badge Component
+
+**File to Create:** `src/components/shared/LoyaltyLevelBadge.tsx`
+
+Small reusable badge showing user's tier with icon and color. Variants:
+- `inline` — tiny badge for headers/nav
+- `card` — compact card for profile pages
+
+Uses the tier config colors/icons from `zivoPoints.ts`.
+
+### 5) Apply Tier Perks at Checkout
+
+**File to Modify:** `src/hooks/useEatsDeliveryPricing.ts`
+
+Integrate tier perks into the pricing calculation:
+- Import `useLoyaltyPoints` to get user's current tier
+- If tier grants `freeDelivery`, set delivery fee to $0
+- If tier grants `discountPercent`, apply discount to subtotal
+- Show loyalty discount as a separate line item
+
+**File to Modify:** `src/components/eats/DeliveryFeeBreakdownCard.tsx`
+
+Add new line items:
+- "Loyalty discount (Elite -10%)" — green, when active
+- "Free delivery (Elite perk)" — replaces delivery fee line, when active
 
 **File to Modify:** `src/pages/EatsCheckout.tsx`
 
-**Changes:**
-- Import `useEatsDeliveryPricing` hook
-- Remove hardcoded `const deliveryFee = 3.99`
-- Use hook values for all fee calculations
-- Replace the simple "Subtotal / Delivery Fee / Total" display with `DeliveryFeeBreakdownCard` + full breakdown
-- Add surge demand banner when active
-- Update the `total` calculation to use dynamic values
-- Pass dynamic fees to `createOrder.mutateAsync()` call
+Add `PointsCheckoutReminder` below the breakdown card showing bonus points multiplier from tier.
 
-**Before (current):**
-```text
-const deliveryFee = 3.99;
-const total = subtotal + deliveryFee;
-```
+### 6) Add Badge to Profile Page
 
-**After:**
-```text
-const pricing = useEatsDeliveryPricing(subtotal);
-const total = pricing.orderTotal;
-```
+**File to Modify:** `src/pages/Profile.tsx`
 
-**Order Summary section update:** Replace the simple 3-line breakdown (lines 598-611) with the full dynamic breakdown showing base fee, distance fee, demand adjustment, service fee, tax, and final total.
-
-### 4) Add Demand Adjustment Banner
-
-**Where:** Inside the Order Summary card in `EatsCheckout.tsx`, above the price breakdown.
-
-**When visible:** Only when surge is active (multiplier > 1.0).
-
-**Design:**
-```text
-+----------------------------------------------+
-|  ! Delivery fee adjusted due to high demand. |
-|    Demand is higher than usual in your area.  |
-+----------------------------------------------+
-```
-
-- Amber background with warning icon
-- Concise, transparent language
+Show `LoyaltyLevelBadge` next to user's name/avatar area and add "Loyalty" to quickLinks.
 
 ---
 
@@ -139,75 +111,87 @@ const total = pricing.orderTotal;
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useEatsDeliveryPricing.ts` | Combines zone pricing + surge for complete fee calculation |
-| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Visual breakdown of delivery fees with demand messaging |
+| `src/components/loyalty/TierComparisonTable.tsx` | Side-by-side tier comparison with perks |
+| `src/components/shared/LoyaltyLevelBadge.tsx` | Reusable tier badge for headers/profile |
 
-### Modified Files (1)
+### Modified Files (6)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsCheckout.tsx` | Replace hardcoded $3.99 with dynamic pricing hook, show breakdown card and demand banner |
+| `src/config/zivoPoints.ts` | Add `TierPerks` interface and structured perks to each tier |
+| `src/pages/account/LoyaltyPage.tsx` | Add "Levels" tab with tier comparison |
+| `src/hooks/useEatsDeliveryPricing.ts` | Apply free delivery and discount based on tier |
+| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Show loyalty discount and free delivery lines |
+| `src/pages/EatsCheckout.tsx` | Add points checkout reminder with tier bonus |
+| `src/pages/Profile.tsx` | Show loyalty badge + add quickLink |
 
 ---
 
-## Updated Checkout Order Summary
-
-```text
-+----------------------------------------------+
-|  Order Summary                               |
-|  Burger Palace                               |
-|                                              |
-|  [Item list with +/- buttons]                |
-|                                              |
-|  --- ETA Breakdown ---                       |
-|                                              |
-|  --- Price Breakdown ---                     |
-|  Subtotal                      $28.50        |
-|  Base delivery fee              $2.99        |
-|  Distance fee                   $1.00        |
-|  Demand adjustment              $1.20   (*)  |
-|  Service fee                    $4.28        |
-|  Tax                            $2.35        |
-|                                              |
-|  (*) amber banner if active:                 |
-|  "Delivery fee adjusted due to high demand." |
-|                                              |
-|  Total                         $40.32        |
-|                                              |
-|  [Place Order Request]                       |
-+----------------------------------------------+
-```
-
----
-
-## Pricing Calculation Flow
+## Checkout Pricing with Tier Perks
 
 ```text
 Cart Subtotal ($28.50)
        |
        v
-useEatsDeliveryPricing hook
+  Tier perks applied:
        |
-       ├── Base delivery fee: $2.99 (from DEFAULT_EATS_ZONE)
-       ├── Distance fee: $1.00 (est. 2 mi x $0.50/mi)
-       ├── Demand adjustment: surge multiplier applied to delivery fee
-       │      e.g. 1.3x surge on $3.99 base = $1.20 extra
-       ├── Service fee: 15% of subtotal = $4.28
-       ├── Small order fee: $2.00 if subtotal < $15
-       ├── Tax: 8.25% of subtotal = $2.35
+       ├── Elite discount: -10% of subtotal (-$2.85)
+       ├── Free delivery (Elite perk): $0.00
+       ├── Service fee: 15% of discounted subtotal
+       ├── Tax: 8.25%
        |
        v
-  Final total = subtotal + deliveryFee + serviceFee + smallOrderFee + tax
+  Breakdown shown:
+       |
+       Subtotal                      $28.50
+       Loyalty discount (Elite)      -$2.85   (green)
+       Delivery fee                   FREE    (green, was $3.99)
+       Service fee                    $3.85
+       Tax                            $2.12
+       ─────────────────────────────────────
+       Total                         $31.62
+
+       You'll earn 400 points (2x Elite bonus)
 ```
 
 ---
 
-## Transparency Guarantees
+## Tier Comparison Table Design
 
-| Requirement | How Addressed |
-|-------------|--------------|
-| Show base delivery fee | Separate line item in breakdown |
-| Show distance fee | Separate line with approximate distance |
-| Show demand adjustment | Orange-highlighted line, only when active |
-| Demand message | Amber banner: "Delivery fee adjusted due to high demand." |
-| Final total before payment | Bold total at bottom, always visible |
-| No hidden fees | Every fee component shown as individual line |
+```text
++----------------+----------------+----------------+
+|   Explorer     |   Traveler     |    Elite       |
+|   (current)    |                |                |
++----------------+----------------+----------------+
+|   0+ pts       |   5,000+ pts   |  25,000+ pts   |
++----------------+----------------+----------------+
+|  1x points     |  1.5x points   |  2x points     |
+|  Basic alerts  |  Priority      |  Exclusive     |
+|                |  alerts        |  previews      |
+|  No discount   |  5% off orders |  10% off       |
+|  Standard      |  Priority      |  Priority      |
+|  delivery      |  delivery      |  FREE delivery |
+|                |  Early deals   |  Birthday pts  |
++----------------+----------------+----------------+
+```
+
+---
+
+## Loyalty Badge Variants
+
+**Inline (for header/nav):**
+A small pill badge: `[crown icon] Elite` with amber styling.
+
+**Card (for profile):**
+A compact card showing tier icon, name, lifetime points, and progress bar to next tier.
+
+---
+
+## Edge Cases
+
+| Scenario | Behavior |
+|----------|----------|
+| User not logged in | No perks applied, no badge shown |
+| Explorer tier (no perks) | Standard pricing, badge says "Explorer" |
+| Tier upgrade mid-session | Invalidate loyalty query, new perks apply on next checkout |
+| Free delivery + surge active | Free delivery overrides surge — delivery fee is $0 |
+
