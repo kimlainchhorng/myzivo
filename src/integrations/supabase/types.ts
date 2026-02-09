@@ -5802,6 +5802,45 @@ export type Database = {
           },
         ]
       }
+      customer_identity_verifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          id_document_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          id_document_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          id_document_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_order_items: {
         Row: {
           created_at: string
@@ -30075,6 +30114,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trust_scores: {
+        Row: {
+          id: string
+          last_updated: string | null
+          role: string | null
+          score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          last_updated?: string | null
+          role?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          last_updated?: string | null
+          role?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       trusted_contacts: {
         Row: {

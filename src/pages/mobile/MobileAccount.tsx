@@ -65,6 +65,7 @@ export default function MobileAccount() {
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
     { icon: CreditCard, label: "Payment Methods", path: "/profile#payment" },
     { icon: Gift, label: "ZIVO Rewards", path: "/wallet", badge: "New" },
+    { icon: Shield, label: "Identity Verification", path: "/account/verification" },
   ];
 
   const supportItems: MenuItem[] = [
