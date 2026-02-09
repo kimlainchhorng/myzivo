@@ -5028,12 +5028,14 @@ export type Database = {
           discount_amount: number
           estimated_prep_minutes: number | null
           id: string
+          is_scheduled: boolean | null
           notes: string | null
           pin_attempts: number
           prep_started_at: string | null
           priority: string | null
           promo_code: string | null
           restaurant_id: string
+          scheduled_for: string | null
           status: string
           table_id: string | null
           table_number: string | null
@@ -5051,12 +5053,14 @@ export type Database = {
           discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
+          is_scheduled?: boolean | null
           notes?: string | null
           pin_attempts?: number
           prep_started_at?: string | null
           priority?: string | null
           promo_code?: string | null
           restaurant_id: string
+          scheduled_for?: string | null
           status?: string
           table_id?: string | null
           table_number?: string | null
@@ -5074,12 +5078,14 @@ export type Database = {
           discount_amount?: number
           estimated_prep_minutes?: number | null
           id?: string
+          is_scheduled?: boolean | null
           notes?: string | null
           pin_attempts?: number
           prep_started_at?: string | null
           priority?: string | null
           promo_code?: string | null
           restaurant_id?: string
+          scheduled_for?: string | null
           status?: string
           table_id?: string | null
           table_number?: string | null
@@ -15052,6 +15058,27 @@ export type Database = {
           },
         ]
       }
+      order_bundles: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       order_chats: {
         Row: {
           created_at: string
@@ -15553,6 +15580,38 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          bundle_id: string | null
+          created_at: string | null
+          id: string
+          is_scheduled: boolean | null
+          scheduled_for: string | null
+        }
+        Insert: {
+          bundle_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_scheduled?: boolean | null
+          scheduled_for?: string | null
+        }
+        Update: {
+          bundle_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_scheduled?: boolean | null
+          scheduled_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "order_bundles"
             referencedColumns: ["id"]
           },
         ]
@@ -26211,10 +26270,12 @@ export type Database = {
           holder_name: string
           holder_phone: string | null
           id: string
+          is_scheduled: boolean | null
           order_number: string
           pin_attempts: number
           promo_code: string | null
           provider: string
+          scheduled_for: string | null
           status: string
           stripe_checkout_session_id: string | null
           subtotal: number
@@ -26242,10 +26303,12 @@ export type Database = {
           holder_name: string
           holder_phone?: string | null
           id?: string
+          is_scheduled?: boolean | null
           order_number: string
           pin_attempts?: number
           promo_code?: string | null
           provider?: string
+          scheduled_for?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           subtotal?: number
@@ -26273,10 +26336,12 @@ export type Database = {
           holder_name?: string
           holder_phone?: string | null
           id?: string
+          is_scheduled?: boolean | null
           order_number?: string
           pin_attempts?: number
           promo_code?: string | null
           provider?: string
+          scheduled_for?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           subtotal?: number
@@ -30143,6 +30208,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      zone_demand: {
+        Row: {
+          demand_level: string | null
+          drivers_online: number | null
+          id: string
+          orders_count: number | null
+          updated_at: string | null
+          zone_id: string
+        }
+        Insert: {
+          demand_level?: string | null
+          drivers_online?: number | null
+          id?: string
+          orders_count?: number | null
+          updated_at?: string | null
+          zone_id: string
+        }
+        Update: {
+          demand_level?: string | null
+          drivers_online?: number | null
+          id?: string
+          orders_count?: number | null
+          updated_at?: string | null
+          zone_id?: string
+        }
+        Relationships: []
       }
       zone_pricing_rates: {
         Row: {

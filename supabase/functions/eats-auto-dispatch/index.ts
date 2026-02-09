@@ -43,14 +43,15 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;
 }
 
-// Calculate ETA based on distances
+// Calculate ETA based on distances with demand buffer
 function calculateETA(
   driverLat: number, 
   driverLng: number,
   restaurantLat: number, 
   restaurantLng: number,
   customerLat: number | null, 
-  customerLng: number | null
+  customerLng: number | null,
+  surgeMultiplier: number = 1.0
 ) {
   const distanceToRestaurant = calculateDistance(driverLat, driverLng, restaurantLat, restaurantLng);
   const etaPickupMinutes = Math.ceil(distanceToRestaurant / AVG_SPEED_KM_PER_MIN);
@@ -61,11 +62,22 @@ function calculateETA(
     etaDeliveryMinutes = Math.ceil(distanceToCustomer / AVG_SPEED_KM_PER_MIN);
   }
   
+  // Add demand buffer based on surge level
+  let demandBuffer = 0;
+  if (surgeMultiplier > 1.5) {
+    demandBuffer = 10; // High demand: +10 min
+  } else if (surgeMultiplier > 1.0) {
+    demandBuffer = 5;  // Medium demand: +5 min
+  }
+  
+  const totalMinutes = etaPickupMinutes + etaDeliveryMinutes + demandBuffer;
   const now = new Date();
+  
   return {
     eta_pickup: new Date(now.getTime() + etaPickupMinutes * 60 * 1000).toISOString(),
-    eta_dropoff: new Date(now.getTime() + (etaPickupMinutes + etaDeliveryMinutes) * 60 * 1000).toISOString(),
-    eta_minutes: etaPickupMinutes + etaDeliveryMinutes,
+    eta_dropoff: new Date(now.getTime() + totalMinutes * 60 * 1000).toISOString(),
+    eta_minutes: totalMinutes,
+    demand_buffer: demandBuffer,
   };
 }
 
@@ -238,15 +250,35 @@ serve(async (req) => {
     const nearestDriver = driversWithDistance[0];
     console.log(`[eats-auto-dispatch] Nearest driver: ${nearestDriver.full_name} at ${nearestDriver.distance_km.toFixed(2)}km`);
 
-    // Calculate ETA
+    // Fetch current surge multiplier for demand-aware ETA
+    let surgeMultiplier = 1.0;
+    try {
+      const { data: surgeData } = await supabase
+        .from("surge_multipliers")
+        .select("multiplier")
+        .eq("zone", "GLOBAL")
+        .single();
+      
+      if (surgeData?.multiplier) {
+        surgeMultiplier = Math.min(Number(surgeData.multiplier), 2.5); // Cap at 2.5x
+        console.log(`[eats-auto-dispatch] Current surge multiplier: ${surgeMultiplier}`);
+      }
+    } catch (surgeErr) {
+      console.log("[eats-auto-dispatch] Could not fetch surge, using default");
+    }
+
+    // Calculate ETA with demand buffer
     const eta = calculateETA(
       nearestDriver.current_lat,
       nearestDriver.current_lng,
       restaurant.lat,
       restaurant.lng,
       order.delivery_lat,
-      order.delivery_lng
+      order.delivery_lng,
+      surgeMultiplier
     );
+
+    console.log(`[eats-auto-dispatch] ETA: ${eta.eta_minutes} min (includes ${eta.demand_buffer} min demand buffer)`);
 
     // Atomically assign driver to prevent race conditions
     const { data: updatedOrder, error: updateError } = await supabase

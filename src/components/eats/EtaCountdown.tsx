@@ -1,10 +1,12 @@
 /**
  * ETA Countdown Component
  * Shows estimated arrival time with countdown and dynamic recalculation
+ * Includes demand-awareness messaging when delivery times may be longer
  */
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Zap } from "lucide-react";
+import { Clock, Zap, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { SurgeLevel } from "@/lib/surge";
 
 interface EtaCountdownProps {
   etaDropoff: string | null;
@@ -13,6 +15,8 @@ interface EtaCountdownProps {
   deliveryLat?: number | null;
   deliveryLng?: number | null;
   className?: string;
+  demandLevel?: SurgeLevel;
+  showDemandNote?: boolean;
 }
 
 // Haversine formula for distance calculation
@@ -45,6 +49,8 @@ export function EtaCountdown({
   deliveryLat,
   deliveryLng,
   className = "",
+  demandLevel,
+  showDemandNote = false,
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -92,6 +98,7 @@ export function EtaCountdown({
 
   const isArrivingSoon = etaMinutes <= 2;
   const isNearby = etaMinutes <= 5;
+  const hasDemandBuffer = showDemandNote && demandLevel && demandLevel !== "Low";
 
   return (
     <motion.div
@@ -152,6 +159,16 @@ export function EtaCountdown({
           <span className="text-xs text-zinc-500">Live</span>
         </div>
       </div>
+
+      {/* Demand buffer note */}
+      {hasDemandBuffer && !isArrivingSoon && (
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          <Flame className={`w-3 h-3 ${demandLevel === "High" ? "text-orange-500" : "text-amber-500"}`} />
+          <span className={demandLevel === "High" ? "text-orange-400/80" : "text-amber-400/80"}>
+            Busy time — ETA includes buffer
+          </span>
+        </div>
+      )}
 
       {/* Progress bar for visual feedback */}
       {!isArrivingSoon && etaMinutes <= 30 && (
