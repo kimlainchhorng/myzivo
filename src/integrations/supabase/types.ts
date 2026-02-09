@@ -11719,6 +11719,7 @@ export type Database = {
           id: string
           inactivity_warning_at: string | null
           is_business_order: boolean | null
+          is_group_order: boolean | null
           is_multi_stop: boolean | null
           is_scheduled: boolean | null
           items: Json
@@ -11731,6 +11732,7 @@ export type Database = {
           merchant_earnings_cents: number | null
           needs_driver: boolean | null
           paid_at: string | null
+          participant_count: number | null
           payment_status: string | null
           payment_type: string | null
           payout_at: string | null
@@ -11885,6 +11887,7 @@ export type Database = {
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_group_order?: boolean | null
           is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
           items: Json
@@ -11897,6 +11900,7 @@ export type Database = {
           merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
           paid_at?: string | null
+          participant_count?: number | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
@@ -12051,6 +12055,7 @@ export type Database = {
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_group_order?: boolean | null
           is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
           items?: Json
@@ -12063,6 +12068,7 @@ export type Database = {
           merchant_earnings_cents?: number | null
           needs_driver?: boolean | null
           paid_at?: string | null
+          participant_count?: number | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
@@ -12913,6 +12919,175 @@ export type Database = {
           period?: string
           period_key?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      group_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          menu_item_id: string
+          notes: string | null
+          price: number
+          quantity: number
+          session_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name: string
+          menu_item_id: string
+          notes?: string | null
+          price: number
+          quantity?: number
+          session_id: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          menu_item_id?: string
+          notes?: string | null
+          price?: number
+          quantity?: number
+          session_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_order_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_order_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_order_members: {
+        Row: {
+          group_order_id: string | null
+          id: string
+          joined_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          group_order_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          group_order_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_order_members_group_order_id_fkey"
+            columns: ["group_order_id"]
+            isOneToOne: false
+            referencedRelation: "group_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_order_sessions: {
+        Row: {
+          created_at: string
+          deadline: string | null
+          host_user_id: string
+          id: string
+          invite_code: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deadline?: string | null
+          host_user_id: string
+          id?: string
+          invite_code: string
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string | null
+          host_user_id?: string
+          id?: string
+          invite_code?: string
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_order_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_order_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_order_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_order_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_orders: {
+        Row: {
+          created_at: string | null
+          host_user_id: string | null
+          id: string
+          restaurant_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          host_user_id?: string | null
+          id?: string
+          restaurant_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          host_user_id?: string | null
+          id?: string
+          restaurant_id?: string | null
+          status?: string | null
         }
         Relationships: []
       }

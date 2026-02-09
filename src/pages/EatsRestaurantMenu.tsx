@@ -30,6 +30,10 @@ import { HighVolumeBanner } from "@/components/eats/HighVolumeBanner";
 import { useRestaurantQueueLength } from "@/hooks/useRestaurantQueueLength";
 import { SocialShareSheet } from "@/components/shared/SocialShareSheet";
 import { useShareTracking } from "@/hooks/useShareTracking";
+import { StartGroupOrderButton } from "@/components/eats/StartGroupOrderButton";
+import { GroupOrderBanner } from "@/components/eats/GroupOrderBanner";
+import { useGroupOrder, useGroupSession } from "@/hooks/useGroupOrder";
+import { useAuth } from "@/contexts/AuthContext";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -250,6 +254,14 @@ function EatsRestaurantMenuContent() {
   const [searchParams] = useSearchParams();
   const { logLinkOpened } = useShareTracking();
   const hasLoggedOpen = useRef(false);
+
+  // Group order mode
+  const { user } = useAuth();
+  const groupSessionId = searchParams.get("group");
+  const { addGroupItem } = useGroupOrder();
+  const { session: groupSession, items: groupItems } = useGroupSession(groupSessionId);
+  const isGroupMode = !!groupSessionId && !!groupSession && groupSession.status === "open";
+  const myGroupItemCount = groupItems.filter(i => i.user_id === user?.id).length;
   
   useEffect(() => {
     if (id && searchParams.get("utm_source") === "share" && !hasLoggedOpen.current) {
@@ -361,7 +373,10 @@ function EatsRestaurantMenuContent() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-start">
+              <div className="flex items-center gap-2 self-start flex-wrap">
+                {!isGroupMode && id && (
+                  <StartGroupOrderButton restaurantId={id} />
+                )}
                 <SocialShareSheet
                   title={restaurant.name}
                   text={`Check out ${restaurant.name} on ZIVO Eats!`}
@@ -379,6 +394,14 @@ function EatsRestaurantMenuContent() {
               </div>
             </div>
             
+            {/* Group Order Banner */}
+            {isGroupMode && groupSession && (
+              <GroupOrderBanner
+                inviteCode={groupSession.invite_code}
+                myItemCount={myGroupItemCount}
+              />
+            )}
+
             {/* Availability Banners */}
             {isServiceMaintenance && (
               <MaintenanceBanner className="mt-4" />
