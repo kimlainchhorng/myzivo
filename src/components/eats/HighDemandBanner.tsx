@@ -11,10 +11,11 @@ import type { SurgeLevel } from "@/lib/surge";
 interface HighDemandBannerProps {
   level: SurgeLevel;
   orderId: string;
+  isRespondingWithIncentives?: boolean;
   className?: string;
 }
 
-export function HighDemandBanner({ level, orderId, className }: HighDemandBannerProps) {
+export function HighDemandBanner({ level, orderId, isRespondingWithIncentives, className }: HighDemandBannerProps) {
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Check if already dismissed this session
@@ -90,8 +91,12 @@ export function HighDemandBanner({ level, orderId, className }: HighDemandBanner
               isHigh ? "text-orange-300/70" : "text-amber-300/70"
             )}>
               {isHigh 
-                ? "Delivery time may be slightly longer. We appreciate your patience!" 
-                : "Delivery may take a bit longer than usual."}
+                ? isRespondingWithIncentives
+                  ? "Delivery time may be slightly longer. Additional drivers are being notified."
+                  : "Delivery time may be slightly longer. We appreciate your patience!"
+                : isRespondingWithIncentives
+                  ? "We're bringing more drivers online to speed things up."
+                  : "Delivery may take a bit longer than usual."}
             </p>
           </div>
         </div>

@@ -11,6 +11,7 @@ interface PeakDemandAlertProps {
   isLowCoverage: boolean;
   alertMessage: string | null;
   coverageMessage: string | null;
+  isSystemResponding?: boolean;
   storageKey?: string;
   className?: string;
 }
@@ -20,6 +21,7 @@ export function PeakDemandAlert({
   isLowCoverage,
   alertMessage,
   coverageMessage,
+  isSystemResponding,
   storageKey = "peak-demand-alert",
   className,
 }: PeakDemandAlertProps) {
@@ -90,6 +92,14 @@ export function PeakDemandAlert({
             )}>
               {body}
             </p>
+            {isSystemResponding && (
+              <p className={cn(
+                "text-xs mt-1",
+                showHighDemand ? "text-amber-300/70" : "text-yellow-300/70"
+              )}>
+                We're pre-positioning drivers to keep things moving.
+              </p>
+            )}
           </div>
         </div>
       </motion.div>

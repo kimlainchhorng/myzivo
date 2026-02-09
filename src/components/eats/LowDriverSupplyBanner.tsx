@@ -15,6 +15,7 @@ interface LowDriverSupplyBannerProps {
   supplyLevel: DriverSupplyLevel;
   driverCount: number;
   orderId: string;
+  isIncentiveActive?: boolean;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ export function LowDriverSupplyBanner({
   supplyLevel, 
   driverCount, 
   orderId, 
+  isIncentiveActive,
   className 
 }: LowDriverSupplyBannerProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -52,18 +54,24 @@ export function LowDriverSupplyBanner({
     if (isCritical) {
       return {
         title: "No drivers nearby",
-        subtitle: "Delivery times are extended. We're actively finding drivers.",
+        subtitle: isIncentiveActive
+          ? "We're actively notifying additional drivers. Hang tight!"
+          : "Delivery times are extended. We're actively finding drivers.",
       };
     }
     if (isLow) {
       return {
         title: "High demand — delivery may take longer",
-        subtitle: `Only ${driverCount} driver${driverCount === 1 ? "" : "s"} available nearby.`,
+        subtitle: isIncentiveActive
+          ? "Additional drivers are being notified to your area."
+          : `Only ${driverCount} driver${driverCount === 1 ? "" : "s"} available nearby.`,
       };
     }
     return {
       title: "Busy area",
-      subtitle: "Delivery may take a bit longer than usual.",
+      subtitle: isIncentiveActive
+        ? "We're bringing more drivers online."
+        : "Delivery may take a bit longer than usual.",
     };
   };
 

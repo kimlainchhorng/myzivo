@@ -14892,6 +14892,27 @@ export type Database = {
         }
         Relationships: []
       }
+      live_metrics: {
+        Row: {
+          id: string
+          metric_name: string | null
+          metric_value: number | null
+          recorded_at: string | null
+        }
+        Insert: {
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          recorded_at?: string | null
+        }
+        Update: {
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       login_sessions: {
         Row: {
           created_at: string
