@@ -1735,6 +1735,36 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_message_log: {
+        Row: {
+          channel: string
+          id: string
+          message_preview: string | null
+          sent_at: string
+          trigger_ref: string | null
+          trigger_type: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          id?: string
+          message_preview?: string | null
+          sent_at?: string
+          trigger_ref?: string | null
+          trigger_type: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          message_preview?: string | null
+          sent_at?: string
+          trigger_ref?: string | null
+          trigger_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       automation_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -14472,6 +14502,36 @@ export type Database = {
           },
         ]
       }
+      maintenance_history: {
+        Row: {
+          action: string
+          affected_services: string[] | null
+          duration_minutes: number | null
+          id: string
+          message: string | null
+          performed_at: string
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          affected_services?: string[] | null
+          duration_minutes?: number | null
+          id?: string
+          message?: string | null
+          performed_at?: string
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          affected_services?: string[] | null
+          duration_minutes?: number | null
+          id?: string
+          message?: string | null
+          performed_at?: string
+          performed_by?: string | null
+        }
+        Relationships: []
+      }
       maintenance_logs: {
         Row: {
           cost: number | null
@@ -14552,6 +14612,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maintenance_mode: {
+        Row: {
+          affected_services: string[] | null
+          created_at: string
+          disabled_at: string | null
+          disabled_by: string | null
+          enabled: boolean
+          enabled_at: string | null
+          enabled_by: string | null
+          id: string
+          message: string | null
+          updated_at: string
+        }
+        Insert: {
+          affected_services?: string[] | null
+          created_at?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affected_services?: string[] | null
+          created_at?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       marketing_campaign_stats: {
         Row: {
@@ -15775,6 +15874,10 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          automated_birthday: boolean
+          automated_cart_reminders: boolean
+          automated_messages_enabled: boolean
+          automated_reengagement: boolean
           created_at: string
           email_enabled: boolean | null
           id: string
@@ -15788,6 +15891,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          automated_birthday?: boolean
+          automated_cart_reminders?: boolean
+          automated_messages_enabled?: boolean
+          automated_reengagement?: boolean
           created_at?: string
           email_enabled?: boolean | null
           id?: string
@@ -15801,6 +15908,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          automated_birthday?: boolean
+          automated_cart_reminders?: boolean
+          automated_messages_enabled?: boolean
+          automated_reengagement?: boolean
           created_at?: string
           email_enabled?: boolean | null
           id?: string
@@ -20203,6 +20314,7 @@ export type Database = {
           background_check_reason: string | null
           background_check_status: string
           created_at: string | null
+          date_of_birth: string | null
           email: string | null
           email_verified: boolean | null
           full_name: string | null
@@ -20238,6 +20350,7 @@ export type Database = {
           background_check_reason?: string | null
           background_check_status?: string
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
@@ -20273,6 +20386,7 @@ export type Database = {
           background_check_reason?: string | null
           background_check_status?: string
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
