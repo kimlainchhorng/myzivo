@@ -1,95 +1,109 @@
 
-
-# Ratings and Reviews — Wire Up Existing Infrastructure
+# Top Picks and Top Rated Sections
 
 ## Overview
 
-All the building blocks already exist but are disconnected:
-- **`RatingModal`** (`src/components/eats/RatingModal.tsx`): Full UI with overall, food, and delivery ratings plus optional comment -- never imported anywhere
-- **`useEatsReviews` hook**: CRUD operations for `eats_reviews` table -- never used from order pages
-- **`eats_reviews` table**: Exists in Supabase with columns for rating, food_rating, delivery_rating, comment
-- **`useOrderReview` hook**: Checks if an order has been reviewed -- never used
-
-This plan wires everything together so the rating modal appears after delivery and past ratings show in order history.
+The Eats mobile home (`MobileEatsPremium.tsx`) and desktop restaurants page (`EatsRestaurants.tsx`) currently show restaurants in a single feed sorted by rating. There are no dedicated "Top Rated" or "Most Popular This Week" sections, and no user-facing sort controls. The `restaurants` table already has `rating`, `total_orders`, and `avg_prep_time` columns, so no schema changes are needed.
 
 ## What Changes
 
-### 1. Show RatingModal on order detail page after delivery
+### 1. New component: `TopPicksSection` (new file)
 
-Update `EatsOrderDetail.tsx` to:
-- Import `RatingModal` and `useOrderReview`
-- Auto-open the modal when order status is `delivered` and no review exists yet
-- Add a "Rate this order" button for delivered orders that haven't been rated
-- Show a "Rated" badge for orders that have already been reviewed
+A reusable section component that displays two horizontal-scroll carousels on the Eats home screen:
 
-### 2. Show past ratings in order history
+- **Top Rated Restaurants**: Sorted by `rating DESC`, showing restaurants with rating >= 4.0
+- **Most Popular This Week**: Sorted by `total_orders DESC`, showing the busiest restaurants
 
-Update `EatsOrders.tsx` to:
-- For delivered orders, show star rating inline if a review exists
-- Query reviews for the user's delivered orders using `useEatsReviews`
+Each carousel uses the existing `RecommendationCard` component with a new `variant="topPick"` that shows a rank badge (1, 2, 3...).
 
-### 3. Show rating on individual order detail (already delivered)
+### 2. Add sort controls to `MobileEatsPremium.tsx`
 
-On the order detail page for a delivered order that has been rated:
-- Display the submitted rating (overall, food, delivery) and comment in a read-only summary card below the order details
+Below the category pills, add a sort-pill bar with four options:
+- **Recommended** (default -- current rating sort)
+- **Top Rated** (rating DESC)
+- **Most Popular** (total_orders DESC)
+- **Fast Delivery** (avg_prep_time ASC)
+
+The selected sort re-orders the main restaurant feed. Uses simple inline pills matching the existing category pill design, no new dependencies.
+
+### 3. Add sort controls to `EatsRestaurants.tsx` (desktop)
+
+Add a sort dropdown (using existing `SortSelect` component) next to the search bar with the same four options: Recommended, Top Rated, Most Popular, Fast Delivery.
+
+### 4. Update `RecommendationCard` with `topPick` variant
+
+Add a small rank badge overlay (gold #1, silver #2, bronze #3, then plain for 4+) when `variant="topPick"` and a `rank` prop is provided.
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/pages/EatsOrderDetail.tsx` | Update | Import RatingModal, auto-trigger on delivery, add Rate button, show rating summary |
-| `src/pages/EatsOrders.tsx` | Update | Show star rating inline for reviewed orders |
-| `src/hooks/useEatsReviews.ts` | Update | Add hook to batch-fetch reviews for multiple order IDs |
+| `src/components/eats/TopPicksSection.tsx` | Create | Two carousels: Top Rated and Most Popular This Week |
+| `src/components/eats/MobileEatsPremium.tsx` | Update | Add TopPicksSection above feed, add sort pills |
+| `src/pages/EatsRestaurants.tsx` | Update | Add sort dropdown to desktop listing |
+| `src/components/eats/RecommendationCard.tsx` | Update | Add `topPick` variant with rank badge |
 
 ## Technical Details
 
-### Auto-trigger rating modal
-
-In `EatsOrderDetail.tsx`, add state and effect:
+### TopPicksSection data
 
 ```text
-const [showRating, setShowRating] = useState(false);
-const { data: existingReview } = useOrderReview(order?.id);
+Two queries, both from restaurants table:
 
-useEffect:
-  if order.status === 'delivered' && existingReview === null (loaded, not found)
-    delay 1.5s then setShowRating(true)
+Top Rated:
+  WHERE status = 'active' AND rating >= 4.0
+  ORDER BY rating DESC
+  LIMIT 6
+
+Most Popular:
+  WHERE status = 'active' AND total_orders > 0
+  ORDER BY total_orders DESC
+  LIMIT 6
 ```
 
-This gives the delivered status animation time to play before the modal appears. The modal is skippable.
+Both queries are wrapped in a single `useQuery` call with a 5-minute stale time to avoid extra requests.
 
-### "Rate this order" button for delivered orders
-
-Below the "Order Again" button for delivered orders, add a "Rate Order" button that opens the modal -- only if no review exists yet. If already reviewed, show the rating inline instead.
-
-### Rating summary card
-
-For delivered orders with an existing review, render a read-only card showing:
-- Overall stars
-- Food quality stars (if provided)
-- Delivery experience stars (if provided)
-- Written comment (if provided)
-
-Uses the existing `StarRating` component in disabled/read-only mode.
-
-### Order history inline ratings
-
-In `EatsOrders.tsx`, add a new hook `useMyOrderReviews` to `useEatsReviews.ts` that fetches all reviews for the logged-in user. Then for each delivered order card, if a review exists, show a small star icon with the rating number next to the status badge.
+### Sort pills (mobile)
 
 ```text
-New hook: useMyOrderReviews()
-  Query: eats_reviews WHERE user_id = auth.uid()
-  Returns: Map<orderId, EatsReview>
+State: sortBy = 'recommended' | 'rating' | 'popular' | 'fast'
 
-In order card:
-  If review exists for this order:
-    Show star icon + rating (e.g., "4.0") next to Delivered badge
+Applied to filteredRestaurants before rendering:
+  'recommended' => order by rating DESC (current default)
+  'rating'      => order by rating DESC, nulls last
+  'popular'     => order by total_orders DESC, nulls last
+  'fast'        => order by avg_prep_time ASC, nulls last
 ```
+
+Sorting is done client-side since all restaurants are already fetched. The pill bar renders inline between category pills and the restaurant feed, using the same orange active / zinc inactive styling.
+
+### Sort dropdown (desktop)
+
+Uses the existing `SortSelect` component from `src/components/results/SortSelect.tsx` with custom options:
+
+```text
+const eatsSortOptions = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'rating', label: 'Top Rated' },
+  { value: 'popular', label: 'Most Popular' },
+  { value: 'fast', label: 'Fast Delivery' },
+];
+```
+
+### Rank badge on RecommendationCard
+
+When `variant="topPick"` and `rank` is provided:
+- Rank 1: Gold badge with crown icon
+- Rank 2: Silver badge
+- Rank 3: Bronze badge
+- 4+: Small numbered badge
+
+Positioned in the top-left of the cover image, overlapping slightly.
 
 ### Edge cases
 
-- Modal only auto-opens once per page visit (guarded by state)
-- If user navigates away and comes back, modal triggers again if still unrated (acceptable UX for encouraging reviews)
-- Skip button simply closes the modal without submitting
-- Review cannot be submitted twice (useCreateEatsReview will fail on duplicate order_id due to DB constraint)
-- Orders with status other than "delivered" never show the rating modal or button
+- Restaurants with null rating are placed last when sorting by rating
+- Restaurants with null total_orders treated as 0
+- Restaurants with null avg_prep_time placed last when sorting by fast delivery
+- TopPicksSection hidden if fewer than 2 restaurants qualify for either list
+- City filter from `useCustomerCity` still applies to all queries
