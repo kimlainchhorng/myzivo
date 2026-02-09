@@ -5,9 +5,9 @@
  * Smart dispatch transparency with clear driver assignment status
  * Order editing window for customer flexibility before restaurant confirms
  */
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock, Map } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock, Map, Star, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -53,6 +53,9 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { SocialShareSheet } from "@/components/shared/SocialShareSheet";
+import { RatingModal } from "@/components/eats/RatingModal";
+import { useOrderReview } from "@/hooks/useEatsReviews";
+import StarRating from "@/components/rating/StarRating";
 
 // Haversine formula for distance calculation (miles)
 function calculateDistanceMiles(
@@ -82,7 +85,19 @@ function EatsOrderDetailContent() {
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [showRating, setShowRating] = useState(false);
   const { clearCart, addItem } = useCart();
+
+  // Rating review check
+  const { data: existingReview, isSuccess: reviewLoaded } = useOrderReview(order?.id);
+
+  // Auto-trigger rating modal after delivery
+  useEffect(() => {
+    if (order?.status === "delivered" && reviewLoaded && existingReview === null) {
+      const timer = setTimeout(() => setShowRating(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [order?.status, reviewLoaded, existingReview]);
 
   // Use live location when available, fall back to driver profile location
   const driverLat = liveDriverLocation?.lat ?? driver?.current_lat;
@@ -767,6 +782,7 @@ function EatsOrderDetailContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="space-y-3"
           >
             <Button
               onClick={handleOrderAgain}
@@ -775,6 +791,67 @@ function EatsOrderDetailContent() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Order Again
             </Button>
+
+            {/* Rate Order Button (only for delivered, unrated orders) */}
+            {order.status === "delivered" && reviewLoaded && !existingReview && (
+              <Button
+                variant="outline"
+                onClick={() => setShowRating(true)}
+                className="w-full h-12 rounded-xl border-orange-500/30 bg-zinc-900/80 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50"
+              >
+                <Star className="w-5 h-5 mr-2" />
+                Rate This Order
+              </Button>
+            )}
+          </motion.div>
+        )}
+
+        {/* Rating Summary Card (for delivered orders that have been rated) */}
+        {order.status === "delivered" && existingReview && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2">
+                <Star className="w-4 h-4 text-orange-500" />
+                Your Review
+              </h2>
+              <span className="text-xs text-zinc-500">
+                {format(new Date(existingReview.created_at), "MMM d, yyyy")}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-400">Overall</span>
+                <StarRating value={existingReview.rating} onChange={() => {}} size="sm" disabled />
+              </div>
+              {existingReview.food_rating && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400 flex items-center gap-2">
+                    <UtensilsCrossed className="w-3.5 h-3.5" /> Food Quality
+                  </span>
+                  <StarRating value={existingReview.food_rating} onChange={() => {}} size="sm" disabled />
+                </div>
+              )}
+              {existingReview.delivery_rating && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400 flex items-center gap-2">
+                    <Truck className="w-3.5 h-3.5" /> Delivery
+                  </span>
+                  <StarRating value={existingReview.delivery_rating} onChange={() => {}} size="sm" disabled />
+                </div>
+              )}
+            </div>
+
+            {existingReview.comment && (
+              <p className="text-sm text-zinc-300 bg-zinc-800/50 rounded-xl p-3 italic">
+                "{existingReview.comment}"
+              </p>
+            )}
           </motion.div>
         )}
 
@@ -844,6 +921,16 @@ function EatsOrderDetailContent() {
         onConfirm={orderEditing.cancelOrder}
         isCancelling={orderEditing.isCancelling}
       />
+      {/* Rating Modal */}
+      {order.status === "delivered" && (
+        <RatingModal
+          open={showRating}
+          onOpenChange={setShowRating}
+          orderId={order.id}
+          restaurantId={order.restaurant_id}
+          restaurantName={restaurantName}
+        />
+      )}
     </div>
   );
 }

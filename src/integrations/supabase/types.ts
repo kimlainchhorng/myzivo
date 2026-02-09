@@ -14437,6 +14437,33 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_snapshots: {
+        Row: {
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          period: string | null
+          recorded_at: string | null
+          score: number | null
+        }
+        Insert: {
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          period?: string | null
+          recorded_at?: string | null
+          score?: number | null
+        }
+        Update: {
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          period?: string | null
+          recorded_at?: string | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       ledger_entries: {
         Row: {
           amount: number
@@ -17574,6 +17601,8 @@ export type Database = {
           is_flagged: boolean | null
           is_public: boolean | null
           merchant_rating: number | null
+          merchant_reply: string | null
+          merchant_reply_at: string | null
           order_id: string
           restaurant_id: string | null
           tags: string[] | null
@@ -17595,6 +17624,8 @@ export type Database = {
           is_flagged?: boolean | null
           is_public?: boolean | null
           merchant_rating?: number | null
+          merchant_reply?: string | null
+          merchant_reply_at?: string | null
           order_id: string
           restaurant_id?: string | null
           tags?: string[] | null
@@ -17616,6 +17647,8 @@ export type Database = {
           is_flagged?: boolean | null
           is_public?: boolean | null
           merchant_rating?: number | null
+          merchant_reply?: string | null
+          merchant_reply_at?: string | null
           order_id?: string
           restaurant_id?: string | null
           tags?: string[] | null
