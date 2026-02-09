@@ -12540,6 +12540,39 @@ export type Database = {
         }
         Relationships: []
       }
+      incidents: {
+        Row: {
+          affected_service: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          affected_service?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          affected_service?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           category: string

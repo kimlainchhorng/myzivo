@@ -5,7 +5,7 @@
  * Includes enhanced driver assignment sub-steps for transparency
  * Shows near_pickup and at_pickup phases
  */
-import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck, MapPin, Navigation } from "lucide-react";
+import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck, MapPin, Navigation, Flame, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -54,6 +54,8 @@ interface StatusTimelineProps {
   assignedAt?: string | null;
   /** Current dispatch phase for enhanced substep display */
   dispatchPhase?: DispatchPhase;
+  /** Prep progress percentage (0-100) for prep substeps */
+  prepProgressPercent?: number;
 }
 
 function formatTimestamp(timestamp: string | null | undefined): string | null {
@@ -72,6 +74,7 @@ export function StatusTimeline({
   driverId,
   assignedAt,
   dispatchPhase,
+  prepProgressPercent = 0,
 }: StatusTimelineProps) {
   // Normalize legacy status values to standard ones
   const normalizedStatus = normalizeStatus(currentStatus);
@@ -184,13 +187,101 @@ export function StatusTimeline({
               </div>
             </div>
 
-            {/* Driver Assignment Substeps - shown under Preparing */}
+            {/* Driver Assignment Substeps + Prep Progress - shown under Preparing */}
             {showSubstepsHere && (
               <div className="ml-5 pl-4 border-l-2 border-dashed border-zinc-700 space-y-2 py-2">
+                {/* Prep Progress Substeps */}
+                {normalizedStatus === "preparing" && (
+                  <>
+                    {/* Starting prep */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center",
+                        prepProgressPercent >= 30 ? "bg-emerald-500/30" : "bg-orange-500/30"
+                      )}>
+                        {prepProgressPercent >= 30 ? (
+                          <Check className="w-3 h-3 text-emerald-400" />
+                        ) : (
+                          <ChefHat className="w-3 h-3 text-orange-400 animate-pulse" />
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-xs",
+                        prepProgressPercent >= 30 ? "text-zinc-400" : "text-orange-300"
+                      )}>
+                        Starting preparation
+                      </span>
+                    </motion.div>
+
+                    {/* Cooking */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center",
+                        prepProgressPercent >= 75 ? "bg-emerald-500/30" : 
+                          prepProgressPercent >= 30 ? "bg-orange-500/30" : "bg-zinc-700/50"
+                      )}>
+                        {prepProgressPercent >= 75 ? (
+                          <Check className="w-3 h-3 text-emerald-400" />
+                        ) : prepProgressPercent >= 30 ? (
+                          <Flame className="w-3 h-3 text-orange-400 animate-pulse" />
+                        ) : (
+                          <Flame className="w-3 h-3 text-zinc-500" />
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-xs",
+                        prepProgressPercent >= 75 ? "text-zinc-400" : 
+                          prepProgressPercent >= 30 ? "text-orange-300" : "text-zinc-500"
+                      )}>
+                        Cooking your order
+                      </span>
+                    </motion.div>
+
+                    {/* Almost ready */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center",
+                        prepProgressPercent >= 100 ? "bg-emerald-500/30" : 
+                          prepProgressPercent >= 75 ? "bg-amber-500/30" : "bg-zinc-700/50"
+                      )}>
+                        {prepProgressPercent >= 100 ? (
+                          <Check className="w-3 h-3 text-emerald-400" />
+                        ) : prepProgressPercent >= 75 ? (
+                          <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                        ) : (
+                          <Sparkles className="w-3 h-3 text-zinc-500" />
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-xs",
+                        prepProgressPercent >= 100 ? "text-zinc-400" : 
+                          prepProgressPercent >= 75 ? "text-amber-300" : "text-zinc-500"
+                      )}>
+                        Almost ready!
+                      </span>
+                    </motion.div>
+                  </>
+                )}
+
                 {/* Searching for driver */}
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: normalizedStatus === "preparing" ? 0.15 : 0 }}
                   className="flex items-center gap-3"
                 >
                   <div

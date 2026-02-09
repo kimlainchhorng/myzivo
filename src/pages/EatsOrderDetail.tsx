@@ -18,6 +18,7 @@ import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { useDriverProximity } from "@/hooks/useDriverProximity";
 import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
 import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
+import { usePrepProgress } from "@/hooks/usePrepProgress";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -26,6 +27,7 @@ import { EnhancedStatusBanner } from "@/components/eats/EnhancedStatusBanner";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { LowDriverSupplyBanner } from "@/components/eats/LowDriverSupplyBanner";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
+import { PrepProgressBanner } from "@/components/eats/PrepProgressBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
@@ -83,7 +85,17 @@ export default function EatsOrderDetail() {
     return undefined;
   }, [driverLat, driverLng, order?.delivery_lat, order?.delivery_lng]);
 
-  // Dispatch status for transparent messaging (enhanced with pickup coordinates)
+  // Fetch learned prep time for this restaurant
+  const learnedPrep = useLearnedPrepTime(order?.restaurant_id);
+
+  // Calculate prep progress for smoother status transitions
+  const prepProgress = usePrepProgress({
+    acceptedAt: order?.accepted_at,
+    learnedPrepMinutes: learnedPrep.avgPrepMinutes,
+    isOrderReady: order?.status === "ready_for_pickup" || order?.status === "ready",
+  });
+
+  // Dispatch status for transparent messaging (enhanced with pickup coordinates and prep progress)
   const dispatchStatus = useEatsDispatchStatus({
     status: order?.status || "",
     driverId: order?.driver_id,
@@ -93,6 +105,8 @@ export default function EatsOrderDetail() {
     deliveryLng: order?.delivery_lng,
     pickupLat,
     pickupLng,
+    prepProgressPercent: prepProgress.progressPercent,
+    isAlmostReady: prepProgress.status === "almost_ready",
   });
 
   // Driver proximity tracking for enhanced ETA
@@ -106,9 +120,6 @@ export default function EatsOrderDetail() {
     orderStatus: order?.status || "",
   });
 
-  // Fetch learned prep time for this restaurant
-  const learnedPrep = useLearnedPrepTime(order?.restaurant_id);
-
   // Determine order phase for ETA calculation
   const orderPhase: OrderPhase = useMemo(() => {
     if (order?.status === "out_for_delivery") return "out_for_delivery";
@@ -117,7 +128,7 @@ export default function EatsOrderDetail() {
     return "preparing";
   }, [order?.status]);
 
-  // Smart ETA with range calculation and learned prep time
+  // Smart ETA with range calculation, learned prep time, and speed adjustment
   const smartEta = useSmartEta({
     orderStatus: order?.status || "",
     driverAssigned: !!order?.driver_id,
@@ -132,6 +143,9 @@ export default function EatsOrderDetail() {
     learnedPrepMinutes: learnedPrep.avgPrepMinutes,
     isPrepLearned: learnedPrep.isLearned,
     orderPhase,
+    // Real-time prep speed adjustment
+    actualPrepElapsed: prepProgress.elapsedMinutes,
+    prepSpeedFactor: prepProgress.prepSpeedFactor,
   });
   
   const etaLabel: "to pickup" | "to you" | undefined = order?.status === "out_for_delivery"
@@ -333,6 +347,17 @@ export default function EatsOrderDetail() {
           <IncentiveBoostBanner orderId={order.id} />
         )}
 
+        {/* Prep Progress Banner - show during preparation phase */}
+        {order.status === "preparing" && (
+          <PrepProgressBanner
+            status={prepProgress.status}
+            progressPercent={prepProgress.progressPercent}
+            isRunningFast={prepProgress.isRunningFast}
+            isRunningSlow={prepProgress.isRunningSlow}
+            speedMessage={prepProgress.speedMessage}
+          />
+        )}
+
         {/* Dispatch Search Banner - show when looking for a driver */}
         <AnimatePresence>
           {dispatchStatus.showSearching && isActiveOrder && (
@@ -460,6 +485,7 @@ export default function EatsOrderDetail() {
             driverId={order.driver_id}
             assignedAt={order.assigned_at}
             dispatchPhase={dispatchStatus.phase}
+            prepProgressPercent={prepProgress.progressPercent}
           />
         </motion.div>
 
