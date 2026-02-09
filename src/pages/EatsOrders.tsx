@@ -1,9 +1,9 @@
 /**
  * ZIVO Eats — My Orders Page
- * Order history with status badges
+ * Order history with status badges and scheduled order indicators
  */
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -116,10 +116,16 @@ export default function EatsOrders() {
                         <ChevronRight className="w-5 h-5 text-zinc-500 shrink-0" />
                       </div>
                       
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge className={cn("text-xs font-semibold border-0", statusStyle.bg, statusStyle.text)}>
                           {statusStyle.label}
                         </Badge>
+                        {(order as any).is_scheduled && (order as any).deliver_by && (
+                          <Badge className="bg-violet-500/20 text-violet-400 text-xs font-semibold border-0 flex items-center gap-1">
+                            <CalendarClock className="w-3 h-3" />
+                            {format(new Date((order as any).deliver_by), "MMM d, h:mm a")}
+                          </Badge>
+                        )}
                         <span className="text-sm text-zinc-500">
                           · ${order.total_amount?.toFixed(2) || "0.00"}
                         </span>

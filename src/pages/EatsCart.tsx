@@ -1,6 +1,6 @@
 /**
  * ZIVO Eats — Enhanced Cart Page
- * Full checkout flow with address, promo, payment, tip, ZIVO+ discounts, wallet credits, and surge pricing
+ * Full checkout flow with address, promo, payment, tip, ZIVO+ discounts, wallet credits, surge pricing, and scheduled delivery
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2, 
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { AddressSelector } from "@/components/eats/AddressSelector";
+import { DeliveryTimeSelector } from "@/components/eats/DeliveryTimeSelector";
 import { PromoCodeInput } from "@/components/eats/PromoCodeInput";
 import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/components/eats/PaymentMethodModal";
 import { TipSelector } from "@/components/eats/TipSelector";
@@ -25,6 +26,8 @@ import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import type { DeliveryMode } from "@/components/eats/DeliveryTimeSheet";
 
 function EatsCartContent() {
   const navigate = useNavigate();
@@ -44,6 +47,11 @@ function EatsCartContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
   const [useCredits, setUseCredits] = useState(false);
+  
+  // Scheduled delivery state
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("asap");
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduledTime, setScheduledTime] = useState<string | null>(null);
 
   // Hooks
   const { data: addresses } = useSavedLocations(userId);
@@ -143,12 +151,27 @@ function EatsCartContent() {
         notes: item.notes,
       }));
 
+      // Calculate deliver_by timestamp for scheduled orders
+      let deliverBy: string | null = null;
+      if (deliveryMode === "scheduled" && scheduledDate && scheduledTime) {
+        // Parse time like "6:30 PM" to create full date
+        const [time, period] = scheduledTime.split(" ");
+        const [hourStr, minuteStr] = time.split(":");
+        let hour = parseInt(hourStr);
+        const minute = parseInt(minuteStr);
+        if (period === "PM" && hour !== 12) hour += 12;
+        if (period === "AM" && hour === 12) hour = 0;
+        const scheduledDateTime = new Date(scheduledDate);
+        scheduledDateTime.setHours(hour, minute, 0, 0);
+        deliverBy = scheduledDateTime.toISOString();
+      }
+
       const order = await createOrder.mutateAsync({
         customer_name: "Customer", // Would come from profile
         customer_phone: "", // Would come from profile
         customer_email: "", // Would come from profile
         delivery_address: selectedAddress.address,
-        preferred_time: "asap",
+        preferred_time: deliveryMode,
         restaurant_id: restaurantId,
         items: orderItems,
         subtotal,
@@ -165,6 +188,10 @@ function EatsCartContent() {
         // Surge tracking
         surge_multiplier: surgeMultiplier,
         surge_fee_cents: Math.round(surgeBreakdown.surgeAmount * 100),
+        // Scheduled delivery tracking
+        is_scheduled: deliveryMode === "scheduled",
+        deliver_by: deliverBy,
+        pickup_window_start: deliverBy,
       });
 
       // Apply wallet credit deduction if credits were used
@@ -270,6 +297,18 @@ function EatsCartContent() {
       <div className="px-6 py-4 space-y-4">
         {/* Delivery Address */}
         <AddressSelector selectedAddress={selectedAddress} />
+
+        {/* Delivery Time Selector */}
+        <DeliveryTimeSelector
+          mode={deliveryMode}
+          scheduledDate={scheduledDate}
+          scheduledTime={scheduledTime}
+          onChange={(mode, date, time) => {
+            setDeliveryMode(mode);
+            setScheduledDate(date);
+            setScheduledTime(time);
+          }}
+        />
 
         {/* Cart Items */}
         <div className="space-y-3">
@@ -429,6 +468,17 @@ function EatsCartContent() {
               <span>-${creditAppliedDollars.toFixed(2)}</span>
             </div>
           )}
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-400">Delivery Time</span>
+            <span className={deliveryMode === "scheduled" ? "text-violet-400" : ""}>
+              {deliveryMode === "asap" 
+                ? "ASAP (30-45 min)" 
+                : scheduledDate && scheduledTime
+                  ? `${format(scheduledDate, "MMM d")} at ${scheduledTime}`
+                  : "Select time"
+              }
+            </span>
+          </div>
           <div className="border-t border-white/10 pt-3">
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>

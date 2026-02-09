@@ -71,6 +71,11 @@ export interface CreateFoodOrderInput {
   // Surge fields
   surge_multiplier?: number;
   surge_fee_cents?: number;
+  // Scheduling fields
+  is_scheduled?: boolean;
+  deliver_by?: string | null;
+  pickup_window_start?: string | null;
+  pickup_window_end?: string | null;
 }
 
 // Fetch all active restaurants (including closed ones for display)
@@ -247,6 +252,11 @@ export function useCreateFoodOrder() {
           // Surge tracking
           surge_multiplier: input.surge_multiplier || 1.0,
           surge_fee_cents: input.surge_fee_cents || 0,
+          // Scheduling tracking
+          is_scheduled: input.is_scheduled || false,
+          deliver_by: input.deliver_by || null,
+          pickup_window_start: input.pickup_window_start || null,
+          pickup_window_end: input.pickup_window_end || null,
         })
         .select()
         .single();
