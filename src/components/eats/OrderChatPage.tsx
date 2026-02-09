@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useEatsOrderChat, ChatMessage } from "@/hooks/useEatsOrderChat";
 import { ChatRole, QUICK_REPLIES, isChatActive } from "@/lib/chatTables";
+import { RequestSupportButton } from "@/components/eats/RequestSupportButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -43,6 +44,7 @@ export function OrderChatPage({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
+    chatId,
     messages,
     members,
     sendMessage,
@@ -179,6 +181,12 @@ export function OrderChatPage({
             </h1>
             <p className="text-xs text-zinc-500">{getParticipants()}</p>
           </div>
+          {!isReadOnly && myRole === "customer" && (
+            <RequestSupportButton
+              orderId={orderId}
+              chatId={chatId}
+            />
+          )}
           {isReadOnly && (
             <Badge variant="secondary" className="text-xs">
               Read-only
@@ -331,6 +339,28 @@ function MessageBubble({
   roleInfo: { icon: React.ElementType; color: string };
 }) {
   const Icon = roleInfo.icon;
+
+  // System messages (support joined/left/requested)
+  const isSystemMessage =
+    message.sender_type === "admin" &&
+    (message.message.startsWith("Support has been requested") ||
+      message.message.startsWith("A support agent has joined") ||
+      message.message.startsWith("Support agent has left"));
+
+  if (isSystemMessage) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-center py-2"
+      >
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-800/50 border border-zinc-700/50">
+          <Shield className="w-3 h-3 text-purple-400" />
+          <span className="text-xs text-zinc-400">{message.message}</span>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
