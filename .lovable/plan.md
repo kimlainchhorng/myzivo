@@ -1,323 +1,407 @@
 
 
-# Maintenance Mode — Implementation Plan
+# Multi-Brand Support — Implementation Plan
 
 ## Overview
-Add a maintenance mode feature that displays a clear message when ZIVO ordering is paused. When maintenance mode is active, checkout and new orders are disabled, but customers can still browse restaurants and view their past orders.
+Add automatic branding adaptation based on domain detection. When the app is accessed from different domains, it automatically loads the corresponding brand configuration (logo, colors, app name) and applies the brand theme to headers, buttons, and primary elements.
 
 ## Current State Analysis
 
 ### Existing Infrastructure
 | Component | Status | Purpose |
 |-----------|--------|---------|
-| `service_health_status` table | Exists | Stores status per service (flights, hotels, eats, rides, etc.) |
-| `useSystemStatus()` hook | Exists | Checks for degraded/paused services |
-| `SystemStatusBanner` | Exists | Shows "slower than usual" message for degraded services |
-| `useRestaurantAvailability()` | Exists | Checks individual restaurant pause status |
+| `brands` table | Exists | Stores brand configurations with domain mapping |
+| `tenants` table | Exists | Multi-tenant with logo_url, primary_color, settings |
+| `index.css` | Exists | CSS custom properties for theming |
+| `ZivoLogo` component | Exists | Hardcoded ZIVO branding |
+| `TenantContext` | Exists | Multi-tenant state for admin users |
 
-### Database Schema (service_health_status)
-| Column | Type | Description |
-|--------|------|-------------|
-| `service_name` | text | flights, hotels, cars, rides, **eats**, auth, payments, storage |
-| `status` | text | operational, degraded, outage, **maintenance** |
-| `is_paused` | boolean | Manual service pause |
-| `paused_reason` | text | Admin-provided reason |
+### Database Schema (brands table)
+| Column | Type | Purpose |
+|--------|------|---------|
+| `id` | uuid | Primary key |
+| `name` | text | Brand display name (e.g., "ZIVO", "Partner A") |
+| `logo_url` | text | URL to brand logo image |
+| `primary_color` | text | Primary brand color (hex/hsl) |
+| `domain` | text | Domain mapping (e.g., "hizovo.com", "partner.com") |
 
-### Current Services in DB
-- flights, hotels, cars, rides, eats, auth, payments, storage
+### Current Theming (index.css)
+CSS custom properties defined in `:root`:
+- `--primary` — Primary brand color (blue)
+- `--primary-foreground` — Text on primary
+- `--background`, `--foreground`, etc.
 
 ---
 
 ## Implementation Plan
 
-### 1) Extend System Status Hook for Maintenance Mode
+### 1) Create Brand Context
 
-**File to Modify:** `src/hooks/useSystemStatus.ts`
+**File to Create:** `src/contexts/BrandContext.tsx`
 
-**Changes:**
-- Add `isMaintenanceMode` flag (when status = 'maintenance' OR is_paused = true)
-- Return service-specific maintenance data
-- New interface:
-
-```text
-interface SystemStatusResult {
-  hasActiveIncident: boolean;
-  isMaintenanceMode: boolean;
-  maintenanceMessage: string;
-  incidentMessage: string;
-  isLoading: boolean;
-  services: {
-    eats: { status: string; isPaused: boolean; } | null;
-    rides: { status: string; isPaused: boolean; } | null;
-    travel: { status: string; isPaused: boolean; } | null;
-  };
-}
-```
-
-### 2) Create Maintenance Mode Screen Component
-
-**File to Create:** `src/components/shared/MaintenanceScreen.tsx`
-
-**Purpose:** Full-screen overlay shown when maintenance mode is active.
-
-**Design:**
-```text
-┌─────────────────────────────────────────┐
-│                                         │
-│              🔧 (icon)                  │
-│                                         │
-│    ZIVO is temporarily under           │
-│         maintenance.                    │
-│                                         │
-│     Please try again shortly.           │
-│                                         │
-│                                         │
-│         [ Browse Restaurants ]          │
-│                                         │
-│         [ View Past Orders ]            │
-│                                         │
-└─────────────────────────────────────────┘
-```
-
-**Features:**
-- Full-screen centered layout
-- ZIVO logo/branding
-- Calm, non-alarming design (blue theme for maintenance)
-- Action buttons to browse or view orders
-
-### 3) Create Service-Specific Maintenance Hook
-
-**File to Create:** `src/hooks/useServiceMaintenance.ts`
-
-**Purpose:** Check if a specific service (eats, rides, travel) is in maintenance mode.
+**Purpose:** Provide brand configuration based on current domain.
 
 **Implementation:**
 ```text
-export function useServiceMaintenance(serviceName: "eats" | "rides" | "flights" | "hotels") {
-  const { data, isLoading } = useQuery({
-    queryKey: ["service-maintenance", serviceName],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("service_health_status")
-        .select("status, is_paused")
-        .eq("service_name", serviceName)
-        .single();
-      
-      return {
-        isInMaintenance: data?.status === "maintenance" || data?.is_paused,
-        isPaused: data?.is_paused,
-      };
-    },
-    staleTime: 30000,
-    refetchInterval: 30000,
-  });
-  
-  return {
-    isInMaintenance: data?.isInMaintenance ?? false,
-    isLoading,
-  };
+interface BrandConfig {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  domain: string | null;
+}
+
+interface BrandContextValue {
+  brand: BrandConfig;
+  isLoading: boolean;
+  isCustomBrand: boolean;
+}
+
+Detection logic:
+1. Get current domain: window.location.hostname
+2. Query brands table: WHERE domain = hostname
+3. If found → use brand config
+4. If not found → use default ZIVO config
+
+Caching:
+- staleTime: 5 minutes (brand rarely changes)
+- Store in sessionStorage for instant reload
+```
+
+### 2) Create Brand Hook
+
+**File to Create:** `src/hooks/useBrand.ts`
+
+**Purpose:** Lightweight hook to access brand configuration.
+
+**Implementation:**
+```text
+export function useBrand() {
+  const context = useContext(BrandContext);
+  if (!context) {
+    // Return default ZIVO brand if outside provider
+    return {
+      brand: DEFAULT_BRAND,
+      isLoading: false,
+      isCustomBrand: false,
+    };
+  }
+  return context;
 }
 ```
 
-### 4) Update Checkout Pages with Maintenance Gate
+### 3) Create CSS Theme Applicator
 
-**Files to Modify:**
-- `src/pages/EatsCheckout.tsx`
-- `src/pages/TravelCheckoutPage.tsx`
+**File to Create:** `src/lib/brandTheme.ts`
 
-**Pattern for EatsCheckout:**
+**Purpose:** Apply brand colors to CSS custom properties at runtime.
+
+**Implementation:**
 ```text
-function EatsCheckoutContent() {
-  const { isInMaintenance, isLoading: maintenanceLoading } = useServiceMaintenance("eats");
+export function applyBrandTheme(primaryColor: string | null) {
+  if (!primaryColor) return;
   
-  // Show maintenance screen if eats service is paused
-  if (maintenanceLoading) {
-    return <LoadingSpinner />;
-  }
+  const root = document.documentElement;
   
-  if (isInMaintenance) {
+  // Parse color (supports hex: #3B82F6 or hsl: 221 83% 53%)
+  const hsl = parseToHSL(primaryColor);
+  
+  // Apply to CSS custom properties
+  root.style.setProperty('--primary', hsl);
+  root.style.setProperty('--ring', hsl);
+  root.style.setProperty('--sidebar-primary', hsl);
+  
+  // Generate lighter/darker variants
+  root.style.setProperty('--primary-light', lighten(hsl, 30));
+}
+
+export function resetBrandTheme() {
+  // Remove custom properties to restore defaults
+  const root = document.documentElement;
+  root.style.removeProperty('--primary');
+  root.style.removeProperty('--ring');
+  // etc.
+}
+```
+
+### 4) Create Dynamic Brand Logo Component
+
+**File to Create:** `src/components/shared/BrandLogo.tsx`
+
+**Purpose:** Display brand logo dynamically based on brand config.
+
+**Implementation:**
+```text
+interface BrandLogoProps {
+  size?: "sm" | "md" | "lg" | "xl";
+  showText?: boolean;
+  className?: string;
+}
+
+export function BrandLogo({ size = "md", showText = true, className }: BrandLogoProps) {
+  const { brand, isLoading } = useBrand();
+  
+  // If custom logo exists, show image
+  if (brand.logoUrl) {
     return (
-      <MaintenanceScreen 
-        allowBrowse 
-        allowViewOrders 
-        browseUrl="/eats/restaurants"
-        ordersUrl="/eats/orders"
-      />
+      <div className={cn("flex items-center gap-2", sizeClasses[size].container, className)}>
+        <img 
+          src={brand.logoUrl} 
+          alt={brand.name}
+          className={cn("object-contain", sizeClasses[size].icon)}
+        />
+        {showText && (
+          <span className={cn("font-bold", sizeClasses[size].text)}>
+            {brand.name}
+          </span>
+        )}
+      </div>
     );
   }
   
-  // ... existing checkout logic
+  // Fall back to default ZIVO logo
+  return <ZivoLogo size={size} showText={showText} className={className} />;
 }
 ```
 
-### 5) Update Edge Functions with Maintenance Check
+### 5) Integrate Brand Provider in App
 
-**Files to Modify:**
-- `supabase/functions/create-eats-checkout/index.ts`
-- `supabase/functions/create-eats-payment-intent/index.ts`
-- `supabase/functions/create-ride-checkout/index.ts`
-- `supabase/functions/create-ride-payment-intent/index.ts`
-- `supabase/functions/create-travel-order/index.ts`
-
-**Pattern (add at start of each function):**
-```text
-// Check if service is in maintenance
-const { data: serviceStatus } = await supabase
-  .from("service_health_status")
-  .select("status, is_paused")
-  .eq("service_name", "eats")  // or "rides", "hotels" etc.
-  .single();
-
-if (serviceStatus?.status === "maintenance" || serviceStatus?.is_paused) {
-  return new Response(
-    JSON.stringify({ 
-      error: "Service temporarily unavailable",
-      maintenance: true,
-    }),
-    { headers: corsHeaders, status: 503 }
-  );
-}
-```
-
-### 6) Update Restaurant Menu Page with Maintenance Banner
-
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+**File to Modify:** `src/App.tsx`
 
 **Changes:**
-- Check if eats service is in maintenance
-- Show info banner if in maintenance (but still allow browsing)
-- Disable "Add to Cart" and "Proceed to Checkout" buttons
+- Wrap app with `BrandProvider`
+- Apply theme on brand load
+
+**Pattern:**
+```text
+function App() {
+  return (
+    <BrandProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          {/* existing providers */}
+          <BrandThemeApplicator />
+          <Routes>...</Routes>
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrandProvider>
+  );
+}
+
+// Component that applies theme when brand changes
+function BrandThemeApplicator() {
+  const { brand } = useBrand();
+  
+  useEffect(() => {
+    if (brand.primaryColor) {
+      applyBrandTheme(brand.primaryColor);
+    } else {
+      resetBrandTheme();
+    }
+  }, [brand.primaryColor]);
+  
+  return null;
+}
+```
+
+### 6) Update Header Components to Use Brand Logo
+
+**Files to Modify:**
+- `src/components/app/AppHeader.tsx`
+- `src/components/app/ZivoSuperAppLayout.tsx`
+- `src/components/app/HizovoAppHeader.tsx`
+
+**Changes:**
+Replace `<ZivoLogo />` with `<BrandLogo />`:
+
+```text
+// Before
+import ZivoLogo from "@/components/ZivoLogo";
+<ZivoLogo size="sm" />
+
+// After
+import { BrandLogo } from "@/components/shared/BrandLogo";
+<BrandLogo size="sm" />
+```
+
+### 7) Update Page Title with Brand Name
+
+**File to Create:** `src/components/shared/BrandHead.tsx`
+
+**Purpose:** Dynamically set page title with brand name.
+
+**Implementation:**
+```text
+import { useEffect } from "react";
+import { useBrand } from "@/hooks/useBrand";
+
+export function BrandHead({ title }: { title?: string }) {
+  const { brand } = useBrand();
+  
+  useEffect(() => {
+    document.title = title 
+      ? `${title} | ${brand.name}`
+      : brand.name;
+  }, [title, brand.name]);
+  
+  return null;
+}
+```
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (5)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useServiceMaintenance.ts` | Service-specific maintenance check |
-| `src/components/shared/MaintenanceScreen.tsx` | Full-screen maintenance display |
+| `src/contexts/BrandContext.tsx` | Brand configuration provider with domain detection |
+| `src/hooks/useBrand.ts` | Lightweight hook to access brand config |
+| `src/lib/brandTheme.ts` | CSS custom property applicator |
+| `src/components/shared/BrandLogo.tsx` | Dynamic brand logo component |
+| `src/components/shared/BrandHead.tsx` | Dynamic page title component |
 
-### Modified Files (8)
+### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/hooks/useSystemStatus.ts` | Add `isMaintenanceMode` flag |
-| `src/pages/EatsCheckout.tsx` | Gate checkout with maintenance check |
-| `src/pages/TravelCheckoutPage.tsx` | Gate checkout with maintenance check |
-| `src/pages/EatsRestaurantMenu.tsx` | Disable ordering buttons, show banner |
-| `supabase/functions/create-eats-checkout/index.ts` | Add maintenance guard |
-| `supabase/functions/create-eats-payment-intent/index.ts` | Add maintenance guard |
-| `supabase/functions/create-ride-checkout/index.ts` | Add maintenance guard |
-| `supabase/functions/create-ride-payment-intent/index.ts` | Add maintenance guard |
+| `src/App.tsx` | Add BrandProvider wrapper + theme applicator |
+| `src/components/app/AppHeader.tsx` | Use BrandLogo instead of ZivoLogo |
+| `src/components/app/ZivoSuperAppLayout.tsx` | Use BrandLogo instead of ZivoLogo |
+| `src/components/app/HizovoAppHeader.tsx` | Use BrandLogo instead of ZivoLogo |
 
 ---
 
-## Maintenance Screen Design
+## Domain Detection Logic
 
-### Visual Layout
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│                        ╭─────────╮                           │
-│                        │   🔧    │                           │
-│                        ╰─────────╯                           │
-│                                                              │
-│                 ZIVO is temporarily                          │
-│                   under maintenance.                         │
-│                                                              │
-│               Please try again shortly.                      │
-│                                                              │
-│                                                              │
-│              ┌─────────────────────────┐                     │
-│              │   Browse Restaurants    │                     │
-│              └─────────────────────────┘                     │
-│                                                              │
-│              ┌─────────────────────────┐                     │
-│              │    View Past Orders     │                     │
-│              └─────────────────────────┘                     │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Domain Detection Flow                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. App loads → Get hostname: window.location.hostname          │
+│                                                                 │
+│  2. Query brands table:                                         │
+│     SELECT * FROM brands WHERE domain = 'hostname'              │
+│                                                                 │
+│  3. If brand found:                                             │
+│     ├─ Apply brand.primaryColor to CSS variables                │
+│     ├─ Use brand.logoUrl in BrandLogo component                 │
+│     └─ Use brand.name in page titles                            │
+│                                                                 │
+│  4. If no brand found:                                          │
+│     └─ Use default ZIVO configuration                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Color Scheme
-| Element | Value |
-|---------|-------|
-| Background | `bg-background` (default) |
-| Icon container | `bg-blue-500/20` |
-| Icon | `text-blue-500` (Wrench icon) |
-| Title | Default text |
-| Subtitle | `text-muted-foreground` |
-| Buttons | Outline variant |
+### Domain Matching Examples
+| Hostname | Brand Matched | Theme Applied |
+|----------|---------------|---------------|
+| `hizovo.com` | ZIVO (default) | Blue (#3B82F6) |
+| `partner-a.com` | Partner A | Green (#10B981) |
+| `partner-b.com` | Partner B | Purple (#8B5CF6) |
+| `localhost` | ZIVO (default) | Blue (#3B82F6) |
 
 ---
 
-## Customer Experience Flow
+## CSS Variables Affected
 
-### Normal Operation
+When a custom brand color is applied:
+
+| Variable | Default (ZIVO) | Custom Brand |
+|----------|----------------|--------------|
+| `--primary` | 221 83% 53% | Brand primary |
+| `--ring` | 221 83% 53% | Brand primary |
+| `--sidebar-primary` | 221 83% 53% | Brand primary |
+| `--chart-1` | 221 83% 53% | Brand primary |
+
+### Elements Automatically Themed
+- Primary buttons (`bg-primary`)
+- Focus rings (`ring-primary`)
+- Links and accents
+- Header logo background
+- Progress indicators
+- Active states
+
+---
+
+## Default Brand Configuration
+
 ```text
-Browse Restaurants → Add Items → Cart → Checkout → Payment → Order Placed
+const DEFAULT_BRAND: BrandConfig = {
+  id: "default",
+  name: "ZIVO",
+  logoUrl: null, // Uses ZivoLogo component
+  primaryColor: null, // Uses CSS defaults
+  domain: null,
+};
 ```
 
-### Maintenance Mode Active
+---
+
+## Caching Strategy
+
+| Layer | Duration | Purpose |
+|-------|----------|---------|
+| TanStack Query | 5 minutes staleTime | Prevent redundant DB calls |
+| sessionStorage | Session lifetime | Instant theme on page reload |
+| CSS Variables | Runtime | Applied once per session |
+
+---
+
+## Technical Details
+
+### Color Parsing (brandTheme.ts)
 ```text
-Browse Restaurants → Add Items → Cart → [BLOCKED] → Maintenance Screen
-                                                     ├─ Browse Restaurants (allowed)
-                                                     └─ View Past Orders (allowed)
-```
-
----
-
-## Allowed vs Blocked Actions
-
-| Action | Maintenance Mode | Notes |
-|--------|------------------|-------|
-| Browse restaurants | Allowed | Users can explore menus |
-| View menu items | Allowed | Prices, descriptions visible |
-| Add to cart | Blocked | Button disabled |
-| Proceed to checkout | Blocked | Redirects to maintenance screen |
-| Submit order | Blocked | Edge function returns 503 |
-| View past orders | Allowed | Order history accessible |
-| Track existing order | Allowed | Active orders still tracked |
-
----
-
-## Edge Function Response Format
-
-### Success (Normal)
-```json
-{
-  "success": true,
-  "orderId": "abc123",
-  ...
+function parseToHSL(color: string): string {
+  // Handle hex: #3B82F6
+  if (color.startsWith("#")) {
+    const rgb = hexToRgb(color);
+    return rgbToHsl(rgb);
+  }
+  
+  // Handle HSL: 221 83% 53% or hsl(221, 83%, 53%)
+  if (color.includes("%")) {
+    return color.replace(/hsl\(|\)/g, "").trim();
+  }
+  
+  return color;
 }
 ```
 
-### Maintenance Mode (503)
-```json
-{
-  "error": "Service temporarily unavailable",
-  "maintenance": true
-}
-```
-
-**Client handling:**
+### Theme Application
 ```text
-if (response.status === 503 && data.maintenance) {
-  // Show maintenance message
-  toast.error("Ordering is temporarily unavailable. Please try again shortly.");
-  navigate("/eats");
+function applyBrandTheme(primaryColor: string) {
+  const hsl = parseToHSL(primaryColor);
+  const root = document.documentElement;
+  
+  // Core primary color
+  root.style.setProperty("--primary", hsl);
+  root.style.setProperty("--ring", hsl);
+  
+  // Sidebar
+  root.style.setProperty("--sidebar-primary", hsl);
+  root.style.setProperty("--sidebar-ring", hsl);
+  
+  // Charts
+  root.style.setProperty("--chart-1", hsl);
 }
 ```
 
 ---
 
-## Admin Control
+## Admin Setup
 
-Admins trigger maintenance mode via:
-1. **Recovery Dashboard** → Toggle service pause for "eats"
-2. **Recovery Dashboard** → Set status to "maintenance"
+To configure a new brand, admins add a row to the `brands` table:
 
-No new admin UI needed — existing tools control the data.
+| Column | Example Value |
+|--------|---------------|
+| `name` | Partner Airways |
+| `logo_url` | https://storage.../partner-logo.png |
+| `primary_color` | #10B981 |
+| `domain` | partner-airways.com |
+
+Once added, any user visiting `partner-airways.com` will see the Partner Airways branding automatically.
 
 ---
 
@@ -325,13 +409,13 @@ No new admin UI needed — existing tools control the data.
 
 This implementation provides:
 
-1. **Service-Specific Hook** — `useServiceMaintenance(serviceName)` for checking individual services
-2. **Maintenance Screen** — Full-screen overlay with clear messaging
-3. **Checkout Gating** — Block checkout pages when maintenance is active
-4. **Edge Function Guards** — Server-side 503 responses for order creation
-5. **Menu Page Updates** — Disable ordering buttons, show info banner
-6. **Allowed Browsing** — Customers can still explore and view past orders
-7. **Clear Messaging** — "ZIVO is temporarily under maintenance. Please try again shortly."
+1. **Brand Context** — Domain-based brand detection with database lookup
+2. **Dynamic Theming** — CSS custom properties updated at runtime
+3. **Brand Logo** — Automatic logo switching based on brand config
+4. **Page Titles** — Dynamic titles with brand name
+5. **Header Integration** — All headers use dynamic branding
+6. **Default Fallback** — ZIVO branding when no custom brand matches
+7. **Caching** — Efficient query caching + sessionStorage for fast reloads
 
-The feature gives admins control to pause ordering platform-wide while keeping the browsing experience intact for customers.
+The system automatically adapts the entire UI to match the brand associated with the current domain, requiring no code changes to add new white-label partners.
 
