@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2 } from "lucide-react";
+import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,10 +13,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { useRestaurants } from "@/hooks/useEatsOrders";
+import { Restaurant } from "@/lib/eatsApi";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
 import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
+import { FavoriteButton } from "@/components/eats/FavoriteButton";
 
 function EatsRestaurantsContent() {
   const navigate = useNavigate();
@@ -171,8 +173,21 @@ function EatsRestaurantsContent() {
                     ) : (
                       <UtensilsCrossed className="w-16 h-16 text-eats/30" />
                     )}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-3 left-3">
                       <RestaurantAvailabilityBadge restaurant={restaurant} size="sm" />
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <FavoriteButton 
+                        restaurant={{
+                          id: restaurant.id,
+                          name: restaurant.name,
+                          logo_url: restaurant.logo_url || null,
+                          cuisine_type: restaurant.cuisine_type || null,
+                          rating: restaurant.rating || null,
+                          cover_image_url: restaurant.cover_image_url || null,
+                        } as Restaurant}
+                        size="sm"
+                      />
                     </div>
                   </div>
                   <CardContent className="p-4">

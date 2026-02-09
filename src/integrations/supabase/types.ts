@@ -33194,6 +33194,14 @@ export type Database = {
           source: string
         }[]
       }
+      get_restaurant_queue_wait: {
+        Args: { p_order_id?: string; p_restaurant_id: string }
+        Returns: {
+          estimated_wait_minutes: number
+          is_busy: boolean
+          orders_ahead: number
+        }[]
+      }
       get_restaurant_reviews: {
         Args: {
           p_limit?: number

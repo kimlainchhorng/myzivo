@@ -28,6 +28,7 @@ import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { useCheckoutRiskAssessment } from "@/hooks/useCheckoutRiskAssessment";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
 import { toast } from "sonner";
 
 const checkoutSchema = z.object({
@@ -343,6 +344,19 @@ function EatsCheckoutContent() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Saved Address Selector */}
+                    <SavedAddressSelector
+                      selectedAddress={watch("delivery_address") || ""}
+                      onSelect={(address) => {
+                        // Use setValue to update form field
+                        const form = document.getElementById("delivery_address") as HTMLInputElement;
+                        if (form) {
+                          form.value = address;
+                          form.dispatchEvent(new Event("input", { bubbles: true }));
+                        }
+                      }}
+                    />
+                    
                     <div>
                       <Label htmlFor="delivery_address">Delivery Address *</Label>
                       <Input
