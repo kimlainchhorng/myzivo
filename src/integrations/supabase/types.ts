@@ -12197,6 +12197,8 @@ export type Database = {
           event_type: string
           id: string
           meta: Json | null
+          metadata: Json | null
+          submission_id: string | null
           user_id: string
         }
         Insert: {
@@ -12206,6 +12208,8 @@ export type Database = {
           event_type: string
           id?: string
           meta?: Json | null
+          metadata?: Json | null
+          submission_id?: string | null
           user_id: string
         }
         Update: {
@@ -12215,45 +12219,82 @@ export type Database = {
           event_type?: string
           id?: string
           meta?: Json | null
+          metadata?: Json | null
+          submission_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kyc_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kyc_submissions: {
         Row: {
+          admin_notes: string | null
+          completed_steps: number[] | null
+          created_at: string | null
+          current_step: number | null
           data_json: Json | null
           document_urls_json: Json | null
+          documents: Json | null
           id: string
+          info_request_message: string | null
+          info_requested_at: string | null
+          personal_info: Json | null
           rejection_reason: string | null
           reviewed_at: string | null
-          reviewed_by_admin_id: string | null
+          reviewed_by: string | null
           role: string
           status: string
           submitted_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
+          completed_steps?: number[] | null
+          created_at?: string | null
+          current_step?: number | null
           data_json?: Json | null
           document_urls_json?: Json | null
+          documents?: Json | null
           id?: string
+          info_request_message?: string | null
+          info_requested_at?: string | null
+          personal_info?: Json | null
           rejection_reason?: string | null
           reviewed_at?: string | null
-          reviewed_by_admin_id?: string | null
+          reviewed_by?: string | null
           role: string
           status?: string
           submitted_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
+          completed_steps?: number[] | null
+          created_at?: string | null
+          current_step?: number | null
           data_json?: Json | null
           document_urls_json?: Json | null
+          documents?: Json | null
           id?: string
+          info_request_message?: string | null
+          info_requested_at?: string | null
+          personal_info?: Json | null
           rejection_reason?: string | null
           reviewed_at?: string | null
-          reviewed_by_admin_id?: string | null
+          reviewed_by?: string | null
           role?: string
           status?: string
           submitted_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
