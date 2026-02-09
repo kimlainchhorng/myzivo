@@ -19,11 +19,16 @@ import { useRestaurant, useMenuItems, type MenuItem } from "@/hooks/useEatsOrder
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
+import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
+import { BusyRestaurantBanner } from "@/components/eats/BusyRestaurantBanner";
+import { UnavailableBanner } from "@/components/eats/UnavailableBanner";
 
-function MenuItemCard({ item, restaurantId, restaurantName }: { 
+function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: { 
   item: MenuItem; 
   restaurantId: string;
   restaurantName: string;
+  canOrder?: boolean;
 }) {
   const { addItem, items } = useCart();
   const [added, setAdded] = useState(false);
@@ -32,6 +37,7 @@ function MenuItemCard({ item, restaurantId, restaurantName }: {
   const quantity = cartItem?.quantity || 0;
 
   const handleAdd = () => {
+    if (!canOrder) return;
     addItem({
       id: item.id,
       restaurantId,
@@ -79,7 +85,15 @@ function MenuItemCard({ item, restaurantId, restaurantName }: {
           
           <div className="flex items-center justify-between mt-3">
             <span className="font-bold text-lg">${item.price.toFixed(2)}</span>
-            {quantity > 0 ? (
+            {!canOrder ? (
+              <Button
+                size="sm"
+                disabled
+                className="h-8 px-4 rounded-lg gap-1 opacity-50 cursor-not-allowed"
+              >
+                Unavailable
+              </Button>
+            ) : quantity > 0 ? (
               <div className="flex items-center gap-2">
                 <Badge className="bg-eats text-white">{quantity} in cart</Badge>
                 <Button
@@ -200,13 +214,13 @@ function EatsRestaurantMenuContent() {
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(id);
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(id);
   const { getItemCount, getSubtotal } = useCart();
+  
+  // Get availability status
+  const availability = useRestaurantAvailability(restaurant);
 
   const isLoading = restaurantLoading || menuLoading;
   const cartCount = getItemCount();
   const subtotal = getSubtotal();
-  
-  // Check if restaurant is closed
-  const isClosed = restaurant && restaurant.is_open === false;
 
   // Group menu items by category
   const categories = menuItems?.reduce((acc, item) => {
@@ -292,10 +306,10 @@ function EatsRestaurantMenuContent() {
                       <span className="font-medium">{restaurant.rating}</span>
                     </div>
                   )}
-                  {restaurant.avg_prep_time && (
+                  {(availability.adjustedPrepTime || restaurant.avg_prep_time) && (
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      <span>{restaurant.avg_prep_time} min prep</span>
+                      <span>{availability.adjustedPrepTime || restaurant.avg_prep_time} min prep</span>
                     </div>
                   )}
                   {restaurant.phone && (
@@ -307,21 +321,22 @@ function EatsRestaurantMenuContent() {
                 </div>
               </div>
 
-              {restaurant.is_open === false ? (
-                <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 self-start">
-                  Closed
-                </Badge>
-              ) : (
-                <Badge className="bg-emerald-500 self-start">Open Now</Badge>
-              )}
+              <RestaurantAvailabilityBadge restaurant={restaurant} className="self-start" />
             </div>
             
-            {/* Closed Banner */}
-            {isClosed && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mt-4">
-                <p className="font-bold text-red-400">This restaurant is currently closed</p>
-                <p className="text-sm text-zinc-400 mt-1">Check back later for opening hours</p>
-              </div>
+            {/* Availability Banners */}
+            {availability.status === "busy" && (
+              <BusyRestaurantBanner
+                adjustedPrepTime={availability.adjustedPrepTime}
+                bonusMinutes={availability.prepTimeBonus}
+                className="mt-4"
+              />
+            )}
+            {availability.status === "unavailable" && (
+              <UnavailableBanner
+                message={availability.detailMessage}
+                className="mt-4"
+              />
             )}
           </div>
 
@@ -340,6 +355,7 @@ function EatsRestaurantMenuContent() {
                       item={item} 
                       restaurantId={restaurant.id}
                       restaurantName={restaurant.name}
+                      canOrder={availability.canOrder}
                     />
                   ))}
                 </div>

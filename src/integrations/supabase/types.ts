@@ -5679,6 +5679,63 @@ export type Database = {
         }
         Relationships: []
       }
+      dispatch_settings: {
+        Row: {
+          dispatch_enabled: boolean | null
+          distance_weight: number | null
+          id: number
+          idle_time_weight: number | null
+          max_attempts: number | null
+          max_drivers_notified: number | null
+          max_idle_minutes: number | null
+          max_search_radius_km: number | null
+          min_driver_rating: number | null
+          offer_timeout_seconds: number | null
+          prefer_high_rating: boolean | null
+          prefer_idle_drivers: boolean | null
+          prefer_nearest: boolean | null
+          rating_weight: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          dispatch_enabled?: boolean | null
+          distance_weight?: number | null
+          id?: number
+          idle_time_weight?: number | null
+          max_attempts?: number | null
+          max_drivers_notified?: number | null
+          max_idle_minutes?: number | null
+          max_search_radius_km?: number | null
+          min_driver_rating?: number | null
+          offer_timeout_seconds?: number | null
+          prefer_high_rating?: boolean | null
+          prefer_idle_drivers?: boolean | null
+          prefer_nearest?: boolean | null
+          rating_weight?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          dispatch_enabled?: boolean | null
+          distance_weight?: number | null
+          id?: number
+          idle_time_weight?: number | null
+          max_attempts?: number | null
+          max_drivers_notified?: number | null
+          max_idle_minutes?: number | null
+          max_search_radius_km?: number | null
+          min_driver_rating?: number | null
+          offer_timeout_seconds?: number | null
+          prefer_high_rating?: boolean | null
+          prefer_idle_drivers?: boolean | null
+          prefer_nearest?: boolean | null
+          rating_weight?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       dispute_audit_logs: {
         Row: {
           action: string
@@ -21473,6 +21530,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           logo_url: string | null
+          max_active_orders: number | null
           min_order_cents: number | null
           name: string
           onboarding_completed_at: string | null
@@ -21543,6 +21601,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          max_active_orders?: number | null
           min_order_cents?: number | null
           name: string
           onboarding_completed_at?: string | null
@@ -21613,6 +21672,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          max_active_orders?: number | null
           min_order_cents?: number | null
           name?: string
           onboarding_completed_at?: string | null

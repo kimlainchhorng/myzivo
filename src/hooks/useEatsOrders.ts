@@ -20,6 +20,11 @@ export interface Restaurant {
   avg_prep_time: number | null;
   is_open: boolean | null;
   status: string | null;
+  // Availability fields
+  busy_mode: boolean | null;
+  busy_prep_time_bonus_minutes: number | null;
+  pause_new_orders: boolean | null;
+  closed_reason: string | null;
 }
 
 export interface MenuItem {
