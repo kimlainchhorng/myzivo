@@ -38,6 +38,16 @@ serve(async (req) => {
       throw new Error("Invalid authentication");
     }
 
+    // Verify customer role
+    const { data: isCustomer } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "customer",
+    });
+
+    if (!isCustomer) {
+      throw new Error("Customer role required");
+    }
+
     const body: CancellationRequest = await req.json();
     const { orderId, reason } = body;
 
