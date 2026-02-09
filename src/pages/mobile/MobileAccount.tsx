@@ -53,6 +53,12 @@ export default function MobileAccount() {
       path: "/account/business",
       badge: businessMembership?.isMember ? undefined : undefined
     },
+    // Show Invoices link only for business members
+    ...(businessMembership?.isMember ? [{
+      icon: FileText,
+      label: "Invoices",
+      path: "/account/invoices"
+    }] : []),
     { icon: Tag, label: "My Promos", path: "/account/promos" },
     { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
