@@ -1,113 +1,50 @@
 
 
-# Driver Activity Feed
+# Service Status Messages — Context-Aware Banners
 
-## Overview
+## Current State
 
-Create a new `/driver/activity` page that shows a chronological timeline of all driver earnings and financial activity. This gives drivers a single place to see their completed work and money flow.
+The system already has:
+- A `service_health_status` table tracking 12 services (flights, hotels, payments, eats, rides, dispatch, etc.)
+- A `useSystemStatus` hook that detects degraded services but returns a **single generic message** regardless of which service is affected
+- A `SystemStatusBanner` component that displays that generic message in a dismissible amber banner
 
-## Data Sources
+**The gap**: The banner always says "Some services may be temporarily slower than usual" — it never tells customers *what* is actually impacted.
 
-The timeline will pull from existing database tables:
+## What Changes
 
-| Source Table | Event Type | What it Shows |
-|---|---|---|
-| `trips` (completed) | Delivery completed | Ride fare earned |
-| `food_orders` (completed) | Delivery completed | Eats delivery fee earned |
-| `package_deliveries` (delivered) | Delivery completed | Package payout earned |
-| `driver_earnings` | Wallet credit | Earnings credited to wallet |
-| `payouts` | Payout issued | Money sent to driver |
-| `driver_incentives` | Incentive/bonus | Active bonus periods and amounts |
+Upgrade the hook and banner to show **service-specific messages** based on which services are degraded.
 
-## New Files
+### Message Mapping
 
-### 1. Hook: `src/hooks/useDriverActivityFeed.ts`
-
-Fetches the last 30 days of activity from multiple tables, normalizes into a unified timeline format, and sorts by date descending. Each item has:
-- `type`: "delivery" | "bonus" | "wallet_credit" | "payout" | "incentive"
-- `title`: e.g., "Ride Completed", "Payout Issued"
-- `description`: address or details
-- `amount`: dollar value
-- `timestamp`: ISO date
-- `icon`: which icon to render
-- `status`: for payouts (pending/paid)
-
-### 2. Page: `src/pages/driver/DriverActivityPage.tsx`
-
-Full-page timeline with:
-- Header with back button and title "Activity"
-- Filter tabs: All | Deliveries | Earnings | Payouts
-- Scrollable timeline with date group headers (Today, Yesterday, Earlier)
-- Each item shows: colored icon, title, description, amount, and relative time
-- Empty state for new drivers
-- Follows existing driver app dark theme (zinc-950 background, white/10 borders)
-
-### 3. Route and Navigation
-
-- Register `/driver/activity` route in `App.tsx`
-- Add "Activity" quick-link on `DriverHomePage.tsx` alongside the existing Analytics link
-
-## Visual Design
-
-Matches the existing driver app style (dark zinc-950 theme):
-
-```text
-[Back]  Activity                    [Filter: All v]
-─────────────────────────────────────────────────
-  TODAY
-  
-  [green dot] Ride Completed              +$12.50
-              123 Main St -> 456 Oak Ave
-              2:30 PM
-  
-  [blue dot]  Eats Delivery               +$8.75
-              Pizza Palace -> 789 Elm St
-              1:15 PM
-
-  YESTERDAY
-  
-  [purple dot] Payout Issued             -$45.00
-               Bank transfer - Paid
-               4:00 PM
-  
-  [amber dot]  Bonus Earned               +$5.00
-               Peak hour bonus
-               12:00 PM
-```
-
-## File Changes Summary
-
-| File | Action |
+| Degraded Service Key(s) | Banner Message |
 |---|---|
-| `src/hooks/useDriverActivityFeed.ts` | Create - unified activity feed hook |
-| `src/pages/driver/DriverActivityPage.tsx` | Create - timeline page |
-| `src/App.tsx` | Update - add `/driver/activity` route |
-| `src/pages/driver/DriverHomePage.tsx` | Update - add Activity nav link |
+| `eats`, `rides`, `dispatch` | "High demand in your area -- delivery times may be longer." |
+| `payments` | "Payment processing delays -- please try again shortly." |
+| Both categories | Shows the more urgent one (payments) |
+| Other services | Falls back to existing generic message |
 
-## Technical Details
+### File Changes
 
-### Activity item interface
+| File | Action | What |
+|---|---|---|
+| `src/hooks/useSystemStatus.ts` | Update | Return the list of degraded `service_key` values and derive a context-specific `incidentMessage` based on which services are affected |
+| `src/components/shared/SystemStatusBanner.tsx` | Update | Use the new context-specific message; use a credit-card icon for payment issues vs. the existing warning triangle for delivery delays |
 
-```text
-ActivityItem {
-  id: string
-  type: "delivery" | "bonus" | "wallet_credit" | "payout" | "incentive"
-  title: string
-  description: string
-  amount: number
-  timestamp: string
-  iconColor: string  // green, blue, purple, amber
-  status?: string    // for payouts: pending/paid/failed
-}
-```
+### Technical Detail
 
-### Query strategy
+**`useSystemStatus.ts`** changes:
+- Query now also selects `service_key`
+- New logic derives the message:
+  - If any degraded service key is `payments` -> payment delay message
+  - If any degraded service key is `eats`, `rides`, or `dispatch` -> high demand / delivery delay message  
+  - Otherwise -> existing generic fallback
+- Returns a new `incidentType` field (`"delivery"` | `"payment"` | `"general"`) so the banner can pick the right icon
 
-The hook runs parallel queries to all source tables filtered by `driver_id` and last 30 days, merges results into a single sorted array, and groups by date for display. Uses React Query with 30-second refresh interval matching the existing earnings hook pattern.
+**`SystemStatusBanner.tsx`** changes:
+- Reads `incidentType` from the hook
+- Shows `CreditCard` icon (from lucide) for payment issues, keeps `AlertTriangle` for delivery/general
+- No other behavioral changes — dismissal, 1-hour expiry, and layout remain the same
 
-### Filter logic
+This is a minimal update to two existing files with no new files, hooks, or routes needed.
 
-- **All**: Show everything
-- **Deliveries**: type = "delivery" (trips, food orders, packages)
-- **Earnings**: type = "wallet_credit" or "bonus" (driver_earnings, incentives)
-- **Payouts**: type = "payout" (payouts table)
