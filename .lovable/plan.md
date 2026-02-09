@@ -1,115 +1,95 @@
 
-# Live Support Join in Order Chat
+
+# Ratings and Reviews — Wire Up Existing Infrastructure
 
 ## Overview
 
-Two chat systems exist side by side but never connect:
-- **Order Chat** (`order_chats` / `chat_messages`): 3-party chat between Customer, Driver, Merchant
-- **Live Support Chat** (`live_chat_sessions` / `live_chat_messages`): Separate 1:1 support chat
+All the building blocks already exist but are disconnected:
+- **`RatingModal`** (`src/components/eats/RatingModal.tsx`): Full UI with overall, food, and delivery ratings plus optional comment -- never imported anywhere
+- **`useEatsReviews` hook**: CRUD operations for `eats_reviews` table -- never used from order pages
+- **`eats_reviews` table**: Exists in Supabase with columns for rating, food_rating, delivery_rating, comment
+- **`useOrderReview` hook**: Checks if an order has been reviewed -- never used
 
-The goal is to let customers tap "Request Support" inside the order chat, which creates a `live_chat_sessions` record linked to that order. When a support agent picks it up, the agent is added to the existing `chat_members` table as role `admin`, and a system message appears in the order chat: "Support is joining the chat..." followed by "Support agent joined."
-
-This keeps both systems in sync -- the support queue sees the request, and all messages flow through the existing order chat channel.
+This plan wires everything together so the rating modal appears after delivery and past ratings show in order history.
 
 ## What Changes
 
-### 1. New hook: `useOrderSupportRequest` (new file)
+### 1. Show RatingModal on order detail page after delivery
 
-Handles the full lifecycle of requesting support inside an order chat:
-- **Request**: Creates a `live_chat_sessions` row with `context_type = 'order_chat'` and `context_id = orderId`, status `waiting`
-- **Status tracking**: Subscribes to real-time updates on that session (waiting, active, ended)
-- **Agent join detection**: When the session status changes to `active`, inserts the agent as an `admin` member in `chat_members` and posts a system message to `chat_messages`
-- **Check existing**: On mount, checks if there is already an active/waiting support session for this order
+Update `EatsOrderDetail.tsx` to:
+- Import `RatingModal` and `useOrderReview`
+- Auto-open the modal when order status is `delivered` and no review exists yet
+- Add a "Rate this order" button for delivered orders that haven't been rated
+- Show a "Rated" badge for orders that have already been reviewed
 
-### 2. New component: `RequestSupportButton` (new file)
+### 2. Show past ratings in order history
 
-A button placed in the order chat header that shows three states:
-- **Default**: "Request Support" with a headset icon
-- **Waiting**: "Support is joining..." with a spinner (after request, before agent joins)
-- **Active**: "Support joined" checkmark badge (agent is in the chat)
+Update `EatsOrders.tsx` to:
+- For delivered orders, show star rating inline if a review exists
+- Query reviews for the user's delivered orders using `useEatsReviews`
 
-Includes a confirmation dialog before requesting to prevent accidental taps.
+### 3. Show rating on individual order detail (already delivered)
 
-### 3. Update `OrderChatPage.tsx`
-
-- Import and render `RequestSupportButton` in the header bar (next to the read-only badge area)
-- When support status changes to `active`, show a toast notification: "A support agent has joined the chat"
-
-### 4. Update `chatTables.ts`
-
-- Add a "Request Support" quick reply option for the `customer` role
-- No changes to `CHAT_ROLES` needed -- `admin` role already exists
+On the order detail page for a delivered order that has been rated:
+- Display the submitted rating (overall, food, delivery) and comment in a read-only summary card below the order details
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useOrderSupportRequest.ts` | Create | Hook to request, track, and detect agent join |
-| `src/components/eats/RequestSupportButton.tsx` | Create | Header button with waiting/active states |
-| `src/components/eats/OrderChatPage.tsx` | Update | Add RequestSupportButton to header, toast on agent join |
-| `src/lib/chatTables.ts` | Update | Add "Need help" to customer quick replies |
+| `src/pages/EatsOrderDetail.tsx` | Update | Import RatingModal, auto-trigger on delivery, add Rate button, show rating summary |
+| `src/pages/EatsOrders.tsx` | Update | Show star rating inline for reviewed orders |
+| `src/hooks/useEatsReviews.ts` | Update | Add hook to batch-fetch reviews for multiple order IDs |
 
 ## Technical Details
 
-### useOrderSupportRequest hook
+### Auto-trigger rating modal
+
+In `EatsOrderDetail.tsx`, add state and effect:
 
 ```text
-Input: orderId, chatId
+const [showRating, setShowRating] = useState(false);
+const { data: existingReview } = useOrderReview(order?.id);
 
-On mount:
-  Query live_chat_sessions WHERE context_type = 'order_chat' AND context_id = orderId AND status IN ('waiting', 'active')
-  If found => set supportStatus to that session's status
-
-requestSupport():
-  1. Insert into live_chat_sessions: { user_id, context_type: 'order_chat', context_id: orderId, status: 'waiting' }
-  2. Insert system message into chat_messages: { chat_id, sender_type: 'admin', message: 'Support has been requested. An agent will join shortly...' }
-  3. Set local state to 'waiting'
-
-Real-time subscription on the live_chat_sessions row:
-  On UPDATE to status = 'active':
-    1. Read agent_id from the session
-    2. Insert into chat_members: { chat_id, user_id: agent_id, role: 'admin' }
-    3. Insert system message: 'A support agent has joined the chat'
-    4. Set local state to 'active'
-    5. Fire onAgentJoined callback
-
-  On UPDATE to status = 'ended':
-    1. Insert system message: 'Support agent has left the chat'
-    2. Set local state to 'ended'
-
-Returns: { supportStatus, requestSupport, isRequesting, supportSessionId }
+useEffect:
+  if order.status === 'delivered' && existingReview === null (loaded, not found)
+    delay 1.5s then setShowRating(true)
 ```
 
-### RequestSupportButton component
+This gives the delivered status animation time to play before the modal appears. The modal is skippable.
+
+### "Rate this order" button for delivered orders
+
+Below the "Order Again" button for delivered orders, add a "Rate Order" button that opens the modal -- only if no review exists yet. If already reviewed, show the rating inline instead.
+
+### Rating summary card
+
+For delivered orders with an existing review, render a read-only card showing:
+- Overall stars
+- Food quality stars (if provided)
+- Delivery experience stars (if provided)
+- Written comment (if provided)
+
+Uses the existing `StarRating` component in disabled/read-only mode.
+
+### Order history inline ratings
+
+In `EatsOrders.tsx`, add a new hook `useMyOrderReviews` to `useEatsReviews.ts` that fetches all reviews for the logged-in user. Then for each delivered order card, if a review exists, show a small star icon with the rating number next to the status badge.
 
 ```text
-Props: orderId, chatId, onAgentJoined
+New hook: useMyOrderReviews()
+  Query: eats_reviews WHERE user_id = auth.uid()
+  Returns: Map<orderId, EatsReview>
 
-Three visual states:
-  null/ended => Button: "Request Support" (headset icon, outline variant)
-  'waiting'  => Button: "Support joining..." (spinner, disabled, amber border)
-  'active'   => Badge: "Support joined" (checkmark, emerald)
-
-Confirmation dialog before requesting:
-  Title: "Request live support?"
-  Body: "A support agent will join this chat to help with your order."
-  Actions: Cancel / Request Support
+In order card:
+  If review exists for this order:
+    Show star icon + rating (e.g., "4.0") next to Delivered badge
 ```
 
-### Notification on agent join
+### Edge cases
 
-When the real-time subscription detects `status = 'active'`:
-- Toast notification: "Support agent joined" with a headset icon
-- Insert a notification row into the `notifications` table for the customer so it appears in their notification center
-
-### System messages in order chat
-
-System messages use `sender_type: 'admin'` with `sender_id: null` and are rendered differently in the existing `MessageBubble` component. A small update adds a centered system-message style when `sender_id` is null and `sender_type` is `admin`.
-
-### Edge Cases
-
-- **Chat is read-only**: Hide the Request Support button when `isChatActive()` returns false
-- **Support already requested**: Hook detects existing waiting/active session on mount and shows correct state
-- **Agent never joins**: User can cancel the request (updates session to `ended`)
-- **Multiple requests**: Only one active/waiting support session per order -- hook prevents duplicate requests
-- **Agent leaves and re-requests**: After session ends, the button returns to default state and allows a new request
+- Modal only auto-opens once per page visit (guarded by state)
+- If user navigates away and comes back, modal triggers again if still unrated (acceptable UX for encouraging reviews)
+- Skip button simply closes the modal without submitting
+- Review cannot be submitted twice (useCreateEatsReview will fail on duplicate order_id due to DB constraint)
+- Orders with status other than "delivered" never show the rating modal or button
