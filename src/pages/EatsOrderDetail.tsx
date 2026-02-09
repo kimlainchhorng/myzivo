@@ -45,7 +45,7 @@ import { OrderDelayBanner } from "@/components/eats/OrderDelayBanner";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
-import { useCart } from "@/contexts/CartContext";
+import { CartProvider, useCart } from "@/contexts/CartContext";
 import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -68,7 +68,7 @@ function calculateDistanceMiles(
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export default function EatsOrderDetail() {
+function EatsOrderDetailContent() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { order, loading, error } = useLiveEatsOrder(id);
@@ -787,5 +787,13 @@ export default function EatsOrderDetail() {
         isCancelling={orderEditing.isCancelling}
       />
     </div>
+  );
+}
+
+export default function EatsOrderDetail() {
+  return (
+    <CartProvider>
+      <EatsOrderDetailContent />
+    </CartProvider>
   );
 }
