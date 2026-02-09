@@ -10938,6 +10938,7 @@ export type Database = {
           credit_applied_cents: number | null
           credit_used_amount: number
           currency: string | null
+          current_stop_index: number | null
           customer_email: string | null
           customer_id: string
           customer_name: string | null
@@ -10953,6 +10954,7 @@ export type Database = {
           delivery_photo_url: string | null
           delivery_pin: string | null
           delivery_pin_verified: boolean | null
+          delivery_stops: Json | null
           discount_amount: number | null
           discount_type: string | null
           dispatch_at: string | null
@@ -10974,6 +10976,7 @@ export type Database = {
           id: string
           inactivity_warning_at: string | null
           is_business_order: boolean | null
+          is_multi_stop: boolean | null
           is_scheduled: boolean | null
           items: Json
           last_driver_lat: number | null
@@ -11067,6 +11070,7 @@ export type Database = {
           tip_amount: number | null
           tip_cents: number | null
           total_amount: number
+          total_distance_miles: number | null
           tracking_code: string | null
           updated_at: string | null
           wallet_transaction_id: string | null
@@ -11097,6 +11101,7 @@ export type Database = {
           credit_applied_cents?: number | null
           credit_used_amount?: number
           currency?: string | null
+          current_stop_index?: number | null
           customer_email?: string | null
           customer_id: string
           customer_name?: string | null
@@ -11112,6 +11117,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          delivery_stops?: Json | null
           discount_amount?: number | null
           discount_type?: string | null
           dispatch_at?: string | null
@@ -11133,6 +11139,7 @@ export type Database = {
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
           items: Json
           last_driver_lat?: number | null
@@ -11226,6 +11233,7 @@ export type Database = {
           tip_amount?: number | null
           tip_cents?: number | null
           total_amount: number
+          total_distance_miles?: number | null
           tracking_code?: string | null
           updated_at?: string | null
           wallet_transaction_id?: string | null
@@ -11256,6 +11264,7 @@ export type Database = {
           credit_applied_cents?: number | null
           credit_used_amount?: number
           currency?: string | null
+          current_stop_index?: number | null
           customer_email?: string | null
           customer_id?: string
           customer_name?: string | null
@@ -11271,6 +11280,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          delivery_stops?: Json | null
           discount_amount?: number | null
           discount_type?: string | null
           dispatch_at?: string | null
@@ -11292,6 +11302,7 @@ export type Database = {
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
           items?: Json
           last_driver_lat?: number | null
@@ -11385,6 +11396,7 @@ export type Database = {
           tip_amount?: number | null
           tip_cents?: number | null
           total_amount?: number
+          total_distance_miles?: number | null
           tracking_code?: string | null
           updated_at?: string | null
           wallet_transaction_id?: string | null
@@ -22182,6 +22194,10 @@ export type Database = {
           accepts_delivery: boolean | null
           accepts_pickup: boolean | null
           address: string
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_id: string | null
+          affiliate_partner_name: string | null
           application_id: string | null
           auto_accept_orders: boolean | null
           auto_busy_enabled: boolean | null
@@ -22260,6 +22276,10 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address: string
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_id?: string | null
+          affiliate_partner_name?: string | null
           application_id?: string | null
           auto_accept_orders?: boolean | null
           auto_busy_enabled?: boolean | null
@@ -22338,6 +22358,10 @@ export type Database = {
           accepts_delivery?: boolean | null
           accepts_pickup?: boolean | null
           address?: string
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_id?: string | null
+          affiliate_partner_name?: string | null
           application_id?: string | null
           auto_accept_orders?: boolean | null
           auto_busy_enabled?: boolean | null

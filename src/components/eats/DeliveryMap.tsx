@@ -7,6 +7,13 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import { MapPin, Navigation, Loader2 } from "lucide-react";
 
+interface DeliveryStop {
+  lat: number;
+  lng: number;
+  stopOrder: number;
+  status: "pending" | "current" | "delivered";
+}
+
 interface DeliveryMapProps {
   driverLat?: number | null;
   driverLng?: number | null;
@@ -17,6 +24,10 @@ interface DeliveryMapProps {
   restaurantLat?: number;
   restaurantLng?: number;
   isLocationStale?: boolean;
+  // Multi-stop support
+  deliveryStops?: DeliveryStop[];
+  isMultiStop?: boolean;
+  currentStopIndex?: number;
   className?: string;
 }
 
@@ -62,6 +73,9 @@ export function DeliveryMap({
   restaurantLat,
   restaurantLng,
   isLocationStale = false,
+  deliveryStops,
+  isMultiStop = false,
+  currentStopIndex = 0,
   className,
 }: DeliveryMapProps) {
   const { isLoaded, loadError } = useGoogleMaps();
