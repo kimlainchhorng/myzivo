@@ -139,6 +139,7 @@ const EatsCheckout = lazy(() => import("./pages/EatsCheckout"));
 const EatsCart = lazy(() => import("./pages/EatsCart"));
 const EatsOrders = lazy(() => import("./pages/EatsOrders"));
 const EatsOrderDetail = lazy(() => import("./pages/EatsOrderDetail"));
+const EatsDeliveryReplay = lazy(() => import("./pages/EatsDeliveryReplay"));
 const EatsAddress = lazy(() => import("./pages/EatsAddress"));
 const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
 const EatsAlerts = lazy(() => import("./pages/EatsAlerts"));
@@ -659,6 +660,7 @@ const App = () => (
                 <Route path="/eats/address" element={<EatsAddress />} />
                 <Route path="/eats/orders" element={<EatsOrders />} />
                 <Route path="/eats/orders/:id" element={<EatsOrderDetail />} />
+                <Route path="/eats/orders/:id/replay" element={<EatsDeliveryReplay />} />
                 <Route path="/eats/orders/:id/chat" element={<ProtectedRoute><EatsOrderChatPage /></ProtectedRoute>} />
                 <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
                 <Route path="/eats/alerts" element={<EatsAlerts />} />

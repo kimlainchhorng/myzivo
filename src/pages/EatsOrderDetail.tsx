@@ -7,7 +7,7 @@
  */
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -732,6 +732,24 @@ function EatsOrderDetailContent() {
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Order Again
+            </Button>
+          </motion.div>
+        )}
+
+        {/* View Delivery Route Button - only for delivered orders */}
+        {order.status === "delivered" && order.picked_up_at && order.delivered_at && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+          >
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-xl border-orange-500/30 bg-zinc-900/80 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50"
+              onClick={() => navigate(`/eats/orders/${id}/replay`)}
+            >
+              <Map className="w-5 h-5 mr-2" />
+              View Delivery Route
             </Button>
           </motion.div>
         )}

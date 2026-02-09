@@ -7738,6 +7738,33 @@ export type Database = {
           },
         ]
       }
+      driver_locations_history: {
+        Row: {
+          driver_id: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          order_id: string | null
+          recorded_at: string | null
+        }
+        Insert: {
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Update: {
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       driver_notification_logs: {
         Row: {
           body: string | null
@@ -17404,6 +17431,30 @@ export type Database = {
           lng?: number | null
           order_id?: string
           stop_index?: number | null
+        }
+        Relationships: []
+      }
+      order_timeline: {
+        Row: {
+          created_at: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          status?: string | null
         }
         Relationships: []
       }
