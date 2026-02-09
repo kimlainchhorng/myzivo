@@ -1,11 +1,14 @@
 
-# Driver Reassignment Transparency — Implementation Plan
+# Order Editing Window — Implementation Plan
 
 ## Overview
-Keep customers informed when their delivery driver changes. When a driver cancels or is reassigned, the customer should see:
-1. Clear messaging: "Finding another driver near you..."
-2. Status transitions: Searching for new driver → New driver assigned
-3. Automatic ETA recalculation after the new driver is assigned
+Allow customers to edit or cancel their order for a short window (2-3 minutes) after placing it. During this grace period, customers can:
+1. Remove items from the order
+2. Change item quantities  
+3. Add a note to the order
+4. Cancel the order entirely
+
+The feature activates only when the order is still in "placed" (pending) status or within the grace period timer.
 
 ---
 
@@ -14,241 +17,218 @@ Keep customers informed when their delivery driver changes. When a driver cancel
 ### Data Available
 | Field | Location | Purpose |
 |-------|----------|---------|
-| `driver_id` | `food_orders` table | Current assigned driver (null if none) |
-| `previous_driver_id` | `food_orders` table | Previous driver before reassignment |
-| `assigned_at` | `food_orders` table | When current driver was assigned |
-| `order_events` | Audit table | Logs `driver_assigned` and `driver_unassigned` events |
+| `placed_at` / `created_at` | `food_orders` | When order was placed (grace window start) |
+| `status` | `food_orders` | Current order status (placed, confirmed, etc.) |
+| `items` | `food_orders` | JSONB array of order items |
+| `special_instructions` | `food_orders` | Order notes |
+| `accepted_at` | `food_orders` | When restaurant confirmed (ends grace window) |
 
-### Current Behavior
-- When driver is unassigned, `driver_id` becomes null
-- `DispatchSearchBanner` shows "Finding the best driver near you..." when `showSearching` is true
-- `useSmartEta` already recalculates when `driverAssigned` changes
-- **Missing**: No detection of driver *change* (old driver → null → new driver)
-- **Missing**: No specific messaging for reassignment scenario
+### Key Insight
+The grace window should end when **either**:
+1. Timer expires (2-3 minutes after `placed_at`)
+2. Restaurant confirms the order (`status` changes from "placed" to "confirmed")
 
 ---
 
 ## Implementation Plan
 
-### 1) Create useDriverReassignment Hook
+### 1) Create useOrderEditWindow Hook
 
-**File to Create:** `src/hooks/useDriverReassignment.ts`
+**File to Create:** `src/hooks/useOrderEditWindow.ts`
 
-**Purpose:** Track driver changes and detect reassignment scenarios.
+**Purpose:** Calculate remaining edit time and determine if editing is allowed.
 
 ```typescript
-export interface DriverReassignmentState {
-  // Reassignment detection
-  wasReassigned: boolean;           // A previous driver existed before current
-  isSearchingForNewDriver: boolean; // Driver was unassigned, searching for new one
-  previousDriverId: string | null;
+interface OrderEditWindowResult {
+  // Window state
+  isEditWindowOpen: boolean;
+  canEdit: boolean;
+  canCancel: boolean;
   
-  // Timestamps
-  reassignedAt: Date | null;
+  // Timer
+  remainingSeconds: number;
+  remainingDisplay: string;  // "02:30" format
   
-  // For display
-  showReassignmentBanner: boolean;
-  reassignmentMessage: string;
-  reassignmentSubMessage: string;
+  // Closure reason
+  closedReason: "expired" | "confirmed" | null;
 }
 
-interface UseDriverReassignmentOptions {
-  currentDriverId: string | null | undefined;
-  previousDriverId?: string | null;
-  orderStatus: string;
+interface UseOrderEditWindowOptions {
+  placedAt: string | null | undefined;
+  status: string;
+  acceptedAt?: string | null;
+  graceMinutes?: number;  // Default 2.5 minutes
 }
 ```
 
 **Key Logic:**
+- Grace window = 2.5 minutes (150 seconds) from `placed_at`
+- Window closes immediately if `status !== "placed"` (restaurant confirmed)
+- Live countdown updates every second
+- Returns formatted display time (MM:SS)
+
+### 2) Create useOrderEditing Hook
+
+**File to Create:** `src/hooks/useOrderEditing.ts`
+
+**Purpose:** Provide mutation functions for editing orders within the grace window.
+
 ```typescript
-// Detect when driver changes
-const prevDriverRef = useRef(currentDriverId);
-
-useEffect(() => {
-  // Had a driver, now searching (driver cancelled/unassigned)
-  if (prevDriverRef.current && !currentDriverId) {
-    setIsSearchingForNewDriver(true);
-    setWasReassigned(true);
-    setPreviousDriverId(prevDriverRef.current);
-    setReassignedAt(new Date());
-  }
+interface OrderEditingResult {
+  // Item mutations
+  removeItem: (itemIndex: number) => Promise<void>;
+  updateItemQuantity: (itemIndex: number, newQuantity: number) => Promise<void>;
   
-  // New driver assigned after searching
-  if (isSearchingForNewDriver && currentDriverId) {
-    setIsSearchingForNewDriver(false);
-    // Clear after 10 seconds to reset state
-    setTimeout(() => setWasReassigned(false), 10000);
-  }
+  // Note mutation
+  updateNote: (note: string) => Promise<void>;
   
-  prevDriverRef.current = currentDriverId;
-}, [currentDriverId]);
+  // Cancel mutation
+  cancelOrder: (reason?: string) => Promise<void>;
+  
+  // States
+  isUpdating: boolean;
+  isCancelling: boolean;
+}
 ```
 
-### 2) Create ReassignmentBanner Component
+**Validation:** All mutations will first verify the edit window is still open before proceeding.
 
-**File to Create:** `src/components/eats/ReassignmentBanner.tsx`
+### 3) Create OrderEditBanner Component
 
-**Purpose:** Dedicated banner for driver reassignment scenarios with clear messaging.
+**File to Create:** `src/components/eats/OrderEditBanner.tsx`
 
-**UI Design - Searching State:**
-```
-+-----------------------------------------------------+
-| 🔄 Finding another driver near you...               |
-|                                                     |
-| [==================>------] Searching...            |
-|                                                     |
-| Your previous driver had to cancel. We're finding   |
-| someone new!                                        |
-+-----------------------------------------------------+
-```
+**Purpose:** Prominent banner showing edit availability with countdown timer.
 
-**UI Design - New Driver Assigned:**
+**UI Design:**
 ```
 +-----------------------------------------------------+
-| ✅ New driver assigned!                             |
+| ✏️  You can edit or cancel this order               |
 |                                                     |
-| Your order is back on track                         |
+| Editing available for: 02:30                        |
+|                                                     |
+| [Edit Items]                    [Cancel Order]      |
 +-----------------------------------------------------+
 ```
 
 **Props:**
 ```typescript
-interface ReassignmentBannerProps {
-  isSearching: boolean;
-  newDriverAssigned: boolean;
-  nearbyCount?: number | null;
+interface OrderEditBannerProps {
+  remainingSeconds: number;
+  remainingDisplay: string;
+  onEditClick: () => void;
+  onCancelClick: () => void;
   className?: string;
 }
 ```
 
 **Styling:**
-| State | Icon | Colors | Animation |
-|-------|------|--------|-----------|
-| Searching | RefreshCw | Amber/Orange | Rotating + pulse |
-| New assigned | CheckCircle | Emerald | Brief scale-in |
+| Time Remaining | Color | Animation |
+|----------------|-------|-----------|
+| > 60 seconds | Blue/Cyan | Subtle pulse |
+| 30-60 seconds | Amber | Medium pulse |
+| < 30 seconds | Red | Fast pulse + warning |
 
-### 3) Update useEatsDispatchStatus Hook
+### 4) Create OrderEditSheet Component
 
-**File to Modify:** `src/hooks/useEatsDispatchStatus.ts`
+**File to Create:** `src/components/eats/OrderEditSheet.tsx`
 
-**New Props:**
+**Purpose:** Bottom sheet for editing order items and adding notes.
+
+**UI Sections:**
+1. **Timer Header** - Shows remaining time prominently
+2. **Items List** - Each item with quantity controls and remove button
+3. **Add Note** - Text area for order notes
+4. **Save Button** - Commits changes
+
+**Props:**
 ```typescript
-interface UseEatsDispatchStatusOptions {
-  // ... existing props
-  
-  // Reassignment context
-  wasReassigned?: boolean;
-  isSearchingForNewDriver?: boolean;
+interface OrderEditSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  orderId: string;
+  items: OrderItem[];
+  currentNote?: string;
+  remainingDisplay: string;
+  onRemoveItem: (index: number) => Promise<void>;
+  onUpdateQuantity: (index: number, quantity: number) => Promise<void>;
+  onUpdateNote: (note: string) => Promise<void>;
+  isUpdating: boolean;
 }
 ```
 
-**New Phase:** Add `reassigning` phase for clarity.
-
-```typescript
-export type DispatchPhase = 
-  | "pending"
-  | "preparing"
-  | "almost_ready"
-  | "searching"
-  | "reassigning"     // NEW: Looking for replacement driver
-  | "assigned"
-  | "near_pickup"
-  | "at_pickup"
-  | "en_route"
-  | "arrived"
-  | "delivered"
-  | "cancelled";
+**Item Row UI:**
+```
++-----------------------------------------------------+
+| 🍔 Burger Deluxe                                    |
+|    $12.99                                           |
+|                                                     |
+| [-]  2  [+]                              [🗑️ Remove]|
++-----------------------------------------------------+
 ```
 
-**Updated Messaging:**
-```typescript
-// Reassignment scenario
-if (isSearchingForNewDriver) {
-  return {
-    phase: "reassigning",
-    message: "Finding another driver near you...",
-    subMessage: "Your previous driver had to cancel",
-    showSearching: true,
-  };
-}
+### 5) Create CancelOrderDialog Component
 
-// Normal searching
-if (!driverId) {
-  return {
-    phase: "searching",
-    message: "Finding the best driver near you...",
-    subMessage: "We're matching you with a nearby driver",
-    showSearching: true,
-  };
-}
+**File to Create:** `src/components/eats/CancelOrderDialog.tsx`
+
+**Purpose:** Confirmation dialog for order cancellation.
+
+**UI Design:**
+```
++-----------------------------------------------------+
+| ⚠️ Cancel Order?                                    |
+|                                                     |
+| Are you sure you want to cancel this order?         |
+|                                                     |
+| (Optional reason)                                   |
+| [________________________]                          |
+|                                                     |
+| [Keep Order]                    [Yes, Cancel]       |
++-----------------------------------------------------+
 ```
 
-### 4) Update EnhancedStatusBanner Component
-
-**File to Modify:** `src/components/eats/EnhancedStatusBanner.tsx`
-
-**Add `reassigning` phase styling:**
+**Props:**
 ```typescript
-const PHASE_STYLES: Record<DispatchPhase, {...}> = {
-  // ... existing phases
-  reassigning: {
-    icon: RefreshCw,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-    animate: true,  // Rotating animation
-  },
-};
-```
-
-### 5) Update useSmartEta Hook
-
-**File to Modify:** `src/hooks/useSmartEta.ts`
-
-**Add new recalc reason:**
-```typescript
-export type RecalcReason = 
-  | "initial" 
-  | "driver_assigned" 
-  | "driver_reassigned"  // NEW
-  | "pickup_complete" 
-  | "location_change" 
-  | "interval"
-  | "prep_speed_change";
-```
-
-**Update recalc trigger logic:**
-```typescript
-// Detect driver reassignment (had driver → no driver → new driver)
-if (prevDriverAssigned.current && !driverAssigned) {
-  reason = "driver_reassigned";
-}
-// New driver assigned (triggers full ETA recalc)
-if (!prevDriverAssigned.current && driverAssigned) {
-  reason = "driver_assigned";
+interface CancelOrderDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (reason?: string) => Promise<void>;
+  isCancelling: boolean;
 }
 ```
 
-### 6) Update useLiveEatsOrder Hook
+### 6) Create Edge Function for Order Updates
 
-**File to Modify:** `src/hooks/useLiveEatsOrder.ts`
+**File to Create:** `supabase/functions/update-eats-order/index.ts`
 
-**Add `previous_driver_id` to interface and query:**
+**Purpose:** Secure backend validation for order edits within grace window.
+
+**Endpoints:**
 ```typescript
-export interface LiveEatsOrder {
-  // ... existing fields
-  previous_driver_id?: string | null;  // NEW
+// POST /update-eats-order
+{
+  action: "update_items" | "update_note" | "cancel",
+  orderId: string,
+  items?: OrderItem[],        // For update_items
+  note?: string,              // For update_note
+  cancellation_reason?: string // For cancel
 }
+```
 
-// Update select query to include it
-const { data } = await supabase
-  .from(EATS_TABLES.orders)
-  .select(`
-    *,
-    restaurants:restaurant_id(name, logo_url, phone, address, lat, lng, avg_prep_time)
-  `)
-  .eq("id", orderId)
-  .single();
+**Validation Rules:**
+1. Order must belong to the authenticated user
+2. Order status must be "placed" (not yet confirmed)
+3. Order must be within grace window (< 2.5 min from `placed_at`)
+4. Items array must have at least 1 item (can't remove all)
+5. Recalculate totals after item changes
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  order?: UpdatedOrder,
+  error?: string,
+  reason?: "expired" | "confirmed" | "invalid"
+}
 ```
 
 ### 7) Update EatsOrderDetail Page
@@ -257,86 +237,135 @@ const { data } = await supabase
 
 **Integration:**
 ```typescript
-import { useDriverReassignment } from "@/hooks/useDriverReassignment";
-import { ReassignmentBanner } from "@/components/eats/ReassignmentBanner";
-
-// Track driver reassignment
-const reassignment = useDriverReassignment({
-  currentDriverId: order?.driver_id,
-  previousDriverId: order?.previous_driver_id,
-  orderStatus: order?.status || "",
+// Track edit window state
+const editWindow = useOrderEditWindow({
+  placedAt: order?.placed_at || order?.created_at,
+  status: order?.status || "",
+  acceptedAt: order?.accepted_at,
 });
 
-// Pass to dispatch status
-const dispatchStatus = useEatsDispatchStatus({
-  // ... existing props
-  wasReassigned: reassignment.wasReassigned,
-  isSearchingForNewDriver: reassignment.isSearchingForNewDriver,
-});
+// Order editing mutations
+const orderEditing = useOrderEditing(order?.id);
 
-// Show reassignment banner when applicable
-{reassignment.showReassignmentBanner && isActiveOrder && (
-  <ReassignmentBanner
-    isSearching={reassignment.isSearchingForNewDriver}
-    newDriverAssigned={reassignment.wasReassigned && !!order.driver_id}
-    nearbyCount={deliveryFactors.nearbyDriverCount}
+// Sheet state
+const [editSheetOpen, setEditSheetOpen] = useState(false);
+const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+// Show edit banner when window is open
+{editWindow.isEditWindowOpen && isActiveOrder && (
+  <OrderEditBanner
+    remainingSeconds={editWindow.remainingSeconds}
+    remainingDisplay={editWindow.remainingDisplay}
+    onEditClick={() => setEditSheetOpen(true)}
+    onCancelClick={() => setCancelDialogOpen(true)}
   />
 )}
 ```
+
+**Placement:** Add banner immediately after the status banner, before other banners.
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (6)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useDriverReassignment.ts` | Track driver changes and detect reassignment |
-| `src/components/eats/ReassignmentBanner.tsx` | Visual banner for reassignment scenarios |
+| `src/hooks/useOrderEditWindow.ts` | Calculate edit window state and countdown |
+| `src/hooks/useOrderEditing.ts` | Mutation functions for order edits |
+| `src/components/eats/OrderEditBanner.tsx` | "Edit or cancel" banner with countdown |
+| `src/components/eats/OrderEditSheet.tsx` | Bottom sheet for item editing |
+| `src/components/eats/CancelOrderDialog.tsx` | Cancellation confirmation dialog |
+| `supabase/functions/update-eats-order/index.ts` | Secure backend for order updates |
 
-### Modified Files (5)
+### Modified Files (1)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsDispatchStatus.ts` | Add `reassigning` phase, accept reassignment props |
-| `src/hooks/useSmartEta.ts` | Add `driver_reassigned` recalc reason |
-| `src/hooks/useLiveEatsOrder.ts` | Include `previous_driver_id` in interface |
-| `src/components/eats/EnhancedStatusBanner.tsx` | Add `reassigning` phase styling |
-| `src/pages/EatsOrderDetail.tsx` | Integrate reassignment tracking and banner |
+| `src/pages/EatsOrderDetail.tsx` | Integrate edit window, banner, sheet, and dialog |
 
 ---
 
-## Status Flow for Reassignment
+## Grace Window Logic
 
 ```
-Original Flow:
-  Driver Assigned → En Route → Delivered
-
-Reassignment Flow:
-  Driver Assigned → [Driver Cancels] → "Finding another driver..." 
-                                      → New Driver Assigned → En Route → Delivered
+Order Placed (placed_at)
+    │
+    ├─────────────────────────────────────────────┐
+    │  GRACE WINDOW (2.5 minutes)                 │
+    │                                             │
+    │  ┌─────────────────────────────────────┐    │
+    │  │ Customer can:                       │    │
+    │  │  - Remove items                     │    │
+    │  │  - Change quantities                │    │
+    │  │  - Add note                         │    │
+    │  │  - Cancel order                     │    │
+    │  └─────────────────────────────────────┘    │
+    │                                             │
+    ├─────────────────────────────────────────────┤
+    │                                             │
+    ▼ Timer expires OR Restaurant confirms        ▼
+    
+WINDOW CLOSED
+  - No more edits allowed
+  - Banner disappears
+  - Standard order flow continues
 ```
 
 ---
 
-## Message Summary
+## Timer Display Format
 
-| Scenario | Main Message | Sub-message |
-|----------|--------------|-------------|
-| Driver cancelled, searching | "Finding another driver near you..." | "Your previous driver had to cancel" |
-| New driver assigned | "New driver assigned!" | "Your order is back on track" |
-| ETA after reassignment | (Updated range) | "ETA recalculated for new driver" |
+| Time Remaining | Display | Color |
+|----------------|---------|-------|
+| 2:30 → 1:00 | "02:30" → "01:00" | Cyan/Blue |
+| 1:00 → 0:30 | "00:59" → "00:30" | Amber/Yellow |
+| 0:30 → 0:00 | "00:29" → "00:00" | Red + pulse |
 
 ---
 
-## ETA Recalculation Behavior
+## Edge Cases
 
-When driver reassignment occurs:
-1. `driver_id` changes from old ID → null → new ID
-2. `useSmartEta` detects `driverAssigned` transition
-3. Full ETA recalculation triggers with `reason: "driver_assigned"`
-4. New range displayed based on new driver's location
+| Scenario | Behavior |
+|----------|----------|
+| Remove all items except 1 | Allow (minimum 1 item) |
+| Try to remove last item | Block with toast "Order must have at least one item" |
+| Restaurant confirms during edit | Close sheet, show toast "Order confirmed by restaurant" |
+| Timer expires during edit | Close sheet, show toast "Edit window expired" |
+| Reduce quantity to 0 | Same as remove item |
+| Network error during update | Show retry button, don't close sheet |
 
-The existing Smart ETA system already handles this automatically since it tracks `driverAssigned` state changes.
+---
+
+## Price Recalculation
+
+When items are modified:
+```
+subtotal = SUM(item.price × item.quantity)
+delivery_fee = (unchanged)
+service_fee = (unchanged or recalculate based on subtotal)
+tax = subtotal × tax_rate
+total = subtotal + delivery_fee + service_fee + tax
+```
+
+---
+
+## Audit Trail
+
+All edits are logged to `order_events` table:
+```typescript
+{
+  order_id: orderId,
+  type: "order_edited" | "order_cancelled_by_customer",
+  actor_id: customerId,
+  actor_role: "customer",
+  data: {
+    action: "item_removed" | "quantity_changed" | "note_updated" | "cancelled",
+    previous_items: [...],
+    new_items: [...],
+    reason: "customer_request",
+  }
+}
+```
 
 ---
 
@@ -344,8 +373,12 @@ The existing Smart ETA system already handles this automatically since it tracks
 
 This implementation provides:
 
-1. **Clear reassignment messaging**: "Finding another driver near you..." with context
-2. **Dedicated `reassigning` phase**: Distinct from normal searching
-3. **Automatic ETA recalculation**: Leverages existing Smart ETA recalc triggers
-4. **Visual reassignment banner**: Shows progress and nearby driver count
-5. **Smooth status transitions**: Searching → New driver assigned confirmation
+1. **Clear edit window**: 2.5 minute grace period after order placement
+2. **Prominent countdown timer**: Visual urgency with color-coded countdown
+3. **Easy editing**: Bottom sheet for item modifications and notes
+4. **Safe cancellation**: Confirmation dialog with optional reason
+5. **Secure backend**: Edge function validates window and recalculates totals
+6. **Audit trail**: All edits logged for transparency
+7. **Real-time awareness**: Window closes if restaurant confirms order
+
+The feature respects both customer flexibility and restaurant workflow by limiting edits to the brief period before restaurant acknowledgment.
