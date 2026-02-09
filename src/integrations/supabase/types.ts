@@ -16421,6 +16421,77 @@ export type Database = {
           },
         ]
       }
+      merchant_rewards: {
+        Row: {
+          amount_cents: number
+          claimed_at: string | null
+          created_at: string
+          description: string
+          id: string
+          period_end: string
+          period_start: string
+          restaurant_id: string
+          reward_type: string
+          status: string
+          title: string
+        }
+        Insert: {
+          amount_cents?: number
+          claimed_at?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          period_end: string
+          period_start: string
+          restaurant_id: string
+          reward_type: string
+          status?: string
+          title: string
+        }
+        Update: {
+          amount_cents?: number
+          claimed_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          restaurant_id?: string
+          reward_type?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_rewards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_rewards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_rewards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_rewards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -24115,6 +24186,56 @@ export type Database = {
         }
         Relationships: []
       }
+      reward_issuances: {
+        Row: {
+          created_at: string | null
+          id: string
+          issued_at: string | null
+          metadata: Json | null
+          redeemed_at: string | null
+          reward_type: string
+          reward_value: number
+          rule_id: string | null
+          status: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          metadata?: Json | null
+          redeemed_at?: string | null
+          reward_type: string
+          reward_value: number
+          rule_id?: string | null
+          status?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          metadata?: Json | null
+          redeemed_at?: string | null
+          reward_type?: string
+          reward_value?: number
+          rule_id?: string | null
+          status?: string | null
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_issuances_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "reward_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reward_redemptions: {
         Row: {
           applied_at: string | null
@@ -24158,6 +24279,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reward_rules: {
+        Row: {
+          created_at: string | null
+          current_issuances: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_recurring: boolean | null
+          max_issuances: number | null
+          name: string
+          reward_meta: Json | null
+          reward_type: string
+          reward_value: number
+          target_type: string
+          trigger_type: string
+          trigger_value: number
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_issuances?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          max_issuances?: number | null
+          name: string
+          reward_meta?: Json | null
+          reward_type: string
+          reward_value: number
+          target_type: string
+          trigger_type: string
+          trigger_value: number
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_issuances?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          max_issuances?: number | null
+          name?: string
+          reward_meta?: Json | null
+          reward_type?: string
+          reward_value?: number
+          target_type?: string
+          trigger_type?: string
+          trigger_value?: number
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
       }
       rewards: {
         Row: {
