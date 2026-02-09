@@ -5788,6 +5788,30 @@ export type Database = {
         }
         Relationships: []
       }
+      currencies: {
+        Row: {
+          code: string | null
+          exchange_rate: number | null
+          id: string
+          symbol: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code?: string | null
+          exchange_rate?: number | null
+          id?: string
+          symbol?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string | null
+          exchange_rate?: number | null
+          id?: string
+          symbol?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       customer_feedback: {
         Row: {
           ambiance_rating: number | null
@@ -14425,6 +14449,27 @@ export type Database = {
           submitted_at?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      languages: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
         }
         Relationships: []
       }
@@ -23977,6 +24022,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string | null
           cuisine_type: string
+          currency: string
           current_period_end: string | null
           delivery_fee_cents: number | null
           delivery_mode: string | null
@@ -23990,6 +24036,7 @@ export type Database = {
           is_open: boolean | null
           lat: number | null
           lng: number | null
+          locale: string
           logo_url: string | null
           max_active_orders: number | null
           min_order_cents: number | null
@@ -24023,6 +24070,7 @@ export type Database = {
           stripe_subscription_id: string | null
           subscription_status: string | null
           tenant_id: string | null
+          timezone: string
           total_orders: number | null
           updated_at: string | null
           use_auto_prep_time: boolean | null
@@ -24059,6 +24107,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type: string
+          currency?: string
           current_period_end?: string | null
           delivery_fee_cents?: number | null
           delivery_mode?: string | null
@@ -24072,6 +24121,7 @@ export type Database = {
           is_open?: boolean | null
           lat?: number | null
           lng?: number | null
+          locale?: string
           logo_url?: string | null
           max_active_orders?: number | null
           min_order_cents?: number | null
@@ -24105,6 +24155,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           tenant_id?: string | null
+          timezone?: string
           total_orders?: number | null
           updated_at?: string | null
           use_auto_prep_time?: boolean | null
@@ -24141,6 +24192,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type?: string
+          currency?: string
           current_period_end?: string | null
           delivery_fee_cents?: number | null
           delivery_mode?: string | null
@@ -24154,6 +24206,7 @@ export type Database = {
           is_open?: boolean | null
           lat?: number | null
           lng?: number | null
+          locale?: string
           logo_url?: string | null
           max_active_orders?: number | null
           min_order_cents?: number | null
@@ -24187,6 +24240,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           tenant_id?: string | null
+          timezone?: string
           total_orders?: number | null
           updated_at?: string | null
           use_auto_prep_time?: boolean | null
