@@ -1,9 +1,9 @@
 
 
-# KYC / Verification Workflow for Drivers and Merchants
+# Automated Backups and Recovery Readiness Implementation
 
 ## Overview
-Implement a comprehensive KYC (Know Your Customer) verification workflow for Drivers and Merchants using the existing Supabase infrastructure. The system will require document submission, admin review with approval/rejection, and block payouts and "go online" functionality until approved. A complete audit trail will track all verification events.
+Implement a comprehensive automated backup system with scheduled daily database backups, storage bucket backups, backup logging, a recovery guide, and failure alerting. This builds on the existing disaster recovery infrastructure (`backup_logs`, `dr_configuration`, `RecoveryDashboard`).
 
 ---
 
@@ -12,740 +12,615 @@ Implement a comprehensive KYC (Know Your Customer) verification workflow for Dri
 ### Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| `profiles.kyc_status` | Complete | Values: not_started, submitted, approved, rejected (string) |
-| `profiles.kyc_verified_at` | Complete | Timestamp of verification |
-| `profiles.kyc_rejection_reason` | Complete | Reason text for rejections |
-| `profiles.payout_hold` | Complete | Boolean to block payouts |
-| `drivers` table | Complete | Has `can_go_online`, `status`, `documents_verified` |
-| `drivers.can_go_online` | Complete | Boolean to control online toggle |
-| `restaurants.documents_verified` | Complete | Boolean field for merchant docs |
-| `restaurants.status` | Complete | Enum: pending, active, suspended, closed |
-| `restaurants.owner_id` | Complete | Links to user ID |
-| `driver_documents` table | Complete | driver_id, document_type, file_path, status |
-| `driver-documents` storage bucket | Complete | RLS policies for user/admin access |
-| `useDriverDocuments` hook | Complete | CRUD for driver documents |
-| `AdminDriverOnboardingQueue` | Complete | Existing driver review UI |
-| `useMerchantRole` hook | Complete | Checks user_roles for merchant |
-| `user_roles` table | Complete | Secure role storage (driver, merchant, admin) |
-| Notification system | Complete | Push, SMS, Email via send-notification |
+| `backup_logs` table | Complete | Has backup_type, backup_target, status, storage_location, size_bytes, error_message, retention_days |
+| `backup_runs` table | Complete | Simpler table with id, backup_type, status, file_url, created_at |
+| `dr_configuration` table | Complete | Key-value config (RTO, RPO settings) |
+| `service_health_status` table | Complete | Service health monitoring |
+| `recovery_tests` table | Complete | DR test tracking |
+| `restore_operations` table | Complete | Restore request/approval workflow |
+| `RecoveryDashboard` page | Complete | Full admin UI at `/admin/recovery` |
+| `useDisasterRecovery` hooks | Complete | All CRUD hooks for backup/restore |
+| `useTriggerBackup` hook | Complete | Manual backup trigger |
+| 5 existing cron jobs | Active | Cleanup jobs (location history, sessions, tokens) |
+| `send-notification` edge function | Complete | Push/SMS/Email notifications |
+| Supabase Storage buckets | Complete | 13 buckets including kyc-documents, menu-photos, receipts |
+| pg_cron + pg_net extensions | Enabled | Ready for scheduled HTTP calls |
 
 ### Missing
 | Feature | Status |
 |---------|--------|
-| `kyc_submissions` table | Need to create |
-| `kyc_events` audit table | Need to create |
-| `kyc-documents` storage bucket | Need to create |
-| `/driver/kyc` page | Need to create |
-| `/merchant/kyc` page | Need to create |
-| `/admin/kyc` inbox page | Need to create |
-| `/admin/kyc/[user_id]` review page | Need to create |
-| `useKYCSubmission` hook | Need to create |
-| `useKYCAdmin` hook | Need to create |
-| KYC step validation in driver online toggle | Need to add |
-| KYC notifications | Need to integrate |
-
----
-
-## Database Schema
-
-### New Table: `kyc_submissions`
-Central KYC submission tracking for both drivers and merchants:
-
-```sql
-CREATE TABLE kyc_submissions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('driver', 'merchant')),
-  status TEXT NOT NULL DEFAULT 'draft' 
-    CHECK (status IN ('draft', 'submitted', 'under_review', 'approved', 'rejected', 'needs_info')),
-  
-  -- Step tracking
-  current_step INTEGER DEFAULT 1,
-  completed_steps INTEGER[] DEFAULT '{}',
-  
-  -- Personal/Business info (JSON for flexibility)
-  personal_info JSONB DEFAULT '{}',
-  -- Driver: { legal_name, dob, ssn_last4, address }
-  -- Merchant: { legal_business_name, ein, business_type, owner_name, owner_dob }
-  
-  -- Document URLs (stored as JSON array)
-  documents JSONB DEFAULT '[]',
-  -- [{ type: 'license_front', url: '...', status: 'pending' }, ...]
-  
-  -- Review tracking
-  submitted_at TIMESTAMPTZ,
-  reviewed_by UUID REFERENCES auth.users(id),
-  reviewed_at TIMESTAMPTZ,
-  rejection_reason TEXT,
-  admin_notes TEXT,
-  
-  -- Request for more info
-  info_requested_at TIMESTAMPTZ,
-  info_request_message TEXT,
-  
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  
-  UNIQUE(user_id, role)
-);
-
-CREATE INDEX idx_kyc_submissions_status ON kyc_submissions(status);
-CREATE INDEX idx_kyc_submissions_role ON kyc_submissions(role);
-CREATE INDEX idx_kyc_submissions_user ON kyc_submissions(user_id);
-```
-
-### New Table: `kyc_events`
-Audit trail for all KYC-related actions:
-
-```sql
-CREATE TABLE kyc_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  submission_id UUID REFERENCES kyc_submissions(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  event_type TEXT NOT NULL,
-  -- 'created', 'submitted', 'approved', 'rejected', 'info_requested', 
-  -- 'info_provided', 'document_uploaded', 'document_removed', 'resubmitted'
-  actor_id UUID REFERENCES auth.users(id),
-  actor_role TEXT, -- 'user', 'admin', 'system'
-  metadata JSONB DEFAULT '{}',
-  -- { document_type: 'license', reason: '...', previous_status: '...', new_status: '...' }
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_kyc_events_submission ON kyc_events(submission_id);
-CREATE INDEX idx_kyc_events_user ON kyc_events(user_id);
-CREATE INDEX idx_kyc_events_type ON kyc_events(event_type);
-```
-
-### Storage Bucket: `kyc-documents`
-Private bucket for KYC documents with signed URL access:
-
-```sql
--- Create bucket via SQL
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('kyc-documents', 'kyc-documents', false)
-ON CONFLICT (id) DO NOTHING;
-
--- RLS: Users can upload to their own folder
-CREATE POLICY "Users can upload own kyc docs"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (
-  bucket_id = 'kyc-documents' 
-  AND (storage.foldername(name))[1] = auth.uid()::text
-);
-
--- RLS: Users can view their own docs
-CREATE POLICY "Users can view own kyc docs"
-ON storage.objects FOR SELECT TO authenticated
-USING (
-  bucket_id = 'kyc-documents' 
-  AND (storage.foldername(name))[1] = auth.uid()::text
-);
-
--- RLS: Admins can view all docs
-CREATE POLICY "Admins can view all kyc docs"
-ON storage.objects FOR SELECT TO authenticated
-USING (
-  bucket_id = 'kyc-documents' 
-  AND public.has_role(auth.uid(), 'admin')
-);
-
--- RLS: Users can delete their own docs
-CREATE POLICY "Users can delete own kyc docs"
-ON storage.objects FOR DELETE TO authenticated
-USING (
-  bucket_id = 'kyc-documents' 
-  AND (storage.foldername(name))[1] = auth.uid()::text
-);
-```
-
-### RLS Policies for KYC Tables
-
-```sql
--- kyc_submissions
-ALTER TABLE kyc_submissions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own submission"
-ON kyc_submissions FOR SELECT TO authenticated
-USING (user_id = auth.uid());
-
-CREATE POLICY "Users can insert own submission"
-ON kyc_submissions FOR INSERT TO authenticated
-WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "Users can update own draft/needs_info submission"
-ON kyc_submissions FOR UPDATE TO authenticated
-USING (user_id = auth.uid() AND status IN ('draft', 'needs_info'));
-
-CREATE POLICY "Admins can view all submissions"
-ON kyc_submissions FOR SELECT TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can update any submission"
-ON kyc_submissions FOR UPDATE TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));
-
--- kyc_events
-ALTER TABLE kyc_events ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own events"
-ON kyc_events FOR SELECT TO authenticated
-USING (user_id = auth.uid());
-
-CREATE POLICY "Admins can view all events"
-ON kyc_events FOR SELECT TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "System can insert events"
-ON kyc_events FOR INSERT TO authenticated
-WITH CHECK (true);
-```
+| Automated daily backup edge function | Need to create |
+| Cron job to trigger daily backup | Need to add |
+| Storage backup edge function | Need to create |
+| Enhanced backup logging with file URLs | Need to update |
+| Admin `/admin/backups` page (simplified view) | Need to create |
+| Admin `/admin/system/recovery` guide page | Need to create |
+| Backup failure alerting | Need to add |
+| Downloadable backup links | Need to implement |
 
 ---
 
 ## Implementation Plan
 
-### A) KYC Data Layer
+### 1) Database Backup Edge Function
 
-**File to Create:** `src/lib/kyc.ts`
+**File to Create:** `supabase/functions/run-database-backup/index.ts`
 
+**Purpose:** Export critical tables to JSON and store in Supabase Storage or external S3.
+
+**Tables to Backup:**
+- `orders` / `customer_orders` (order data)
+- `driver_payouts` (payout records)
+- `profiles` (user data)
+- `support_tickets` (customer service)
+- `loyalty_points` (loyalty program)
+- `marketing_campaigns` (campaign data)
+- `restaurants` (merchant data)
+- `drivers` (driver profiles)
+
+**Logic:**
 ```typescript
-export type KYCRole = 'driver' | 'merchant';
-export type KYCStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'needs_info';
-
-export interface KYCDocument {
-  type: string; // 'license_front', 'license_back', 'insurance', 'selfie', 'business_license', 'owner_id'
-  url: string;
-  fileName: string;
-  uploadedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
-}
-
-export interface DriverPersonalInfo {
-  legalFirstName: string;
-  legalLastName: string;
-  dateOfBirth: string;
-  addressLine1: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  ssnLast4?: string;
-}
-
-export interface MerchantBusinessInfo {
-  legalBusinessName: string;
-  businessType: string; // 'sole_proprietor', 'llc', 'corporation'
-  ein?: string;
-  ownerFirstName: string;
-  ownerLastName: string;
-  ownerDateOfBirth: string;
-  businessAddressLine1: string;
-  businessCity: string;
-  businessState: string;
-  businessZipCode: string;
-}
-
-export interface KYCSubmission {
-  id: string;
-  userId: string;
-  role: KYCRole;
-  status: KYCStatus;
-  currentStep: number;
-  completedSteps: number[];
-  personalInfo: DriverPersonalInfo | MerchantBusinessInfo;
-  documents: KYCDocument[];
-  submittedAt: string | null;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  rejectionReason: string | null;
-  adminNotes: string | null;
-  infoRequestedAt: string | null;
-  infoRequestMessage: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Helper functions
-export function getDocumentSignedUrl(filePath: string): Promise<string | null>
-export function getKYCSteps(role: KYCRole): KYCStep[]
-export function validateStep(role: KYCRole, step: number, data: any): ValidationResult
-export function getStatusBadgeConfig(status: KYCStatus): StatusConfig
-```
-
-### B) KYC Hooks
-
-**File to Create:** `src/hooks/useKYC.ts`
-
-```typescript
-// For driver/merchant users
-export function useKYCSubmission(role: KYCRole)
-export function useUpdateKYCSubmission()
-export function useSubmitKYC()
-export function useUploadKYCDocument()
-export function useRemoveKYCDocument()
-
-// For admin
-export function useKYCQueue(filters?: { status?: KYCStatus; role?: KYCRole })
-export function useKYCSubmissionDetail(submissionId: string)
-export function useApproveKYC()
-export function useRejectKYC()
-export function useRequestMoreInfo()
-export function useKYCEvents(submissionId: string)
-```
-
-### C) Driver KYC Page
-
-**File to Create:** `src/pages/driver/DriverKYCPage.tsx`
-
-**Route:** `/driver/kyc`
-
-**Steps:**
-
-| Step | Title | Fields |
-|------|-------|--------|
-| 1 | Personal Information | Legal name, DOB, Address, SSN last 4 (optional) |
-| 2 | Driver's License | Front image, Back image |
-| 3 | Profile Photo | Selfie/face photo (optional for MVP) |
-| 4 | Vehicle & Insurance | Vehicle info (from drivers table), Insurance upload (optional) |
-| 5 | Review & Submit | Summary of all info, submit button |
-
-**UI Layout:**
-```text
-+----------------------------------------------------------+
-|  ← Driver KYC Verification                               |
-+----------------------------------------------------------+
-|                                                           |
-|  Step 1 of 5: Personal Information                        |
-|  ━━━━━━━━━━━━ ○ ○ ○ ○                                      |
-|                                                           |
-|  +------------------------------------------------------+|
-|  | Legal First Name                                     ||
-|  | [_________________________]                          ||
-|  |                                                      ||
-|  | Legal Last Name                                      ||
-|  | [_________________________]                          ||
-|  |                                                      ||
-|  | Date of Birth                                        ||
-|  | [__/__/____]                                         ||
-|  |                                                      ||
-|  | Address                                              ||
-|  | [_________________________]                          ||
-|  | City            State      ZIP                       ||
-|  | [________]      [__]       [_____]                   ||
-|  +------------------------------------------------------+|
-|                                                           |
-|  [Back]                              [Continue →]         |
-|                                                           |
-+----------------------------------------------------------+
-```
-
-**Components to Create:**
-- `KYCStepIndicator.tsx` - Progress stepper
-- `KYCDocumentUpload.tsx` - Drag-drop upload with preview
-- `KYCStatusBanner.tsx` - Shows current status (Pending Review, Rejected, etc.)
-- `KYCInfoRequestAlert.tsx` - Shows admin's request for more info
-
-### D) Merchant KYC Page
-
-**File to Create:** `src/pages/merchant/MerchantKYCPage.tsx`
-
-**Route:** `/merchant/kyc`
-
-**Steps:**
-
-| Step | Title | Fields |
-|------|-------|--------|
-| 1 | Business Information | Legal business name, Business type, EIN (optional) |
-| 2 | Owner Verification | Owner name, DOB, Owner ID upload |
-| 3 | Business Documents | Business license upload (optional) |
-| 4 | Payout Readiness | Stripe Connect status display, link to Stripe onboarding |
-| 5 | Review & Submit | Summary, submit button |
-
-### E) Admin KYC Inbox Page
-
-**File to Create:** `src/pages/admin/KYCInboxPage.tsx`
-
-**Route:** `/admin/kyc`
-
-**Features:**
-- List of all pending KYC submissions
-- Filter by role (driver/merchant), status
-- Search by name/email
-- Quick stats (pending, approved today, rejected)
-- Click to open detail view
-
-**UI Layout:**
-```text
-+----------------------------------------------------------+
-|  KYC Verification Queue                    [Refresh]      |
-+----------------------------------------------------------+
-|                                                           |
-|  [Pending: 12] [Approved: 8] [Rejected: 2] [Needs Info: 3]|
-|                                                           |
-|  Filters: [All Roles ▼] [Pending ▼] [Search...]          |
-|                                                           |
-|  +------------------------------------------------------+|
-|  | DRIVER | John Smith          | Submitted 2h ago      ||
-|  |        | john@email.com      | 4/4 docs uploaded     ||
-|  |        |                     | [Review]              ||
-|  +------------------------------------------------------+|
-|  | MERCHANT | Pizza Palace      | Submitted 5h ago      ||
-|  |          | owner@pizza.com   | 3/3 docs uploaded     ||
-|  |          |                   | [Review]              ||
-|  +------------------------------------------------------+|
-|                                                           |
-+----------------------------------------------------------+
-```
-
-### F) Admin KYC Review Page
-
-**File to Create:** `src/pages/admin/KYCReviewPage.tsx`
-
-**Route:** `/admin/kyc/:userId`
-
-**Features:**
-- View all submitted information
-- View uploaded documents (with signed URL)
-- Document viewer/lightbox
-- Approve / Reject / Request More Info buttons
-- Rejection reason input
-- More info request message input
-- Audit event timeline
-
-**UI Layout:**
-```text
-+----------------------------------------------------------+
-|  ← Back to Queue                  Status: Pending Review  |
-+----------------------------------------------------------+
-|                                                           |
-|  [Avatar] John Smith                                      |
-|           Driver • Applied Feb 9, 2026                    |
-|                                                           |
-|  ┌─────────────────────────────────────────────────────┐  |
-|  │ Personal Information                                │  |
-|  ├─────────────────────────────────────────────────────┤  |
-|  │ Name: John Michael Smith                            │  |
-|  │ DOB: 1990-05-15 (35 years old)                      │  |
-|  │ Address: 123 Main St, Baton Rouge, LA 70801         │  |
-|  └─────────────────────────────────────────────────────┘  |
-|                                                           |
-|  ┌─────────────────────────────────────────────────────┐  |
-|  │ Documents                                           │  |
-|  ├─────────────────────────────────────────────────────┤  |
-|  │ [🖼️ License Front]  [🖼️ License Back]  [🖼️ Selfie]  │  |
-|  │        Pending           Pending         Pending    │  |
-|  └─────────────────────────────────────────────────────┘  |
-|                                                           |
-|  ┌─────────────────────────────────────────────────────┐  |
-|  │ Audit Trail                                         │  |
-|  ├─────────────────────────────────────────────────────┤  |
-|  │ • Feb 9, 2:30 PM - Submitted by user                │  |
-|  │ • Feb 9, 10:15 AM - Document uploaded: license_front│  |
-|  │ • Feb 9, 10:00 AM - KYC started                     │  |
-|  └─────────────────────────────────────────────────────┘  |
-|                                                           |
-|  Admin Notes (internal):                                  |
-|  [___________________________________________________]    |
-|                                                           |
-|  ┌─────────────────────────────────────────────────────┐  |
-|  │ [Request Info]  [❌ Reject]        [✓ Approve]      │  |
-|  └─────────────────────────────────────────────────────┘  |
-|                                                           |
-+----------------------------------------------------------+
-```
-
-### G) KYC Status Badge Component
-
-**File to Create:** `src/components/kyc/KYCStatusBadge.tsx`
-
-Display status consistently across all pages:
-
-| Status | Badge Color | Icon |
-|--------|-------------|------|
-| draft | gray | Edit |
-| submitted | amber | Clock |
-| under_review | blue | Eye |
-| approved | green | CheckCircle |
-| rejected | red | XCircle |
-| needs_info | orange | AlertTriangle |
-
-### H) Block Driver "Go Online" Until Approved
-
-**File to Modify:** `src/pages/driver/DriverHomePage.tsx`
-
-Add KYC check before allowing online toggle:
-
-```typescript
-// Add to DriverHomePage
-const { data: kycSubmission } = useKYCSubmission('driver');
-const kycApproved = kycSubmission?.status === 'approved';
-
-// In toggle handler
-const handleToggleOnline = () => {
-  if (!driver) return;
+serve(async (req) => {
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
   
-  if (!kycApproved) {
-    toast.error("Complete KYC verification first", {
-      description: "You must be verified before going online.",
-      action: {
-        label: "Start KYC",
-        onClick: () => navigate("/driver/kyc"),
+  // 1. Create backup_logs entry (status: in_progress)
+  const { data: backupLog } = await supabase
+    .from("backup_logs")
+    .insert({
+      backup_type: "full",
+      backup_target: "database",
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+      retention_days: 30,
+    })
+    .select()
+    .single();
+
+  try {
+    // 2. Export each table to JSON
+    const tablesToBackup = [
+      "customer_orders",
+      "driver_payouts", 
+      "profiles",
+      "support_tickets",
+      "loyalty_points",
+      "marketing_campaigns",
+      "restaurants",
+      "drivers"
+    ];
+    
+    const backupData: Record<string, any> = {};
+    let totalRows = 0;
+    
+    for (const table of tablesToBackup) {
+      const { data, count } = await supabase
+        .from(table)
+        .select("*", { count: "exact" })
+        .limit(100000); // Paginate for large tables
+      
+      backupData[table] = data;
+      totalRows += count || 0;
+    }
+    
+    // 3. Store backup file
+    const dateStr = new Date().toISOString().split("T")[0];
+    const fileName = `db-backup-${dateStr}-${backupLog.id}.json`;
+    const filePath = `backups/database/${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from("system-backups")
+      .upload(filePath, JSON.stringify(backupData), {
+        contentType: "application/json",
+      });
+    
+    if (uploadError) throw uploadError;
+    
+    // 4. Update backup_logs with success
+    await supabase
+      .from("backup_logs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        storage_location: filePath,
+        size_bytes: JSON.stringify(backupData).length,
+        metadata: { tables: tablesToBackup, total_rows: totalRows },
+      })
+      .eq("id", backupLog.id);
+    
+    // 5. Also update backup_runs for simple view
+    await supabase.from("backup_runs").insert({
+      backup_type: "db",
+      status: "success",
+      file_url: filePath,
+    });
+    
+    return new Response(JSON.stringify({ success: true, backup_id: backupLog.id }));
+    
+  } catch (error) {
+    // 6. Update backup_logs with failure
+    await supabase
+      .from("backup_logs")
+      .update({
+        status: "failed",
+        completed_at: new Date().toISOString(),
+        error_message: error.message,
+      })
+      .eq("id", backupLog.id);
+    
+    await supabase.from("backup_runs").insert({
+      backup_type: "db",
+      status: "failed",
+    });
+    
+    // 7. Send alert notification
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        type: "admin_alert",
+        title: "⚠️ Database Backup Failed",
+        body: `Daily backup failed: ${error.message}`,
+        priority: "critical",
+        event_type: "backup_failed",
       },
     });
-    return;
+    
+    // 8. Insert admin alert
+    await supabase.from("alerts").insert({
+      type: "system",
+      severity: "critical",
+      title: "Database Backup Failed",
+      message: error.message,
+      created_at: new Date().toISOString(),
+    });
+    
+    throw error;
   }
+});
+```
+
+### 2) Storage Backup Edge Function
+
+**File to Create:** `supabase/functions/run-storage-backup/index.ts`
+
+**Purpose:** List and catalog files in critical buckets, optionally copy to backup bucket.
+
+**Buckets to Backup:**
+- `kyc-documents` (KYC files - most critical)
+- `menu-photos` (restaurant images)
+- `delivery-proofs` (order receipts/proofs)
+
+**Logic:**
+```typescript
+serve(async (req) => {
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
   
-  updateStatus.mutate({
-    driverId: driver.id,
-    isOnline: !driver.is_online,
-  });
-};
+  const bucketsToBackup = [
+    "kyc-documents",
+    "menu-photos", 
+    "delivery-proofs"
+  ];
+  
+  const { data: backupLog } = await supabase
+    .from("backup_logs")
+    .insert({
+      backup_type: "files",
+      backup_target: "storage",
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+      retention_days: 90,
+    })
+    .select()
+    .single();
+
+  try {
+    const manifest: Record<string, any> = {};
+    let totalFiles = 0;
+    let totalSize = 0;
+    
+    for (const bucket of bucketsToBackup) {
+      const { data: files, error } = await supabase.storage
+        .from(bucket)
+        .list("", { limit: 10000 });
+      
+      if (error) throw error;
+      
+      manifest[bucket] = {
+        file_count: files.length,
+        files: files.map(f => ({
+          name: f.name,
+          size: f.metadata?.size || 0,
+          created_at: f.created_at,
+        })),
+      };
+      
+      totalFiles += files.length;
+      totalSize += files.reduce((sum, f) => sum + (f.metadata?.size || 0), 0);
+    }
+    
+    // Store manifest
+    const dateStr = new Date().toISOString().split("T")[0];
+    const fileName = `storage-manifest-${dateStr}.json`;
+    const filePath = `backups/storage/${fileName}`;
+    
+    await supabase.storage
+      .from("system-backups")
+      .upload(filePath, JSON.stringify(manifest), {
+        contentType: "application/json",
+      });
+    
+    await supabase
+      .from("backup_logs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        storage_location: filePath,
+        size_bytes: totalSize,
+        metadata: { 
+          buckets: bucketsToBackup, 
+          total_files: totalFiles,
+          manifest_type: "storage_catalog"
+        },
+      })
+      .eq("id", backupLog.id);
+    
+    await supabase.from("backup_runs").insert({
+      backup_type: "storage",
+      status: "success",
+      file_url: filePath,
+    });
+    
+    return new Response(JSON.stringify({ success: true }));
+    
+  } catch (error) {
+    // Handle failure same as database backup
+    await supabase
+      .from("backup_logs")
+      .update({
+        status: "failed",
+        completed_at: new Date().toISOString(),
+        error_message: error.message,
+      })
+      .eq("id", backupLog.id);
+    
+    await supabase.from("backup_runs").insert({
+      backup_type: "storage",
+      status: "failed",
+    });
+    
+    // Alert admin
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        type: "admin_alert",
+        title: "⚠️ Storage Backup Failed",
+        body: `Storage backup failed: ${error.message}`,
+        priority: "critical",
+      },
+    });
+    
+    throw error;
+  }
+});
 ```
 
-Also show banner if KYC not complete:
-```tsx
-{!kycApproved && (
-  <KYCStatusBanner 
-    status={kycSubmission?.status || 'not_started'} 
-    role="driver"
-    onStartClick={() => navigate("/driver/kyc")}
-  />
-)}
+### 3) Create System Backups Storage Bucket
+
+**Migration:**
+```sql
+-- Create system-backups bucket for storing backup files
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('system-backups', 'system-backups', false, 1073741824) -- 1GB limit
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS: Only service role and admins can access
+CREATE POLICY "Admins can read system backups"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+  bucket_id = 'system-backups' 
+  AND public.has_role(auth.uid(), 'admin')
+);
 ```
 
-### I) Block Merchant Payouts/Ads Until Approved
+### 4) Scheduled Cron Jobs
 
-**File to Modify:** `src/pages/merchant/MerchantAdsPage.tsx`
-
-Add KYC check:
-
-```typescript
-const { data: kycSubmission } = useKYCSubmission('merchant');
-const kycApproved = kycSubmission?.status === 'approved';
-
-if (!kycApproved) {
-  return (
-    <KYCRequiredBanner 
-      status={kycSubmission?.status || 'not_started'}
-      role="merchant"
-      message="Complete verification to activate ads and receive payouts."
-    />
+**Database Backup - Daily at 02:00 UTC:**
+```sql
+SELECT cron.schedule(
+  'daily-database-backup',
+  '0 2 * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://slirphzzwcogdbkeicff.supabase.co/functions/v1/run-database-backup',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer SERVICE_ROLE_KEY"}'::jsonb,
+    body := '{}'::jsonb
   );
-}
+  $$
+);
 ```
 
-### J) Update Profile KYC Status on Approval
+**Storage Backup - Daily at 03:00 UTC:**
+```sql
+SELECT cron.schedule(
+  'daily-storage-backup',
+  '0 3 * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://slirphzzwcogdbkeicff.supabase.co/functions/v1/run-storage-backup',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer SERVICE_ROLE_KEY"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+```
 
-When admin approves/rejects, sync to `profiles.kyc_status`:
+### 5) Admin Backups Page (Simplified View)
 
+**File to Create:** `src/pages/admin/BackupsPage.tsx`
+
+**Route:** `/admin/backups`
+
+**Features:**
+- Summary stats (last backup time, status, total backups)
+- List of recent backup_runs with status and download link
+- Manual trigger buttons for database and storage backups
+- Filter by backup_type (db/storage)
+
+**UI Layout:**
+```text
++----------------------------------------------------------+
+|  System Backups                    [Backup Now ▼]         |
++----------------------------------------------------------+
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | LAST DB BACKUP   |  | LAST STORAGE     |               |
+|  | 2h ago ✓         |  | 26h ago ✓        |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  +------------------+  +------------------+               |
+|  | TOTAL BACKUPS    |  | FAILED (7 DAYS)  |               |
+|  | 127              |  | 0                |               |
+|  +------------------+  +------------------+               |
+|                                                           |
+|  Recent Backups                                           |
+|  +------------------------------------------------------+|
+|  | Type   | Status    | Time        | Size   | Actions  ||
+|  +------------------------------------------------------+|
+|  | DB     | ✓ Success | 2h ago      | 45 MB  | Download ||
+|  | Storage| ✓ Success | 26h ago     | 1.2 GB | Download ||
+|  | DB     | ✓ Success | 1 day ago   | 44 MB  | Download ||
+|  +------------------------------------------------------+|
+|                                                           |
++----------------------------------------------------------+
+```
+
+**Hook to Create:** `src/hooks/useBackups.ts`
 ```typescript
-// In useApproveKYC mutation
-await supabase
-  .from("profiles")
-  .update({
-    kyc_status: "approved",
-    kyc_verified_at: new Date().toISOString(),
-    kyc_rejection_reason: null,
-    payout_hold: false, // Release payout hold
-  })
-  .eq("user_id", userId);
-
-// Also update drivers.can_go_online if driver
-if (role === 'driver') {
-  await supabase
-    .from("drivers")
-    .update({ 
-      can_go_online: true,
-      documents_verified: true,
-      status: 'verified',
-    })
-    .eq("user_id", userId);
-}
-
-// Also update restaurants.documents_verified if merchant
-if (role === 'merchant') {
-  await supabase
-    .from("restaurants")
-    .update({ 
-      documents_verified: true,
-      status: 'active',
-    })
-    .eq("owner_id", userId);
-}
+export function useBackupRuns(limit = 50)
+export function useTriggerDatabaseBackup()
+export function useTriggerStorageBackup()
+export function useDownloadBackup(backupId: string)
 ```
 
-### K) KYC Notifications
+### 6) Recovery Guide Page
 
-**Integrate with existing `send-notification` edge function:**
+**File to Create:** `src/pages/admin/RecoveryGuidePage.tsx`
 
-| Event | Notify | Channels |
-|-------|--------|----------|
-| User submits KYC | Admin | Push (admin bell) |
-| Admin approves | User | Push, Email |
-| Admin rejects | User | Push, Email, SMS (critical) |
-| Admin requests info | User | Push, Email |
+**Route:** `/admin/system/recovery`
 
+**Content:**
+- Step-by-step database restore instructions
+- Step-by-step storage restore instructions
+- Emergency contact information
+- Service restart procedures
+- RTO/RPO targets display
+- Links to Supabase dashboard
+
+**Sections:**
+1. **Quick Reference**
+   - RTO Target: 4 hours
+   - RPO Target: 1 hour
+   - Emergency contacts
+
+2. **Database Restore**
+   - Download latest backup from /admin/backups
+   - Use Supabase SQL Editor or psql to restore
+   - Verify row counts post-restore
+   - Run data integrity checks
+
+3. **Storage Restore**
+   - Access system-backups bucket
+   - Download file manifest
+   - Re-upload files to original buckets
+   - Verify file access
+
+4. **Service Restart**
+   - Pause affected services via /admin/recovery
+   - Clear caches if needed
+   - Resume services
+   - Monitor for errors
+
+5. **Escalation Path**
+   - Level 1: On-call admin
+   - Level 2: Engineering lead
+   - Level 3: External Supabase support
+
+### 7) Backup Failure Alerting
+
+**Integrate with existing `send-notification`:**
+
+When backup fails:
+1. Insert row into `alerts` table (existing)
+2. Insert row into `tenant_admin_alerts` table (if exists)
+3. Call `send-notification` with `priority: "critical"`
+4. Send email to admin distribution list via Resend
+
+**File to Modify:** `supabase/functions/send-notification/index.ts`
+
+Add handling for `event_type: "backup_failed"`:
 ```typescript
-// On submission
-await supabase.functions.invoke("send-notification", {
-  body: {
-    type: "admin_alert",
-    title: "New KYC Submission",
-    body: `${role} verification submitted by ${name}`,
-    action_url: `/admin/kyc/${userId}`,
-  },
-});
-
-// On approval
-await supabase.functions.invoke("send-notification", {
-  body: {
-    user_id: userId,
-    title: "Verification Approved",
-    body: "Your account has been verified. You can now go online!",
-    priority: "critical",
-    event_type: "kyc_approved",
-  },
-});
+if (eventType === "backup_failed") {
+  // Always send email for backup failures
+  await sendEmail({
+    to: ADMIN_EMAIL_LIST,
+    subject: `[CRITICAL] ZIVO Backup Failed - ${title}`,
+    body: body,
+  });
+}
 ```
 
-### L) Routes Configuration
+### 8) Update Routes
 
 **File to Modify:** `src/App.tsx`
 
 ```typescript
-// Lazy imports
-const DriverKYCPage = lazy(() => import("./pages/driver/DriverKYCPage"));
-const MerchantKYCPage = lazy(() => import("./pages/merchant/MerchantKYCPage"));
-const KYCInboxPage = lazy(() => import("./pages/admin/KYCInboxPage"));
-const KYCReviewPage = lazy(() => import("./pages/admin/KYCReviewPage"));
+// Add lazy imports
+const BackupsPage = lazy(() => import("./pages/admin/BackupsPage"));
+const RecoveryGuidePage = lazy(() => import("./pages/admin/RecoveryGuidePage"));
 
-// Routes
-<Route path="/driver/kyc" element={<ProtectedRoute><DriverKYCPage /></ProtectedRoute>} />
-<Route path="/merchant/kyc" element={<ProtectedRoute><MerchantKYCPage /></ProtectedRoute>} />
-<Route path="/admin/kyc" element={<ProtectedRoute requireAdmin><KYCInboxPage /></ProtectedRoute>} />
-<Route path="/admin/kyc/:userId" element={<ProtectedRoute requireAdmin><KYCReviewPage /></ProtectedRoute>} />
+// Add routes
+<Route path="/admin/backups" element={
+  <ProtectedRoute requireAdmin><BackupsPage /></ProtectedRoute>
+} />
+<Route path="/admin/system/recovery" element={
+  <ProtectedRoute requireAdmin><RecoveryGuidePage /></ProtectedRoute>
+} />
 ```
+
+---
+
+## Database Changes
+
+### Migration Summary
+| Change | Purpose |
+|--------|---------|
+| Create `system-backups` storage bucket | Store backup files |
+| Add RLS policies | Admin access to backups |
+| Schedule `daily-database-backup` cron | Automated daily DB backup |
+| Schedule `daily-storage-backup` cron | Automated daily storage backup |
 
 ---
 
 ## File Summary
 
-### Database Migration (1)
-| Change | Purpose |
-|--------|---------|
-| Create `kyc_submissions` table | Central KYC tracking |
-| Create `kyc_events` table | Audit trail |
-| Create `kyc-documents` bucket | Private document storage |
-| RLS policies | Security for both tables and bucket |
-
-### New Files (12)
+### New Edge Functions (2)
 | File | Purpose |
 |------|---------|
-| `src/lib/kyc.ts` | KYC types, helpers, validation |
-| `src/hooks/useKYC.ts` | All KYC-related React Query hooks |
-| `src/pages/driver/DriverKYCPage.tsx` | Driver verification wizard |
-| `src/pages/merchant/MerchantKYCPage.tsx` | Merchant verification wizard |
-| `src/pages/admin/KYCInboxPage.tsx` | Admin queue view |
-| `src/pages/admin/KYCReviewPage.tsx` | Admin detail review |
-| `src/components/kyc/KYCStepIndicator.tsx` | Step progress UI |
-| `src/components/kyc/KYCDocumentUpload.tsx` | Document upload with preview |
-| `src/components/kyc/KYCStatusBadge.tsx` | Status badge component |
-| `src/components/kyc/KYCStatusBanner.tsx` | Full-width status banner |
-| `src/components/kyc/KYCInfoRequestAlert.tsx` | Admin info request display |
-| Migration SQL file | Schema changes |
+| `supabase/functions/run-database-backup/index.ts` | Export tables to JSON backup |
+| `supabase/functions/run-storage-backup/index.ts` | Catalog storage buckets |
 
-### Modified Files (4)
+### New Pages (2)
+| File | Purpose |
+|------|---------|
+| `src/pages/admin/BackupsPage.tsx` | Simplified backup management UI |
+| `src/pages/admin/RecoveryGuidePage.tsx` | DR procedures documentation |
+
+### New Hooks (1)
+| File | Purpose |
+|------|---------|
+| `src/hooks/useBackups.ts` | Backup-specific hooks |
+
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/pages/driver/DriverHomePage.tsx` | Add KYC check before going online |
-| `src/pages/merchant/MerchantAdsPage.tsx` | Add KYC requirement banner |
-| `src/pages/RestaurantDashboard.tsx` | Add KYC status indicator |
-| `src/App.tsx` | Add KYC routes |
+| `supabase/functions/send-notification/index.ts` | Add backup failure email |
+| `supabase/config.toml` | Register new edge functions |
+| `src/App.tsx` | Add routes for new pages |
+
+---
+
+## Backup Schedule
+
+| Backup Type | Schedule | Retention | Target |
+|-------------|----------|-----------|--------|
+| Database (full) | Daily 02:00 UTC | 30 days | 8 critical tables |
+| Storage catalog | Daily 03:00 UTC | 90 days | 3 buckets |
 
 ---
 
 ## Data Flow
 
 ```text
-Driver/Merchant Opens KYC Page
+Cron Job (02:00 UTC)
         ↓
-Load existing submission (or create draft)
+net.http_post → run-database-backup
         ↓
-Complete steps 1-4/5:
-├── Save personal/business info
-├── Upload documents to kyc-documents bucket
-├── Log events to kyc_events
-└── Update kyc_submissions.completed_steps
+Create backup_logs entry (in_progress)
         ↓
-Submit for Review
-├── Set status = 'submitted'
-├── Set submitted_at = now()
-├── Log 'submitted' event
-└── Notify admin (send-notification)
+Export tables to JSON:
+├── customer_orders
+├── driver_payouts
+├── profiles
+├── support_tickets
+├── loyalty_points
+├── marketing_campaigns
+├── restaurants
+└── drivers
         ↓
-Admin Reviews in /admin/kyc/:userId
-├── View documents via signed URLs
-├── Add internal notes
-└── Take action:
-    ├── Approve → Update profiles.kyc_status, unlock features
-    ├── Reject → Set rejection_reason, notify user
-    └── Request Info → Set info_request_message, notify user
+Upload to system-backups bucket
         ↓
-Log event to kyc_events
+Update backup_logs (completed)
         ↓
-Notify user via push/email/SMS
+Insert backup_runs row
         ↓
-If approved:
-├── profiles.kyc_status = 'approved'
-├── profiles.payout_hold = false
-├── drivers.can_go_online = true (if driver)
-└── restaurants.documents_verified = true (if merchant)
+If failed:
+├── Update backup_logs (failed)
+├── Insert alert
+├── Send admin notification (push + email)
+└── Log error
+
+---
+
+Admin Views Backups
+        ↓
+/admin/backups page
+        ↓
+View list from backup_runs
+        ↓
+Click Download → Get signed URL → Download JSON
 ```
 
 ---
 
 ## Security Controls
 
-### 1. Role-Based Access
-- Users can only see/edit their own submissions
-- Admins can view all submissions
-- Status changes only by admin
+### 1. Service Role Only
+Edge functions use service_role_key for full database access.
 
-### 2. Document Security
-- Private bucket (not public)
-- Signed URLs with 1-hour expiry for viewing
-- RLS enforces user-folder isolation
+### 2. Admin Access
+Only admins can view/download backups via RLS.
 
-### 3. Audit Trail
-- Every action logged to `kyc_events`
-- Actor ID and role recorded
-- Immutable log (no delete/update policies)
+### 3. Private Bucket
+`system-backups` bucket is not public.
 
-### 4. KYC-Gated Features
-- Driver cannot go online without KYC approval
-- Merchant cannot run ads without KYC approval
-- Payouts blocked via `profiles.payout_hold`
+### 4. Signed URLs
+Download links are time-limited signed URLs (1 hour).
 
-### 5. Status Transitions
-Only valid transitions allowed:
-- draft → submitted
-- submitted → under_review → approved/rejected/needs_info
-- needs_info → submitted (resubmission)
-- rejected → submitted (resubmission)
+### 5. Encryption
+Supabase storage encrypts data at rest.
+
+---
+
+## Alerting Matrix
+
+| Event | Alert Type | Channels |
+|-------|------------|----------|
+| Backup started | Info | Log only |
+| Backup completed | Success | Log only |
+| Backup failed | Critical | Push + Email + Alert table |
+| Backup delayed (>24h) | Warning | Push + Email |
 
 ---
 
 ## Summary
 
-This implementation creates a complete KYC verification system:
+This implementation provides:
 
-1. **Driver KYC** - 5-step wizard for personal info, license, selfie, vehicle/insurance
-2. **Merchant KYC** - 5-step wizard for business info, owner ID, business license, Stripe status
-3. **Admin Review** - Queue view with filters, detail page with document viewer
-4. **Audit Trail** - Every action logged with actor, timestamp, metadata
-5. **Feature Gating** - Drivers blocked from going online, merchants blocked from ads/payouts
-6. **Notifications** - Push/email/SMS for status changes
-7. **Security** - RLS, signed URLs, role checks
+1. **Automated Daily Backups** - Database at 02:00 UTC, storage at 03:00 UTC
+2. **Critical Table Coverage** - 8 essential tables exported to JSON
+3. **Storage Cataloging** - File manifests for 3 critical buckets
+4. **Backup Logging** - Complete audit trail in backup_logs and backup_runs
+5. **Admin UI** - Simple /admin/backups page with download links
+6. **Recovery Guide** - Documented procedures at /admin/system/recovery
+7. **Failure Alerting** - Immediate push + email on backup failure
+8. **30-Day Retention** - Automatic expiry tracking
 
-Builds on existing infrastructure (profiles.kyc_status, driver_documents patterns, notification system) with minimal new tables.
+Builds on existing disaster recovery infrastructure with minimal new tables.
 
