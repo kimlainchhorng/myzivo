@@ -450,6 +450,15 @@ export const FRAUD_PREVENTION_COPY = {
   
   /** 3DS required */
   threeDsRequired: "Additional verification is required to complete your payment.",
+  
+  /** High risk verification required */
+  highRiskVerification: "For security reasons, this order requires verification.",
+  
+  /** Phone verification prompt */
+  phoneVerificationRequired: "Please verify your phone number to continue with this order.",
+  
+  /** Verification complete */
+  verificationComplete: "Verification successful. You can now proceed with your order.",
 } as const;
 
 // ============================================

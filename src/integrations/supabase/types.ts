@@ -7738,6 +7738,35 @@ export type Database = {
           },
         ]
       }
+      driver_shift_assignments: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          shift_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          shift_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          shift_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_shift_assignments_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "driver_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_shifts: {
         Row: {
           actual_end: string | null
@@ -21658,6 +21687,7 @@ export type Database = {
           tenant_id: string | null
           total_orders: number | null
           updated_at: string | null
+          use_auto_prep_time: boolean | null
           zip: string | null
           zone_id: string | null
         }
@@ -21729,6 +21759,7 @@ export type Database = {
           tenant_id?: string | null
           total_orders?: number | null
           updated_at?: string | null
+          use_auto_prep_time?: boolean | null
           zip?: string | null
           zone_id?: string | null
         }
@@ -21800,6 +21831,7 @@ export type Database = {
           tenant_id?: string | null
           total_orders?: number | null
           updated_at?: string | null
+          use_auto_prep_time?: boolean | null
           zip?: string | null
           zone_id?: string | null
         }

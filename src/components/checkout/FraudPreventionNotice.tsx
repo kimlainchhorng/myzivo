@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { FRAUD_PREVENTION_COPY } from "@/config/fraudPrevention";
 
 interface FraudPreventionNoticeProps {
-  variant?: "checkout" | "review" | "declined" | "3ds";
+  variant?: "checkout" | "review" | "declined" | "3ds" | "verification_required";
   className?: string;
 }
 
@@ -41,6 +41,14 @@ export function FraudPreventionNotice({
           message: FRAUD_PREVENTION_COPY.threeDsRequired,
           color: "text-blue-500",
           bg: "bg-blue-500/10 border-blue-500/30",
+        };
+      case "verification_required":
+        return {
+          icon: Shield,
+          title: "Verification Required",
+          message: FRAUD_PREVENTION_COPY.highRiskVerification,
+          color: "text-amber-500",
+          bg: "bg-amber-500/10 border-amber-500/30",
         };
       default:
         return {
