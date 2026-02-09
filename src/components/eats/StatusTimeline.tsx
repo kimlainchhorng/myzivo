@@ -2,9 +2,10 @@
  * Order Status Timeline Component
  * Visual progress indicator for food order status with timestamps
  * Uses standardized EatsOrderStatus from orderStatus.ts
- * Includes driver assignment sub-steps for transparency
+ * Includes enhanced driver assignment sub-steps for transparency
+ * Shows near_pickup and at_pickup phases
  */
-import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck } from "lucide-react";
+import { Check, Clock, ChefHat, Truck, Package, Search, UserCheck, MapPin, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -16,6 +17,7 @@ import {
   getStatusIndex,
 } from "@/lib/orderStatus";
 import { motion } from "framer-motion";
+import type { DispatchPhase } from "@/hooks/useEatsDispatchStatus";
 
 interface StatusStep {
   key: EatsOrderStatusType;
@@ -50,6 +52,8 @@ interface StatusTimelineProps {
   driverId?: string | null;
   /** When the driver was assigned */
   assignedAt?: string | null;
+  /** Current dispatch phase for enhanced substep display */
+  dispatchPhase?: DispatchPhase;
 }
 
 function formatTimestamp(timestamp: string | null | undefined): string | null {
@@ -67,11 +71,19 @@ export function StatusTimeline({
   className,
   driverId,
   assignedAt,
+  dispatchPhase,
 }: StatusTimelineProps) {
   // Normalize legacy status values to standard ones
   const normalizedStatus = normalizeStatus(currentStatus);
   const currentIndex = getStatusIndex(normalizedStatus);
   const isCancelled = currentStatus === EatsOrderStatus.CANCELLED || currentStatus === "cancelled";
+
+  // Determine driver substep states based on dispatch phase
+  const isSearching = !driverId;
+  const isDriverAssigned = !!driverId;
+  const isDriverNearPickup = dispatchPhase === "near_pickup";
+  const isDriverAtPickup = dispatchPhase === "at_pickup";
+  const isEnRoute = normalizedStatus === "out_for_delivery";
 
   if (isCancelled) {
     return (
@@ -101,15 +113,10 @@ export function StatusTimeline({
     return formatTimestamp(timestamps[step.timestampKey as keyof OrderTimestamps]);
   };
 
-  // Determine driver substep visibility
-  const isPreparingOrReady = ["preparing", "ready", "ready_for_pickup"].includes(normalizedStatus);
+  // Determine if we should show the map or demand banner
+  const isPreparingOrReady = ["preparing", "ready", "ready_for_pickup", "confirmed"].includes(normalizedStatus);
   const isOutForDelivery = normalizedStatus === "out_for_delivery";
   const showDriverSubsteps = isPreparingOrReady || isOutForDelivery;
-
-  // Driver substep states
-  const isSearching = showDriverSubsteps && !driverId;
-  const isDriverAssigned = !!driverId;
-  const isEnRoute = normalizedStatus === "out_for_delivery";
 
   return (
     <div className={cn("space-y-1", className)}>
@@ -212,7 +219,7 @@ export function StatusTimeline({
                   </div>
                 </motion.div>
 
-                {/* Driver assigned */}
+                {/* Driver heading to restaurant */}
                 {isDriverAssigned && (
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
@@ -223,19 +230,21 @@ export function StatusTimeline({
                     <div
                       className={cn(
                         "w-6 h-6 rounded-full flex items-center justify-center",
-                        isEnRoute ? "bg-emerald-500/30" : "bg-orange-500/30"
+                        isDriverNearPickup || isDriverAtPickup || isEnRoute
+                          ? "bg-emerald-500/30"
+                          : "bg-orange-500/30"
                       )}
                     >
-                      {isEnRoute ? (
+                      {isDriverNearPickup || isDriverAtPickup || isEnRoute ? (
                         <Check className="w-3 h-3 text-emerald-400" />
                       ) : (
-                        <UserCheck className="w-3 h-3 text-orange-400 animate-pulse" />
+                        <Navigation className="w-3 h-3 text-orange-400 animate-pulse" />
                       )}
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className={cn(
                         "text-xs",
-                        isEnRoute ? "text-zinc-400" : "text-orange-300"
+                        isDriverNearPickup || isDriverAtPickup || isEnRoute ? "text-zinc-400" : "text-orange-300"
                       )}>
                         Driver heading to restaurant
                       </span>
@@ -246,12 +255,72 @@ export function StatusTimeline({
                   </motion.div>
                 )}
 
+                {/* Driver arriving at restaurant */}
+                {isDriverAssigned && (isDriverNearPickup || isDriverAtPickup || isEnRoute) && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex items-center gap-3"
+                  >
+                    <div
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center",
+                        isDriverAtPickup || isEnRoute
+                          ? "bg-emerald-500/30"
+                          : "bg-blue-500/30"
+                      )}
+                    >
+                      {isDriverAtPickup || isEnRoute ? (
+                        <Check className="w-3 h-3 text-emerald-400" />
+                      ) : (
+                        <MapPin className="w-3 h-3 text-blue-400 animate-pulse" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-xs",
+                      isDriverAtPickup || isEnRoute ? "text-zinc-400" : "text-blue-300"
+                    )}>
+                      Driver arriving at restaurant
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Driver at restaurant / waiting */}
+                {isDriverAssigned && (isDriverAtPickup || isEnRoute) && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-3"
+                  >
+                    <div
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center",
+                        isEnRoute ? "bg-emerald-500/30" : "bg-cyan-500/30"
+                      )}
+                    >
+                      {isEnRoute ? (
+                        <Check className="w-3 h-3 text-emerald-400" />
+                      ) : (
+                        <Clock className="w-3 h-3 text-cyan-400 animate-pulse" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-xs",
+                      isEnRoute ? "text-zinc-400" : "text-cyan-300"
+                    )}>
+                      {isEnRoute ? "Order picked up" : "Waiting for order"}
+                    </span>
+                  </motion.div>
+                )}
+
                 {/* En route to customer */}
                 {isEnRoute && (
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
+                    transition={{ delay: 0.25 }}
                     className="flex items-center gap-3"
                   >
                     <div className="w-6 h-6 rounded-full flex items-center justify-center bg-orange-500/30">

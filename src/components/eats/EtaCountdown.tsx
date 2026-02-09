@@ -33,6 +33,10 @@ interface EtaCountdownProps {
   incentiveMultiplier?: number;
   /** Whether to show incentive boost note */
   showIncentiveNote?: boolean;
+  /** Timestamp of last driver location update - triggers immediate recalc */
+  lastLocationUpdate?: number;
+  /** Whether ETA is based on live location (shows Live indicator more prominently) */
+  isLocationBased?: boolean;
 }
 
 // Haversine formula for distance calculation
@@ -94,10 +98,20 @@ export function EtaCountdown({
   showLowSupplyNote = false,
   incentiveMultiplier = 1.0,
   showIncentiveNote = false,
+  lastLocationUpdate,
+  isLocationBased = false,
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
-  // Update every 30 seconds for countdown
+  // Update based on location changes or fallback to 30-second interval
+  useEffect(() => {
+    // If we have location data, recalculate immediately on location change
+    if (lastLocationUpdate) {
+      setNow(Date.now());
+    }
+  }, [lastLocationUpdate, driverLat, driverLng]);
+
+  // Fallback: Update every 30 seconds for countdown when no live location
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(Date.now());

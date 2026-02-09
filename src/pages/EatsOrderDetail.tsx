@@ -15,10 +15,12 @@ import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
 import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
+import { useDriverProximity } from "@/hooks/useDriverProximity";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
+import { EnhancedStatusBanner } from "@/components/eats/EnhancedStatusBanner";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { LowDriverSupplyBanner } from "@/components/eats/LowDriverSupplyBanner";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
@@ -67,6 +69,10 @@ export default function EatsOrderDetail() {
   const driverLng = liveDriverLocation?.lng ?? driver?.current_lng;
   const driverHeading = liveDriverLocation?.heading;
 
+  // Get pickup coordinates from restaurant
+  const pickupLat = order?.pickup_lat ?? order?.restaurants?.lat;
+  const pickupLng = order?.pickup_lng ?? order?.restaurants?.lng;
+
   // Calculate distance from driver to delivery
   const distanceToDelivery = useMemo(() => {
     if (driverLat != null && driverLng != null && order?.delivery_lat != null && order?.delivery_lng != null) {
@@ -75,7 +81,7 @@ export default function EatsOrderDetail() {
     return undefined;
   }, [driverLat, driverLng, order?.delivery_lat, order?.delivery_lng]);
 
-  // Dispatch status for transparent messaging
+  // Dispatch status for transparent messaging (enhanced with pickup coordinates)
   const dispatchStatus = useEatsDispatchStatus({
     status: order?.status || "",
     driverId: order?.driver_id,
@@ -83,7 +89,29 @@ export default function EatsOrderDetail() {
     driverLng,
     deliveryLat: order?.delivery_lat,
     deliveryLng: order?.delivery_lng,
+    pickupLat,
+    pickupLng,
   });
+
+  // Driver proximity tracking for enhanced ETA
+  const proximity = useDriverProximity({
+    driverLat,
+    driverLng,
+    pickupLat,
+    pickupLng,
+    deliveryLat: order?.delivery_lat,
+    deliveryLng: order?.delivery_lng,
+    orderStatus: order?.status || "",
+  });
+
+  // Determine ETA to show based on order phase
+  const etaMinutes = order?.status === "out_for_delivery"
+    ? proximity.etaToDelivery
+    : proximity.etaToPickup;
+  
+  const etaLabel: "to pickup" | "to you" | undefined = order?.status === "out_for_delivery"
+    ? "to you"
+    : order?.driver_id ? "to pickup" : undefined;
 
   // Determine if we should show the map or demand banner
   const showMap = order && ["confirmed", "preparing", "ready_for_pickup", "out_for_delivery"].includes(order.status);
@@ -185,33 +213,6 @@ export default function EatsOrderDetail() {
     delivered_at: order.delivered_at,
   };
 
-  // Get status-specific messaging (enhanced with dispatch awareness)
-  const getStatusMessage = () => {
-    // Use dispatch-aware messages for active orders
-    if (isActiveOrder && dispatchStatus.message) {
-      return dispatchStatus.message;
-    }
-    
-    switch (order.status) {
-      case "pending":
-        return "Waiting for restaurant confirmation...";
-      case "confirmed":
-        return "Restaurant is preparing your order";
-      case "preparing":
-        return "Your food is being prepared";
-      case "ready_for_pickup":
-        return "Order ready for pickup";
-      case "out_for_delivery":
-        return "Driver is on the way!";
-      case "delivered":
-        return "Order delivered. Enjoy!";
-      case "cancelled":
-        return "Order was cancelled";
-      default:
-        return "Processing your order...";
-    }
-  };
-
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
       <SEOHead 
@@ -254,53 +255,15 @@ export default function EatsOrderDetail() {
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {/* Live Status Banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={`p-4 rounded-2xl border ${
-            order.status === "delivered" 
-              ? "bg-emerald-500/10 border-emerald-500/30" 
-              : order.status === "cancelled"
-              ? "bg-red-500/10 border-red-500/30"
-              : "bg-orange-500/10 border-orange-500/30"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${
-              order.status === "delivered" 
-                ? "bg-emerald-500" 
-                : order.status === "cancelled"
-                ? "bg-red-500"
-                : "bg-orange-500 animate-pulse"
-            }`} />
-            <div className="flex-1">
-              <p className={`font-bold text-sm ${
-                order.status === "delivered" 
-                  ? "text-emerald-400" 
-                  : order.status === "cancelled"
-                  ? "text-red-400"
-                  : "text-orange-400"
-              }`}>
-                {getStatusMessage()}
-              </p>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                {order.status !== "delivered" && order.status !== "cancelled" && "Updates in real-time"}
-              </p>
-              {/* Driver assigned automatically indicator */}
-              {order.driver_id && order.assigned_at && order.status !== "delivered" && order.status !== "cancelled" && (
-                <p className="text-xs text-emerald-400 mt-1">Driver assigned automatically</p>
-              )}
-            </div>
-            {/* ETA Display */}
-            {order.driver_id && (order as any).eta_minutes && order.status !== "delivered" && order.status !== "cancelled" && (
-              <div className="text-right">
-                <p className="text-lg font-bold text-white">{(order as any).eta_minutes} min</p>
-                <p className="text-xs text-zinc-500">ETA</p>
-              </div>
-            )}
-          </div>
-        </motion.div>
+        {/* Enhanced Live Status Banner */}
+        <EnhancedStatusBanner
+          phase={dispatchStatus.phase}
+          message={dispatchStatus.message}
+          subMessage={dispatchStatus.subMessage}
+          etaMinutes={order.driver_id ? etaMinutes : null}
+          etaLabel={etaLabel}
+          isLocationBased={driverLat != null && driverLng != null}
+        />
 
         {/* Scheduled Delivery Banner */}
         {(order as any).is_scheduled && (order as any).deliver_by && (
@@ -372,7 +335,7 @@ export default function EatsOrderDetail() {
           </motion.div>
         )}
 
-        {/* ETA Countdown for active deliveries */}
+        {/* ETA Countdown for active deliveries with location-based refresh */}
         {order.driver_id && order.eta_dropoff && order.status !== "delivered" && order.status !== "cancelled" && (
           <EtaCountdown
             etaDropoff={order.eta_dropoff}
@@ -393,6 +356,8 @@ export default function EatsOrderDetail() {
             showLowSupplyNote={deliveryFactors.driverSupply === "low"}
             incentiveMultiplier={deliveryFactors.incentiveMultiplier}
             showIncentiveNote={deliveryFactors.isIncentivePeriod && deliveryFactors.driverSupply === "high"}
+            lastLocationUpdate={proximity.lastEtaUpdate.getTime()}
+            isLocationBased={driverLat != null && driverLng != null}
           />
         )}
 
@@ -466,6 +431,7 @@ export default function EatsOrderDetail() {
             timestamps={timestamps}
             driverId={order.driver_id}
             assignedAt={order.assigned_at}
+            dispatchPhase={dispatchStatus.phase}
           />
         </motion.div>
 
