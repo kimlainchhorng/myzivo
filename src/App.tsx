@@ -143,6 +143,7 @@ const EatsDeliveryReplay = lazy(() => import("./pages/EatsDeliveryReplay"));
 const EatsAddress = lazy(() => import("./pages/EatsAddress"));
 const EatsReceipt = lazy(() => import("./pages/EatsReceipt"));
 const EatsAlerts = lazy(() => import("./pages/EatsAlerts"));
+const EatsGroupOrder = lazy(() => import("./pages/EatsGroupOrder"));
 const EatsFavorites = lazy(() => import("./pages/EatsFavorites"));
 const EatsOrderChatPage = lazy(() => import("./pages/eats/EatsOrderChatPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -663,6 +664,7 @@ const App = () => (
                 <Route path="/eats/orders/:id/replay" element={<EatsDeliveryReplay />} />
                 <Route path="/eats/orders/:id/chat" element={<ProtectedRoute><EatsOrderChatPage /></ProtectedRoute>} />
                 <Route path="/eats/orders/:id/receipt" element={<EatsReceipt />} />
+                <Route path="/eats/group/:inviteCode" element={<EatsGroupOrder />} />
                 <Route path="/eats/alerts" element={<EatsAlerts />} />
                 <Route path="/eats/favorites" element={<EatsFavorites />} />
                 

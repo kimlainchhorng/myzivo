@@ -23,6 +23,14 @@ interface MenuItemModalProps {
   restaurantName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  groupSessionId?: string | null;
+  onAddGroupItem?: (item: {
+    menu_item_id: string;
+    item_name: string;
+    price: number;
+    quantity: number;
+    notes?: string;
+  }) => Promise<boolean>;
 }
 
 export function MenuItemModal({
@@ -31,6 +39,8 @@ export function MenuItemModal({
   restaurantName,
   open,
   onOpenChange,
+  groupSessionId,
+  onAddGroupItem,
 }: MenuItemModalProps) {
   const { addItem, getRestaurantId } = useCart();
   const [quantity, setQuantity] = useState(1);
@@ -38,8 +48,27 @@ export function MenuItemModal({
 
   const currentRestaurantId = getRestaurantId();
 
-  const handleAdd = () => {
+  const isGroupMode = !!groupSessionId && !!onAddGroupItem;
+
+  const handleAdd = async () => {
     if (!item) return;
+
+    if (isGroupMode) {
+      const success = await onAddGroupItem({
+        menu_item_id: item.id,
+        item_name: item.name,
+        price: item.price,
+        quantity,
+        notes: notes.trim() || undefined,
+      });
+      if (success) {
+        toast.success(`${quantity}x ${item.name} added to group order`);
+        onOpenChange(false);
+        setQuantity(1);
+        setNotes("");
+      }
+      return;
+    }
 
     // Check if adding from different restaurant
     if (currentRestaurantId && currentRestaurantId !== restaurantId) {
@@ -173,7 +202,7 @@ export function MenuItemModal({
                 : "bg-zinc-700 cursor-not-allowed"
             )}
           >
-            {isItemAvailable ? `Add to Cart · $${totalPrice.toFixed(2)}` : "Out of Stock"}
+            {isItemAvailable ? (isGroupMode ? `Add to Group Order · $${totalPrice.toFixed(2)}` : `Add to Cart · $${totalPrice.toFixed(2)}`) : "Out of Stock"}
           </Button>
         </div>
       </DialogContent>
