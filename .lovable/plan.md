@@ -1,319 +1,357 @@
 
-# Fraud Protection Messaging — Implementation Plan
+
+# Order Status Accuracy — Implementation Plan
 
 ## Overview
-Add high-risk order verification requirements at checkout and display the message: **"For security reasons, this order requires verification."** when risk scoring triggers phone or payment verification.
+Improve live order tracking reliability with clearer real-time status updates and automatic ETA refresh when driver location changes.
 
 ---
 
 ## Current State Analysis
 
-### Existing Risk Assessment System
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `useRiskAssessment` hook | `src/hooks/useRiskAssessment.ts` | Client-side risk scoring (0-100) |
-| `RISK_THRESHOLDS` | `src/config/fraudPrevention.ts` | Thresholds: LOW=30, MEDIUM=60, HIGH=80 |
-| `getRiskDecision()` | `src/config/fraudPrevention.ts` | Returns: approve / review / decline / 3ds_required |
+### Existing Components
+| Component | Purpose | Current Behavior |
+|-----------|---------|------------------|
+| `useEatsDispatchStatus` | Dispatch phase messaging | Shows: pending, searching, assigned, en_route, arrived, delivered |
+| `useLiveDriverLocation` | Real-time driver GPS | Updates via Supabase realtime, tracks to delivery only |
+| `EtaCountdown` | ETA display | Recalculates every 30 seconds, uses driver-to-delivery distance |
+| `DriverInfoCard` | Driver info + status | Shows "arriving" when driver < 0.2mi from dropoff |
+| `StatusTimeline` | Order progress steps | Shows main steps + driver substeps (searching, assigned, en route) |
 
-### Existing Verification Infrastructure
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `PhoneVerificationDialog` | `src/components/account/PhoneVerificationDialog.tsx` | OTP modal for phone verification |
-| `send-otp-sms` | `supabase/functions/send-otp-sms/` | Sends 6-digit SMS code via Twilio |
-| `verify-otp-sms` | `supabase/functions/verify-otp-sms/` | Verifies SMS OTP code |
-| `FraudPreventionNotice` | `src/components/checkout/FraudPreventionNotice.tsx` | Displays fraud notices (checkout, review, declined, 3ds) |
-
-### Current Checkout Flow (EatsCheckout.tsx)
-```text
-Form Validation → Submit Order → Redirect to Order Detail
-                  (No risk check currently)
-```
+### Gaps Identified
+1. **No "Driver near pickup" status** — Customer can't see when driver arrives at restaurant
+2. **No "Restaurant preparing" clarity** — Current status doesn't distinguish preparing phases
+3. **ETA updates every 30 seconds** — Not triggered by driver location changes
+4. **Distance to pickup not tracked** — Only distance to delivery is calculated
 
 ---
 
 ## Implementation Plan
 
-### 1) Create HighRiskVerificationGate Component
+### 1) Enhance useEatsDispatchStatus Hook
 
-**File to Create:** `src/components/checkout/HighRiskVerificationGate.tsx`
+**File to Modify:** `src/hooks/useEatsDispatchStatus.ts`
 
-**Purpose:** Gating component that blocks checkout until verification is completed for high-risk orders.
-
-**UI Design:**
-```text
-+------------------------------------------------------------------+
-| [🛡️]  For security reasons, this order requires verification.   |
-|                                                                  |
-|  We detected unusual activity. Please verify to continue.        |
-|                                                                  |
-|  [ ] Phone Verification        [ Verify Phone ]                  |
-|      ✓ Verified                                                  |
-|                                                                  |
-|  [Continue to Checkout]  (enabled when verified)                 |
-+------------------------------------------------------------------+
-```
-
-**Props:**
+**New Phases:**
 ```typescript
-interface HighRiskVerificationGateProps {
-  riskScore: number;
-  phoneNumber?: string;
-  phoneVerified?: boolean;
-  onVerificationComplete: () => void;
-  onCancel: () => void;
-  children?: React.ReactNode;
+export type DispatchPhase = 
+  | "pending"           // Waiting for restaurant
+  | "preparing"         // Restaurant preparing (NEW)
+  | "searching"         // Looking for driver
+  | "assigned"          // Driver heading to restaurant
+  | "near_pickup"       // Driver near restaurant (NEW)
+  | "at_pickup"         // Driver at restaurant waiting (NEW)
+  | "en_route"          // Driver heading to customer
+  | "arrived"           // Driver near customer
+  | "delivered"         // Complete
+  | "cancelled";        // Cancelled
+
+interface UseEatsDispatchStatusOptions {
+  status: string;
+  driverId: string | null | undefined;
+  driverLat?: number | null;
+  driverLng?: number | null;
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
+  // NEW: Restaurant/pickup coordinates
+  pickupLat?: number | null;
+  pickupLng?: number | null;
 }
 ```
 
-**States:**
-- Shows when `riskScore >= RISK_THRESHOLDS.MEDIUM_RISK` (60)
-- Requires phone verification if `riskScore >= 60` and phone not verified
-- Allows proceeding once verified
-
-### 2) Create useCheckoutRiskAssessment Hook
-
-**File to Create:** `src/hooks/useCheckoutRiskAssessment.ts`
-
-**Purpose:** Specialized hook for checkout risk assessment that combines order data with user signals.
-
-```typescript
-interface CheckoutRiskResult {
-  score: number;
-  decision: 'approve' | 'review' | 'decline' | '3ds_required';
-  requiresPhoneVerification: boolean;
-  requiresPaymentVerification: boolean;
-  blockers: string[];
-  canProceed: boolean;
-}
-
-function useCheckoutRiskAssessment(options: {
-  orderTotal: number;
-  isFirstOrder: boolean;
-  phoneVerified: boolean;
-}): CheckoutRiskResult;
-```
-
-**Risk Logic:**
+**New Logic:**
 ```text
-Order Data
-    ↓
-Calculate base risk from useRiskAssessment()
-    ↓
-Add checkout-specific signals:
-  - High value + first order: +20 points
-  - Phone not verified: +15 points
-  - New account: +10 points
-    ↓
-If score >= 60 (MEDIUM_RISK):
-  → requiresPhoneVerification = !phoneVerified
-    ↓
-If score >= 80 (HIGH_RISK):
-  → decision = 'decline' (block order)
-    ↓
-canProceed = (score < 60) OR (score >= 60 AND verified)
+Order Status: confirmed/preparing
+   ↓
+Check if driver assigned
+   ├── NO → phase: "searching"
+   └── YES → Calculate distance to pickup (restaurant)
+              ├── > 0.2mi → phase: "assigned" 
+              │             message: "Driver heading to restaurant"
+              ├── 0.05-0.2mi → phase: "near_pickup" (NEW)
+              │                message: "Driver arriving at restaurant"
+              └── < 0.05mi → phase: "at_pickup" (NEW)
+                             message: "Driver waiting at restaurant"
+                             
+Order Status: ready_for_pickup
+   ↓
+Driver picks up → phase: "en_route"
+                  message: "Driver picked up your order"
+                  
+Order Status: out_for_delivery
+   ↓
+Calculate distance to delivery
+   ├── > 0.15mi → phase: "en_route"
+   │              message: "Driver is on the way!"
+   └── ≤ 0.15mi → phase: "arrived"
+                  message: "Driver arriving now!"
 ```
 
-### 3) Update FRAUD_PREVENTION_COPY in Config
+**Customer-Facing Messages:**
+| Phase | Message | Sub-message |
+|-------|---------|-------------|
+| pending | "Waiting for restaurant confirmation..." | "Restaurant will confirm shortly" |
+| preparing | "Restaurant is preparing your order" | "Your food is being made fresh" |
+| searching | "Finding the best driver near you..." | "We're matching you with a nearby driver" |
+| assigned | "Driver heading to restaurant" | "Your driver will pick up your order soon" |
+| near_pickup | "Driver arriving at restaurant" | "Almost ready to pick up your order" |
+| at_pickup | "Driver at restaurant" | "Waiting for your order" |
+| en_route | "Driver is on the way!" | "Your food is coming to you" |
+| arrived | "Driver arriving now!" | "Get ready for your delivery" |
 
-**File to Modify:** `src/config/fraudPrevention.ts`
+### 2) Update useLiveEatsOrder Interface
 
-**Add new copy:**
+**File to Modify:** `src/hooks/useLiveEatsOrder.ts`
+
+**Add pickup coordinates to interface:**
 ```typescript
-export const FRAUD_PREVENTION_COPY = {
-  // ... existing copy
+export interface LiveEatsOrder {
+  // ... existing fields
   
-  /** High risk verification required */
-  highRiskVerification: "For security reasons, this order requires verification.",
-  
-  /** Phone verification prompt */
-  phoneVerificationRequired: "Please verify your phone number to continue with this order.",
-  
-  /** Verification complete */
-  verificationComplete: "Verification successful. You can now proceed with your order.",
-} as const;
-```
-
-### 4) Create SecurityVerificationBanner Component
-
-**File to Create:** `src/components/checkout/SecurityVerificationBanner.tsx`
-
-**Purpose:** Prominent banner with the exact customer message.
-
-**UI Design:**
-```text
-+------------------------------------------------------------------+
-| [🛡️]  For security reasons, this order requires verification.   |
-|                                                                  |
-|       This helps protect your account and ensure a secure        |
-|       transaction. Verification typically takes less than        |
-|       a minute.                                                  |
-+------------------------------------------------------------------+
-```
-
-**Props:**
-```typescript
-interface SecurityVerificationBannerProps {
-  onVerify: () => void;
-  isVerifying?: boolean;
-  className?: string;
+  // Pickup coordinates (from restaurant or order)
+  pickup_lat?: number | null;
+  pickup_lng?: number | null;
 }
 ```
 
-### 5) Update EatsCheckout Page
+**Update query to include pickup coordinates:**
+```typescript
+const { data } = await supabase
+  .from(EATS_TABLES.orders)
+  .select(`
+    *,
+    restaurants:restaurant_id(name, logo_url, phone, address, lat, lng)
+  `)
+  .eq("id", orderId)
+  .single();
+```
 
-**File to Modify:** `src/pages/EatsCheckout.tsx`
+### 3) Create useDriverProximity Hook
+
+**File to Create:** `src/hooks/useDriverProximity.ts`
+
+**Purpose:** Consolidated proximity tracking with automatic ETA updates.
+
+```typescript
+interface ProximityState {
+  // Distance calculations
+  distanceToPickup: number | null;
+  distanceToDelivery: number | null;
+  
+  // Proximity flags
+  isNearPickup: boolean;      // < 0.2 miles
+  isAtPickup: boolean;        // < 0.05 miles
+  isNearDelivery: boolean;    // < 0.15 miles
+  isArrivingSoon: boolean;    // < 0.05 miles
+  
+  // Dynamic ETA (recalculated on location change)
+  etaToPickup: number | null;   // minutes
+  etaToDelivery: number | null; // minutes
+  lastEtaUpdate: Date;
+}
+
+function useDriverProximity(options: {
+  driverLat: number | null;
+  driverLng: number | null;
+  pickupLat: number | null;
+  pickupLng: number | null;
+  deliveryLat: number | null;
+  deliveryLng: number | null;
+  orderStatus: string;
+}): ProximityState;
+```
+
+**Key Feature:** ETAs recalculate immediately when driver coordinates change (not on a fixed interval).
+
+### 4) Update EtaCountdown Component
+
+**File to Modify:** `src/components/eats/EtaCountdown.tsx`
 
 **Changes:**
-1. Import `useCheckoutRiskAssessment`, `HighRiskVerificationGate`, `SecurityVerificationBanner`
-2. Add risk assessment before order submission
-3. Show verification gate for high-risk orders
-4. Block submit button until verification complete
+1. Accept `lastLocationUpdate` prop to force recalculation
+2. Remove fixed 30-second interval when location-based
+3. Add immediate recalc when driver location changes
 
-**Integration Flow:**
-```text
-Page Load
-    ↓
-useCheckoutRiskAssessment({
-  orderTotal: total,
-  isFirstOrder: user.booking_count === 0,
-  phoneVerified: user.phone_verified,
-})
-    ↓
-If requiresPhoneVerification:
-  → Show SecurityVerificationBanner
-  → Open PhoneVerificationDialog on click
-  → Block form submission until verified
-    ↓
-If canProceed:
-  → Enable "Place Order" button
+**New Props:**
+```typescript
+interface EtaCountdownProps {
+  // ... existing props
+  
+  /** Timestamp of last driver location update - triggers recalc */
+  lastLocationUpdate?: number;
+  /** Whether to show "Live" indicator more prominently */
+  isLocationBased?: boolean;
+}
 ```
 
-**Code Structure:**
+**Updated Logic:**
 ```typescript
-// Before form
-{riskAssessment.requiresPhoneVerification && (
-  <SecurityVerificationBanner
-    onVerify={() => setShowPhoneVerification(true)}
-    isVerifying={isVerifyingPhone}
-  />
-)}
-
-// Phone verification dialog
-<PhoneVerificationDialog
-  open={showPhoneVerification}
-  onOpenChange={setShowPhoneVerification}
-  phoneNumber={formData.customer_phone}
-  onVerified={handlePhoneVerified}
-/>
-
-// Submit button
-<Button
-  disabled={!riskAssessment.canProceed || isSubmitting}
->
-  {riskAssessment.requiresPhoneVerification && !phoneVerified
-    ? "Verify to Continue"
-    : "Place Order Request"
+// Recalculate ETA whenever driver location changes
+useEffect(() => {
+  if (driverLat != null && driverLng != null) {
+    // Immediate recalculation on location change
+    recalculateEta();
   }
-</Button>
+}, [driverLat, driverLng, lastLocationUpdate]);
 ```
 
-### 6) Update FraudPreventionNotice Component
+### 5) Create EnhancedStatusBanner Component
 
-**File to Modify:** `src/components/checkout/FraudPreventionNotice.tsx`
+**File to Create:** `src/components/eats/EnhancedStatusBanner.tsx`
 
-**Add new variant:**
+**Purpose:** Replace the simple status banner with phase-aware messaging.
+
+**UI Design by Phase:**
+```text
+┌──────────────────────────────────────────────────────────┐
+│ ● [animated]  Driver arriving at restaurant              │
+│               Almost ready to pick up your order         │
+│                                        [3 min to pickup] │
+└──────────────────────────────────────────────────────────┘
+
+Colors by phase:
+- pending/preparing: amber (waiting)
+- searching: indigo (searching animation)
+- assigned/near_pickup/at_pickup: blue (driver active)
+- en_route: orange (delivery in progress)
+- arrived: emerald (arriving)
+- delivered: emerald (complete)
+```
+
+**Props:**
 ```typescript
-case "verification_required":
-  return {
-    icon: Shield,
-    title: "Verification Required",
-    message: FRAUD_PREVENTION_COPY.highRiskVerification,
-    color: "text-amber-500",
-    bg: "bg-amber-500/10 border-amber-500/30",
-  };
+interface EnhancedStatusBannerProps {
+  phase: DispatchPhase;
+  message: string;
+  subMessage: string;
+  etaMinutes?: number | null;
+  etaLabel?: string; // "to pickup" | "to you"
+  isLocationBased?: boolean;
+}
+```
+
+### 6) Update EatsOrderDetail Page
+
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+
+**Changes:**
+1. Calculate distance to pickup (restaurant)
+2. Pass pickup coordinates to dispatch status hook
+3. Use driver proximity hook for consolidated state
+4. Pass location update timestamp to EtaCountdown
+5. Replace status banner with EnhancedStatusBanner
+
+**Updated Dispatch Hook Call:**
+```typescript
+const dispatchStatus = useEatsDispatchStatus({
+  status: order?.status || "",
+  driverId: order?.driver_id,
+  driverLat,
+  driverLng,
+  deliveryLat: order?.delivery_lat,
+  deliveryLng: order?.delivery_lng,
+  // NEW: Pass restaurant coordinates
+  pickupLat: order?.pickup_lat ?? (order.restaurants as any)?.lat,
+  pickupLng: order?.pickup_lng ?? (order.restaurants as any)?.lng,
+});
+
+// NEW: Driver proximity tracking
+const proximity = useDriverProximity({
+  driverLat,
+  driverLng,
+  pickupLat: order?.pickup_lat ?? (order.restaurants as any)?.lat,
+  pickupLng: order?.pickup_lng ?? (order.restaurants as any)?.lng,
+  deliveryLat: order?.delivery_lat,
+  deliveryLng: order?.delivery_lng,
+  orderStatus: order?.status || "",
+});
+```
+
+**ETA Display Logic:**
+```typescript
+// Show appropriate ETA based on order phase
+const etaMinutes = order?.status === "out_for_delivery"
+  ? proximity.etaToDelivery
+  : proximity.etaToPickup;
+
+const etaLabel = order?.status === "out_for_delivery"
+  ? "to you"
+  : "to pickup";
+```
+
+### 7) Update StatusTimeline Substeps
+
+**File to Modify:** `src/components/eats/StatusTimeline.tsx`
+
+**Add new substeps for driver phases:**
+```typescript
+// Enhanced substeps under "Preparing"
+const driverSubsteps = [
+  { phase: "searching", label: "Searching for driver...", icon: Search },
+  { phase: "assigned", label: "Driver heading to restaurant", icon: Navigation },
+  { phase: "near_pickup", label: "Driver arriving at restaurant", icon: MapPin },
+  { phase: "at_pickup", label: "Driver waiting for order", icon: Clock },
+];
 ```
 
 ---
 
 ## File Summary
 
-### New Files (3)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/components/checkout/HighRiskVerificationGate.tsx` | Gating component for high-risk order verification |
-| `src/components/checkout/SecurityVerificationBanner.tsx` | Banner with "For security reasons..." message |
-| `src/hooks/useCheckoutRiskAssessment.ts` | Specialized checkout risk assessment hook |
+| `src/hooks/useDriverProximity.ts` | Consolidated proximity + dynamic ETA tracking |
+| `src/components/eats/EnhancedStatusBanner.tsx` | Phase-aware status display |
 
-### Modified Files (3)
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/config/fraudPrevention.ts` | Add `highRiskVerification` and related copy |
-| `src/components/checkout/FraudPreventionNotice.tsx` | Add `verification_required` variant |
-| `src/pages/EatsCheckout.tsx` | Integrate risk assessment and verification gate |
+| `src/hooks/useEatsDispatchStatus.ts` | Add near_pickup, at_pickup, preparing phases + pickup coordinates |
+| `src/hooks/useLiveEatsOrder.ts` | Add pickup_lat, pickup_lng to interface + restaurant coords |
+| `src/components/eats/EtaCountdown.tsx` | Trigger recalc on location change, not fixed interval |
+| `src/components/eats/StatusTimeline.tsx` | Add driver substeps for near_pickup, at_pickup |
+| `src/pages/EatsOrderDetail.tsx` | Integrate proximity hook, pass pickup coords, use EnhancedStatusBanner |
 
 ---
 
-## Risk Scoring for Checkout
+## Status Message Summary
 
-| Condition | Points Added | Threshold Effect |
-|-----------|--------------|------------------|
-| High-value order (>$100) + first order | +20 | May trigger verification |
-| Phone not verified | +15 | Common trigger |
-| New account (<24h) | +10 | Minor signal |
-| Failed payment attempts (3+) | +35 | Strong signal |
-| Bot behavior detected | +50 | Auto-decline |
-
-**Combined Example:**
-- New account (10) + Phone not verified (15) + High-value first order (20) = 45 → Verification required
-- Bot detected (50) + New account (10) = 60 → Review
-- Failed payments (35) + Phone unverified (15) + High value (20) = 70 → Verification required
-
----
-
-## Verification Flow Diagram
-
-```text
-User fills checkout form
-         ↓
-Risk assessment runs on form data
-         ↓
-Score < 60?
-   ├── YES → "Place Order" enabled (normal flow)
-   └── NO ↓
-       Score >= 60?
-          ├── Show SecurityVerificationBanner
-          ├── "For security reasons, this order requires verification."
-          └── Phone verified?
-                 ├── YES → Enable checkout
-                 └── NO → Block + Show "Verify Phone" button
-                           ↓
-                      PhoneVerificationDialog opens
-                           ↓
-                      User enters 6-digit SMS code
-                           ↓
-                      verify-otp-sms edge function
-                           ↓
-                      On success: canProceed = true
-                           ↓
-                      "Place Order" enabled
-```
+| Order Phase | Status Message | ETA Shows |
+|-------------|----------------|-----------|
+| Restaurant confirming | "Waiting for restaurant confirmation..." | — |
+| Restaurant preparing | "Restaurant is preparing your order" | — |
+| Finding driver | "Finding the best driver near you..." | — |
+| Driver assigned | "Driver heading to restaurant" | X min to pickup |
+| Driver near restaurant | "Driver arriving at restaurant" | X min to pickup |
+| Driver at restaurant | "Driver at restaurant" | Waiting... |
+| Driver en route | "Driver is on the way!" | X min to you |
+| Driver arriving | "Driver arriving now!" | Arriving soon! |
+| Delivered | "Order delivered. Enjoy!" | — |
 
 ---
 
-## Customer-Facing Message
+## ETA Refresh Behavior
 
-The exact message as requested:
-> **"For security reasons, this order requires verification."**
+| Trigger | Current Behavior | New Behavior |
+|---------|------------------|--------------|
+| Fixed interval | Every 30 seconds | Every 30 seconds (fallback only) |
+| Driver location change | No refresh | **Immediate recalculation** |
+| Order status change | No refresh | **Immediate recalculation** |
+| Phase transition | No refresh | **Immediate recalculation** |
 
-This message appears:
-1. As a banner at the top of the checkout form
-2. In the verification dialog header
-3. As a tooltip on the disabled submit button
+**Result:** ETA updates feel more responsive and accurate because they reflect the latest driver position immediately.
 
-The message is:
-- Non-alarming (doesn't suggest fraud suspicion)
-- Action-oriented (implies a simple fix)
-- Security-focused (builds trust)
+---
+
+## Proximity Thresholds
+
+| Threshold | Distance | Used For |
+|-----------|----------|----------|
+| Near pickup | 0.2 miles (~320m) | "Arriving at restaurant" |
+| At pickup | 0.05 miles (~80m) | "At restaurant" |
+| Near delivery | 0.15 miles (~240m) | "Arriving now!" |
+| At delivery | 0.05 miles (~80m) | "Driver here!" |
 
 ---
 
@@ -321,10 +359,20 @@ The message is:
 
 This implementation provides:
 
-1. **Risk-based verification**: Orders scoring >= 60 require phone verification before checkout
-2. **Clear messaging**: Shows "For security reasons, this order requires verification."
-3. **Non-blocking UX**: Users can still see their order; just need to verify to proceed
-4. **Leverages existing infrastructure**: Uses existing `PhoneVerificationDialog`, SMS OTP functions, and risk scoring
-5. **Configurable thresholds**: Uses existing `RISK_THRESHOLDS` from fraud prevention config
+1. **Clearer real-time status updates:**
+   - "Restaurant preparing" distinct from confirmation
+   - "Driver heading to restaurant" → "Driver arriving at restaurant" → "Driver at restaurant"
+   - "Driver en route" → "Driver arriving now!"
 
-The flow blocks high-risk orders until verification is complete, reducing fraud while maintaining a good user experience for legitimate customers.
+2. **Automatic ETA refresh:**
+   - ETA recalculates immediately when driver location updates (not just every 30s)
+   - Shows "to pickup" ETA before pickup, "to you" after
+
+3. **Enhanced timeline:**
+   - Driver substeps show granular progress during pickup phase
+   - Visual indicators for each driver phase
+
+4. **Proximity-aware messaging:**
+   - Uses driver distance to both restaurant and delivery to determine status
+   - More accurate arrival notifications
+
