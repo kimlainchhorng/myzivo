@@ -2,12 +2,13 @@
  * ZIVO Eats — Restaurant Listing Page
  */
 
-import { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { UtensilsCrossed, MapPin, Clock, Star, Search, ArrowLeft, Loader2 } from "lucide-react";
 import { usePromoBadgesByRestaurant } from "@/hooks/useRestaurantPromotions";
 import { PromoBadgeOverlay } from "@/components/eats/PromoBadgeOverlay";
 import { VoiceSearchButton } from "@/components/eats/VoiceSearchButton";
+import { SortSelect, type SortOption } from "@/components/results/SortSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,10 +24,18 @@ import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailab
 import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { FavoriteButton } from "@/components/eats/FavoriteButton";
 
+const eatsSortOptions: SortOption[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "rating", label: "Top Rated" },
+  { value: "popular", label: "Most Popular" },
+  { value: "fast", label: "Fast Delivery" },
+];
+
 function EatsRestaurantsContent() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState("recommended");
   const { data: restaurants, isLoading } = useRestaurants();
   const { deliveryAddress, setDeliveryAddress, getItemCount } = useCart();
   const { getBadges } = usePromoBadgesByRestaurant();
@@ -42,6 +51,21 @@ function EatsRestaurantsContent() {
     const matchesCuisine = !selectedCuisine || restaurant.cuisine_type === selectedCuisine;
     return matchesSearch && matchesCuisine;
   }) || [];
+
+  // Apply sort
+  const sortedRestaurants = useMemo(() => {
+    const list = [...filteredRestaurants];
+    switch (sortBy) {
+      case "rating":
+        return list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+      case "popular":
+        return list.sort((a, b) => (b.total_orders ?? 0) - (a.total_orders ?? 0));
+      case "fast":
+        return list.sort((a, b) => (a.avg_prep_time ?? 999) - (b.avg_prep_time ?? 999));
+      default:
+        return list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    }
+  }, [filteredRestaurants, sortBy]);
 
   const cartCount = getItemCount();
 
@@ -98,7 +122,7 @@ function EatsRestaurantsContent() {
               </span>
             </h1>
             <p className="text-muted-foreground">
-              {isLoading ? "Loading..." : `${filteredRestaurants.length} restaurants available`}
+              {isLoading ? "Loading..." : `${sortedRestaurants.length} restaurants available`}
             </p>
           </div>
 
@@ -119,6 +143,8 @@ function EatsRestaurantsContent() {
                 />
               </div>
             </div>
+
+            <SortSelect value={sortBy} onValueChange={setSortBy} options={eatsSortOptions} />
 
             {/* Cuisine Filters */}
             <div className="flex flex-wrap gap-2">
@@ -153,7 +179,7 @@ function EatsRestaurantsContent() {
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-eats" />
             </div>
-          ) : filteredRestaurants.length === 0 ? (
+          ) : sortedRestaurants.length === 0 ? (
             <div className="text-center py-16">
               <UtensilsCrossed className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="font-bold text-xl mb-2">No restaurants found</h3>
@@ -166,7 +192,7 @@ function EatsRestaurantsContent() {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredRestaurants.map((restaurant, index) => (
+              {sortedRestaurants.map((restaurant, index) => (
                 <Card
                   key={restaurant.id}
                   className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-eats/30 animate-in fade-in slide-in-from-bottom-4"

@@ -4,19 +4,26 @@
  */
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Star, Clock, RotateCcw } from "lucide-react";
+import { Star, Clock, RotateCcw, Crown } from "lucide-react";
 import { Restaurant } from "@/lib/eatsApi";
 import { useReorder } from "@/hooks/useReorder";
 import { cn } from "@/lib/utils";
 
 interface RecommendationCardProps {
   restaurant: Restaurant;
-  variant?: "reorder" | "favorite" | "timing";
+  variant?: "reorder" | "favorite" | "timing" | "topPick";
   orderCount?: number;
   topItems?: string[];
   timingLabel?: string;
+  rank?: number;
   className?: string;
 }
+
+const rankStyles: Record<number, { bg: string; text: string; border: string }> = {
+  1: { bg: "bg-amber-500", text: "text-white", border: "border-amber-400" },
+  2: { bg: "bg-zinc-300", text: "text-zinc-800", border: "border-zinc-200" },
+  3: { bg: "bg-orange-700", text: "text-white", border: "border-orange-600" },
+};
 
 export function RecommendationCard({
   restaurant,
@@ -24,6 +31,7 @@ export function RecommendationCard({
   orderCount,
   topItems,
   timingLabel,
+  rank,
   className,
 }: RecommendationCardProps) {
   const navigate = useNavigate();
@@ -35,9 +43,10 @@ export function RecommendationCard({
 
   const handleReorder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // For reorder, we'd need past order data - navigate to restaurant instead
     navigate(`/eats/restaurant/${restaurant.id}`);
   };
+
+  const rankStyle = rank ? rankStyles[rank] || { bg: "bg-zinc-700", text: "text-zinc-200", border: "border-zinc-600" } : null;
 
   return (
     <motion.div
@@ -61,6 +70,16 @@ export function RecommendationCard({
           <div className="w-full h-full bg-gradient-to-br from-orange-500/20 to-zinc-800" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+        {/* Rank Badge (topPick variant) */}
+        {variant === "topPick" && rank && rankStyle && (
+          <div className={cn(
+            "absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center border-2 font-black text-xs shadow-lg",
+            rankStyle.bg, rankStyle.text, rankStyle.border
+          )}>
+            {rank === 1 ? <Crown className="w-3.5 h-3.5" /> : rank}
+          </div>
+        )}
 
         {/* Timing Badge */}
         {variant === "timing" && timingLabel && (

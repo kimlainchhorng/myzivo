@@ -24159,6 +24159,36 @@ export type Database = {
           },
         ]
       }
+      rewards: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          reward_type: string | null
+          reward_value: number | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ride_offers: {
         Row: {
           driver_id: string
