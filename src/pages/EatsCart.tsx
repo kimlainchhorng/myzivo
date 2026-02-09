@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2, Flame } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2, Flame, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { AddressSelector } from "@/components/eats/AddressSelector";
@@ -22,6 +22,8 @@ import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
 import { useMembership, calculateMembershipSavings } from "@/hooks/useMembership";
 import { useCustomerWallet, useAppliedCredit } from "@/hooks/useCustomerWallet";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
+import { useDemandAdjustedEta } from "@/hooks/useDemandAdjustedEta";
+import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
@@ -62,6 +64,17 @@ function EatsCartContent() {
   
   // Surge pricing
   const { isActive: surgeActive, level: surgeLevel, multiplier: surgeMultiplier, calculateDeliveryFee } = useEatsSurgePricing();
+
+  const restaurantName = items.length > 0 ? items[0].restaurantName : "";
+  const restaurantId = items.length > 0 ? items[0].restaurantId : "";
+
+  // Demand-adjusted ETA
+  const { demandMultiplier } = useDemandAdjustedEta(restaurantId || undefined);
+  const eta = useQueueAwareEta({
+    restaurantId: restaurantId || undefined,
+    demandMultiplier,
+    surgeMultiplier,
+  });
 
   // Get current user
   useEffect(() => {
@@ -120,8 +133,8 @@ function EatsCartContent() {
   // Final total
   const total = totalBeforeCredits - creditAppliedDollars;
 
-  const restaurantName = items.length > 0 ? items[0].restaurantName : "";
-  const restaurantId = items.length > 0 ? items[0].restaurantId : "";
+
+
 
   // Handle promo apply
   const handleApplyPromo = async (code: string) => {
@@ -408,6 +421,17 @@ function EatsCartContent() {
           onToggle={setUseCredits}
         />
 
+        {/* High Demand Banner */}
+        {surgeActive && (
+          <div className="flex items-start gap-3 rounded-2xl bg-orange-500/10 border border-orange-500/20 p-4">
+            <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-bold text-sm text-orange-400">High demand in your area</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Delivery fee adjusted based on demand.</p>
+            </div>
+          </div>
+        )}
+
         {/* Order Summary */}
         <div className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between text-sm">
@@ -472,7 +496,7 @@ function EatsCartContent() {
             <span className="text-zinc-400">Delivery Time</span>
             <span className={deliveryMode === "scheduled" ? "text-violet-400" : ""}>
               {deliveryMode === "asap" 
-                ? "ASAP (30-45 min)" 
+                ? `ASAP (${eta.etaMinRange}–${eta.etaMaxRange} min)` 
                 : scheduledDate && scheduledTime
                   ? `${format(scheduledDate, "MMM d")} at ${scheduledTime}`
                   : "Select time"

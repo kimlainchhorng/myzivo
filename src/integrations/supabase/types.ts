@@ -25275,6 +25275,33 @@ export type Database = {
         }
         Relationships: []
       }
+      route_metrics: {
+        Row: {
+          actual_minutes: number | null
+          distance_km: number | null
+          estimated_minutes: number | null
+          id: string
+          order_id: string | null
+          recorded_at: string | null
+        }
+        Insert: {
+          actual_minutes?: number | null
+          distance_km?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Update: {
+          actual_minutes?: number | null
+          distance_km?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          order_id?: string | null
+          recorded_at?: string | null
+        }
+        Relationships: []
+      }
       safety_alerts: {
         Row: {
           created_at: string
