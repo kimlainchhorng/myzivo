@@ -1,250 +1,306 @@
 
-
-# Surge Pricing Display for Eats
+# Scheduled Orders for Eats
 
 ## Overview
-Add surge pricing visibility to the Eats service so customers see clear indicators when delivery fees are higher due to high demand. The system will leverage the existing global surge multiplier infrastructure (used for Rides) and apply it to Eats delivery fees.
+Enable customers to choose a future delivery time when placing food orders. The system will add a delivery time selector to checkout, allowing "Deliver ASAP" or "Schedule for Later" with date/time picking. Scheduled orders will be clearly labeled in the order history.
 
 ---
 
 ## Current State Analysis
 
-### Already Exists
+### Already Complete
 | Feature | Status | Location |
 |---------|--------|----------|
-| `surge_multipliers` table | Complete | Has zone='GLOBAL', multiplier (currently 1.0) |
-| `useSurgePricing` hook | Complete | Fetches global surge, refreshes every 15s |
-| `useZoneSurgePricing` hook | Complete | Same as above with zone context |
-| `getSurgeLevelFromMultiplier()` | Complete | Returns "Low", "Medium", "High" |
-| `SurgeLevel` type | Complete | "Low" / "Medium" / "High" |
-| Surge badge for Rides | Complete | RideCard.tsx shows "Busy time pricing x1.5" |
-| `CustomerCityContext` | Complete | Has selectedCity with zoneCode |
-| `eats_zones` table | Complete | delivery_fee_base per zone |
-| `EatsPriceBreakdown` component | Complete | Shows delivery fee line item |
-| `EatsCart` page | Complete | Calculates deliveryFee = $3.99 base |
+| `is_scheduled` column | Complete | `food_orders` table (boolean) |
+| `pickup_window_start` column | Complete | `food_orders` table (timestamp) |
+| `pickup_window_end` column | Complete | `food_orders` table (timestamp) |
+| `deliver_by` column | Complete | `food_orders` table (timestamp) |
+| `sla_deliver_by` column | Complete | `food_orders` table (timestamp) |
+| `preferred_time` in CreateFoodOrderInput | Complete | "asap" or "scheduled" enum |
+| `scheduled_time` in CreateFoodOrderInput | Complete | Optional string |
+| `opening_hours` on restaurants | Complete | JSON field with hours |
+| `MobileDatePickerSheet` component | Complete | Date picker bottom sheet |
+| `EatsCart.tsx` checkout page | Complete | Main checkout UI |
+| `EatsOrders.tsx` orders list | Complete | Order history |
+| `EatsOrderDetail.tsx` order detail | Complete | Single order view |
 
 ### Missing
 | Feature | Status |
 |---------|--------|
-| `useEatsSurgePricing` hook | Need to create |
-| Surge badge on restaurant list | Need to add |
-| Surge badge on restaurant detail page | Need to add |
-| Surge delivery fee calculation | Need to integrate |
-| Surge breakdown in order summary | Need to add |
-| Surge badge component for Eats | Need to create |
+| Delivery time selector UI in EatsCart | Need to create |
+| Time picker component for mobile | Need to create |
+| Validate time against restaurant hours | Need to add |
+| Store scheduled fields on order creation | Need to update mutation |
+| "Scheduled Order" badge on orders page | Need to add |
+| Show scheduled time in order summary | Need to add |
+| Show scheduled time on order detail | Need to add |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Eats Surge Pricing Hook
+### 1) Create Mobile Time Picker Sheet Component
 
-**File to Create:** `src/hooks/useEatsSurgePricing.ts`
+**File to Create:** `src/components/eats/DeliveryTimeSheet.tsx`
 
-**Purpose:** Fetch and apply surge pricing specifically for Eats delivery fees.
-
-```typescript
-interface EatsSurgePricingInfo {
-  multiplier: number;
-  level: SurgeLevel; // "Low" | "Medium" | "High"
-  isActive: boolean;
-  label: string;
-  isLoading: boolean;
-  // Calculated fees
-  calculateDeliveryFee: (baseFee: number) => {
-    baseFee: number;
-    surgeAmount: number;
-    finalFee: number;
-  };
-}
-```
-
-**Logic:**
-- Uses existing `fetchGlobalSurgeMultiplier()` from `src/lib/surge.ts`
-- Refreshes every 15 seconds
-- Provides helper to calculate surged delivery fee
-- Capped at MAX_SURGE_MULTIPLIER (2.5x)
-
-### 2) Create Eats Surge Badge Component
-
-**File to Create:** `src/components/eats/EatsSurgeBadge.tsx`
-
-**Purpose:** Reusable badge showing surge status with appropriate styling.
-
-**UI Variants:**
-
-| Level | Color | Icon | Example Text |
-|-------|-------|------|--------------|
-| Low | (hidden) | - | - |
-| Medium | Orange | 🔥 | "Busy - higher fees" |
-| High | Red | 🔥🔥 | "High demand - surge pricing" |
-
-**Design:**
-```text
-+----------------------------------------+
-| 🔥 High demand – surge pricing active  |
-+----------------------------------------+
-```
-
-- Badge background: `bg-orange-500/90` (Medium) or `bg-red-500/90` (High)
-- Rounded pill with backdrop blur
-- Compact variant for cards, expanded for banners
-
-### 3) Add Surge Badge to Restaurant List
-
-**File to Modify:** `src/components/eats/MobileEatsPremium.tsx`
-
-**Changes:**
-- Import `useEatsSurgePricing` hook
-- Show global surge banner at top when surge is active
-- Display estimated surge delivery fee on each restaurant card
+**Purpose:** Bottom sheet for selecting delivery timing (ASAP or scheduled).
 
 **UI:**
 ```text
-+----------------------------------------------------------+
-| 🔥 High demand – delivery fees may be higher              |
-|    Prices are higher due to busy conditions               |
-+----------------------------------------------------------+
-
-[Restaurant Cards with surge indicator...]
++------------------------------------------+
+|        When would you like it?           |
++------------------------------------------+
+|                                          |
+|  [🕐]  Deliver ASAP         ○            |
+|        Usually 30-45 min                 |
+|                                          |
+|  [📅]  Schedule for Later   ○            |
+|        Choose a specific time            |
+|                                          |
++------------------------------------------+
+|  (If "Schedule" selected:)               |
+|                                          |
+|  Select Date                             |
+|  [Today ▼] [Tomorrow] [Tue, Feb 11]      |
+|                                          |
+|  Select Time                             |
+|  [11:30 AM] [12:00 PM] [12:30 PM] ...    |
+|                                          |
++------------------------------------------+
+|                                          |
+|  [     Confirm Delivery Time     ]       |
+|                                          |
++------------------------------------------+
 ```
 
-**Location:** Above category pills when surge is active
+**Features:**
+- Toggle between ASAP and Scheduled
+- Date selector (Today + next 6 days)
+- Time slot grid (30-minute intervals)
+- Only show future times for today
+- Respect restaurant opening hours when available
+- Orange accent color to match Eats theme
 
-### 4) Add Surge Badge to Restaurant Detail Header
+### 2) Create Delivery Time Selector Button Component
 
-**File to Modify:** `src/pages/EatsRestaurantDetail.tsx`
+**File to Create:** `src/components/eats/DeliveryTimeSelector.tsx`
 
-**Changes:**
-- Add surge banner below restaurant info when active
-- Show surged delivery fee estimate
+**Purpose:** Compact button that shows current selection and opens the sheet.
 
-### 5) Update Cart with Surge Pricing Breakdown
+**UI (ASAP selected):**
+```text
++------------------------------------------+
+| [🕐]  Deliver ASAP                    ▼  |
+|       30-45 min                          |
++------------------------------------------+
+```
+
+**UI (Scheduled selected):**
+```text
++------------------------------------------+
+| [📅]  Scheduled Delivery              ▼  |
+|       Today at 6:30 PM                   |
++------------------------------------------+
+```
+
+### 3) Add Delivery Time Selection to EatsCart
 
 **File to Modify:** `src/pages/EatsCart.tsx`
 
 **Changes:**
-- Use `useEatsSurgePricing` hook
-- Calculate delivery fee with surge applied
-- Show breakdown in order summary:
+- Add state for delivery timing
+- Insert DeliveryTimeSelector below address selector
+- Pass scheduled info to order creation
+- Update order summary to show scheduled time
 
-**UI:**
-```text
-+------------------------------------------+
-| Order Summary                            |
-+------------------------------------------+
-| Subtotal                          $24.99 |
-| Delivery Fee                             |
-|   Base fee                        $3.99  |
-|   Busy time fee (×1.5)           +$2.00  |
-|   ────────────────────────────────────── |
-|   Final delivery                  $5.99  |
-| Service Fee                        $1.25 |
-| Tax                                $2.00 |
-+------------------------------------------+
-| Total                            $34.23  |
-+------------------------------------------+
+```typescript
+// Add state
+const [deliveryMode, setDeliveryMode] = useState<"asap" | "scheduled">("asap");
+const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+const [scheduledTime, setScheduledTime] = useState<string | null>(null);
+
+// In handlePlaceOrder, add to createOrder.mutateAsync:
+is_scheduled: deliveryMode === "scheduled",
+deliver_by: scheduledDate && scheduledTime 
+  ? new Date(`${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}`).toISOString()
+  : null,
+pickup_window_start: scheduledDate && scheduledTime
+  ? new Date(`${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}`).toISOString()
+  : null,
 ```
 
-**Alternative (simpler):**
-```text
-| Delivery Fee                      $5.99  |
-|   (includes $2.00 surge)                 |
-```
+**UI Placement:** After Address Selector, before Cart Items
 
-### 6) Update Order Creation with Surge Tracking
+### 4) Update Order Creation Mutation
 
 **File to Modify:** `src/hooks/useEatsOrders.ts`
 
 **Changes:**
-- Add `surge_multiplier` and `surge_amount` to CreateFoodOrderInput
-- Store surge info with order for historical tracking
+- Add scheduling fields to CreateFoodOrderInput interface
+- Include fields in insert statement
 
-### 7) Add Surge Explainer Tooltip
+```typescript
+// Add to CreateFoodOrderInput interface:
+is_scheduled?: boolean;
+deliver_by?: string | null;
+pickup_window_start?: string | null;
+pickup_window_end?: string | null;
 
-**File to Create:** `src/components/eats/SurgeExplainerTooltip.tsx`
-
-**Purpose:** Info tooltip explaining why prices are higher.
-
-**Content:**
-> "Prices may be higher due to high demand in your area. This helps ensure faster delivery times."
-
-**Trigger:** Info icon (ℹ️) next to surge badge or delivery fee line
-
----
-
-## Database Changes
-
-### Add surge tracking to food_orders
-
-**Migration:**
-```sql
-ALTER TABLE food_orders 
-ADD COLUMN IF NOT EXISTS surge_multiplier NUMERIC(3,2) DEFAULT 1.0,
-ADD COLUMN IF NOT EXISTS surge_fee_cents INTEGER DEFAULT 0;
+// Add to insert object:
+is_scheduled: input.is_scheduled || false,
+deliver_by: input.deliver_by || null,
+pickup_window_start: input.pickup_window_start || null,
+pickup_window_end: input.pickup_window_end || null,
 ```
 
-This allows:
-- Historical reporting on surge orders
-- Customer support to see if surge was applied
-- Analytics on surge frequency and revenue impact
+### 5) Add Scheduled Badge to Orders List
+
+**File to Modify:** `src/pages/EatsOrders.tsx`
+
+**Changes:**
+- Check `is_scheduled` and `deliver_by` on each order
+- Show "Scheduled" badge with time
+
+```typescript
+// In order card, after status badge:
+{order.is_scheduled && order.deliver_by && (
+  <Badge className="bg-violet-500/20 text-violet-400 text-xs font-semibold border-0">
+    <CalendarClock className="w-3 h-3 mr-1" />
+    {format(new Date(order.deliver_by), "MMM d, h:mm a")}
+  </Badge>
+)}
+```
+
+### 6) Show Scheduled Time in Order Summary (Cart)
+
+**File to Modify:** `src/pages/EatsCart.tsx`
+
+**Changes:**
+- Add delivery time line in Order Summary section
+
+```typescript
+// After subtotal, add:
+<div className="flex justify-between text-sm">
+  <span className="text-zinc-400">Delivery Time</span>
+  <span className={deliveryMode === "scheduled" ? "text-violet-400" : ""}>
+    {deliveryMode === "asap" 
+      ? "ASAP (30-45 min)" 
+      : scheduledDate && scheduledTime
+        ? format(new Date(`${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}`), "MMM d 'at' h:mm a")
+        : "Select time"
+    }
+  </span>
+</div>
+```
+
+### 7) Show Scheduled Time on Order Detail
+
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+
+**Changes:**
+- Add scheduled banner for scheduled orders
+- Show delivery time target
+
+```typescript
+// After status banner, add for scheduled orders:
+{order.is_scheduled && order.deliver_by && (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-violet-500/10 border border-violet-500/30 rounded-2xl p-4"
+  >
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center">
+        <CalendarClock className="w-5 h-5 text-violet-400" />
+      </div>
+      <div>
+        <p className="font-bold text-violet-400 text-sm">Scheduled Delivery</p>
+        <p className="text-sm text-zinc-400">
+          {format(new Date(order.deliver_by), "EEEE, MMMM d 'at' h:mm a")}
+        </p>
+      </div>
+    </div>
+  </motion.div>
+)}
+```
 
 ---
 
 ## File Summary
 
-### Database Migration (1)
-| Change | Purpose |
-|--------|---------|
-| Add `surge_multiplier`, `surge_fee_cents` to food_orders | Track surge on orders |
-
-### New Files (3)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useEatsSurgePricing.ts` | Eats-specific surge hook |
-| `src/components/eats/EatsSurgeBadge.tsx` | Surge status badge |
-| `src/components/eats/SurgeExplainerTooltip.tsx` | Info tooltip |
+| `src/components/eats/DeliveryTimeSheet.tsx` | Bottom sheet with ASAP/schedule options and time picker |
+| `src/components/eats/DeliveryTimeSelector.tsx` | Compact button showing current selection |
 
 ### Modified Files (4)
 | File | Changes |
 |------|---------|
-| `src/components/eats/MobileEatsPremium.tsx` | Add surge banner at top |
-| `src/pages/EatsRestaurantDetail.tsx` | Add surge badge to header |
-| `src/pages/EatsCart.tsx` | Show surge breakdown in summary |
-| `src/hooks/useEatsOrders.ts` | Add surge fields to order creation |
+| `src/pages/EatsCart.tsx` | Add time selector, pass scheduling fields to order |
+| `src/hooks/useEatsOrders.ts` | Add scheduling fields to input interface and insert |
+| `src/pages/EatsOrders.tsx` | Show "Scheduled" badge on order cards |
+| `src/pages/EatsOrderDetail.tsx` | Show scheduled delivery banner |
 
 ---
 
 ## UI Component Details
 
-### EatsSurgeBadge (Compact - for cards)
-```text
-[🔥 Surge active]
-```
-- Height: 24px
-- Font: 10px bold
-- Background: orange-500 (Medium) / red-500 (High)
-- Border radius: full
+### DeliveryTimeSheet (Bottom Sheet)
+- Height: 70vh
+- Sections: Mode toggle, Date selector, Time grid
+- Date pills: Horizontally scrollable (Today + 6 days)
+- Time slots: 30-minute intervals in grid (3 columns)
+- Disabled times: Past times, outside restaurant hours
+- Accent color: Violet for scheduled, Orange for ASAP
 
-### EatsSurgeBadge (Banner - for list header)
-```text
-+----------------------------------------------------------+
-| 🔥 High demand – delivery fees may be higher              |
-|    Prices are higher due to busy conditions. [Why?]       |
-+----------------------------------------------------------+
-```
-- Full width
-- Padding: 16px
-- Background: orange-500/10 (Medium) / red-500/10 (High)
-- Border: 1px orange-500/30
+### DeliveryTimeSelector (Button)
+- Full-width card style (matches other checkout sections)
+- Left icon: Clock (ASAP) or Calendar (Scheduled)
+- Right chevron indicator
+- Tap opens DeliveryTimeSheet
 
-### Order Summary Surge Lines
-```text
-| Delivery Fee                             |
-|   Base                            $3.99  |
-|   Busy time (×1.5)               +$2.00  |  <- Orange text
-|   ─────────────────────                  |
-|   Total                           $5.99  |
+### Scheduled Badge (Orders List)
+- Violet color scheme (differentiates from status badges)
+- CalendarClock icon
+- Format: "Feb 9, 6:30 PM"
+- Appears next to status badge
+
+---
+
+## Time Slot Generation Logic
+
+```typescript
+function generateTimeSlots(
+  date: Date, 
+  restaurantHours?: { open: string; close: string }
+): string[] {
+  const slots: string[] = [];
+  const now = new Date();
+  const isToday = isSameDay(date, now);
+  
+  // Default hours: 10:00 AM - 10:00 PM
+  const openHour = restaurantHours?.open 
+    ? parseInt(restaurantHours.open.split(':')[0]) 
+    : 10;
+  const closeHour = restaurantHours?.close 
+    ? parseInt(restaurantHours.close.split(':')[0]) 
+    : 22;
+  
+  // Generate 30-minute slots
+  for (let hour = openHour; hour < closeHour; hour++) {
+    for (let minute of [0, 30]) {
+      const slotTime = setMinutes(setHours(date, hour), minute);
+      
+      // Skip past times for today (plus 1 hour buffer)
+      if (isToday && slotTime <= addHours(now, 1)) continue;
+      
+      slots.push(format(slotTime, 'h:mm a'));
+    }
+  }
+  
+  return slots;
+}
 ```
 
 ---
@@ -252,75 +308,49 @@ This allows:
 ## Data Flow
 
 ```text
-App Loads
-    ↓
-useEatsSurgePricing() fetches surge_multipliers (zone='GLOBAL')
-    ↓
-multiplier > 1.0 → Surge is active
-    ↓
-MobileEatsPremium shows banner: "High demand – surge pricing active"
-    ↓
-User browses restaurants (each card shows delivery fee unchanged)
-    ↓
-User adds items to cart
-    ↓
-EatsCart calculates:
-├── baseFee = zone.delivery_fee_base (e.g., $3.99)
-├── surgeAmount = baseFee × (multiplier - 1) (e.g., $2.00)
-└── finalFee = baseFee × multiplier (e.g., $5.99)
-    ↓
-Order summary shows breakdown
-    ↓
-User places order
-    ↓
-Order stored with:
-├── delivery_fee = $5.99 (final)
-├── surge_multiplier = 1.5
-└── surge_fee_cents = 200
-    ↓
-Driver assigned, order proceeds
+Customer opens EatsCart
+        ↓
+Sees DeliveryTimeSelector (default: ASAP)
+        ↓
+Taps selector → Opens DeliveryTimeSheet
+        ↓
+Chooses "Schedule for Later"
+        ↓
+Selects date (Today, Tomorrow, etc.)
+        ↓
+Selects time slot (12:30 PM)
+        ↓
+Confirms → Sheet closes
+        ↓
+DeliveryTimeSelector shows: "Today at 12:30 PM"
+        ↓
+Order summary shows delivery time
+        ↓
+Customer places order
+        ↓
+Order saved with:
+├── is_scheduled: true
+├── deliver_by: "2026-02-09T12:30:00Z"
+└── pickup_window_start: "2026-02-09T12:00:00Z"
+        ↓
+EatsOrders shows badge: "📅 Feb 9, 12:30 PM"
+        ↓
+EatsOrderDetail shows scheduled banner
+        ↓
+Restaurant sees scheduled time in their dashboard
 ```
-
----
-
-## Surge Level Thresholds
-
-Using existing logic from `getSurgeLevelFromMultiplier()`:
-
-| Multiplier | Level | Badge Color | Display |
-|------------|-------|-------------|---------|
-| 1.0 | Low | Hidden | No badge |
-| 1.01 - 1.5 | Medium | Orange | "Busy - higher fees" |
-| > 1.5 | High | Red | "High demand - surge pricing" |
-
----
-
-## Technical Notes
-
-### Why Use Global Surge?
-The `surge_multipliers` table currently only has zone='GLOBAL'. This is admin-controlled and applies universally. Future enhancement could support zone-specific surge.
-
-### Refresh Rate
-Surge multiplier refreshes every 15 seconds (matching rides), ensuring customers see up-to-date pricing.
-
-### Maximum Cap
-Surge is capped at 2.5x (MAX_SURGE_MULTIPLIER) to prevent abuse.
-
-### Transparency
-Clear breakdown ensures customers understand exactly what they're paying and why.
 
 ---
 
 ## Summary
 
-This implementation adds surge pricing visibility to Eats:
+This implementation enables scheduled orders by:
 
-1. **Surge Hook** - `useEatsSurgePricing` fetches and applies global surge to delivery fees
-2. **Surge Badge** - Visual indicator with orange (Medium) / red (High) styling
-3. **Restaurant List Banner** - Top banner when surge is active
-4. **Cart Breakdown** - Shows base fee + surge fee = final delivery fee
-5. **Order Tracking** - Stores surge_multiplier and surge_fee_cents on orders
-6. **Explainer** - Tooltip explaining why prices are higher
+1. **Time Selector** - DeliveryTimeSheet with ASAP/Schedule toggle and time picker
+2. **Checkout Integration** - DeliveryTimeSelector in EatsCart between address and items
+3. **Order Summary** - Shows delivery time (ASAP or scheduled time)
+4. **Order Creation** - Stores `is_scheduled`, `deliver_by`, `pickup_window_start`
+5. **Orders List** - Violet "Scheduled" badge with date/time
+6. **Order Detail** - Purple banner showing scheduled delivery time
 
-Leverages existing surge infrastructure from Rides (same database table, same fetch logic) while providing Eats-specific UI components and fee calculations.
-
+Leverages existing database columns (`is_scheduled`, `deliver_by`, `pickup_window_start`) and matches the Eats design aesthetic with violet accent for scheduled orders.
