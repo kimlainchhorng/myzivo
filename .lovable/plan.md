@@ -1,332 +1,330 @@
 
-# Incentive Awareness — Implementation Plan
+# Fraud Protection Messaging — Implementation Plan
 
 ## Overview
-Add incentive-period awareness to improve ETA accuracy and optionally display a positive messaging banner when driver incentives are active ("More drivers online in your area — faster delivery times.").
+Add high-risk order verification requirements at checkout and display the message: **"For security reasons, this order requires verification."** when risk scoring triggers phone or payment verification.
 
 ---
 
 ## Current State Analysis
 
-### Database Schema Available
-The `driver_incentives` table already exists:
-```typescript
-driver_incentives: {
-  id: string;
-  name: string | null;
-  bonus_amount: number | null;
-  start_time: string | null;      // Time window start (e.g., "11:00")
-  end_time: string | null;        // Time window end (e.g., "14:00")
-  conditions_json: Json | null;   // Additional conditions
-  created_at: string | null;
-}
+### Existing Risk Assessment System
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `useRiskAssessment` hook | `src/hooks/useRiskAssessment.ts` | Client-side risk scoring (0-100) |
+| `RISK_THRESHOLDS` | `src/config/fraudPrevention.ts` | Thresholds: LOW=30, MEDIUM=60, HIGH=80 |
+| `getRiskDecision()` | `src/config/fraudPrevention.ts` | Returns: approve / review / decline / 3ds_required |
+
+### Existing Verification Infrastructure
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `PhoneVerificationDialog` | `src/components/account/PhoneVerificationDialog.tsx` | OTP modal for phone verification |
+| `send-otp-sms` | `supabase/functions/send-otp-sms/` | Sends 6-digit SMS code via Twilio |
+| `verify-otp-sms` | `supabase/functions/verify-otp-sms/` | Verifies SMS OTP code |
+| `FraudPreventionNotice` | `src/components/checkout/FraudPreventionNotice.tsx` | Displays fraud notices (checkout, review, declined, 3ds) |
+
+### Current Checkout Flow (EatsCheckout.tsx)
+```text
+Form Validation → Submit Order → Redirect to Order Detail
+                  (No risk check currently)
 ```
-
-### Current ETA System
-The `useEatsDeliveryFactors` hook already combines:
-- **Demand level** (surge pricing)
-- **Driver supply** (nearby driver count)
-- ETA multipliers: low supply = 1.5x, moderate = 1.2x, high = 1.0x
-
-### Current Banners
-- `HighDemandBanner` — Shows when demand is high (negative signal)
-- `LowDriverSupplyBanner` — Shows when few drivers nearby (negative signal)
-- No positive signal banner currently exists
 
 ---
 
 ## Implementation Plan
 
-### 1) Create useDriverIncentives Hook
+### 1) Create HighRiskVerificationGate Component
 
-**File to Create:** `src/hooks/useDriverIncentives.ts`
+**File to Create:** `src/components/checkout/HighRiskVerificationGate.tsx`
 
-**Purpose:** Fetch active driver incentives and determine if we're in an incentive period.
-
-```typescript
-interface ActiveIncentive {
-  id: string;
-  name: string;
-  bonusAmount: number;
-}
-
-interface DriverIncentivesInfo {
-  isIncentivePeriod: boolean;
-  activeIncentives: ActiveIncentive[];
-  isLoading: boolean;
-}
-```
-
-**Logic:**
-```text
-Current Time Check:
-  ↓
-Query driver_incentives where:
-  - start_time <= current_time
-  - end_time >= current_time
-  ↓
-If any active incentives found:
-  → isIncentivePeriod = true
-  → activeIncentives = matching records
-Else:
-  → isIncentivePeriod = false
-```
-
-**Query Strategy:**
-```typescript
-const { data } = await supabase
-  .from("driver_incentives")
-  .select("id, name, bonus_amount, start_time, end_time")
-  .not("start_time", "is", null)
-  .not("end_time", "is", null);
-
-// Filter client-side for current time window
-const currentTime = format(new Date(), "HH:mm");
-const active = data?.filter(incentive => 
-  currentTime >= incentive.start_time && 
-  currentTime <= incentive.end_time
-);
-```
-
-### 2) Update useEatsDeliveryFactors Hook
-
-**File to Modify:** `src/hooks/useEatsDeliveryFactors.ts`
-
-**Changes:**
-1. Import and use `useDriverIncentives`
-2. Add incentive period to delivery factors
-3. Apply ETA reduction when incentive is active
-
-**New Interface Fields:**
-```typescript
-export interface DeliveryFactors {
-  // Existing fields...
-  demandLevel: SurgeLevel;
-  driverSupply: DriverSupplyLevel;
-  supplyMultiplier: number;
-  
-  // NEW: Incentive awareness
-  isIncentivePeriod: boolean;
-  incentiveMultiplier: number;      // 0.85 when active (15% faster)
-  showIncentiveBanner: boolean;     // Show positive banner
-  incentiveMessage: string | null;  // "More drivers online..."
-}
-```
-
-**ETA Adjustment Logic:**
-```text
-If incentive period is active:
-  → incentiveMultiplier = 0.85 (15% faster ETAs)
-  → showIncentiveBanner = true (if supply is also good)
-Else:
-  → incentiveMultiplier = 1.0 (no adjustment)
-  → showIncentiveBanner = false
-```
-
-**Combined Multiplier:**
-```typescript
-// Final ETA multiplier considers all factors
-const finalMultiplier = supplyMultiplier * incentiveMultiplier;
-// e.g., low supply (1.5) + incentive (0.85) = 1.275x
-// e.g., high supply (1.0) + incentive (0.85) = 0.85x (faster!)
-```
-
-### 3) Create IncentiveBoostBanner Component
-
-**File to Create:** `src/components/eats/IncentiveBoostBanner.tsx`
-
-**Purpose:** Positive messaging banner when incentives attract more drivers.
+**Purpose:** Gating component that blocks checkout until verification is completed for high-risk orders.
 
 **UI Design:**
 ```text
-+----------------------------------------------------------+
-| [🚗✨]  More drivers online in your area            [X]  |
-|         — faster delivery times.                         |
-+----------------------------------------------------------+
-Background: bg-emerald-500/10 border-emerald-500/30
++------------------------------------------------------------------+
+| [🛡️]  For security reasons, this order requires verification.   |
+|                                                                  |
+|  We detected unusual activity. Please verify to continue.        |
+|                                                                  |
+|  [ ] Phone Verification        [ Verify Phone ]                  |
+|      ✓ Verified                                                  |
+|                                                                  |
+|  [Continue to Checkout]  (enabled when verified)                 |
++------------------------------------------------------------------+
 ```
 
 **Props:**
 ```typescript
-interface IncentiveBoostBannerProps {
-  orderId?: string;        // For session-based dismissal
-  className?: string;
-  variant?: "compact" | "full";
+interface HighRiskVerificationGateProps {
+  riskScore: number;
+  phoneNumber?: string;
+  phoneVerified?: boolean;
+  onVerificationComplete: () => void;
+  onCancel: () => void;
+  children?: React.ReactNode;
 }
 ```
 
-**Behavior:**
-- Dismissible per-session (sessionStorage)
-- Emerald/green theme (positive signal)
-- Animated car + sparkle icon
-- Only shows when both:
-  1. `isIncentivePeriod === true`
-  2. Supply is NOT low (don't mix positive/negative signals)
+**States:**
+- Shows when `riskScore >= RISK_THRESHOLDS.MEDIUM_RISK` (60)
+- Requires phone verification if `riskScore >= 60` and phone not verified
+- Allows proceeding once verified
 
-### 4) Update EtaCountdown Component
+### 2) Create useCheckoutRiskAssessment Hook
 
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+**File to Create:** `src/hooks/useCheckoutRiskAssessment.ts`
 
-**Changes:**
-Add incentive multiplier to ETA calculation:
+**Purpose:** Specialized hook for checkout risk assessment that combines order data with user signals.
 
-**Current Calculation:**
 ```typescript
-const combinedMultiplier = Math.min(traffic.multiplier * supplyMultiplier, 2.0);
+interface CheckoutRiskResult {
+  score: number;
+  decision: 'approve' | 'review' | 'decline' | '3ds_required';
+  requiresPhoneVerification: boolean;
+  requiresPaymentVerification: boolean;
+  blockers: string[];
+  canProceed: boolean;
+}
+
+function useCheckoutRiskAssessment(options: {
+  orderTotal: number;
+  isFirstOrder: boolean;
+  phoneVerified: boolean;
+}): CheckoutRiskResult;
 ```
 
-**Updated Calculation:**
-```typescript
-// New prop
-incentiveMultiplier?: number;
-
-// Updated calculation
-const combinedMultiplier = Math.min(
-  traffic.multiplier * supplyMultiplier * (incentiveMultiplier ?? 1.0), 
-  2.0
-);
-
-// Add incentive note when active
-{showIncentiveNote && (
-  <div className="mt-3 flex items-center gap-2 text-xs">
-    <Sparkles className="w-3 h-3 text-emerald-500" />
-    <span className="text-emerald-400/80">
-      Peak driver hours — faster delivery
-    </span>
-  </div>
-)}
-```
-
-### 5) Update EatsOrderDetail Page
-
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
-
-**Changes:**
-1. Import `IncentiveBoostBanner`
-2. Show banner when incentive is active and supply is good
-3. Pass incentive multiplier to EtaCountdown
-
-**Banner Priority Logic:**
+**Risk Logic:**
 ```text
-Banner Display Priority (mutually exclusive):
-1. HighDemandBanner — if demand surge active
-2. LowDriverSupplyBanner — if supply is low
-3. IncentiveBoostBanner — if incentive active AND supply is good
-4. None — normal conditions
+Order Data
+    ↓
+Calculate base risk from useRiskAssessment()
+    ↓
+Add checkout-specific signals:
+  - High value + first order: +20 points
+  - Phone not verified: +15 points
+  - New account: +10 points
+    ↓
+If score >= 60 (MEDIUM_RISK):
+  → requiresPhoneVerification = !phoneVerified
+    ↓
+If score >= 80 (HIGH_RISK):
+  → decision = 'decline' (block order)
+    ↓
+canProceed = (score < 60) OR (score >= 60 AND verified)
 ```
 
-**Implementation:**
+### 3) Update FRAUD_PREVENTION_COPY in Config
+
+**File to Modify:** `src/config/fraudPrevention.ts`
+
+**Add new copy:**
 ```typescript
-{/* Positive: Incentive boost banner */}
-{deliveryFactors.showIncentiveBanner && isActiveOrder && (
-  <IncentiveBoostBanner orderId={order.id} />
+export const FRAUD_PREVENTION_COPY = {
+  // ... existing copy
+  
+  /** High risk verification required */
+  highRiskVerification: "For security reasons, this order requires verification.",
+  
+  /** Phone verification prompt */
+  phoneVerificationRequired: "Please verify your phone number to continue with this order.",
+  
+  /** Verification complete */
+  verificationComplete: "Verification successful. You can now proceed with your order.",
+} as const;
+```
+
+### 4) Create SecurityVerificationBanner Component
+
+**File to Create:** `src/components/checkout/SecurityVerificationBanner.tsx`
+
+**Purpose:** Prominent banner with the exact customer message.
+
+**UI Design:**
+```text
++------------------------------------------------------------------+
+| [🛡️]  For security reasons, this order requires verification.   |
+|                                                                  |
+|       This helps protect your account and ensure a secure        |
+|       transaction. Verification typically takes less than        |
+|       a minute.                                                  |
++------------------------------------------------------------------+
+```
+
+**Props:**
+```typescript
+interface SecurityVerificationBannerProps {
+  onVerify: () => void;
+  isVerifying?: boolean;
+  className?: string;
+}
+```
+
+### 5) Update EatsCheckout Page
+
+**File to Modify:** `src/pages/EatsCheckout.tsx`
+
+**Changes:**
+1. Import `useCheckoutRiskAssessment`, `HighRiskVerificationGate`, `SecurityVerificationBanner`
+2. Add risk assessment before order submission
+3. Show verification gate for high-risk orders
+4. Block submit button until verification complete
+
+**Integration Flow:**
+```text
+Page Load
+    ↓
+useCheckoutRiskAssessment({
+  orderTotal: total,
+  isFirstOrder: user.booking_count === 0,
+  phoneVerified: user.phone_verified,
+})
+    ↓
+If requiresPhoneVerification:
+  → Show SecurityVerificationBanner
+  → Open PhoneVerificationDialog on click
+  → Block form submission until verified
+    ↓
+If canProceed:
+  → Enable "Place Order" button
+```
+
+**Code Structure:**
+```typescript
+// Before form
+{riskAssessment.requiresPhoneVerification && (
+  <SecurityVerificationBanner
+    onVerify={() => setShowPhoneVerification(true)}
+    isVerifying={isVerifyingPhone}
+  />
 )}
+
+// Phone verification dialog
+<PhoneVerificationDialog
+  open={showPhoneVerification}
+  onOpenChange={setShowPhoneVerification}
+  phoneNumber={formData.customer_phone}
+  onVerified={handlePhoneVerified}
+/>
+
+// Submit button
+<Button
+  disabled={!riskAssessment.canProceed || isSubmitting}
+>
+  {riskAssessment.requiresPhoneVerification && !phoneVerified
+    ? "Verify to Continue"
+    : "Place Order Request"
+  }
+</Button>
+```
+
+### 6) Update FraudPreventionNotice Component
+
+**File to Modify:** `src/components/checkout/FraudPreventionNotice.tsx`
+
+**Add new variant:**
+```typescript
+case "verification_required":
+  return {
+    icon: Shield,
+    title: "Verification Required",
+    message: FRAUD_PREVENTION_COPY.highRiskVerification,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10 border-amber-500/30",
+  };
 ```
 
 ---
 
 ## File Summary
 
-### New Files (2)
+### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useDriverIncentives.ts` | Hook to check active driver incentive periods |
-| `src/components/eats/IncentiveBoostBanner.tsx` | Positive messaging banner for incentive periods |
+| `src/components/checkout/HighRiskVerificationGate.tsx` | Gating component for high-risk order verification |
+| `src/components/checkout/SecurityVerificationBanner.tsx` | Banner with "For security reasons..." message |
+| `src/hooks/useCheckoutRiskAssessment.ts` | Specialized checkout risk assessment hook |
 
 ### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsDeliveryFactors.ts` | Add incentive awareness, adjust ETA multiplier |
-| `src/components/eats/EtaCountdown.tsx` | Accept incentive multiplier, show incentive note |
-| `src/pages/EatsOrderDetail.tsx` | Display IncentiveBoostBanner when appropriate |
+| `src/config/fraudPrevention.ts` | Add `highRiskVerification` and related copy |
+| `src/components/checkout/FraudPreventionNotice.tsx` | Add `verification_required` variant |
+| `src/pages/EatsCheckout.tsx` | Integrate risk assessment and verification gate |
 
 ---
 
-## ETA Adjustment Summary
+## Risk Scoring for Checkout
 
-| Condition | Multiplier | Effect |
-|-----------|------------|--------|
-| Normal supply | 1.0x | Base ETA |
-| Low supply | 1.5x | +50% ETA |
-| Moderate supply | 1.2x | +20% ETA |
-| Incentive active | 0.85x | -15% ETA |
-| Rush hour traffic | 1.4x | +40% ETA |
-| Late night | 0.8x | -20% ETA |
+| Condition | Points Added | Threshold Effect |
+|-----------|--------------|------------------|
+| High-value order (>$100) + first order | +20 | May trigger verification |
+| Phone not verified | +15 | Common trigger |
+| New account (<24h) | +10 | Minor signal |
+| Failed payment attempts (3+) | +35 | Strong signal |
+| Bot behavior detected | +50 | Auto-decline |
 
 **Combined Example:**
-- Moderate supply (1.2) + Incentive active (0.85) = 1.02x (nearly normal)
-- High supply (1.0) + Incentive active (0.85) = 0.85x (faster!)
-- Low supply (1.5) + Incentive active (0.85) = 1.275x (still slower, but improved)
+- New account (10) + Phone not verified (15) + High-value first order (20) = 45 → Verification required
+- Bot detected (50) + New account (10) = 60 → Review
+- Failed payments (35) + Phone unverified (15) + High value (20) = 70 → Verification required
 
 ---
 
-## Banner Display Logic
+## Verification Flow Diagram
 
 ```text
-                    Supply Level
-                    ↓
-    ┌───────────────┴───────────────┐
-    Low/Moderate                   High
-    ↓                               ↓
-Check Demand                   Check Incentive
-    ↓                               ↓
-┌───┴───┐                      ┌───┴───┐
-High   Low                     Yes    No
-↓       ↓                       ↓      ↓
-Demand  Supply                Incentive (nothing)
-Banner  Banner                Banner
+User fills checkout form
+         ↓
+Risk assessment runs on form data
+         ↓
+Score < 60?
+   ├── YES → "Place Order" enabled (normal flow)
+   └── NO ↓
+       Score >= 60?
+          ├── Show SecurityVerificationBanner
+          ├── "For security reasons, this order requires verification."
+          └── Phone verified?
+                 ├── YES → Enable checkout
+                 └── NO → Block + Show "Verify Phone" button
+                           ↓
+                      PhoneVerificationDialog opens
+                           ↓
+                      User enters 6-digit SMS code
+                           ↓
+                      verify-otp-sms edge function
+                           ↓
+                      On success: canProceed = true
+                           ↓
+                      "Place Order" enabled
 ```
-
-**Key Rule:** Never show IncentiveBoostBanner together with negative banners.
 
 ---
 
 ## Customer-Facing Message
 
 The exact message as requested:
-> **"More drivers online in your area — faster delivery times."**
+> **"For security reasons, this order requires verification."**
 
-This is a positive, reassuring message that:
-1. Explains WHY delivery might be faster
-2. Doesn't create false expectations (only shows when conditions are good)
-3. Complements the ETA improvement with context
+This message appears:
+1. As a banner at the top of the checkout form
+2. In the verification dialog header
+3. As a tooltip on the disabled submit button
 
----
-
-## Data Flow
-
-```text
-driver_incentives (DB)
-        ↓
-useDriverIncentives (Hook)
-        ↓
-    ┌───┴───┐
-    isIncentivePeriod
-    activeIncentives
-        ↓
-useEatsDeliveryFactors (Hook)
-        ↓
-    ┌───┴────────┬────────────┐
-    incentive    showIncentive  Combined
-    Multiplier   Banner         ETA Factors
-        ↓            ↓              ↓
-EtaCountdown   IncentiveBoost   Delivery
-(faster ETA)   Banner           Estimate
-```
+The message is:
+- Non-alarming (doesn't suggest fraud suspicion)
+- Action-oriented (implies a simple fix)
+- Security-focused (builds trust)
 
 ---
 
 ## Summary
 
-This implementation:
+This implementation provides:
 
-1. **ETA Accuracy**: Uses incentive-active periods to reduce ETA by ~15% when more drivers are expected to be online due to bonus incentives.
+1. **Risk-based verification**: Orders scoring >= 60 require phone verification before checkout
+2. **Clear messaging**: Shows "For security reasons, this order requires verification."
+3. **Non-blocking UX**: Users can still see their order; just need to verify to proceed
+4. **Leverages existing infrastructure**: Uses existing `PhoneVerificationDialog`, SMS OTP functions, and risk scoring
+5. **Configurable thresholds**: Uses existing `RISK_THRESHOLDS` from fraud prevention config
 
-2. **Optional Banner**: Shows the positive message "More drivers online in your area — faster delivery times." only when:
-   - An incentive period is active
-   - Driver supply is good (not low)
-   - No negative banners (demand/supply) are showing
-
-3. **Non-Conflicting**: Maintains mutual exclusivity with existing warning banners to avoid confusing mixed signals.
-
-4. **Leverages Existing Tables**: Uses the existing `driver_incentives` table that already has `start_time` and `end_time` fields for time-based incentive windows.
+The flow blocks high-risk orders until verification is complete, reducing fraud while maintaining a good user experience for legitimate customers.
