@@ -177,8 +177,29 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating...');
-  // Claim all clients immediately
-  event.waitUntil(clients.claim());
+  // Clean old caches and claim all clients immediately
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => {
+            // Keep workbox-managed caches, delete unknown old ones
+            const knownCaches = [
+              'google-fonts-stylesheets',
+              'google-fonts-webfonts',
+              'images-cache',
+              'mapbox-cache',
+              'workbox-precache',
+            ];
+            return !knownCaches.some((known) => name.includes(known));
+          })
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
+      );
+    }).then(() => clients.claim())
+  );
 });
 
 // Handle messages from the main app
