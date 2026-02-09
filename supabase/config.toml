@@ -206,3 +206,6 @@ verify_jwt = false
 
 [functions.run-storage-backup]
 verify_jwt = false
+
+[functions.update-eats-order]
+verify_jwt = false

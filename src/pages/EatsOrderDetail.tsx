@@ -3,6 +3,7 @@
  * Real-time status updates with driver tracking, live map, and scheduled delivery support
  * Includes demand awareness messaging for high-traffic periods
  * Smart dispatch transparency with clear driver assignment status
+ * Order editing window for customer flexibility before restaurant confirms
  */
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -20,6 +21,8 @@ import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
 import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
 import { usePrepProgress } from "@/hooks/usePrepProgress";
 import { useDriverReassignment } from "@/hooks/useDriverReassignment";
+import { useOrderEditWindow } from "@/hooks/useOrderEditWindow";
+import { useOrderEditing } from "@/hooks/useOrderEditing";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -33,6 +36,9 @@ import { ReassignmentBanner } from "@/components/eats/ReassignmentBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
+import { OrderEditBanner } from "@/components/eats/OrderEditBanner";
+import { OrderEditSheet } from "@/components/eats/OrderEditSheet";
+import { CancelOrderDialog } from "@/components/eats/CancelOrderDialog";
 import { HelpModal } from "@/components/eats/HelpModal";
 import { OrderChatButton } from "@/components/eats/OrderChatButton";
 import { MaskedCallButton } from "@/components/eats/MaskedCallButton";
@@ -68,6 +74,8 @@ export default function EatsOrderDetail() {
   const deliveryFactors = useEatsDeliveryFactors();
   const { batchInfo } = useOrderBatchInfo(order?.id, (order as any)?.batch_id);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const { clearCart, addItem } = useCart();
 
   // Use live location when available, fall back to driver profile location
@@ -103,6 +111,17 @@ export default function EatsOrderDetail() {
     previousDriverId: order?.previous_driver_id,
     orderStatus: order?.status || "",
   });
+
+  // Order editing window for customer flexibility
+  const editWindow = useOrderEditWindow({
+    placedAt: order?.placed_at || order?.created_at,
+    status: order?.status || "",
+    acceptedAt: order?.accepted_at,
+  });
+
+  // Order editing mutations (items must be cast from JSONB)
+  const orderItems = useMemo(() => (order?.items as any[]) || [], [order?.items]);
+  const orderEditing = useOrderEditing(order?.id, orderItems);
 
   // Dispatch status for transparent messaging (enhanced with pickup coordinates and prep progress)
   const dispatchStatus = useEatsDispatchStatus({
@@ -317,6 +336,19 @@ export default function EatsOrderDetail() {
           showEtaExplanation={true}
           isPrepLearned={learnedPrep.isLearned}
         />
+
+        {/* Order Edit Banner - show when edit window is open */}
+        <AnimatePresence>
+          {editWindow.isEditWindowOpen && isActiveOrder && (
+            <OrderEditBanner
+              remainingSeconds={editWindow.remainingSeconds}
+              remainingDisplay={editWindow.remainingDisplay}
+              urgency={editWindow.urgency}
+              onEditClick={() => setEditSheetOpen(true)}
+              onCancelClick={() => setCancelDialogOpen(true)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Scheduled Delivery Banner */}
         {(order as any).is_scheduled && (order as any).deliver_by && (
@@ -689,6 +721,29 @@ export default function EatsOrderDetail() {
         orderId={order.id}
         restaurantPhone={restaurantPhone}
         restaurantName={restaurantName}
+      />
+
+      {/* Order Edit Sheet */}
+      <OrderEditSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        items={orderItems}
+        currentNote={(order as any).special_instructions}
+        remainingDisplay={editWindow.remainingDisplay}
+        remainingSeconds={editWindow.remainingSeconds}
+        urgency={editWindow.urgency}
+        onRemoveItem={orderEditing.removeItem}
+        onUpdateQuantity={orderEditing.updateItemQuantity}
+        onUpdateNote={orderEditing.updateNote}
+        isUpdating={orderEditing.isUpdating}
+      />
+
+      {/* Cancel Order Dialog */}
+      <CancelOrderDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={orderEditing.cancelOrder}
+        isCancelling={orderEditing.isCancelling}
       />
     </div>
   );
