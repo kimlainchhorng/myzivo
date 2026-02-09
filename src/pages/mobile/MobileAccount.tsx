@@ -4,7 +4,7 @@
  */
 import { useNavigate, Navigate, Link } from "react-router-dom";
 import { 
-  ArrowLeft, User, Users, Mail, Bell, CreditCard, Gift, 
+  ArrowLeft, User, Users, UserPlus, Mail, Bell, CreditCard, Gift, 
   HelpCircle, FileText, Shield, ChevronRight, LogOut, 
   Settings, Star, ExternalLink, Crown, Tag, Building2
 } from "lucide-react";
@@ -67,6 +67,7 @@ export default function MobileAccount() {
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
     { icon: CreditCard, label: "Payment Methods", path: "/profile#payment" },
     { icon: Gift, label: "ZIVO Rewards", path: "/wallet", badge: "New" },
+    { icon: UserPlus, label: "Invite Friends", path: "/account/referrals" },
     { icon: Shield, label: "Identity Verification", path: "/account/verification" },
   ];
 
