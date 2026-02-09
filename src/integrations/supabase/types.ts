@@ -13005,6 +13005,39 @@ export type Database = {
           },
         ]
       }
+      group_order_payments: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: string
+          paid_at: string | null
+          session_id: string | null
+          status: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
       group_order_sessions: {
         Row: {
           created_at: string
@@ -13012,6 +13045,7 @@ export type Database = {
           host_user_id: string
           id: string
           invite_code: string
+          payment_mode: string | null
           restaurant_id: string
           status: string
           updated_at: string
@@ -13022,6 +13056,7 @@ export type Database = {
           host_user_id: string
           id?: string
           invite_code: string
+          payment_mode?: string | null
           restaurant_id: string
           status?: string
           updated_at?: string
@@ -13032,6 +13067,7 @@ export type Database = {
           host_user_id?: string
           id?: string
           invite_code?: string
+          payment_mode?: string | null
           restaurant_id?: string
           status?: string
           updated_at?: string

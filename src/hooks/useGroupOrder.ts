@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { GroupPayment } from "@/components/eats/GroupPaymentCard";
 
 export interface GroupOrderSession {
   id: string;
@@ -180,6 +181,66 @@ export function useGroupOrder() {
     []
   );
 
+  const setPaymentMode = useCallback(
+    async (
+      sessionId: string,
+      mode: "host_pays" | "split_even" | "pay_own",
+      participants: { userId: string; userName: string; amount: number }[]
+    ) => {
+      // Lock session and set payment mode
+      const { error: updateErr } = await supabase
+        .from("group_order_sessions")
+        .update({ status: "locked", payment_mode: mode } as any)
+        .eq("id", sessionId);
+
+      if (updateErr) {
+        toast.error("Failed to lock order");
+        return false;
+      }
+
+      if (mode === "host_pays") return true;
+
+      // Create payment rows for split modes
+      const rows = participants
+        .filter((p) => p.amount > 0)
+        .map((p) => ({
+          session_id: sessionId,
+          user_id: p.userId,
+          user_name: p.userName,
+          amount: p.amount,
+          status: "pending" as const,
+        }));
+
+      if (rows.length > 0) {
+        const { error: insertErr } = await supabase
+          .from("group_order_payments" as any)
+          .insert(rows);
+
+        if (insertErr) {
+          console.error("Failed to create payment rows:", insertErr);
+          toast.error("Failed to create payment records");
+          return false;
+        }
+      }
+
+      return true;
+    },
+    []
+  );
+
+  const markPaymentPaid = useCallback(async (paymentId: string) => {
+    const { error } = await supabase
+      .from("group_order_payments" as any)
+      .update({ status: "paid", paid_at: new Date().toISOString() })
+      .eq("id", paymentId);
+
+    if (error) {
+      toast.error("Payment failed");
+      return false;
+    }
+    return true;
+  }, []);
+
   return {
     startGroupOrder,
     joinGroupOrder,
@@ -187,6 +248,8 @@ export function useGroupOrder() {
     removeGroupItem,
     lockSession,
     markCheckedOut,
+    setPaymentMode,
+    markPaymentPaid,
   };
 }
 
@@ -196,6 +259,7 @@ export function useGroupOrder() {
 export function useGroupSession(sessionId: string | null) {
   const [session, setSession] = useState<GroupOrderSession | null>(null);
   const [items, setItems] = useState<GroupOrderItem[]>([]);
+  const [payments, setPayments] = useState<GroupPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -209,7 +273,7 @@ export function useGroupSession(sessionId: string | null) {
     setIsLoading(true);
 
     const fetchData = async () => {
-      const [sessionRes, itemsRes] = await Promise.all([
+      const [sessionRes, itemsRes, paymentsRes] = await Promise.all([
         supabase
           .from("group_order_sessions")
           .select("*")
@@ -220,10 +284,16 @@ export function useGroupSession(sessionId: string | null) {
           .select("*")
           .eq("session_id", sessionId)
           .order("created_at", { ascending: true }),
+        supabase
+          .from("group_order_payments" as any)
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("created_at", { ascending: true }),
       ]);
 
       if (sessionRes.data) setSession(sessionRes.data as GroupOrderSession);
       if (itemsRes.data) setItems(itemsRes.data as GroupOrderItem[]);
+      if (paymentsRes.data) setPayments(paymentsRes.data as unknown as GroupPayment[]);
       setIsLoading(false);
     };
 
@@ -276,6 +346,28 @@ export function useGroupSession(sessionId: string | null) {
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "group_order_payments",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setPayments((prev) => [...prev, payload.new as GroupPayment]);
+          } else if (payload.eventType === "UPDATE") {
+            setPayments((prev) =>
+              prev.map((p) =>
+                p.id === (payload.new as GroupPayment).id
+                  ? (payload.new as GroupPayment)
+                  : p
+              )
+            );
+          }
+        }
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -298,12 +390,18 @@ export function useGroupSession(sessionId: string | null) {
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const participantCount = new Set(items.map((i) => i.user_id)).size;
 
+  const paidCount = payments.filter((p) => p.status === "paid").length;
+  const allPaid = payments.length > 0 && paidCount === payments.length;
+
   return {
     session,
     items,
     itemsByUser,
     total,
     participantCount,
+    payments,
+    paidCount,
+    allPaid,
     isLoading,
   };
 }
