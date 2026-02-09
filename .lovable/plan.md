@@ -1,32 +1,26 @@
 
 
-# Fix: Admin Role Check Fails Due to Duplicate `has_role` Functions
+# Grant Full Access to chhorngkimlain1@gmail.com
 
-## Problem
+## Current State
 
-The console shows this error on every page load for logged-in users:
+The account already has **admin**, **customer**, and **driver** roles. The available roles in the system are:
+`admin`, `moderator`, `user`, `super_admin`, `operations`, `finance`, `support`, `driver`, `merchant`, `customer`, `owner`, `manager`
 
-> Could not choose the best candidate function between: public.has_role(\_user\_id => uuid, \_role => public.app\_role), public.has_role(\_user\_id => uuid, \_role => text)
+## Changes
 
-PostgREST cannot decide which overload to call because `text` and `app_role` (an enum) are ambiguous when a string like `"admin"` is passed via the RPC. This means **admin detection silently fails** -- admins are treated as regular users.
+### 1. Database -- Add Missing Roles
 
-## Fix
+Insert the remaining 9 roles for this user:
+- `moderator`, `user`, `super_admin`, `operations`, `finance`, `support`, `merchant`, `owner`, `manager`
 
-Drop the redundant `text` overload, keeping only the `app_role` version (which is the correct, type-safe one). PostgREST will then auto-cast the string `"admin"` to the `app_role` enum without ambiguity.
+### 2. Code -- Add Email to Admin Allowlist
 
-### Database Migration (single SQL statement)
+**File:** `src/config/adminConfig.ts`
 
-```sql
-DROP FUNCTION IF EXISTS public.has_role(uuid, text);
-```
-
-### No Frontend Changes
-
-`AuthContext.tsx` already calls `supabase.rpc("has_role", { _user_id: userId, _role: "admin" })` which will work correctly once the ambiguity is resolved.
+Add `"chhorngkimlain1@gmail.com"` to the `ADMIN_EMAILS` array so the client-side admin gate also recognizes this account.
 
 ## Result
 
-- The console error disappears
-- Admin users are correctly detected on login
-- `isAdmin` flag in AuthContext works as intended
+The account will hold every role in the system and pass both server-side (`check_user_role` RPC) and client-side (`ADMIN_EMAILS`) checks, allowing full access to all features for testing.
 
