@@ -48,6 +48,17 @@ export interface FoodOrderItem {
   notes?: string;
 }
 
+export interface DeliveryStopInput {
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  instructions?: string;
+  label?: string;
+  stop_order: number;
+  status?: string;
+  delivered_at?: string | null;
+}
+
 export interface CreateFoodOrderInput {
   customer_name: string;
   customer_phone: string;
@@ -64,6 +75,10 @@ export interface CreateFoodOrderInput {
   tax?: number;
   tip_amount?: number;
   total: number;
+  // Multi-stop delivery fields
+  delivery_stops?: DeliveryStopInput[];
+  is_multi_stop?: boolean;
+  total_distance_miles?: number;
   // Membership fields
   membership_applied?: boolean;
   membership_discount_cents?: number;
@@ -245,6 +260,11 @@ export function useCreateFoodOrder() {
             ? `${input.delivery_instructions}\n\n---\nCustomer Info: ${customerInfo}`
             : `Customer Info: ${customerInfo}`,
           status: INITIAL_ORDER_STATUS as BookingStatus,
+          // Multi-stop delivery fields
+          delivery_stops: input.delivery_stops ? JSON.stringify(input.delivery_stops) : null,
+          is_multi_stop: input.is_multi_stop || false,
+          total_distance_miles: input.total_distance_miles || null,
+          current_stop_index: 0,
           // Membership tracking
           membership_applied: input.membership_applied || false,
           membership_discount_cents: input.membership_discount_cents || 0,
