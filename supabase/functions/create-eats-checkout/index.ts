@@ -66,6 +66,23 @@ serve(async (req) => {
       special_instructions,
     } = body;
 
+    // Check if eats service is in maintenance
+    const { data: serviceStatus } = await supabase
+      .from("service_health_status")
+      .select("status, is_paused")
+      .eq("service_name", "eats")
+      .maybeSingle();
+
+    if (serviceStatus?.status === "maintenance" || serviceStatus?.status === "outage" || serviceStatus?.is_paused) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Service temporarily unavailable",
+          maintenance: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
+      );
+    }
+
     // Validate required fields
     if (!customer_name || !customer_phone || !delivery_address || !restaurant_id || !items?.length) {
       throw new Error("Missing required fields");

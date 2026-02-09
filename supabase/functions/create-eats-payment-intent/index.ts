@@ -68,6 +68,23 @@ serve(async (req) => {
     const body: CreatePaymentIntentRequest = await req.json();
     console.log("[create-eats-payment-intent] Request:", body);
 
+    // Check if eats service is in maintenance
+    const { data: serviceStatus } = await supabase
+      .from("service_health_status")
+      .select("status, is_paused")
+      .eq("service_name", "eats")
+      .maybeSingle();
+
+    if (serviceStatus?.status === "maintenance" || serviceStatus?.status === "outage" || serviceStatus?.is_paused) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Service temporarily unavailable",
+          maintenance: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
+      );
+    }
+
     // Validate total
     const total = Number(body.total);
     if (!Number.isFinite(total) || total <= 0) {

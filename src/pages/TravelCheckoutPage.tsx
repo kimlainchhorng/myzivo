@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTravelCart } from "@/contexts/TravelCartContext";
 import { useCreateOrder, type HolderInfo } from "@/hooks/useCreateOrder";
 import { useTravelCheckout } from "@/hooks/useTravelCheckout";
+import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
+import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { format } from "date-fns";
 
 const TravelCheckoutPage = () => {
@@ -22,6 +24,7 @@ const TravelCheckoutPage = () => {
   const { items, getTotal, clearCart } = useTravelCart();
   const { createOrder, isLoading: isCreatingOrder, error: orderError } = useCreateOrder();
   const { startCheckout, isLoading: isStartingCheckout, error: checkoutError } = useTravelCheckout();
+  const { isInMaintenance, isLoading: maintenanceLoading } = useServiceMaintenance("hotels");
 
   const [step, setStep] = useState(1);
   const [holder, setHolder] = useState<HolderInfo>({
@@ -34,6 +37,33 @@ const TravelCheckoutPage = () => {
 
   const isLoading = isCreatingOrder || isStartingCheckout;
   const error = orderError || checkoutError;
+
+  const subtotal = getTotal();
+  const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
+  const total = subtotal + serviceFee;
+
+  // Show maintenance screen if travel service is paused
+  if (maintenanceLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isInMaintenance) {
+    return (
+      <MaintenanceScreen
+        serviceName="ZIVO Travel"
+        browseUrl="/hotels"
+        browseLabel="Browse Hotels"
+        ordersUrl="/account/bookings"
+        ordersLabel="View Past Bookings"
+        showBrowse
+        showOrders
+      />
+    );
+  }
 
   // Redirect if cart is empty
   if (items.length === 0) {
@@ -103,9 +133,6 @@ const TravelCheckoutPage = () => {
     }
   };
 
-  const subtotal = getTotal();
-  const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
-  const total = subtotal + serviceFee;
 
   return (
     <div className="min-h-screen bg-background">
