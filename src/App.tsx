@@ -349,6 +349,7 @@ const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"))
 const AccountBusinessPage = lazy(() => import("./pages/account/BusinessAccountPage"));
 const AccountInvoicesPage = lazy(() => import("./pages/account/BusinessInvoicesPage"));
 const AccountVerificationPage = lazy(() => import("./pages/account/VerificationPage"));
+const TrustLevelPage = lazy(() => import("./pages/account/TrustLevelPage"));
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
 const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const ScaleProtection = lazy(() => import("./pages/security/ScaleProtection"));
@@ -1017,6 +1018,9 @@ const App = () => (
                 
                 {/* Identity Verification */}
                 <Route path="/account/verification" element={<ProtectedRoute><AccountVerificationPage /></ProtectedRoute>} />
+                
+                {/* Account Trust Level */}
+                <Route path="/account/trust" element={<ProtectedRoute><TrustLevelPage /></ProtectedRoute>} />
 
                 {/* Promo Codes */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
