@@ -1693,6 +1693,38 @@ export type Database = {
           },
         ]
       }
+      automation_events: {
+        Row: {
+          id: string
+          rule_id: string | null
+          sent_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          rule_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          rule_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_events_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_job_runs: {
         Row: {
           completed_at: string | null
@@ -2903,28 +2935,73 @@ export type Database = {
       }
       business_accounts: {
         Row: {
+          billing_address: string | null
+          billing_city: string | null
+          billing_cycle: string | null
           billing_email: string | null
+          billing_state: string | null
+          billing_zip: string | null
           company_name: string
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string | null
+          credit_limit: number | null
           id: string
+          industry: string | null
           invite_code_enabled: boolean
+          notes: string | null
           owner_id: string | null
+          payment_terms_days: number | null
+          status: string | null
+          tax_id: string | null
+          total_spent: number | null
+          updated_at: string | null
         }
         Insert: {
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_cycle?: string | null
           billing_email?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
           company_name: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
+          credit_limit?: number | null
           id?: string
+          industry?: string | null
           invite_code_enabled?: boolean
+          notes?: string | null
           owner_id?: string | null
+          payment_terms_days?: number | null
+          status?: string | null
+          tax_id?: string | null
+          total_spent?: number | null
+          updated_at?: string | null
         }
         Update: {
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_cycle?: string | null
           billing_email?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
           company_name?: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
+          credit_limit?: number | null
           id?: string
+          industry?: string | null
           invite_code_enabled?: boolean
+          notes?: string | null
           owner_id?: string | null
+          payment_terms_days?: number | null
+          status?: string | null
+          tax_id?: string | null
+          total_spent?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -12229,6 +12306,30 @@ export type Database = {
           period?: string
           period_key?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      growth_metrics: {
+        Row: {
+          active_users: number | null
+          id: string
+          new_users: number | null
+          recorded_at: string | null
+          repeat_orders: number | null
+        }
+        Insert: {
+          active_users?: number | null
+          id?: string
+          new_users?: number | null
+          recorded_at?: string | null
+          repeat_orders?: number | null
+        }
+        Update: {
+          active_users?: number | null
+          id?: string
+          new_users?: number | null
+          recorded_at?: string | null
+          repeat_orders?: number | null
         }
         Relationships: []
       }
@@ -33763,6 +33864,7 @@ export type Database = {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
       }
+      is_customer: { Args: { _user_id?: string }; Returns: boolean }
       is_damage_report_party: {
         Args: { _damage_report_id: string; _user_id: string }
         Returns: boolean

@@ -71,6 +71,19 @@ serve(async (req) => {
       );
     }
 
+    // Verify customer role
+    const { data: isCustomer } = await supabaseAdmin.rpc("has_role", {
+      _user_id: user.id,
+      _role: "customer",
+    });
+
+    if (!isCustomer) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Customer role required", reason: "invalid" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Parse request body
     const body: RequestBody = await req.json();
     const { action, orderId, items, note, cancellation_reason } = body;
