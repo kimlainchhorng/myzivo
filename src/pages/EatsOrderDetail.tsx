@@ -464,7 +464,7 @@ function EatsOrderDetailContent() {
 
         {/* High Demand Banner - show when demand is active for non-completed orders */}
         {deliveryFactors.demandActive && isActiveOrder && (
-          <HighDemandBanner level={deliveryFactors.demandLevel} orderId={order.id} />
+          <HighDemandBanner level={deliveryFactors.demandLevel} orderId={order.id} isRespondingWithIncentives={deliveryFactors.isIncentivePeriod} />
         )}
 
         {/* Low Driver Supply Banner - show when few drivers available (not when demand banner shows) */}
@@ -473,6 +473,7 @@ function EatsOrderDetailContent() {
             supplyLevel={deliveryFactors.driverSupply}
             driverCount={deliveryFactors.nearbyDriverCount}
             orderId={order.id}
+            isIncentiveActive={deliveryFactors.isIncentivePeriod}
           />
         )}
 

@@ -25,6 +25,7 @@ import { getRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { FavoriteButton } from "@/components/eats/FavoriteButton";
 import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
 import { PeakDemandAlert } from "@/components/eats/PeakDemandAlert";
+import { useDriverIncentives } from "@/hooks/useDriverIncentives";
 
 const eatsSortOptions: SortOption[] = [
   { value: "recommended", label: "Recommended" },
@@ -42,6 +43,7 @@ function EatsRestaurantsContent() {
   const { deliveryAddress, setDeliveryAddress, getItemCount } = useCart();
   const { getBadges } = usePromoBadgesByRestaurant();
   const demandAlert = useUpcomingDemandAlert();
+  const { isIncentivePeriod } = useDriverIncentives();
 
   // Get unique cuisines
   const cuisines = [...new Set(restaurants?.map(r => r.cuisine_type).filter(Boolean))] as string[];
@@ -183,6 +185,7 @@ function EatsRestaurantsContent() {
             isLowCoverage={demandAlert.isLowCoverage}
             alertMessage={demandAlert.alertMessage}
             coverageMessage={demandAlert.coverageMessage}
+            isSystemResponding={demandAlert.isHighDemandPredicted && isIncentivePeriod}
             storageKey="peak-demand-restaurants"
             className="mb-6"
           />

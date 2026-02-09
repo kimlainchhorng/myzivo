@@ -38,6 +38,7 @@ import { useRestaurantPromotions } from "@/hooks/useRestaurantPromotions";
 import { ActivePromotionsSection } from "@/components/eats/ActivePromotionsSection";
 import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
 import { PeakDemandAlert } from "@/components/eats/PeakDemandAlert";
+import { useDriverIncentives } from "@/hooks/useDriverIncentives";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -259,6 +260,7 @@ function EatsRestaurantMenuContent() {
   
   // Upcoming demand alert for this restaurant's zone
   const demandAlert = useUpcomingDemandAlert(restaurant?.region_id);
+  const { isIncentivePeriod } = useDriverIncentives();
   
   // Share tracking — log "link_opened" if arrived via share link
   const [searchParams] = useSearchParams();
@@ -442,6 +444,7 @@ function EatsRestaurantMenuContent() {
                 isLowCoverage={demandAlert.isLowCoverage}
                 alertMessage={demandAlert.alertMessage}
                 coverageMessage={demandAlert.coverageMessage}
+                isSystemResponding={demandAlert.isHighDemandPredicted && isIncentivePeriod}
                 storageKey={`peak-demand-menu-${id}`}
                 className="mt-4"
               />
