@@ -662,6 +662,68 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_events: {
+        Row: {
+          affiliate_id: string | null
+          created_at: string | null
+          event_type: string | null
+          id: string
+          reference_id: string | null
+        }
+        Insert: {
+          affiliate_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          id?: string
+          reference_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          id?: string
+          reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_events_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          commission_type: string | null
+          commission_value: number | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          referral_code: string | null
+        }
+        Insert: {
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          referral_code?: string | null
+        }
+        Update: {
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          referral_code?: string | null
+        }
+        Relationships: []
+      }
       ai_fraud_alerts: {
         Row: {
           action_taken: string | null
@@ -1214,6 +1276,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      announcement_deliveries: {
+        Row: {
+          announcement_id: string
+          channel: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          recipient_id: string
+          recipient_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          announcement_id: string
+          channel: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_id: string
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          announcement_id?: string
+          channel?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_id?: string
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_deliveries_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       announcements: {
         Row: {
