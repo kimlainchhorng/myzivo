@@ -3,9 +3,10 @@
  * Shows estimated arrival time with countdown and dynamic recalculation
  * Includes demand-awareness messaging when delivery times may be longer
  * Supports batch position display for grouped deliveries
+ * Traffic-aware ETA adjustments based on time of day
  */
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Zap, Flame, Layers } from "lucide-react";
+import { Clock, Zap, Flame, Layers, TrafficCone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
@@ -47,6 +48,26 @@ function calculateDistanceMiles(
 // Average speed in city traffic (miles per minute)
 const AVG_SPEED_MILES_PER_MIN = 0.5; // ~30 mph
 
+/**
+ * Get traffic multiplier based on time of day
+ * Rush hours: 1.4x slower, Late night: 0.8x faster
+ */
+function getTrafficMultiplier(): { multiplier: number; isRushHour: boolean; isLateNight: boolean } {
+  const hour = new Date().getHours();
+  
+  // Rush hours: 7-9 AM and 4-7 PM
+  if ((hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19)) {
+    return { multiplier: 1.4, isRushHour: true, isLateNight: false };
+  }
+  
+  // Late night: 10 PM - 6 AM (faster)
+  if (hour >= 22 || hour <= 6) {
+    return { multiplier: 0.8, isRushHour: false, isLateNight: true };
+  }
+  
+  return { multiplier: 1.0, isRushHour: false, isLateNight: false };
+}
+
 export function EtaCountdown({
   etaDropoff,
   driverLat,
@@ -69,7 +90,10 @@ export function EtaCountdown({
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate dynamic ETA based on live driver distance
+  // Get traffic conditions
+  const traffic = useMemo(() => getTrafficMultiplier(), []);
+
+  // Calculate dynamic ETA based on live driver distance with traffic adjustment
   const dynamicEtaMinutes = useMemo(() => {
     if (
       driverLat != null &&
@@ -83,10 +107,12 @@ export function EtaCountdown({
         deliveryLat,
         deliveryLng
       );
-      return Math.max(1, Math.ceil(distance / AVG_SPEED_MILES_PER_MIN));
+      const baseMinutes = distance / AVG_SPEED_MILES_PER_MIN;
+      const withTraffic = baseMinutes * traffic.multiplier;
+      return Math.max(1, Math.ceil(withTraffic));
     }
     return null;
-  }, [driverLat, driverLng, deliveryLat, deliveryLng]);
+  }, [driverLat, driverLng, deliveryLat, deliveryLng, traffic.multiplier]);
 
   // Calculate time-based ETA from eta_dropoff timestamp
   // Prefer batchStopEta when available (more accurate for grouped orders)
@@ -108,6 +134,7 @@ export function EtaCountdown({
   const isArrivingSoon = etaMinutes <= 2;
   const isNearby = etaMinutes <= 5;
   const hasDemandBuffer = showDemandNote && demandLevel && demandLevel !== "Low";
+  const showTrafficNote = traffic.isRushHour && dynamicEtaMinutes != null && !isArrivingSoon;
 
   return (
     <motion.div
@@ -177,8 +204,18 @@ export function EtaCountdown({
         </div>
       </div>
 
+      {/* Traffic adjustment note */}
+      {showTrafficNote && (
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          <TrafficCone className="w-3 h-3 text-amber-500" />
+          <span className="text-amber-400/80">
+            Rush hour — adjusted for traffic
+          </span>
+        </div>
+      )}
+
       {/* Demand buffer note */}
-      {hasDemandBuffer && !isArrivingSoon && (
+      {hasDemandBuffer && !isArrivingSoon && !showTrafficNote && (
         <div className="mt-3 flex items-center gap-2 text-xs">
           <Flame className={`w-3 h-3 ${demandLevel === "High" ? "text-orange-500" : "text-amber-500"}`} />
           <span className={demandLevel === "High" ? "text-orange-400/80" : "text-amber-400/80"}>
