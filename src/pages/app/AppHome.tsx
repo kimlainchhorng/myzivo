@@ -1,128 +1,110 @@
 /**
- * App Home Screen - Mobile Premium
- * Premium Bento-grid design with screen navigation
+ * App Home Screen - Super App Hub
+ * Three zones: Services Grid, Personalized Section, Quick Actions
  */
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package, Clock, CreditCard
+  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import flightsHeroImg from "@/assets/flights-hero.png";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 
-// Premium Image Assets
+// Image Assets
 const assets = {
   flights: flightsHeroImg,
   hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
   rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
   food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
   move: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800",
+  rentals: "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&q=80&w=800",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
 
-// Service Card Component - Image Background Style
+// Service Card Component
 interface ServiceCardProps {
   title: string;
   subtitle: string;
   img: string;
   icon: LucideIcon;
   onNavigate: () => void;
-  className?: string;
   imgPosition?: string;
 }
 
-const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className = "", imgPosition = "center" }: ServiceCardProps) => {
-  return (
-    <motion.button
-      onClick={onNavigate}
-      whileTap={{ scale: 0.97 }}
-      className={`relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation ${className}`}
-    >
-      {/* Background Image with Gradient Overlay */}
-      <div className="absolute inset-0">
-        <img 
-          src={img} 
-          className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
-          alt={title}
-          style={{ objectPosition: imgPosition }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-      </div>
+const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition = "center" }: ServiceCardProps) => (
+  <motion.button
+    onClick={onNavigate}
+    whileTap={{ scale: 0.97 }}
+    className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation h-28"
+  >
+    <div className="absolute inset-0">
+      <img 
+        src={img} 
+        className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
+        alt={title}
+        style={{ objectPosition: imgPosition }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+    </div>
+    <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+      <Icon className="w-4 h-4 text-white" />
+    </div>
+    <div className="absolute bottom-0 left-0 right-0 p-3">
+      <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
+      <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
+    </div>
+  </motion.button>
+);
 
-      {/* Icon Badge */}
-      <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
-        <Icon className="w-4 h-4 text-white" />
-      </div>
-
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
-        <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
-      </div>
-    </motion.button>
-  );
-};
-
-// Dark Card Component - No Image Background
-interface DarkCardProps {
+// Quick Action Card
+interface QuickActionCardProps {
+  icon: LucideIcon;
+  iconBg: string;
+  iconColor: string;
   title: string;
   subtitle: string;
-  icon: LucideIcon;
   onNavigate: () => void;
-  className?: string;
 }
 
-const DarkCard = ({ title, subtitle, icon: Icon, onNavigate, className = "" }: DarkCardProps) => {
-  return (
-    <motion.button
-      onClick={onNavigate}
-      whileTap={{ scale: 0.97 }}
-      className={`relative rounded-2xl overflow-hidden cursor-pointer bg-zinc-900/80 border border-white/10 touch-manipulation p-4 flex flex-col justify-end ${className}`}
-    >
-      {/* Icon Badge */}
-      <div className="absolute top-3 left-3 w-8 h-8 bg-white/5 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
-        <Icon className="w-4 h-4 text-zinc-400" />
-      </div>
-
-      {/* Content */}
-      <div className="mt-auto">
-        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
-        <p className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider">{subtitle}</p>
-      </div>
-    </motion.button>
-  );
-};
+const QuickActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onNavigate }: QuickActionCardProps) => (
+  <motion.button
+    onClick={onNavigate}
+    whileTap={{ scale: 0.97 }}
+    className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation text-left"
+  >
+    <div className={`w-8 h-8 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}>
+      <Icon className={`w-4 h-4 ${iconColor}`} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="text-sm font-semibold truncate">{title}</div>
+      <div className="text-[10px] text-zinc-400 truncate">{subtitle}</div>
+    </div>
+    <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
+  </motion.button>
+);
 
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Navigation handler for service cards - routes to premium screens
   const handleNavigate = useCallback((screen: string) => {
     window.scrollTo(0, 0);
     switch (screen) {
-      case "FLIGHTS":
-        navigate("/search?tab=flights");
-        break;
-      case "HOTELS":
-        navigate("/search?tab=hotels");
-        break;
-      case "RIDES":
-        navigate("/rides");
-        break;
-      case "EATS":
-        navigate("/eats");
-        break;
-      case "MOVE":
-        navigate("/move");
-        break;
-      default:
-        navigate("/search");
+      case "FLIGHTS": navigate("/search?tab=flights"); break;
+      case "HOTELS": navigate("/search?tab=hotels"); break;
+      case "RIDES": navigate("/rides"); break;
+      case "EATS": navigate("/eats"); break;
+      case "MOVE": navigate("/move"); break;
+      case "RENTALS": navigate("/rent-car"); break;
+      default: navigate("/search");
     }
   }, [navigate]);
 
@@ -135,10 +117,115 @@ const AppHome = () => {
 
   const userName = user?.email?.split('@')[0] || "Traveler";
 
+  // --- Zone 2: Recent Activity ---
+  const { data: recentActivity } = useQuery({
+    queryKey: ["home-recent", user?.id],
+    queryFn: async () => {
+      const db = supabase as any;
+      const [tripsRes, ordersRes, deliveriesRes] = await Promise.all([
+        db.from("trips").select("id, pickup_address, created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
+        db.from("food_orders").select("id, restaurant_id, restaurants(name), created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
+        db.from("package_deliveries").select("id, pickup_address, created_at").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(3),
+      ]);
+
+      const items: { id: string; title: string; subtitle: string; emoji: string; timestamp: string }[] = [];
+
+      tripsRes.data?.forEach((t) => items.push({
+        id: t.id, title: "Ride", subtitle: t.pickup_address || "Trip", emoji: "🚗", timestamp: t.created_at,
+      }));
+      ordersRes.data?.forEach((o) => {
+        const rName = (o.restaurants as any)?.name || "Restaurant";
+        items.push({ id: o.id, title: "Eats", subtitle: rName, emoji: "🍔", timestamp: o.created_at });
+      });
+      deliveriesRes.data?.forEach((d) => items.push({
+        id: d.id, title: "Delivery", subtitle: d.pickup_address || "Package", emoji: "📦", timestamp: d.created_at,
+      }));
+
+      return items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 3);
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  // --- Zone 2: Recommended Services ---
+  const { data: recommendations } = useQuery({
+    queryKey: ["home-recommendations", user?.id],
+    queryFn: async () => {
+      const db = supabase as any;
+      const [ridesCount, ordersCount, deliveriesCount] = await Promise.all([
+        db.from("trips").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
+        db.from("food_orders").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
+        db.from("package_deliveries").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
+      ]);
+
+      const suggestions: { label: string; href: string }[] = [];
+      if (!ridesCount.count) suggestions.push({ label: "Try ZIVO Ride", href: "/rides" });
+      if (!ordersCount.count) suggestions.push({ label: "Order your first meal", href: "/eats" });
+      if (!deliveriesCount.count) suggestions.push({ label: "Send a package", href: "/move" });
+      return suggestions;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  // --- Zone 3: Last Meal ---
+  const { data: lastMeal } = useQuery({
+    queryKey: ["home-last-meal", user?.id],
+    queryFn: async () => {
+      const db = supabase as any;
+      const { data } = await db
+        .from("food_orders")
+        .select("id, restaurant_id, restaurants(name)")
+        .eq("user_id", user!.id)
+        .eq("status", "delivered")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  // --- Zone 3: Last Ride ---
+  const { data: lastRide } = useQuery({
+    queryKey: ["home-last-ride", user?.id],
+    queryFn: async () => {
+      const db = supabase as any;
+      const { data } = await db
+        .from("trips")
+        .select("id, pickup_address")
+        .eq("user_id", user!.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  // --- Zone 3: Upcoming Count ---
+  const { data: upcomingCount } = useQuery({
+    queryKey: ["home-upcoming-count", user?.id],
+    queryFn: async () => {
+      const db = supabase as any;
+      const [trips, hotels, orders] = await Promise.all([
+        db.from("trips").select("id", { count: "exact", head: true }).eq("user_id", user!.id).in("status", ["accepted", "in_progress"]),
+        db.from("hotel_bookings").select("id", { count: "exact", head: true }).eq("user_id", user!.id).gte("check_in_date", new Date().toISOString().split("T")[0]),
+        db.from("food_orders").select("id", { count: "exact", head: true }).eq("user_id", user!.id).in("status", ["pending", "preparing", "ready"]),
+      ]);
+      return (trips.count || 0) + (hotels.count || 0) + (orders.count || 0);
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
   return (
     <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-x-hidden selection:bg-primary/30">
       
-      {/* 1. TOP BAR: Profile & Notifications */}
+      {/* 1. TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full border-2 border-white/20 p-0.5">
@@ -158,37 +245,8 @@ const AppHome = () => {
         </button>
       </div>
 
-      {/* 2. LIVE ACTIVITY "ISLAND" */}
-      <motion.div 
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="fixed top-16 left-4 right-4 z-40 safe-area-top"
-      >
-        <button 
-          onClick={() => handleNavigate("RIDES")}
-          className="w-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 p-2.5 rounded-2xl flex items-center justify-between shadow-2xl touch-manipulation active:scale-[0.98] transition-transform"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-              <Car className="w-4 h-4 text-white" />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-bold text-white">Book a Ride</div>
-              <div className="text-[10px] text-zinc-400">Premium vehicles available</div>
-            </div>
-          </div>
-          <div className="pr-1">
-            <div className="w-10 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/20">
-              <span className="text-[10px] font-bold text-emerald-400">GO</span>
-            </div>
-          </div>
-        </button>
-      </motion.div>
-
-      {/* 3. HERO SEARCH SECTION */}
-      <div className="pt-36 px-4 pb-4">
-        {/* Win-Back Banner */}
+      {/* 2. SEARCH */}
+      <div className="pt-20 px-4 pb-4">
         {user && <WinBackBanner className="mb-4" />}
 
         <h1 className="text-2xl font-thin tracking-tight mb-0.5">
@@ -196,7 +254,6 @@ const AppHome = () => {
         </h1>
         <p className="text-zinc-400 mb-4 text-sm">One app for every journey.</p>
 
-        {/* Glass Search Bar */}
         <button 
           onClick={() => navigate("/search")}
           className="relative group w-full touch-manipulation"
@@ -213,120 +270,111 @@ const AppHome = () => {
         </button>
       </div>
 
-      {/* 4. BENTO GRID SERVICE NAV */}
-      <div className="px-4 pb-24 space-y-2">
-        {/* Main Bento Grid - 2 columns */}
+      {/* ZONE 1: Services Grid */}
+      <div className="px-4 pb-4">
         <div className="grid grid-cols-2 gap-2">
-          {/* Row 1: Flights Image + Rides Image */}
-          <ServiceCard 
-            title="Flights" 
-            subtitle="Global Travel" 
-            img={assets.flights}
-            icon={Plane} 
-            onNavigate={() => handleNavigate("FLIGHTS")}
-            className="h-24"
-            imgPosition="center 60%"
-          />
-          <ServiceCard 
-            title="Rides" 
-            subtitle="Premium Mobility" 
-            img={assets.rides} 
-            icon={Car}
-            onNavigate={() => handleNavigate("RIDES")}
-            className="h-24"
-            imgPosition="center 40%"
-          />
+          <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
+          <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
+          <ServiceCard title="Delivery" subtitle="Package Delivery" img={assets.move} icon={Package} onNavigate={() => handleNavigate("MOVE")} imgPosition="center 40%" />
+          <ServiceCard title="Flights" subtitle="Global Travel" img={assets.flights} icon={Plane} onNavigate={() => handleNavigate("FLIGHTS")} imgPosition="center 60%" />
+          <ServiceCard title="Hotels" subtitle="Luxury Stays" img={assets.hotels} icon={BedDouble} onNavigate={() => handleNavigate("HOTELS")} imgPosition="center 60%" />
+          <ServiceCard title="Rentals" subtitle="Rent & Drive" img={assets.rentals} icon={Car} onNavigate={() => handleNavigate("RENTALS")} imgPosition="center 50%" />
+        </div>
+      </div>
 
-          {/* Row 2: Food Image + Move Image */}
-          <ServiceCard 
-            title="Eats" 
-            subtitle="Gourmet Delivery" 
-            img={assets.food} 
-            icon={Utensils}
-            onNavigate={() => handleNavigate("EATS")}
-            className="h-24"
-            imgPosition="center 50%"
-          />
-          <ServiceCard 
-            title="Move" 
-            subtitle="Package Delivery" 
-            img={assets.move} 
-            icon={Package}
-            onNavigate={() => handleNavigate("MOVE")}
-            className="h-24"
-            imgPosition="center 40%"
+      {/* ZONE 2: Personalized (auth-gated) */}
+      {user && (
+        <div className="px-4 pb-4 space-y-4">
+          {/* Recent Activity */}
+          {recentActivity && recentActivity.length > 0 && (
+            <div>
+              <h2 className="text-sm font-bold text-zinc-300 mb-2">Recent Activity</h2>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {recentActivity.map((item) => (
+                  <div key={item.id} className="shrink-0 bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-2 min-w-[140px]">
+                    <div className="text-lg mb-0.5">{item.emoji}</div>
+                    <div className="text-xs font-semibold">{item.title}</div>
+                    <div className="text-[10px] text-zinc-400 truncate">{item.subtitle}</div>
+                    <div className="text-[9px] text-zinc-500 mt-1">
+                      {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommended Services */}
+          {recommendations && recommendations.length > 0 && (
+            <div>
+              <h2 className="text-sm font-bold text-zinc-300 mb-2">Recommended for You</h2>
+              <div className="flex gap-2 flex-wrap">
+                {recommendations.map((rec) => (
+                  <button
+                    key={rec.href}
+                    onClick={() => navigate(rec.href)}
+                    className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold rounded-full active:scale-95 transition-transform touch-manipulation"
+                  >
+                    {rec.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ZONE 3: Quick Actions (auth-gated) */}
+      {user && (
+        <div className="px-4 pb-4 space-y-2">
+          <h2 className="text-sm font-bold text-zinc-300 mb-1">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <QuickActionCard
+              icon={RefreshCw}
+              iconBg="bg-orange-500/20"
+              iconColor="text-orange-400"
+              title={lastMeal ? "Reorder" : "Order Food"}
+              subtitle={lastMeal ? ((lastMeal.restaurants as any)?.name || "Last meal") : "Browse restaurants"}
+              onNavigate={() => {
+                if (lastMeal?.restaurant_id) {
+                  navigate(`/eats/restaurant/${lastMeal.restaurant_id}`);
+                } else {
+                  navigate("/eats");
+                }
+              }}
+            />
+            <QuickActionCard
+              icon={Navigation}
+              iconBg="bg-primary/20"
+              iconColor="text-primary"
+              title={lastRide ? "Rebook Ride" : "Book a Ride"}
+              subtitle={lastRide?.pickup_address || "Get moving"}
+              onNavigate={() => {
+                if (lastRide?.pickup_address) {
+                  navigate(`/rides?pickup=${encodeURIComponent(lastRide.pickup_address)}`);
+                } else {
+                  navigate("/rides");
+                }
+              }}
+            />
+          </div>
+          <QuickActionCard
+            icon={CalendarDays}
+            iconBg="bg-violet-500/20"
+            iconColor="text-violet-400"
+            title="Upcoming Bookings"
+            subtitle={upcomingCount ? `${upcomingCount} active` : "View all"}
+            onNavigate={() => navigate("/trips")}
           />
         </div>
+      )}
 
-        {/* Bottom Row: Hotels + Cars + Premium */}
-        <div className="grid grid-cols-6 gap-2">
-          <ServiceCard 
-            title="Hotels" 
-            subtitle="Luxury Stays" 
-            img={assets.hotels} 
-            icon={BedDouble}
-            onNavigate={() => handleNavigate("HOTELS")}
-            className="col-span-2 h-20"
-            imgPosition="center 60%"
-          />
-          <ServiceCard 
-            title="Cars" 
-            subtitle="Rent & Drive" 
-            img="https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&h=300&fit=crop"
-            icon={Car}
-            onNavigate={() => navigate("/rent-car")}
-            className="col-span-2 h-20"
-            imgPosition="center 50%"
-          />
-          <motion.button 
-            onClick={() => navigate("/account")}
-            whileTap={{ scale: 0.97 }}
-            className="col-span-2 bg-primary/90 rounded-2xl p-3 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -mr-6 -mt-6" />
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-teal-400/20 rounded-full blur-xl -ml-3 -mb-3" />
-            <Zap className="w-5 h-5 text-white mb-1" />
-            <div className="font-bold text-sm leading-tight text-white">Premium</div>
-            <div className="text-[9px] text-white/70 mt-0.5">Exclusive perks</div>
-          </motion.button>
-        </div>
-
-        {/* Quick Actions Row */}
-        <div className="grid grid-cols-2 gap-2">
-          <motion.button
-            onClick={() => navigate("/rides/history")}
-            whileTap={{ scale: 0.97 }}
-            className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
-          >
-            <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
-              <Clock className="w-4 h-4 text-primary" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-semibold">Past Trips</div>
-              <div className="text-[10px] text-zinc-400">Ride history</div>
-            </div>
-          </motion.button>
-
-          <motion.button
-            onClick={() => navigate("/payment-methods")}
-            whileTap={{ scale: 0.97 }}
-            className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
-          >
-            <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-              <CreditCard className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-semibold">Payment</div>
-              <div className="text-[10px] text-zinc-400">Manage cards</div>
-            </div>
-          </motion.button>
-        </div>
-
-        {/* Recommended Deals */}
+      {/* Recommended Deals */}
+      <div className="px-4 pb-24">
         <RecommendedDealsSection className="py-6 px-0" />
       </div>
 
-      {/* 5. BOTTOM NAVIGATION */}
+      {/* Bottom Navigation */}
       <ZivoMobileNav />
     </div>
   );

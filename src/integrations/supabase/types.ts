@@ -26098,6 +26098,27 @@ export type Database = {
         }
         Relationships: []
       }
+      service_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          service_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          service_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          service_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       settlements: {
         Row: {
           customer_paid: number | null
