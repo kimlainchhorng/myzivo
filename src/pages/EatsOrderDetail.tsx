@@ -38,6 +38,7 @@ import { PrepProgressBanner } from "@/components/eats/PrepProgressBanner";
 import { ReassignmentBanner } from "@/components/eats/ReassignmentBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
+import { MultiStopTrackingProgress, type TrackingStop } from "@/components/eats/MultiStopTrackingProgress";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
 import { OrderEditBanner } from "@/components/eats/OrderEditBanner";
 import { OrderEditSheet } from "@/components/eats/OrderEditSheet";
@@ -461,6 +462,31 @@ function EatsOrderDetailContent() {
             orderId={order.id}
           />
         )}
+
+        {/* Multi-Stop Tracking Progress - show visual route progress for batched orders */}
+        {batchInfo.isBatched && batchInfo.totalStops > 1 && isActiveOrder && (() => {
+          const currentStop = batchInfo.currentStopOrder ?? 1;
+          const stops: TrackingStop[] = Array.from({ length: batchInfo.totalStops }, (_, i) => {
+            const stopNum = i + 1;
+            const status: TrackingStop["status"] =
+              stopNum < currentStop ? "delivered" :
+              stopNum === currentStop ? "current" : "pending";
+            return {
+              stopOrder: stopNum,
+              address: stopNum === batchInfo.customerStopOrder
+                ? (order.delivery_address || `Stop ${stopNum}`)
+                : `Stop ${stopNum}`,
+              status,
+            };
+          });
+          return (
+            <MultiStopTrackingProgress
+              stops={stops}
+              currentStopIndex={currentStop - 1}
+            />
+          );
+        })()}
+
         {/* Delivery PIN Display - Customer sees PIN when order is out for delivery */}
         {order.status === "out_for_delivery" && order.delivery_pin && !order.delivery_pin_verified && (
           <motion.div
@@ -587,6 +613,12 @@ function EatsOrderDetailContent() {
             assignedAt={order.assigned_at}
             dispatchPhase={dispatchStatus.phase}
             prepProgressPercent={prepProgress.progressPercent}
+            isBatched={batchInfo.isBatched}
+            batchPosition={
+              batchInfo.isBatched && batchInfo.currentStopOrder
+                ? { current: batchInfo.currentStopOrder, total: batchInfo.totalStops, customerStop: batchInfo.customerStopOrder ?? 0 }
+                : null
+            }
           />
         </motion.div>
 
