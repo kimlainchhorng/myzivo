@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
   UtensilsCrossed, Clock, User, 
-  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle, Tag, X
+  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle, Tag, X, CreditCard, Wallet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
 import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
+import { PaymentTypeSelector, type PaymentType } from "@/components/eats/PaymentTypeSelector";
 import { PeakDriverBanner } from "@/components/eats/PeakDriverBanner";
 import { DeliveryFeeBreakdownCard } from "@/components/eats/DeliveryFeeBreakdownCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
@@ -54,6 +55,7 @@ import { useAutoRewards } from "@/hooks/useAutoRewards";
 import { RewardSelector } from "@/components/checkout/RewardSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -123,6 +125,10 @@ function EatsCheckoutContent() {
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
   const [selectedReward, setSelectedReward] = useState<any>(null);
+  const [paymentType, setPaymentType] = useState<PaymentType>("card");
+
+  // Wallet
+  const { wallet, balanceCents, applyCredit } = useCustomerWallet();
 
   // Auto-rewards: detect milestones and get active rewards
   const { activeRewards, isLoading: rewardsLoading } = useAutoRewards();
@@ -142,7 +148,14 @@ function EatsCheckoutContent() {
   const promoValidation = usePromotionValidation({ serviceType: 'eats', restaurantId: restaurantId || undefined });
   const { discountAmount, finalTotal: promoFinalTotal, isFreeDel } = promoValidation.calculateFinalTotal(subtotal, deliveryFee);
   const totalBeforeReward = promoValidation.appliedPromo?.valid ? promoFinalTotal : pricing.orderTotal;
-  const total = Math.max(0, totalBeforeReward - rewardDiscount);
+  const totalAfterReward = Math.max(0, totalBeforeReward - rewardDiscount);
+  
+  // Wallet deduction calculation
+  const walletDeductionCents = paymentType === "wallet" || paymentType === "wallet_card"
+    ? Math.min(balanceCents, Math.round(totalAfterReward * 100), 2500) // MAX_CREDIT_PER_ORDER
+    : 0;
+  const walletDeductionDollars = walletDeductionCents / 100;
+  const total = Math.max(0, totalAfterReward - walletDeductionDollars);
 
   // Win-back offer auto-apply
   const winBackOffer = useWinBackOffer();
@@ -298,11 +311,23 @@ function EatsCheckoutContent() {
         subtotal,
         delivery_fee: deliveryFee,
         total,
-        // Business account billing
         billing_type: billingType,
         business_account_id: billingType === "company" && businessMembership?.company ? businessMembership.company.id : undefined,
         business_account_name: billingType === "company" && businessMembership?.company ? businessMembership.company.name : undefined,
       });
+
+      // Apply wallet credit if using wallet payment
+      if ((paymentType === "wallet" || paymentType === "wallet_card") && walletDeductionCents > 0 && order?.id) {
+        try {
+          await applyCredit.mutateAsync({
+            amount_cents: walletDeductionCents,
+            order_id: order.id,
+          });
+        } catch (e) {
+          console.error("Wallet credit error:", e);
+          toast.error("Failed to apply wallet credit, but order was placed.");
+        }
+      }
 
       clearCart();
       toast.success("Order placed successfully!");
@@ -668,6 +693,24 @@ function EatsCheckoutContent() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Payment Type */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-eats" />
+                      Payment Method
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PaymentTypeSelector
+                      selected={paymentType}
+                      onChange={setPaymentType}
+                      walletBalanceCents={balanceCents}
+                      orderTotalCents={Math.round(totalAfterReward * 100)}
+                    />
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Right: Order Summary */}
@@ -817,7 +860,19 @@ function EatsCheckoutContent() {
                       </div>
                     )}
 
-                    {/* Company Billing Badge */}
+                    {/* Wallet deduction line item */}
+                    {walletDeductionCents > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Wallet className="w-3.5 h-3.5" />
+                          Wallet Credit
+                        </span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          -${walletDeductionDollars.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
                     {billingType === "company" && businessMembership?.company && (
                       <CompanyBillingBadge companyName={businessMembership.company.name} />
                     )}
