@@ -376,6 +376,7 @@ const Help = lazy(() => import("./pages/Help"));
 const TravelBookingsSupport = lazy(() => import("./pages/support/TravelBookings"));
 const SiteIssuesSupport = lazy(() => import("./pages/support/SiteIssues"));
 const UserSupportTicketsPage = lazy(() => import("./pages/support/UserSupportTicketsPage"));
+const LiveSupportChatPage = lazy(() => import("./pages/support/LiveSupportChatPage"));
 const AdminSupportDashboard = lazy(() => import("./pages/admin/modules/support/AdminSupportDashboard"));
 const PartnerOverview = lazy(() => import("./pages/partner/Overview"));
 
@@ -715,6 +716,7 @@ const App = () => (
                 <Route path="/help" element={<SetupRequiredRoute><RiderHelpPage /></SetupRequiredRoute>} />
                 <Route path="/help/new" element={<SetupRequiredRoute><NewTicketPage /></SetupRequiredRoute>} />
                 <Route path="/help/tickets" element={<SetupRequiredRoute><MyTicketsPage /></SetupRequiredRoute>} />
+                <Route path="/support/chat" element={<SetupRequiredRoute><LiveSupportChatPage /></SetupRequiredRoute>} />
                 
                 {/* ZIVO Driver App Routes */}
                 <Route path="/driver" element={<DriverHomePage />} />
