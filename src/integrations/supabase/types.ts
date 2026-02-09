@@ -6579,6 +6579,63 @@ export type Database = {
           },
         ]
       }
+      driver_incentive_progress: {
+        Row: {
+          completed: boolean | null
+          driver_id: string | null
+          id: string
+          incentive_id: string | null
+          progress: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          driver_id?: string | null
+          id?: string
+          incentive_id?: string | null
+          progress?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          driver_id?: string | null
+          id?: string
+          incentive_id?: string | null
+          progress?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      driver_incentives: {
+        Row: {
+          bonus_amount: number | null
+          conditions_json: Json | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          name: string | null
+          start_time: string | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          conditions_json?: Json | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          name?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          conditions_json?: Json | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          name?: string | null
+          start_time?: string | null
+        }
+        Relationships: []
+      }
       driver_limits: {
         Row: {
           block_reason: string | null
@@ -22326,6 +22383,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      risk_signals: {
+        Row: {
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          risk_type: string | null
+          severity: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          risk_type?: string | null
+          severity?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          risk_type?: string | null
+          severity?: string | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {

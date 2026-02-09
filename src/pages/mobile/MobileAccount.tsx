@@ -6,7 +6,7 @@ import { useNavigate, Navigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Users, Mail, Bell, CreditCard, Gift, 
   HelpCircle, FileText, Shield, ChevronRight, LogOut, 
-  Settings, Star, ExternalLink, Crown
+  Settings, Star, ExternalLink, Crown, Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +45,7 @@ export default function MobileAccount() {
 
   const accountItems: MenuItem[] = [
     { icon: Crown, label: isMember ? "ZIVO+ Member" : "Join ZIVO+", path: "/account/membership" },
+    { icon: Tag, label: "My Promos", path: "/account/promos" },
     { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
