@@ -143,7 +143,7 @@ export function useRestaurant(id: string | undefined) {
   });
 }
 
-// Fetch menu items for a restaurant
+// Fetch menu items for a restaurant (includes unavailable items for display)
 export function useMenuItems(restaurantId: string | undefined) {
   return useQuery({
     queryKey: ["menu-items", restaurantId],
@@ -154,7 +154,7 @@ export function useMenuItems(restaurantId: string | undefined) {
         .from(EATS_TABLES.menuItems)
         .select("*")
         .eq("restaurant_id", restaurantId)
-        .eq("is_available", true)
+        .order("is_available", { ascending: false }) // Available items first
         .order("category")
         .order("is_featured", { ascending: false });
 

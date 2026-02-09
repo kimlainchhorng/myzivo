@@ -23,6 +23,7 @@ import { useRestaurantAvailability } from "@/hooks/useRestaurantAvailability";
 import { RestaurantAvailabilityBadge } from "@/components/eats/RestaurantAvailabilityBadge";
 import { BusyRestaurantBanner } from "@/components/eats/BusyRestaurantBanner";
 import { UnavailableBanner } from "@/components/eats/UnavailableBanner";
+import { ItemAvailabilityBadge } from "@/components/eats/ItemAvailabilityBadge";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: { 
   item: MenuItem; 
@@ -35,9 +36,13 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
 
   const cartItem = items.find(i => i.id === item.id);
   const quantity = cartItem?.quantity || 0;
+  
+  // Check if item is available (respect both item availability and restaurant availability)
+  const isItemAvailable = item.is_available !== false;
+  const canAdd = canOrder && isItemAvailable;
 
   const handleAdd = () => {
-    if (!canOrder) return;
+    if (!canAdd) return;
     addItem({
       id: item.id,
       restaurantId,
@@ -52,18 +57,27 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-eats/30">
+    <Card className={cn(
+      "overflow-hidden transition-all duration-300 border-2 border-transparent",
+      canAdd ? "hover:shadow-lg hover:border-eats/30" : "opacity-60"
+    )}>
       <div className="flex">
         {/* Image */}
-        <div className="w-28 sm:w-36 h-28 sm:h-36 bg-gradient-to-br from-eats/10 to-orange-500/5 flex items-center justify-center shrink-0">
+        <div className="w-28 sm:w-36 h-28 sm:h-36 bg-gradient-to-br from-eats/10 to-orange-500/5 flex items-center justify-center shrink-0 relative">
           {item.image_url ? (
             <img
               src={item.image_url}
               alt={item.name}
-              className="w-full h-full object-cover"
+              className={cn("w-full h-full object-cover", !isItemAvailable && "grayscale")}
             />
           ) : (
             <UtensilsCrossed className="w-8 h-8 text-eats/30" />
+          )}
+          {/* Out of Stock Badge overlay */}
+          {!isItemAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <ItemAvailabilityBadge isAvailable={false} size="sm" />
+            </div>
           )}
         </div>
         
@@ -71,8 +85,8 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
         <CardContent className="flex-1 p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-bold text-base line-clamp-1">{item.name}</h3>
-              {item.is_featured && (
+              <h3 className={cn("font-bold text-base line-clamp-1", !isItemAvailable && "text-muted-foreground")}>{item.name}</h3>
+              {item.is_featured && isItemAvailable && (
                 <Badge className="bg-eats/10 text-eats text-[10px] shrink-0">Popular</Badge>
               )}
             </div>
@@ -84,14 +98,14 @@ function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true }: {
           </div>
           
           <div className="flex items-center justify-between mt-3">
-            <span className="font-bold text-lg">${item.price.toFixed(2)}</span>
-            {!canOrder ? (
+            <span className={cn("font-bold text-lg", !isItemAvailable && "text-muted-foreground")}>${item.price.toFixed(2)}</span>
+            {!canAdd ? (
               <Button
                 size="sm"
                 disabled
                 className="h-8 px-4 rounded-lg gap-1 opacity-50 cursor-not-allowed"
               >
-                Unavailable
+                {!isItemAvailable ? "Out of Stock" : "Unavailable"}
               </Button>
             ) : quantity > 0 ? (
               <div className="flex items-center gap-2">

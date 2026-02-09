@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { Minus, Plus, X, UtensilsCrossed } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -67,12 +68,16 @@ export function MenuItemModal({
   if (!item) return null;
 
   const totalPrice = item.price * quantity;
+  const isItemAvailable = item.is_available !== false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white p-0 overflow-hidden">
         {/* Image */}
-        <div className="h-48 bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center">
+        <div className={cn(
+          "h-48 bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center relative",
+          !isItemAvailable && "grayscale"
+        )}>
           {item.image_url ? (
             <img
               src={item.image_url}
@@ -81,6 +86,15 @@ export function MenuItemModal({
             />
           ) : (
             <UtensilsCrossed className="w-16 h-16 text-orange-500/30" />
+          )}
+          {/* Out of Stock overlay */}
+          {!isItemAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="bg-red-500/90 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2">
+                <X className="w-5 h-5" />
+                Out of Stock
+              </div>
+            </div>
           )}
         </div>
 
@@ -94,53 +108,72 @@ export function MenuItemModal({
             )}
           </DialogHeader>
 
-          {/* Special Instructions */}
-          <div>
-            <label className="text-sm text-zinc-400 mb-2 block">
-              Special Instructions (optional)
-            </label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., No onions, extra sauce..."
-              className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 resize-none"
-              rows={2}
-            />
-          </div>
-
-          {/* Quantity Selector */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-400">Quantity</span>
-            <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="text-xl font-bold w-8 text-center">{quantity}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
+          {/* Out of Stock Warning */}
+          {!isItemAvailable && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <p className="text-red-400 font-medium text-sm">
+                This item is currently out of stock and cannot be added to your cart.
+              </p>
             </div>
-          </div>
+          )}
+
+          {/* Special Instructions - only show if available */}
+          {isItemAvailable && (
+            <div>
+              <label className="text-sm text-zinc-400 mb-2 block">
+                Special Instructions (optional)
+              </label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g., No onions, extra sauce..."
+                className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 resize-none"
+                rows={2}
+              />
+            </div>
+          )}
+
+          {/* Quantity Selector - only show if available */}
+          {isItemAvailable && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-400">Quantity</span>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-xl font-bold w-8 text-center">{quantity}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Add to Cart Button */}
           <Button
             onClick={handleAdd}
-            className="w-full h-14 rounded-xl font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+            disabled={!isItemAvailable}
+            className={cn(
+              "w-full h-14 rounded-xl font-bold text-lg",
+              isItemAvailable 
+                ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                : "bg-zinc-700 cursor-not-allowed"
+            )}
           >
-            Add to Cart · ${totalPrice.toFixed(2)}
+            {isItemAvailable ? `Add to Cart · $${totalPrice.toFixed(2)}` : "Out of Stock"}
           </Button>
         </div>
       </DialogContent>
