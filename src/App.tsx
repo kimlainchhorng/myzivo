@@ -497,6 +497,7 @@ const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard
 const RewardsPage = lazy(() => import("./pages/RewardsPage"));
 const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
 const ActivityPage = lazy(() => import("./pages/account/ActivityPage"));
+const CustomerDisputesPage = lazy(() => import("./pages/CustomerDisputesPage"));
 
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
@@ -1008,6 +1009,7 @@ const App = () => (
                 
                 {/* Promo Codes */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
+                <Route path="/account/disputes" element={<ProtectedRoute><CustomerDisputesPage /></ProtectedRoute>} />
                 
                 {/* Eats Analytics Routes */}
                 <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AnalyticsHub /></ProtectedRoute>} />

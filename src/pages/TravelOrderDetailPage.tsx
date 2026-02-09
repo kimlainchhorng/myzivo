@@ -17,6 +17,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import { useOrderActions } from "@/hooks/useOrderActions";
 import { OrderItemCard } from "@/components/travel/OrderItemCard";
 import { CancelRequestModal } from "@/components/travel/CancelRequestModal";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { ReportProblemDialog } from "@/components/orders/ReportProblemDialog";
 
 const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
   draft: { icon: Clock, label: "Draft", color: "text-muted-foreground" },
@@ -44,6 +46,7 @@ export default function TravelOrderDetailPage() {
   const { data: order, isLoading, error } = useTripDetails(orderNumber);
   const { resendConfirmation, isResending } = useOrderActions();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
@@ -81,6 +84,7 @@ export default function TravelOrderDetailPage() {
     order.status === "confirmed" &&
     order.cancellation_status === "none";
   const hasCancellationRequest = order.cancellation_status !== "none";
+  const canReport = ["confirmed", "refunded"].includes(order.status);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -168,6 +172,17 @@ export default function TravelOrderDetailPage() {
               Request Cancellation
             </Button>
           )}
+
+          {canReport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReportDialog(true)}
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Report a problem
+            </Button>
+          )}
         </div>
 
         {/* Traveler Info */}
@@ -246,6 +261,13 @@ export default function TravelOrderDetailPage() {
         orderNumber={order.order_number}
         total={order.total}
         currency={order.currency}
+      />
+
+      {/* Report Problem Dialog */}
+      <ReportProblemDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        orderId={order.id}
       />
 
       <MobileBottomNav />
