@@ -2,9 +2,10 @@
  * OrderTrackingPage
  * 
  * Customer-facing order tracking with live driver location
+ * Includes delay detection and customer messaging
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +21,12 @@ import {
   CheckCircle,
   Circle,
   Truck,
+  AlertTriangle,
 } from "lucide-react";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
+import { useOrderDelayDetection } from "@/hooks/useOrderDelayDetection";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import { OrderDelayBanner } from "@/components/eats/OrderDelayBanner";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +69,22 @@ export function OrderTrackingPage() {
   const polylineRef = useRef<google.maps.Polyline | null>(null);
 
   const [eta, setEta] = useState<string | null>(null);
+
+  // Delay detection for public tracking
+  const delayDetection = useOrderDelayDetection({
+    etaDropoff: order?.estimated_delivery_at,
+    createdAt: order?.created_at,
+    durationMinutes: order?.duration_minutes,
+    orderStatus: order?.status,
+    driverLat: driverLocation?.driver_lat,
+    driverLng: driverLocation?.driver_lng,
+    deliveryLat: order?.delivery_lat,
+    deliveryLng: order?.delivery_lng,
+    orderId: order?.id,
+    restaurantName: order?.restaurant_name,
+  });
+
+  const isActiveOrder = order && !["completed", "cancelled", "delivered"].includes(order.status);
 
   // Initialize map
   useEffect(() => {
@@ -250,6 +270,16 @@ export function OrderTrackingPage() {
 
       {/* Content */}
       <div className="container py-6 space-y-6">
+        {/* Order Delay Banner */}
+        {delayDetection.isDelayed && isActiveOrder && (
+          <OrderDelayBanner
+            delayLevel={delayDetection.delayLevel}
+            delayMinutes={delayDetection.delayMinutes}
+            newEtaMin={delayDetection.newEstimatedEtaMin}
+            newEtaMax={delayDetection.newEstimatedEtaMax}
+          />
+        )}
+
         {/* Status Timeline */}
         <Card>
           <CardHeader className="pb-3">
