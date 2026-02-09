@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
 import { useEatsDriver } from "@/hooks/useEatsDriver";
 import { useLiveDriverLocation } from "@/hooks/useLiveDriverLocation";
-import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
+import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useEatsDispatchStatus } from "@/hooks/useEatsDispatchStatus";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
@@ -20,6 +20,7 @@ import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
+import { LowDriverSupplyBanner } from "@/components/eats/LowDriverSupplyBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
@@ -55,7 +56,7 @@ export default function EatsOrderDetail() {
   const { order, loading, error } = useLiveEatsOrder(id);
   const { driver } = useEatsDriver(order?.driver_id);
   const { location: liveDriverLocation, isStale } = useLiveDriverLocation(order?.driver_id, order?.status);
-  const { level: demandLevel, isActive: demandActive } = useEatsSurgePricing();
+  const deliveryFactors = useEatsDeliveryFactors();
   const { batchInfo } = useOrderBatchInfo(order?.id, (order as any)?.batch_id);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { clearCart, addItem } = useCart();
@@ -322,8 +323,17 @@ export default function EatsOrderDetail() {
         )}
 
         {/* High Demand Banner - show when demand is active for non-completed orders */}
-        {demandActive && isActiveOrder && (
-          <HighDemandBanner level={demandLevel} orderId={order.id} />
+        {deliveryFactors.demandActive && isActiveOrder && (
+          <HighDemandBanner level={deliveryFactors.demandLevel} orderId={order.id} />
+        )}
+
+        {/* Low Driver Supply Banner - show when few drivers available (not when demand banner shows) */}
+        {deliveryFactors.showLowSupplyWarning && isActiveOrder && (
+          <LowDriverSupplyBanner
+            supplyLevel={deliveryFactors.driverSupply}
+            driverCount={deliveryFactors.nearbyDriverCount}
+            orderId={order.id}
+          />
         )}
 
         {/* Dispatch Search Banner - show when looking for a driver */}
@@ -364,14 +374,17 @@ export default function EatsOrderDetail() {
             driverLng={driverLng}
             deliveryLat={order.delivery_lat ?? undefined}
             deliveryLng={order.delivery_lng ?? undefined}
-            demandLevel={demandLevel}
-            showDemandNote={demandActive}
+            demandLevel={deliveryFactors.demandLevel}
+            showDemandNote={deliveryFactors.demandActive}
             batchStopEta={batchInfo.customerStopEta}
             batchPosition={
               batchInfo.isBatched && batchInfo.customerStopOrder
                 ? { current: batchInfo.customerStopOrder, total: batchInfo.totalStops }
                 : null
             }
+            supplyMultiplier={deliveryFactors.supplyMultiplier}
+            nearbyDriverCount={deliveryFactors.nearbyDriverCount}
+            showLowSupplyNote={deliveryFactors.driverSupply === "low"}
           />
         )}
 
