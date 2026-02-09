@@ -25,7 +25,8 @@ import {
   Wallet,
   Store,
   ExternalLink,
-  Users
+  Users,
+  TrendingUp
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
@@ -125,6 +126,7 @@ const Profile = () => {
   };
 
   const quickLinks = [
+    { icon: TrendingUp, label: "Spending", href: "/account/spending", description: "View spending history" },
     { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
