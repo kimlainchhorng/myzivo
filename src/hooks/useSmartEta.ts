@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type TrafficLevel = "light" | "moderate" | "heavy";
-export type RecalcReason = "initial" | "driver_assigned" | "pickup_complete" | "location_change" | "interval" | "prep_speed_change";
+export type RecalcReason = "initial" | "driver_assigned" | "driver_reassigned" | "pickup_complete" | "location_change" | "interval" | "prep_speed_change";
 export type OrderPhase = "preparing" | "ready" | "out_for_delivery";
 
 export interface SmartEtaResult {

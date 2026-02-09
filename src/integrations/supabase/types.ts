@@ -2688,6 +2688,33 @@ export type Database = {
           },
         ]
       }
+      brands: {
+        Row: {
+          created_at: string | null
+          domain: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          primary_color: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          primary_color?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          primary_color?: string | null
+        }
+        Relationships: []
+      }
       bundling_settings: {
         Row: {
           bundling_enabled: boolean
@@ -10770,6 +10797,7 @@ export type Database = {
       food_orders: {
         Row: {
           accepted_at: string | null
+          address_type: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
           almost_ready_at: string | null
@@ -10817,6 +10845,7 @@ export type Database = {
           driver_payout_cents: number | null
           driver_response_status: string | null
           duration_minutes: number | null
+          editable_until: string | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
           eta_dropoff: string | null
@@ -10883,6 +10912,7 @@ export type Database = {
           refunded_at: string | null
           region_id: string | null
           requires_review: boolean | null
+          restaurant_confirmed_at: string | null
           restaurant_id: string
           restaurant_payout_cents: number | null
           review_status: string | null
@@ -10891,6 +10921,7 @@ export type Database = {
           risk_level: string | null
           risk_score: number | null
           risk_signals: string[] | null
+          saved_location_id: string | null
           scheduled_for: string | null
           service_fee: number | null
           service_fee_cents: number | null
@@ -10924,6 +10955,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          address_type?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
           almost_ready_at?: string | null
@@ -10971,6 +11003,7 @@ export type Database = {
           driver_payout_cents?: number | null
           driver_response_status?: string | null
           duration_minutes?: number | null
+          editable_until?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           eta_dropoff?: string | null
@@ -11037,6 +11070,7 @@ export type Database = {
           refunded_at?: string | null
           region_id?: string | null
           requires_review?: boolean | null
+          restaurant_confirmed_at?: string | null
           restaurant_id: string
           restaurant_payout_cents?: number | null
           review_status?: string | null
@@ -11045,6 +11079,7 @@ export type Database = {
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
+          saved_location_id?: string | null
           scheduled_for?: string | null
           service_fee?: number | null
           service_fee_cents?: number | null
@@ -11078,6 +11113,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          address_type?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
           almost_ready_at?: string | null
@@ -11125,6 +11161,7 @@ export type Database = {
           driver_payout_cents?: number | null
           driver_response_status?: string | null
           duration_minutes?: number | null
+          editable_until?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           eta_dropoff?: string | null
@@ -11191,6 +11228,7 @@ export type Database = {
           refunded_at?: string | null
           region_id?: string | null
           requires_review?: boolean | null
+          restaurant_confirmed_at?: string | null
           restaurant_id?: string
           restaurant_payout_cents?: number | null
           review_status?: string | null
@@ -11199,6 +11237,7 @@ export type Database = {
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
+          saved_location_id?: string | null
           scheduled_for?: string | null
           service_fee?: number | null
           service_fee_cents?: number | null
@@ -11341,6 +11380,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_saved_location_id_fkey"
+            columns: ["saved_location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
             referencedColumns: ["id"]
           },
           {
@@ -16250,6 +16296,7 @@ export type Database = {
       orders: {
         Row: {
           almost_ready_at: string | null
+          brand_id: string | null
           bundle_id: string | null
           cancelled_by_user: boolean | null
           created_at: string | null
@@ -16267,6 +16314,7 @@ export type Database = {
         }
         Insert: {
           almost_ready_at?: string | null
+          brand_id?: string | null
           bundle_id?: string | null
           cancelled_by_user?: boolean | null
           created_at?: string | null
@@ -16284,6 +16332,7 @@ export type Database = {
         }
         Update: {
           almost_ready_at?: string | null
+          brand_id?: string | null
           bundle_id?: string | null
           cancelled_by_user?: boolean | null
           created_at?: string | null
@@ -16300,6 +16349,13 @@ export type Database = {
           scheduled_for?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_bundle_id_fkey"
             columns: ["bundle_id"]
@@ -21934,9 +21990,15 @@ export type Database = {
           address: string
           application_id: string | null
           auto_accept_orders: boolean | null
+          auto_busy_enabled: boolean | null
+          auto_busy_order_threshold: number | null
+          auto_pause_enabled: boolean | null
+          auto_pause_order_threshold: number | null
+          auto_pause_prep_threshold_minutes: number | null
           avg_prep_time: number | null
           avg_rating: number | null
           bank_connected: boolean | null
+          brand_id: string | null
           busy_mode: boolean | null
           busy_prep_time_bonus_minutes: number | null
           cancel_at_period_end: boolean | null
@@ -22006,9 +22068,15 @@ export type Database = {
           address: string
           application_id?: string | null
           auto_accept_orders?: boolean | null
+          auto_busy_enabled?: boolean | null
+          auto_busy_order_threshold?: number | null
+          auto_pause_enabled?: boolean | null
+          auto_pause_order_threshold?: number | null
+          auto_pause_prep_threshold_minutes?: number | null
           avg_prep_time?: number | null
           avg_rating?: number | null
           bank_connected?: boolean | null
+          brand_id?: string | null
           busy_mode?: boolean | null
           busy_prep_time_bonus_minutes?: number | null
           cancel_at_period_end?: boolean | null
@@ -22078,9 +22146,15 @@ export type Database = {
           address?: string
           application_id?: string | null
           auto_accept_orders?: boolean | null
+          auto_busy_enabled?: boolean | null
+          auto_busy_order_threshold?: number | null
+          auto_pause_enabled?: boolean | null
+          auto_pause_order_threshold?: number | null
+          auto_pause_prep_threshold_minutes?: number | null
           avg_prep_time?: number | null
           avg_rating?: number | null
           bank_connected?: boolean | null
+          brand_id?: string | null
           busy_mode?: boolean | null
           busy_prep_time_bonus_minutes?: number | null
           cancel_at_period_end?: boolean | null
@@ -22150,6 +22224,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
@@ -23800,6 +23881,30 @@ export type Database = {
         }
         Relationships: []
       }
+      service_health: {
+        Row: {
+          checked_at: string | null
+          id: string
+          response_time_ms: number | null
+          service_name: string | null
+          status: string | null
+        }
+        Insert: {
+          checked_at?: string | null
+          id?: string
+          response_time_ms?: number | null
+          service_name?: string | null
+          status?: string | null
+        }
+        Update: {
+          checked_at?: string | null
+          id?: string
+          response_time_ms?: number | null
+          service_name?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       service_health_status: {
         Row: {
           created_at: string
@@ -24450,6 +24555,8 @@ export type Database = {
           raw: Json
           square_item_id: string
           square_merchant_id: string
+          stock_mode: string | null
+          stock_qty: number | null
           updated_at: string | null
           user_id: string
         }
@@ -24467,6 +24574,8 @@ export type Database = {
           raw: Json
           square_item_id: string
           square_merchant_id: string
+          stock_mode?: string | null
+          stock_qty?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -24484,6 +24593,8 @@ export type Database = {
           raw?: Json
           square_item_id?: string
           square_merchant_id?: string
+          stock_mode?: string | null
+          stock_qty?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -27426,8 +27537,10 @@ export type Database = {
           driver_masked_phone: string | null
           driver_payout_cents: number | null
           dropoff_address: string
+          dropoff_address_type: string | null
           dropoff_lat: number
           dropoff_lng: number
+          dropoff_saved_location_id: string | null
           duration_minutes: number | null
           estimated_minutes: number | null
           fare_amount: number | null
@@ -27445,8 +27558,10 @@ export type Database = {
           payout_status: string | null
           payout_transfer_id: string | null
           pickup_address: string
+          pickup_address_type: string | null
           pickup_lat: number
           pickup_lng: number
+          pickup_saved_location_id: string | null
           platform_fee: number | null
           rating: number | null
           refund_amount: number | null
@@ -27490,8 +27605,10 @@ export type Database = {
           driver_masked_phone?: string | null
           driver_payout_cents?: number | null
           dropoff_address: string
+          dropoff_address_type?: string | null
           dropoff_lat: number
           dropoff_lng: number
+          dropoff_saved_location_id?: string | null
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
@@ -27509,8 +27626,10 @@ export type Database = {
           payout_status?: string | null
           payout_transfer_id?: string | null
           pickup_address: string
+          pickup_address_type?: string | null
           pickup_lat: number
           pickup_lng: number
+          pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
           refund_amount?: number | null
@@ -27554,8 +27673,10 @@ export type Database = {
           driver_masked_phone?: string | null
           driver_payout_cents?: number | null
           dropoff_address?: string
+          dropoff_address_type?: string | null
           dropoff_lat?: number
           dropoff_lng?: number
+          dropoff_saved_location_id?: string | null
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
@@ -27573,8 +27694,10 @@ export type Database = {
           payout_status?: string | null
           payout_transfer_id?: string | null
           pickup_address?: string
+          pickup_address_type?: string | null
           pickup_lat?: number
           pickup_lng?: number
+          pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
           refund_amount?: number | null
@@ -27606,6 +27729,20 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_dropoff_saved_location_id_fkey"
+            columns: ["dropoff_saved_location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_pickup_saved_location_id_fkey"
+            columns: ["pickup_saved_location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
             referencedColumns: ["id"]
           },
           {

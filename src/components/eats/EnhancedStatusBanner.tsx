@@ -4,7 +4,7 @@
  * Provides clearer status updates throughout the order lifecycle
  */
 import { motion } from "framer-motion";
-import { Clock, Search, Navigation, MapPin, Truck, Package, ChefHat, Ban, Zap, Sparkles } from "lucide-react";
+import { Clock, Search, Navigation, MapPin, Truck, Package, ChefHat, Ban, Zap, Sparkles, RefreshCw } from "lucide-react";
 import type { DispatchPhase } from "@/hooks/useEatsDispatchStatus";
 import { cn } from "@/lib/utils";
 // MapPin already imported above
@@ -48,6 +48,13 @@ const PHASE_STYLES: Record<DispatchPhase, {
   },
   almost_ready: {
     icon: Sparkles,
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/30",
+    animate: true,
+  },
+  reassigning: {
+    icon: RefreshCw,
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     border: "border-amber-500/30",

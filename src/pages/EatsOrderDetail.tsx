@@ -19,6 +19,7 @@ import { useDriverProximity } from "@/hooks/useDriverProximity";
 import { useSmartEta, type OrderPhase } from "@/hooks/useSmartEta";
 import { useLearnedPrepTime } from "@/hooks/useLearnedPrepTime";
 import { usePrepProgress } from "@/hooks/usePrepProgress";
+import { useDriverReassignment } from "@/hooks/useDriverReassignment";
 import { StatusTimeline } from "@/components/eats/StatusTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
@@ -28,6 +29,7 @@ import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { LowDriverSupplyBanner } from "@/components/eats/LowDriverSupplyBanner";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
 import { PrepProgressBanner } from "@/components/eats/PrepProgressBanner";
+import { ReassignmentBanner } from "@/components/eats/ReassignmentBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
@@ -94,6 +96,13 @@ export default function EatsOrderDetail() {
     learnedPrepMinutes: learnedPrep.avgPrepMinutes,
     isOrderReady: order?.status === "ready_for_pickup" || order?.status === "ready",
   });
+  
+  // Track driver reassignment for transparent messaging
+  const reassignment = useDriverReassignment({
+    currentDriverId: order?.driver_id,
+    previousDriverId: order?.previous_driver_id,
+    orderStatus: order?.status || "",
+  });
 
   // Dispatch status for transparent messaging (enhanced with pickup coordinates and prep progress)
   const dispatchStatus = useEatsDispatchStatus({
@@ -107,6 +116,8 @@ export default function EatsOrderDetail() {
     pickupLng,
     prepProgressPercent: prepProgress.progressPercent,
     isAlmostReady: prepProgress.status === "almost_ready",
+    wasReassigned: reassignment.wasReassigned,
+    isSearchingForNewDriver: reassignment.isSearchingForNewDriver,
   });
 
   // Driver proximity tracking for enhanced ETA
@@ -358,9 +369,18 @@ export default function EatsOrderDetail() {
           />
         )}
 
-        {/* Dispatch Search Banner - show when looking for a driver */}
+        {/* Reassignment Banner - show when driver was reassigned */}
+        {reassignment.showReassignmentBanner && isActiveOrder && (
+          <ReassignmentBanner
+            isSearching={reassignment.isSearchingForNewDriver}
+            newDriverAssigned={reassignment.wasReassigned && !!order.driver_id}
+            nearbyCount={deliveryFactors.nearbyDriverCount}
+          />
+        )}
+
+        {/* Dispatch Search Banner - show when looking for a driver (but not during reassignment) */}
         <AnimatePresence>
-          {dispatchStatus.showSearching && isActiveOrder && (
+          {dispatchStatus.showSearching && isActiveOrder && !reassignment.showReassignmentBanner && (
             <DispatchSearchBanner orderId={order.id} />
           )}
         </AnimatePresence>
