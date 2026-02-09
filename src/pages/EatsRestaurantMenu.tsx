@@ -34,6 +34,8 @@ import { StartGroupOrderButton } from "@/components/eats/StartGroupOrderButton";
 import { GroupOrderBanner } from "@/components/eats/GroupOrderBanner";
 import { useGroupOrder, useGroupSession } from "@/hooks/useGroupOrder";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRestaurantPromotions } from "@/hooks/useRestaurantPromotions";
+import { ActivePromotionsSection } from "@/components/eats/ActivePromotionsSection";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -250,6 +252,9 @@ function EatsRestaurantMenuContent() {
   // Get queue length for high volume banner
   const queue = useRestaurantQueueLength(id, restaurant?.avg_prep_time || 20);
   
+  // Active promotions for this restaurant
+  const { data: restaurantPromos } = useRestaurantPromotions(id);
+  
   // Share tracking — log "link_opened" if arrived via share link
   const [searchParams] = useSearchParams();
   const { logLinkOpened } = useShareTracking();
@@ -430,6 +435,11 @@ function EatsRestaurantMenuContent() {
               />
             )}
           </div>
+
+          {/* Active Promotions */}
+          {restaurantPromos && restaurantPromos.length > 0 && (
+            <ActivePromotionsSection promos={restaurantPromos} />
+          )}
 
           {/* Menu */}
           <div className="space-y-8">
