@@ -122,7 +122,9 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
 
         {order.tax && order.tax > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-500">Tax</span>
+            <span className="text-zinc-500">
+              Tax{order.subtotal && order.tax ? ` (${((order.tax / order.subtotal) * 100).toFixed(2)}%)` : ""}
+            </span>
             <span>${order.tax.toFixed(2)}</span>
           </div>
         )}
@@ -200,6 +202,7 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
               tip: order.tip_amount ?? undefined,
               discount: order.discount_amount ?? undefined,
               promoCode: order.promo_code ?? undefined,
+              taxRate: order.subtotal && order.tax ? order.tax / order.subtotal : undefined,
             };
             downloadReceipt(unified);
           }}

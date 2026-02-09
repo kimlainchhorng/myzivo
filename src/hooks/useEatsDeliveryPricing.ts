@@ -32,6 +32,7 @@ export interface EatsDeliveryPricing {
   serviceFee: number;
   smallOrderFee: number;
   tax: number;
+  taxRate: number;
   // Totals
   subtotal: number;
   orderTotal: number;
@@ -100,6 +101,7 @@ export function useEatsDeliveryPricing(
       serviceFee,
       smallOrderFee,
       tax,
+      taxRate: zone.tax_rate,
       subtotal: round(subtotal),
       orderTotal,
       surgeActive: surge.isActive && !loyaltyFreeDelivery,
