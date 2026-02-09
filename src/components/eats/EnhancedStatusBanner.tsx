@@ -67,6 +67,12 @@ const PHASE_STYLES: Record<DispatchPhase, {
     border: "border-indigo-500/30",
     animate: true,
   },
+  matched: {
+    icon: Zap,
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+  },
   assigned: {
     icon: Navigation,
     color: "text-blue-400",

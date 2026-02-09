@@ -5,7 +5,7 @@
  * Smart dispatch transparency with clear driver assignment status
  * Order editing window for customer flexibility before restaurant confirms
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock, Map, Star, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -170,6 +170,19 @@ function EatsOrderDetailContent() {
     customerId: order?.customer_id,
   });
 
+  // Just-assigned detection for matched transition
+  const prevDriverId = useRef(order?.driver_id);
+  const [justAssigned, setJustAssigned] = useState(false);
+
+  useEffect(() => {
+    if (!prevDriverId.current && order?.driver_id) {
+      setJustAssigned(true);
+      const timer = setTimeout(() => setJustAssigned(false), 3000);
+      return () => clearTimeout(timer);
+    }
+    prevDriverId.current = order?.driver_id;
+  }, [order?.driver_id]);
+
   // Dispatch status for transparent messaging (enhanced with pickup coordinates and prep progress)
   const dispatchStatus = useEatsDispatchStatus({
     status: order?.status || "",
@@ -184,9 +197,19 @@ function EatsOrderDetailContent() {
     isAlmostReady: prepProgress.status === "almost_ready",
     wasReassigned: reassignment.wasReassigned,
     isSearchingForNewDriver: reassignment.isSearchingForNewDriver,
+    justAssigned,
   });
 
-  // Traffic-aware ETA (only during active delivery)
+  // Traffic-aware ETA for pickup phase (driver heading to restaurant)
+  const pickupTrafficEta = useTrafficAwareEta({
+    driverLat,
+    driverLng,
+    destLat: pickupLat,
+    destLng: pickupLng,
+    enabled: !!order?.driver_id && ["confirmed", "preparing", "ready", "ready_for_pickup"].includes(order?.status || ""),
+  });
+
+  // Traffic-aware ETA for delivery phase
   const trafficEta = useTrafficAwareEta({
     driverLat,
     driverLng,
@@ -194,6 +217,11 @@ function EatsOrderDetailContent() {
     destLng: order?.delivery_lng,
     enabled: order?.status === "out_for_delivery",
   });
+
+  // Use pickup-phase traffic multiplier when heading to restaurant, delivery-phase when out for delivery
+  const activeTrafficMultiplier = order?.status === "out_for_delivery"
+    ? trafficEta.trafficMultiplier
+    : pickupTrafficEta.trafficMultiplier;
 
   // Driver proximity tracking for enhanced ETA — now with traffic multiplier
   const proximity = useDriverProximity({
@@ -204,7 +232,7 @@ function EatsOrderDetailContent() {
     deliveryLat: order?.delivery_lat,
     deliveryLng: order?.delivery_lng,
     orderStatus: order?.status || "",
-    trafficMultiplier: trafficEta.trafficMultiplier,
+    trafficMultiplier: activeTrafficMultiplier,
   });
 
   // Eats arrival alert — toast + push when driver enters delivery zone
@@ -473,10 +501,15 @@ function EatsOrderDetailContent() {
           />
         )}
 
-        {/* Dispatch Search Banner - show when looking for a driver (but not during reassignment) */}
+        {/* Dispatch Search Banner - show when looking for a driver or just matched */}
         <AnimatePresence>
-          {dispatchStatus.showSearching && isActiveOrder && !reassignment.showReassignmentBanner && (
-            <DispatchSearchBanner orderId={order.id} />
+          {(dispatchStatus.showSearching || dispatchStatus.phase === "matched") && isActiveOrder && !reassignment.showReassignmentBanner && (
+            <DispatchSearchBanner
+              orderId={order.id}
+              nearbyCount={deliveryFactors.nearbyDriverCount}
+              isMatched={dispatchStatus.phase === "matched"}
+              matchedDriverName={driver?.full_name || null}
+            />
           )}
         </AnimatePresence>
 
