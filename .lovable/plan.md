@@ -1,189 +1,136 @@
 
-# Optional Identity Verification
+
+# Account Trust Level
 
 ## Overview
 
-Add an optional identity verification feature at `/account/verification` for high-value users and business accounts. Users can upload a government ID and a selfie for manual admin review. Status flows through: Not Started, Pending, Verified, Rejected.
+Add a trust level system that scores customers as "Excellent", "Good", or "Needs Attention" based on observable account signals. The trust level is computed client-side from existing data (profile completeness, verification status, order history, account age). It's displayed on the Account page and an optional detail page at `/account/trust` explains the benefits and how to improve.
 
-This builds a new system separate from the existing P2P renter verification (which requires license details). Customer identity verification is simpler -- just document uploads and status tracking.
+No new database tables are needed -- trust level is derived from data that already exists.
+
+## Trust Level Logic
+
+Trust is computed from a set of weighted signals (0-100 score):
+
+| Signal | Points | Source |
+|--------|--------|--------|
+| Email verified | +15 | `profiles.email_verified` |
+| Phone verified | +15 | `profiles.phone_verified` |
+| Identity verified | +20 | `customer_identity_verifications.status = 'verified'` |
+| Account age > 30 days | +10 | `profiles.created_at` |
+| Account age > 90 days | +10 | `profiles.created_at` |
+| Has completed orders | +10 | `useSpendingStats` order count > 0 |
+| 5+ completed orders | +10 | `useSpendingStats` order count >= 5 |
+| Profile complete (name + phone) | +10 | `profiles.full_name` and `profiles.phone` |
+
+Score mapping:
+- 80-100: **Excellent** (green, shield-check icon)
+- 50-79: **Good** (amber, shield icon)
+- 0-49: **Needs Attention** (red, shield-alert icon)
+
+## Benefits Display
+
+| Trust Level | Benefits |
+|-------------|----------|
+| Excellent | Faster checkout, fewer verifications, best promotions, priority support |
+| Good | Standard checkout, occasional verifications, regular promotions |
+| Needs Attention | Additional verifications required, limited promotions |
 
 ## What Gets Built
 
-### 1. Database: New table and storage bucket
+### 1. Trust Level Hook
 
-Create a `customer_identity_verifications` table:
-- `id` (uuid, PK)
-- `user_id` (uuid, FK to auth.users, unique -- one verification per user)
-- `id_document_url` (text) -- uploaded government ID image
-- `selfie_url` (text) -- uploaded selfie image
-- `status` (text: pending | verified | rejected, default: pending)
-- `rejection_reason` (text, nullable)
-- `reviewed_by` (uuid, nullable)
-- `reviewed_at` (timestamptz, nullable)
-- `created_at` / `updated_at` (timestamptz)
+New file: `src/hooks/useAccountTrustLevel.ts`
 
-RLS policies:
-- Users can SELECT/INSERT/UPDATE their own row (customer role required)
-- Admins can SELECT/UPDATE all rows
+Fetches profile and verification data, computes the score, and returns:
+- `level`: "excellent" | "good" | "needs_attention"
+- `score`: number (0-100)
+- `signals`: list of earned/missing signals with labels
+- `improvements`: actionable suggestions to raise the score
+- `benefits`: current tier's benefits
+- `isLoading`: boolean
 
-Storage bucket: `identity-documents` (private) with RLS allowing authenticated users to upload to their own folder.
+### 2. Trust Level Config
 
-### 2. Hook: `useCustomerVerification`
+New file: `src/config/trustLevel.ts`
 
-New file: `src/hooks/useCustomerVerification.ts`
+Contains the signal definitions, weights, tier thresholds, benefits per tier, and display config (colors, icons, labels).
 
-Provides:
-- `verification` -- current verification record (or null if not started)
-- `uploadDocument(type, file)` -- uploads to storage, updates the verification row
-- `submitVerification()` -- sets status to "pending"
-- `status` -- derived: "not_started" | "pending" | "verified" | "rejected"
+### 3. Trust Level Card (for Account page)
 
-### 3. Page: `/account/verification`
+New file: `src/components/account/TrustLevelCard.tsx`
 
-New file: `src/pages/account/VerificationPage.tsx`
+A compact card showing the trust level badge, score bar, and a "View Details" link. Inserted into the MobileAccount page between the Profile Card and Account Settings sections.
 
-Layout:
-- Header with Shield icon and title "Identity Verification"
-- Status banner showing current state (not started / pending / verified / rejected)
-- Optional badge explanation: "Verified accounts get a trust badge and access to higher-value features"
-- Two upload cards: Government ID and Selfie
-- Submit button (enabled when both documents uploaded)
-- If rejected: show reason and allow resubmission
+### 4. Trust Level Detail Page
 
-### 4. Route and Navigation
+New file: `src/pages/account/TrustLevelPage.tsx`
 
-- Add route: `/account/verification` in `App.tsx` (ProtectedRoute)
-- Add menu item in `MobileAccount.tsx` account settings section with a Shield icon
+Full page at `/account/trust` showing:
+- Current trust level with animated score ring
+- Benefits unlocked at this level
+- Signal breakdown (what's earned, what's missing)
+- Actionable improvement suggestions with direct links (e.g., "Verify your phone" links to profile)
+
+### 5. Route and Navigation
+
+- Add route `/account/trust` in `App.tsx`
+- Add trust card to `MobileAccount.tsx` (above Account Settings)
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `supabase/migrations/[timestamp]_customer_identity_verification.sql` | Create | Table, RLS, storage bucket |
-| `src/hooks/useCustomerVerification.ts` | Create | Data fetching, upload, submission hook |
-| `src/pages/account/VerificationPage.tsx` | Create | Full verification page UI |
-| `src/App.tsx` | Update | Add route for `/account/verification` |
-| `src/pages/mobile/MobileAccount.tsx` | Update | Add verification menu item |
+| `src/config/trustLevel.ts` | Create | Signal weights, tiers, benefits config |
+| `src/hooks/useAccountTrustLevel.ts` | Create | Hook computing trust from profile + verification + orders |
+| `src/components/account/TrustLevelCard.tsx` | Create | Compact card for account page |
+| `src/pages/account/TrustLevelPage.tsx` | Create | Full detail page |
+| `src/App.tsx` | Update | Add `/account/trust` route |
+| `src/pages/mobile/MobileAccount.tsx` | Update | Insert TrustLevelCard |
 
 ## Technical Details
 
-### Database migration
+### Trust level config structure
 
 ```text
--- Table
-CREATE TABLE public.customer_identity_verifications (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
-  id_document_url text,
-  selfie_url text,
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
-  rejection_reason text,
-  reviewed_by uuid,
-  reviewed_at timestamptz,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
+TRUST_SIGNALS = [
+  { id: "email_verified", label: "Email verified", weight: 15, improvement: "Verify your email address" },
+  { id: "phone_verified", label: "Phone verified", weight: 15, improvement: "Add and verify your phone number" },
+  { id: "identity_verified", label: "Identity verified", weight: 20, improvement: "Complete identity verification" },
+  { id: "account_age_30", label: "Account older than 30 days", weight: 10 },
+  { id: "account_age_90", label: "Account older than 90 days", weight: 10 },
+  { id: "has_orders", label: "Completed at least 1 order", weight: 10, improvement: "Complete your first booking" },
+  { id: "frequent_user", label: "Completed 5+ orders", weight: 10, improvement: "Keep booking to build trust" },
+  { id: "profile_complete", label: "Profile complete", weight: 10, improvement: "Add your full name and phone number" },
+]
 
-ALTER TABLE public.customer_identity_verifications ENABLE ROW LEVEL SECURITY;
-
--- Customer can read/write own record
-CREATE POLICY "Users can view own verification"
-  ON public.customer_identity_verifications FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
-
-CREATE POLICY "Users can insert own verification"
-  ON public.customer_identity_verifications FOR INSERT
-  TO authenticated
-  WITH CHECK (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
-
-CREATE POLICY "Users can update own verification"
-  ON public.customer_identity_verifications FOR UPDATE
-  TO authenticated
-  USING (user_id = auth.uid() AND public.has_role(auth.uid(), 'customer'));
-
--- Admin access
-CREATE POLICY "Admins can view all verifications"
-  ON public.customer_identity_verifications FOR SELECT
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can update verifications"
-  ON public.customer_identity_verifications FOR UPDATE
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
-
--- Storage bucket
-INSERT INTO storage.buckets (id, name, public) VALUES ('identity-documents', 'identity-documents', false);
-
-CREATE POLICY "Users upload own identity docs"
-  ON storage.objects FOR INSERT
-  TO authenticated
-  WITH CHECK (bucket_id = 'identity-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
-
-CREATE POLICY "Users view own identity docs"
-  ON storage.objects FOR SELECT
-  TO authenticated
-  USING (bucket_id = 'identity-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+TRUST_TIERS = {
+  excellent: { min: 80, label: "Excellent", color: "emerald", icon: ShieldCheck },
+  good:      { min: 50, label: "Good",      color: "amber",   icon: Shield },
+  needs_attention: { min: 0, label: "Needs Attention", color: "red", icon: ShieldAlert },
+}
 ```
 
-### Hook structure
+### Hook data sources
 
-```text
-useCustomerVerification() returns:
-  - verification: row data or null
-  - status: "not_started" | "pending" | "verified" | "rejected"
-  - isLoading: boolean
-  - uploadDocument(type: "id" | "selfie", file: File): uploads to storage, upserts row
-  - isUploading: boolean
-```
+The hook combines three queries:
+1. Profile data (already available via auth context -- `profiles` row)
+2. Customer verification status (reuses `useCustomerVerification` hook)
+3. Order count (lightweight query: `food_orders` count for the user)
 
-Upload flow:
-1. Upload file to `identity-documents/{user_id}/{type}_{timestamp}.{ext}`
-2. Get signed URL (private bucket)
-3. Upsert `customer_identity_verifications` row with the URL
+All queries use existing RLS-protected tables -- no new database access patterns.
 
-### Page UI structure
+### MobileAccount integration
 
-```text
-/account/verification
-
-[Header: Shield icon + "Identity Verification"]
-
-[Status Banner]
-  Not started: "Optional -- verify your identity for enhanced trust"
-  Pending: "Your documents are being reviewed (1-2 business days)"
-  Verified: Green checkmark + "Your identity is verified"
-  Rejected: Red banner with rejection reason + "Resubmit" option
-
-[Info Card]
-  "Why verify?"
-  - Trust badge on your profile
-  - Access to higher-value bookings
-  - Enhanced account security
-
-[Upload: Government ID]
-  Drop zone with preview, accepts images
-
-[Upload: Selfie]
-  Drop zone with preview, accepts images
-
-[Submit Button]
-  Enabled only when both uploads present
-  Disabled if status is "pending" or "verified"
-```
-
-### Navigation entry in MobileAccount
-
-Add to `accountItems` array after "ZIVO Rewards":
-```text
-{ icon: Shield, label: "Identity Verification", path: "/account/verification" }
-```
+The TrustLevelCard is placed between the Profile Card and the "Account Settings" heading. It shows:
+- Trust level name + colored badge
+- Progress bar (score / 100)
+- "Tap to see details" link to `/account/trust`
 
 ### Edge cases
 
-- User uploads new documents while status is "rejected": reset status to "pending" on resubmit
-- User navigates to page when already verified: show verified state, no upload zones
-- File validation: images only, max 10MB
-- Private bucket: use `createSignedUrl` for display (60-minute expiry)
-- Only users with customer role can access (enforced by RLS)
+- New users with no data: score is 0, shows "Needs Attention" with clear improvement steps
+- Fully verified long-term users: score is 100, shows "Excellent" with all benefits
+- Loading state: skeleton card while data loads
+- The trust score is read-only and informational -- it does not gate any features (benefits are aspirational/motivational text)
+
