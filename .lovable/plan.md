@@ -1,131 +1,121 @@
 
 
-# Smarter Delivery Routes — Traffic-Aware ETA Recalculation
+# Faster Smart Dispatch — Transparent Matching with Post-Assignment Route ETA
 
 ## Overview
 
-Enhance delivery ETA accuracy by (1) using real Google traffic data instead of hardcoded time-of-day multipliers, and (2) recalculating ETAs dynamically when batch stop order changes or driver progress shifts. This builds on existing infrastructure — the `maps-route` edge function already returns live traffic data that the frontend currently discards.
+Improve the driver-matching experience by (1) showing real-time dispatch transparency during the "searching" phase -- including nearby driver count and estimated match time, and (2) providing a more accurate initial ETA immediately after driver assignment by using the traffic-aware route calculation.
 
-## Current Gaps
+## Current State
 
-- **`mapsApi.ts`** discards `duration_in_traffic_minutes` and `traffic_level` returned by the edge function
-- **`useDriverProximity`** uses a flat 30mph speed assumption (Haversine / 0.5) with zero traffic awareness
-- **`EtaCountdown`** applies a hardcoded rush-hour multiplier (1.4x for 7-9am/4-7pm) instead of real traffic data
-- **Batch stop reorder** triggers a refetch of batch info via Realtime, but the ETA shown is only the static `customer_stop_eta` from the database — no live recalculation
+- **DispatchSearchBanner** already supports a `nearbyCount` prop but EatsOrderDetail doesn't pass it -- it renders `<DispatchSearchBanner orderId={order.id} />` with no driver count
+- **useTrafficAwareEta** only activates during `out_for_delivery` status, so the driver's initial ETA to the restaurant (pickup phase) has no traffic awareness
+- **DispatchSearchBanner** shows a generic "Finding the best driver near you..." with an infinite loading animation but no estimate of how long matching will take
+- **Post-assignment messaging** jumps straight to "Driver heading to restaurant" with no transition confirming the match
 
 ## What Changes
 
-### 1. Update `src/services/mapsApi.ts` — Expose traffic data
+### 1. Update `src/pages/EatsOrderDetail.tsx` — Pass nearby count + enable early traffic ETA
 
-Add `duration_in_traffic_minutes` and `traffic_level` to the `RouteResult` interface and populate them from the edge function response. These fields already come back from `maps-route` but are currently ignored.
+- Pass `deliveryFactors.nearbyDriverCount` to `DispatchSearchBanner` so customers see "3 drivers nearby" during search
+- Expand `useTrafficAwareEta` activation to also cover `confirmed` and `preparing` statuses (when a driver is assigned and heading to pickup), not just `out_for_delivery`. This gives traffic-aware ETA during the pickup phase too.
 
+### 2. Update `src/components/eats/DispatchSearchBanner.tsx` — Add match time estimate + matched transition
+
+Add two enhancements:
+- **Estimated match time**: When `nearbyCount` is available, show "Usually matched in under 1 min" (if 3+ drivers nearby), "Usually matched in 1-2 min" (1-2 drivers), or no estimate (0 drivers). This sets expectations.
+- **New prop `driverName`**: When a driver is just assigned, briefly show a "Matched!" confirmation with the driver name before the banner exits. This creates a satisfying transition moment.
+
+### 3. Update `src/hooks/useEatsDispatchStatus.ts` — Add "just matched" phase
+
+Add a new `matched` phase that fires for a few seconds after driver assignment. This lets the UI show a brief success state ("Matched with [driver]!") before transitioning to "Driver heading to restaurant."
+
+New phase:
 ```
-RouteResult (updated):
-  + duration_in_traffic_minutes: number | null
-  + traffic_level: "light" | "moderate" | "heavy" | null
-```
-
-### 2. Create `src/hooks/useTrafficAwareEta.ts` — Live route-based ETA
-
-A new hook that, given driver and destination coordinates, periodically calls `maps-route` to get a real traffic-aware ETA. This replaces the flat Haversine calculation when live driver location is available.
-
-Key design:
-- Calls `getRoute()` when driver coordinates change, **throttled to once per 60 seconds** to manage API costs
-- Falls back to the existing Haversine-based ETA between API calls (instant, every location update)
-- Returns both the traffic-aware ETA and the traffic level for display
-- Caches the last API result and blends it with live Haversine distance: if the driver has moved closer since the last API call, proportionally reduces the ETA
-
-```
-Props:
-  driverLat, driverLng: number | null
-  destLat, destLng: number | null
-  enabled: boolean (only for out_for_delivery status)
-
-Returns:
-  etaMinutes: number | null (best available ETA)
-  trafficLevel: "light" | "moderate" | "heavy" | null
-  isTrafficBased: boolean (true when using real route data)
-  lastRouteUpdate: Date
+"matched" — Driver just assigned (shown for ~3 seconds)
+  message: "Matched with your driver!"
+  subMessage: "They're heading to the restaurant now"
+  showSearching: false
 ```
 
-### 3. Update `src/hooks/useDriverProximity.ts` — Accept traffic multiplier
+This is tracked with a `justAssigned` prop: when `driverId` transitions from null to a value, the hook returns `matched` phase for a brief window.
 
-Add an optional `trafficMultiplier` parameter. When provided (from useTrafficAwareEta), apply it to the ETA calculation instead of the flat 0.5 mi/min speed. This keeps the hook's instant-recalculation behavior on every location change while using a more accurate speed estimate.
+### 4. Update `src/pages/EatsOrderDetail.tsx` — Wire matched transition
 
-```
-New optional param:
-  trafficMultiplier?: number (default 1.0)
+Track previous driver ID to detect assignment moment. Pass a `justAssigned` flag to the dispatch status hook. Show the DispatchSearchBanner in "matched" mode briefly, then let it animate out.
 
-Modified ETA calc:
-  etaToDelivery = Math.max(1, Math.ceil(
-    (distanceToDelivery / AVG_SPEED_MILES_PER_MIN) * trafficMultiplier
-  ))
-```
+### 5. Update `src/hooks/useTrafficAwareEta.ts` — Support pickup-phase ETA
 
-### 4. Update `src/components/eats/EtaCountdown.tsx` — Use live traffic
+The hook currently only activates for `out_for_delivery`. Change the `enabled` prop in EatsOrderDetail to also be true when a driver is assigned and heading to pickup (status is `confirmed`, `preparing`, or `ready`). The hook itself doesn't change -- just the `enabled` condition and destination coordinates (pickup instead of delivery).
 
-Replace the hardcoded `getTrafficMultiplier()` function with an optional `trafficLevel` prop. When the prop is provided, use real traffic data for the multiplier instead of guessing from time of day. Keep the time-of-day fallback when no live data is available.
+Create a second instance of the hook for the pickup phase:
 
 ```
-New optional props:
-  trafficLevel?: "light" | "moderate" | "heavy" | null
-  isTrafficBased?: boolean
-
-Modified traffic logic:
-  If trafficLevel is provided:
-    "light" -> 1.0, "moderate" -> 1.2, "heavy" -> 1.5
-  Else:
-    Fall back to existing getTrafficMultiplier()
-```
-
-### 5. Update `src/hooks/useOrderBatchInfo.ts` — Recalculate on stop completion
-
-Currently listens for `batch_stops` changes via Realtime and refetches the RPC. Enhance by also:
-- Subscribing to the `delivery_batches` table for the batch (catches stop reorder events from dispatch)
-- Adding a `refetchInterval` of 30 seconds during active delivery (when batch status is `in_progress`) to catch any missed updates
-
-This is a small change — add one more Realtime channel subscription.
-
-### 6. Wire into `src/pages/EatsOrderDetail.tsx`
-
-Import and use `useTrafficAwareEta` alongside the existing `useDriverProximity`. Pass traffic data down to `EtaCountdown`:
-
-```
-const trafficEta = useTrafficAwareEta({
+const pickupTrafficEta = useTrafficAwareEta({
   driverLat, driverLng,
-  destLat: order?.delivery_lat,
-  destLng: order?.delivery_lng,
-  enabled: order?.status === "out_for_delivery",
+  destLat: pickupLat,
+  destLng: pickupLng,
+  enabled: !!order?.driver_id && ["confirmed", "preparing", "ready", "ready_for_pickup"].includes(order?.status),
 });
-
-// Pass to EtaCountdown
-<EtaCountdown
-  ...existing props
-  trafficLevel={trafficEta.trafficLevel}
-  isTrafficBased={trafficEta.isTrafficBased}
-/>
 ```
 
-Also pass `trafficMultiplier` to `useDriverProximity` so the proximity-based ETA is traffic-aware.
+Pass `pickupTrafficEta.trafficMultiplier` to `useDriverProximity` during the pickup phase for more accurate "Driver ETA to restaurant" estimates.
 
-## API Cost Control
+## Technical Detail
 
-The `maps-route` call is the only cost concern. Mitigations:
-- **60-second throttle**: Maximum 1 API call per minute per active order tracking page
-- **Only during `out_for_delivery`**: No calls during preparation or waiting phases
-- **Haversine blend**: Between API calls, the ETA smoothly adjusts based on distance changes without additional API calls
-- **Single viewer**: Only the customer viewing their order page triggers calls — no server-side polling
+### DispatchSearchBanner match time estimate logic
+
+```
+if nearbyCount >= 3: "Usually matched in under 1 min"
+if nearbyCount >= 1: "Usually matched in 1-2 min"  
+if nearbyCount === 0 or null: no estimate shown
+```
+
+### Just-assigned detection in EatsOrderDetail
+
+```
+const prevDriverId = useRef(order?.driver_id);
+const [justAssigned, setJustAssigned] = useState(false);
+
+useEffect(() => {
+  if (!prevDriverId.current && order?.driver_id) {
+    setJustAssigned(true);
+    const timer = setTimeout(() => setJustAssigned(false), 3000);
+    return () => clearTimeout(timer);
+  }
+  prevDriverId.current = order?.driver_id;
+}, [order?.driver_id]);
+```
+
+### EatsDispatchStatus matched phase
+
+When `justAssigned` is true and `driverId` exists, return:
+```
+{ phase: "matched", message: "Matched with your driver!", subMessage: "Heading to restaurant now", showSearching: false }
+```
+
+### DispatchSearchBanner updated props
+
+```
+interface DispatchSearchBannerProps {
+  nearbyCount?: number | null;
+  orderId: string;
+  className?: string;
+  matchedDriverName?: string | null;  // NEW: show matched state
+  isMatched?: boolean;                // NEW: trigger matched animation
+}
+```
+
+When `isMatched` is true, the banner briefly shows a green checkmark animation with "Matched!" before animating out.
 
 ## File Summary
 
 | File | Action | What |
 |---|---|---|
-| `src/services/mapsApi.ts` | Update | Add `duration_in_traffic_minutes` and `traffic_level` to RouteResult |
-| `src/hooks/useTrafficAwareEta.ts` | Create | Throttled route API calls with Haversine blending for live traffic ETA |
-| `src/hooks/useDriverProximity.ts` | Update | Accept optional trafficMultiplier for speed adjustment |
-| `src/components/eats/EtaCountdown.tsx` | Update | Accept trafficLevel prop, use real data over hardcoded multiplier |
-| `src/hooks/useOrderBatchInfo.ts` | Update | Add delivery_batches Realtime subscription + refetch interval |
-| `src/pages/EatsOrderDetail.tsx` | Update | Wire useTrafficAwareEta and pass traffic data to ETA components |
+| `src/pages/EatsOrderDetail.tsx` | Update | Pass nearbyCount to DispatchSearchBanner, add justAssigned detection, add pickup-phase traffic ETA |
+| `src/components/eats/DispatchSearchBanner.tsx` | Update | Add match time estimate, matched driver transition animation |
+| `src/hooks/useEatsDispatchStatus.ts` | Update | Add "matched" phase for just-assigned transition |
+| `src/hooks/useTrafficAwareEta.ts` | No change | Reused with pickup coordinates for pickup-phase ETA |
 
-Six file changes (one new hook, five updates). No schema changes. No new edge functions.
+Three file updates, no new files, no schema changes.
 
