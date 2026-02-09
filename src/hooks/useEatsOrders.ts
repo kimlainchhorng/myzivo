@@ -68,6 +68,9 @@ export interface CreateFoodOrderInput {
   city_id?: string;
   city_name?: string;
   zone_code?: string;
+  // Surge fields
+  surge_multiplier?: number;
+  surge_fee_cents?: number;
 }
 
 // Fetch all active restaurants (including closed ones for display)
@@ -241,6 +244,9 @@ export function useCreateFoodOrder() {
           city_id: input.city_id || null,
           city_name: input.city_name || null,
           zone_code: input.zone_code || null,
+          // Surge tracking
+          surge_multiplier: input.surge_multiplier || 1.0,
+          surge_fee_cents: input.surge_fee_cents || 0,
         })
         .select()
         .single();

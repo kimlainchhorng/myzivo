@@ -1,10 +1,10 @@
 /**
  * ZIVO Eats — Enhanced Cart Page
- * Full checkout flow with address, promo, payment, tip, ZIVO+ discounts, and wallet credits
+ * Full checkout flow with address, promo, payment, tip, ZIVO+ discounts, wallet credits, and surge pricing
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2 } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, UtensilsCrossed, Loader2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { AddressSelector } from "@/components/eats/AddressSelector";
@@ -13,11 +13,14 @@ import { PaymentMethodModal, PaymentMethodDisplay, type PaymentMethod } from "@/
 import { TipSelector } from "@/components/eats/TipSelector";
 import { MembershipSavingsBadge } from "@/components/membership/MembershipSavingsBadge";
 import { CreditSelector } from "@/components/eats/CreditSelector";
+import { EatsSurgeBadge } from "@/components/eats/EatsSurgeBadge";
+import { SurgeExplainerTooltip } from "@/components/eats/SurgeExplainerTooltip";
 import { useEatsPromo } from "@/hooks/useEatsPromo";
 import { useSavedLocations, type SavedLocation } from "@/hooks/useSavedLocations";
 import { useCreateFoodOrder } from "@/hooks/useEatsOrders";
 import { useMembership, calculateMembershipSavings } from "@/hooks/useMembership";
 import { useCustomerWallet, useAppliedCredit } from "@/hooks/useCustomerWallet";
+import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
@@ -48,6 +51,9 @@ function EatsCartContent() {
   const createOrder = useCreateFoodOrder();
   const { membership, isActive: isMember } = useMembership();
   const { wallet, balanceCents, applyCredit } = useCustomerWallet();
+  
+  // Surge pricing
+  const { isActive: surgeActive, level: surgeLevel, multiplier: surgeMultiplier, calculateDeliveryFee } = useEatsSurgePricing();
 
   // Get current user
   useEffect(() => {
@@ -75,16 +81,20 @@ function EatsCartContent() {
   const deliveryFeeBase = 3.99;
   const serviceFeeBase = Math.round(subtotal * 0.05 * 100) / 100;
   
-  // Calculate membership savings
+  // Apply surge to delivery fee
+  const surgeBreakdown = calculateDeliveryFee(deliveryFeeBase);
+  const deliveryFeeAfterSurge = surgeBreakdown.finalFee;
+  
+  // Calculate membership savings (on surged delivery fee)
   const membershipSavings = useMemo(() => {
     if (!isMember || !membership?.plan) {
       return { deliverySavings: 0, serviceSavings: 0, total: 0 };
     }
-    return calculateMembershipSavings(membership.plan, subtotal, deliveryFeeBase, serviceFeeBase);
-  }, [isMember, membership, subtotal, deliveryFeeBase, serviceFeeBase]);
+    return calculateMembershipSavings(membership.plan, subtotal, deliveryFeeAfterSurge, serviceFeeBase);
+  }, [isMember, membership, subtotal, deliveryFeeAfterSurge, serviceFeeBase]);
 
   // Apply membership discounts
-  const deliveryFee = Math.max(0, deliveryFeeBase - membershipSavings.deliverySavings);
+  const deliveryFee = Math.max(0, deliveryFeeAfterSurge - membershipSavings.deliverySavings);
   const serviceFee = Math.max(0, serviceFeeBase - membershipSavings.serviceSavings);
   const tax = Math.round((subtotal - promo.discountAmount) * 0.08 * 100) / 100;
   
@@ -152,6 +162,9 @@ function EatsCartContent() {
         membership_discount_cents: Math.round(membershipSavings.total * 100),
         // Credit tracking
         credit_applied_cents: creditAppliedCents,
+        // Surge tracking
+        surge_multiplier: surgeMultiplier,
+        surge_fee_cents: Math.round(surgeBreakdown.surgeAmount * 100),
       });
 
       // Apply wallet credit deduction if credits were used
@@ -370,10 +383,32 @@ function EatsCartContent() {
             </div>
           )}
           
-          <div className="flex justify-between text-sm">
-            <span className="text-zinc-400">Delivery Fee</span>
-            <span>${deliveryFee.toFixed(2)}</span>
+          {/* Delivery Fee with Surge Breakdown */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400 flex items-center gap-1">
+                Delivery Fee
+                {surgeActive && <SurgeExplainerTooltip />}
+              </span>
+              <span>${deliveryFee.toFixed(2)}</span>
+            </div>
+            {surgeActive && (
+              <div className="ml-4 space-y-0.5 text-xs">
+                <div className="flex justify-between text-zinc-500">
+                  <span>Base</span>
+                  <span>${deliveryFeeBase.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-orange-400">
+                  <span className="flex items-center gap-1">
+                    <Flame className="w-3 h-3" />
+                    Busy time (×{surgeMultiplier.toFixed(1)})
+                  </span>
+                  <span>+${surgeBreakdown.surgeAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
+          
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">Service Fee</span>
             <span>${serviceFee.toFixed(2)}</span>

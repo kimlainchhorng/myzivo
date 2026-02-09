@@ -14146,6 +14146,114 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_referrals: {
+        Row: {
+          commission_discount_expires_at: string | null
+          commission_discount_months: number | null
+          commission_discount_percent: number | null
+          created_at: string | null
+          credited_at: string | null
+          id: string
+          referee_restaurant_id: string | null
+          referee_reward_cents: number | null
+          referee_user_id: string
+          referrer_restaurant_id: string | null
+          referrer_reward_cents: number | null
+          referrer_user_id: string
+          reward_type: string | null
+          status: string | null
+        }
+        Insert: {
+          commission_discount_expires_at?: string | null
+          commission_discount_months?: number | null
+          commission_discount_percent?: number | null
+          created_at?: string | null
+          credited_at?: string | null
+          id?: string
+          referee_restaurant_id?: string | null
+          referee_reward_cents?: number | null
+          referee_user_id: string
+          referrer_restaurant_id?: string | null
+          referrer_reward_cents?: number | null
+          referrer_user_id: string
+          reward_type?: string | null
+          status?: string | null
+        }
+        Update: {
+          commission_discount_expires_at?: string | null
+          commission_discount_months?: number | null
+          commission_discount_percent?: number | null
+          created_at?: string | null
+          credited_at?: string | null
+          id?: string
+          referee_restaurant_id?: string | null
+          referee_reward_cents?: number | null
+          referee_user_id?: string
+          referrer_restaurant_id?: string | null
+          referrer_reward_cents?: number | null
+          referrer_user_id?: string
+          reward_type?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_referrals_referee_restaurant_id_fkey"
+            columns: ["referee_restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referee_restaurant_id_fkey"
+            columns: ["referee_restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referee_restaurant_id_fkey"
+            columns: ["referee_restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referee_restaurant_id_fkey"
+            columns: ["referee_restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
+            columns: ["referrer_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
+            columns: ["referrer_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
+            columns: ["referrer_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
+            columns: ["referrer_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -20988,6 +21096,7 @@ export type Database = {
           rating: number | null
           rating_count: number | null
           ratings_count: number | null
+          referred_by_restaurant_id: string | null
           region_id: string | null
           restricted_reason: string | null
           service_fee_percent: number | null
@@ -21057,6 +21166,7 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           ratings_count?: number | null
+          referred_by_restaurant_id?: string | null
           region_id?: string | null
           restricted_reason?: string | null
           service_fee_percent?: number | null
@@ -21126,6 +21236,7 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           ratings_count?: number | null
+          referred_by_restaurant_id?: string | null
           region_id?: string | null
           restricted_reason?: string | null
           service_fee_percent?: number | null
@@ -21151,6 +21262,34 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_referred_by_restaurant_id_fkey"
+            columns: ["referred_by_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_referred_by_restaurant_id_fkey"
+            columns: ["referred_by_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_referred_by_restaurant_id_fkey"
+            columns: ["referred_by_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_referred_by_restaurant_id_fkey"
+            columns: ["referred_by_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -24454,6 +24593,55 @@ export type Database = {
           zone?: string | null
         }
         Relationships: []
+      }
+      surge_notifications: {
+        Row: {
+          driver_id: string
+          id: string
+          multiplier: number
+          notification_type: string
+          sent_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          driver_id: string
+          id?: string
+          multiplier: number
+          notification_type?: string
+          sent_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          driver_id?: string
+          id?: string
+          multiplier?: number
+          notification_type?: string
+          sent_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "surge_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "surge_notifications_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "surge_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       surge_overrides: {
         Row: {
@@ -31760,6 +31948,22 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_referral_device_groups: {
+        Args: { hours?: number; min_count?: number }
+        Returns: {
+          device_fingerprint: string
+          referral_count: number
+          referral_ids: string[]
+        }[]
+      }
+      get_referral_ip_groups: {
+        Args: { hours?: number; min_count?: number }
+        Returns: {
+          ip_address: string
+          referral_count: number
+          referral_ids: string[]
+        }[]
+      }
       get_referral_settings: { Args: never; Returns: Json }
       get_restaurant_reviews: {
         Args: {
