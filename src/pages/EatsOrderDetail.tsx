@@ -21,6 +21,7 @@ import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
 import { HighDemandBanner } from "@/components/eats/HighDemandBanner";
 import { LowDriverSupplyBanner } from "@/components/eats/LowDriverSupplyBanner";
+import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
 import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
 import { GroupedDeliveryBadge } from "@/components/eats/GroupedDeliveryBadge";
 import { DispatchSearchBanner } from "@/components/eats/DispatchSearchBanner";
@@ -336,6 +337,11 @@ export default function EatsOrderDetail() {
           />
         )}
 
+        {/* Incentive Boost Banner - show when incentive period active and supply is good */}
+        {deliveryFactors.showIncentiveBanner && isActiveOrder && (
+          <IncentiveBoostBanner orderId={order.id} />
+        )}
+
         {/* Dispatch Search Banner - show when looking for a driver */}
         <AnimatePresence>
           {dispatchStatus.showSearching && isActiveOrder && (
@@ -385,6 +391,8 @@ export default function EatsOrderDetail() {
             supplyMultiplier={deliveryFactors.supplyMultiplier}
             nearbyDriverCount={deliveryFactors.nearbyDriverCount}
             showLowSupplyNote={deliveryFactors.driverSupply === "low"}
+            incentiveMultiplier={deliveryFactors.incentiveMultiplier}
+            showIncentiveNote={deliveryFactors.isIncentivePeriod && deliveryFactors.driverSupply === "high"}
           />
         )}
 

@@ -6,7 +6,7 @@
  * Traffic-aware ETA adjustments based on time of day
  */
 import { useState, useEffect, useMemo } from "react";
-import { Clock, Zap, Flame, Layers, TrafficCone, Car } from "lucide-react";
+import { Clock, Zap, Flame, Layers, TrafficCone, Car, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
@@ -29,6 +29,10 @@ interface EtaCountdownProps {
   nearbyDriverCount?: number;
   /** Whether to show low supply note */
   showLowSupplyNote?: boolean;
+  /** Incentive period multiplier for ETA adjustment (0.85 = 15% faster) */
+  incentiveMultiplier?: number;
+  /** Whether to show incentive boost note */
+  showIncentiveNote?: boolean;
 }
 
 // Haversine formula for distance calculation
@@ -88,6 +92,8 @@ export function EtaCountdown({
   supplyMultiplier = 1.0,
   nearbyDriverCount,
   showLowSupplyNote = false,
+  incentiveMultiplier = 1.0,
+  showIncentiveNote = false,
 }: EtaCountdownProps) {
   const [now, setNow] = useState(Date.now());
 
@@ -102,7 +108,7 @@ export function EtaCountdown({
   // Get traffic conditions
   const traffic = useMemo(() => getTrafficMultiplier(), []);
 
-  // Calculate dynamic ETA based on live driver distance with traffic and supply adjustment
+  // Calculate dynamic ETA based on live driver distance with traffic, supply, and incentive adjustment
   const dynamicEtaMinutes = useMemo(() => {
     if (
       driverLat != null &&
@@ -117,13 +123,16 @@ export function EtaCountdown({
         deliveryLng
       );
       const baseMinutes = distance / AVG_SPEED_MILES_PER_MIN;
-      // Apply traffic and supply multipliers, cap total at 2.0x
-      const combinedMultiplier = Math.min(traffic.multiplier * supplyMultiplier, 2.0);
+      // Apply traffic, supply, and incentive multipliers, cap total at 2.0x
+      const combinedMultiplier = Math.min(
+        traffic.multiplier * supplyMultiplier * incentiveMultiplier, 
+        2.0
+      );
       const withFactors = baseMinutes * combinedMultiplier;
       return Math.max(1, Math.ceil(withFactors));
     }
     return null;
-  }, [driverLat, driverLng, deliveryLat, deliveryLng, traffic.multiplier, supplyMultiplier]);
+  }, [driverLat, driverLng, deliveryLat, deliveryLng, traffic.multiplier, supplyMultiplier, incentiveMultiplier]);
 
   // Calculate time-based ETA from eta_dropoff timestamp
   // Prefer batchStopEta when available (more accurate for grouped orders)
@@ -148,6 +157,8 @@ export function EtaCountdown({
   const showTrafficNote = traffic.isRushHour && dynamicEtaMinutes != null && !isArrivingSoon;
   // Show supply note only if no traffic note and supply is low
   const showSupplyNote = showLowSupplyNote && !showTrafficNote && !isArrivingSoon;
+  // Show incentive note only if no other notes are showing and incentive is active
+  const displayIncentiveNote = showIncentiveNote && !showTrafficNote && !showSupplyNote && !hasDemandBuffer && !isArrivingSoon;
 
   return (
     <motion.div
@@ -233,6 +244,16 @@ export function EtaCountdown({
           <Car className="w-3 h-3 text-orange-500" />
           <span className="text-orange-400/80">
             Few drivers nearby — ETA adjusted
+          </span>
+        </div>
+      )}
+
+      {/* Incentive boost note */}
+      {displayIncentiveNote && (
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          <Sparkles className="w-3 h-3 text-emerald-500" />
+          <span className="text-emerald-400/80">
+            Peak driver hours — faster delivery
           </span>
         </div>
       )}
