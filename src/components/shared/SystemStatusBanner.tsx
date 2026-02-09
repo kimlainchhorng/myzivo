@@ -3,7 +3,7 @@
  * Customer-facing reliability banner for active incidents
  */
 import { useState, useEffect } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, CreditCard, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSystemStatus } from "@/hooks/useSystemStatus";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ interface SystemStatusBannerProps {
 }
 
 export default function SystemStatusBanner({ className }: SystemStatusBannerProps) {
-  const { hasActiveIncident, incidentMessage, isLoading } = useSystemStatus();
+  const { hasActiveIncident, incidentMessage, incidentType, isLoading } = useSystemStatus();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Check localStorage on mount
@@ -24,17 +24,14 @@ export default function SystemStatusBanner({ className }: SystemStatusBannerProp
     if (dismissed) {
       try {
         const parsedDismissed = JSON.parse(dismissed);
-        // Check if dismissed within the last hour (session-like behavior)
         const dismissedAt = new Date(parsedDismissed.dismissedAt).getTime();
         const oneHourAgo = Date.now() - 60 * 60 * 1000;
         if (dismissedAt > oneHourAgo) {
           setIsDismissed(true);
         } else {
-          // Clear old dismissal
           localStorage.removeItem(STORAGE_KEY);
         }
       } catch {
-        // Invalid JSON, ignore
         localStorage.removeItem(STORAGE_KEY);
       }
     }
@@ -50,10 +47,11 @@ export default function SystemStatusBanner({ className }: SystemStatusBannerProp
     );
   };
 
-  // Don't render if loading, no incident, or dismissed
   if (isLoading || !hasActiveIncident || isDismissed) {
     return null;
   }
+
+  const Icon = incidentType === "payment" ? CreditCard : AlertTriangle;
 
   return (
     <div
@@ -66,7 +64,7 @@ export default function SystemStatusBanner({ className }: SystemStatusBannerProp
       )}
     >
       <div className="container mx-auto flex items-center justify-center gap-2">
-        <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <Icon className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
         <span className="text-amber-700 dark:text-amber-300 font-medium">
           {incidentMessage}
         </span>

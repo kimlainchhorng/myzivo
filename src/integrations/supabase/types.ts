@@ -28124,6 +28124,33 @@ export type Database = {
         }
         Relationships: []
       }
+      system_alerts: {
+        Row: {
+          alert_type: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          resolved: boolean | null
+          severity: string | null
+        }
+        Insert: {
+          alert_type?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          resolved?: boolean | null
+          severity?: string | null
+        }
+        Update: {
+          alert_type?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          resolved?: boolean | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
       system_health_history: {
         Row: {
           active_incidents: number | null
