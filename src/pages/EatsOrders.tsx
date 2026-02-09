@@ -3,15 +3,17 @@
  * Order history with status badges and scheduled order indicators
  */
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2, CalendarClock } from "lucide-react";
+import { ArrowLeft, Clock, Package, UtensilsCrossed, ChevronRight, Loader2, CalendarClock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyEatsOrders } from "@/hooks/useEatsOrders";
+import { useReorder } from "@/hooks/useReorder";
 import SEOHead from "@/components/SEOHead";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { CartProvider } from "@/contexts/CartContext";
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   pending: { bg: "bg-zinc-500/20", text: "text-zinc-400", label: "Pending" },
@@ -23,9 +25,10 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
   cancelled: { bg: "bg-red-500/20", text: "text-red-400", label: "Cancelled" },
 };
 
-export default function EatsOrders() {
+function EatsOrdersContent() {
   const navigate = useNavigate();
   const { data: orders, isLoading, error } = useMyEatsOrders();
+  const { reorder, isReordering } = useReorder();
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -87,64 +90,110 @@ export default function EatsOrders() {
         {/* Orders List */}
         {orders && orders.length > 0 && (
           <div className="space-y-4">
-            {orders.map((order, index) => {
-              const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
-              const restaurantName = (order.restaurants as any)?.name || "Restaurant";
-              const createdAt = new Date(order.created_at);
-              const items = (order.items as any[]) || [];
-              const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+              {orders.map((order, index) => {
+                const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
+                const restaurantName = (order.restaurants as any)?.name || "Restaurant";
+                const createdAt = new Date(order.created_at);
+                const items = (order.items as any[]) || [];
+                const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+                const canReorder = order.status === "delivered" || order.status === "cancelled";
 
-              return (
-                <motion.button
-                  key={order.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => navigate(`/eats/orders/${order.id}`)}
-                  className="w-full bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5 text-left hover:bg-zinc-800/80 transition-colors"
-                >
-                  <div className="flex gap-4">
-                    {/* Icon */}
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center shrink-0">
-                      <UtensilsCrossed className="w-6 h-6 text-orange-500" />
-                    </div>
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-5"
+                  >
+                    <button
+                      onClick={() => navigate(`/eats/orders/${order.id}`)}
+                      className="w-full text-left hover:bg-zinc-800/50 -m-5 p-5 rounded-2xl transition-colors"
+                    >
+                      <div className="flex gap-4">
+                        {/* Icon */}
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-zinc-800 flex items-center justify-center shrink-0">
+                          <UtensilsCrossed className="w-6 h-6 text-orange-500" />
+                        </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-bold line-clamp-1">{restaurantName}</h3>
-                        <ChevronRight className="w-5 h-5 text-zinc-500 shrink-0" />
-                      </div>
-                      
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <Badge className={cn("text-xs font-semibold border-0", statusStyle.bg, statusStyle.text)}>
-                          {statusStyle.label}
-                        </Badge>
-                        {(order as any).is_scheduled && (order as any).deliver_by && (
-                          <Badge className="bg-violet-500/20 text-violet-400 text-xs font-semibold border-0 flex items-center gap-1">
-                            <CalendarClock className="w-3 h-3" />
-                            {format(new Date((order as any).deliver_by), "MMM d, h:mm a")}
-                          </Badge>
-                        )}
-                        <span className="text-sm text-zinc-500">
-                          · ${order.total_amount?.toFixed(2) || "0.00"}
-                        </span>
-                      </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold line-clamp-1">{restaurantName}</h3>
+                            <ChevronRight className="w-5 h-5 text-zinc-500 shrink-0" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge className={cn("text-xs font-semibold border-0", statusStyle.bg, statusStyle.text)}>
+                              {statusStyle.label}
+                            </Badge>
+                            {(order as any).is_scheduled && (order as any).deliver_by && (
+                              <Badge className="bg-violet-500/20 text-violet-400 text-xs font-semibold border-0 flex items-center gap-1">
+                                <CalendarClock className="w-3 h-3" />
+                                {format(new Date((order as any).deliver_by), "MMM d, h:mm a")}
+                              </Badge>
+                            )}
+                            <span className="text-sm text-zinc-500">
+                              · ${order.total_amount?.toFixed(2) || "0.00"}
+                            </span>
+                          </div>
 
-                      <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatDistanceToNow(createdAt, { addSuffix: true })}</span>
-                        <span>·</span>
-                        <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                          <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDistanceToNow(createdAt, { addSuffix: true })}</span>
+                            <span>·</span>
+                            <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })}
+                    </button>
+
+                    {/* Reorder Button */}
+                    {canReorder && (
+                      <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            reorder({
+                              id: order.id,
+                              restaurant_id: order.restaurant_id,
+                              restaurants: order.restaurants as { name: string } | null,
+                              items: items.map(item => ({
+                                menu_item_id: item.menu_item_id,
+                                name: item.name,
+                                price: item.price,
+                                quantity: item.quantity,
+                                notes: item.notes,
+                              })),
+                            });
+                          }}
+                          disabled={isReordering}
+                          className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                        >
+                          {isReordering ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-4 h-4" />
+                          )}
+                          Reorder
+                        </Button>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function EatsOrders() {
+  return (
+    <CartProvider>
+      <EatsOrdersContent />
+    </CartProvider>
   );
 }
