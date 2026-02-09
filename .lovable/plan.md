@@ -1,387 +1,332 @@
 
-# Restaurant Availability Status — Implementation Plan
+# Incentive Awareness — Implementation Plan
 
 ## Overview
-Add a comprehensive restaurant availability status system showing Open, Busy, or Temporarily Unavailable states with appropriate messaging and ordering behavior.
+Add incentive-period awareness to improve ETA accuracy and optionally display a positive messaging banner when driver incentives are active ("More drivers online in your area — faster delivery times.").
 
 ---
 
 ## Current State Analysis
 
-### Database Fields Available (already in `restaurants` table)
-| Field | Type | Purpose |
-|-------|------|---------|
-| `is_open` | boolean | Whether restaurant is currently accepting orders |
-| `busy_mode` | boolean | Whether restaurant is in busy mode |
-| `busy_prep_time_bonus_minutes` | number | Extra minutes added during busy periods |
-| `pause_new_orders` | boolean | Temporarily disable new orders |
-| `avg_prep_time` | number | Normal preparation time |
-| `closed_reason` | string | Optional reason for closure |
-
-### Frontend Interface (needs updating)
-Current `Restaurant` interface in `useEatsOrders.ts`:
+### Database Schema Available
+The `driver_incentives` table already exists:
 ```typescript
-interface Restaurant {
+driver_incentives: {
   id: string;
-  name: string;
-  is_open: boolean | null;
-  status: string | null;
-  avg_prep_time: number | null;
-  // Missing: busy_mode, pause_new_orders, busy_prep_time_bonus_minutes
+  name: string | null;
+  bonus_amount: number | null;
+  start_time: string | null;      // Time window start (e.g., "11:00")
+  end_time: string | null;        // Time window end (e.g., "14:00")
+  conditions_json: Json | null;   // Additional conditions
+  created_at: string | null;
 }
 ```
 
-### Current UI Behavior
-- Shows "Open" badge if `is_open === true`
-- Shows "Closed" badge if `is_open === false`
-- No busy state messaging
-- No ordering restriction for unavailable restaurants
+### Current ETA System
+The `useEatsDeliveryFactors` hook already combines:
+- **Demand level** (surge pricing)
+- **Driver supply** (nearby driver count)
+- ETA multipliers: low supply = 1.5x, moderate = 1.2x, high = 1.0x
+
+### Current Banners
+- `HighDemandBanner` — Shows when demand is high (negative signal)
+- `LowDriverSupplyBanner` — Shows when few drivers nearby (negative signal)
+- No positive signal banner currently exists
 
 ---
 
 ## Implementation Plan
 
-### 1) Update Restaurant Interface
+### 1) Create useDriverIncentives Hook
 
-**File to Modify:** `src/hooks/useEatsOrders.ts`
+**File to Create:** `src/hooks/useDriverIncentives.ts`
 
-**Changes:**
-Add new fields to the `Restaurant` interface to capture availability status:
+**Purpose:** Fetch active driver incentives and determine if we're in an incentive period.
 
 ```typescript
-export interface Restaurant {
-  // ... existing fields
-  busy_mode: boolean | null;
-  busy_prep_time_bonus_minutes: number | null;
-  pause_new_orders: boolean | null;
-  closed_reason: string | null;
+interface ActiveIncentive {
+  id: string;
+  name: string;
+  bonusAmount: number;
 }
-```
 
-### 2) Create RestaurantAvailabilityBadge Component
-
-**File to Create:** `src/components/eats/RestaurantAvailabilityBadge.tsx`
-
-**Purpose:** Unified badge component showing restaurant status with consistent styling.
-
-**States:**
-| Status | Condition | Badge Color | Icon |
-|--------|-----------|-------------|------|
-| Open | `is_open && !busy_mode && !pause_new_orders` | Emerald/green | Checkmark |
-| Busy | `is_open && busy_mode && !pause_new_orders` | Amber/orange | Clock |
-| Temporarily Unavailable | `pause_new_orders || !is_open` | Red | AlertCircle |
-
-**Styling:**
-```text
-+----------------------------------+
-| [🟢 Open]                        | Emerald badge
-+----------------------------------+
-| [⏱ Busy — longer wait]          | Amber badge + tooltip
-+----------------------------------+
-| [⚠ Temporarily unavailable]     | Red badge
-+----------------------------------+
-```
-
-### 3) Create BusyRestaurantBanner Component
-
-**File to Create:** `src/components/eats/BusyRestaurantBanner.tsx`
-
-**Purpose:** Contextual banner on restaurant menu page when busy.
-
-**UI Design:**
-```text
-+----------------------------------------------------------+
-| [⏱]  High demand — longer preparation times              |
-|      Expected wait: 45-55 min (15 min longer than usual) |
-+----------------------------------------------------------+
-```
-
-**Features:**
-- Show when `busy_mode === true`
-- Calculate extended prep time using `avg_prep_time + busy_prep_time_bonus_minutes`
-- Dismissible per-session
-- Amber/orange theme matching other Eats warnings
-
-### 4) Create UnavailableBanner Component
-
-**File to Create:** `src/components/eats/UnavailableBanner.tsx`
-
-**Purpose:** Banner on restaurant page when temporarily unavailable.
-
-**UI Design:**
-```text
-+----------------------------------------------------------+
-| [⚠]  This restaurant is temporarily unavailable          |
-|      You can browse the menu, but ordering is paused.    |
-|      [reason if provided]                                |
-+----------------------------------------------------------+
-```
-
-**Features:**
-- Show when `pause_new_orders === true` or `is_open === false`
-- Red/destructive theme
-- Non-dismissible (ordering actually blocked)
-
-### 5) Create useRestaurantAvailability Hook
-
-**File to Create:** `src/hooks/useRestaurantAvailability.ts`
-
-**Purpose:** Derive availability status and messaging from restaurant data.
-
-```typescript
-interface RestaurantAvailability {
-  status: "open" | "busy" | "unavailable";
-  canOrder: boolean;
-  statusMessage: string;
-  detailMessage: string | null;
-  adjustedPrepTime: number | null;
-  prepTimeBonus: number | null;
+interface DriverIncentivesInfo {
+  isIncentivePeriod: boolean;
+  activeIncentives: ActiveIncentive[];
+  isLoading: boolean;
 }
 ```
 
 **Logic:**
+```text
+Current Time Check:
+  ↓
+Query driver_incentives where:
+  - start_time <= current_time
+  - end_time >= current_time
+  ↓
+If any active incentives found:
+  → isIncentivePeriod = true
+  → activeIncentives = matching records
+Else:
+  → isIncentivePeriod = false
+```
+
+**Query Strategy:**
 ```typescript
-function getRestaurantAvailability(restaurant: Restaurant): RestaurantAvailability {
-  // Unavailable: explicitly paused or closed
-  if (restaurant.pause_new_orders || restaurant.is_open === false) {
-    return {
-      status: "unavailable",
-      canOrder: false,
-      statusMessage: "Temporarily unavailable",
-      detailMessage: restaurant.closed_reason || "Ordering is currently paused.",
-      adjustedPrepTime: null,
-      prepTimeBonus: null,
-    };
-  }
+const { data } = await supabase
+  .from("driver_incentives")
+  .select("id, name, bonus_amount, start_time, end_time")
+  .not("start_time", "is", null)
+  .not("end_time", "is", null);
+
+// Filter client-side for current time window
+const currentTime = format(new Date(), "HH:mm");
+const active = data?.filter(incentive => 
+  currentTime >= incentive.start_time && 
+  currentTime <= incentive.end_time
+);
+```
+
+### 2) Update useEatsDeliveryFactors Hook
+
+**File to Modify:** `src/hooks/useEatsDeliveryFactors.ts`
+
+**Changes:**
+1. Import and use `useDriverIncentives`
+2. Add incentive period to delivery factors
+3. Apply ETA reduction when incentive is active
+
+**New Interface Fields:**
+```typescript
+export interface DeliveryFactors {
+  // Existing fields...
+  demandLevel: SurgeLevel;
+  driverSupply: DriverSupplyLevel;
+  supplyMultiplier: number;
   
-  // Busy: open but in busy mode
-  if (restaurant.busy_mode) {
-    const bonus = restaurant.busy_prep_time_bonus_minutes || 15;
-    const base = restaurant.avg_prep_time || 25;
-    return {
-      status: "busy",
-      canOrder: true,
-      statusMessage: "Busy",
-      detailMessage: "High demand — longer preparation times.",
-      adjustedPrepTime: base + bonus,
-      prepTimeBonus: bonus,
-    };
-  }
-  
-  // Normal open state
-  return {
-    status: "open",
-    canOrder: true,
-    statusMessage: "Open",
-    detailMessage: null,
-    adjustedPrepTime: restaurant.avg_prep_time,
-    prepTimeBonus: null,
-  };
+  // NEW: Incentive awareness
+  isIncentivePeriod: boolean;
+  incentiveMultiplier: number;      // 0.85 when active (15% faster)
+  showIncentiveBanner: boolean;     // Show positive banner
+  incentiveMessage: string | null;  // "More drivers online..."
 }
 ```
 
-### 6) Update EatsRestaurants Page (Restaurant List)
-
-**File to Modify:** `src/pages/EatsRestaurants.tsx`
-
-**Changes:**
-1. Import `RestaurantAvailabilityBadge`
-2. Replace simple Open/Closed badge with new unified badge
-3. Show prep time adjustment for busy restaurants
-
-**Badge Location:**
+**ETA Adjustment Logic:**
 ```text
-+------------------------------------------+
-| [Image]                                  |
-|                          [🟡 Busy]       |  <-- Top right corner
-+------------------------------------------+
-| Restaurant Name                          |
-| Italian • ⭐ 4.8 • 🕐 35-45 min          |  <-- Prep time adjusted
-+------------------------------------------+
+If incentive period is active:
+  → incentiveMultiplier = 0.85 (15% faster ETAs)
+  → showIncentiveBanner = true (if supply is also good)
+Else:
+  → incentiveMultiplier = 1.0 (no adjustment)
+  → showIncentiveBanner = false
 ```
 
-### 7) Update MobileEatsPremium Component
+**Combined Multiplier:**
+```typescript
+// Final ETA multiplier considers all factors
+const finalMultiplier = supplyMultiplier * incentiveMultiplier;
+// e.g., low supply (1.5) + incentive (0.85) = 1.275x
+// e.g., high supply (1.0) + incentive (0.85) = 0.85x (faster!)
+```
 
-**File to Modify:** `src/components/eats/MobileEatsPremium.tsx`
+### 3) Create IncentiveBoostBanner Component
+
+**File to Create:** `src/components/eats/IncentiveBoostBanner.tsx`
+
+**Purpose:** Positive messaging banner when incentives attract more drivers.
+
+**UI Design:**
+```text
++----------------------------------------------------------+
+| [🚗✨]  More drivers online in your area            [X]  |
+|         — faster delivery times.                         |
++----------------------------------------------------------+
+Background: bg-emerald-500/10 border-emerald-500/30
+```
+
+**Props:**
+```typescript
+interface IncentiveBoostBannerProps {
+  orderId?: string;        // For session-based dismissal
+  className?: string;
+  variant?: "compact" | "full";
+}
+```
+
+**Behavior:**
+- Dismissible per-session (sessionStorage)
+- Emerald/green theme (positive signal)
+- Animated car + sparkle icon
+- Only shows when both:
+  1. `isIncentivePeriod === true`
+  2. Supply is NOT low (don't mix positive/negative signals)
+
+### 4) Update EtaCountdown Component
+
+**File to Modify:** `src/components/eats/EtaCountdown.tsx`
 
 **Changes:**
-1. Import and use `RestaurantAvailabilityBadge`
-2. Replace current Open/Closed badge (lines 253-264)
-3. Adjust displayed prep time when busy
+Add incentive multiplier to ETA calculation:
 
-**Current Code (to replace):**
+**Current Calculation:**
 ```typescript
-{restaurant.is_open !== null && (
-  <div className="absolute top-6 left-6">
-    <div className={`... ${restaurant.is_open ? "emerald" : "red"}`}>
-      {restaurant.is_open ? "Open Now" : "Closed"}
-    </div>
+const combinedMultiplier = Math.min(traffic.multiplier * supplyMultiplier, 2.0);
+```
+
+**Updated Calculation:**
+```typescript
+// New prop
+incentiveMultiplier?: number;
+
+// Updated calculation
+const combinedMultiplier = Math.min(
+  traffic.multiplier * supplyMultiplier * (incentiveMultiplier ?? 1.0), 
+  2.0
+);
+
+// Add incentive note when active
+{showIncentiveNote && (
+  <div className="mt-3 flex items-center gap-2 text-xs">
+    <Sparkles className="w-3 h-3 text-emerald-500" />
+    <span className="text-emerald-400/80">
+      Peak driver hours — faster delivery
+    </span>
   </div>
 )}
 ```
 
-**New Code:**
-```typescript
-<div className="absolute top-6 left-6">
-  <RestaurantAvailabilityBadge restaurant={restaurant} />
-</div>
-```
+### 5) Update EatsOrderDetail Page
 
-### 8) Update EatsRestaurantMenu Page
-
-**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+**File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
 **Changes:**
-1. Import `useRestaurantAvailability`, `BusyRestaurantBanner`, `UnavailableBanner`
-2. Show appropriate banner based on availability status
-3. Disable "Add to Cart" buttons when `canOrder === false`
-4. Update prep time display to use adjusted time
+1. Import `IncentiveBoostBanner`
+2. Show banner when incentive is active and supply is good
+3. Pass incentive multiplier to EtaCountdown
 
-**Banner Placement (after header, before menu):**
-```typescript
-{/* Availability Banners */}
-{availability.status === "busy" && (
-  <BusyRestaurantBanner
-    restaurant={restaurant}
-    adjustedPrepTime={availability.adjustedPrepTime}
-    bonusMinutes={availability.prepTimeBonus}
-  />
-)}
-{availability.status === "unavailable" && (
-  <UnavailableBanner
-    message={availability.detailMessage}
-  />
-)}
+**Banner Priority Logic:**
+```text
+Banner Display Priority (mutually exclusive):
+1. HighDemandBanner — if demand surge active
+2. LowDriverSupplyBanner — if supply is low
+3. IncentiveBoostBanner — if incentive active AND supply is good
+4. None — normal conditions
 ```
 
-**Add Button Disable Logic (in MenuItemCard):**
+**Implementation:**
 ```typescript
-<Button
-  disabled={!canOrder}  // New prop passed down
-  onClick={handleAdd}
->
-  {canOrder ? "Add" : "Unavailable"}
-</Button>
-```
-
-### 9) Update Checkout Page
-
-**File to Modify:** `src/pages/EatsCheckout.tsx`
-
-**Changes:**
-Add validation to prevent checkout for unavailable restaurants:
-
-```typescript
-// Fetch restaurant to check availability
-const { data: restaurant } = useRestaurant(restaurantId);
-const availability = useRestaurantAvailability(restaurant);
-
-// Block checkout if unavailable
-if (!availability.canOrder) {
-  return (
-    <div className="...">
-      <AlertCircle />
-      <h1>Restaurant Unavailable</h1>
-      <p>This restaurant is temporarily not accepting orders.</p>
-      <Button onClick={() => navigate("/eats/restaurants")}>
-        Browse Other Restaurants
-      </Button>
-    </div>
-  );
-}
+{/* Positive: Incentive boost banner */}
+{deliveryFactors.showIncentiveBanner && isActiveOrder && (
+  <IncentiveBoostBanner orderId={order.id} />
+)}
 ```
 
 ---
 
 ## File Summary
 
-### New Files (4)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/components/eats/RestaurantAvailabilityBadge.tsx` | Unified status badge (Open/Busy/Unavailable) |
-| `src/components/eats/BusyRestaurantBanner.tsx` | Banner for busy restaurants with prep time info |
-| `src/components/eats/UnavailableBanner.tsx` | Banner for temporarily unavailable restaurants |
-| `src/hooks/useRestaurantAvailability.ts` | Hook to derive availability status and messaging |
+| `src/hooks/useDriverIncentives.ts` | Hook to check active driver incentive periods |
+| `src/components/eats/IncentiveBoostBanner.tsx` | Positive messaging banner for incentive periods |
 
-### Modified Files (5)
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/hooks/useEatsOrders.ts` | Add `busy_mode`, `pause_new_orders`, `busy_prep_time_bonus_minutes`, `closed_reason` to Restaurant interface |
-| `src/pages/EatsRestaurants.tsx` | Use new availability badge component |
-| `src/components/eats/MobileEatsPremium.tsx` | Replace Open/Closed badge with availability badge |
-| `src/pages/EatsRestaurantMenu.tsx` | Add banners, disable ordering when unavailable |
-| `src/pages/EatsCheckout.tsx` | Block checkout for unavailable restaurants |
+| `src/hooks/useEatsDeliveryFactors.ts` | Add incentive awareness, adjust ETA multiplier |
+| `src/components/eats/EtaCountdown.tsx` | Accept incentive multiplier, show incentive note |
+| `src/pages/EatsOrderDetail.tsx` | Display IncentiveBoostBanner when appropriate |
 
 ---
 
-## UI Components
+## ETA Adjustment Summary
 
-### RestaurantAvailabilityBadge
-```text
-Open:        [✓ Open]           bg-emerald-500/20 text-emerald-400
-Busy:        [⏱ Busy]           bg-amber-500/20 text-amber-400
-Unavailable: [⚠ Unavailable]    bg-red-500/20 text-red-400
-```
+| Condition | Multiplier | Effect |
+|-----------|------------|--------|
+| Normal supply | 1.0x | Base ETA |
+| Low supply | 1.5x | +50% ETA |
+| Moderate supply | 1.2x | +20% ETA |
+| Incentive active | 0.85x | -15% ETA |
+| Rush hour traffic | 1.4x | +40% ETA |
+| Late night | 0.8x | -20% ETA |
 
-### BusyRestaurantBanner
-```text
-+----------------------------------------------------------+
-| [⏱]  High demand — longer preparation times          [X] |
-|      Expected wait: 45-55 min (~15 min longer)           |
-+----------------------------------------------------------+
-Background: bg-amber-500/10 border-amber-500/30
-```
-
-### UnavailableBanner
-```text
-+----------------------------------------------------------+
-| [⚠]  This restaurant is temporarily unavailable          |
-|      You can browse the menu, but ordering is paused.    |
-+----------------------------------------------------------+
-Background: bg-red-500/10 border-red-500/30
-```
+**Combined Example:**
+- Moderate supply (1.2) + Incentive active (0.85) = 1.02x (nearly normal)
+- High supply (1.0) + Incentive active (0.85) = 0.85x (faster!)
+- Low supply (1.5) + Incentive active (0.85) = 1.275x (still slower, but improved)
 
 ---
 
-## Status Logic Flow
+## Banner Display Logic
 
 ```text
-Restaurant Data
-      ↓
-pause_new_orders === true?
-      ├── YES → Status: "unavailable", canOrder: false
-      └── NO ↓
-is_open === false?
-      ├── YES → Status: "unavailable", canOrder: false
-      └── NO ↓
-busy_mode === true?
-      ├── YES → Status: "busy", canOrder: true, adjust prep time
-      └── NO → Status: "open", canOrder: true
+                    Supply Level
+                    ↓
+    ┌───────────────┴───────────────┐
+    Low/Moderate                   High
+    ↓                               ↓
+Check Demand                   Check Incentive
+    ↓                               ↓
+┌───┴───┐                      ┌───┴───┐
+High   Low                     Yes    No
+↓       ↓                       ↓      ↓
+Demand  Supply                Incentive (nothing)
+Banner  Banner                Banner
 ```
+
+**Key Rule:** Never show IncentiveBoostBanner together with negative banners.
 
 ---
 
-## Data Requirements
+## Customer-Facing Message
 
-The database already has these fields — just need to include them in frontend queries:
-- `busy_mode`: boolean (set by merchant when overwhelmed)
-- `busy_prep_time_bonus_minutes`: number (extra minutes during busy)
-- `pause_new_orders`: boolean (merchant can pause without closing)
-- `closed_reason`: string (optional explanation)
+The exact message as requested:
+> **"More drivers online in your area — faster delivery times."**
+
+This is a positive, reassuring message that:
+1. Explains WHY delivery might be faster
+2. Doesn't create false expectations (only shows when conditions are good)
+3. Complements the ETA improvement with context
+
+---
+
+## Data Flow
+
+```text
+driver_incentives (DB)
+        ↓
+useDriverIncentives (Hook)
+        ↓
+    ┌───┴───┐
+    isIncentivePeriod
+    activeIncentives
+        ↓
+useEatsDeliveryFactors (Hook)
+        ↓
+    ┌───┴────────┬────────────┐
+    incentive    showIncentive  Combined
+    Multiplier   Banner         ETA Factors
+        ↓            ↓              ↓
+EtaCountdown   IncentiveBoost   Delivery
+(faster ETA)   Banner           Estimate
+```
 
 ---
 
 ## Summary
 
-This implementation provides:
+This implementation:
 
-1. **Three clear status states**: Open, Busy, Temporarily Unavailable
-2. **Consistent badge component**: Used across restaurant lists and menu pages
-3. **Busy messaging**: "High demand — longer preparation times" with adjusted ETA
-4. **Unavailable behavior**: Menu browsing allowed, ordering disabled
-5. **Checkout protection**: Prevents orders to unavailable restaurants
+1. **ETA Accuracy**: Uses incentive-active periods to reduce ETA by ~15% when more drivers are expected to be online due to bonus incentives.
 
-The customer message for busy status:
-> **"High demand — longer preparation times."**
+2. **Optional Banner**: Shows the positive message "More drivers online in your area — faster delivery times." only when:
+   - An incentive period is active
+   - Driver supply is good (not low)
+   - No negative banners (demand/supply) are showing
 
-This matches the user's exact requirement while leveraging existing database fields.
+3. **Non-Conflicting**: Maintains mutual exclusivity with existing warning banners to avoid confusing mixed signals.
+
+4. **Leverages Existing Tables**: Uses the existing `driver_incentives` table that already has `start_time` and `end_time` fields for time-based incentive windows.
