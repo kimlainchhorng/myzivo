@@ -128,7 +128,7 @@ export default function NearbyCars({
           mapPaneName={OverlayView.OVERLAY_LAYER}
         >
           <div 
-            className="-translate-x-1/2 -translate-y-1/2 transition-all duration-[1800ms] ease-out"
+            className="-translate-x-1/2 -translate-y-1/2 transition-all ease-out [transition-duration:1800ms]"
             style={{ zIndex: 50 }}
           >
             <CarSvg rotation={car.rot} />
