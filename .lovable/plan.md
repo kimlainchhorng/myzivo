@@ -1,238 +1,200 @@
 
-# Business Accounts — Implementation Plan
+# Invoice Access for Business Users — Implementation Plan
 
 ## Overview
-Enable users to join or create a company account for corporate billing, allowing payment to be charged to the company instead of personal payment methods. This includes a Business Account section in account settings with invite code functionality and checkout integration.
+Add an invoices section at `/account/invoices` where business account members can view and download their company invoices as PDFs. This page will display invoice number, date, amount, and status (paid/unpaid), with PDF download functionality.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| Business accounts table | Exists | `business_accounts` (id, company_name, billing_email) |
-| Business account users table | Exists | `business_account_users` (business_id, user_id, role) |
-| Business renter accounts | Exists | `business_renter_accounts` (full corporate profile) |
-| Invite code system | Exists | `useRenterInvites.ts` (for P2P invites) |
-| Account settings pages | Exists | `src/pages/account/` |
-| EatsCheckout | Exists | `src/pages/EatsCheckout.tsx` |
-| B2B config | Exists | `src/config/b2bTravelConfig.ts` |
+| `invoices` database table | Exists | Supabase (id, business_id, invoice_number, amount, status, issued_at, due_at) |
+| `BusinessInvoiceList` component | Exists | `src/components/business/BusinessInvoiceList.tsx` (uses mock data) |
+| Business membership hook | Exists | `src/hooks/useBusinessMembership.ts` |
+| PDF export pattern | Exists | `src/hooks/useItineraryExport.ts` (print dialog approach) |
+| Account page patterns | Exists | `src/pages/account/` directory |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Business Account settings page | Missing | Section for joining/creating company |
-| Company invite codes table | Missing | Table for company-specific invite codes |
-| User business membership hook | Missing | Check if user belongs to a company |
-| Payment method selector | Missing | Personal vs Company toggle |
-| Checkout company billing display | Missing | "Billed to company" indicator |
+| Dedicated invoices page | Missing | `/account/invoices` route |
+| Real invoices hook | Missing | Fetch from `invoices` table |
+| PDF generation for invoices | Missing | Generate downloadable invoice PDF |
+| Navigation link | Missing | Add to MobileAccount menu |
 
 ---
 
 ## Implementation Plan
 
-### 1) Database Schema Updates
+### 1) Create Business Invoices Hook
 
-**New Table: `company_invite_codes`**
+**File to Create:** `src/hooks/useBusinessInvoices.ts`
 
-Stores invite codes that allow users to join specific companies.
+**Purpose:** Fetch invoices from the database for the user's business account.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| business_id | uuid (FK) | Links to business_accounts |
-| invite_code | text | 8-char alphanumeric code (e.g., "ACME2024") |
-| created_by | uuid (FK) | User who created the code |
-| expires_at | timestamp | Optional expiration |
-| max_uses | integer | Max number of times code can be used |
-| uses_count | integer | Current number of uses |
-| is_active | boolean | Whether code is active |
-| created_at | timestamp | Creation timestamp |
-
-**Updates to `business_accounts`:**
-- Add `invite_code_enabled` (boolean) — whether company allows invite joins
-- Add `owner_id` (uuid FK to auth.users) — company owner/admin
-
-**Updates to `business_account_users`:**
-- Add `payment_preference` (text) — "personal" or "company"
-- Add `joined_via` (text) — "invite_code" or "direct"
-- Add `joined_at` (timestamp)
-
-**RLS Policies:**
-- Users can read their own business membership
-- Company admins can manage invite codes
-- Company admins can view all company members
-
----
-
-### 2) Create Business Account Settings Page
-
-**File to Create:** `src/pages/account/BusinessAccountPage.tsx`
-
-**Purpose:** Section in account settings for managing business account membership.
-
-**States:**
-1. **No Business Account** — Show options to join or create
-2. **Member of Company** — Show company info, role, payment preference
-3. **Company Admin** — Additional management options
-
-**UI Layout:**
-
+**Implementation:**
 ```text
-┌─────────────────────────────────────────────────┐
-│ ← Business Account                    [Building]│
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ 🏢 Join a Company                         │  │
-│ │ Enter your company's invite code          │  │
-│ │                                           │  │
-│ │ [ENTER CODE          ]    [Join]         │  │
-│ └───────────────────────────────────────────┘  │
-│                                                 │
-│ ─────────────── OR ────────────────            │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ 🆕 Create a Business Account              │  │
-│ │ Set up company billing for your team      │  │
-│ │                                           │  │
-│ │ [Get Started →]                           │  │
-│ └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+- Query `invoices` table filtered by business_id
+- Join with business_account_users to verify membership
+- Return invoice list with sorting by date
+- Include loading and error states
 ```
 
-**When Member:**
-
+**Return Interface:**
 ```text
-┌─────────────────────────────────────────────────┐
-│ ← Business Account                              │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ 🏢 Acme Corporation                       │  │
-│ │ Member since Jan 2024 • Employee          │  │
-│ └───────────────────────────────────────────┘  │
-│                                                 │
-│ ┌───────────────────────────────────────────┐  │
-│ │ 💳 Payment Method                         │  │
-│ │                                           │  │
-│ │ (○) Personal — Use my own card            │  │
-│ │ (●) Company — Billed to Acme Corp         │  │
-│ └───────────────────────────────────────────┘  │
-│                                                 │
-│ [Leave Company]                                 │
-└─────────────────────────────────────────────────┘
-```
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  amount: number;
+  status: "paid" | "pending" | "overdue";
+  issuedAt: string;
+  dueAt: string | null;
+}
 
----
-
-### 3) Create Business Membership Hook
-
-**File to Create:** `src/hooks/useBusinessMembership.ts`
-
-**Purpose:** Fetch and manage user's business account membership.
-
-**Functions:**
-- `useBusinessMembership()` — Get current user's business membership
-- `useJoinCompanyWithCode()` — Join company using invite code
-- `useLeaveCompany()` — Leave current company
-- `useUpdatePaymentPreference()` — Toggle personal/company payment
-
-**Return Type:**
-```text
-interface BusinessMembership {
-  isMember: boolean;
-  company: {
-    id: string;
-    name: string;
-    billingEmail: string;
-  } | null;
-  role: "admin" | "member" | "viewer";
-  paymentPreference: "personal" | "company";
-  joinedAt: string;
+interface UseBusinessInvoicesReturn {
+  invoices: Invoice[];
   isLoading: boolean;
+  error: Error | null;
+  totalPaid: number;
+  totalPending: number;
+  totalOverdue: number;
 }
 ```
 
 ---
 
-### 4) Create Company Invite Code Validation Hook
+### 2) Create Invoice PDF Generator Hook
 
-**File to Create:** `src/hooks/useCompanyInviteCode.ts`
+**File to Create:** `src/hooks/useInvoicePdfExport.ts`
 
-**Purpose:** Validate and redeem company invite codes.
+**Purpose:** Generate and download invoice PDFs using the print dialog pattern.
 
-**Functions:**
-- `useValidateCompanyCode()` — Check if code is valid
-- `useRedeemCompanyCode()` — Join company with code
+**Implementation:**
+- Generate styled HTML invoice document
+- Include company name, invoice number, date, line items, total
+- Open in new window and trigger print dialog (Save as PDF)
+- Follow pattern from `useItineraryExport.ts`
 
-**Validation Logic:**
-1. Check code exists and is active
-2. Check code hasn't expired
-3. Check max uses not exceeded
-4. Check user not already in this company
+**Template Structure:**
+```text
+ZIVO INVOICE
+─────────────────────
+Invoice #: INV-2024-0042
+Date: March 1, 2024
+Due Date: March 15, 2024
+
+Bill To:
+[Company Name]
+[Billing Email]
+
+Amount Due: $2,450.00
+Status: PAID / PENDING
+
+─────────────────────
+Powered by ZIVO
+```
 
 ---
 
-### 5) Update EatsCheckout for Business Billing
+### 3) Create Business Invoices Page
 
-**File to Modify:** `src/pages/EatsCheckout.tsx`
+**File to Create:** `src/pages/account/BusinessInvoicesPage.tsx`
+
+**Purpose:** Dedicated page for viewing and downloading invoices.
+
+**UI Layout:**
+```text
+┌─────────────────────────────────────────────────┐
+│ ← Invoices                         [FileText]   │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│ ┌───────────┐ ┌───────────┐ ┌───────────┐      │
+│ │ Paid      │ │ Pending   │ │ Overdue   │      │
+│ │ $3,340    │ │ $1,250    │ │ $325      │      │
+│ └───────────┘ └───────────┘ └───────────┘      │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ [Search invoices...]      [Filter: All ▾] │  │
+│ └───────────────────────────────────────────┘  │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ INV-2024-0042            Paid    $2,450  │  │
+│ │ Mar 1, 2024                      [PDF ↓] │  │
+│ ├───────────────────────────────────────────┤  │
+│ │ INV-2024-0043          Pending   $1,250  │  │
+│ │ Mar 5, 2024                      [PDF ↓] │  │
+│ ├───────────────────────────────────────────┤  │
+│ │ INV-2024-0041          Overdue     $325  │  │
+│ │ Feb 15, 2024                     [PDF ↓] │  │
+│ └───────────────────────────────────────────┘  │
+│                                                 │
+│ ┌───────────────────────────────────────────┐  │
+│ │ ⓘ Invoices are generated for orders      │  │
+│ │   billed to your company account.        │  │
+│ └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+**Features:**
+- Summary cards showing paid, pending, overdue totals
+- Search by invoice number
+- Filter by status (all, paid, pending, overdue)
+- List of invoices with key details
+- PDF download button per invoice
+- Empty state when no invoices
+- Redirect to business account page if not a member
+
+---
+
+### 4) Update Navigation and Routes
+
+**File to Modify:** `src/pages/mobile/MobileAccount.tsx`
 
 **Changes:**
-- Import `useBusinessMembership` hook
-- Add payment method selector when user is company member
-- Show "Billed to company" badge in order summary
-- Pass billing type to order creation
+- Add "Invoices" menu item under Business Account (only visible if member)
+- Icon: `FileText`
+- Path: `/account/invoices`
 
-**New UI Section (before order summary):**
-
+**Updated accountItems array:**
 ```text
-┌───────────────────────────────────────────────┐
-│ 💳 Payment Method                              │
-│                                                │
-│ ┌──────────────────┐ ┌──────────────────┐    │
-│ │ Personal         │ │ ✓ Company        │    │
-│ │ My payment       │ │ Acme Corp        │    │
-│ └──────────────────┘ └──────────────────┘    │
-└───────────────────────────────────────────────┘
+{ 
+  icon: Building2, 
+  label: businessMembership?.company?.name || "Business Account", 
+  path: "/account/business"
+},
+// NEW: Only show if business member
+...(businessMembership?.isMember ? [{
+  icon: FileText,
+  label: "Invoices",
+  path: "/account/invoices"
+}] : []),
 ```
-
-**In Order Summary:**
-
-```text
-Payment: Billed to Acme Corporation
-```
-
----
-
-### 6) Update Order Creation
-
-**File to Modify:** `src/hooks/useEatsOrders.ts`
-
-**Changes:**
-- Add `billing_type` field: "personal" | "company"
-- Add `business_account_id` field when billing to company
-- Store company billing info in order record
-
-**New Fields in CreateFoodOrderInput:**
-```text
-billing_type?: "personal" | "company";
-business_account_id?: string;
-business_account_name?: string;
-```
-
----
-
-### 7) Add Route and Navigation
 
 **File to Modify:** `src/App.tsx`
 
 **Changes:**
-- Import lazy-loaded `BusinessAccountPage`
-- Add route: `/account/business`
+- Add lazy import for BusinessInvoicesPage
+- Add protected route: `/account/invoices`
 
-**File to Update:** `src/pages/mobile/MobileAccount.tsx`
+---
 
-**Changes:**
-- Add "Business Account" menu item in Account Settings section
-- Show company badge if user is a member
+### 5) Database RLS Policy (if needed)
+
+**Migration:** Add RLS policy to ensure users can only view invoices for their business.
+
+```text
+CREATE POLICY "Users can view invoices for their business"
+  ON public.invoices
+  FOR SELECT
+  USING (
+    business_id IN (
+      SELECT business_id 
+      FROM public.business_account_users 
+      WHERE user_id = auth.uid()
+    )
+  );
+```
 
 ---
 
@@ -241,131 +203,54 @@ business_account_name?: string;
 ### New Files (3)
 | File | Purpose |
 |------|---------|
-| `src/pages/account/BusinessAccountPage.tsx` | Business account settings section |
-| `src/hooks/useBusinessMembership.ts` | User's business membership state |
-| `src/hooks/useCompanyInviteCode.ts` | Invite code validation/redemption |
+| `src/hooks/useBusinessInvoices.ts` | Fetch invoices from database |
+| `src/hooks/useInvoicePdfExport.ts` | Generate PDF for download |
+| `src/pages/account/BusinessInvoicesPage.tsx` | Invoices list page |
 
-### Modified Files (4)
+### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsCheckout.tsx` | Payment method selector, company billing display |
-| `src/hooks/useEatsOrders.ts` | Add billing type to order creation |
-| `src/App.tsx` | Add /account/business route |
-| `src/pages/mobile/MobileAccount.tsx` | Add Business Account menu item |
+| `src/pages/mobile/MobileAccount.tsx` | Add Invoices menu item |
+| `src/App.tsx` | Add route and lazy import |
 
 ### Database Changes (1 migration)
 | Change | Description |
 |--------|-------------|
-| New table | `company_invite_codes` |
-| Alter table | `business_accounts` — add owner_id, invite_code_enabled |
-| Alter table | `business_account_users` — add payment_preference, joined_via, joined_at |
-| RLS policies | For all new/modified tables |
+| RLS policy | Ensure users can only view their company's invoices |
 
 ---
 
-## Invite Code Flow
+## Invoice Status Logic
 
-### Joining a Company
-
-```text
-1. User enters invite code in Business Account settings
-2. System validates code:
-   - Code exists and is_active = true
-   - Not expired (expires_at is null or > now)
-   - Uses remaining (uses_count < max_uses or max_uses is null)
-   - User not already a member
-3. If valid:
-   - Create row in business_account_users
-   - Increment uses_count on invite code
-   - Show success, display company info
-4. If invalid:
-   - Show specific error message
-```
-
-### Code Format
-- 8 alphanumeric characters
-- Uppercase only
-- No confusing characters (0/O, 1/I, L)
-- Example: `ACME2024`, `TECH8K4M`
+| Status | Condition | Display |
+|--------|-----------|---------|
+| Paid | `status = 'paid'` | Green badge with checkmark |
+| Pending | `status = 'pending'` AND `due_at >= now()` | Amber badge with clock |
+| Overdue | `status = 'pending'` AND `due_at < now()` | Red badge with alert |
 
 ---
 
-## Payment Method Logic
+## PDF Content Structure
 
-### Selection Rules
-| Condition | Available Options |
-|-----------|------------------|
-| Not a company member | Personal only (no UI shown) |
-| Company member, preference = personal | Both options, Personal selected |
-| Company member, preference = company | Both options, Company selected |
+The generated PDF will include:
 
-### Checkout Display
-- Personal: Standard checkout (no changes)
-- Company: Show "Billed to {Company Name}" badge near total
-
-### Order Record
-- `billing_type`: "personal" or "company"
-- `business_account_id`: null or company UUID
-- `business_account_name`: null or company name
+1. **Header**: ZIVO logo/branding
+2. **Invoice Details**: Number, issue date, due date
+3. **Bill To**: Company name, billing email
+4. **Amount**: Total amount with currency
+5. **Status**: Clear paid/pending indicator
+6. **Footer**: ZIVO contact info, compliance note
 
 ---
 
-## Security Considerations
+## Access Control
 
-### RLS Policies
-
-```text
-company_invite_codes:
-- SELECT: Company admins can view their company's codes
-- INSERT: Company admins can create codes
-- UPDATE: Company admins can modify their codes
-- DELETE: Company admins can delete their codes
-
-business_account_users:
-- SELECT: Users can view their own membership
-- SELECT: Company admins can view all company members
-- INSERT: Via invite code redemption (RPC function)
-- DELETE: User can leave, admin can remove members
-```
-
-### Server-Side Validation
-- Invite code validation in secure RPC function
-- Payment preference stored server-side
-- Company billing requires active membership verification
-
----
-
-## UI Components
-
-### PaymentMethodSelector Component
-
-**File to Create:** `src/components/checkout/PaymentMethodSelector.tsx`
-
-```text
-Props:
-- membership: BusinessMembership
-- selected: "personal" | "company"
-- onSelect: (type) => void
-- disabled?: boolean
-
-Features:
-- Two toggle cards (Personal / Company)
-- Company option shows company name
-- Only visible when user is company member
-```
-
-### CompanyBillingBadge Component
-
-**File to Create:** `src/components/checkout/CompanyBillingBadge.tsx`
-
-```text
-Props:
-- companyName: string
-
-Display:
-- Building2 icon + "Billed to {companyName}"
-- Muted styling, informational
-```
+| User State | Behavior |
+|------------|----------|
+| Not logged in | Redirect to login |
+| Not a business member | Show message with link to join company |
+| Business member | Show invoices for their company |
+| Business admin | Same view (admin features in future) |
 
 ---
 
@@ -373,9 +258,9 @@ Display:
 
 | State | Display |
 |-------|---------|
-| No membership | Join/Create options |
-| Pending invite | "Invite sent to company admin for approval" |
-| Left company | Confirmation + option to rejoin |
+| No invoices yet | "No invoices yet. Invoices will appear here when you make orders billed to your company." |
+| No matching search | "No invoices match your search." |
+| Error loading | "Failed to load invoices. Please try again." |
 
 ---
 
@@ -383,11 +268,13 @@ Display:
 
 This implementation provides:
 
-1. **Business Account settings page** — Join company with invite code or create new
-2. **Payment method toggle** — Personal or Company billing preference
-3. **Checkout integration** — "Billed to company" indicator when company payment selected
-4. **Invite code system** — Secure codes for company membership
-5. **Membership management** — View company, change preference, leave company
-6. **Order tracking** — Billing type stored with each order
+1. **Dedicated invoices page** at `/account/invoices`
+2. **Real-time data** from the `invoices` database table
+3. **Key invoice details** — number, date, amount, status
+4. **PDF download** via print dialog (Save as PDF)
+5. **Search and filter** for easy navigation
+6. **Summary cards** showing totals by status
+7. **Proper access control** — only business members can view
+8. **Navigation integration** — accessible from account menu
 
-The feature enables corporate users to easily expense orders to their company while maintaining personal account flexibility.
+The feature leverages existing patterns (BusinessInvoiceList component design, useItineraryExport PDF approach) while connecting to the real invoices table in the database.
