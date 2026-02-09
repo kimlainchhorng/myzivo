@@ -1,301 +1,256 @@
 
-# Smart ETA — Implementation Plan
+# Smarter Delivery Times — Implementation Plan
 
 ## Overview
-Enhance the ETA system to show a **delivery time range** (e.g., "25–32 min") with the message **"ETA updated based on traffic and demand"**, and automatically recalculate when key events occur (driver assigned, order picked up, driver location changes significantly).
+Enhance ETA accuracy by incorporating **real (learned) restaurant preparation times** into the calculation. The ETA will combine:
+1. Learned average prep time (from historical data or restaurant default)
+2. Driver travel time (existing smart ETA)
+3. Traffic/demand adjustments (existing factors)
+
+The order screen will display the message: **"ETA based on real preparation times."**
 
 ---
 
 ## Current State Analysis
 
-### Existing ETA Components
-| Component | Location | Current Behavior |
-|-----------|----------|------------------|
-| `EtaCountdown` | `src/components/eats/EtaCountdown.tsx` | Shows single-point ETA with traffic multiplier |
-| `useDriverProximity` | `src/hooks/useDriverProximity.ts` | Calculates distance-based ETA (single value) |
-| `EnhancedStatusBanner` | `src/components/eats/EnhancedStatusBanner.tsx` | Shows phase + single ETA value |
-| `maps-route` edge function | `supabase/functions/maps-route/` | Returns Google Directions duration (not traffic-aware yet) |
-| `useEatsDeliveryFactors` | `src/hooks/useEatsDeliveryFactors.ts` | Provides supply/demand multipliers |
-| Traffic multiplier | Inside `EtaCountdown.tsx` | Simple time-of-day check (rush hour 1.4x, late night 0.8x) |
+### What We Have
+| Component | Current Behavior |
+|-----------|------------------|
+| `useSmartEta` | Calculates ETA range using driver location + traffic/demand factors |
+| `restaurants.avg_prep_time` | Static prep time set by restaurant (default ~25-30 min) |
+| `sla_metrics.prep_seconds` | Historical prep times per completed order |
+| `food_orders.accepted_at/ready_at` | Timestamps for calculating actual prep time |
+| `EnhancedStatusBanner` | Displays ETA range with "Live ETA" badge |
+| `SmartEtaDisplay` | Shows ETA with traffic/demand explanation |
 
-### Current ETA Display
-```
-+---------------------------+
-| Arriving in               |
-| 25 min            ● Live  |
-| Rush hour — adjusted...   |
-+---------------------------+
+### What's Missing
+1. **No learned prep time aggregation** — Uses static `avg_prep_time` instead of actual historical average
+2. **Prep time not added to travel ETA** — Current ETA only considers driver travel, not restaurant prep
+3. **No "based on real preparation times" message**
+4. **No phase-aware ETA breakdown** — Customer doesn't know how much is prep vs travel
+
+---
+
+## Data Sources for Learned Prep Times
+
+### Primary: `sla_metrics` table
+```sql
+-- Already captures prep_seconds per order
+SELECT AVG(prep_seconds) / 60 as avg_prep_minutes
+FROM sla_metrics
+WHERE merchant_id = ? AND prep_seconds > 0
 ```
 
-### Target ETA Display
+### Fallback: Calculate from order timestamps
+```sql
+-- When sla_metrics is empty, use order timestamps
+SELECT AVG(EXTRACT(EPOCH FROM (ready_at - accepted_at)) / 60) as avg_prep_minutes
+FROM food_orders  
+WHERE restaurant_id = ? AND ready_at IS NOT NULL AND accepted_at IS NOT NULL
+  AND status = 'delivered'
 ```
-+---------------------------+
-| Arriving in               |
-| 25–32 min       📍 Live ETA |
-| ETA updated based on traffic and demand. |
-+---------------------------+
+
+### Ultimate fallback: Restaurant default
+```sql
+SELECT avg_prep_time FROM restaurants WHERE id = ?
 ```
 
 ---
 
 ## Implementation Plan
 
-### 1) Create useSmartEta Hook
+### 1) Create useLearnedPrepTime Hook
 
-**File to Create:** `src/hooks/useSmartEta.ts`
+**File to Create:** `src/hooks/useLearnedPrepTime.ts`
 
-**Purpose:** Centralized hook that calculates ETA range with all factors and tracks recalculation triggers.
+**Purpose:** Fetch restaurant's learned average prep time from historical data.
 
+```typescript
+interface LearnedPrepTimeResult {
+  avgPrepMinutes: number | null;
+  isLearned: boolean;           // true = from actual data, false = from default
+  sampleSize: number;           // number of orders used to calculate
+  confidence: 'high' | 'medium' | 'low';  // based on sample size
+}
+
+export function useLearnedPrepTime(restaurantId: string | undefined): LearnedPrepTimeResult;
+```
+
+**Data Fetching Priority:**
+1. Check `sla_metrics` for avg prep_seconds by merchant_id
+2. If < 5 samples, also check `food_orders` timestamps as backup
+3. If no historical data, fall back to `restaurants.avg_prep_time`
+
+**Confidence Levels:**
+| Sample Size | Confidence | Description |
+|-------------|------------|-------------|
+| 20+ orders | high | "Based on 20+ orders" |
+| 5-19 orders | medium | "Based on recent orders" |
+| < 5 orders | low | Uses restaurant default |
+
+### 2) Update useSmartEta Hook
+
+**File to Modify:** `src/hooks/useSmartEta.ts`
+
+**New Input Props:**
+```typescript
+interface UseSmartEtaOptions {
+  // ... existing props
+  
+  // NEW: Learned prep time data
+  learnedPrepMinutes?: number | null;
+  isPrepLearned?: boolean;
+  orderPhase?: 'preparing' | 'ready' | 'out_for_delivery';
+}
+```
+
+**Updated ETA Calculation:**
+```typescript
+// Calculate total ETA based on phase
+function calculateTotalEta(options: {
+  orderPhase: string;
+  learnedPrepMinutes: number | null;
+  travelEtaMinutes: number | null;
+  trafficFactor: number;
+  demandFactor: number;
+}) {
+  const { orderPhase, learnedPrepMinutes, travelEtaMinutes, trafficFactor, demandFactor } = options;
+  
+  // Phase: Preparing → show prep + travel
+  if (orderPhase === 'preparing') {
+    const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor; // demand affects prep
+    const adjustedTravel = (travelEtaMinutes || 10) * trafficFactor; // traffic affects travel
+    return adjustedPrep + adjustedTravel;
+  }
+  
+  // Phase: Ready/Out for delivery → travel only
+  if (orderPhase === 'ready' || orderPhase === 'out_for_delivery') {
+    return (travelEtaMinutes || 10) * trafficFactor;
+  }
+  
+  return learnedPrepMinutes || 25; // Default for pending
+}
+```
+
+**Output Changes:**
 ```typescript
 interface SmartEtaResult {
-  // Range-based ETA
-  etaMinRange: number | null;   // e.g., 25
-  etaMaxRange: number | null;   // e.g., 32
-  etaDisplayText: string;       // e.g., "25–32 min"
-  
-  // Single-point for edge cases
-  etaSingleMinutes: number | null;
-  
-  // Recalculation tracking
-  lastRecalcAt: Date;
-  lastRecalcReason: 'initial' | 'driver_assigned' | 'pickup_complete' | 'location_change' | 'interval';
-  isLive: boolean;              // Using live driver location
-  
-  // Factors applied
-  trafficFactor: number;        // 0.8 - 1.4
-  demandFactor: number;         // 1.0 - 1.5
-  isRushHour: boolean;
-  trafficLevel: 'light' | 'moderate' | 'heavy';
-}
-
-interface UseSmartEtaOptions {
-  orderStatus: string;
-  driverAssigned: boolean;
-  driverLat?: number | null;
-  driverLng?: number | null;
-  pickupLat?: number | null;
-  pickupLng?: number | null;
-  deliveryLat?: number | null;
-  deliveryLng?: number | null;
-  baseEtaMinutes?: number | null;  // From order.eta_dropoff
-  demandLevel?: SurgeLevel;
-  supplyMultiplier?: number;
-}
-```
-
-**ETA Range Calculation Logic:**
-```text
-Base ETA (from driver location or database)
-    ↓
-Apply traffic factor (0.8 - 1.4 based on time of day)
-    ↓
-Apply demand factor (1.0 - 1.5 based on driver supply)
-    ↓
-Calculate range:
-  - Min = baseEta × 0.85 (optimistic)
-  - Max = baseEta × combinedFactor × 1.15 (pessimistic)
-    ↓
-Round and format: "25–32 min"
-```
-
-**Recalculation Triggers:**
-| Trigger | Detection Method | Action |
-|---------|------------------|--------|
-| Driver assigned | `driverAssigned` changes false → true | Full recalc with log |
-| Order picked up | `orderStatus` changes to "out_for_delivery" | Full recalc, switch to delivery ETA |
-| Location change (>0.1mi) | Compare with previous lat/lng | Recalc ETA, update range |
-| Fallback interval | Every 60 seconds | Refresh factors only |
-
-### 2) Create SmartEtaDisplay Component
-
-**File to Create:** `src/components/eats/SmartEtaDisplay.tsx`
-
-**Purpose:** New display component showing ETA range with "Live ETA" badge and explanation message.
-
-**UI Design:**
-```text
-+--------------------------------------------------+
-| [🕐]  Arriving in                                |
-|       25–32 min                  📍 Live ETA     |
-|                                                  |
-|       ETA updated based on traffic and demand.   |
-+--------------------------------------------------+
-```
-
-**Props:**
-```typescript
-interface SmartEtaDisplayProps {
-  etaMinRange: number;
-  etaMaxRange: number;
-  isLive: boolean;
-  isArrivingSoon: boolean;  // < 3 min shows "Arriving soon!"
-  trafficLevel: 'light' | 'moderate' | 'heavy';
-  showExplanation?: boolean;
-  className?: string;
-}
-```
-
-**Visual States:**
-| ETA Range | Background | Text | Special |
-|-----------|------------|------|---------|
-| > 15 min | Orange gradient | White | Normal |
-| 5–15 min | Amber gradient | White | Pulse icon |
-| < 5 min | Emerald gradient | "Arriving soon!" | Fast pulse |
-
-### 3) Update maps-route Edge Function for Traffic-Aware Duration
-
-**File to Modify:** `supabase/functions/maps-route/index.ts`
-
-**Changes:**
-- Add `departure_time=now` to get real-time traffic data
-- Return `duration_in_traffic` alongside standard duration
-- Add `traffic_level` based on ratio of traffic vs base duration
-
-```typescript
-// Updated URL with traffic awareness
-const url = `https://maps.googleapis.com/maps/api/directions/json` +
-  `?origin=${origin_lat},${origin_lng}` +
-  `&destination=${dest_lat},${dest_lng}` +
-  `&mode=driving` +
-  `&departure_time=now` +  // NEW: enables traffic-aware routing
-  `&key=${encodeURIComponent(key)}`;
-
-// Response includes:
-{
-  ok: true,
-  distance_miles: 2.5,
-  duration_minutes: 8,
-  duration_in_traffic_minutes: 12,  // NEW
-  traffic_ratio: 1.5,               // NEW (12/8)
-  traffic_level: "heavy",           // NEW: light/moderate/heavy
-  polyline: "...",
-}
-```
-
-### 4) Update useDriverProximity Hook
-
-**File to Modify:** `src/hooks/useDriverProximity.ts`
-
-**Changes:**
-- Add ETA range calculation (min/max)
-- Track previous location for "significant change" detection (>0.1mi)
-- Add `recalcReason` field
-
-**New Fields:**
-```typescript
-interface ProximityState {
   // ... existing fields
   
-  // NEW: Range-based ETA
-  etaToDeliveryMin: number | null;
-  etaToDeliveryMax: number | null;
-  etaToPickupMin: number | null;
-  etaToPickupMax: number | null;
+  // NEW: Breakdown for transparency
+  prepComponent: number | null;    // Prep time portion
+  travelComponent: number | null;  // Travel time portion
+  isPrepLearned: boolean;          // Using real prep data
+}
+```
+
+### 3) Update SmartEtaDisplay Component
+
+**File to Modify:** `src/components/eats/SmartEtaDisplay.tsx`
+
+**New Props:**
+```typescript
+interface SmartEtaDisplayProps {
+  // ... existing props
   
-  // NEW: Change detection
-  locationChangedSignificantly: boolean;
-  previousLat: number | null;
-  previousLng: number | null;
+  // NEW: Prep time context
+  isPrepLearned?: boolean;
+  showPrepMessage?: boolean;
 }
 ```
 
-### 5) Update EnhancedStatusBanner Component
-
-**File to Modify:** `src/components/eats/EnhancedStatusBanner.tsx`
-
-**Changes:**
-- Accept `etaMinRange` and `etaMaxRange` props instead of single `etaMinutes`
-- Display range format: "25–32 min"
-- Add "Live ETA" label with location pin icon
-- Show explanation text when appropriate
-
-**Updated Props:**
+**New Message Display:**
 ```typescript
-interface EnhancedStatusBannerProps {
-  phase: DispatchPhase;
-  message: string;
-  subMessage: string;
-  // UPDATED: Range-based ETA
-  etaMinRange?: number | null;
-  etaMaxRange?: number | null;
-  etaLabel?: "to pickup" | "to you";
-  isLocationBased?: boolean;
-  showEtaExplanation?: boolean;  // NEW
-  className?: string;
-}
-```
-
-**Updated ETA Display:**
-```typescript
-{/* ETA Range Display */}
-{etaMinRange != null && etaMaxRange != null && (
-  <div className="text-right shrink-0">
-    <div className="flex items-center gap-1.5">
-      {isLocationBased && (
-        <MapPin className="w-3 h-3 text-emerald-400" />
-      )}
-      <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wide">
-        Live ETA
-      </span>
-    </div>
-    <p className="text-lg font-bold text-white">
-      {etaMinRange}–{etaMaxRange} <span className="text-sm font-normal text-zinc-400">min</span>
-    </p>
-    {etaLabel && (
-      <p className="text-xs text-zinc-500">{etaLabel}</p>
-    )}
-  </div>
+{/* "Based on real preparation times" message */}
+{showPrepMessage && isPrepLearned && (
+  <p className="text-xs text-zinc-500 mt-3">
+    ETA based on real preparation times.
+  </p>
 )}
 
-{/* Explanation message */}
-{showEtaExplanation && (
-  <p className="text-xs text-zinc-500 mt-2">
+{/* Fallback when not learned */}
+{showPrepMessage && !isPrepLearned && (
+  <p className="text-xs text-zinc-500 mt-3">
     ETA updated based on traffic and demand.
   </p>
 )}
 ```
 
-### 6) Update EtaCountdown Component
+### 4) Update EnhancedStatusBanner Component
 
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+**File to Modify:** `src/components/eats/EnhancedStatusBanner.tsx`
 
-**Changes:**
-- Calculate and display ETA range instead of single value
-- Add "Live ETA" badge
-- Add explanation message: "ETA updated based on traffic and demand."
-- Track recalculation events
-
-**Key Changes:**
+**New Props:**
 ```typescript
-// Calculate ETA range
-const etaRange = useMemo(() => {
-  if (dynamicEtaMinutes == null) return null;
+interface EnhancedStatusBannerProps {
+  // ... existing props
   
-  const combinedFactor = traffic.multiplier * supplyMultiplier;
-  const minEta = Math.max(1, Math.floor(dynamicEtaMinutes * 0.85));
-  const maxEta = Math.max(minEta + 2, Math.ceil(dynamicEtaMinutes * combinedFactor * 1.15));
-  
-  return { min: minEta, max: maxEta };
-}, [dynamicEtaMinutes, traffic.multiplier, supplyMultiplier]);
-
-// Display: "25–32 min"
-<p className="text-2xl font-bold text-white">
-  {etaRange.min}–{etaRange.max} <span className="text-lg font-normal">min</span>
-</p>
+  // NEW
+  isPrepLearned?: boolean;
+}
 ```
 
-### 7) Update EatsOrderDetail Page
+**Updated Explanation Message:**
+```typescript
+{/* Updated explanation based on prep source */}
+{showEtaExplanation && (
+  <p className="text-xs text-zinc-500 mt-2">
+    {isPrepLearned 
+      ? "ETA based on real preparation times."
+      : "ETA updated based on traffic and demand."}
+  </p>
+)}
+```
+
+### 5) Update useLiveEatsOrder Hook
+
+**File to Modify:** `src/hooks/useLiveEatsOrder.ts`
+
+**Changes:**
+Add restaurant `avg_prep_time` to the query join so it's available as fallback:
+
+```typescript
+const { data } = await supabase
+  .from(EATS_TABLES.orders)
+  .select(`
+    *,
+    restaurants:restaurant_id(name, logo_url, phone, address, lat, lng, avg_prep_time)
+  `)
+  .eq("id", orderId)
+  .single();
+```
+
+**Interface Update:**
+```typescript
+restaurants?: {
+  name: string;
+  logo_url: string | null;
+  phone: string | null;
+  address: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  avg_prep_time?: number | null;  // NEW
+};
+```
+
+### 6) Update EatsOrderDetail Page
 
 **File to Modify:** `src/pages/EatsOrderDetail.tsx`
 
-**Changes:**
-- Use new smart ETA hook
-- Pass range values to components
-- Track recalculation events for logging
-
-**Updated ETA Integration:**
+**Integration:**
 ```typescript
-// Use smart ETA with range calculation
+// Fetch learned prep time for this restaurant
+const learnedPrep = useLearnedPrepTime(order?.restaurant_id);
+
+// Determine order phase for ETA calculation
+const orderPhase = useMemo(() => {
+  if (order?.status === 'out_for_delivery') return 'out_for_delivery';
+  if (order?.status === 'ready_for_pickup') return 'ready';
+  if (['confirmed', 'preparing'].includes(order?.status || '')) return 'preparing';
+  return 'preparing';
+}, [order?.status]);
+
+// Enhanced Smart ETA with prep time
 const smartEta = useSmartEta({
   orderStatus: order?.status || "",
   driverAssigned: !!order?.driver_id,
@@ -305,21 +260,80 @@ const smartEta = useSmartEta({
   pickupLng,
   deliveryLat: order?.delivery_lat,
   deliveryLng: order?.delivery_lng,
-  demandLevel: deliveryFactors.demandLevel,
   supplyMultiplier: deliveryFactors.supplyMultiplier,
+  // NEW: Prep time integration
+  learnedPrepMinutes: learnedPrep.avgPrepMinutes,
+  isPrepLearned: learnedPrep.isLearned,
+  orderPhase,
 });
+```
 
-// Pass to EnhancedStatusBanner
+**Update Banner Calls:**
+```typescript
 <EnhancedStatusBanner
   phase={dispatchStatus.phase}
   message={dispatchStatus.message}
   subMessage={dispatchStatus.subMessage}
-  etaMinRange={order.driver_id ? smartEta.etaMinRange : null}
-  etaMaxRange={order.driver_id ? smartEta.etaMaxRange : null}
+  etaMinRange={smartEta.etaMinRange}
+  etaMaxRange={smartEta.etaMaxRange}
   etaLabel={etaLabel}
-  isLocationBased={driverLat != null && driverLng != null}
-  showEtaExplanation={smartEta.isLive}
+  isLocationBased={smartEta.isLive}
+  showEtaExplanation={true}
+  isPrepLearned={learnedPrep.isLearned}  // NEW
 />
+```
+
+### 7) Create Database Function for Learned Prep Time
+
+**SQL Function:** (for efficient aggregation)
+
+```sql
+CREATE OR REPLACE FUNCTION get_restaurant_avg_prep_time(p_restaurant_id UUID)
+RETURNS TABLE (
+  avg_prep_minutes NUMERIC,
+  sample_size INT,
+  source TEXT
+) AS $$
+BEGIN
+  -- Try sla_metrics first
+  RETURN QUERY
+  SELECT 
+    ROUND(AVG(prep_seconds) / 60.0, 1) as avg_prep_minutes,
+    COUNT(*)::INT as sample_size,
+    'sla_metrics'::TEXT as source
+  FROM sla_metrics
+  WHERE merchant_id = p_restaurant_id 
+    AND prep_seconds IS NOT NULL 
+    AND prep_seconds > 0
+  HAVING COUNT(*) >= 3;
+  
+  IF FOUND THEN RETURN; END IF;
+  
+  -- Fallback to order timestamps
+  RETURN QUERY
+  SELECT 
+    ROUND(AVG(EXTRACT(EPOCH FROM (ready_at - accepted_at)) / 60.0), 1),
+    COUNT(*)::INT,
+    'order_timestamps'::TEXT
+  FROM food_orders
+  WHERE restaurant_id = p_restaurant_id
+    AND ready_at IS NOT NULL 
+    AND accepted_at IS NOT NULL
+    AND status = 'delivered'
+  HAVING COUNT(*) >= 3;
+  
+  IF FOUND THEN RETURN; END IF;
+  
+  -- Ultimate fallback: restaurant default
+  RETURN QUERY
+  SELECT 
+    COALESCE(r.avg_prep_time, 25)::NUMERIC,
+    0,
+    'restaurant_default'::TEXT
+  FROM restaurants r
+  WHERE r.id = p_restaurant_id;
+END;
+$$ LANGUAGE plpgsql;
 ```
 
 ---
@@ -329,82 +343,81 @@ const smartEta = useSmartEta({
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useSmartEta.ts` | Centralized ETA range calculation with recalc tracking |
-| `src/components/eats/SmartEtaDisplay.tsx` | Optional standalone smart ETA display component |
+| `src/hooks/useLearnedPrepTime.ts` | Fetch and cache learned prep time for restaurant |
+| SQL migration | `get_restaurant_avg_prep_time` function |
 
 ### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `supabase/functions/maps-route/index.ts` | Add traffic-aware routing with `departure_time=now` |
-| `src/hooks/useDriverProximity.ts` | Add ETA range fields and significant location change detection |
-| `src/components/eats/EnhancedStatusBanner.tsx` | Display ETA range, add "Live ETA" badge and explanation |
-| `src/components/eats/EtaCountdown.tsx` | Calculate range, add explanation message |
-| `src/pages/EatsOrderDetail.tsx` | Integrate smart ETA hook, pass range values |
+| `src/hooks/useSmartEta.ts` | Add prep time to ETA calculation, phase-aware logic |
+| `src/hooks/useLiveEatsOrder.ts` | Include `avg_prep_time` in restaurant join |
+| `src/components/eats/SmartEtaDisplay.tsx` | Add `isPrepLearned` prop, "real preparation times" message |
+| `src/components/eats/EnhancedStatusBanner.tsx` | Add `isPrepLearned` prop, update explanation message |
+| `src/pages/EatsOrderDetail.tsx` | Integrate `useLearnedPrepTime`, pass to Smart ETA |
 
 ---
 
-## ETA Range Calculation Formula
+## ETA Calculation Formula
 
 ```text
-Base ETA (distance ÷ 0.5 mph = minutes)
-    ↓
-Traffic Factor:
-  - Rush hour (7-9 AM, 4-7 PM): 1.4x
-  - Normal: 1.0x
-  - Late night (10 PM - 6 AM): 0.8x
-    ↓
-Demand Factor:
-  - Low supply (0-2 drivers): 1.5x
-  - Moderate (3-5 drivers): 1.2x
-  - High (6+ drivers): 1.0x
-    ↓
-Range Calculation:
-  Min = floor(baseEta × 0.85)
-  Max = ceil(baseEta × combinedFactor × 1.15)
-    ↓
-Example:
-  Base: 20 min, Rush hour, Low supply
-  Combined = 1.4 × 1.5 = 2.1 (capped at 2.0)
-  Min = floor(20 × 0.85) = 17 min
-  Max = ceil(20 × 2.0 × 1.15) = 46 min → show "17–46 min"
+Order Phase: PREPARING
+├── Prep Component = learnedPrepMinutes × demandFactor
+├── Travel Component = driverTravelMinutes × trafficFactor
+└── Total ETA = Prep + Travel
+
+Order Phase: READY / OUT_FOR_DELIVERY  
+├── Prep Component = 0 (order already prepared)
+├── Travel Component = driverTravelMinutes × trafficFactor
+└── Total ETA = Travel only
+
+Range Calculation (unchanged):
+  Min = floor(totalEta × 0.85)
+  Max = ceil(totalEta × combinedFactor × 1.15)
+```
+
+**Example Calculation:**
+```text
+Learned prep time: 18 min (from 25 orders)
+Driver travel time: 8 min
+Rush hour traffic: 1.4x
+Normal demand: 1.0x
+
+Phase: Preparing
+  Prep = 18 × 1.0 = 18 min
+  Travel = 8 × 1.4 = 11.2 min
+  Total = 29.2 min
+  
+Range: 25–34 min
+Message: "ETA based on real preparation times."
 ```
 
 ---
 
-## Recalculation Event Summary
+## Message Display Logic
 
-| Event | Detection | Recalc Type |
-|-------|-----------|-------------|
-| Driver assigned | `order.driver_id` changes from null | Full recalc + log "driver_assigned" |
-| Order picked up | `status` → "out_for_delivery" | Full recalc + switch to delivery ETA |
-| Significant location change | Driver moved >0.1 miles | Immediate recalc + log "location_change" |
-| Phase transition | `dispatchStatus.phase` changes | Refresh display |
-| Fallback interval | Every 60 seconds | Refresh factors only |
+| Condition | Message |
+|-----------|---------|
+| `isPrepLearned = true` | "ETA based on real preparation times." |
+| `isPrepLearned = false` | "ETA updated based on traffic and demand." |
+| Arriving soon (< 3 min) | No message (show "Arriving soon!") |
 
 ---
 
-## Customer-Facing Messages
+## Confidence Indicator (Optional Enhancement)
 
-| Context | Display |
-|---------|---------|
-| Main ETA | **25–32 min** |
-| Badge | 📍 **Live ETA** |
-| Explanation | "ETA updated based on traffic and demand." |
-| Traffic note (rush hour) | "Rush hour — adjusted for traffic" |
-| Low supply note | "Few drivers nearby — ETA adjusted" |
-| Arriving soon | "Arriving soon!" (no range shown) |
+When sample size is high, show additional context:
+```text
+"Based on 25+ recent orders from this restaurant"
+```
 
 ---
 
 ## Summary
 
-This implementation provides:
+This implementation enhances ETA accuracy by:
 
-1. **ETA Range Display**: Shows "25–32 min" instead of single value
-2. **"Live ETA" Badge**: Small label with location pin icon
-3. **Explanation Message**: "ETA updated based on traffic and demand."
-4. **Smart Recalculation**: Updates on driver assigned, pickup, and significant location changes
-5. **Traffic-Aware Routing**: Edge function enhanced with `departure_time=now` for real traffic data
-6. **Unified Hook**: `useSmartEta` consolidates all ETA logic with recalc tracking
-
-The range provides more realistic expectations while the explanation builds trust by showing the system is actively adjusting based on real conditions.
+1. **Learning from historical data**: Calculates average prep time from completed orders
+2. **Phase-aware calculation**: Adds prep time during preparation, travel time only after pickup
+3. **Transparent messaging**: Shows "ETA based on real preparation times" when using learned data
+4. **Graceful fallbacks**: Uses restaurant default when insufficient historical data
+5. **Maintains existing factors**: Traffic and demand adjustments still apply
