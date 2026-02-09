@@ -2,11 +2,11 @@
  * ZIVO Eats — Group Order Page
  * Shared view for host + participants to see the group cart
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Users, Copy, Lock, ShoppingCart, ArrowLeft, Loader2,
-  Trash2, Clock, CheckCircle, Plus, UserCircle
+  Trash2, Clock, CheckCircle, Plus, UserCircle, CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,12 +21,14 @@ import { useCart } from "@/contexts/CartContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import GroupPaymentModeSelector, { type PaymentMode } from "@/components/eats/GroupPaymentModeSelector";
+import GroupPaymentCard from "@/components/eats/GroupPaymentCard";
 
 function EatsGroupOrderContent() {
   const navigate = useNavigate();
   const { inviteCode } = useParams<{ inviteCode: string }>();
   const { user } = useAuth();
-  const { joinGroupOrder, removeGroupItem, lockSession, markCheckedOut } = useGroupOrder();
+  const { joinGroupOrder, removeGroupItem, lockSession, markCheckedOut, setPaymentMode, markPaymentPaid } = useGroupOrder();
   const { addItem, clearCart } = useCart();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -34,7 +36,8 @@ function EatsGroupOrderContent() {
   const [hostUserId, setHostUserId] = useState<string | null>(null);
   const [joining, setJoining] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [isLocking, setIsLocking] = useState(false);
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   // Join/load session on mount
   useEffect(() => {
@@ -53,7 +56,7 @@ function EatsGroupOrderContent() {
     load();
   }, [inviteCode, joinGroupOrder]);
 
-  const { session, items, itemsByUser, total, participantCount, isLoading } =
+  const { session, items, itemsByUser, total, participantCount, payments, paidCount, allPaid, isLoading } =
     useGroupSession(sessionId);
 
   const { data: restaurant } = useRestaurant(restaurantId || undefined);
@@ -62,6 +65,8 @@ function EatsGroupOrderContent() {
   const isOpen = session?.status === "open";
   const isLocked = session?.status === "locked";
   const isCheckedOut = session?.status === "checked_out";
+  const paymentMode = (session as any)?.payment_mode as string | null;
+  const hasSplitPayments = paymentMode === "split_even" || paymentMode === "pay_own";
 
   // Countdown timer
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -98,30 +103,78 @@ function EatsGroupOrderContent() {
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const handleLockAndCheckout = async () => {
+  const handleLockAndCheckout = () => {
+    if (!sessionId || !session || items.length === 0) return;
+    setShowPaymentSelector(true);
+  };
+
+  const handlePaymentModeConfirm = async (mode: PaymentMode) => {
     if (!sessionId || !session) return;
-    setIsLocking(true);
-    const locked = await lockSession(sessionId);
-    setIsLocking(false);
 
-    if (locked) {
-      // Load all group items into the regular cart
-      clearCart();
-      items.forEach((item) => {
-        addItem({
-          id: item.menu_item_id,
-          restaurantId: session.restaurant_id,
-          restaurantName: restaurant?.name || "Restaurant",
-          name: `${item.item_name} (${item.user_name})`,
-          price: item.price,
-          quantity: item.quantity,
-          notes: item.notes || undefined,
+    if (mode === "host_pays") {
+      // Existing flow: host pays all
+      const success = await setPaymentMode(sessionId, mode, []);
+      if (success) {
+        clearCart();
+        items.forEach((item) => {
+          addItem({
+            id: item.menu_item_id,
+            restaurantId: session.restaurant_id,
+            restaurantName: restaurant?.name || "Restaurant",
+            name: `${item.item_name} (${item.user_name})`,
+            price: item.price,
+            quantity: item.quantity,
+            notes: item.notes || undefined,
+          });
         });
-      });
-
-      await markCheckedOut(sessionId);
-      navigate("/eats/checkout");
+        await markCheckedOut(sessionId);
+        navigate("/eats/checkout");
+      }
+      return;
     }
+
+    // Build participant list with amounts
+    const participantMap = new Map<string, { userId: string; userName: string; itemTotal: number }>();
+    items.forEach((item) => {
+      const existing = participantMap.get(item.user_id) || { userId: item.user_id, userName: item.user_name, itemTotal: 0 };
+      existing.itemTotal += item.price * item.quantity;
+      participantMap.set(item.user_id, existing);
+    });
+
+    const participantList = Array.from(participantMap.values()).filter((p) => p.itemTotal > 0);
+
+    let paymentParticipants: { userId: string; userName: string; amount: number }[];
+
+    if (mode === "split_even") {
+      const perPerson = total / participantList.length;
+      paymentParticipants = participantList.map((p) => ({
+        userId: p.userId,
+        userName: p.userName,
+        amount: Math.round(perPerson * 100) / 100,
+      }));
+    } else {
+      // pay_own
+      paymentParticipants = participantList.map((p) => ({
+        userId: p.userId,
+        userName: p.userName,
+        amount: Math.round(p.itemTotal * 100) / 100,
+      }));
+    }
+
+    const success = await setPaymentMode(sessionId, mode, paymentParticipants);
+    if (success) {
+      setShowPaymentSelector(false);
+      toast.success("Order locked! Waiting for payments.");
+    }
+  };
+
+  const handlePayNow = async (paymentId: string) => {
+    setPayingId(paymentId);
+    const success = await markPaymentPaid(paymentId);
+    if (success) {
+      toast.success("Payment confirmed!");
+    }
+    setPayingId(null);
   };
 
   const handleAddItems = () => {
@@ -312,6 +365,44 @@ function EatsGroupOrderContent() {
             </CardContent>
           </Card>
 
+          {/* Split Payment Cards */}
+          {isLocked && hasSplitPayments && payments.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <span className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-violet-400" />
+                    Payments
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {paidCount} of {payments.length} paid
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {payments.map((payment) => (
+                  <GroupPaymentCard
+                    key={payment.id}
+                    payment={payment}
+                    items={paymentMode === "pay_own" ? items.filter((i) => i.user_id === payment.user_id) : undefined}
+                    isCurrentUser={user?.id === payment.user_id}
+                    isPaying={payingId === payment.id}
+                    onPayNow={handlePayNow}
+                    showItems={paymentMode === "pay_own"}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* All paid success */}
+          {allPaid && payments.length > 0 && (
+            <div className="text-center p-6 bg-emerald-500/10 rounded-xl mb-6">
+              <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
+              <p className="font-semibold text-emerald-400">All payments complete — order placed!</p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="space-y-3">
             {isOpen && (
@@ -327,20 +418,15 @@ function EatsGroupOrderContent() {
             {isHost && isOpen && items.length > 0 && (
               <Button
                 onClick={handleLockAndCheckout}
-                disabled={isLocking}
                 variant="outline"
                 className="w-full h-12 rounded-xl gap-2 border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
               >
-                {isLocking ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Lock className="w-5 h-5" />
-                )}
+                <Lock className="w-5 h-5" />
                 Lock & Checkout
               </Button>
             )}
 
-            {!isHost && isLocked && (
+            {!isHost && isLocked && !hasSplitPayments && (
               <div className="text-center p-4 bg-amber-500/10 rounded-xl">
                 <Lock className="w-6 h-6 mx-auto mb-2 text-amber-400" />
                 <p className="text-sm text-amber-400 font-medium">
@@ -357,14 +443,16 @@ function EatsGroupOrderContent() {
                 </p>
               </div>
             )}
-
-            {/* Split payment placeholder */}
-            {isHost && items.length > 0 && (
-              <p className="text-xs text-center text-muted-foreground">
-                Split payment coming soon — one person pays for now
-              </p>
-            )}
           </div>
+
+          {/* Payment Mode Selector */}
+          <GroupPaymentModeSelector
+            open={showPaymentSelector}
+            onOpenChange={setShowPaymentSelector}
+            items={items}
+            total={total}
+            onConfirm={handlePaymentModeConfirm}
+          />
         </div>
       </main>
 
