@@ -64,7 +64,7 @@ const DEFAULT_RATE: Omit<ZonePricingRate, "id" | "zone_id" | "created_at" | "upd
   per_minute: 0.35,
   booking_fee: 2.50,
   minimum_fare: 7.00,
-  multiplier: 1.0,
+  ride_type_multiplier: 1.0,
 };
 
 const ZonePricingRatesPage = () => {
@@ -93,7 +93,7 @@ const ZonePricingRatesPage = () => {
   const totalZones = zones?.length ?? 0;
   const ratesInZone = rates?.length ?? 0;
   const lowestBase = rates?.length ? Math.min(...rates.map((r) => r.base_fare)) : 0;
-  const highestMulti = rates?.length ? Math.max(...rates.map((r) => r.multiplier)) : 0;
+  const highestMulti = rates?.length ? Math.max(...rates.map((r) => r.ride_type_multiplier)) : 0;
 
   const handleEditSave = () => {
     if (!editingRate) return;
@@ -104,7 +104,7 @@ const ZonePricingRatesPage = () => {
       per_minute: editingRate.per_minute,
       booking_fee: editingRate.booking_fee,
       minimum_fare: editingRate.minimum_fare,
-      multiplier: editingRate.multiplier,
+      ride_type_multiplier: editingRate.ride_type_multiplier,
     });
     setIsEditDialogOpen(false);
     setEditingRate(null);
@@ -120,7 +120,7 @@ const ZonePricingRatesPage = () => {
       per_minute: newRate.per_minute,
       booking_fee: newRate.booking_fee,
       minimum_fare: newRate.minimum_fare,
-      multiplier: newRate.multiplier,
+      ride_type_multiplier: newRate.ride_type_multiplier,
     });
     setIsAddDialogOpen(false);
     setNewRate(DEFAULT_RATE);
@@ -280,7 +280,7 @@ const ZonePricingRatesPage = () => {
                       <TableCell className="text-right">{formatCurrency(rate.per_minute)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(rate.booking_fee)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(rate.minimum_fare)}</TableCell>
-                      <TableCell className="text-right">{rate.multiplier.toFixed(2)}×</TableCell>
+                      <TableCell className="text-right">{rate.ride_type_multiplier.toFixed(2)}×</TableCell>
                       <TableCell className="text-right font-semibold text-primary">
                         {formatCurrency(calculateFarePreview(rate))}
                       </TableCell>
@@ -397,9 +397,9 @@ const ZonePricingRatesPage = () => {
                       step="0.01"
                       min="0.5"
                       max="10"
-                      value={editingRate.multiplier}
+                      value={editingRate.ride_type_multiplier}
                       onChange={(e) =>
-                        setEditingRate({ ...editingRate, multiplier: parseFloat(e.target.value) || 1 })
+                        setEditingRate({ ...editingRate, ride_type_multiplier: parseFloat(e.target.value) || 1 })
                       }
                     />
                   </div>
@@ -519,9 +519,9 @@ const ZonePricingRatesPage = () => {
                     step="0.01"
                     min="0.5"
                     max="10"
-                    value={newRate.multiplier}
+                    value={newRate.ride_type_multiplier}
                     onChange={(e) =>
-                      setNewRate({ ...newRate, multiplier: parseFloat(e.target.value) || 1 })
+                      setNewRate({ ...newRate, ride_type_multiplier: parseFloat(e.target.value) || 1 })
                     }
                   />
                 </div>
