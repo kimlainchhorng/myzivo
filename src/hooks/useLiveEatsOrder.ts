@@ -47,11 +47,16 @@ export interface LiveEatsOrder {
   delivery_pin?: string | null;
   delivery_pin_verified?: boolean | null;
   pin_attempts?: number | null;
+  // Pickup coordinates (from order or restaurant)
+  pickup_lat?: number | null;
+  pickup_lng?: number | null;
   restaurants?: {
     name: string;
     logo_url: string | null;
     phone: string | null;
     address: string | null;
+    lat?: number | null;
+    lng?: number | null;
   };
 }
 
@@ -70,7 +75,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
     try {
       const { data, error: fetchError } = await supabase
         .from(EATS_TABLES.orders)
-        .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
+        .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng)")
         .eq("id", orderId)
         .single();
 
@@ -99,7 +104,7 @@ export function useLiveEatsOrder(orderId: string | undefined) {
       try {
         const { data, error: fetchError } = await supabase
           .from(EATS_TABLES.orders)
-          .select("*, restaurants:restaurant_id(name, logo_url, phone, address)")
+          .select("*, restaurants:restaurant_id(name, logo_url, phone, address, lat, lng)")
           .eq("id", orderId)
           .single();
 

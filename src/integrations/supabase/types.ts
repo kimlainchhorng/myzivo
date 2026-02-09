@@ -2697,6 +2697,59 @@ export type Database = {
         }
         Relationships: []
       }
+      business_account_users: {
+        Row: {
+          business_id: string | null
+          created_at: string | null
+          id: string
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_account_users_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_accounts: {
+        Row: {
+          billing_email: string | null
+          company_name: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          billing_email?: string | null
+          company_name: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          billing_email?: string | null
+          company_name?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       business_authorized_drivers: {
         Row: {
           business_account_id: string
@@ -10742,6 +10795,7 @@ export type Database = {
           eta_pickup: string | null
           happy_hour_id: string | null
           id: string
+          is_business_order: boolean | null
           is_scheduled: boolean | null
           items: Json
           membership_applied: boolean | null
@@ -10886,6 +10940,7 @@ export type Database = {
           eta_pickup?: string | null
           happy_hour_id?: string | null
           id?: string
+          is_business_order?: boolean | null
           is_scheduled?: boolean | null
           items: Json
           membership_applied?: boolean | null
@@ -11030,6 +11085,7 @@ export type Database = {
           eta_pickup?: string | null
           happy_hour_id?: string | null
           id?: string
+          is_business_order?: boolean | null
           is_scheduled?: boolean | null
           items?: Json
           membership_applied?: boolean | null
@@ -15891,6 +15947,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_stops: {
+        Row: {
+          address: string | null
+          delivered_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          order_id: string
+          stop_index: number | null
+        }
+        Insert: {
+          address?: string | null
+          delivered_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id: string
+          stop_index?: number | null
+        }
+        Update: {
+          address?: string | null
+          delivered_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string
+          stop_index?: number | null
+        }
+        Relationships: []
       }
       order_timers: {
         Row: {
