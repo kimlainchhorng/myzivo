@@ -1,10 +1,11 @@
 /**
  * App Header Component
- * Mobile-first header with logo, location selector, and help
+ * Mobile-first header with logo, city selector, and help
  */
 import { useNavigate } from "react-router-dom";
-import { MapPin, HelpCircle, ChevronLeft, Bell } from "lucide-react";
+import { HelpCircle, ChevronLeft } from "lucide-react";
 import ZivoLogo from "@/components/ZivoLogo";
+import CitySelector from "@/components/city/CitySelector";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
@@ -60,16 +61,13 @@ const AppHeader = ({
           </div>
         )}
 
-        {/* Center - Title or Location */}
+        {/* Center - Title or City Selector */}
         {title ? (
           <h1 className="font-bold text-lg absolute left-1/2 -translate-x-1/2">
             {title}
           </h1>
         ) : !hideLocation && (
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border touch-manipulation active:bg-muted/80 transition-colors">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            <span className="text-sm font-medium truncate max-w-[140px]">Current Location</span>
-          </button>
+          <CitySelector />
         )}
 
         {/* Right */}

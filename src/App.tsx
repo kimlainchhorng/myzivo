@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { RideStoreProvider } from "@/stores/rideStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
@@ -580,6 +581,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <CustomerCityProvider>
           <CurrencyProvider>
           <UTMProvider>
           <RealtimeSyncProvider>
@@ -1571,6 +1573,7 @@ const App = () => (
           </RealtimeSyncProvider>
           </UTMProvider>
           </CurrencyProvider>
+          </CustomerCityProvider>
           <CookieConsent />
           <PWAInstallPrompt />
           <SpatialCursor />

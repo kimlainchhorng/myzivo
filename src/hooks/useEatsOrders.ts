@@ -64,12 +64,27 @@ export interface CreateFoodOrderInput {
   membership_discount_cents?: number;
   // Credit fields
   credit_applied_cents?: number;
+  // City fields
+  city_id?: string;
+  city_name?: string;
+  zone_code?: string;
 }
 
 // Fetch all active restaurants (including closed ones for display)
-export function useRestaurants(onlyOpen: boolean = false) {
+// Now supports city filtering
+export function useRestaurants(cityNameOrOnlyOpen?: string | boolean, onlyOpen: boolean = false) {
+  // Handle both old API (boolean) and new API (cityName, boolean)
+  let cityName: string | null = null;
+  let filterOpen = onlyOpen;
+  
+  if (typeof cityNameOrOnlyOpen === "boolean") {
+    filterOpen = cityNameOrOnlyOpen;
+  } else if (typeof cityNameOrOnlyOpen === "string") {
+    cityName = cityNameOrOnlyOpen;
+  }
+
   return useQuery({
-    queryKey: ["restaurants", onlyOpen],
+    queryKey: ["restaurants", cityName, filterOpen],
     queryFn: async () => {
       let query = supabase
         .from(EATS_TABLES.restaurants)
@@ -77,8 +92,13 @@ export function useRestaurants(onlyOpen: boolean = false) {
         .eq("status", "active")
         .order("rating", { ascending: false });
 
+      // Filter by city if provided
+      if (cityName) {
+        query = query.eq("city", cityName);
+      }
+
       // Optionally filter to only open restaurants
-      if (onlyOpen) {
+      if (filterOpen) {
         query = query.eq("is_open", true);
       }
 
@@ -217,6 +237,10 @@ export function useCreateFoodOrder() {
           membership_discount_cents: input.membership_discount_cents || 0,
           // Credit tracking
           credit_applied_cents: input.credit_applied_cents || 0,
+          // City tracking
+          city_id: input.city_id || null,
+          city_name: input.city_name || null,
+          zone_code: input.zone_code || null,
         })
         .select()
         .single();
