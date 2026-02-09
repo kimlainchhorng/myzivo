@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2, Settings, UtensilsCrossed, BarChart3 } from "lucide-react";
+import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2, Settings, UtensilsCrossed, BarChart3, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -106,6 +106,14 @@ const DriverHomePage = () => {
           </div>
           <div className="flex items-center gap-2">
             <DriverNotificationBell />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/driver/activity")}
+              className="text-white/60 hover:text-white"
+            >
+              <Activity className="w-5 h-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

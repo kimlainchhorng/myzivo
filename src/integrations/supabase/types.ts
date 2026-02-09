@@ -176,6 +176,33 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_feed: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string | null
+          id: string
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string | null
+          id?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ad_billing_events: {
         Row: {
           ad_id: string
@@ -1615,10 +1642,12 @@ export type Database = {
         Row: {
           announcement_id: string
           channel: string
+          clicked_at: string | null
           created_at: string
           delivered_at: string | null
           error_message: string | null
           id: string
+          opened_at: string | null
           recipient_id: string
           recipient_type: string
           sent_at: string | null
@@ -1627,10 +1656,12 @@ export type Database = {
         Insert: {
           announcement_id: string
           channel: string
+          clicked_at?: string | null
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
           id?: string
+          opened_at?: string | null
           recipient_id: string
           recipient_type: string
           sent_at?: string | null
@@ -1639,10 +1670,12 @@ export type Database = {
         Update: {
           announcement_id?: string
           channel?: string
+          clicked_at?: string | null
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
           id?: string
+          opened_at?: string | null
           recipient_id?: string
           recipient_type?: string
           sent_at?: string | null
@@ -1667,7 +1700,10 @@ export type Database = {
           id: string
           is_active: boolean | null
           starts_at: string | null
+          target_activity: string | null
           target_audience: string | null
+          target_city: string | null
+          target_zone: string | null
           title: string
           type: string | null
           updated_at: string | null
@@ -1680,7 +1716,10 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           starts_at?: string | null
+          target_activity?: string | null
           target_audience?: string | null
+          target_city?: string | null
+          target_zone?: string | null
           title: string
           type?: string | null
           updated_at?: string | null
@@ -1693,7 +1732,10 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           starts_at?: string | null
+          target_activity?: string | null
           target_audience?: string | null
+          target_city?: string | null
+          target_zone?: string | null
           title?: string
           type?: string | null
           updated_at?: string | null

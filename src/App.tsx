@@ -94,6 +94,7 @@ const DriverAccountPage = lazy(
 );
 const DriverOrderChatPage = lazy(() => import("./pages/driver/DriverOrderChatPage"));
 const DriverAnalyticsPage = lazy(() => import("./pages/driver/DriverAnalyticsPage"));
+const DriverActivityPage = lazy(() => import("./pages/driver/DriverActivityPage"));
 
 // Admin Analytics Pages
 const AnalyticsHub = lazy(() => import("./pages/admin/analytics/AnalyticsHub"));
@@ -1051,8 +1052,9 @@ const App = () => (
                 <Route path="/admin/notifications/outbox" element={<ProtectedRoute requireAdmin><NotificationsOutboxPage /></ProtectedRoute>} />
                 <Route path="/admin/notifications/audit" element={<ProtectedRoute requireAdmin><NotificationAuditPage /></ProtectedRoute>} />
                 
-                {/* Driver Analytics */}
+                {/* Driver Analytics & Activity */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
+                <Route path="/driver/activity" element={<DriverActivityPage />} />
                 
                 <Route
                   path="/admin"
