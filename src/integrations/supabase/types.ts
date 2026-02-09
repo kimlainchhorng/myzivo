@@ -20155,6 +20155,9 @@ export type Database = {
           admin_2fa_enabled: boolean | null
           admin_2fa_secret: string | null
           admin_role: string | null
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_name: string | null
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
@@ -20187,6 +20190,9 @@ export type Database = {
           admin_2fa_enabled?: boolean | null
           admin_2fa_secret?: string | null
           admin_role?: string | null
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_name?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
@@ -20219,6 +20225,9 @@ export type Database = {
           admin_2fa_enabled?: boolean | null
           admin_2fa_secret?: string | null
           admin_role?: string | null
+          affiliate_captured_at?: string | null
+          affiliate_code?: string | null
+          affiliate_partner_name?: string | null
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string

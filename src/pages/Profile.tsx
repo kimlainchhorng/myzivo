@@ -24,7 +24,8 @@ import {
   Gift,
   Wallet,
   Store,
-  ExternalLink
+  ExternalLink,
+  Users
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
@@ -53,6 +54,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
+import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 
 const profileSchema = z.object({
@@ -67,6 +69,7 @@ const Profile = () => {
   const { user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
+  const affiliateAttribution = useAffiliateAttribution();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -371,7 +374,25 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Flight Status Tiers */}
+            {/* Partner Attribution Card - shown if user was referred by affiliate */}
+            {affiliateAttribution.hasAffiliateAttribution && (
+              <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/5" />
+                <CardContent className="p-4 sm:p-5 relative">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm sm:text-base">Referred by Partner</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        You joined through {affiliateAttribution.partnerName}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <div>
               <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
                 <Plane className="w-4 h-4 text-primary" />

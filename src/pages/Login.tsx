@@ -37,6 +37,14 @@ const Login = () => {
   const initialMode = searchParams.get("mode") === "signup" ? false : true;
   
   const [isLogin, setIsLogin] = useState(initialMode);
+
+  // Capture affiliate_code from URL for attribution tracking
+  useEffect(() => {
+    const affiliateCode = searchParams.get("affiliate_code");
+    if (affiliateCode) {
+      sessionStorage.setItem("signup_affiliate_code", affiliateCode);
+    }
+  }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const { signIn, signUp, signInWithProvider } = useAuth();

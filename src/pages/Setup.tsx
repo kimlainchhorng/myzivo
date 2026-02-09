@@ -78,6 +78,9 @@ const Setup = () => {
     setSubmitting(true);
 
     try {
+      // Capture affiliate code from sessionStorage if present
+      const affiliateCode = sessionStorage.getItem("signup_affiliate_code");
+
       // Upsert profile in one call to avoid race conditions with the profile-creation trigger
       // (select→insert can fail if the trigger creates the row between calls).
       //
@@ -90,7 +93,17 @@ const Setup = () => {
         phone: phone || null,
         setup_complete: true,
         updated_at: new Date().toISOString(),
+        // Affiliate tracking - only set if code exists (don't overwrite existing attribution)
+        ...(affiliateCode && {
+          affiliate_code: affiliateCode,
+          affiliate_captured_at: new Date().toISOString(),
+        }),
       } as any;
+
+      // Clear affiliate code from sessionStorage after use
+      if (affiliateCode) {
+        sessionStorage.removeItem("signup_affiliate_code");
+      }
 
       const { error } = await supabase
         .from("profiles")
