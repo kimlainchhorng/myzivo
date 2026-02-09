@@ -1,141 +1,147 @@
 
 
-# Group Orders -- Share a Cart with Friends
+# Split Payments for Group Orders
 
 ## Overview
 
-Allow a customer to start a "Group Order" session on a restaurant page, generate a shareable invite link, and let others join and add their own items to a shared cart. When everyone is ready, the host checks out and pays for the whole order.
+Replace the "Split payment coming soon" placeholder in group orders with a full split payment system. When a host locks a group order, they choose a payment mode: **Host pays all**, **Split evenly**, or **Pay for own items**. Each participant then sees their share and pays individually. The order only confirms once all required payments are complete.
 
 ## Database Changes
 
-### New table: `group_order_sessions`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid (PK) | |
-| restaurant_id | uuid (FK) | Restaurant this group order is for |
-| host_user_id | uuid (FK) | User who started the session |
-| invite_code | text (unique) | 6-character shareable code |
-| status | text | `open`, `locked`, `checked_out`, `cancelled` |
-| deadline | timestamptz | Optional auto-lock timer |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
-
-### New table: `group_order_items`
+### New table: `group_order_payments`
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid (PK) | |
 | session_id | uuid (FK) | References group_order_sessions |
-| user_id | uuid | Who added this item |
-| user_name | text | Display name of the person |
-| menu_item_id | uuid (FK) | References menu_items |
-| item_name | text | Snapshot of item name |
-| price | numeric | Snapshot of price |
-| quantity | int | |
-| notes | text | Special instructions |
+| user_id | uuid | Who this payment is for |
+| user_name | text | Display name |
+| amount | numeric | Amount this person owes |
+| status | text | `pending`, `paid`, `failed` |
+| paid_at | timestamptz | When payment was confirmed |
 | created_at | timestamptz | |
 
-RLS policies will allow:
-- Host can read/write all items in their session
-- Participants can read all items but only write their own
-- Anyone with the invite code can join (insert their items)
+RLS: users can read all payments in their session, update only their own.
 
-## New Files
+### Alter table: `group_order_sessions`
 
-### 1. `src/hooks/useGroupOrder.ts`
+Add column:
+- `payment_mode` text (nullable, values: `host_pays`, `split_even`, `pay_own`)
 
-Central hook managing all group order logic:
-- **`startGroupOrder(restaurantId)`** -- creates a session, generates an invite code, returns the code
-- **`joinGroupOrder(inviteCode)`** -- validates code, returns session info (restaurant, host name, items so far)
-- **`addGroupItem(sessionId, item)`** -- inserts item tagged with the current user's ID and name
-- **`removeGroupItem(itemId)`** -- only allowed for the item's owner
-- **`lockSession(sessionId)`** -- host-only; sets status to `locked`, preventing further additions
-- **`useGroupSession(sessionId)`** -- real-time subscription to session status and all items via Supabase Realtime
-- **`convertToCart(sessionId)`** -- for checkout: pulls all group items into the regular cart context
+## How It Works
 
-### 2. `src/pages/EatsGroupOrder.tsx`
+### Payment Modes
 
-Route: `/eats/group/:inviteCode`
+1. **Host Pays** (existing behavior) -- Host proceeds to normal checkout with all items. No per-participant payment tracking needed.
+2. **Split Evenly** -- Total is divided equally among all participants. A `group_order_payments` row is created for each unique participant with an equal share.
+3. **Pay for Own Items** -- Each participant's items are totaled separately. A `group_order_payments` row is created per participant matching their individual subtotal plus a proportional share of delivery/fees.
 
-The shared group order page that both host and participants see:
-- **Header**: Restaurant name, group order status badge, invite code display
-- **Invite section** (host only): Shareable link with copy button, plus a share sheet
-- **Shared cart view**: Items grouped by person with each person's name as a section header, individual item prices, and a running total at the bottom
-- **"Add Items" button**: Opens the restaurant menu (navigates to `/eats/restaurant/:id?group=SESSION_ID`) so users can browse and add
-- **Timer** (optional): If host set a deadline, show countdown. When it hits zero, session auto-locks
-- **Lock/Checkout button** (host only): Locks the session and navigates to regular checkout with all items loaded
-
-### 3. `src/components/eats/GroupOrderBanner.tsx`
-
-A banner shown on the restaurant menu page when the user is in an active group order session (detected via `?group=SESSION_ID` query param). Shows:
-- "You're adding to [Host]'s group order"
-- Item count badge for how many items the current user has added
-- "Done Adding" button to go back to the group order page
-
-### 4. `src/components/eats/StartGroupOrderButton.tsx`
-
-Button shown on the restaurant menu page header area. When tapped:
-- If user is not logged in, prompts login
-- Creates a group order session
-- Navigates to `/eats/group/:inviteCode`
-
-## Modified Files
-
-### 5. `src/pages/EatsRestaurantMenu.tsx`
-
-- Add `StartGroupOrderButton` next to the restaurant name/header area
-- Detect `?group=SESSION_ID` query param; if present, show `GroupOrderBanner` and route "Add to Cart" actions through the group order hook instead of the regular cart
-
-### 6. `src/components/eats/MenuItemModal.tsx`
-
-- When in group order mode (session ID in URL), the "Add to Cart" button calls `addGroupItem` instead of the regular `addItem`, tagging the item with the user's name
-- Button text changes to "Add to Group Order"
-
-### 7. `src/App.tsx`
-
-- Register new route: `/eats/group/:inviteCode` pointing to `EatsGroupOrder`
-
-### 8. `src/pages/EatsCheckout.tsx`
-
-- When arriving from a group order (detected via session ID in state/params), show a "Group Order" badge at the top
-- Display items grouped by person name in the order summary for clarity
-
-## User Flow
+### Flow
 
 ```text
-Host                              Friends
-  |                                  |
-  |-- Taps "Start Group Order" ----->|
-  |                                  |
-  |-- Shares invite link ----------->|
-  |                                  |
-  |   (everyone browses menu         |
-  |    and adds their items)         |
-  |                                  |
-  |-- Sees all items in real-time -->|
-  |                                  |
-  |-- Taps "Lock & Checkout" ------->|
-  |                                  |
-  |-- Pays for entire order -------->|
-  |                                  |
-  |-- Order placed ----------------->|
+Host taps "Lock & Checkout"
+        |
+        v
+  Payment Mode Selector
+  (Host pays / Split evenly / Pay own)
+        |
+        v
+  If "Host pays": existing flow (host goes to checkout)
+        |
+  If "Split" or "Pay own":
+        |
+        v
+  Payment rows created for each participant
+        |
+        v
+  Each participant sees their share on the group order page
+  with a "Pay Now" button
+        |
+        v
+  Participants pay individually (order request with their share)
+        |
+        v
+  Real-time status updates: each payment marked as "Paid"
+        |
+        v
+  When ALL payments are "paid", order is placed automatically
 ```
 
-## Real-Time Sync
+## New and Modified Files
 
-The group order page subscribes to Supabase Realtime on both `group_order_sessions` (for status changes) and `group_order_items` (for item additions/removals). All participants see updates instantly without refreshing.
+### 1. New: `src/components/eats/GroupPaymentModeSelector.tsx`
+
+A modal/sheet shown when host taps "Lock & Checkout" with three radio options:
+- Host pays total
+- Split evenly (shows per-person amount)
+- Pay for own items (shows each person's subtotal)
+
+Includes a "Confirm & Lock" button that locks the session and creates payment records.
+
+### 2. New: `src/components/eats/GroupPaymentCard.tsx`
+
+Card component shown on the group order page for each participant when payment mode is `split_even` or `pay_own`:
+- Shows participant name, items (for pay_own mode), amount owed
+- Status badge: "Pending" (amber) or "Paid" (green)
+- "Pay Now" button for the current user's own payment row
+- Clicking "Pay Now" navigates to a lightweight checkout or triggers the existing order creation flow for their portion
+
+### 3. Update: `src/hooks/useGroupOrder.ts`
+
+Add functions:
+- `setPaymentMode(sessionId, mode, participants)` -- locks session, sets `payment_mode`, creates `group_order_payments` rows
+- `markPaymentPaid(paymentId)` -- marks a participant's payment as paid
+- `checkAllPaid(sessionId)` -- checks if all payment rows are `paid`; if so, triggers the final order placement
+
+### 4. Update: `src/hooks/useGroupOrder.ts` (`useGroupSession`)
+
+Add real-time subscription to `group_order_payments` table so all participants see payment status updates live. Return `payments` array and derived `allPaid` boolean.
+
+### 5. Update: `src/pages/EatsGroupOrder.tsx`
+
+- Replace the "Split payment coming soon" placeholder with the actual `GroupPaymentModeSelector`
+- When session is locked and has a split/pay-own payment mode, show `GroupPaymentCard` for each participant instead of the current "host is checking out" message
+- Show a progress indicator: "2 of 3 payments complete"
+- When `allPaid` becomes true, show a success state: "All payments complete -- order placed!"
+
+### 6. Migration SQL
+
+```text
+ALTER TABLE group_order_sessions ADD COLUMN payment_mode text;
+
+CREATE TABLE group_order_payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES group_order_sessions(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  user_name text NOT NULL,
+  amount numeric NOT NULL,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed')),
+  paid_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- RLS, indexes, realtime
+```
+
+## Participant Experience
+
+**Non-host participants** see:
+- When session is `open`: normal shared cart view (add/remove items)
+- When session is `locked` with `host_pays`: "The host is completing checkout"
+- When session is `locked` with `split_even` or `pay_own`: their payment card with amount owed and a "Pay Now" button
+- After they pay: their card shows a green "Paid" checkmark
+- When everyone has paid: "Order confirmed!" success state
 
 ## Edge Cases
 
-- **User not logged in**: Prompted to log in or sign up before joining/starting a group order
-- **Wrong restaurant**: If a participant tries to add items from a different restaurant, they're blocked with a message
-- **Session already locked/checked out**: Late joiners see a read-only view with a message that the order has been finalized
-- **Host leaves page**: Session persists in the database; host can return via the same invite link
-- **Empty group order**: Host cannot check out if total items is zero
-- **Timer expires**: Session auto-locks via a `useEffect` interval check; participants see "Time's up" and can no longer add items
+- **Participant leaves before paying**: Their payment row stays `pending`. Host can see who hasn't paid yet. A "Remind" button could send a push notification (future enhancement).
+- **Only one participant**: Split options still work but effectively behave like host-pays.
+- **Zero-item participant**: If someone joined but added nothing, they're excluded from payments in pay-own mode and from the even split calculation.
+- **Host cancels after locking**: Session status goes to `cancelled`, all pending payments are voided.
 
-## Split Payment (Future)
+## Technical Notes
 
-The plan includes a "One person pays" flow only. The checkout page will show a subtle "Split payment coming soon" label as a placeholder for a future iteration.
+- Payment in this context uses the existing order-request flow (no Stripe integration) -- each participant's "Pay Now" action creates an individual order request or marks their portion as confirmed, matching the current "payment collected on delivery" model.
+- The `group_order_payments` table and real-time sync ensure all participants see live status without polling.
+- The final order is placed only when `checkAllPaid` returns true, triggered reactively via the Supabase Realtime subscription on the payments table.
 
