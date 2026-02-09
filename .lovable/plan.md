@@ -1,120 +1,192 @@
 
-# Customer Reliability Messaging — Implementation Plan
+
+# Maintenance Mode — Implementation Plan
 
 ## Overview
-Add a customer-facing reliability banner that displays when any system service is experiencing an incident. The banner shows the message: **"Some services may be temporarily slower than usual."** This keeps customers informed without alarming them during minor degradations.
+Add a maintenance mode feature that displays a clear message when ZIVO ordering is paused. When maintenance mode is active, checkout and new orders are disabled, but customers can still browse restaurants and view their past orders.
 
 ## Current State Analysis
 
 ### Existing Infrastructure
-| Component | Status | Location |
-|-----------|--------|----------|
-| `service_health_status` table | Exists | Supabase DB with status, is_paused fields |
-| `useServiceHealthStatus()` hook | Exists (admin-only) | `src/hooks/useDisasterRecovery.ts` |
-| `AnnouncementBanner` component | Exists | `src/components/shared/AnnouncementBanner.tsx` |
-| Layout components | Exists | `AppLayout`, `HizovoAppLayout`, `ZivoSuperAppLayout` |
+| Component | Status | Purpose |
+|-----------|--------|---------|
+| `service_health_status` table | Exists | Stores status per service (flights, hotels, eats, rides, etc.) |
+| `useSystemStatus()` hook | Exists | Checks for degraded/paused services |
+| `SystemStatusBanner` | Exists | Shows "slower than usual" message for degraded services |
+| `useRestaurantAvailability()` | Exists | Checks individual restaurant pause status |
 
 ### Database Schema (service_health_status)
 | Column | Type | Description |
 |--------|------|-------------|
-| `service_name` | text | flights, hotels, cars, rides, eats, auth, payments, storage |
-| `status` | text | operational, degraded, outage, maintenance |
+| `service_name` | text | flights, hotels, cars, rides, **eats**, auth, payments, storage |
+| `status` | text | operational, degraded, outage, **maintenance** |
 | `is_paused` | boolean | Manual service pause |
-| `paused_reason` | text | Reason for pause |
+| `paused_reason` | text | Admin-provided reason |
 
-### RLS Policy
-```sql
-CREATE POLICY "Anyone can read service health" 
-  ON public.service_health_status 
-  FOR SELECT TO authenticated 
-  USING (true);
-```
-Customers can already read service health data.
+### Current Services in DB
+- flights, hotels, cars, rides, eats, auth, payments, storage
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Customer System Status Hook
+### 1) Extend System Status Hook for Maintenance Mode
 
-**File to Create:** `src/hooks/useSystemStatus.ts`
+**File to Modify:** `src/hooks/useSystemStatus.ts`
 
-**Purpose:** Lightweight hook for customers to check if any system incident is active.
+**Changes:**
+- Add `isMaintenanceMode` flag (when status = 'maintenance' OR is_paused = true)
+- Return service-specific maintenance data
+- New interface:
 
-**Implementation:**
 ```text
-Query service_health_status table
-Check for any service where:
-  - status = 'degraded' OR status = 'outage' OR status = 'maintenance'
-  - OR is_paused = true
-
-Return:
-  - hasActiveIncident: boolean
-  - incidentMessage: string (standardized message)
-  - isLoading: boolean
+interface SystemStatusResult {
+  hasActiveIncident: boolean;
+  isMaintenanceMode: boolean;
+  maintenanceMessage: string;
+  incidentMessage: string;
+  isLoading: boolean;
+  services: {
+    eats: { status: string; isPaused: boolean; } | null;
+    rides: { status: string; isPaused: boolean; } | null;
+    travel: { status: string; isPaused: boolean; } | null;
+  };
+}
 ```
 
-**Caching Strategy:**
-- `staleTime: 60000` (1 minute)
-- `refetchInterval: 60000` (poll every minute)
-- Lightweight query with minimal fields
+### 2) Create Maintenance Mode Screen Component
 
----
+**File to Create:** `src/components/shared/MaintenanceScreen.tsx`
 
-### 2) Create Customer Reliability Banner Component
-
-**File to Create:** `src/components/shared/SystemStatusBanner.tsx`
-
-**Purpose:** Non-intrusive banner informing customers of service issues.
+**Purpose:** Full-screen overlay shown when maintenance mode is active.
 
 **Design:**
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│ ⚠️ Some services may be temporarily slower than usual.    [×]  │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│                                         │
+│              🔧 (icon)                  │
+│                                         │
+│    ZIVO is temporarily under           │
+│         maintenance.                    │
+│                                         │
+│     Please try again shortly.           │
+│                                         │
+│                                         │
+│         [ Browse Restaurants ]          │
+│                                         │
+│         [ View Past Orders ]            │
+│                                         │
+└─────────────────────────────────────────┘
 ```
 
 **Features:**
-- Amber/warning color scheme (not alarming)
-- Dismissible with X button
-- Uses localStorage to remember dismissal (per session)
-- Only shows when `hasActiveIncident = true`
-- Non-sticky (doesn't follow scroll)
+- Full-screen centered layout
+- ZIVO logo/branding
+- Calm, non-alarming design (blue theme for maintenance)
+- Action buttons to browse or view orders
 
-**Styling:**
+### 3) Create Service-Specific Maintenance Hook
+
+**File to Create:** `src/hooks/useServiceMaintenance.ts`
+
+**Purpose:** Check if a specific service (eats, rides, travel) is in maintenance mode.
+
+**Implementation:**
 ```text
-Background: bg-amber-50 dark:bg-amber-950/30
-Border: border-amber-200 dark:border-amber-800
-Icon: AlertTriangle (Lucide)
-Text: "Some services may be temporarily slower than usual."
+export function useServiceMaintenance(serviceName: "eats" | "rides" | "flights" | "hotels") {
+  const { data, isLoading } = useQuery({
+    queryKey: ["service-maintenance", serviceName],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("service_health_status")
+        .select("status, is_paused")
+        .eq("service_name", serviceName)
+        .single();
+      
+      return {
+        isInMaintenance: data?.status === "maintenance" || data?.is_paused,
+        isPaused: data?.is_paused,
+      };
+    },
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+  
+  return {
+    isInMaintenance: data?.isInMaintenance ?? false,
+    isLoading,
+  };
+}
 ```
 
----
-
-### 3) Integrate Banner into Layout Components
+### 4) Update Checkout Pages with Maintenance Gate
 
 **Files to Modify:**
-- `src/components/app/AppLayout.tsx`
-- `src/components/app/HizovoAppLayout.tsx`
-- `src/components/app/ZivoSuperAppLayout.tsx`
+- `src/pages/EatsCheckout.tsx`
+- `src/pages/TravelCheckoutPage.tsx`
 
-**Placement:** Below header, above main content.
-
-**Integration Pattern:**
+**Pattern for EatsCheckout:**
 ```text
-<div className="min-h-screen bg-background flex flex-col">
-  {!hideHeader && <Header ... />}
+function EatsCheckoutContent() {
+  const { isInMaintenance, isLoading: maintenanceLoading } = useServiceMaintenance("eats");
   
-  {/* NEW: System Status Banner (customer-facing) */}
-  <SystemStatusBanner />
+  // Show maintenance screen if eats service is paused
+  if (maintenanceLoading) {
+    return <LoadingSpinner />;
+  }
   
-  <main className={...}>
-    {children}
-  </main>
+  if (isInMaintenance) {
+    return (
+      <MaintenanceScreen 
+        allowBrowse 
+        allowViewOrders 
+        browseUrl="/eats/restaurants"
+        ordersUrl="/eats/orders"
+      />
+    );
+  }
   
-  {!hideNav && <BottomNav />}
-</div>
+  // ... existing checkout logic
+}
 ```
+
+### 5) Update Edge Functions with Maintenance Check
+
+**Files to Modify:**
+- `supabase/functions/create-eats-checkout/index.ts`
+- `supabase/functions/create-eats-payment-intent/index.ts`
+- `supabase/functions/create-ride-checkout/index.ts`
+- `supabase/functions/create-ride-payment-intent/index.ts`
+- `supabase/functions/create-travel-order/index.ts`
+
+**Pattern (add at start of each function):**
+```text
+// Check if service is in maintenance
+const { data: serviceStatus } = await supabase
+  .from("service_health_status")
+  .select("status, is_paused")
+  .eq("service_name", "eats")  // or "rides", "hotels" etc.
+  .single();
+
+if (serviceStatus?.status === "maintenance" || serviceStatus?.is_paused) {
+  return new Response(
+    JSON.stringify({ 
+      error: "Service temporarily unavailable",
+      maintenance: true,
+    }),
+    { headers: corsHeaders, status: 503 }
+  );
+}
+```
+
+### 6) Update Restaurant Menu Page with Maintenance Banner
+
+**File to Modify:** `src/pages/EatsRestaurantMenu.tsx`
+
+**Changes:**
+- Check if eats service is in maintenance
+- Show info banner if in maintenance (but still allow browsing)
+- Disable "Add to Cart" and "Proceed to Checkout" buttons
 
 ---
 
@@ -123,116 +195,127 @@ Text: "Some services may be temporarily slower than usual."
 ### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useSystemStatus.ts` | Check for active incidents |
-| `src/components/shared/SystemStatusBanner.tsx` | Customer reliability banner |
+| `src/hooks/useServiceMaintenance.ts` | Service-specific maintenance check |
+| `src/components/shared/MaintenanceScreen.tsx` | Full-screen maintenance display |
 
-### Modified Files (3)
+### Modified Files (8)
 | File | Changes |
 |------|---------|
-| `src/components/app/AppLayout.tsx` | Add SystemStatusBanner |
-| `src/components/app/HizovoAppLayout.tsx` | Add SystemStatusBanner |
-| `src/components/app/ZivoSuperAppLayout.tsx` | Add SystemStatusBanner |
+| `src/hooks/useSystemStatus.ts` | Add `isMaintenanceMode` flag |
+| `src/pages/EatsCheckout.tsx` | Gate checkout with maintenance check |
+| `src/pages/TravelCheckoutPage.tsx` | Gate checkout with maintenance check |
+| `src/pages/EatsRestaurantMenu.tsx` | Disable ordering buttons, show banner |
+| `supabase/functions/create-eats-checkout/index.ts` | Add maintenance guard |
+| `supabase/functions/create-eats-payment-intent/index.ts` | Add maintenance guard |
+| `supabase/functions/create-ride-checkout/index.ts` | Add maintenance guard |
+| `supabase/functions/create-ride-payment-intent/index.ts` | Add maintenance guard |
 
 ---
 
-## Hook Implementation Details
+## Maintenance Screen Design
 
-### useSystemStatus Hook
+### Visual Layout
 ```text
-export function useSystemStatus() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["system-status-customer"],
-    queryFn: async () => {
-      const { data: services } = await supabase
-        .from("service_health_status")
-        .select("status, is_paused")
-        .or("status.neq.operational,is_paused.eq.true");
-      
-      return {
-        hasActiveIncident: services && services.length > 0,
-      };
-    },
-    staleTime: 60000,
-    refetchInterval: 60000,
-  });
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│                        ╭─────────╮                           │
+│                        │   🔧    │                           │
+│                        ╰─────────╯                           │
+│                                                              │
+│                 ZIVO is temporarily                          │
+│                   under maintenance.                         │
+│                                                              │
+│               Please try again shortly.                      │
+│                                                              │
+│                                                              │
+│              ┌─────────────────────────┐                     │
+│              │   Browse Restaurants    │                     │
+│              └─────────────────────────┘                     │
+│                                                              │
+│              ┌─────────────────────────┐                     │
+│              │    View Past Orders     │                     │
+│              └─────────────────────────┘                     │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
 
-  return {
-    hasActiveIncident: data?.hasActiveIncident ?? false,
-    incidentMessage: "Some services may be temporarily slower than usual.",
-    isLoading,
-  };
+### Color Scheme
+| Element | Value |
+|---------|-------|
+| Background | `bg-background` (default) |
+| Icon container | `bg-blue-500/20` |
+| Icon | `text-blue-500` (Wrench icon) |
+| Title | Default text |
+| Subtitle | `text-muted-foreground` |
+| Buttons | Outline variant |
+
+---
+
+## Customer Experience Flow
+
+### Normal Operation
+```text
+Browse Restaurants → Add Items → Cart → Checkout → Payment → Order Placed
+```
+
+### Maintenance Mode Active
+```text
+Browse Restaurants → Add Items → Cart → [BLOCKED] → Maintenance Screen
+                                                     ├─ Browse Restaurants (allowed)
+                                                     └─ View Past Orders (allowed)
+```
+
+---
+
+## Allowed vs Blocked Actions
+
+| Action | Maintenance Mode | Notes |
+|--------|------------------|-------|
+| Browse restaurants | Allowed | Users can explore menus |
+| View menu items | Allowed | Prices, descriptions visible |
+| Add to cart | Blocked | Button disabled |
+| Proceed to checkout | Blocked | Redirects to maintenance screen |
+| Submit order | Blocked | Edge function returns 503 |
+| View past orders | Allowed | Order history accessible |
+| Track existing order | Allowed | Active orders still tracked |
+
+---
+
+## Edge Function Response Format
+
+### Success (Normal)
+```json
+{
+  "success": true,
+  "orderId": "abc123",
+  ...
+}
+```
+
+### Maintenance Mode (503)
+```json
+{
+  "error": "Service temporarily unavailable",
+  "maintenance": true
+}
+```
+
+**Client handling:**
+```text
+if (response.status === 503 && data.maintenance) {
+  // Show maintenance message
+  toast.error("Ordering is temporarily unavailable. Please try again shortly.");
+  navigate("/eats");
 }
 ```
 
 ---
 
-## Banner Dismissal Logic
-
-| Scenario | Behavior |
-|----------|----------|
-| User dismisses banner | Store dismissal timestamp in localStorage |
-| Same session, incident still active | Banner stays hidden |
-| New session (page refresh) | Banner reappears if incident still active |
-| Incident resolves | Banner auto-hides (query returns false) |
-
-**Storage Key:** `zivo-system-status-dismissed`
-
----
-
-## Visual Design
-
-### Banner States
-
-**Active Incident:**
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│ ⚠️ Some services may be temporarily slower than usual.    [×]  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**No Incident:**
-```text
-(Banner not rendered)
-```
-
-### Color Scheme
-| Element | Light Mode | Dark Mode |
-|---------|------------|-----------|
-| Background | `bg-amber-50` | `bg-amber-950/30` |
-| Border | `border-amber-200` | `border-amber-800` |
-| Icon | `text-amber-600` | `text-amber-400` |
-| Text | `text-amber-700` | `text-amber-300` |
-
----
-
-## Incident Triggers
-
-The banner will appear when ANY of the following are true in `service_health_status`:
-
-| Condition | Example |
-|-----------|---------|
-| `status = 'degraded'` | Flights API slow |
-| `status = 'outage'` | Payments down |
-| `status = 'maintenance'` | Hotels scheduled maintenance |
-| `is_paused = true` | Rides manually paused |
-
----
-
-## Performance Considerations
-
-1. **Minimal Query:** Only fetches `status` and `is_paused` columns
-2. **Polling Interval:** 60 seconds (not aggressive)
-3. **Stale Time:** 60 seconds (reduces redundant fetches)
-4. **Conditional Render:** Banner component returns `null` when no incident
-
----
-
 ## Admin Control
 
-Admins control incident status via:
-- **Recovery Dashboard** → Service Health tab
-- **Disaster Recovery Dashboard** → Pause/unpause services
-- **Direct DB updates** to `service_health_status` table
+Admins trigger maintenance mode via:
+1. **Recovery Dashboard** → Toggle service pause for "eats"
+2. **Recovery Dashboard** → Set status to "maintenance"
 
 No new admin UI needed — existing tools control the data.
 
@@ -242,12 +325,13 @@ No new admin UI needed — existing tools control the data.
 
 This implementation provides:
 
-1. **Customer Hook** — `useSystemStatus()` for lightweight incident detection
-2. **Reliability Banner** — Amber warning banner with dismissal capability
-3. **Layout Integration** — Banner appears in all customer-facing layouts
-4. **Non-Alarming UX** — Soft messaging that informs without scaring
-5. **Session Dismissal** — Users can dismiss; reappears on new session
-6. **Real-time Data** — Reads from existing `service_health_status` table
-7. **Admin-Controlled** — Incidents triggered by existing admin tools
+1. **Service-Specific Hook** — `useServiceMaintenance(serviceName)` for checking individual services
+2. **Maintenance Screen** — Full-screen overlay with clear messaging
+3. **Checkout Gating** — Block checkout pages when maintenance is active
+4. **Edge Function Guards** — Server-side 503 responses for order creation
+5. **Menu Page Updates** — Disable ordering buttons, show info banner
+6. **Allowed Browsing** — Customers can still explore and view past orders
+7. **Clear Messaging** — "ZIVO is temporarily under maintenance. Please try again shortly."
 
-The feature ensures customers are informed when services are impacted while maintaining a calm, professional user experience.
+The feature gives admins control to pause ordering platform-wide while keeping the browsing experience intact for customers.
+
