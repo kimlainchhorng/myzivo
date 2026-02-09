@@ -13880,6 +13880,7 @@ export type Database = {
           restaurant_id: string
           stock_mode: string | null
           stock_qty: number | null
+          stock_quantity: number | null
           updated_at: string | null
         }
         Insert: {
@@ -13897,6 +13898,7 @@ export type Database = {
           restaurant_id: string
           stock_mode?: string | null
           stock_qty?: number | null
+          stock_quantity?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -13914,6 +13916,7 @@ export type Database = {
           restaurant_id?: string
           stock_mode?: string | null
           stock_qty?: number | null
+          stock_quantity?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -15524,6 +15527,61 @@ export type Database = {
         }
         Relationships: []
       }
+      order_item_modifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          modification_type: string
+          order_id: string
+          original_item_name: string
+          reason: string | null
+          substitute_item_name: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          modification_type: string
+          order_id: string
+          original_item_name: string
+          reason?: string | null
+          substitute_item_name?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          modification_type?: string
+          order_id?: string
+          original_item_name?: string
+          reason?: string | null
+          substitute_item_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_modifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_modifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_modifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_offers: {
         Row: {
           created_at: string | null
@@ -15839,7 +15897,10 @@ export type Database = {
           editable_until: string | null
           id: string
           is_scheduled: boolean | null
+          prep_started_at: string | null
           promo_code: string | null
+          queue_position: number | null
+          ready_at: string | null
           scheduled_for: string | null
         }
         Insert: {
@@ -15853,7 +15914,10 @@ export type Database = {
           editable_until?: string | null
           id?: string
           is_scheduled?: boolean | null
+          prep_started_at?: string | null
           promo_code?: string | null
+          queue_position?: number | null
+          ready_at?: string | null
           scheduled_for?: string | null
         }
         Update: {
@@ -15867,7 +15931,10 @@ export type Database = {
           editable_until?: string | null
           id?: string
           is_scheduled?: boolean | null
+          prep_started_at?: string | null
           promo_code?: string | null
+          queue_position?: number | null
+          ready_at?: string | null
           scheduled_for?: string | null
         }
         Relationships: [
