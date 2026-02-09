@@ -1,376 +1,262 @@
 
-# Delay Detection — Implementation Plan
+# Notification Center — Implementation Plan
 
 ## Overview
-Implement automatic delay detection that identifies when orders are running late compared to their estimated delivery time, displays clear messaging to customers, recalculates ETAs dynamically, and sends push notifications when delays occur.
+Create a unified `/notifications` page where customers can view all their notifications in one place, including order updates, promotions, support messages, and delay alerts. The page will support filtering by category, mark as read functionality, and integrate with the existing notification hooks.
 
 ## Current State Analysis
 
 ### What Already Exists
 | Feature | Status | Location |
 |---------|--------|----------|
-| ETA Countdown component | Complete | `src/components/eats/EtaCountdown.tsx` |
-| Smart ETA calculation | Complete | `src/hooks/useSmartEta.ts` |
-| Live order tracking hook | Complete | `src/hooks/useLiveEatsOrder.ts` |
-| Order detail page | Complete | `src/pages/EatsOrderDetail.tsx` |
-| Order tracking page | Complete | `src/pages/track/OrderTrackingPage.tsx` |
-| Push notification system | Complete | `supabase/functions/send-notification/index.ts` |
-| Order events table | Complete | `order_events` table |
-| `eta_dropoff` field on orders | Complete | `food_orders.eta_dropoff` |
-| Traffic-aware ETA adjustments | Complete | In `EtaCountdown` component |
+| Core notifications hook | Complete | `src/hooks/useNotifications.ts` |
+| Eats-specific alerts hook | Complete | `src/hooks/useEatsAlerts.ts` |
+| NotificationBell dropdown (desktop) | Complete | `src/components/notifications/NotificationBell.tsx` |
+| EatsAlerts page (Eats-only) | Complete | `src/pages/EatsAlerts.tsx` |
+| Notification Settings page | Complete | `src/pages/account/NotificationSettings.tsx` |
+| Real-time subscriptions | Complete | In both hooks |
+| Category types in DB | Complete | `transactional`, `account`, `operational`, `marketing` |
+| Bell icon in ZivoSuperAppLayout | Partial | Links to `/notifications` (page missing) |
+| Bell icon in Header | Complete | Shows NotificationBell dropdown |
 
 ### What's Missing
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Delay detection hook | Missing | Compare current time to ETA, detect if late |
-| Delay detection banner | Missing | "Your order is taking longer than expected" |
-| Automatic ETA recalculation on delay | Missing | Adjust ETA when delay detected |
-| Delay push notification | Missing | "Your delivery is delayed" notification |
-| Order delay event logging | Missing | Log delay events for analytics |
+| Unified /notifications page | Missing | Full-page notification center |
+| Category filter tabs | Missing | Filter by order/promo/support/delay |
+| Bell icon in AppHeader | Missing | Consistent bell across mobile headers |
+| Route registration | Missing | Add route to App.tsx |
+| Unified hook combining sources | Optional | Could merge general + eats alerts |
 
 ---
 
 ## Implementation Plan
 
-### 1) Create Order Delay Detection Hook
+### 1) Create Unified Notifications Page
 
-**File to Create:** `src/hooks/useOrderDelayDetection.ts`
+**File to Create:** `src/pages/NotificationsPage.tsx`
 
-**Purpose:** Monitor order timing and detect when delivery is running late.
+**Purpose:** Full-page notification center accessible at `/notifications`.
 
-**Detection Logic:**
-```text
-Current Time > ETA Dropoff + Buffer → Order is delayed
-
-Buffer thresholds:
-- Warning: 5 minutes past ETA (soft delay)
-- Delayed: 10 minutes past ETA (confirmed delay)
-- Significantly Delayed: 20+ minutes past ETA (critical)
-```
-
-**Returned Data:**
-```text
-interface OrderDelayResult {
-  isDelayed: boolean;
-  delayLevel: "none" | "warning" | "delayed" | "critical";
-  delayMinutes: number;
-  originalEtaTime: Date | null;
-  newEstimatedEta: number | null;
-  delayMessage: string | null;
-  shouldNotify: boolean; // true if notification needed
-}
-```
-
-**ETA Recalculation:**
-- When delay detected, recalculate from current driver position
-- Add buffer based on delay severity (10-20% extra)
-- Update display with new range
-
----
-
-### 2) Create Delay Detection Banner Component
-
-**File to Create:** `src/components/eats/OrderDelayBanner.tsx`
-
-**Purpose:** Display customer-facing delay message on order tracking.
-
-**Message Variants:**
-| Delay Level | Message |
-|-------------|---------|
-| warning | "Your order is running slightly behind schedule." |
-| delayed | "Your order is taking longer than expected." |
-| critical | "We apologize — your order is significantly delayed." |
+**Features:**
+- Filter tabs: All, Orders, Promotions, Support, Delays
+- Unread count badge on tabs
+- Mark as read (single + all)
+- Empty state per category
+- Click to navigate to action_url
+- Real-time updates via existing hook
 
 **UI Design:**
 ```text
-+--------------------------------------------------+
-| ⏰ ORDER DELAYED                                  |
-|                                                  |
-| Your order is taking longer than expected.       |
-| Updated ETA: 25–30 min                           |
-|                                                  |
-| We're working to get your order to you ASAP.    |
-+--------------------------------------------------+
+┌─────────────────────────────────────────────────┐
+│ ← Notifications               [Mark all read ✓] │
+│    12 unread                                    │
+├─────────────────────────────────────────────────┤
+│ [All] [Orders] [Promos] [Support] [Delays]     │
+├─────────────────────────────────────────────────┤
+│ ● Order Confirmed                         2m   │
+│   Your order from Burger Palace is...          │
+│                                                 │
+│   Your ZIVO+ membership renewed           1h   │
+│   Payment of $9.99 processed                   │
+│                                                 │
+│ ● Price Drop Alert!                       3h   │
+│   NYC-Paris flights dropped to $450            │
+└─────────────────────────────────────────────────┘
 ```
+
+**Category Mapping:**
+| Category | Filter Tab | Icon |
+|----------|------------|------|
+| transactional | Orders | Package |
+| marketing | Promotions | Gift |
+| operational | Support | Headphones |
+| account | Account | User |
+| delay alerts (template contains "delay") | Delays | Clock |
+
+---
+
+### 2) Create Notification Item Component
+
+**File to Create:** `src/components/notifications/NotificationItem.tsx`
+
+**Purpose:** Reusable notification list item with consistent styling.
+
+**Props:**
+- notification object
+- onMarkAsRead callback
+- onClick navigation handler
 
 **Features:**
-- Dismissible (but reappears if delay worsens)
-- Shows updated ETA range
-- Amber background for warning, red for delayed/critical
-- Links to support if critical
+- Unread indicator dot
+- Category badge with color
+- Relative timestamp
+- Action arrow if has action_url
+- Tap to mark read + navigate
 
 ---
 
-### 3) Create Delay Notification Trigger Hook
+### 3) Update AppHeader with Bell Icon
 
-**File to Create:** `src/hooks/useDelayNotification.ts`
-
-**Purpose:** Trigger push notification when delay is first detected.
-
-**Logic:**
-- Call notification API when `isDelayed` transitions to `true`
-- Use `order_delayed` event type
-- Only notify once per delay level (prevent spam)
-- Store notification state in localStorage to prevent duplicates
-
-**Notification Template:**
-```text
-Title: "Delivery Delayed ⏰"
-Body: "Your order from {restaurant} is delayed. Updated ETA: {eta_min}–{eta_max} min."
-Action URL: "/eats/orders/{order_id}"
-```
-
----
-
-### 4) Update Order Detail Page with Delay Detection
-
-**File to Modify:** `src/pages/EatsOrderDetail.tsx`
+**File to Modify:** `src/components/app/AppHeader.tsx`
 
 **Changes:**
-- Import and use `useOrderDelayDetection` hook
-- Show `OrderDelayBanner` when delay detected
-- Pass updated ETA to existing ETA components
-- Log delay event to `order_events` table
+- Add Bell icon button with unread badge
+- Use `useNotifications` hook for count
+- Navigate to `/notifications` on click
+- Show badge only when unread > 0
 
-**Integration Point (after stale location warning, ~line 480):**
+**New Default Right Action:**
 ```tsx
-{/* Order Delay Banner */}
-{delay.isDelayed && isActiveOrder && (
-  <OrderDelayBanner
-    delayLevel={delay.delayLevel}
-    delayMinutes={delay.delayMinutes}
-    newEtaMin={delay.newEstimatedEtaMin}
-    newEtaMax={delay.newEstimatedEtaMax}
-    onContactSupport={() => setHelpModalOpen(true)}
-  />
-)}
+<button onClick={() => navigate('/notifications')} className="relative ...">
+  <Bell className="w-5 h-5" />
+  {unreadCount > 0 && (
+    <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px]">
+      {unreadCount > 9 ? '9+' : unreadCount}
+    </span>
+  )}
+</button>
 ```
 
 ---
 
-### 5) Update EtaCountdown Component for Delay Awareness
+### 4) Add Route to App.tsx
 
-**File to Modify:** `src/components/eats/EtaCountdown.tsx`
+**File to Modify:** `src/App.tsx`
 
 **Changes:**
-- Add `isDelayed` and `delayMinutes` props
-- Show delay indicator badge when late
-- Change color scheme to amber/red when delayed
-- Display "Delayed" label instead of "Arriving in"
+- Import `NotificationsPage` (lazy load)
+- Add route: `/notifications` with ProtectedRoute wrapper
+
+**Route Definition:**
+```tsx
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+
+<Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+```
 
 ---
 
-### 6) Create Delay Event Logging
+### 5) Enhanced useNotifications Hook (Optional Enhancement)
 
-**Integration in hook:** `useOrderDelayDetection.ts`
+**File to Modify:** `src/hooks/useNotifications.ts`
 
-**Purpose:** Log delay events for analytics and support visibility.
+**Potential Changes:**
+- Add category filter parameter
+- Return grouped counts by category
+- Support pagination/infinite scroll
 
-**Event Types:**
-- `order_delayed_warning` — 5+ min late
-- `order_delayed` — 10+ min late
-- `order_delayed_critical` — 20+ min late
-
-**Logged to:** `order_events` table with metadata:
-```json
-{
-  "delay_minutes": 15,
-  "original_eta": "2026-02-09T14:30:00Z",
-  "detected_at": "2026-02-09T14:40:00Z"
+**New Return Values:**
+```typescript
+interface UseNotificationsResult {
+  // Existing...
+  categoryCounts: {
+    orders: number;
+    promos: number;
+    support: number;
+    delays: number;
+  };
+  filterByCategory: (category: string | null) => void;
 }
 ```
-
----
-
-### 7) Update Order Tracking Page (Public)
-
-**File to Modify:** `src/pages/track/OrderTrackingPage.tsx`
-
-**Changes:**
-- Add delay detection for public tracking
-- Show delay banner when applicable
-- Update ETA display with recalculated time
 
 ---
 
 ## File Summary
 
-### New Files (3)
+### New Files (2)
 | File | Purpose |
 |------|---------|
-| `src/hooks/useOrderDelayDetection.ts` | Detect order delays and recalculate ETA |
-| `src/components/eats/OrderDelayBanner.tsx` | Customer-facing delay notification banner |
-| `src/hooks/useDelayNotification.ts` | Trigger push notification on delay |
+| `src/pages/NotificationsPage.tsx` | Unified notification center page |
+| `src/components/notifications/NotificationItem.tsx` | Reusable notification list item |
 
-### Modified Files (3)
+### Modified Files (2)
 | File | Changes |
 |------|---------|
-| `src/pages/EatsOrderDetail.tsx` | Add delay detection and banner |
-| `src/components/eats/EtaCountdown.tsx` | Add delay-aware styling |
-| `src/pages/track/OrderTrackingPage.tsx` | Add delay detection for public tracking |
+| `src/App.tsx` | Add /notifications route |
+| `src/components/app/AppHeader.tsx` | Add bell icon with unread badge |
 
 ---
 
-## Delay Detection Algorithm
+## Notification Categories
 
-### Phase 1: Compare Current Time to ETA
+| Category | Display Name | Color | Icon |
+|----------|--------------|-------|------|
+| transactional | Orders | Primary (blue) | Package |
+| marketing | Promotions | Emerald (green) | Gift |
+| operational | Support | Amber (orange) | Headphones |
+| account | Account | Blue | User |
+
+**Special Handling:**
+- Delay alerts: Identified by `template` containing "delay" or `title` containing "Delayed"
+- Shows in dedicated "Delays" tab with Clock icon and red styling
+
+---
+
+## Filter Tabs Logic
+
 ```text
-current_time = now()
-original_eta = order.eta_dropoff
-
-If original_eta is null:
-  Use calculated ETA from created_at + duration_minutes
-
-time_past_eta = current_time - original_eta
-```
-
-### Phase 2: Determine Delay Level
-```text
-If time_past_eta < 5 min:
-  delay_level = "none"
-  
-If 5 min <= time_past_eta < 10 min:
-  delay_level = "warning"
-  
-If 10 min <= time_past_eta < 20 min:
-  delay_level = "delayed"
-  
-If time_past_eta >= 20 min:
-  delay_level = "critical"
-```
-
-### Phase 3: Recalculate ETA
-```text
-If driver location available:
-  distance = haversine(driver_lat, driver_lng, delivery_lat, delivery_lng)
-  travel_time = distance / 0.5 mph
-  
-  // Add delay buffer based on severity
-  If delay_level = "warning":
-    buffer = 1.1 (10% extra)
-  If delay_level = "delayed":
-    buffer = 1.15 (15% extra)
-  If delay_level = "critical":
-    buffer = 1.2 (20% extra)
-  
-  new_eta = travel_time × traffic_factor × buffer
-  
-Else:
-  // Estimate based on average progression
-  new_eta = delay_minutes + original_remaining_estimate
+All: Show all notifications
+Orders: category = 'transactional'
+Promos: category = 'marketing'  
+Support: category = 'operational'
+Delays: template LIKE '%delay%' OR title LIKE '%Delayed%'
 ```
 
 ---
 
-## Notification Flow
+## Empty States
 
-```text
-1. Order placed with eta_dropoff
-   └─> Hook monitors time vs ETA
-
-2. Current time passes eta_dropoff + 10 min
-   └─> delay.isDelayed = true
-   └─> delay.shouldNotify = true
-
-3. Check localStorage for notification flag
-   └─> If not notified for this delay level:
-       └─> Call send-notification edge function
-       └─> Set localStorage flag
-       └─> Log order_delayed event
-
-4. User receives push notification
-   └─> "Your delivery is delayed. Updated ETA: 25–30 min."
-   └─> Tap opens order detail page
-```
+| Tab | Empty Message |
+|-----|---------------|
+| All | "No notifications yet. You'll see updates here." |
+| Orders | "No order updates yet. Place an order to get started." |
+| Promos | "No promotions right now. Check back for deals!" |
+| Support | "No support messages. Need help? Contact us." |
+| Delays | "No delay alerts. Your orders are on time!" |
 
 ---
 
-## UI Components
+## Real-Time Updates
 
-### Delay Banner (Warning Level)
-```text
-┌─────────────────────────────────────────────────┐
-│ ⏰                                              │
-│ Your order is running slightly behind schedule. │
-│                                                 │
-│ Updated ETA: 22–28 min                         │
-└─────────────────────────────────────────────────┘
-```
-
-### Delay Banner (Delayed Level)
-```text
-┌─────────────────────────────────────────────────┐
-│ ⏰ ORDER DELAYED                               │
-│                                                 │
-│ Your order is taking longer than expected.     │
-│                                                 │
-│ Updated ETA: 25–32 min                         │
-│                                                 │
-│ ℹ️ We're working to get your order to you ASAP │
-└─────────────────────────────────────────────────┘
-```
-
-### Delay Banner (Critical Level)
-```text
-┌─────────────────────────────────────────────────┐
-│ ⚠️ SIGNIFICANT DELAY                           │
-│                                                 │
-│ We apologize — your order is significantly     │
-│ delayed.                                        │
-│                                                 │
-│ Updated ETA: 35–45 min                         │
-│                                                 │
-│ [Contact Support]                              │
-└─────────────────────────────────────────────────┘
-```
+The page will leverage existing real-time subscriptions:
+- `useNotifications` already subscribes to INSERT events
+- New notifications appear at top of list instantly
+- Unread count updates automatically
+- Toast shown for incoming notifications
 
 ---
 
-## Edge Cases
+## Navigation Integration
 
-| Scenario | Behavior |
-|----------|----------|
-| No eta_dropoff set | Calculate from created_at + duration_minutes |
-| Order already delivered | No delay detection (skip) |
-| Order cancelled | No delay detection (skip) |
-| Driver not assigned yet | Use prep time + estimated pickup time |
-| Network offline | Continue showing last known delay state |
-| Delay resolves (driver speeds up) | Clear delay banner if new ETA is met |
+| Entry Point | Action |
+|-------------|--------|
+| Header NotificationBell dropdown | "View all" → `/notifications` |
+| AppHeader bell icon | Click → `/notifications` |
+| ZivoSuperAppLayout bell | Click → `/notifications` |
+| Push notification tap | Deep link to `/notifications` or specific order |
 
 ---
 
-## Push Notification Templates
+## Accessibility
 
-### Delay Notification
-```text
-Title: "Delivery Delayed ⏰"
-Body: "Your order from {restaurant_name} is delayed. Updated ETA: {eta_min}–{eta_max} min."
-Action: Opens /eats/orders/{order_id}
-Priority: normal
-Event Type: order_delayed
-```
-
-### Critical Delay Notification
-```text
-Title: "Order Significantly Delayed"
-Body: "We're sorry — your {restaurant_name} order is taking longer than expected. Tap for details."
-Action: Opens /eats/orders/{order_id}
-Priority: critical
-Event Type: order_delayed_critical
-```
+- Proper aria-labels on bell icons
+- Focus management for tab navigation
+- Screen reader announcements for new notifications
+- Keyboard navigation support
 
 ---
 
 ## Summary
 
-This implementation provides:
+This implementation creates a unified notification center that:
 
-1. **Automatic delay detection** — Compare current time to original ETA
-2. **Multi-level delay classification** — warning/delayed/critical thresholds
-3. **Clear customer messaging** — "Your order is taking longer than expected"
-4. **Dynamic ETA recalculation** — Adjust based on current driver location
-5. **Push notifications** — Alert customers when delays occur
-6. **Event logging** — Track delays for analytics and support
-7. **Public tracking support** — Delay detection on guest tracking page
+1. **Consolidates all notifications** — Orders, promotions, support, delays in one view
+2. **Category filtering** — Easy tab-based filtering by notification type
+3. **Mark as read** — Single item and bulk mark as read actions
+4. **Unread badge** — Consistent bell icon with count across app headers
+5. **Real-time updates** — New notifications appear instantly
+6. **Mobile-first design** — Touch-friendly interface matching ZIVO design system
+7. **Deep linking** — Click to navigate to relevant content
 
-The feature keeps customers informed proactively, reducing support inquiries and improving trust by providing transparent, updated timing information.
+The feature provides customers with a central hub to stay informed about all their ZIVO activity.
