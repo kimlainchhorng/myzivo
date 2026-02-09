@@ -44,13 +44,15 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Verify customer role
-    const { data: isCustomer } = await supabase.rpc("has_role", {
-      _user_id: user.id,
-      _role: "customer",
-    });
+    // Verify customer role (direct query bypasses RLS via service role)
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "customer")
+      .maybeSingle();
 
-    if (!isCustomer) {
+    if (!roleData) {
       throw new Error("Customer role required");
     }
     logStep("Customer role verified");
