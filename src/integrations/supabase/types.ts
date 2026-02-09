@@ -919,14 +919,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_conversation_flags: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          flagged_by: string | null
+          id: string
+          notes: string | null
+          reason: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          flagged_by?: string | null
+          id?: string
+          notes?: string | null
+          reason: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          flagged_by?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversation_flags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_conversations: {
         Row: {
           answer: string | null
           created_at: string | null
           escalated: boolean | null
           id: string
+          is_flagged: boolean | null
+          matched_faq_id: string | null
           question: string | null
+          response_time_ms: number | null
           role: string | null
+          satisfaction_rating: number | null
           user_id: string | null
         }
         Insert: {
@@ -934,8 +982,12 @@ export type Database = {
           created_at?: string | null
           escalated?: boolean | null
           id?: string
+          is_flagged?: boolean | null
+          matched_faq_id?: string | null
           question?: string | null
+          response_time_ms?: number | null
           role?: string | null
+          satisfaction_rating?: number | null
           user_id?: string | null
         }
         Update: {
@@ -943,9 +995,57 @@ export type Database = {
           created_at?: string | null
           escalated?: boolean | null
           id?: string
+          is_flagged?: boolean | null
+          matched_faq_id?: string | null
           question?: string | null
+          response_time_ms?: number | null
           role?: string | null
+          satisfaction_rating?: number | null
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversations_matched_faq_id_fkey"
+            columns: ["matched_faq_id"]
+            isOneToOne: false
+            referencedRelation: "ai_faq_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_faq_responses: {
+        Row: {
+          answer: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          question: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          question: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          question?: string
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Relationships: []
       }
