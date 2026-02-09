@@ -4733,6 +4733,68 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_type: string | null
+          discount_value: number | null
+          expires_at: string | null
+          id: string
+          usage_limit: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          usage_limit?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          usage_limit?: number | null
+        }
+        Relationships: []
+      }
       credit_ledger: {
         Row: {
           admin_id: string | null
@@ -10468,6 +10530,7 @@ export type Database = {
           risk_level: string | null
           risk_score: number | null
           risk_signals: string[] | null
+          scheduled_for: string | null
           service_fee: number | null
           service_fee_cents: number | null
           sla_at_risk_at: string | null
@@ -10611,6 +10674,7 @@ export type Database = {
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
+          scheduled_for?: string | null
           service_fee?: number | null
           service_fee_cents?: number | null
           sla_at_risk_at?: string | null
@@ -10754,6 +10818,7 @@ export type Database = {
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
+          scheduled_for?: string | null
           service_fee?: number | null
           service_fee_cents?: number | null
           sla_at_risk_at?: string | null
@@ -21379,6 +21444,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          rating: number
+          reviewer_user_id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          rating: number
+          reviewer_user_id: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          rating?: number
+          reviewer_user_id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
       }
       reward_redemptions: {
         Row: {

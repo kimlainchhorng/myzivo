@@ -1,10 +1,10 @@
 /**
  * ZIVO Eats — Order Detail Page
- * Real-time status updates with driver tracking and live map
+ * Real-time status updates with driver tracking, live map, and scheduled delivery support
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, UtensilsCrossed, HelpCircle, RefreshCw, Share2, MessageCircle, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveEatsOrder } from "@/hooks/useLiveEatsOrder";
@@ -245,6 +245,26 @@ export default function EatsOrderDetail() {
           </div>
         </motion.div>
 
+        {/* Scheduled Delivery Banner */}
+        {(order as any).is_scheduled && (order as any).deliver_by && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-violet-500/10 border border-violet-500/30 rounded-2xl p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
+                <CalendarClock className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="font-bold text-violet-400 text-sm">Scheduled Delivery</p>
+                <p className="text-sm text-zinc-400">
+                  {format(new Date((order as any).deliver_by), "EEEE, MMMM d 'at' h:mm a")}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {/* Delivery PIN Display - Customer sees PIN when order is out for delivery */}
         {order.status === "out_for_delivery" && order.delivery_pin && !order.delivery_pin_verified && (
           <motion.div
