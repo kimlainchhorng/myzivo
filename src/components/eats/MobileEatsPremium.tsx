@@ -3,7 +3,7 @@
  * Real data from Supabase with dark glass UI, filtered by city
  * Includes surge pricing banner when demand is high
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -26,12 +26,22 @@ import SponsoredRestaurantCard from "./SponsoredRestaurantCard";
 import CitySelectionModal from "@/components/city/CitySelectionModal";
 import { RecommendedForYouSection } from "./RecommendedForYouSection";
 import { TimingSuggestionBadge, getTimingBadgeForCuisine } from "./TimingSuggestionBadge";
+import { TopPicksSection } from "./TopPicksSection";
+
+type SortOption = "recommended" | "rating" | "popular" | "fast";
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "rating", label: "Top Rated" },
+  { value: "popular", label: "Most Popular" },
+  { value: "fast", label: "Fast Delivery" },
+];
 
 const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
 
 export default function MobileEatsPremium() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const navigate = useNavigate();
   const { selectedCity } = useCustomerCity();
   
@@ -55,6 +65,21 @@ export default function MobileEatsPremium() {
       r.cuisine_type?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   }) || [];
+
+  // Apply sort
+  const sortedRestaurants = useMemo(() => {
+    const list = [...filteredRestaurants];
+    switch (sortBy) {
+      case "rating":
+        return list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+      case "popular":
+        return list.sort((a, b) => (b.total_orders ?? 0) - (a.total_orders ?? 0));
+      case "fast":
+        return list.sort((a, b) => (a.avg_prep_time ?? 999) - (b.avg_prep_time ?? 999));
+      default:
+        return list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    }
+  }, [filteredRestaurants, sortBy]);
 
   return (
     <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-hidden selection:bg-orange-500/30">
@@ -122,8 +147,11 @@ export default function MobileEatsPremium() {
       {/* SMART RECOMMENDATIONS */}
       <RecommendedForYouSection />
 
+      {/* TOP PICKS SECTIONS */}
+      {!searchQuery && <TopPicksSection city={selectedCity?.name} />}
+
       {/* 2. CATEGORY PILLS */}
-      <div className="pl-6 mb-6 overflow-x-auto hide-scrollbar">
+      <div className="pl-6 mb-3 overflow-x-auto hide-scrollbar">
         <div className="flex gap-3 w-max pr-6">
           {categories.map((cat) => (
             <button
@@ -136,6 +164,25 @@ export default function MobileEatsPremium() {
               }`}
             >
               {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* SORT PILLS */}
+      <div className="pl-6 mb-6 overflow-x-auto hide-scrollbar">
+        <div className="flex gap-2 w-max pr-6">
+          {sortOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSortBy(opt.value)}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all border touch-manipulation active:scale-95 ${
+                sortBy === opt.value
+                  ? "bg-orange-500/20 border-orange-500/50 text-orange-400"
+                  : "bg-zinc-900/30 border-white/5 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {opt.label}
             </button>
           ))}
         </div>
@@ -227,9 +274,9 @@ export default function MobileEatsPremium() {
       )}
 
       {/* 5. VISUAL MENU FEED */}
-      {!isLoading && filteredRestaurants.length > 0 && (
+      {!isLoading && sortedRestaurants.length > 0 && (
         <div className="px-6 pb-32 space-y-8">
-          {filteredRestaurants.map((restaurant) => (
+          {sortedRestaurants.map((restaurant) => (
             <motion.div 
               key={restaurant.id}
               initial={{ opacity: 0, scale: 0.95 }}

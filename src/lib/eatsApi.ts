@@ -22,6 +22,7 @@ export interface Restaurant {
   cover_image_url: string | null;
   rating: number | null;
   avg_prep_time: number | null;
+  total_orders: number | null;
   is_open: boolean | null;
   status: string | null;
 }
