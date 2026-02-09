@@ -9,6 +9,7 @@ import { useMemo } from "react";
 export type DispatchPhase = 
   | "pending"       // Waiting for restaurant confirmation
   | "preparing"     // Restaurant preparing order
+  | "almost_ready"  // 75%+ through prep time - NEW for smoother transitions
   | "searching"     // Looking for driver
   | "assigned"      // Driver heading to restaurant
   | "near_pickup"   // Driver near restaurant (< 0.2mi)
@@ -35,6 +36,10 @@ interface UseEatsDispatchStatusOptions {
   /** Restaurant/pickup coordinates for near_pickup detection */
   pickupLat?: number | null;
   pickupLng?: number | null;
+  /** Prep progress percentage from usePrepProgress (0-100) */
+  prepProgressPercent?: number;
+  /** Whether order is almost ready (75%+ through prep) */
+  isAlmostReady?: boolean;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -70,6 +75,8 @@ export function useEatsDispatchStatus({
   deliveryLng,
   pickupLat,
   pickupLng,
+  prepProgressPercent,
+  isAlmostReady,
 }: UseEatsDispatchStatusOptions): DispatchStatus {
   return useMemo(() => {
     // Cancelled orders
@@ -147,6 +154,39 @@ export function useEatsDispatchStatus({
 
     // Preparing status
     if (status === "preparing") {
+      // Check if almost ready (75%+ through prep)
+      if (isAlmostReady) {
+        // Check if driver assigned and near/at pickup
+        if (driverId && driverLat != null && driverLng != null && pickupLat != null && pickupLng != null) {
+          const distToPickup = calculateDistanceMiles(driverLat, driverLng, pickupLat, pickupLng);
+          
+          if (distToPickup <= THRESHOLDS.AT_PICKUP) {
+            return {
+              phase: "at_pickup",
+              message: "Driver waiting at restaurant",
+              subMessage: "Order almost ready!",
+              showSearching: false,
+            };
+          }
+          
+          if (distToPickup <= THRESHOLDS.NEAR_PICKUP) {
+            return {
+              phase: "near_pickup",
+              message: "Driver arriving for pickup",
+              subMessage: "Order will be picked up shortly",
+              showSearching: false,
+            };
+          }
+        }
+        
+        return {
+          phase: "almost_ready",
+          message: "Almost ready!",
+          subMessage: "Final touches on your order",
+          showSearching: !driverId,
+        };
+      }
+      
       // Check if driver assigned
       if (!driverId) {
         return {
@@ -173,7 +213,7 @@ export function useEatsDispatchStatus({
         if (distToPickup <= THRESHOLDS.NEAR_PICKUP) {
           return {
             phase: "near_pickup",
-            message: "Driver arriving at restaurant",
+            message: "Driver arriving for pickup",
             subMessage: "Food is being prepared",
             showSearching: false,
           };
@@ -261,5 +301,5 @@ export function useEatsDispatchStatus({
       subMessage: "",
       showSearching: false,
     };
-  }, [status, driverId, driverLat, driverLng, deliveryLat, deliveryLng, pickupLat, pickupLng]);
+  }, [status, driverId, driverLat, driverLng, deliveryLat, deliveryLng, pickupLat, pickupLng, prepProgressPercent, isAlmostReady]);
 }

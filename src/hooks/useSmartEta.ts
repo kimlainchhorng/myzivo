@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import type { SurgeLevel } from "@/lib/surge";
 
 export type TrafficLevel = "light" | "moderate" | "heavy";
-export type RecalcReason = "initial" | "driver_assigned" | "pickup_complete" | "location_change" | "interval";
+export type RecalcReason = "initial" | "driver_assigned" | "pickup_complete" | "location_change" | "interval" | "prep_speed_change";
 export type OrderPhase = "preparing" | "ready" | "out_for_delivery";
 
 export interface SmartEtaResult {
@@ -53,6 +53,9 @@ interface UseSmartEtaOptions {
   learnedPrepMinutes?: number | null;
   isPrepLearned?: boolean;
   orderPhase?: OrderPhase;
+  // Real-time prep speed adjustment
+  actualPrepElapsed?: number;
+  prepSpeedFactor?: number;
 }
 
 // Haversine formula for distance calculation (miles)
@@ -119,6 +122,8 @@ export function useSmartEta({
   learnedPrepMinutes,
   isPrepLearned = false,
   orderPhase,
+  actualPrepElapsed,
+  prepSpeedFactor = 1.0,
 }: UseSmartEtaOptions): SmartEtaResult {
   const [lastRecalcAt, setLastRecalcAt] = useState(new Date());
   const [lastRecalcReason, setLastRecalcReason] = useState<RecalcReason>("initial");
@@ -128,6 +133,7 @@ export function useSmartEta({
   const prevOrderStatus = useRef(orderStatus);
   const prevLat = useRef(driverLat);
   const prevLng = useRef(driverLng);
+  const prevPrepSpeedFactor = useRef(prepSpeedFactor);
 
   // Detect recalculation triggers
   useEffect(() => {
@@ -140,6 +146,13 @@ export function useSmartEta({
     // Order picked up
     else if (prevOrderStatus.current !== "out_for_delivery" && orderStatus === "out_for_delivery") {
       reason = "pickup_complete";
+    }
+    // Prep speed changed significantly (>10% change)
+    else if (
+      prevPrepSpeedFactor.current != null &&
+      Math.abs(prepSpeedFactor - prevPrepSpeedFactor.current) > 0.1
+    ) {
+      reason = "prep_speed_change";
     }
     // Significant location change
     else if (
@@ -162,7 +175,8 @@ export function useSmartEta({
     prevOrderStatus.current = orderStatus;
     prevLat.current = driverLat;
     prevLng.current = driverLng;
-  }, [driverAssigned, orderStatus, driverLat, driverLng]);
+    prevPrepSpeedFactor.current = prepSpeedFactor;
+  }, [driverAssigned, orderStatus, driverLat, driverLng, prepSpeedFactor]);
 
   // Fallback interval recalc every 60 seconds
   useEffect(() => {
@@ -202,8 +216,8 @@ export function useSmartEta({
     const phase = orderPhase || "preparing";
     
     if (phase === "preparing") {
-      // Add prep time + travel time
-      const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor;
+      // Add prep time + travel time, with prep speed adjustment
+      const adjustedPrep = (learnedPrepMinutes || 20) * demandFactor * prepSpeedFactor;
       const adjustedTravel = (travelEtaMinutes || 10) * traffic.factor;
       prepComponent = Math.ceil(adjustedPrep);
       travelComponent = Math.ceil(adjustedTravel);
@@ -269,6 +283,7 @@ export function useSmartEta({
     supplyMultiplier,
     learnedPrepMinutes,
     isPrepLearned,
+    prepSpeedFactor,
     lastRecalcAt,
     lastRecalcReason,
   ]);
