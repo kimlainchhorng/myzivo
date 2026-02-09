@@ -80,7 +80,7 @@ export function categorizeError(error: unknown): SupabaseErrorInfo {
       return {
         type: "network",
         message: err.message || "Service unavailable",
-        userMessage: "Service temporarily unavailable. Please try again.",
+        userMessage: "Service temporarily unavailable. Please try again shortly.",
         isRetryable: true,
         originalError: error,
       };
