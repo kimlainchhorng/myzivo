@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { EATS_TABLES, INITIAL_ORDER_STATUS } from "@/lib/eatsTables";
+import { cacheData, getCachedData } from "@/hooks/useOfflineCache";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -115,6 +116,9 @@ export function useRestaurants(cityNameOrOnlyOpen?: string | boolean, onlyOpen: 
     cityName = cityNameOrOnlyOpen;
   }
 
+  const cacheKey = `restaurants-${cityName ?? "all"}-${filterOpen}`;
+  const cached = getCachedData<Restaurant[]>(cacheKey);
+
   return useQuery({
     queryKey: ["restaurants", cityName, filterOpen],
     queryFn: async () => {
@@ -124,21 +128,23 @@ export function useRestaurants(cityNameOrOnlyOpen?: string | boolean, onlyOpen: 
         .eq("status", "active")
         .order("rating", { ascending: false });
 
-      // Filter by city if provided
       if (cityName) {
         query = query.eq("city", cityName);
       }
 
-      // Optionally filter to only open restaurants
       if (filterOpen) {
         query = query.eq("is_open", true);
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
+
+      cacheData(cacheKey, data);
       return data as Restaurant[];
     },
+    placeholderData: cached?.data,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -164,6 +170,9 @@ export function useRestaurant(id: string | undefined) {
 
 // Fetch menu items for a restaurant (includes unavailable items for display)
 export function useMenuItems(restaurantId: string | undefined) {
+  const cacheKey = `menu-${restaurantId}`;
+  const cached = restaurantId ? getCachedData<MenuItem[]>(cacheKey) : null;
+
   return useQuery({
     queryKey: ["menu-items", restaurantId],
     queryFn: async () => {
@@ -173,14 +182,19 @@ export function useMenuItems(restaurantId: string | undefined) {
         .from(EATS_TABLES.menuItems)
         .select("*")
         .eq("restaurant_id", restaurantId)
-        .order("is_available", { ascending: false }) // Available items first
+        .order("is_available", { ascending: false })
         .order("category")
         .order("is_featured", { ascending: false });
 
       if (error) throw error;
+
+      cacheData(cacheKey, data);
       return data as MenuItem[];
     },
     enabled: !!restaurantId,
+    placeholderData: cached?.data,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -534,6 +548,8 @@ export function useCreateTestFoodOrder() {
 
 // Fetch current user's orders
 export function useMyEatsOrders() {
+  const cached = getCachedData<any[]>("my-orders");
+
   return useQuery({
     queryKey: ["my-eats-orders"],
     queryFn: async () => {
@@ -548,8 +564,13 @@ export function useMyEatsOrders() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+
+      cacheData("my-orders", data);
       return data;
     },
+    placeholderData: cached?.data,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
