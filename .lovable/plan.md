@@ -1,119 +1,103 @@
 
 
-# Payment Breakdown Transparency
+# Tax Transparency
 
-## Overview
+## What's Already Working
 
-There are two separate receipt systems that need enhancement:
+The checkout (`DeliveryFeeBreakdownCard`) already shows: Subtotal, Delivery Fee, Service Fee, Small Order Fee, Tax, and Total. The in-app receipt (`OrderReceipt.tsx`) also shows all these lines. The downloadable invoice (`receiptUtils.ts`) renders them too.
 
-1. **In-app Order Receipt** (`OrderReceipt.tsx`) — shown on the Eats order detail/receipt page. Already displays subtotal, discount, delivery fee, tax, and total. Missing: service fee, tip, and wallet credit lines.
+**What's missing**: The tax line everywhere just says "Tax — $X.XX" without showing the rate (e.g., 8.25%). The tax rate is calculated in `useEatsDeliveryPricing` from `zone.tax_rate` but never exposed to the UI.
 
-2. **Downloadable Receipt** (`receiptUtils.ts`) — generates a printable HTML receipt from the spending dashboard. Currently only shows service name and status with no line-item breakdown at all. The `UnifiedOrder` type lacks breakdown fields.
+## Changes
 
-## What Changes
+### 1. Expose `taxRate` from the pricing hook
 
-### 1. Enhance the in-app Order Receipt with missing fee lines
+Update `EatsDeliveryPricing` interface and the hook return value to include `taxRate: number` (the decimal rate from the zone, e.g., 0.0825).
 
-Update `OrderReceipt.tsx` to show:
-- Service fee (from `order.service_fee`)
-- Tip amount (from `order.tip_amount`)
-- Wallet credit deduction (if applicable)
+**File**: `src/hooks/useEatsDeliveryPricing.ts`
+- Add `taxRate: number` to the `EatsDeliveryPricing` interface
+- Add `taxRate: zone.tax_rate` to the return object
 
-These fields already exist on `LiveEatsOrder` — they just aren't rendered.
+### 2. Show tax rate in checkout breakdown
 
-### 2. Add breakdown fields to UnifiedOrder
+Update `DeliveryFeeBreakdownCard` to display the rate next to the tax amount:
+- Change "Tax" label to "Tax (8.25%)" using `(pricing.taxRate * 100).toFixed(2)%`
 
-Update `UnifiedOrder` interface in `useSpendingStats.ts` with optional breakdown fields:
-- `subtotal`, `deliveryFee`, `serviceFee`, `tax`, `tip`, `discount`, `promoCode`
+**File**: `src/components/eats/DeliveryFeeBreakdownCard.tsx`
+- Update the Tax row label to include the percentage
 
-Populate these from the `food_orders` query (already fetches `total_amount` — expand the select to include `subtotal`, `delivery_fee`, `service_fee`, `tax`, `tip_amount`, `discount_amount`, `promo_code`). For rides and travel, populate what's available and leave others undefined.
+### 3. Add `taxRate` to UnifiedOrder and persist it
 
-### 3. Rewrite downloadable receipt with full breakdown
+Update the `UnifiedOrder` interface with an optional `taxRate` field. The `food_orders` table already has a `tax_rate` column (confirmed in types). Map it in the spending stats query.
 
-Update `generateReceiptHTML` in `receiptUtils.ts` to render a proper invoice-style receipt with all available line items: food total, delivery fee, service fee, tax, tip, discount, wallet credit, and final total. Only show lines where values exist and are non-zero.
+**File**: `src/hooks/useSpendingStats.ts`
+- Add `taxRate?: number` to `UnifiedOrder`
+- Add `tax_rate` to the food_orders select query
+- Map `o.tax_rate` to `taxRate` in the UnifiedOrder mapping
 
-### 4. Add a "Download Invoice" button to OrderReceipt
+### 4. Show tax rate in the in-app receipt
 
-Add a download button alongside the existing "Print Receipt" that generates the full HTML invoice and triggers a print dialog — using the same `receiptUtils` pattern but with the richer `LiveEatsOrder` data.
+Update `OrderReceipt.tsx` to display the tax rate percentage when available.
+
+**File**: `src/components/eats/OrderReceipt.tsx`
+- Change "Tax" label to include rate if `order.tax_rate` exists (e.g., "Tax (8.25%)")
+
+### 5. Show tax rate in the downloadable invoice
+
+Update `receiptUtils.ts` to render the tax rate percentage in the breakdown.
+
+**File**: `src/lib/receiptUtils.ts`
+- Accept `taxRate` on `UnifiedOrder` (already adding to interface)
+- Change the Tax row label from "Tax" to "Tax (X.XX%)" when `order.taxRate` is defined
+- Update the `OrderReceipt` download button to pass `taxRate` in the UnifiedOrder conversion
+
+### 6. Store tax_rate on order creation
+
+Update the order submission in `EatsCheckout.tsx` to save `pricing.taxRate` alongside `pricing.tax` in the `food_orders` insert, so receipts can show the rate even after the zone config changes.
+
+**File**: `src/pages/EatsCheckout.tsx`
+- Add `tax_rate: pricing.taxRate` to the order creation payload (if the column exists)
 
 ## Files Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/hooks/useSpendingStats.ts` | Update | Add breakdown fields to UnifiedOrder, expand food_orders select |
-| `src/lib/receiptUtils.ts` | Update | Full line-item breakdown in generated HTML receipt |
-| `src/components/eats/OrderReceipt.tsx` | Update | Add service fee, tip, wallet credit lines |
-| `src/components/account/OrderReceiptCard.tsx` | No change | Already works with updated receiptUtils |
+| `src/hooks/useEatsDeliveryPricing.ts` | Update | Add `taxRate` to interface and return value |
+| `src/components/eats/DeliveryFeeBreakdownCard.tsx` | Update | Show tax rate percentage in label |
+| `src/hooks/useSpendingStats.ts` | Update | Add `taxRate` to UnifiedOrder, expand query |
+| `src/components/eats/OrderReceipt.tsx` | Update | Show tax rate in receipt tax line |
+| `src/lib/receiptUtils.ts` | Update | Show tax rate in downloadable invoice |
+| `src/pages/EatsCheckout.tsx` | Update | Store tax_rate on order creation |
 
 ## Technical Details
 
-### UnifiedOrder expanded interface
+### Tax rate display format
+
+The rate is stored as a decimal (e.g., 0.0825). Display as percentage: `(rate * 100).toFixed(2)%` producing "8.25%".
+
+### Checkout tax line (before and after)
 
 ```text
-export interface UnifiedOrder {
-  id: string;
-  type: "eats" | "rides" | "travel";
-  title: string;
-  amount: number;
-  date: string;
-  status: string;
-  // Breakdown (optional — populated when available)
-  subtotal?: number;
-  deliveryFee?: number;
-  serviceFee?: number;
-  tax?: number;
-  tip?: number;
-  discount?: number;
-  promoCode?: string;
-}
+Before:  Tax                    $3.30
+After:   Tax (8.25%)            $3.30
 ```
 
-### Eats query expansion
+### Receipt tax line (before and after)
 
 ```text
-Current select: "id, total_amount, status, created_at, restaurant:restaurants(name)"
-New select:     "id, total_amount, subtotal, delivery_fee, service_fee, tax, tip_amount, discount_amount, promo_code, status, created_at, restaurant:restaurants(name)"
+Before:  Tax                    $3.30
+After:   Tax (8.25%)            $3.30
 ```
 
-Map into UnifiedOrder:
-- subtotal -> subtotal
-- delivery_fee -> deliveryFee
-- service_fee -> serviceFee
-- tax -> tax
-- tip_amount -> tip
-- discount_amount -> discount
-- promo_code -> promoCode
-
-### Receipt HTML breakdown
-
-The `generateReceiptHTML` function will render each line item conditionally:
+### Downloadable invoice (before and after)
 
 ```text
-Items/Subtotal:  $XX.XX
-Delivery Fee:    $X.XX
-Service Fee:     $X.XX
-Tax:             $X.XX
-Tip:             $X.XX
-Discount:       -$X.XX  (green, shown only if > 0)
-─────────────────────────
-Total Paid:      $XX.XX
+Before:  Tax          $3.30
+After:   Tax (8.25%)  $3.30
 ```
-
-Lines with zero or undefined values are hidden. Discount shown in green with a minus sign. Promo code name shown in parentheses if available.
-
-### OrderReceipt.tsx additions
-
-Add between the existing Tax row and Total row:
-
-- Service fee row: shows `order.service_fee` if > 0
-- Tip row: shows `order.tip_amount` if > 0
-
-Both use the same styling pattern as existing rows.
 
 ### Edge cases
 
-- Rides and travel orders have no subtotal/delivery breakdown — receipt falls back to showing just "Service" label and total amount (current behavior preserved)
-- Orders with no service fee or tip simply omit those rows
-- Discount of 0 is hidden
-- All amounts use `.toFixed(2)` for consistent formatting
-
+- Zone has 0% tax rate: show "Tax (0.00%)" with $0.00 (or hide the line entirely -- current behavior hides when tax is 0)
+- Tax rate not available on older orders (taxRate is undefined): fall back to just "Tax" without percentage
+- Rides and travel orders: no change -- they don't have a tax rate field, so receipts continue showing just the total
