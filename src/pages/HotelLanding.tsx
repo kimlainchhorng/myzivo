@@ -10,6 +10,7 @@ import SEOHead from "@/components/SEOHead";
 import TrustIndicators from "@/components/shared/TrustIndicators";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import { InternalLinkGrid } from "@/components/seo";
+import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { HOTEL_DISCLAIMERS, HOTEL_TRUST_BADGES } from "@/config/hotelCompliance";
@@ -221,6 +222,9 @@ export default function HotelLanding() {
             </div>
           </div>
         </section>
+
+        {/* Hotel Experience Gallery - Immersive Photo Grid */}
+        <HotelExperienceGallery />
 
         <TrustIndicators />
 
