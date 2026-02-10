@@ -209,20 +209,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -40, 20, 0], scale: [1, 1.2, 0.9, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 -left-20 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ x: [0, -30, 20, 0], y: [0, 30, -30, 0], scale: [1, 0.9, 1.1, 1] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-1/4 -right-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"
-        />
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-black px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
       <div className="w-full max-w-md relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -241,7 +228,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-zinc-400 mt-2 text-sm sm:text-base"
             >
-              {isLogin ? "Welcome back, Traveler" : "Get started free — takes 30 seconds"}
+              {isLogin ? "Welcome back, Traveler" : "Create your secure account"}
             </motion.p>
           </div>
 
@@ -498,9 +485,7 @@ const Login = () => {
         </motion.div>
 
         <p className="mt-4 sm:mt-6 text-center text-xs text-zinc-500">
-          {isLogin ? "Protected by enterprise-grade security 🔒" : (
-            <>By signing up, you agree to our <a href="/terms" className="text-blue-500 hover:underline">Terms</a> & <a href="/privacy" className="text-blue-500 hover:underline">Privacy Policy</a></>
-          )}
+          {isLogin ? "Protected by enterprise-grade security 🔒" : "By signing up, you agree to our Terms of Service 📋"}
         </p>
 
         {/* Go to Home */}
