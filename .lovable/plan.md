@@ -1,46 +1,75 @@
 
 
-# Safety Center
+# ETA Accuracy Improvement via Live Driver Density
 
 ## Overview
-Add a dedicated Safety Center accessible from the ride/delivery trip screen. It will be a bottom-sheet drawer with three core actions: Share Trip (live tracking link), Emergency Call, and Report Issue. The existing safety banner in TripTracker already has a non-functional "Share" button -- this will be wired up to open the new Safety Center instead.
+Improve ETA accuracy by feeding live driver availability and proximity data into both Ride and Eats estimates. This requires no major UI changes -- the existing ETA display components will automatically show better numbers.
 
-## What Will Be Built
+## Current Gaps
 
-### 1. SafetyCenterSheet Component
-A new reusable bottom-sheet (`Drawer`) component at `src/components/rider/SafetyCenterSheet.tsx` with three sections:
+**Eats (EatsCart / EatsCheckout):**
+- `useEatsDeliveryFactors` already computes a `supplyMultiplier` (1.0x / 1.2x / 1.5x) based on live driver count, but this multiplier is **never passed** into `useQueueAwareEta`. The `driverMinutes` parameter stays at its default (12 min) regardless of driver density.
 
-- **Share Trip**: Generates a live tracking link (`/track/{tripId}`) and allows sharing via Copy Link, WhatsApp, SMS, or native share. Shows a confirmation toast ("Trip shared with your contact") after sharing.
-- **Emergency Call**: Calls 911 (US default) with a single tap. Also shows the existing ZIVO support number option.
-- **Report Issue**: Opens the existing rider support flow (`useRiderSupport`) pre-filled with category "safety" and the current trip ID.
+**Rides (Rides.tsx):**
+- ETAs are entirely static, pulled from hardcoded ride option objects (e.g., `eta: 3`, `eta: 5`). The page does not use `useDriverAvailability` or any live driver proximity data to adjust pickup ETAs.
 
-### 2. Safety Button on Trip Screen
-- Wire the existing "Share" button in the `TripTracker.tsx` safety banner to open the new `SafetyCenterSheet`.
-- Add a persistent floating "Safety" shield button visible during active trips for quick access.
+## Changes
 
-### 3. Share Trip Logic
-- A new hook `useTripSharing.ts` that:
-  - Generates a shareable URL: `{origin}/track/{tripId}`
-  - Logs a `share_event` with `entity_type: "trip_share"` using the existing `useShareTracking` hook
-  - Supports Copy, WhatsApp, SMS, and native Web Share API
-  - Shows a success toast as confirmation notification
+### 1. Eats: Pass supply multiplier into queue-aware ETA
 
-### 4. Eats Order Safety
-- Add the same Safety button to the Eats order tracking screen (`OrderTrackingPage`) so delivery customers also have access to emergency call and report issue.
+**Files:** `src/pages/EatsCart.tsx`, `src/pages/EatsCheckout.tsx`
+
+Both pages already call `useEatsDeliveryFactors()` and get `supplyMultiplier` back. The fix is to pass `supplyMultiplier` as a driver-time inflation factor into `useQueueAwareEta`.
+
+- `useQueueAwareEta` already accepts multipliers for surge, incentive, schedule, and forecast -- the supply multiplier will be applied the same way to `driverMinutes`.
+
+**File:** `src/hooks/useQueueAwareEta.ts`
+
+- Add a new optional `supplyMultiplier` parameter (default 1.0)
+- Apply it to `driverMinutes` alongside the existing schedule/incentive/surge multipliers.
+
+### 2. Rides: Use closest-driver ETA from live data
+
+**File:** `src/pages/Rides.tsx`
+
+- Import and call `useDriverAvailability` with the user's pickup coordinates.
+- When the closest driver ETA is available, use it to adjust the displayed ETA for each ride option, replacing the static `ride.eta` with a blended value that accounts for actual driver proximity.
+- Fallback to the static ETA when no live data is available.
+
+### 3. Eats: Use closest-driver distance for driverMinutes
+
+**File:** `src/pages/EatsCart.tsx`, `src/pages/EatsCheckout.tsx`
+
+- Import `useDriverAvailability` with the delivery address coordinates (or restaurant coordinates as proxy).
+- When `closestETAMinutes` is available, pass it as `driverMinutes` to `useQueueAwareEta` instead of the default 12 minutes.
+- This makes the "driver leg" of the ETA reflect actual driver proximity rather than a fixed assumption.
 
 ## Technical Details
 
-### New Files
-- `src/components/rider/SafetyCenterSheet.tsx` -- the drawer UI with Share / Emergency / Report sections
-- `src/hooks/useTripSharing.ts` -- generates live tracking links and handles share actions
-
 ### Modified Files
-- `src/components/rider/TripTracker.tsx` -- wire safety banner "Share" button to open `SafetyCenterSheet`; add floating Safety button during active trips
-- `src/pages/track/OrderTrackingPage.tsx` -- add Safety button for Eats delivery orders
 
-### Patterns Followed
-- Uses existing `Drawer` (vaul) component consistent with `SocialShareSheet`
-- Reuses `useShareTracking` for event logging
-- Reuses `useRiderSupport` for issue reporting
-- Uses existing `toast` (sonner) for confirmation notifications
-- No new database tables or edge functions required -- leverages existing `share_events` table and `/track/:orderId` route
+1. **`src/hooks/useQueueAwareEta.ts`**
+   - Add `supplyMultiplier?: number` to options (default 1.0)
+   - Apply to `adjustedDriverMinutes` calculation: multiply by `supplyMultiplier`
+
+2. **`src/pages/EatsCart.tsx`**
+   - Import `useDriverAvailability`
+   - Call with restaurant coordinates (from cart items)
+   - Pass `closestETAMinutes` as `driverMinutes` and `supplyMultiplier` from `deliveryFactors` to `useQueueAwareEta`
+
+3. **`src/pages/EatsCheckout.tsx`**
+   - Same as EatsCart: import `useDriverAvailability`, pass real driver time and supply multiplier into the ETA hook
+
+4. **`src/pages/Rides.tsx`**
+   - Import `useDriverAvailability`
+   - Call with `pickupCoords`
+   - Blend `closestETAMinutes` with static ride option ETAs for display (e.g., use the larger of closest-driver ETA and ride-type minimum)
+
+### No New Files or Database Changes
+All data sources already exist. This is purely about wiring existing hooks together.
+
+### Impact
+- Eats ETAs will reflect real driver proximity (could show 5 min instead of default 12 when a driver is nearby, or 20+ min when supply is low)
+- Ride pickup ETAs will reflect actual nearest driver distance rather than static guesses
+- Supply shortages will properly inflate ETAs via the supply multiplier that was already computed but unused
+
