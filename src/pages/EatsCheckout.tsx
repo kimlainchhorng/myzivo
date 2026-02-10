@@ -381,6 +381,7 @@ function EatsCheckoutContent() {
         subtotal,
         delivery_fee: deliveryFee,
         total,
+        tip_amount: tipAmount,
         billing_type: billingType,
         business_account_id: billingType === "company" && businessMembership?.company ? businessMembership.company.id : undefined,
         business_account_name: billingType === "company" && businessMembership?.company ? businessMembership.company.name : undefined,
