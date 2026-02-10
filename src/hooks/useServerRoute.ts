@@ -25,7 +25,8 @@ interface UseServerRouteReturn {
     pickupCoords: { lat: number; lng: number },
     dropoffCoords: { lat: number; lng: number },
     pickupAddress?: string,
-    dropoffAddress?: string
+    dropoffAddress?: string,
+    waypoints?: { lat: number; lng: number }[]
   ) => Promise<ServerRouteData | null>;
   clearRoute: () => void;
 }
@@ -39,13 +40,14 @@ export function useServerRoute(): UseServerRouteReturn {
     pickupCoords: { lat: number; lng: number },
     dropoffCoords: { lat: number; lng: number },
     pickupAddress?: string,
-    dropoffAddress?: string
+    dropoffAddress?: string,
+    waypoints?: { lat: number; lng: number }[]
   ): Promise<ServerRouteData | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await getRoute(pickupCoords, dropoffCoords);
+      const result = await getRoute(pickupCoords, dropoffCoords, waypoints);
 
       if (result) {
         const data: ServerRouteData = {

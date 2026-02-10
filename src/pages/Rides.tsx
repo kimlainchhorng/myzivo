@@ -11,7 +11,8 @@ import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { 
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
-  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X, Receipt
+  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X, Receipt,
+  ChevronUp, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -452,14 +453,17 @@ function RidesInner() {
     return getQuoteForOption(selectedOption);
   }, [selectedOption, getQuoteForOption]);
 
-  // Fetch route when both coordinates are available
+  // Fetch route when both coordinates are available (include waypoints)
   useEffect(() => {
     if (pickupCoords && dropoffCoords) {
-      fetchRoute(pickupCoords, dropoffCoords, pickup, dropoff);
+      const waypoints = stops
+        .filter(s => s.coords != null)
+        .map(s => s.coords!);
+      fetchRoute(pickupCoords, dropoffCoords, pickup, dropoff, waypoints.length > 0 ? waypoints : undefined);
     } else {
       clearRoute();
     }
-  }, [pickupCoords, dropoffCoords, pickup, dropoff, fetchRoute, clearRoute]);
+  }, [pickupCoords, dropoffCoords, pickup, dropoff, stops, fetchRoute, clearRoute]);
 
   const handlePickupSuggestionClick = useCallback(async (suggestion: Suggestion) => {
     setPickup(suggestion.placeName);
@@ -508,11 +512,27 @@ function RidesInner() {
     }
   }, [stops, clearStopSuggestions]);
 
-  // Add a new stop (max 1)
+  // Add a new stop (max 3)
   const handleAddStop = () => {
-    if (stops.length < 1) {
+    if (stops.length < 3) {
       setStops([...stops, { address: "", coords: null }]);
     }
+  };
+
+  // Move stop up
+  const handleMoveStopUp = (index: number) => {
+    if (index <= 0) return;
+    const newStops = [...stops];
+    [newStops[index - 1], newStops[index]] = [newStops[index], newStops[index - 1]];
+    setStops(newStops);
+  };
+
+  // Move stop down
+  const handleMoveStopDown = (index: number) => {
+    if (index >= stops.length - 1) return;
+    const newStops = [...stops];
+    [newStops[index], newStops[index + 1]] = [newStops[index + 1], newStops[index]];
+    setStops(newStops);
   };
 
   // Remove a stop
@@ -873,6 +893,25 @@ function RidesInner() {
                         >
                           <X className="w-4 h-4 text-zinc-500" />
                         </button>
+                        {/* Reorder buttons */}
+                        {stops.length > 1 && (
+                          <div className="flex flex-col -space-y-0.5">
+                            <button
+                              onClick={() => handleMoveStopUp(index)}
+                              disabled={index === 0}
+                              className="p-0.5 hover:bg-zinc-200 rounded transition-colors disabled:opacity-30"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveStopDown(index)}
+                              disabled={index === stops.length - 1}
+                              className="p-0.5 hover:bg-zinc-200 rounded transition-colors disabled:opacity-30"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Stop Dropdown */}
@@ -957,13 +996,13 @@ function RidesInner() {
               </div>
               
               {/* Add Stop Button */}
-              {stops.length < 1 && (
+              {stops.length < 3 && (
                 <button
                   onClick={handleAddStop}
                   className="flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  Add stop
+                  Add stop {stops.length > 0 ? `(${stops.length}/3)` : ''}
                 </button>
               )}
 

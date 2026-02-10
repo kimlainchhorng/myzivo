@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { origin_lat, origin_lng, dest_lat, dest_lng } = await req.json();
+    const { origin_lat, origin_lng, dest_lat, dest_lng, waypoints } = await req.json();
     
     if (
       origin_lat == null || origin_lng == null ||
@@ -44,12 +44,23 @@ Deno.serve(async (req) => {
     }
 
     // Add departure_time=now for real-time traffic data
-    const url = `https://maps.googleapis.com/maps/api/directions/json` +
+    let url = `https://maps.googleapis.com/maps/api/directions/json` +
       `?origin=${origin_lat},${origin_lng}` +
       `&destination=${dest_lat},${dest_lng}` +
       `&mode=driving` +
       `&departure_time=now` +
       `&key=${encodeURIComponent(key)}`;
+
+    // Add waypoints if provided
+    if (Array.isArray(waypoints) && waypoints.length > 0) {
+      const waypointStr = waypoints
+        .filter((wp: any) => wp?.lat != null && wp?.lng != null)
+        .map((wp: any) => `${wp.lat},${wp.lng}`)
+        .join("|");
+      if (waypointStr) {
+        url += `&waypoints=${encodeURIComponent(waypointStr)}`;
+      }
+    }
 
     console.log(`[maps-route] Fetching route: (${origin_lat},${origin_lng}) → (${dest_lat},${dest_lng})`);
 
@@ -65,29 +76,32 @@ Deno.serve(async (req) => {
     }
 
     const route = data.routes?.[0];
-    const leg = route?.legs?.[0];
+    const legs = route?.legs;
 
-    if (!route || !leg) {
+    if (!route || !legs || legs.length === 0) {
       return new Response(JSON.stringify({ ok: false, error: "No route found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Convert meters to miles
-    const distanceMeters = leg.distance?.value ?? 0;
-    const distanceMiles = distanceMeters / 1609.344;
+    // Sum distance and duration across all legs (multi-stop support)
+    let totalDistanceMeters = 0;
+    let totalDurationSeconds = 0;
+    let totalDurationInTrafficSeconds = 0;
 
-    // Convert seconds to minutes (base duration without traffic)
-    const durationSeconds = leg.duration?.value ?? 0;
-    const durationMinutes = durationSeconds / 60;
+    for (const leg of legs) {
+      totalDistanceMeters += leg.distance?.value ?? 0;
+      totalDurationSeconds += leg.duration?.value ?? 0;
+      totalDurationInTrafficSeconds += leg.duration_in_traffic?.value ?? totalDurationSeconds;
+    }
 
-    // Traffic-aware duration (when available)
-    const durationInTrafficSeconds = leg.duration_in_traffic?.value ?? durationSeconds;
-    const durationInTrafficMinutes = durationInTrafficSeconds / 60;
+    const distanceMiles = totalDistanceMeters / 1609.344;
+    const durationMinutes = totalDurationSeconds / 60;
+    const durationInTrafficMinutes = totalDurationInTrafficSeconds / 60;
 
     // Calculate traffic ratio and level
-    const trafficRatio = durationSeconds > 0 ? durationInTrafficSeconds / durationSeconds : 1.0;
+    const trafficRatio = totalDurationSeconds > 0 ? totalDurationInTrafficSeconds / totalDurationSeconds : 1.0;
     let trafficLevel: "light" | "moderate" | "heavy" = "moderate";
     if (trafficRatio < 1.1) {
       trafficLevel = "light";
@@ -95,7 +109,10 @@ Deno.serve(async (req) => {
       trafficLevel = "heavy";
     }
 
-    console.log(`[maps-route] Route found: ${distanceMiles.toFixed(2)} miles, ${Math.round(durationMinutes)} min (traffic: ${Math.round(durationInTrafficMinutes)} min, ${trafficLevel})`);
+    const firstLeg = legs[0];
+    const lastLeg = legs[legs.length - 1];
+
+    console.log(`[maps-route] Route found: ${distanceMiles.toFixed(2)} miles, ${Math.round(durationMinutes)} min (traffic: ${Math.round(durationInTrafficMinutes)} min, ${trafficLevel}, ${legs.length} leg(s))`);
 
     return new Response(JSON.stringify({
       ok: true,
@@ -105,8 +122,8 @@ Deno.serve(async (req) => {
       traffic_ratio: Number(trafficRatio.toFixed(2)),
       traffic_level: trafficLevel,
       polyline: route.overview_polyline?.points ?? null,
-      start_address: leg.start_address,
-      end_address: leg.end_address,
+      start_address: firstLeg.start_address,
+      end_address: lastLeg.end_address,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

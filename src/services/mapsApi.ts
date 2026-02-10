@@ -103,16 +103,21 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
  */
 export async function getRoute(
   origin: { lat: number; lng: number },
-  destination: { lat: number; lng: number }
+  destination: { lat: number; lng: number },
+  waypoints?: { lat: number; lng: number }[]
 ): Promise<RouteResult | null> {
   try {
+    const body: Record<string, unknown> = {
+      origin_lat: origin.lat,
+      origin_lng: origin.lng,
+      dest_lat: destination.lat,
+      dest_lng: destination.lng,
+    };
+    if (waypoints && waypoints.length > 0) {
+      body.waypoints = waypoints;
+    }
     const { data, error } = await supabase.functions.invoke("maps-route", {
-      body: {
-        origin_lat: origin.lat,
-        origin_lng: origin.lng,
-        dest_lat: destination.lat,
-        dest_lng: destination.lng,
-      },
+      body,
     });
 
     if (error) {
