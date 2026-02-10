@@ -36,7 +36,7 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "fast", label: "Fast Delivery" },
 ];
 
-const categories = ['All', 'Pizza', 'Sushi', 'Burgers', 'Healthy', 'Mexican', 'Chinese', 'Indian', 'Thai', 'BBQ', 'Fine Dining', 'Italian', 'Fast Food', 'Asian'];
+const categories = ['All', 'Fine Dining', 'Healthy', 'Fast Food', 'Asian', 'Italian'];
 
 export default function MobileEatsPremium() {
   const [activeCategory, setActiveCategory] = useState("All");

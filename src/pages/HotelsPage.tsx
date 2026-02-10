@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { Hotel, Shield, CheckCircle, Clock, ExternalLink, Search as SearchIcon, Star } from "lucide-react";
+import { Hotel, Shield, CheckCircle, Clock, ExternalLink, Search as SearchIcon } from "lucide-react";
 import { format, addDays } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -297,64 +297,6 @@ export default function HotelsPage() {
         {/* Empty State - Show Popular Destinations */}
         {!hasSearched && (
           <>
-            {/* Tonight's Deals */}
-            <section className="py-10 border-b border-border/50">
-              <div className="container mx-auto px-4">
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock className="w-5 h-5 text-hotels" />
-                  <h2 className="text-xl font-bold">Tonight's Deals</h2>
-                  <span className="text-xs bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full font-semibold">Book by midnight</span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                  {[
-                    { name: "Downtown Boutique Hotel", city: "New York", price: 129, rating: 4.7, img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop&q=75&fm=webp" },
-                    { name: "Seaside Resort & Spa", city: "Miami", price: 189, rating: 4.8, img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop&q=75&fm=webp" },
-                    { name: "Urban Business Suite", city: "Chicago", price: 99, rating: 4.5, img: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop&q=75&fm=webp" },
-                    { name: "Mountain Lodge", city: "Denver", price: 149, rating: 4.6, img: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop&q=75&fm=webp" },
-                  ].map((deal) => (
-                    <div key={deal.name} className="shrink-0 w-[260px] rounded-xl overflow-hidden border border-border bg-card group cursor-pointer hover:shadow-lg transition-shadow">
-                      <div className="relative h-[140px]">
-                        <img src={deal.img} alt={deal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                          <span className="text-xs font-bold text-white">{deal.rating}</span>
-                        </div>
-                      </div>
-                      <div className="p-3">
-                        <h3 className="font-semibold text-sm truncate">{deal.name}</h3>
-                        <p className="text-xs text-muted-foreground">{deal.city}</p>
-                        <div className="flex items-baseline justify-between mt-2">
-                          <span className="text-lg font-bold text-hotels">${deal.price}</span>
-                          <span className="text-xs text-muted-foreground">/night</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Hotel Category Quick Filters */}
-            <section className="py-8 border-b border-border/50 bg-muted/10">
-              <div className="container mx-auto px-4">
-                <h2 className="text-lg font-bold mb-4 text-center">Browse by Category</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
-                  {[
-                    { name: "Boutique", icon: "🏡", gradient: "from-rose-500/20 to-pink-500/10" },
-                    { name: "Resort", icon: "🏖️", gradient: "from-sky-500/20 to-cyan-500/10" },
-                    { name: "Business", icon: "🏢", gradient: "from-slate-500/20 to-gray-500/10" },
-                    { name: "Budget", icon: "💰", gradient: "from-emerald-500/20 to-green-500/10" },
-                  ].map((cat) => (
-                    <button key={cat.name} className={`p-4 rounded-xl bg-gradient-to-br ${cat.gradient} border border-border/50 text-center hover:shadow-md transition-all hover:-translate-y-0.5`}>
-                      <span className="text-2xl block mb-1">{cat.icon}</span>
-                      <span className="font-semibold text-sm">{cat.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
             {/* Partner Logos */}
             <PartnerLogosStrip service="hotels" />
 

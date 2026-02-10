@@ -8,7 +8,6 @@
 import { ArrowRight, Package, Truck, Clock, Shield, MapPin, CheckCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -256,72 +255,6 @@ export default function Move() {
 
         {/* Mobility Services Grid */}
         <MobilityFeaturesGrid className="bg-muted/20" showDriverCTA={true} />
-
-        {/* Testimonials Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">
-                What Our <span className="text-primary">Customers Say</span>
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {[
-                { name: "Sarah M.", text: "Moved my entire apartment in 2 hours. The driver was super careful with my furniture!", rating: 5 },
-                { name: "James K.", text: "Sent a package across town in 45 minutes. Way faster than any postal service.", rating: 5 },
-                { name: "Lisa P.", text: "Great insurance coverage gave me peace of mind when shipping fragile items.", rating: 4 },
-              ].map((review) => (
-                <Card key={review.name} className="border-2 hover:border-primary/30 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-3">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <span key={i} className="text-amber-400 text-sm">★</span>
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4 italic">"{review.text}"</p>
-                    <p className="font-semibold text-sm">{review.name}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Coming Soon / Waitlist */}
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4 text-center">
-            <div className="max-w-lg mx-auto">
-              <Package className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Coming Soon to Your City</h2>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Get notified when ZIVO Move launches in your area.
-              </p>
-              <div className="flex gap-2 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 h-12 px-4 rounded-xl border border-border bg-background text-sm"
-                  style={{ fontSize: '16px' }}
-                  onChange={(e) => {
-                    // Store in localStorage for waitlist
-                    if (e.target.value) localStorage.setItem('zivo_move_waitlist', e.target.value);
-                  }}
-                />
-                <Button
-                  className="h-12 px-6 rounded-xl font-bold"
-                  onClick={() => {
-                    const email = localStorage.getItem('zivo_move_waitlist');
-                    if (email) {
-                      alert('Thanks! We\'ll notify you when ZIVO Move launches in your city.');
-                    }
-                  }}
-                >
-                  Notify Me
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* CTA Section */}
         <section className="py-20 bg-primary/5">

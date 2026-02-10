@@ -5,7 +5,7 @@
  * Mobile: Premium "Curated Dining" visual experience with real data
  */
 import { lazy, Suspense } from "react";
-import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, Truck, Loader2, Flame } from "lucide-react";
+import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -151,56 +151,24 @@ export default function Eats() {
                 <span className="text-eats">Fast.</span>
               </h1>
 
-              <p className="text-lg text-muted-foreground mb-4 max-w-lg">
+              <p className="text-lg text-muted-foreground mb-8 max-w-lg">
                 Discover local restaurants and get your favorite meals delivered 
                 straight to your door. Quick, easy, and delicious.
               </p>
 
-              {/* Live Order Counter */}
-              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 bg-eats/10 border border-eats/20 rounded-full animate-pulse">
-                <Flame className="w-4 h-4 text-eats" />
-                <span className="text-sm font-semibold text-eats">
-                  {(1247 + Math.floor((Date.now() / 60000) % 200)).toLocaleString()}+ orders today
-                </span>
-              </div>
-
               {/* CTA Button */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={() => navigate("/eats/restaurants")}
-                  size="lg"
-                  className="h-14 px-8 text-lg rounded-2xl font-bold gap-3 bg-eats hover:bg-eats/90 shadow-lg"
-                >
-                  Browse Restaurants
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </div>
+              <Button
+                onClick={() => navigate("/eats/restaurants")}
+                size="lg"
+                className="h-14 px-8 text-lg rounded-2xl font-bold gap-3 bg-eats hover:bg-eats/90 shadow-lg"
+              >
+                Browse Restaurants
+                <ArrowRight className="w-5 h-5" />
+              </Button>
 
               <p className="mt-4 text-sm text-muted-foreground">
                 Order from local restaurants with fast delivery
               </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Promo Banner */}
-        <section className="py-4 bg-gradient-to-r from-eats/10 via-orange-500/10 to-eats/10 border-y border-eats/20">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-eats" />
-                <span className="text-sm font-bold">Free delivery on your first order</span>
-              </div>
-              <span className="text-muted-foreground hidden sm:inline">•</span>
-              <span className="text-sm text-muted-foreground">Use code <span className="font-bold text-eats">WELCOME</span></span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/eats/restaurants")}
-                className="rounded-xl border-eats/30 text-eats hover:bg-eats/10"
-              >
-                Order Now
-              </Button>
             </div>
           </div>
         </section>
