@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
-import flightsHeroImg from "@/assets/flights-hero.png";
+import flightsHeroImg from "@/assets/hero-flights.jpg";
+import heroMoveImg from "@/assets/hero-move.jpg";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
@@ -26,7 +27,7 @@ const assets = {
   hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
   rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
   food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
-  move: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800",
+  move: heroMoveImg,
   rentals: "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&q=80&w=800",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
