@@ -65,7 +65,7 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
 
 export function OrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const { order, driverLocation, isLoading, error } = useOrderTracking(orderId);
+  const { order, driverLocation, isLoading, error } = useOrderTracking(orderId, { public: true });
   const { isLoaded: mapsLoaded } = useGoogleMaps();
 
   // Batch awareness for multi-stop deliveries
