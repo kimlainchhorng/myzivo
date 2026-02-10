@@ -50,6 +50,7 @@ import { SurgeBanner } from "@/components/ride/SurgeBanner";
 import { PromoCodeInput } from "@/components/ride/PromoCodeInput";
 import { RidePriceBreakdownWithPromo } from "@/components/ride/RidePriceBreakdownWithPromo";
 import { useRidePromoValidation, ValidatedRidePromo } from "@/hooks/useRidePromoValidation";
+import { useDriverAvailability } from "@/hooks/useLiveDriverTracking";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -324,6 +325,18 @@ function RidesInner() {
   
   // Zone-specific surge pricing
   const surge = useZoneSurgePricing(pricingZone);
+  
+  // Live driver availability for dynamic ETAs
+  const driverAvailability = useDriverAvailability(pickupCoords);
+  const closestDriverETA = driverAvailability.closestETAMinutes;
+  
+  /** Blend live driver ETA with static ride-type ETA.
+   *  Use the larger of (closest driver ETA) and (ride-type minimum) so
+   *  premium / high-wait categories keep their baseline expectations. */
+  const getBlendedEta = useCallback((staticEta: number): number => {
+    if (closestDriverETA == null) return staticEta;
+    return Math.max(closestDriverETA, staticEta);
+  }, [closestDriverETA]);
   
   // Promo code validation hook
   const { 
@@ -720,7 +733,7 @@ function RidesInner() {
           dropoffCoords={dropoffCoords}
           pickup={pickup}
           dropoff={dropoff}
-          etaMinutes={selectedOption?.eta ?? (routeData?.duration ? Math.round(routeData.duration) : undefined)}
+          etaMinutes={selectedOption ? getBlendedEta(selectedOption.eta || 5) : (routeData?.duration ? Math.round(routeData.duration) : undefined)}
           routeData={routeData}
           onLocateMe={handleUseCurrentLocation}
         />
@@ -997,8 +1010,8 @@ function RidesInner() {
                     name={ride.name}
                     tag={ride.tag}
                     seats={ride.seats || 4}
-                    time={getPickupTime(ride.eta || 5)}
-                    eta={`${ride.eta} min`}
+                    time={getPickupTime(getBlendedEta(ride.eta || 5))}
+                    eta={`${getBlendedEta(ride.eta || 5)} min`}
                     price={getFareDisplay(ride)}
                     onClick={() => handleSelectOption(ride)}
                     compact
@@ -1049,7 +1062,7 @@ function RidesInner() {
                 </div>
                 <div className="flex-1">
                   <span className="font-semibold text-zinc-800">{selectedOption.name}</span>
-                  <div className="text-sm text-emerald-600">{selectedOption.eta} min away</div>
+                  <div className="text-sm text-emerald-600">{getBlendedEta(selectedOption.eta || 5)} min away</div>
                 </div>
                 <span className="text-lg font-bold text-emerald-600">{getFareDisplay(selectedOption)}</span>
               </div>
