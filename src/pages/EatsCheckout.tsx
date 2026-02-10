@@ -208,6 +208,7 @@ function EatsCheckoutContent() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -605,12 +606,7 @@ function EatsCheckoutContent() {
                     <SavedAddressSelector
                       selectedAddress={watch("delivery_address") || ""}
                       onSelect={(address) => {
-                        // Use setValue to update form field
-                        const form = document.getElementById("delivery_address") as HTMLInputElement;
-                        if (form) {
-                          form.value = address;
-                          form.dispatchEvent(new Event("input", { bubbles: true }));
-                        }
+                        setValue("delivery_address", address, { shouldValidate: true });
                       }}
                     />
                     
