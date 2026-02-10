@@ -1,75 +1,76 @@
 
 
-# ETA Accuracy Improvement via Live Driver Density
+# Multi-Stop Delivery Awareness + Ride Multi-Stop Enhancement
 
 ## Overview
-Improve ETA accuracy by feeding live driver availability and proximity data into both Ride and Eats estimates. This requires no major UI changes -- the existing ETA display components will automatically show better numbers.
+Three areas of work: (A) surface batch delivery awareness on the public tracking page, (B) ensure ETA dynamically updates as batch stops complete, and (C) enhance multi-stop rides with reordering and price recalculation.
 
-## Current Gaps
+---
 
-**Eats (EatsCart / EatsCheckout):**
-- `useEatsDeliveryFactors` already computes a `supplyMultiplier` (1.0x / 1.2x / 1.5x) based on live driver count, but this multiplier is **never passed** into `useQueueAwareEta`. The `driverMinutes` parameter stays at its default (12 min) regardless of driver density.
+## Part A: Delivery Tracking -- Batch Awareness on Public Tracking Page
 
-**Rides (Rides.tsx):**
-- ETAs are entirely static, pulled from hardcoded ride option objects (e.g., `eta: 3`, `eta: 5`). The page does not use `useDriverAvailability` or any live driver proximity data to adjust pickup ETAs.
+The `EatsOrderDetail.tsx` page already has full batch integration (GroupedDeliveryBanner, MultiStopTrackingProgress, batch-aware ETA via useOrderBatchInfo). However, the public `OrderTrackingPage.tsx` (/track/:orderId) has **none of this**. Customers following a tracking link see no indication their driver is completing other stops.
 
-## Changes
+### Changes to `src/pages/track/OrderTrackingPage.tsx`
+- Import and call `useOrderBatchInfo(orderId, order?.batch_id)` -- requires fetching `batch_id` from the order query
+- Add `batch_id` to the `food_orders` select query
+- Show `GroupedDeliveryBanner` when the order is batched and there are stops before the customer
+- Show `MultiStopTrackingProgress` when the order is part of a multi-stop batch
+- Pass `batchInfo.customerStopEta` into the ETA calculation so ETA reflects stop position
 
-### 1. Eats: Pass supply multiplier into queue-aware ETA
+---
 
-**Files:** `src/pages/EatsCart.tsx`, `src/pages/EatsCheckout.tsx`
+## Part B: Dynamic ETA Updates as Stops Complete
 
-Both pages already call `useEatsDeliveryFactors()` and get `supplyMultiplier` back. The fix is to pass `supplyMultiplier` as a driver-time inflation factor into `useQueueAwareEta`.
+The `useOrderBatchInfo` hook already subscribes to real-time changes on `batch_stops` and `delivery_batches` tables, refetching batch position data when stops are completed. This means `stopsBeforeCustomer` and `customerStopEta` auto-update.
 
-- `useQueueAwareEta` already accepts multipliers for surge, incentive, schedule, and forecast -- the supply multiplier will be applied the same way to `driverMinutes`.
+The gap is in `OrderTrackingPage.tsx` -- the ETA calculation effect only uses `order.estimated_delivery_at` and `order.duration_minutes`. It ignores batch stop ETA entirely.
 
-**File:** `src/hooks/useQueueAwareEta.ts`
+### Changes to `src/pages/track/OrderTrackingPage.tsx`
+- Update the ETA calculation `useEffect` to prefer `batchInfo.customerStopEta` when the order is batched
+- When stops complete, the real-time subscription triggers `useOrderBatchInfo` to refetch, which updates `customerStopEta`, which recalculates displayed ETA -- fully dynamic with no additional work
 
-- Add a new optional `supplyMultiplier` parameter (default 1.0)
-- Apply it to `driverMinutes` alongside the existing schedule/incentive/surge multipliers.
+---
 
-### 2. Rides: Use closest-driver ETA from live data
+## Part C: Ride Multi-Stop Enhancement
 
-**File:** `src/pages/Rides.tsx`
+Currently Rides.tsx supports adding 1 intermediate stop, but:
+- The stop is not included in the route/distance calculation -- `useServerRoute` only uses pickup and dropoff
+- No drag-to-reorder UI exists
+- Price does not update when a stop is added
 
-- Import and call `useDriverAvailability` with the user's pickup coordinates.
-- When the closest driver ETA is available, use it to adjust the displayed ETA for each ride option, replacing the static `ride.eta` with a blended value that accounts for actual driver proximity.
-- Fallback to the static ETA when no live data is available.
+### Changes to `src/pages/Rides.tsx`
+- Increase max stops from 1 to 3 (configurable)
+- When stops are present, build a waypoints array and pass it to `useServerRoute` so the route, distance, and duration include all stops -- this automatically recalculates price since `quoteRidePrice` uses `estimatedDistance` and `estimatedDuration`
+- Add simple reorder controls (move up / move down buttons) on each stop row
+- Show updated distance/duration/price after adding or reordering stops
 
-### 3. Eats: Use closest-driver distance for driverMinutes
+### Changes to `src/hooks/useServerRoute.ts` (if needed)
+- Accept optional `waypoints` parameter (array of lat/lng)
+- Include waypoints in the Google Directions API request so the returned distance and duration reflect the full multi-stop route
 
-**File:** `src/pages/EatsCart.tsx`, `src/pages/EatsCheckout.tsx`
-
-- Import `useDriverAvailability` with the delivery address coordinates (or restaurant coordinates as proxy).
-- When `closestETAMinutes` is available, pass it as `driverMinutes` to `useQueueAwareEta` instead of the default 12 minutes.
-- This makes the "driver leg" of the ETA reflect actual driver proximity rather than a fixed assumption.
+---
 
 ## Technical Details
 
 ### Modified Files
 
-1. **`src/hooks/useQueueAwareEta.ts`**
-   - Add `supplyMultiplier?: number` to options (default 1.0)
-   - Apply to `adjustedDriverMinutes` calculation: multiply by `supplyMultiplier`
+1. **`src/pages/track/OrderTrackingPage.tsx`**
+   - Add `batch_id` to food_orders select query
+   - Import and use `useOrderBatchInfo`
+   - Import and render `GroupedDeliveryBanner` and `MultiStopTrackingProgress`
+   - Update ETA effect to use `batchInfo.customerStopEta` when available
 
-2. **`src/pages/EatsCart.tsx`**
-   - Import `useDriverAvailability`
-   - Call with restaurant coordinates (from cart items)
-   - Pass `closestETAMinutes` as `driverMinutes` and `supplyMultiplier` from `deliveryFactors` to `useQueueAwareEta`
+2. **`src/pages/Rides.tsx`**
+   - Increase max stops to 3
+   - Pass stops as waypoints to route calculation
+   - Add move-up/move-down reorder buttons for stops
+   - Price auto-updates via existing `quoteRidePrice` since it depends on `estimatedDistance`/`estimatedDuration`
 
-3. **`src/pages/EatsCheckout.tsx`**
-   - Same as EatsCart: import `useDriverAvailability`, pass real driver time and supply multiplier into the ETA hook
-
-4. **`src/pages/Rides.tsx`**
-   - Import `useDriverAvailability`
-   - Call with `pickupCoords`
-   - Blend `closestETAMinutes` with static ride option ETAs for display (e.g., use the larger of closest-driver ETA and ride-type minimum)
+3. **`src/hooks/useServerRoute.ts`**
+   - Add optional `waypoints: {lat: number, lng: number}[]` parameter
+   - Include waypoints in the directions request
 
 ### No New Files or Database Changes
-All data sources already exist. This is purely about wiring existing hooks together.
-
-### Impact
-- Eats ETAs will reflect real driver proximity (could show 5 min instead of default 12 when a driver is nearby, or 20+ min when supply is low)
-- Ride pickup ETAs will reflect actual nearest driver distance rather than static guesses
-- Supply shortages will properly inflate ETAs via the supply multiplier that was already computed but unused
+All components (`GroupedDeliveryBanner`, `MultiStopTrackingProgress`, `useOrderBatchInfo`) already exist and are production-ready. The ride multi-stop enhancement uses existing pricing and routing infrastructure.
 
