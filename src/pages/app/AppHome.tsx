@@ -273,10 +273,41 @@ const AppHome = () => {
         <div className="grid grid-cols-2 gap-2">
           <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
           <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
-          <ServiceCard title="Delivery" subtitle="Package Delivery" img={assets.move} icon={Package} onNavigate={() => handleNavigate("MOVE")} imgPosition="center 40%" />
-          <ServiceCard title="Flights" subtitle="Global Travel" img={assets.flights} icon={Plane} onNavigate={() => handleNavigate("FLIGHTS")} imgPosition="center 60%" />
+          <div className="relative">
+            <ServiceCard title="Delivery" subtitle="Package Delivery" img={assets.move} icon={Package} onNavigate={() => handleNavigate("MOVE")} imgPosition="center 40%" />
+            <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full tracking-wide z-10">New</span>
+          </div>
+          <div className="relative">
+            <ServiceCard title="Flights" subtitle="Global Travel" img={assets.flights} icon={Plane} onNavigate={() => handleNavigate("FLIGHTS")} imgPosition="center 60%" />
+            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full tracking-wide z-10">Popular</span>
+          </div>
           <ServiceCard title="Hotels" subtitle="Luxury Stays" img={assets.hotels} icon={BedDouble} onNavigate={() => handleNavigate("HOTELS")} imgPosition="center 60%" />
           <ServiceCard title="Rentals" subtitle="Rent & Drive" img={assets.rentals} icon={Car} onNavigate={() => handleNavigate("RENTALS")} imgPosition="center 50%" />
+        </div>
+      </div>
+
+      {/* Trending Now Section */}
+      <div className="px-4 pb-4">
+        <h2 className="text-sm font-bold text-zinc-300 mb-2">
+          <span className="mr-1">🔥</span>Trending Now
+        </h2>
+        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+          {[
+            { label: "NYC → LAX", tag: "$89", color: "from-blue-600/80 to-blue-400/80" },
+            { label: "Miami Hotels", tag: "20% off", color: "from-orange-600/80 to-amber-400/80" },
+            { label: "Vegas Rentals", tag: "From $29/d", color: "from-purple-600/80 to-pink-400/80" },
+            { label: "Chicago → SFO", tag: "$112", color: "from-emerald-600/80 to-teal-400/80" },
+          ].map((item) => (
+            <motion.button
+              key={item.label}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsSearchOpen(true)}
+              className={`shrink-0 bg-gradient-to-br ${item.color} rounded-2xl px-4 py-3 min-w-[130px] text-left border border-white/10 touch-manipulation`}
+            >
+              <div className="text-xs font-bold text-white">{item.label}</div>
+              <div className="text-[10px] text-white/70 font-semibold mt-0.5">{item.tag}</div>
+            </motion.button>
+          ))}
         </div>
       </div>
 
@@ -346,6 +377,32 @@ const AppHome = () => {
             subtitle={upcomingCount ? `${upcomingCount} active` : "View all"}
             onNavigate={() => navigate("/trips")}
           />
+        </div>
+      )}
+
+      {/* Promo Banner for signed-out users */}
+      {!user && (
+        <div className="px-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-600/20 to-cyan-500/20 border border-blue-500/30 rounded-2xl p-4 flex items-center gap-3"
+          >
+            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold">Sign up & save $10</div>
+              <div className="text-[10px] text-zinc-400">On your first booking with ZIVO</div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate("/login?mode=signup")}
+              className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl touch-manipulation"
+            >
+              Join Free
+            </motion.button>
+          </motion.div>
         </div>
       )}
 
