@@ -47,21 +47,65 @@ interface UseOrderTrackingReturn {
   refetchDriver: () => void;
 }
 
-export function useOrderTracking(orderId: string | undefined): UseOrderTrackingReturn {
+interface UseOrderTrackingOptions {
+  /** When true, uses the public RPC function (no auth required, no PII returned) */
+  public?: boolean;
+}
+
+export function useOrderTracking(orderId: string | undefined, options?: UseOrderTrackingOptions): UseOrderTrackingReturn {
+  const isPublic = options?.public ?? false;
   const queryClient = useQueryClient();
   const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
   const [driverError, setDriverError] = useState<string | null>(null);
 
-  // Fetch order details
+  // Fetch order details — public mode uses RPC, authenticated mode queries directly
   const {
     data: order,
     isLoading,
     error: orderError,
   } = useQuery({
-    queryKey: ["order-tracking", orderId],
+    queryKey: ["order-tracking", orderId, isPublic],
     queryFn: async () => {
       if (!orderId) throw new Error("No order ID");
 
+      if (isPublic) {
+        // Public RPC — returns only tracking-safe fields, no PII
+        const { data, error } = await supabase.rpc("get_order_tracking", {
+          p_order_id: orderId,
+        });
+
+        if (error) throw error;
+        if (!data || data.length === 0) throw new Error("Order not found");
+
+        const row = data[0];
+        const createdAt = new Date(row.created_at);
+        const estimatedDeliveryAt = row.duration_minutes
+          ? new Date(createdAt.getTime() + (row.duration_minutes || 30) * 60000).toISOString()
+          : null;
+
+        return {
+          id: row.id,
+          status: row.status || "pending",
+          restaurant_name: row.restaurant_name || "Restaurant",
+          restaurant_address: row.restaurant_address || "",
+          pickup_lat: row.pickup_lat,
+          pickup_lng: row.pickup_lng,
+          delivery_address: row.delivery_address || "",
+          delivery_lat: row.delivery_lat,
+          delivery_lng: row.delivery_lng,
+          distance_miles: row.distance_miles || 0,
+          duration_minutes: row.duration_minutes || 0,
+          driver_id: row.driver_id,
+          batch_id: row.batch_id,
+          created_at: row.created_at,
+          assigned_at: row.assigned_at,
+          picked_up_at: row.picked_up_at,
+          delivered_at: row.delivered_at,
+          estimated_delivery_at: estimatedDeliveryAt,
+        } as OrderDetails;
+      }
+
+      // Authenticated path — direct table query
       const { data, error } = await supabase
         .from("food_orders")
         .select(`
@@ -90,7 +134,6 @@ export function useOrderTracking(orderId: string | undefined): UseOrderTrackingR
       if (error) throw error;
       if (!data) throw new Error("Order not found");
 
-      // Calculate estimated delivery from created_at + duration
       const createdAt = new Date(data.created_at);
       const estimatedDeliveryAt = data.duration_minutes 
         ? new Date(createdAt.getTime() + (data.duration_minutes || 30) * 60000).toISOString()
@@ -117,7 +160,7 @@ export function useOrderTracking(orderId: string | undefined): UseOrderTrackingR
       } as OrderDetails;
     },
     enabled: !!orderId,
-    refetchInterval: 30000, // Refetch every 30s
+    refetchInterval: 30000,
   });
 
   // Fetch driver location via secure RPC

@@ -36236,6 +36236,28 @@ export type Database = {
           last_updated: string
         }[]
       }
+      get_order_tracking: {
+        Args: { p_order_id: string }
+        Returns: {
+          assigned_at: string
+          batch_id: string
+          created_at: string
+          delivered_at: string
+          delivery_address: string
+          delivery_lat: number
+          delivery_lng: number
+          distance_miles: number
+          driver_id: string
+          duration_minutes: number
+          id: string
+          picked_up_at: string
+          pickup_lat: number
+          pickup_lng: number
+          restaurant_address: string
+          restaurant_name: string
+          status: string
+        }[]
+      }
       get_order_tracking_public: {
         Args: { p_tracking_code: string }
         Returns: {
