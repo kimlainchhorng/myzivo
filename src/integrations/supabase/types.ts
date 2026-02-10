@@ -3372,6 +3372,35 @@ export type Database = {
         }
         Relationships: []
       }
+      bundle_orders: {
+        Row: {
+          bundle_id: string | null
+          id: string
+          order_id: string | null
+          stop_sequence: number | null
+        }
+        Insert: {
+          bundle_id?: string | null
+          id?: string
+          order_id?: string | null
+          stop_sequence?: number | null
+        }
+        Update: {
+          bundle_id?: string | null
+          id?: string
+          order_id?: string | null
+          stop_sequence?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_orders_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "trip_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bundling_settings: {
         Row: {
           bundling_enabled: boolean
@@ -21112,6 +21141,33 @@ export type Database = {
           },
         ]
       }
+      positioning_suggestions: {
+        Row: {
+          created_at: string | null
+          id: string
+          predicted_demand: number | null
+          predicted_drivers_needed: number | null
+          suggestion_time: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          predicted_demand?: number | null
+          predicted_drivers_needed?: number | null
+          suggestion_time?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          predicted_demand?: number | null
+          predicted_drivers_needed?: number | null
+          suggestion_time?: string | null
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
       price_calculations: {
         Row: {
           calculation_inputs: Json | null
@@ -23501,6 +23557,47 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repositioning_alerts: {
+        Row: {
+          created_at: string
+          forecast_window_min: number
+          gap: number
+          id: string
+          message: string
+          status: string
+          zone_id: string | null
+          zone_name: string
+        }
+        Insert: {
+          created_at?: string
+          forecast_window_min?: number
+          gap?: number
+          id?: string
+          message: string
+          status?: string
+          zone_id?: string | null
+          zone_name: string
+        }
+        Update: {
+          created_at?: string
+          forecast_window_min?: number
+          gap?: number
+          id?: string
+          message?: string
+          status?: string
+          zone_id?: string | null
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repositioning_alerts_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -30181,6 +30278,24 @@ export type Database = {
           phone?: string | null
           session_id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      trip_bundles: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
         }
         Relationships: []
       }

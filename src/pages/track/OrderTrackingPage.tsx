@@ -27,8 +27,11 @@ import {
 import { SafetyCenterSheet } from "@/components/rider/SafetyCenterSheet";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { useOrderDelayDetection } from "@/hooks/useOrderDelayDetection";
+import { useOrderBatchInfo } from "@/hooks/useOrderBatchInfo";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import { OrderDelayBanner } from "@/components/eats/OrderDelayBanner";
+import { GroupedDeliveryBanner } from "@/components/eats/GroupedDeliveryBanner";
+import { MultiStopTrackingProgress, TrackingStop } from "@/components/eats/MultiStopTrackingProgress";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +67,9 @@ export function OrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { order, driverLocation, isLoading, error } = useOrderTracking(orderId);
   const { isLoaded: mapsLoaded } = useGoogleMaps();
+
+  // Batch awareness for multi-stop deliveries
+  const { batchInfo } = useOrderBatchInfo(orderId, (order as any)?.batch_id);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -202,7 +208,7 @@ export function OrderTrackingPage() {
     }
   }, [order, driverLocation]);
 
-  // Calculate ETA
+  // Calculate ETA — prefer batch stop ETA when order is batched
   useEffect(() => {
     if (!order) return;
 
@@ -210,6 +216,10 @@ export function OrderTrackingPage() {
       setEta("Delivered");
     } else if (order.status === "cancelled") {
       setEta("Cancelled");
+    } else if (batchInfo.isBatched && batchInfo.customerStopEta) {
+      // Use dynamic batch-aware ETA
+      const estDate = new Date(batchInfo.customerStopEta);
+      setEta(formatDistanceToNow(estDate, { addSuffix: true }));
     } else if (order.estimated_delivery_at) {
       const estDate = new Date(order.estimated_delivery_at);
       setEta(formatDistanceToNow(estDate, { addSuffix: true }));
@@ -218,7 +228,7 @@ export function OrderTrackingPage() {
     } else {
       setEta(null);
     }
-  }, [order]);
+  }, [order, batchInfo.isBatched, batchInfo.customerStopEta]);
 
   if (isLoading) {
     return (
@@ -290,6 +300,31 @@ export function OrderTrackingPage() {
             delayMinutes={delayDetection.delayMinutes}
             newEtaMin={delayDetection.newEstimatedEtaMin}
             newEtaMax={delayDetection.newEstimatedEtaMax}
+          />
+        )}
+
+        {/* Grouped Delivery Banner — shows when driver has earlier stops */}
+        {batchInfo.isBatched && batchInfo.stopsBeforeCustomer > 0 && isActiveOrder && orderId && (
+          <GroupedDeliveryBanner
+            stopsBeforeCustomer={batchInfo.stopsBeforeCustomer}
+            isDriverOnEarlierStop={batchInfo.isDriverOnEarlierStop}
+            orderId={orderId}
+          />
+        )}
+
+        {/* Multi-Stop Route Progress */}
+        {batchInfo.isBatched && batchInfo.totalStops > 1 && isActiveOrder && (
+          <MultiStopTrackingProgress
+            stops={Array.from({ length: batchInfo.totalStops }, (_, i) => ({
+              stopOrder: i + 1,
+              address: `Stop ${i + 1}`,
+              status: (batchInfo.currentStopOrder != null && i + 1 < batchInfo.currentStopOrder)
+                ? "delivered" as const
+                : (batchInfo.currentStopOrder != null && i + 1 === batchInfo.currentStopOrder)
+                  ? "current" as const
+                  : "pending" as const,
+            }))}
+            currentStopIndex={(batchInfo.currentStopOrder ?? 1) - 1}
           />
         )}
 
