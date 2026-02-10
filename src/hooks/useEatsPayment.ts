@@ -19,6 +19,7 @@ interface CreatePaymentIntentParams {
   serviceFee: number;
   tax: number;
   discountAmount: number;
+  tipAmount?: number;
   total: number;
   deliveryAddress: string;
   promoCode?: string;
