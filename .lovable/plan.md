@@ -1,76 +1,68 @@
 
 
-# Multi-Stop Delivery Awareness + Ride Multi-Stop Enhancement
+# Fix: Shared Link Errors and Share Event Logging
 
-## Overview
-Three areas of work: (A) surface batch delivery awareness on the public tracking page, (B) ensure ETA dynamically updates as batch stops complete, and (C) enhance multi-stop rides with reordering and price recalculation.
+## Problems Found
 
----
+### 1. Shared tracking links show "Order not found"
+When you share a `/track/{orderId}` link (via Safety Center, WhatsApp, SMS, etc.), the recipient opens it and sees an error: **"Order not found"**. This happens because the `food_orders` table requires the viewer to be the order's customer, driver, or restaurant owner. A friend or family member opening the link has none of these roles, so the database blocks the query.
 
-## Part A: Delivery Tracking -- Batch Awareness on Public Tracking Page
-
-The `EatsOrderDetail.tsx` page already has full batch integration (GroupedDeliveryBanner, MultiStopTrackingProgress, batch-aware ETA via useOrderBatchInfo). However, the public `OrderTrackingPage.tsx` (/track/:orderId) has **none of this**. Customers following a tracking link see no indication their driver is completing other stops.
-
-### Changes to `src/pages/track/OrderTrackingPage.tsx`
-- Import and call `useOrderBatchInfo(orderId, order?.batch_id)` -- requires fetching `batch_id` from the order query
-- Add `batch_id` to the `food_orders` select query
-- Show `GroupedDeliveryBanner` when the order is batched and there are stops before the customer
-- Show `MultiStopTrackingProgress` when the order is part of a multi-stop batch
-- Pass `batchInfo.customerStopEta` into the ETA calculation so ETA reflects stop position
+### 2. Share events silently fail to log
+The `share_events` table has Row Level Security (RLS) enabled but **no policies at all**. Every share event insert is silently rejected. This means no share analytics are being recorded -- clicks, shares, and conversions are all lost.
 
 ---
 
-## Part B: Dynamic ETA Updates as Stops Complete
+## Fixes
 
-The `useOrderBatchInfo` hook already subscribes to real-time changes on `batch_stops` and `delivery_batches` tables, refetching batch position data when stops are completed. This means `stopsBeforeCustomer` and `customerStopEta` auto-update.
+### Fix 1: Allow public read access to orders via tracking link
+Add a SELECT policy on `food_orders` that allows anyone (even unauthenticated users) to read **a single order by its ID** when accessed via the tracking page. The order ID acts as a secret token -- only people with the link can view it.
 
-The gap is in `OrderTrackingPage.tsx` -- the ETA calculation effect only uses `order.estimated_delivery_at` and `order.duration_minutes`. It ignores batch stop ETA entirely.
+**SQL to run:**
+```sql
+CREATE POLICY "Public tracking access by order ID"
+  ON food_orders FOR SELECT
+  USING (true);
+```
 
-### Changes to `src/pages/track/OrderTrackingPage.tsx`
-- Update the ETA calculation `useEffect` to prefer `batchInfo.customerStopEta` when the order is batched
-- When stops complete, the real-time subscription triggers `useOrderBatchInfo` to refetch, which updates `customerStopEta`, which recalculates displayed ETA -- fully dynamic with no additional work
+This is too broad. Instead, we will create a **secure database function** that returns only the fields needed for tracking (no customer PII), and call it from the tracking page instead of querying the table directly.
 
----
+**Approach:**
+- Create an RPC function `get_order_tracking(p_order_id uuid)` that returns only tracking-safe fields (status, lat/lng, driver info, timestamps, restaurant name) -- no customer name, phone, or payment data
+- Update `useOrderTracking.ts` to call this RPC when used from the public tracking page
+- No new RLS policy needed on `food_orders` -- the function runs with `SECURITY DEFINER` (elevated privileges)
 
-## Part C: Ride Multi-Stop Enhancement
+### Fix 2: Add RLS policies for `share_events`
+Add INSERT and SELECT policies so share events can actually be written and read.
 
-Currently Rides.tsx supports adding 1 intermediate stop, but:
-- The stop is not included in the route/distance calculation -- `useServerRoute` only uses pickup and dropoff
-- No drag-to-reorder UI exists
-- Price does not update when a stop is added
-
-### Changes to `src/pages/Rides.tsx`
-- Increase max stops from 1 to 3 (configurable)
-- When stops are present, build a waypoints array and pass it to `useServerRoute` so the route, distance, and duration include all stops -- this automatically recalculates price since `quoteRidePrice` uses `estimatedDistance` and `estimatedDuration`
-- Add simple reorder controls (move up / move down buttons) on each stop row
-- Show updated distance/duration/price after adding or reordering stops
-
-### Changes to `src/hooks/useServerRoute.ts` (if needed)
-- Accept optional `waypoints` parameter (array of lat/lng)
-- Include waypoints in the Google Directions API request so the returned distance and duration reflect the full multi-stop route
+**SQL to run:**
+- INSERT policy: allow anyone (authenticated or anonymous) to insert share events -- sharing should work for all users
+- SELECT policy: authenticated users can read their own share events
 
 ---
 
 ## Technical Details
 
+### New Database Objects
+
+1. **RPC function: `get_order_tracking`**
+   - Input: `p_order_id uuid`
+   - Returns: order status, pickup/delivery coordinates, distance, duration, timestamps, restaurant name/address, driver_id -- no PII
+   - Security: `SECURITY DEFINER` so it bypasses RLS
+   - This allows anyone with an order ID to view tracking data without exposing sensitive customer information
+
+2. **RLS policies on `share_events`**
+   - INSERT: `WITH CHECK (true)` -- anyone can log share events
+   - SELECT: `USING (user_id = auth.uid())` -- users can only read their own events
+
 ### Modified Files
 
-1. **`src/pages/track/OrderTrackingPage.tsx`**
-   - Add `batch_id` to food_orders select query
-   - Import and use `useOrderBatchInfo`
-   - Import and render `GroupedDeliveryBanner` and `MultiStopTrackingProgress`
-   - Update ETA effect to use `batchInfo.customerStopEta` when available
+1. **`src/hooks/useOrderTracking.ts`**
+   - Add a `public` mode option that calls the `get_order_tracking` RPC instead of directly querying `food_orders`
+   - The RPC returns the same shape of data, so no downstream changes needed
 
-2. **`src/pages/Rides.tsx`**
-   - Increase max stops to 3
-   - Pass stops as waypoints to route calculation
-   - Add move-up/move-down reorder buttons for stops
-   - Price auto-updates via existing `quoteRidePrice` since it depends on `estimatedDistance`/`estimatedDuration`
+2. **`src/pages/track/OrderTrackingPage.tsx`**
+   - Pass `{ public: true }` to `useOrderTracking` so it uses the RPC path
 
-3. **`src/hooks/useServerRoute.ts`**
-   - Add optional `waypoints: {lat: number, lng: number}[]` parameter
-   - Include waypoints in the directions request
-
-### No New Files or Database Changes
-All components (`GroupedDeliveryBanner`, `MultiStopTrackingProgress`, `useOrderBatchInfo`) already exist and are production-ready. The ride multi-stop enhancement uses existing pricing and routing infrastructure.
+### No UI Changes
+The tracking page already handles loading and error states correctly. Once the data access is fixed, the existing UI will render properly for shared link recipients.
 
