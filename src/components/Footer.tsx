@@ -51,6 +51,7 @@ const footerLinks = {
     { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Seller of Travel", href: "/legal/seller-of-travel" },
     { name: "Accessibility", href: "/accessibility" },
+    { name: "Do Not Sell My Info", href: "/do-not-sell" },
   ],
 };
 
