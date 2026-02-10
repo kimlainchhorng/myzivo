@@ -167,7 +167,7 @@ const Setup = lazy(() => import("./pages/Setup"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const FoodOrdering = lazy(() => import("./pages/FoodOrdering"));
+const FoodOrdering = lazy(() => import("./pages/NotFound")); // Removed: was duplicate of Eats
 const FlightBooking = lazy(() => import("./pages/FlightBooking"));
 const FlightLanding = lazy(() => import("./pages/FlightLanding"));
 const FlightResults = lazy(() => import("./pages/FlightResults"));
@@ -196,7 +196,7 @@ const CarSearch = lazy(() => import("./pages/CarSearch"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
 const GroundTransport = lazy(() => import("./pages/GroundTransport"));
-const Events = lazy(() => import("./pages/Events"));
+const Events = lazy(() => import("./pages/NotFound")); // Removed: no events system
 const ThingsToDo = lazy(() => import("./pages/ThingsToDo"));
 const TravelInsurance = lazy(() => import("./pages/TravelInsurance"));
 const TravelExtras = lazy(() => import("./pages/TravelExtras"));
@@ -384,12 +384,12 @@ const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomatio
 // Corporate & Brand pages
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
-const InvestorRelations = lazy(() => import("./pages/InvestorRelations"));
-const StrategicPartnerships = lazy(() => import("./pages/StrategicPartnerships"));
-const FinancialTransparency = lazy(() => import("./pages/FinancialTransparency"));
+const InvestorRelations = lazy(() => import("./pages/NotFound")); // Removed: placeholder
+const StrategicPartnerships = lazy(() => import("./pages/NotFound")); // Removed: internal
+const FinancialTransparency = lazy(() => import("./pages/NotFound")); // Removed: internal
 const Careers = lazy(() => import("./pages/Careers"));
-const EcosystemMap = lazy(() => import("./pages/EcosystemMap"));
-const StrategicRoadmap = lazy(() => import("./pages/StrategicRoadmap"));
+const EcosystemMap = lazy(() => import("./pages/NotFound")); // Removed: internal diagram
+const StrategicRoadmap = lazy(() => import("./pages/NotFound")); // Removed: internal
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
 
 // Support pages
@@ -488,7 +488,7 @@ const LaunchDayRunbook = lazy(() => import("./pages/admin/LaunchDayRunbook"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
-const TrackingTest = lazy(() => import("./pages/TrackingTest"));
+const TrackingTest = lazy(() => import("./pages/NotFound")); // Removed: dev test page
 const Offline = lazy(() => import("./pages/Offline"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -525,7 +525,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
 // Operations & Launch pages
 const BookingManagement = lazy(() => import("./pages/BookingManagement"));
-const HowZivoMakesMoney = lazy(() => import("./pages/HowZivoMakesMoney"));
+const HowZivoMakesMoney = lazy(() => import("./pages/NotFound")); // Removed: internal
 const Press = lazy(() => import("./pages/Press"));
 
 // Internal investor/acquisition pages
@@ -548,7 +548,7 @@ const TransfersAdLanding = lazy(() => import("./pages/ads/TransfersAdLanding"));
 const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding"));
 
 // Creator pages - lazy load
-const Creators = lazy(() => import("./pages/Creators"));
+const Creators = lazy(() => import("./pages/NotFound")); // Removed: no creator program
 const CreatorDashboard = lazy(() => import("./pages/creators/CreatorDashboard"));
 const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
 const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
