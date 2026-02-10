@@ -26,6 +26,7 @@ interface CreatePaymentIntentRequest {
   serviceFee: number;
   tax: number;
   discountAmount: number;
+  tipAmount?: number;
   total: number;
   deliveryAddress: string;
   promoCode?: string;
@@ -106,6 +107,7 @@ serve(async (req) => {
       special_instructions: body.specialInstructions || null,
       promo_code: body.promoCode || null,
       discount_amount: body.discountAmount || 0,
+      tip_amount: body.tipAmount || 0,
       status: "pending",
       payment_status: "pending",
       payment_type: "card",

@@ -60,6 +60,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useEatsPayment } from "@/hooks/useEatsPayment";
 import { StripePaymentSheet } from "@/components/eats/StripePaymentSheet";
+import { TipSelector } from "@/components/eats/TipSelector";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -130,6 +131,7 @@ function EatsCheckoutContent() {
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
   const [selectedReward, setSelectedReward] = useState<any>(null);
   const [paymentType, setPaymentType] = useState<PaymentType>("card");
+  const [tipAmount, setTipAmount] = useState(0);
 
   // Stripe payment state
   const { createPaymentIntent, confirmPaymentSuccess, isCreating: isCreatingPayment, error: paymentError, clearError: clearPaymentError } = useEatsPayment();
@@ -165,7 +167,7 @@ function EatsCheckoutContent() {
     ? Math.min(balanceCents, Math.round(totalAfterReward * 100), 2500) // MAX_CREDIT_PER_ORDER
     : 0;
   const walletDeductionDollars = walletDeductionCents / 100;
-  const total = Math.max(0, totalAfterReward - walletDeductionDollars);
+  const total = Math.max(0, totalAfterReward - walletDeductionDollars + tipAmount);
 
   // Win-back offer auto-apply
   const winBackOffer = useWinBackOffer();
@@ -328,6 +330,7 @@ function EatsCheckoutContent() {
         serviceFee,
         tax: 0,
         discountAmount: discountAmount + rewardDiscount + walletDeductionDollars,
+        tipAmount,
         total,
         deliveryAddress: data.delivery_address,
         promoCode: promoValidation.appliedPromo?.code,
@@ -943,6 +946,13 @@ function EatsCheckoutContent() {
                     <hr />
                     <DeliveryFeeBreakdownCard pricing={pricing} />
 
+                    {/* Tip Selector */}
+                    <TipSelector
+                      subtotal={subtotal}
+                      tipAmount={tipAmount}
+                      onTipChange={setTipAmount}
+                    />
+
                     {/* Discount line item */}
                     {promoValidation.appliedPromo?.valid && discountAmount > 0 && (
                       <div className="flex justify-between text-sm">
@@ -964,6 +974,14 @@ function EatsCheckoutContent() {
                         <span className="font-medium text-primary">
                           -${rewardDiscount.toFixed(2)}
                         </span>
+                      </div>
+                    )}
+
+                    {/* Tip line item */}
+                    {tipAmount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Driver Tip</span>
+                        <span className="font-medium">${tipAmount.toFixed(2)}</span>
                       </div>
                     )}
 
