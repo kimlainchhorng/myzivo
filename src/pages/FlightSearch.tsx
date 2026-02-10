@@ -21,6 +21,7 @@ import {
   FlightFeaturesGrid,
   FlightComplianceFooter
 } from "@/components/flight";
+import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -71,6 +72,9 @@ const FlightSearch = () => {
 
         {/* Popular Destinations with Real Images */}
         <DestinationCardsGrid service="flights" />
+
+        {/* Airline Partners Grid */}
+        <FlightAirlinePartners />
 
         {/* Airline Logos Section - Trust building */}
         <section className="border-y border-border/30 bg-gradient-to-b from-muted/10 to-muted/5">

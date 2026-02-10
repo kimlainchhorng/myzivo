@@ -58,6 +58,8 @@ import { RewardSelector } from "@/components/checkout/RewardSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
+import { useEatsPayment } from "@/hooks/useEatsPayment";
+import { StripePaymentSheet } from "@/components/eats/StripePaymentSheet";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -128,6 +130,12 @@ function EatsCheckoutContent() {
   const [billingType, setBillingType] = useState<"personal" | "company">("personal");
   const [selectedReward, setSelectedReward] = useState<any>(null);
   const [paymentType, setPaymentType] = useState<PaymentType>("card");
+
+  // Stripe payment state
+  const { createPaymentIntent, confirmPaymentSuccess, isCreating: isCreatingPayment, error: paymentError, clearError: clearPaymentError } = useEatsPayment();
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [showStripeSheet, setShowStripeSheet] = useState(false);
 
   // Wallet
   const { wallet, balanceCents, applyCredit } = useCustomerWallet();
@@ -303,6 +311,53 @@ function EatsCheckoutContent() {
       return;
     }
 
+    // Card payment: create Stripe PaymentIntent first
+    if (paymentType === "card" || paymentType === "wallet_card") {
+      const serviceFee = 0; // included in delivery fee
+      const result = await createPaymentIntent({
+        restaurantId,
+        items: items.map(item => ({
+          menu_item_id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          notes: item.notes,
+        })),
+        subtotal,
+        deliveryFee,
+        serviceFee,
+        tax: 0,
+        discountAmount: discountAmount + rewardDiscount + walletDeductionDollars,
+        total,
+        deliveryAddress: data.delivery_address,
+        promoCode: promoValidation.appliedPromo?.code,
+        specialInstructions: data.delivery_instructions,
+      });
+
+      if (!result) {
+        toast.error(paymentError || "Failed to set up payment");
+        return;
+      }
+
+      // Apply wallet credit if applicable
+      if (paymentType === "wallet_card" && walletDeductionCents > 0) {
+        try {
+          await applyCredit.mutateAsync({
+            amount_cents: walletDeductionCents,
+            order_id: result.orderId,
+          });
+        } catch (e) {
+          console.error("Wallet credit error:", e);
+        }
+      }
+
+      setPendingOrderId(result.orderId);
+      setStripeClientSecret(result.clientSecret);
+      setShowStripeSheet(true);
+      return;
+    }
+
+    // Cash / wallet-only: create order directly
     try {
       const order = await createOrder.mutateAsync({
         customer_name: data.customer_name,
@@ -329,7 +384,7 @@ function EatsCheckoutContent() {
       });
 
       // Apply wallet credit if using wallet payment
-      if ((paymentType === "wallet" || paymentType === "wallet_card") && walletDeductionCents > 0 && order?.id) {
+      if (paymentType === "wallet" && walletDeductionCents > 0 && order?.id) {
         try {
           await applyCredit.mutateAsync({
             amount_cents: walletDeductionCents,
@@ -381,6 +436,42 @@ function EatsCheckoutContent() {
       }
     } catch (error) {
       // Error handled in hook
+    }
+  };
+
+  // Handle successful Stripe payment
+  const handleStripeSuccess = async (paymentIntentId: string) => {
+    if (!pendingOrderId) return;
+    
+    const success = await confirmPaymentSuccess(pendingOrderId);
+    if (success) {
+      // Redeem reward if selected
+      if (selectedReward) {
+        try {
+          await supabase.from("rewards").update({ status: "redeemed" }).eq("id", selectedReward.id);
+          await supabase.from("reward_redemptions").insert({
+            user_id: user!.id,
+            reward_id: selectedReward.id,
+            points_spent: 0,
+            status: "redeemed",
+            applied_to_order_id: pendingOrderId,
+          });
+        } catch (e) {
+          console.error("Reward redemption error:", e);
+        }
+      }
+
+      // Track share conversion
+      const utm = getPersistedUTMParams();
+      if (utm.utm_source === "share") {
+        logConversion(pendingOrderId);
+      }
+
+      clearCart();
+      toast.success("Payment successful! Order placed.");
+      navigate(`/eats/orders/${pendingOrderId}`);
+    } else {
+      toast.error("Payment confirmed but order update failed. Contact support.");
     }
   };
 
@@ -893,22 +984,36 @@ function EatsCheckoutContent() {
                       <CompanyBillingBadge companyName={businessMembership.company.name} />
                     )}
 
-                    {/* Note */}
-                    <div className="bg-amber-500/10 text-amber-700 dark:text-amber-400 p-3 rounded-xl text-xs">
-                      <strong>Note:</strong> Payment will be collected upon delivery or via follow-up contact. 
-                      This is an order request — we'll confirm availability.
-                    </div>
+                    {/* Note - only show for non-card payments */}
+                    {paymentType !== "card" && paymentType !== "wallet_card" && (
+                      <div className="bg-amber-500/10 text-amber-700 dark:text-amber-400 p-3 rounded-xl text-xs">
+                        <strong>Note:</strong> Payment will be collected upon delivery or via follow-up contact. 
+                        This is an order request — we'll confirm availability.
+                      </div>
+                    )}
+
+                    {/* Payment error */}
+                    {paymentError && (
+                      <div className="bg-destructive/10 text-destructive p-3 rounded-xl text-xs">
+                        <strong>Payment Error:</strong> {paymentError}
+                      </div>
+                    )}
 
                     {/* Submit */}
                     <Button
                       type="submit"
-                      disabled={isSubmitting || (riskAssessment.requiresPhoneVerification && !phoneVerified) || hasUnavailableItems || isValidating}
+                      disabled={isSubmitting || isCreatingPayment || (riskAssessment.requiresPhoneVerification && !phoneVerified) || hasUnavailableItems || isValidating}
                       className="w-full h-12 rounded-xl font-bold bg-gradient-to-r from-eats to-orange-500"
                     >
                       {isValidating ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Validating...
+                        </>
+                      ) : isCreatingPayment ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Setting up payment...
                         </>
                       ) : isSubmitting ? (
                         <>
@@ -919,6 +1024,8 @@ function EatsCheckoutContent() {
                         "Remove Unavailable Items"
                       ) : riskAssessment.requiresPhoneVerification && !phoneVerified ? (
                         "Verify Phone to Continue"
+                      ) : paymentType === "card" || paymentType === "wallet_card" ? (
+                        `Pay $${total.toFixed(2)}`
                       ) : (
                         "Place Order Request"
                       )}
@@ -938,6 +1045,23 @@ function EatsCheckoutContent() {
         phoneNumber={customerPhone || ""}
         onVerified={handlePhoneVerified}
       />
+
+      {/* Stripe Payment Sheet */}
+      {stripeClientSecret && (
+        <StripePaymentSheet
+          open={showStripeSheet}
+          onOpenChange={(open) => {
+            setShowStripeSheet(open);
+            if (!open) {
+              clearPaymentError();
+            }
+          }}
+          clientSecret={stripeClientSecret}
+          total={total}
+          onSuccess={handleStripeSuccess}
+          onError={(error) => toast.error(error)}
+        />
+      )}
 
       <Footer />
     </div>
