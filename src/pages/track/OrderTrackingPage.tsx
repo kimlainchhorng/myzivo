@@ -22,7 +22,9 @@ import {
   Circle,
   Truck,
   AlertTriangle,
+  Shield,
 } from "lucide-react";
+import { SafetyCenterSheet } from "@/components/rider/SafetyCenterSheet";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { useOrderDelayDetection } from "@/hooks/useOrderDelayDetection";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
@@ -256,6 +258,17 @@ export function OrderTrackingPage() {
               #{order.id.slice(0, 8).toUpperCase()}
             </p>
           </div>
+          {isActiveOrder && orderId && (
+            <SafetyCenterSheet
+              tripId={orderId}
+              tripType="delivery"
+              trigger={
+                <Button variant="ghost" size="icon" className="text-emerald-500 hover:bg-emerald-500/10">
+                  <Shield className="h-5 w-5" />
+                </Button>
+              }
+            />
+          )}
           {eta && (
             <Badge variant="secondary" className="text-sm">
               <Clock className="h-3 w-3 mr-1" />
