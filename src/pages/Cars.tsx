@@ -11,7 +11,7 @@ import SEOHead from "@/components/SEOHead";
 import { useState, useMemo } from "react";
 import { 
   Search, MapPin, Calendar, Car, Zap, Star, Users, 
-  Fuel, Settings2, X, SlidersHorizontal, ArrowRight
+  Fuel, Settings2, X, SlidersHorizontal, ArrowRight, Shield
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -190,6 +190,26 @@ export default function Cars() {
                 {format(parseISO(filters.returnDate), "MMM d, yyyy")}
               </p>
             )}
+            {/* Price Match Guarantee Badge */}
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <Shield className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-semibold text-emerald-600">Price Match Guarantee</span>
+            </div>
+          </div>
+
+          {/* Popular Makes */}
+          <div className="mb-6">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {["Tesla", "BMW", "Toyota", "Honda", "Mercedes", "Ford", "Audi", "Porsche"].map((make) => (
+                <button
+                  key={make}
+                  onClick={() => updateFilter("category", make.toLowerCase())}
+                  className="shrink-0 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
+                >
+                  {make}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Filters Bar */}

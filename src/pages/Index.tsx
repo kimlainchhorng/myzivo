@@ -21,6 +21,9 @@ import PriceAlertPromo from "@/components/home/PriceAlertPromo";
 import BentoFeatures from "@/components/home/BentoFeatures";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
+import { HomepageAdBanner } from "@/components/ads/HomepageAdBanner";
+import { AsSeenOnSection } from "@/components/marketing/AsSeenOnSection";
+import { motion } from "framer-motion";
 
 // Mobile app home - lazy load to match App.tsx pattern
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -43,34 +46,62 @@ const DesktopHomePage = () => {
         <HeroSection />
 
         {/* 2. Why Compare with ZIVO (3 value props) */}
-        <WhyBookWithZivo />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <WhyBookWithZivo />
+        </motion.div>
 
         {/* 2.5. Bento Grid Features (Technology Trust) */}
-        <BentoFeatures />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}>
+          <BentoFeatures />
+        </motion.div>
 
         {/* 3. Primary Services (Flights, Hotels, Cars) */}
-        <PrimaryServicesSection />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <PrimaryServicesSection />
+        </motion.div>
 
         {/* 4. How ZIVO Works (3 steps) */}
-        <HowItWorksSimple />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <HowItWorksSimple />
+        </motion.div>
 
         {/* 5. Popular Routes */}
-        <PopularRoutesSection />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <PopularRoutesSection />
+        </motion.div>
+
+        {/* Ad Banner */}
+        <HomepageAdBanner />
 
         {/* 5.5. Smart Offers (signed-in) / Recommended Deals (signed-out) */}
-        {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
+        </motion.div>
 
         {/* 6. Price Alert Promo */}
-        <PriceAlertPromo />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <PriceAlertPromo />
+        </motion.div>
 
         {/* 7. Social Proof / Platform Trust */}
-        <SocialProofSection />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <SocialProofSection />
+        </motion.div>
+
+        {/* 7.5. As Seen On */}
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <AsSeenOnSection variant="compact" />
+        </motion.div>
 
         {/* 8. Airline Trust Section */}
-        <AirlineTrustSection />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <AirlineTrustSection />
+        </motion.div>
 
         {/* 9. ZIVO Extras */}
-        <ExtrasSection />
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <ExtrasSection />
+        </motion.div>
       </main>
 
       <Footer />
