@@ -1,6 +1,6 @@
 /**
  * Do Not Sell My Personal Information (CCPA)
- * California Consumer Privacy Act compliance page
+ * California Consumer Privacy Act compliance page.
  */
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
