@@ -131,7 +131,7 @@ serve(async (req) => {
     // Process Stripe refund if payment exists
     if (payment && payment.status === "succeeded" && stripeSecretKey) {
       const stripe = new Stripe(stripeSecretKey, {
-        apiVersion: "2023-10-16",
+        apiVersion: "2025-08-27.basil",
       });
 
       try {

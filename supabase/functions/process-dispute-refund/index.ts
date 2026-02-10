@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
 
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
