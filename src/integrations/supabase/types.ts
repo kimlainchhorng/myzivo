@@ -18126,6 +18126,38 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string | null
+          status: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_stops: {
         Row: {
           address: string | null
@@ -18248,6 +18280,8 @@ export type Database = {
           queue_position: number | null
           ready_at: string | null
           scheduled_for: string | null
+          status: string | null
+          surge_multiplier: number | null
         }
         Insert: {
           almost_ready_at?: string | null
@@ -18267,6 +18301,8 @@ export type Database = {
           queue_position?: number | null
           ready_at?: string | null
           scheduled_for?: string | null
+          status?: string | null
+          surge_multiplier?: number | null
         }
         Update: {
           almost_ready_at?: string | null
@@ -18286,6 +18322,8 @@ export type Database = {
           queue_position?: number | null
           ready_at?: string | null
           scheduled_for?: string | null
+          status?: string | null
+          surge_multiplier?: number | null
         }
         Relationships: [
           {
@@ -35703,7 +35741,16 @@ export type Database = {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
       }
-      auto_assign_order: { Args: { p_order_id: string }; Returns: Json }
+      auto_assign_order:
+        | { Args: { p_order_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_order_id: string
+              p_restaurant_lat?: number
+              p_restaurant_lng?: number
+            }
+            Returns: Json
+          }
       auto_assign_order_v2: {
         Args: { p_order_id: string; p_service_type?: string }
         Returns: Json

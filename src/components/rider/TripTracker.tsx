@@ -11,6 +11,7 @@ import { useUnreadMessageCount } from "@/hooks/useTripChat";
 import { useDriverProximityAlert } from "@/hooks/useDriverProximityAlert";
 import { supabase } from "@/integrations/supabase/client";
 import TripChatModal from "@/components/chat/TripChatModal";
+import { SafetyCenterSheet } from "@/components/rider/SafetyCenterSheet";
 import { cn } from "@/lib/utils";
 
 interface TripTrackerProps {
@@ -419,10 +420,34 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
               <p className="text-xs font-semibold text-emerald-500">Safety active</p>
               <p className="text-[10px] text-muted-foreground truncate">Trip monitored • Share with loved ones</p>
             </div>
-            <Button variant="ghost" size="sm" className="text-[10px] px-2 h-7 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 shrink-0">
-              Share
-            </Button>
+            <SafetyCenterSheet
+              tripId={trip.id}
+              tripType="ride"
+              trigger={
+                <Button variant="ghost" size="sm" className="text-[10px] px-2 h-7 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 shrink-0">
+                  Share
+                </Button>
+              }
+            />
           </div>
+        </div>
+      )}
+
+      {/* Floating Safety Button */}
+      {isActive && (
+        <div className="fixed bottom-28 right-4 z-40 animate-in fade-in zoom-in-90 duration-300">
+          <SafetyCenterSheet
+            tripId={trip.id}
+            tripType="ride"
+            trigger={
+              <Button
+                size="icon"
+                className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-xl shadow-emerald-500/30 transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                <Shield className="w-5 h-5 text-white" />
+              </Button>
+            }
+          />
         </div>
       )}
 
