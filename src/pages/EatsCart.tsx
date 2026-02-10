@@ -26,6 +26,7 @@ import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { LiveDemandBanner } from "@/components/eats/LiveDemandBanner";
 import { useDemandAdjustedEta } from "@/hooks/useDemandAdjustedEta";
 import { useQueueAwareEta } from "@/hooks/useQueueAwareEta";
+import { useDriverAvailability } from "@/hooks/useLiveDriverTracking";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
@@ -73,11 +74,20 @@ function EatsCartContent() {
 
   // Demand-adjusted ETA
   const { demandMultiplier } = useDemandAdjustedEta(restaurantId || undefined);
+
+  // Live driver availability for accurate driver leg ETA
+  const driverAvailability = useDriverAvailability(
+    selectedAddress ? { lat: selectedAddress.lat || 0, lng: selectedAddress.lng || 0 } : null
+  );
+  const liveDriverMinutes = driverAvailability.closestETAMinutes ?? undefined;
+
   const eta = useQueueAwareEta({
     restaurantId: restaurantId || undefined,
+    driverMinutes: liveDriverMinutes,
     demandMultiplier,
     surgeMultiplier,
     forecastMultiplier: deliveryFactors.forecastMultiplier,
+    supplyMultiplier: deliveryFactors.supplyMultiplier,
   });
 
   // Get current user

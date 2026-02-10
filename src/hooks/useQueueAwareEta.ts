@@ -37,6 +37,8 @@ interface UseQueueAwareEtaOptions {
   surgeMultiplier?: number;
   /** Forecast multiplier (1.0-1.3) — inflates prep time when demand is predicted to rise */
   forecastMultiplier?: number;
+  /** Supply multiplier (1.0-1.5) — inflates driver time when nearby driver supply is low */
+  supplyMultiplier?: number;
 }
 
 // Default values
@@ -51,6 +53,7 @@ export function useQueueAwareEta({
   incentiveMultiplier = 1.0,
   surgeMultiplier = 1.0,
   forecastMultiplier = 1.0,
+  supplyMultiplier = 1.0,
 }: UseQueueAwareEtaOptions): QueueAwareEtaResult {
   // Get learned prep time
   const learnedPrep = useLearnedPrepTime(restaurantId);
@@ -67,7 +70,7 @@ export function useQueueAwareEta({
     const surgeInflation = surgeMultiplier > 1
       ? Math.min(1 + (surgeMultiplier - 1) * 0.5, 1.3)
       : 1.0;
-    const adjustedDriverMinutes = Math.round(driverMinutes * scheduleForecastMultiplier * incentiveMultiplier * surgeInflation);
+    const adjustedDriverMinutes = Math.round(driverMinutes * scheduleForecastMultiplier * incentiveMultiplier * surgeInflation * supplyMultiplier);
     
     const breakdown: EtaBreakdown = {
       queueMinutes: queue.queueWaitMinutes,
@@ -116,6 +119,7 @@ export function useQueueAwareEta({
     incentiveMultiplier,
     surgeMultiplier,
     forecastMultiplier,
+    supplyMultiplier,
     learnedPrep.loading,
   ]);
 }

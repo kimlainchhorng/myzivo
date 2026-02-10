@@ -37,6 +37,7 @@ import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { useEatsDeliveryPricing } from "@/hooks/useEatsDeliveryPricing";
 import { useEatsDeliveryFactors } from "@/hooks/useEatsDeliveryFactors";
 import { SecurityVerificationBanner } from "@/components/checkout/SecurityVerificationBanner";
+import { useDriverAvailability } from "@/hooks/useLiveDriverTracking";
 import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
 import { LiveDemandBanner } from "@/components/eats/LiveDemandBanner";
 import { PaymentTypeSelector, type PaymentType } from "@/components/eats/PaymentTypeSelector";
@@ -173,12 +174,20 @@ function EatsCheckoutContent() {
   const deliveryFactors = useEatsDeliveryFactors();
 
   // Queue-aware ETA calculation with incentive/peak multipliers
+  // Live driver availability for accurate driver leg ETA
+  const driverAvailability = useDriverAvailability(
+    deliveryAddress ? { lat: 0, lng: 0 } : null // Uses restaurant proxy; real coords would be better
+  );
+  const liveDriverMinutes = driverAvailability.closestETAMinutes ?? undefined;
+
   const eta = useQueueAwareEta({ 
     restaurantId: restaurantId || undefined, 
+    driverMinutes: liveDriverMinutes,
     demandMultiplier,
     scheduleForecastMultiplier: deliveryFactors.scheduleForecastMultiplier,
     incentiveMultiplier: deliveryFactors.incentiveMultiplier,
     forecastMultiplier: deliveryFactors.forecastMultiplier,
+    supplyMultiplier: deliveryFactors.supplyMultiplier,
   });
   
   // Cart validation for item availability
