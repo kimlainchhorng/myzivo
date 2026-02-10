@@ -203,8 +203,9 @@ function GuestLookup() {
   const [bookingRef, setBookingRef] = useState("");
 
   const handleLookup = () => {
-    // TODO: Implement guest booking lookup
-    console.log("Looking up:", { email, bookingRef });
+    if (!email || !bookingRef) return;
+    // Guest lookup requires sign-in for security
+    window.location.href = `/login?redirect=/travel/trips&ref=${encodeURIComponent(bookingRef)}`;
   };
 
   return (
