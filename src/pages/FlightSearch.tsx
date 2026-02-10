@@ -46,13 +46,41 @@ const FlightSearch = () => {
           </BigSearchCard>
         </ImageHero>
 
-        {/* Legal Disclaimer - HIGH VISIBILITY near search */}
-        <section className="border-b border-border/50 py-4 bg-amber-500/5">
+        {/* Flexible Dates + Legal Disclaimer */}
+        <section className="border-b border-border/50 py-4 bg-muted/30">
           <div className="container mx-auto px-4">
-            <p className="text-center text-sm text-muted-foreground font-medium">
-              <ShieldCheck className="w-4 h-4 inline mr-1.5 text-amber-500" />
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-500/10 border border-sky-500/20 rounded-full">
+                <Plane className="w-3.5 h-3.5 text-sky-500" />
+                <span className="text-xs font-semibold text-sky-600">Flexible Dates Available</span>
+              </div>
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-amber-500" />
               {FLIGHT_DISCLAIMERS.ticketing}
             </p>
+          </div>
+        </section>
+
+        {/* Price Trends Section */}
+        <section className="py-8 bg-muted/10 border-b border-border/50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-lg font-bold text-center mb-6">Best Time to Book</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+              {[
+                { icon: "📅", title: "Book 3-4 Weeks Early", desc: "Domestic flights are cheapest 21-28 days out" },
+                { icon: "📊", title: "Tuesdays Are Cheapest", desc: "Airlines release sales early in the week" },
+                { icon: "🔔", title: "Set a Price Alert", desc: "Get notified when fares drop on your route" },
+              ].map((tip) => (
+                <div key={tip.title} className="flex items-start gap-3 p-4 bg-card rounded-xl border border-border/50">
+                  <span className="text-2xl">{tip.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">{tip.title}</h3>
+                    <p className="text-xs text-muted-foreground">{tip.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

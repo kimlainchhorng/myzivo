@@ -135,6 +135,37 @@ const Footer = ({ className }: FooterProps) => {
               <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0 mb-4">
                 ZIVO is an online travel agency. Book flights, hotels, and car rentals with secure checkout and instant confirmation.
               </p>
+
+              {/* Social Media Links */}
+              <div className="flex items-center gap-3 justify-center lg:justify-start mb-4">
+                {[
+                  { name: "X", href: "https://x.com/hizovo", label: "𝕏" },
+                  { name: "Instagram", href: "https://instagram.com/hizovo", label: "📷" },
+                  { name: "LinkedIn", href: "https://linkedin.com/company/hizovo", label: "in" },
+                  { name: "YouTube", href: "https://youtube.com/@hizovo", label: "▶" },
+                ].map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-muted/50 hover:bg-primary/10 border border-border/50 flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-all"
+                    aria-label={social.name}
+                  >
+                    {social.label}
+                  </a>
+                ))}
+              </div>
+
+              {/* App Store Badges */}
+              <div className="flex items-center gap-2 justify-center lg:justify-start mb-4">
+                <div className="px-3 py-1.5 bg-muted/30 border border-border/50 rounded-lg text-[10px] text-muted-foreground font-medium">
+                  📱 App Store — Soon
+                </div>
+                <div className="px-3 py-1.5 bg-muted/30 border border-border/50 rounded-lg text-[10px] text-muted-foreground font-medium">
+                  🤖 Google Play — Soon
+                </div>
+              </div>
               
               {/* Business Info Block */}
               <div className="p-3 rounded-xl bg-muted/30 border border-border/50 mb-4">
