@@ -36015,6 +36015,10 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: boolean
       }
+      decrement_forum_post_likes: {
+        Args: { post_id_input: string }
+        Returns: undefined
+      }
       deduct_merchant_balance: {
         Args: { p_amount_cents: number; p_restaurant_id: string }
         Returns: boolean
@@ -36425,6 +36429,14 @@ export type Database = {
       }
       increment_driver_decline: {
         Args: { driver_id_param: string }
+        Returns: undefined
+      }
+      increment_forum_post_likes: {
+        Args: { post_id_input: string }
+        Returns: undefined
+      }
+      increment_forum_post_views: {
+        Args: { post_id_input: string }
         Returns: undefined
       }
       increment_merchant_coupon_usage: {
