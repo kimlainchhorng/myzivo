@@ -97,16 +97,16 @@ const QuickActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onNav
   <motion.button
     onClick={onNavigate}
     whileTap={{ scale: 0.97 }}
-    className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation text-left"
+    className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 touch-manipulation text-left shadow-sm"
   >
     <div className={`w-8 h-8 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}>
       <Icon className={`w-4 h-4 ${iconColor}`} />
     </div>
     <div className="flex-1 min-w-0">
-      <div className="text-sm font-semibold truncate">{title}</div>
-      <div className="text-[10px] text-zinc-400 truncate">{subtitle}</div>
+      <div className="text-sm font-semibold text-foreground truncate">{title}</div>
+      <div className="text-[10px] text-muted-foreground truncate">{subtitle}</div>
     </div>
-    <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
+    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
   </motion.button>
 );
 
@@ -115,7 +115,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
   <motion.button
     onClick={onNavigate}
     whileTap={{ scale: 0.96 }}
-    className="shrink-0 w-[120px] rounded-2xl overflow-hidden bg-zinc-900/80 border border-white/10 touch-manipulation text-left"
+    className="shrink-0 w-[120px] rounded-2xl overflow-hidden bg-card border border-border shadow-sm touch-manipulation text-left"
   >
     <div className="relative h-[100px]">
       <img
@@ -132,9 +132,9 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
       )}
     </div>
     <div className="p-2">
-      <div className="text-xs font-semibold truncate">{restaurant.name}</div>
+      <div className="text-xs font-semibold text-foreground truncate">{restaurant.name}</div>
       {restaurant.cuisine_type && (
-        <div className="text-[9px] text-zinc-400 truncate mt-0.5">{restaurant.cuisine_type}</div>
+        <div className="text-[9px] text-muted-foreground truncate mt-0.5">{restaurant.cuisine_type}</div>
       )}
     </div>
   </motion.button>
@@ -161,7 +161,7 @@ const PersonalizedRow = ({ title, iconName, restaurants, navigate: nav }: { titl
   const iconConfig = rowIcons[title] || (iconName ? timeIcons[iconName] : undefined);
   return (
     <div>
-      <h2 className="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-1.5">
+      <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
         {iconConfig && <iconConfig.Icon className={`w-3.5 h-3.5 ${iconConfig.color}`} />}
         {title}
       </h2>
@@ -270,31 +270,31 @@ const AppHome = () => {
   });
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-x-hidden selection:bg-primary/30">
+    <div className="relative min-h-screen bg-background font-sans text-foreground overflow-x-hidden selection:bg-primary/30">
       
       {/* 1. TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-background/80 backdrop-blur-lg safe-area-top border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-white/20 p-0.5 overflow-hidden">
+          <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
             {avatarUrl ? (
               <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
             ) : (
-              <div className="w-full h-full rounded-full bg-primary/30 flex items-center justify-center text-sm font-bold text-white">
+              <div className="w-full h-full rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
                 {initials}
               </div>
             )}
           </div>
           <div>
-            <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest">{greeting()}</div>
-            <div className="text-sm font-bold">{userName}</div>
+            <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{greeting()}</div>
+            <div className="text-sm font-bold text-foreground">{userName}</div>
           </div>
         </div>
         <button 
           onClick={() => navigate("/alerts")}
-          className="w-9 h-9 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 active:bg-white/20 transition-colors relative touch-manipulation"
+          className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
         >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-black" />
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
         </button>
       </div>
 
@@ -302,22 +302,22 @@ const AppHome = () => {
       <div className="pt-20 px-4 pb-4">
         {user && <WinBackBanner className="mb-4" />}
 
-        <h1 className="text-2xl font-thin tracking-tight mb-0.5">
+        <h1 className="text-2xl font-thin tracking-tight mb-0.5 text-foreground">
           Explore the <span className="font-black italic">World</span>
         </h1>
-        <p className="text-zinc-400 mb-4 text-sm">One app for every journey.</p>
+        <p className="text-muted-foreground mb-4 text-sm">One app for every journey.</p>
 
         <button 
           onClick={() => setIsSearchOpen(true)}
           className="relative group w-full touch-manipulation"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-teal-400 rounded-2xl blur opacity-20 group-active:opacity-40 transition-opacity" />
-          <div className="relative bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.99] transition-transform">
-            <Search className="w-4 h-4 text-zinc-400" />
-            <span className="text-zinc-500 font-medium text-left flex-1 text-sm">Where to?</span>
-            <div className="h-5 w-[1px] bg-white/10" />
-            <div className="p-1.5 bg-white/10 rounded-lg">
-              <MapPin className="w-3.5 h-3.5 text-white" />
+          <div className="absolute inset-0 bg-primary/5 rounded-2xl blur opacity-40 group-active:opacity-60 transition-opacity" />
+          <div className="relative bg-card border border-border rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.99] transition-transform shadow-sm">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
+            <div className="h-5 w-[1px] bg-border" />
+            <div className="p-1.5 bg-primary/10 rounded-lg">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
             </div>
           </div>
         </button>
@@ -342,8 +342,8 @@ const AppHome = () => {
 
       {/* Trending Destinations */}
       <div className="px-4 pb-4">
-        <div className="border-t border-white/5 pt-4 mb-3" />
-        <h2 className="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-1.5">
+        <div className="border-t border-border pt-4 mb-3" />
+        <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
           <Plane className="w-3.5 h-3.5 text-sky-400" />Trending Destinations
         </h2>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -352,12 +352,12 @@ const AppHome = () => {
               key={dest.city}
               whileTap={{ scale: 0.96 }}
               onClick={() => navigate(`/flights?to=${dest.city}`)}
-              className="shrink-0 px-3 py-2.5 rounded-xl bg-zinc-900/80 border border-white/10 touch-manipulation"
+              className="shrink-0 px-3 py-2.5 rounded-xl bg-card border border-border shadow-sm touch-manipulation"
             >
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dest.color} flex items-center justify-center mb-1.5 mx-auto`}>
                 <MapPin className="w-4 h-4 text-white" />
               </div>
-              <div className="text-xs font-semibold">{dest.city}</div>
+              <div className="text-xs font-semibold text-foreground">{dest.city}</div>
               <div className="text-[10px] text-primary font-bold">from {dest.price}</div>
             </motion.button>
           ))}
@@ -366,7 +366,7 @@ const AppHome = () => {
 
       {/* ZONE 1: Services Grid */}
       <div className="px-4 pb-4">
-        <div className="border-t border-white/5 pt-4 mb-3" />
+        <div className="border-t border-border pt-4 mb-3" />
         <div className="grid grid-cols-2 gap-2">
           <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
           <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
@@ -389,7 +389,7 @@ const AppHome = () => {
 
       {/* ZONE 2: Personalized Rows */}
       <div className="px-4 pb-4 space-y-4">
-        <div className="border-t border-white/5 pt-4" />
+        <div className="border-t border-border pt-4" />
         {/* Time Context Banner */}
         <PersonalizedRow
           title={timeContext.headline}
@@ -415,7 +415,7 @@ const AppHome = () => {
       {/* ZONE 3: Quick Actions (auth-gated) */}
       {user && (
         <div className="px-4 pb-4 space-y-2">
-          <h2 className="text-sm font-bold text-zinc-300 mb-1">Quick Actions</h2>
+          <h2 className="text-sm font-bold text-foreground mb-1">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-2">
             <QuickActionCard
               icon={RefreshCw}

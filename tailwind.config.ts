@@ -129,7 +129,8 @@ export default {
   			sm: 'calc(var(--radius) - 4px)',
   			xl: 'calc(var(--radius) + 4px)',
   			'2xl': 'calc(var(--radius) + 8px)',
-  			'3xl': 'calc(var(--radius) + 16px)'
+			'3xl': 'calc(var(--radius) + 16px)',
+			'4xl': 'calc(var(--radius) + 24px)'
   		},
   		fontSize: {
   			xs: [
@@ -200,7 +201,7 @@ export default {
   			md: 'var(--shadow-md)',
   			lg: 'var(--shadow-lg)',
   			xl: 'var(--shadow-xl)',
-  			soft: '0 2px 8px -2px rgb(0 0 0 / 0.08), 0 4px 16px -4px rgb(0 0 0 / 0.12)',
+  			soft: '0 2px 8px -2px rgb(0 0 0 / 0.06), 0 4px 16px -4px rgb(0 0 0 / 0.08)',
   			'2xs': 'var(--shadow-2xs)',
   			'2xl': 'var(--shadow-2xl)'
   		},
