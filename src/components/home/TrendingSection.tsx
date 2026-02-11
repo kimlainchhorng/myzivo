@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, ChevronRight } from "lucide-react";
+import { TrendingUp, ChevronRight, Flame, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RecommendationCard } from "@/components/ui/personalization";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,9 +75,17 @@ const TrendingSection = () => {
       <div className="absolute top-0 right-0 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
       
-      {/* Static floating emojis */}
-      <div className="absolute top-24 left-[8%] text-3xl sm:text-4xl hidden md:block opacity-40">🔥</div>
-      <div className="absolute bottom-32 right-[6%] text-3xl sm:text-4xl hidden md:block opacity-30">⭐</div>
+      {/* Floating icon decorations */}
+      <div className="absolute top-24 left-[8%] hidden md:block opacity-30">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/15 to-red-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Flame className="w-5 h-5 text-orange-500/50" />
+        </div>
+      </div>
+      <div className="absolute bottom-32 right-[6%] hidden md:block opacity-30">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-yellow-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Star className="w-5 h-5 text-amber-500/50" />
+        </div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -60,7 +60,7 @@ export function useCrossSellSuggestions(sourceService: string, context?: Suggest
           service: "cars",
           title: "Need a car?",
           description: `Rent a car in ${context.flight.destination || "your destination"}`,
-          icon: "🚗",
+          icon: "car",
           link: `/car-rental?location=${context.flight.destination}&pickup=${context.flight.arrival_date}`,
           priority: 1,
         });
@@ -70,7 +70,7 @@ export function useCrossSellSuggestions(sourceService: string, context?: Suggest
           service: "hotels",
           title: "Book a hotel",
           description: `Find hotels in ${context.flight.destination || "your destination"}`,
-          icon: "🏨",
+          icon: "hotel",
           link: `/hotels?city=${context.flight.destination}&checkin=${context.flight.arrival_date}`,
           priority: 2,
         });
@@ -82,7 +82,7 @@ export function useCrossSellSuggestions(sourceService: string, context?: Suggest
           service: "rides",
           title: "Need a ride?",
           description: "Book airport pickup with ZIVO Rides",
-          icon: "🚕",
+          icon: "car-taxi",
           link: `/rides`,
           priority: 1,
         });
@@ -94,7 +94,7 @@ export function useCrossSellSuggestions(sourceService: string, context?: Suggest
           service: "eats",
           title: "Hungry?",
           description: `Discover restaurants in ${context.hotel.city || "your city"}`,
-          icon: "🍔",
+          icon: "utensils",
           link: `/eats`,
           priority: 1,
         });
@@ -106,7 +106,7 @@ export function useCrossSellSuggestions(sourceService: string, context?: Suggest
           service: "move",
           title: "Need something delivered?",
           description: "Use ZIVO Move for package delivery",
-          icon: "📦",
+          icon: "package",
           link: `/move`,
           priority: 2,
         });

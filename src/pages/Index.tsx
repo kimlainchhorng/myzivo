@@ -112,7 +112,7 @@ const DesktopHomePage = () => {
         {/* Second Sponsored Ad Banner */}
         <FadeInSection className="container mx-auto px-4 py-6">
           <HomepageAdBanner
-            headline="Summer travel deals 🌊"
+            headline="Summer travel deals await"
             description="Exclusive fares to beach destinations — book before they're gone."
             ctaText="View Deals"
             ctaHref="/flights"

@@ -36,10 +36,10 @@ const recentSearches = [
 ];
 
 const trendingNow = [
-  { id: "1", destination: "Tokyo", emoji: "🇯🇵", discount: "-25%" },
-  { id: "2", destination: "Bali", emoji: "🏝️", discount: "-30%" },
-  { id: "3", destination: "Dubai", emoji: "🏙️", discount: "-20%" },
-  { id: "4", destination: "Rome", emoji: "🇮🇹", discount: "-15%" },
+  { id: "1", destination: "Tokyo", color: "text-rose-400 bg-rose-500/10", discount: "-25%" },
+  { id: "2", destination: "Bali", color: "text-cyan-400 bg-cyan-500/10", discount: "-30%" },
+  { id: "3", destination: "Dubai", color: "text-amber-400 bg-amber-500/10", discount: "-20%" },
+  { id: "4", destination: "Rome", color: "text-indigo-400 bg-indigo-500/10", discount: "-15%" },
 ];
 
 const UnifiedSearchHub = ({ className }: UnifiedSearchHubProps) => {
@@ -179,7 +179,9 @@ const UnifiedSearchHub = ({ className }: UnifiedSearchHubProps) => {
                       onClick={() => handleTrendingClick(trend.destination)}
                       className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/5 to-teal-500/5 hover:from-primary/10 hover:to-teal-500/10 border border-primary/10 transition-all text-left group"
                     >
-                      <span className="text-2xl">{trend.emoji}</span>
+                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", trend.color.split(" ")[1])}>
+                        <MapPin className={cn("w-4 h-4", trend.color.split(" ")[0])} />
+                      </div>
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.destination}</p>
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">

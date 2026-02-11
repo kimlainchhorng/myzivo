@@ -30,11 +30,15 @@ const CarRentalSettings = () => {
   return (
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
-      <div className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block animate-float-icon">
-        ⚙️
+      <div className="absolute -top-2 right-12 pointer-events-none hidden md:block animate-float-icon opacity-30">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Settings className="w-5 h-5 text-primary/50" />
+        </div>
       </div>
-      <div className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
-        ✨
+      <div className="absolute top-20 right-4 pointer-events-none hidden md:block animate-pulse-slow opacity-30">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-5 h-5 text-violet-500/50" />
+        </div>
       </div>
 
       {/* Header */}

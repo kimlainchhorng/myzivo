@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Car, Users, MapPin, UtensilsCrossed, Plane, Hotel, TrendingUp } from "lucide-react";
+import { Car, Users, MapPin, UtensilsCrossed, Plane, Hotel, TrendingUp, BarChart3, Rocket } from "lucide-react";
 
 const stats = [
   {
@@ -161,12 +161,16 @@ const StatsSection = () => {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-500/15 to-transparent rounded-full blur-3xl" />
       <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating emojis */}
-      <div className="absolute top-32 left-[10%] text-4xl hidden lg:block opacity-40 animate-float">
-        📊
+      {/* Floating icon decorations */}
+      <div className="absolute top-32 left-[10%] hidden lg:block opacity-30 animate-float">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <BarChart3 className="w-6 h-6 text-primary/50" />
+        </div>
       </div>
-      <div className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
-        🚀
+      <div className="absolute bottom-40 right-[8%] hidden lg:block opacity-30 animate-float-delayed">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-eats/15 to-orange-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Rocket className="w-6 h-6 text-eats/50" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">

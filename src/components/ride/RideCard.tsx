@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, Loader2, Flame, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SurgeLevel } from "@/lib/surge";
 import { RideQuoteResult } from "@/lib/quoteRidePrice";
@@ -66,7 +66,7 @@ const RideCard = ({
         {/* Surge Badge - "Busy time pricing" */}
         {quote?.multipliers?.surge && quote.multipliers.surge > 1.0 && (
           <div className="absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-amber-500/90 flex items-center gap-1">
-            <span className="text-[10px]">🔥</span>
+            <Flame className="w-2.5 h-2.5 text-white" />
             <span className="text-[10px] font-bold text-white">Busy time pricing ×{quote.multipliers.surge.toFixed(1)}</span>
           </div>
         )}
@@ -77,7 +77,7 @@ const RideCard = ({
             "absolute left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-violet-500/90 flex items-center gap-1",
             quote?.multipliers?.surge && quote.multipliers.surge > 1.0 ? "top-8" : "top-2"
           )}>
-            <span className="text-[10px]">🎫</span>
+            <Ticket className="w-2.5 h-2.5 text-white" />
             <span className="text-[10px] font-bold text-white">Event pricing</span>
           </div>
         )}

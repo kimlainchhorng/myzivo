@@ -4,18 +4,19 @@
  */
 
 import { cn } from "@/lib/utils";
+import { Car, Key, Truck, Crown, Compass, type LucideIcon } from "lucide-react";
 
 interface CarPartnerTrustStripProps {
   className?: string;
 }
 
-// Partner data with text-based logos
-const carPartners = [
-  { id: "economybookings", name: "EconomyBookings", emoji: "🚗" },
-  { id: "qeeq", name: "QEEQ", emoji: "🔑" },
-  { id: "getrentacar", name: "GetRentACar", emoji: "🚙" },
-  { id: "rentalcars", name: "Rentalcars.com", emoji: "🏎️" },
-  { id: "discovercars", name: "DiscoverCars", emoji: "🛻" },
+// Partner data with Lucide icons
+const carPartners: { id: string; name: string; icon: LucideIcon }[] = [
+  { id: "economybookings", name: "EconomyBookings", icon: Car },
+  { id: "qeeq", name: "QEEQ", icon: Key },
+  { id: "getrentacar", name: "GetRentACar", icon: Truck },
+  { id: "rentalcars", name: "Rentalcars.com", icon: Crown },
+  { id: "discovercars", name: "DiscoverCars", icon: Compass },
 ];
 
 export function CarPartnerTrustStrip({ className }: CarPartnerTrustStripProps) {
@@ -43,7 +44,7 @@ export function CarPartnerTrustStrip({ className }: CarPartnerTrustStripProps) {
                   "grayscale hover:grayscale-0 transition-all"
                 )}
               >
-                <span>{partner.emoji}</span>
+                <partner.icon className="w-3.5 h-3.5" />
                 <span>{partner.name}</span>
               </div>
             ))}

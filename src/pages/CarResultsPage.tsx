@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal, RotateCcw, Car } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import P2PResultsCrossSell from "@/components/car/P2PResultsCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
@@ -511,8 +511,8 @@ export default function CarResultsPage() {
                 {/* Empty State - No results at all */}
                 {!isLoading && results.length === 0 && (
                   <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-3xl">🚗</span>
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-teal-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Car className="w-8 h-8 text-emerald-400" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Searching partner inventory...</h3>
                     <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">

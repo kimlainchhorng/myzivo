@@ -1,13 +1,13 @@
-import { Clock, Zap, TrendingDown, ArrowRight, MapPin } from "lucide-react";
+import { Clock, Zap, TrendingDown, ArrowRight, MapPin, Car, Truck, Crown, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 const deals = [
-  { id: 1, name: "BMW 3 Series", location: "LAX Airport", image: "🚗", originalPrice: 120, discountPrice: 69, discount: 42, timeLeft: 5400, available: 2 },
-  { id: 2, name: "Tesla Model Y", location: "SFO Airport", image: "⚡", originalPrice: 150, discountPrice: 89, discount: 41, timeLeft: 3600, available: 1 },
-  { id: 3, name: "Jeep Grand Cherokee", location: "JFK Airport", image: "🚙", originalPrice: 130, discountPrice: 75, discount: 42, timeLeft: 7200, available: 3 },
-  { id: 4, name: "Mercedes C-Class", location: "ORD Airport", image: "🚘", originalPrice: 140, discountPrice: 79, discount: 44, timeLeft: 1800, available: 1 },
+  { id: 1, name: "BMW 3 Series", location: "LAX Airport", icon: Car, originalPrice: 120, discountPrice: 69, discount: 42, timeLeft: 5400, available: 2 },
+  { id: 2, name: "Tesla Model Y", location: "SFO Airport", icon: Zap, originalPrice: 150, discountPrice: 89, discount: 41, timeLeft: 3600, available: 1 },
+  { id: 3, name: "Jeep Grand Cherokee", location: "JFK Airport", icon: Truck, originalPrice: 130, discountPrice: 75, discount: 42, timeLeft: 7200, available: 3 },
+  { id: 4, name: "Mercedes C-Class", location: "ORD Airport", icon: Crown, originalPrice: 140, discountPrice: 79, discount: 44, timeLeft: 1800, available: 1 },
 ];
 
 const CarFlashDeals = () => {
@@ -67,7 +67,11 @@ const CarFlashDeals = () => {
               </div>
 
               <div className="p-4 pt-10">
-                <div className="text-5xl text-center mb-3">{deal.image}</div>
+                <div className="flex justify-center mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/15 flex items-center justify-center">
+                    <deal.icon className="w-7 h-7 text-emerald-400" />
+                  </div>
+                </div>
                 <h3 className="font-bold text-center mb-1">{deal.name}</h3>
                 <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm mb-4">
                   <MapPin className="w-3 h-3" />
