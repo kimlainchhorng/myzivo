@@ -3,8 +3,7 @@
  * Multi-channel notification system with push → SMS → email fallback
  * Includes compliance checks for SMS: verified, consent, opt-out, quiet hours
  */
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve, createClient } from "../_shared/deps.ts";
 
 // Initialize providers
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
