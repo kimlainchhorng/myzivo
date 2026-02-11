@@ -62,7 +62,6 @@ interface ExtrasPartner {
   category: string;
   description: string;
   icon: LucideIcon;
-  logo: string;
   thumbnail: string;
   trackingUrl: string;
   gradient: string;
@@ -76,7 +75,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Activities & Tours',
     description: 'Book tours and attractions worldwide',
     icon: Ticket,
-    logo: '🎟️',
     thumbnail: extrasActivities,
     trackingUrl: 'https://klook.tpo.li/ToVcOax7',
     gradient: 'from-emerald-500/10 to-teal-500/10',
@@ -88,7 +86,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Museums & Attractions',
     description: 'Skip-the-line museum tickets',
     icon: Ticket,
-    logo: '🎫',
     thumbnail: extrasMuseums,
     trackingUrl: 'https://tiqets.tpo.li/5fqrcQWZ',
     gradient: 'from-violet-500/10 to-purple-500/10',
@@ -100,7 +97,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Airport Transfers',
     description: 'Fixed-price airport pickups',
     icon: Car,
-    logo: '🚕',
     thumbnail: extrasTransfers,
     trackingUrl: 'https://kiwitaxi.tpo.li/Bj6zghJH',
     gradient: 'from-amber-500/10 to-orange-500/10',
@@ -112,7 +108,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Transfers Marketplace',
     description: 'Compare local transfer drivers',
     icon: Car,
-    logo: '🚙',
     thumbnail: extrasTransfers,
     trackingUrl: 'https://gettransfer.tpo.li/FbrIguyh',
     gradient: 'from-amber-500/10 to-orange-500/10',
@@ -124,7 +119,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Group Transfers',
     description: 'Shuttle & group transfer services',
     icon: Car,
-    logo: '🚌',
     thumbnail: extrasTransfers,
     trackingUrl: 'https://intui.tpo.li/CgNTdSyh',
     gradient: 'from-amber-500/10 to-orange-500/10',
@@ -136,7 +130,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'eSIM',
     description: 'Instant eSIM for 190+ countries',
     icon: Wifi,
-    logo: '📱',
     thumbnail: extrasEsim,
     trackingUrl: 'https://airalo.tpo.li/zVRtp8Zt',
     gradient: 'from-cyan-500/10 to-blue-500/10',
@@ -148,7 +141,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'eSIM',
     description: 'Budget-friendly travel eSIM',
     icon: Wifi,
-    logo: '📶',
     thumbnail: extrasEsim,
     trackingUrl: 'https://yesim.tpo.li/OpjeHJgH',
     gradient: 'from-cyan-500/10 to-blue-500/10',
@@ -160,7 +152,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'SIM',
     description: 'Global SIM card with data',
     icon: Globe,
-    logo: '🌐',
     thumbnail: extrasEsim,
     trackingUrl: 'https://drimsim.tpo.li/A9yKO5oA',
     gradient: 'from-sky-500/10 to-indigo-500/10',
@@ -172,7 +163,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Luggage Storage',
     description: 'Store bags from $5.90/day',
     icon: Luggage,
-    logo: '🧳',
     thumbnail: extrasLuggage,
     trackingUrl: 'https://radicalstorage.tpo.li/4W0KR99h',
     gradient: 'from-purple-500/10 to-pink-500/10',
@@ -184,7 +174,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Audio Tours',
     description: 'Self-guided audio experiences',
     icon: Headphones,
-    logo: '🎧',
     thumbnail: extrasAudiotours,
     trackingUrl: 'https://wegotrip.tpo.li/QSrOpIdV',
     gradient: 'from-rose-500/10 to-pink-500/10',
@@ -196,7 +185,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Flight Compensation',
     description: 'Claim up to €600 for delays',
     icon: Scale,
-    logo: '⚖️',
     thumbnail: extrasCompensation,
     trackingUrl: 'https://airhelp.tpo.li/7Z5saPi2',
     gradient: 'from-red-500/10 to-rose-500/10',
@@ -208,7 +196,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Flight Compensation',
     description: 'Free flight compensation check',
     icon: Plane,
-    logo: '✈️',
     thumbnail: extrasCompensation,
     trackingUrl: 'https://compensair.tpo.li/npsp8pm0',
     gradient: 'from-red-500/10 to-rose-500/10',
@@ -220,7 +207,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Travel Radar',
     description: 'Compare all travel options',
     icon: Search,
-    logo: '🔍',
     thumbnail: extrasRadar,
     trackingUrl: 'https://searadar.tpo.li/iAbLlX9i',
     gradient: 'from-indigo-500/10 to-violet-500/10',
@@ -232,7 +218,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Tickets Marketplace',
     description: 'Concerts, sports, live events',
     icon: Ticket,
-    logo: '🎭',
     thumbnail: extrasTickets,
     trackingUrl: 'https://ticketnetwork.tpo.li/utk3u8Vr',
     gradient: 'from-fuchsia-500/10 to-pink-500/10',
@@ -244,7 +229,6 @@ const EXTRAS_PARTNERS: ExtrasPartner[] = [
     category: 'Travel Services',
     description: 'Comprehensive travel solutions',
     icon: Globe,
-    logo: '🌍',
     thumbnail: extrasRadar,
     trackingUrl: 'https://ektatraveling.tpo.li/ZEbsBsKY',
     gradient: 'from-teal-500/10 to-emerald-500/10',
@@ -360,9 +344,9 @@ export default function TravelExtras() {
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                   />
                                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                                  {/* Emoji Badge */}
-                                  <div className="absolute bottom-2 left-3 w-10 h-10 rounded-lg bg-card/90 backdrop-blur-sm flex items-center justify-center text-xl shadow-lg border border-border/50">
-                                    {partner.logo}
+                                  {/* Icon Badge */}
+                                  <div className="absolute bottom-2 left-3 w-10 h-10 rounded-lg bg-card/90 backdrop-blur-sm flex items-center justify-center shadow-lg border border-border/50">
+                                    <partner.icon className="w-5 h-5 text-foreground/70" />
                                   </div>
                                 </div>
                                 

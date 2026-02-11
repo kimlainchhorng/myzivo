@@ -43,7 +43,7 @@ function baseReceiptHTML(order: UnifiedOrder, body: string): string {
     <div class="logo">ZIVO</div>
     <div class="order-id">Order #${order.id.slice(0, 8).toUpperCase()}</div>
     <div class="date">${dateStr}</div>
-    <span class="service-badge ${order.type}">${order.type === "eats" ? "🍽 Eats" : order.type === "rides" ? "🚗 Rides" : "✈️ Travel"}</span>
+    <span class="service-badge ${order.type}">${order.type === "eats" ? "Eats" : order.type === "rides" ? "Rides" : "Travel"}</span>
   </div>
   ${body}
   <div class="total-row">

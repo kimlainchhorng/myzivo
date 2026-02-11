@@ -13,7 +13,9 @@ import {
   Minus,
   Sparkles,
   Loader2,
-  Zap
+  Zap,
+  Check,
+  Lightbulb
 } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isBefore, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -298,11 +300,11 @@ export const FlexibleDatesCalendar = ({
         <div className="mt-3 text-center">
           <p className="text-xs text-muted-foreground">
             {hasRealPrices ? (
-              <span className="text-emerald-400">✓ Live prices from airlines</span>
+              <span className="text-emerald-400 flex items-center gap-1 justify-center"><Check className="w-3.5 h-3.5" /> Live prices from airlines</span>
             ) : isLoading ? (
               <span>Loading real prices...</span>
             ) : (
-              <span>💡 Estimated fares based on route trends</span>
+              <span className="flex items-center gap-1 justify-center"><Lightbulb className="w-3.5 h-3.5" /> Estimated fares based on route trends</span>
             )}
           </p>
         </div>

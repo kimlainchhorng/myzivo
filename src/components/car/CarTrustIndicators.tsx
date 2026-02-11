@@ -48,12 +48,12 @@ export default function CarTrustIndicators({ className }: CarTrustIndicatorsProp
   ];
 
   const paymentMethods = [
-    { name: "Visa", icon: "💳" },
-    { name: "Mastercard", icon: "💳" },
-    { name: "Amex", icon: "💳" },
-    { name: "PayPal", icon: "🅿️" },
-    { name: "Apple Pay", icon: "🍎" },
-    { name: "Google Pay", icon: "G" },
+    { name: "Visa", label: "V" },
+    { name: "Mastercard", label: "MC" },
+    { name: "Amex", label: "AX" },
+    { name: "PayPal", label: "PP" },
+    { name: "Apple Pay", label: "AP" },
+    { name: "Google Pay", label: "GP" },
   ];
 
   const certifications = [
@@ -99,10 +99,10 @@ export default function CarTrustIndicators({ className }: CarTrustIndicatorsProp
               {paymentMethods.slice(0, 4).map((method) => (
                 <div
                   key={method.name}
-                  className="w-8 h-5 sm:w-10 sm:h-7 rounded bg-card border border-border/50 flex items-center justify-center text-[10px] sm:text-xs"
+                  className="w-8 h-5 sm:w-10 sm:h-7 rounded bg-card border border-border/50 flex items-center justify-center text-[8px] sm:text-[10px] font-semibold text-muted-foreground"
                   title={method.name}
                 >
-                  {method.icon}
+                  {method.label}
                 </div>
               ))}
               <span className="text-[10px] sm:text-xs text-muted-foreground">+2</span>

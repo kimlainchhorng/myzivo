@@ -48,7 +48,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
       monthlyPayment: Math.round(totalAmount / 4 * 100) / 100,
       totalAmount: totalAmount,
       provider: 'ZIVO Pay',
-      providerLogo: '💳',
+      providerLogo: 'ZP',
       popular: true
     },
     {
@@ -59,7 +59,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
       monthlyPayment: Math.round(totalAmount / 3 * 100) / 100,
       totalAmount: totalAmount,
       provider: 'Klarna',
-      providerLogo: '🔵'
+      providerLogo: 'K'
     },
     {
       id: '6-monthly',
@@ -69,7 +69,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
       monthlyPayment: Math.round((totalAmount * 1.0499) / 6 * 100) / 100,
       totalAmount: Math.round(totalAmount * 1.0499),
       provider: 'Affirm',
-      providerLogo: '🟢'
+      providerLogo: 'A'
     },
     {
       id: '12-monthly',
@@ -79,7 +79,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
       monthlyPayment: Math.round((totalAmount * 1.0749) / 12 * 100) / 100,
       totalAmount: Math.round(totalAmount * 1.0749),
       provider: 'Affirm',
-      providerLogo: '🟢'
+      providerLogo: 'A'
     },
   ];
 
@@ -138,7 +138,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
                 >
                   <RadioGroupItem value={plan.id} id={plan.id} />
                   
-                  <div className="text-2xl">{plan.providerLogo}</div>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary">{plan.providerLogo}</div>
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

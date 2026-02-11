@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Shield, Car, UtensilsCrossed, Key, Plane, Hotel, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
+import { ArrowLeft, Shield, Car, UtensilsCrossed, Key, Plane, Hotel, CheckCircle, AlertTriangle, HelpCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,20 +18,24 @@ const InsurancePolicy = () => {
       <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
-      {/* Floating emojis */}
+      {/* Floating decorative icons */}
       <motion.div
         animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
         transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-32 right-[8%] text-5xl hidden lg:block opacity-40"
+        className="absolute top-32 right-[8%] hidden lg:block opacity-30"
       >
-        🛡️
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Shield className="w-7 h-7 text-emerald-500/50" />
+        </div>
       </motion.div>
       <motion.div
         animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
         transition={{ duration: 7, repeat: Infinity }}
-        className="absolute bottom-1/3 left-[5%] text-4xl hidden lg:block opacity-30"
+        className="absolute bottom-1/3 left-[5%] hidden lg:block opacity-25"
       >
-        ✨
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400/15 to-yellow-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-6 h-6 text-amber-400/50" />
+        </div>
       </motion.div>
 
       {/* Header */}

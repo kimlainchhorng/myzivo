@@ -8,7 +8,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Warehouse
+  Warehouse,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -163,11 +164,15 @@ const CarRentalDashboard = () => {
       <div className="fixed top-3/4 right-1/4 w-[300px] h-[300px] bg-gradient-to-tl from-emerald-500/8 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Floating Decorative Elements - CSS only */}
-      <div className="fixed top-20 right-20 text-4xl pointer-events-none hidden lg:block animate-float-delayed">
-        🚗
+      <div className="fixed top-20 right-20 pointer-events-none hidden lg:block animate-float-delayed opacity-30">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Car className="w-6 h-6 text-primary/50" />
+        </div>
       </div>
-      <div className="fixed bottom-40 right-40 text-3xl pointer-events-none hidden lg:block animate-pulse-slow">
-        ✨
+      <div className="fixed bottom-40 right-40 pointer-events-none hidden lg:block animate-pulse-slow opacity-25">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/15 to-yellow-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-5 h-5 text-amber-400/50" />
+        </div>
       </div>
 
       {/* Mobile Header */}

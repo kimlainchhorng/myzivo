@@ -1,13 +1,13 @@
-import { Award, Star, Gift, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
+import { Award, Star, Gift, TrendingUp, ChevronRight, Sparkles, Medal, Trophy, Gem, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
-const tiers = [
-  { name: "Bronze", points: 0, color: "from-amber-600 to-amber-700", icon: "🥉" },
-  { name: "Silver", points: 5000, color: "from-gray-400 to-gray-500", icon: "🥈" },
-  { name: "Gold", points: 15000, color: "from-yellow-400 to-amber-500", icon: "🥇" },
-  { name: "Platinum", points: 50000, color: "from-violet-400 to-purple-500", icon: "💎" },
+const tiers: { name: string; points: number; color: string; Icon: LucideIcon }[] = [
+  { name: "Bronze", points: 0, color: "from-amber-600 to-amber-700", Icon: Medal },
+  { name: "Silver", points: 5000, color: "from-gray-400 to-gray-500", Icon: Award },
+  { name: "Gold", points: 15000, color: "from-yellow-400 to-amber-500", Icon: Trophy },
+  { name: "Platinum", points: 50000, color: "from-violet-400 to-purple-500", Icon: Gem },
 ];
 
 const upcomingRewards = [
@@ -62,8 +62,8 @@ const RewardsProgress = ({
             {/* Current Tier */}
             <div className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 mb-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentTier.color} flex items-center justify-center text-3xl`}>
-                  {currentTier.icon}
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentTier.color} flex items-center justify-center`}>
+                  <currentTier.Icon className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Current Status</p>
@@ -94,13 +94,13 @@ const RewardsProgress = ({
                 <div key={tier.name} className="flex flex-col items-center">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 transition-all",
+                      "w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all",
                       currentPoints >= tier.points
                         ? `bg-gradient-to-br ${tier.color}`
                         : "bg-muted/50"
                     )}
                   >
-                    {tier.icon}
+                    <tier.Icon className={cn("w-5 h-5", currentPoints >= tier.points ? "text-white" : "text-muted-foreground")} />
                   </div>
                   <p className={cn(
                     "text-xs font-medium",

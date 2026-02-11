@@ -5,7 +5,7 @@
  * Includes locked disclaimers for Google & Meta ad compliance
  */
 
-import { Shield, ExternalLink, Lock, Mail } from "lucide-react";
+import { Shield, ExternalLink, Lock, Mail, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
@@ -24,7 +24,7 @@ export default function LPComplianceFooter() {
             ZIVO may earn a commission when you book through our partner links.
           </p>
           <p className="text-xs text-muted-foreground font-medium">
-            ✓ Prices may change until booking is completed on the partner's site.
+            <Check className="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-emerald-500" />Prices may change until booking is completed on the partner's site.
           </p>
         </div>
 

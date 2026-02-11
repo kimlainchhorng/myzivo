@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Briefcase, ShoppingBag, Luggage, Plus, Minus, Check } from 'lucide-react';
+import { Briefcase, ShoppingBag, Luggage, Plus, Minus, Check, Lightbulb, Package, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -125,7 +125,7 @@ export default function BaggageSelector({
       {/* Info banner */}
       <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
         <p className="text-sm text-primary">
-          💡 Pre-booking baggage saves up to 40% compared to airport prices
+          <Lightbulb className="w-4 h-4 inline mr-1.5 -mt-0.5" />Pre-booking baggage saves up to 40% compared to airport prices
         </p>
       </div>
 
@@ -173,8 +173,8 @@ export default function BaggageSelector({
                     {option.description}
                   </p>
                   <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                    <span>📦 {option.weight}</span>
-                    <span>📐 {option.dimensions}</span>
+                    <span className="flex items-center gap-1"><Package className="w-3 h-3" />{option.weight}</span>
+                    <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{option.dimensions}</span>
                   </div>
                 </div>
 
