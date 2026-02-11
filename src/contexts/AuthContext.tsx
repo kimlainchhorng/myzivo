@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
 
 type AuthContextType = {
   user: User | null;
@@ -157,12 +158,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
+    clearSessionArtifacts();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
-  };
+  }, []);
+
+  // Session security: idle timeout and max age enforcement
+  useEffect(() => {
+    if (!session) return;
+    const cleanup = setupActivityTracking(() => {
+      console.warn("[Auth] Session invalidated due to inactivity or max age");
+      signOut();
+    });
+    return cleanup;
+  }, [session, signOut]);
 
   return (
     <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signUp, signIn, signInWithProvider, signOut }}>

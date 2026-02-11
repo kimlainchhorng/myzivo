@@ -3,8 +3,8 @@
  * Uses hCaptcha for bot protection
  */
 
-// hCaptcha site key from environment
-const HCAPTCHA_SITE_KEY = 'your-hcaptcha-site-key'; // Replace with env variable
+// hCaptcha site key - must be configured via getCaptchaSiteKey() from server settings
+const HCAPTCHA_SITE_KEY_FALLBACK = '';
 
 export interface CaptchaResult {
   success: boolean;
@@ -56,7 +56,7 @@ export function renderCaptcha(
 
     try {
       const widgetId = hcaptcha.render(containerId, {
-        sitekey: siteKey || HCAPTCHA_SITE_KEY,
+        sitekey: siteKey || HCAPTCHA_SITE_KEY_FALLBACK,
         theme: options?.theme || 'dark',
         size: options?.size || 'normal',
         callback: (token: string) => {
@@ -124,33 +124,18 @@ export function executeCaptcha(widgetId?: string): Promise<string> {
 }
 
 /**
- * Check if captcha is required based on security settings
+ * Check if captcha is required - driven by server response
+ * The rate-limiter edge function returns `requiresCaptcha: true` when needed.
+ * Do NOT use localStorage for this decision (user-manipulable).
  */
-export function isCaptchaRequired(): boolean {
-  try {
-    const settings = localStorage.getItem('hizovo-security-settings');
-    if (settings) {
-      const parsed = JSON.parse(settings);
-      return parsed.captchaEnabled === true;
-    }
-  } catch {
-    // Default to false if settings not found
-  }
-  return false;
+export function isCaptchaRequired(serverResponse?: { requiresCaptcha?: boolean }): boolean {
+  return serverResponse?.requiresCaptcha === true;
 }
 
 /**
- * Get hCaptcha site key from settings
+ * Get hCaptcha site key from server-provided config
+ * Pass siteKey from edge function response or admin settings API
  */
-export function getCaptchaSiteKey(): string {
-  try {
-    const settings = localStorage.getItem('hizovo-security-settings');
-    if (settings) {
-      const parsed = JSON.parse(settings);
-      return parsed.captchaSiteKey || HCAPTCHA_SITE_KEY;
-    }
-  } catch {
-    // Use default
-  }
-  return HCAPTCHA_SITE_KEY;
+export function getCaptchaSiteKey(serverProvidedKey?: string): string {
+  return serverProvidedKey || HCAPTCHA_SITE_KEY_FALLBACK;
 }

@@ -6,6 +6,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
+export type AuditSeverity = 'critical' | 'high' | 'medium' | 'low';
+
 export type AuditAction =
   | 'admin_login'
   | 'admin_logout'
@@ -38,6 +40,39 @@ interface AuditLogData {
   oldValues?: Json;
   newValues?: Json;
   metadata?: Record<string, unknown>;
+  severity?: AuditSeverity;
+}
+
+/**
+ * Log a critical event - logs to DB and triggers admin notification
+ */
+export async function logCriticalEvent(
+  action: AuditAction,
+  entityType: AuditEntityType,
+  description: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  // Log the audit event
+  await logAuditEvent({
+    action,
+    entityType,
+    severity: 'critical',
+    newValues: { description, ...metadata },
+  });
+
+  // Trigger admin notification
+  try {
+    await supabase.functions.invoke('send-notification', {
+      body: {
+        title: `🚨 Critical: ${action}`,
+        body: description,
+        priority: 'critical',
+        event_type: action,
+      },
+    });
+  } catch (e) {
+    console.error('[AuditLog] Failed to send critical alert:', e);
+  }
 }
 
 /**

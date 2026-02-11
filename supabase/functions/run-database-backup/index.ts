@@ -23,10 +23,11 @@ const TABLES_TO_BACKUP = [
   "drivers",
   "ride_requests",
   "travel_orders",
+  "flight_bookings",
 ];
 
 const RETENTION_DAYS = 30;
-const BATCH_SIZE = 10000;
+const PAGE_SIZE = 1000; // Supabase query limit
 
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -93,27 +94,38 @@ serve(async (req: Request): Promise<Response> => {
     let totalRows = 0;
     const tableStats: Record<string, number> = {};
 
-    // Export each table
+    // Export each table with pagination to handle >1000 rows
     for (const table of TABLES_TO_BACKUP) {
       try {
-        const { data, count, error } = await supabase
-          .from(table)
-          .select("*", { count: "exact" })
-          .limit(BATCH_SIZE);
+        const allRows: unknown[] = [];
+        let offset = 0;
+        let hasMore = true;
 
-        if (error) {
-          console.warn(`Error fetching ${table}:`, error.message);
-          backupData[table] = [];
-          tableStats[table] = 0;
-          continue;
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .range(offset, offset + PAGE_SIZE - 1);
+
+          if (error) {
+            console.warn(`Error fetching ${table} at offset ${offset}:`, error.message);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allRows.push(...data);
+            offset += data.length;
+            hasMore = data.length === PAGE_SIZE;
+          } else {
+            hasMore = false;
+          }
         }
 
-        backupData[table] = data || [];
-        const rowCount = count || (data?.length || 0);
-        tableStats[table] = rowCount;
-        totalRows += rowCount;
+        backupData[table] = allRows;
+        tableStats[table] = allRows.length;
+        totalRows += allRows.length;
 
-        console.log(`Backed up ${table}: ${rowCount} rows`);
+        console.log(`Backed up ${table}: ${allRows.length} rows (paginated)`);
       } catch (err) {
         console.warn(`Failed to backup ${table}:`, err);
         backupData[table] = [];
@@ -138,6 +150,11 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     const sizeBytes = new TextEncoder().encode(backupJson).length;
+
+    // Compute SHA-256 hash for integrity verification
+    const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(backupJson));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
     // Upload to storage
     const { error: uploadError } = await supabase.storage
@@ -169,6 +186,7 @@ serve(async (req: Request): Promise<Response> => {
           table_stats: tableStats,
           total_rows: totalRows,
           file_name: fileName,
+          sha256: sha256Hash,
         },
       })
       .eq("id", backupLog.id);

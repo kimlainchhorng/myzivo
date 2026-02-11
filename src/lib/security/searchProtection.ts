@@ -7,7 +7,7 @@
  * - Bot-like behavior patterns
  */
 
-// Track recent searches to detect duplicates
+// Track recent searches to detect duplicates (with sessionStorage persistence)
 const recentSearches = new Map<string, { count: number; lastSearch: number }>();
 const DUPLICATE_WINDOW_MS = 10000; // 10 seconds
 const MAX_DUPLICATES = 3;
@@ -16,6 +16,34 @@ const MAX_DUPLICATES = 3;
 const cyclingTracker = new Map<string, { changes: number; lastChange: number }>();
 const CYCLING_WINDOW_MS = 30000; // 30 seconds
 const MAX_CYCLING_CHANGES = 10;
+
+// Exponential backoff for repeat offenders
+const BLOCK_STORAGE_KEY = 'zivo-search-blocks';
+
+interface BlockData {
+  count: number;
+  blockedUntil: number;
+}
+
+function getBlockData(sessionId: string): BlockData {
+  try {
+    const raw = sessionStorage.getItem(`${BLOCK_STORAGE_KEY}-${sessionId}`);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { count: 0, blockedUntil: 0 };
+}
+
+function setBlockData(sessionId: string, data: BlockData): void {
+  try {
+    sessionStorage.setItem(`${BLOCK_STORAGE_KEY}-${sessionId}`, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+function getBackoffMs(blockCount: number): number {
+  // 10s, 30s, 60s, 120s...
+  const backoffs = [10000, 30000, 60000, 120000];
+  return backoffs[Math.min(blockCount, backoffs.length - 1)];
+}
 
 export interface SearchProtectionResult {
   allowed: boolean;
@@ -34,6 +62,18 @@ export function checkSearchAbuse(
   sessionId: string
 ): SearchProtectionResult {
   const now = Date.now();
+
+  // Check exponential backoff for repeat offenders
+  const blockData = getBlockData(sessionId);
+  if (blockData.blockedUntil > now) {
+    const waitMs = blockData.blockedUntil - now;
+    return {
+      allowed: false,
+      reason: 'throttled',
+      message: `You've been temporarily blocked. Please wait ${Math.ceil(waitMs / 1000)} seconds.`,
+      waitMs,
+    };
+  }
   
   // Check for duplicate searches
   const searchKey = `${origin}-${destination}-${departureDate}-${sessionId}`;
@@ -44,11 +84,14 @@ export function checkSearchAbuse(
     existing.lastSearch = now;
     
     if (existing.count > MAX_DUPLICATES) {
+      // Apply exponential backoff
+      const newBlockData = { count: blockData.count + 1, blockedUntil: now + getBackoffMs(blockData.count) };
+      setBlockData(sessionId, newBlockData);
       return {
         allowed: false,
         reason: 'duplicate',
         message: "You've searched this route multiple times. Please wait a moment.",
-        waitMs: DUPLICATE_WINDOW_MS - (now - existing.lastSearch),
+        waitMs: getBackoffMs(blockData.count),
       };
     }
   } else {
@@ -63,11 +106,13 @@ export function checkSearchAbuse(
     cycleData.changes++;
     
     if (cycleData.changes > MAX_CYCLING_CHANGES) {
+      const newBlockData = { count: blockData.count + 1, blockedUntil: now + getBackoffMs(blockData.count) };
+      setBlockData(sessionId, newBlockData);
       return {
         allowed: false,
         reason: 'cycling',
         message: 'Please slow down. Too many searches in a short time.',
-        waitMs: CYCLING_WINDOW_MS - (now - cycleData.lastChange),
+        waitMs: getBackoffMs(blockData.count),
       };
     }
   } else if (now - cycleData.lastChange > CYCLING_WINDOW_MS) {

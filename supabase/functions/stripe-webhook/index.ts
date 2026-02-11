@@ -81,8 +81,12 @@ serve(async (req) => {
         });
       }
     } else {
-      // For development without webhook secret
-      event = JSON.parse(body);
+      // SECURITY: Webhook signature verification is mandatory
+      console.error("[Webhook] Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
+      return new Response(
+        JSON.stringify({ error: "Webhook signature verification required. Configure STRIPE_WEBHOOK_SECRET." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     console.log("[Webhook] Processing event:", event.type, "ID:", event.id);

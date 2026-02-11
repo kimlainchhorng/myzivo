@@ -3,8 +3,9 @@
  * Centralized config for admin dashboard settings
  */
 
-// Authorized admin emails - users with these emails can access admin features
-// This is an additional check on top of the user_roles table
+// Authorized admin emails - DEFENSE-IN-DEPTH only.
+// The authoritative source is the `user_roles` table via `check_user_role` RPC.
+// This client-side list is an additional UI-level check, NOT a security boundary.
 export const ADMIN_EMAILS = [
   "admin@zivo.com",
   "ops@zivo.com",
