@@ -1,149 +1,104 @@
 
 
-## Map-First Home Screen Redesign
+## Rewards & Loyalty Home Screen Integration
 
-Transform AppHome.tsx from a scrolling feed layout into a map-first super app experience (like Uber/Grab), with a full-screen map showing nearby drivers and a draggable bottom panel containing all content.
-
----
-
-### New Layout Structure
-
-```text
-+----------------------------------+
-| Status Bar (safe area)           |
-+----------------------------------+
-| Top Overlay:                     |
-|   Avatar  Greeting    Bell icon  |
-|   [Search Bar - "Where to?"]    |
-+----------------------------------+
-|                                  |
-|        FULL-SCREEN MAP           |
-|   (nearby cars + restaurants)    |
-|                                  |
-+----------------------------------+
-| === BOTTOM SLIDING PANEL ===     |
-| [drag handle]                    |
-|                                  |
-| Quick Actions (6 icons):         |
-| Ride | Eats | Delivery           |
-| Flights | Hotels | Rentals       |
-|                                  |
-| [Promo Banner Carousel]         |
-|                                  |
-| Recently Used [scroll ->]        |
-| Favorites [scroll ->]            |
-| Recommended for You [scroll ->]  |
-+----------------------------------+
-| Bottom Nav                       |
-+----------------------------------+
-```
-
-**Snap points**: Panel snaps to 40% (default -- shows quick actions), 75% (shows all content), and can be dragged down to ~25% (map focused).
+Most of the rewards system already exists in the codebase (loyalty points hook, rewards page, redemption options, tier system, earning rules). This plan focuses on surfacing it prominently on the home screen and adding the missing "Rewards Wallet" card to the sliding panel.
 
 ---
 
-### Changes (single file: `src/pages/app/AppHome.tsx`)
+### What Already Exists (no changes needed)
 
-**1. Full-screen map background**
-- Wrap the page in a relative container with `h-[100dvh]`
-- Add `GoogleMapProvider` and `GoogleMap` as a full-screen background layer (absolute, inset-0)
-- Use `darkMode={false}` for the light ZIVO map style
-- Include `NearbyCars` for animated nearby driver dots
-- Default center: user's location via `useCurrentLocation` or fallback to NYC (40.7128, -74.006)
+| Feature | Location |
+|---------|----------|
+| Points earning/redeeming logic | `src/hooks/useLoyaltyPoints.ts` |
+| Points balance card | `src/components/loyalty/PointsBalanceCard.tsx` |
+| Redemption options page | `src/components/loyalty/RedemptionOptions.tsx` |
+| Tier system (Explorer/Traveler/Elite) | `src/config/zivoPoints.ts` |
+| Full rewards page | `src/pages/RewardsPage.tsx` |
+| Earning rules config | `src/config/zivoPoints.ts` (EARNING_RULES) |
+| User rewards hook | `src/hooks/useUserRewards.ts` |
 
-**2. Top overlay (floating over map)**
-- Semi-transparent white bar (`bg-white/90 backdrop-blur-xl`) with safe-area-top padding
-- Contains: avatar, greeting text, bell icon (same as current)
-- Below it: the "Where to?" search bar as a floating card
+---
 
-**3. Bottom sliding panel**
-- Reuse the `RideBottomSheet` component pattern (framer-motion drag with snap points)
-- Three snap points: `[0.25, 0.45, 0.80]` (collapsed / default / expanded)
-- White background with rounded top corners and shadow
-- Drag handle at top
+### What Will Be Added
 
-**4. Panel content (inside the sheet)**
+**1. Rewards Wallet Card in the Home Sliding Panel**
 
-**Quick Actions Grid (3x2 icon grid):**
-| Icon | Label | Route |
-|------|-------|-------|
-| Car | Ride | `/rides` |
-| UtensilsCrossed | Eats | `/eats` |
-| Package | Delivery | `/move` |
-| Plane | Flights | `/search?tab=flights` |
-| BedDouble | Hotels | `/search?tab=hotels` |
-| Car | Rentals | `/rent-car` |
+A new compact card inserted between the Promo Carousel and the Recently Used section. It shows:
 
-Each: rounded-2xl card, verdant icon circle, label below. Large 48px+ touch targets.
+- Points balance (large number)
+- Current tier badge with icon
+- Progress bar to next tier
+- "Redeem" button linking to `/rewards`
+- Verdant green gradient accent
 
-**Promo Banner Carousel:**
-- Horizontal auto-scrolling carousel with 2-3 promo banners
-- Uses `embla-carousel-react` (already installed)
-- Cards: gradient backgrounds, bold headlines, CTA buttons
-- Dot indicators below
+Design: Rounded-2xl card with `bg-gradient-to-br from-primary/10 to-emerald-500/10` border, large typography for the balance number, compact progress bar, and a single CTA.
 
-**Scrolling sections (same data, same hooks):**
-- Recently Used (from `useRecentlyViewed`)
-- Favorites (from `usePersonalizedHome().favorites` + `useSavedLocations`)
-- Recommended for You (from `recommended` + `useRecommendedDeals`)
+**2. Recent Rewards Earned (inside the wallet card)**
 
-**5. Remove from current layout:**
-- Remove the static promo banner (replaced by carousel)
-- Remove the old services grid (replaced by quick actions in panel)
-- Remove the Nearby Rides section (map shows this visually now)
-- Remove the standalone quick actions bar (merged into grid)
+A small "Recent" section below the balance showing the last 2-3 reward earnings as one-line items (e.g., "+200 pts - Ride booking", "+100 pts - Review") using data from the `rewards` table via `useUserRewards`.
 
 ---
 
 ### Technical Details
 
-**New imports:**
-- `GoogleMapProvider`, `GoogleMap` from `@/components/maps`
-- `NearbyCars` from `@/components/maps`
-- `useCurrentLocation` from `@/hooks/useCurrentLocation`
-- `useEmblaCarousel` from `embla-carousel-react`
+**File modified**: `src/pages/app/AppHome.tsx`
 
-**Map setup:**
-```text
-<GoogleMapProvider>
-  <GoogleMap
-    center={userLocation || { lat: 40.7128, lng: -74.006 }}
-    zoom={14}
-    darkMode={false}
-    showControls={false}
-    className="absolute inset-0 w-full h-full"
-  />
-</GoogleMapProvider>
+**New imports**:
+- `useLoyaltyPoints` from `@/hooks/useLoyaltyPoints`
+- `useUserRewards` from `@/hooks/useUserRewards`
+- `Gift`, `TrendingUp` icons from lucide-react
+- `Progress` from `@/components/ui/progress`
+
+**New hook calls** (inside AppHome component):
+```
+const { points } = useLoyaltyPoints();
+const { active: activeRewards } = useUserRewards();
 ```
 
-**Bottom sheet** -- inline implementation (not importing RideBottomSheet to avoid coupling):
-- `motion.div` with `drag="y"`, snap behavior, spring animation
-- Three snaps: 25% (map view), 45% (default), 80% (full content)
-- `overscroll-contain` and internal scrolling when expanded
+**Rewards wallet card** -- inserted after the promo carousel (line ~313), before Recently Used (line ~315):
 
-**Promo carousel** -- 3 static banners:
 ```text
-const promos = [
-  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-primary to-emerald-400" },
-  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-400 to-amber-500" },
-  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-400 to-blue-500" },
-];
-```
-Auto-advances every 4 seconds with dot indicators.
-
-**Quick actions grid styling:**
-```text
-<div className="grid grid-cols-3 gap-3">
-  {actions.map(action => (
-    <button className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border shadow-sm">
-      <div className="w-12 h-12 rounded-2xl bg-{color}/10 flex items-center justify-center">
-        <Icon className="w-6 h-6 text-{color}" />
+<div className="mb-5">
+  <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-emerald-500/10 border border-primary/20 p-4">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-primary" />
+        <span className="text-sm font-bold">My Rewards</span>
       </div>
-      <span className="text-xs font-semibold">{label}</span>
-    </button>
-  ))}
+      <Badge>Explorer</Badge>
+    </div>
+    <p className="text-3xl font-bold mb-1">{balance} <span className="text-lg text-muted-foreground">pts</span></p>
+    <Progress value={progress} className="h-2 mb-3" />
+    <p className="text-xs text-muted-foreground mb-3">{pointsNeeded} pts to {nextTierName}</p>
+    
+    <!-- Recent earnings (last 2-3) -->
+    <div className="space-y-1 mb-3">
+      {recentRewards.map(r => (
+        <div className="flex justify-between text-xs">
+          <span>+{r.reward_value} pts</span>
+          <span className="text-muted-foreground">{r.reward_type}</span>
+        </div>
+      ))}
+    </div>
+    
+    <Button onClick={() => navigate("/rewards")} className="w-full bg-gradient-to-r from-primary to-emerald-500">
+      <Gift /> Redeem Points
+    </Button>
+  </div>
 </div>
 ```
+
+**Tier mapping** -- reuses the same mapping from RewardsPage:
+```
+const mapTier = (oldTier: string): ZivoTier => {
+  if (oldTier === 'gold' || oldTier === 'silver') return 'elite';
+  if (oldTier === 'bronze') return 'traveler';
+  return 'explorer';
+};
+```
+
+**Auth-gated**: The rewards card only shows when `user` is signed in. When signed out, the space is skipped cleanly.
 
 ---
 
@@ -152,9 +107,8 @@ Auto-advances every 4 seconds with dot indicators.
 | Item | Detail |
 |------|--------|
 | Files modified | 1 (`src/pages/app/AppHome.tsx`) |
-| Layout change | Scrolling feed to map-first with bottom panel |
-| New components used | GoogleMapProvider, GoogleMap, NearbyCars, embla-carousel |
-| New hooks used | useCurrentLocation |
-| Sections in panel | Quick Actions grid, Promo Carousel, Recently Used, Favorites, Recommendations |
-| Sections removed | Static promo banner, old services grid, standalone quick actions bar, Nearby Rides cards |
+| New sections added | 1 (Rewards Wallet Card with recent earnings) |
+| New hooks imported | 2 (`useLoyaltyPoints`, `useUserRewards`) |
+| Existing infrastructure reused | Points system, tier config, rewards table |
+| No new pages needed | Rewards page, redemption, and referral pages already exist |
 
