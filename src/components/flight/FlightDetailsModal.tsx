@@ -67,7 +67,7 @@ export default function FlightDetailsModal({
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <span className="text-lg font-bold text-muted-foreground">{flight.airlineCode || '✈️'}</span>
+                <span className="text-lg font-bold text-muted-foreground">{flight.airlineCode || <Plane className="w-5 h-5" />}</span>
               )}
             </div>
             <div>

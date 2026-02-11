@@ -7,6 +7,7 @@
  import { useEffect, useState } from "react";
  import { motion, useSpring } from "framer-motion";
  import { useIsMobile } from "@/hooks/use-mobile";
+ import { Plane, Building2, Car } from "lucide-react";
  
  type CursorType = "default" | "flight" | "hotel" | "car" | "link";
  
@@ -85,9 +86,9 @@
          }
        `}
      >
-       {cursorType === "flight" && "✈️"}
-       {cursorType === "hotel" && "🏨"}
-       {cursorType === "car" && "🚗"}
+        {cursorType === "flight" && <Plane className="w-3 h-3" />}
+        {cursorType === "hotel" && <Building2 className="w-3 h-3" />}
+        {cursorType === "car" && <Car className="w-3 h-3" />}
        {cursorType === "link" && (
          <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
        )}

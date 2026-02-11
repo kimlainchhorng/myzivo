@@ -29,7 +29,7 @@ export const carAffiliatePartners: CarAffiliatePartner[] = [
   {
     id: 'economybookings',
     name: 'EconomyBookings',
-    logo: '🚗',
+    logo: 'car',
     baseUrl: 'https://www.economybookings.com',
     trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
     urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
@@ -41,7 +41,7 @@ export const carAffiliatePartners: CarAffiliatePartner[] = [
   {
     id: 'qeeq',
     name: 'QEEQ',
-    logo: '🚙',
+    logo: 'car-front',
     baseUrl: 'https://www.qeeq.com',
     trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
     urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
@@ -53,7 +53,7 @@ export const carAffiliatePartners: CarAffiliatePartner[] = [
   {
     id: 'getrentacar',
     name: 'GetRentACar',
-    logo: '🚐',
+    logo: 'truck',
     baseUrl: 'https://www.getrentacar.com',
     trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.getrentacar,
     urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.getrentacar,

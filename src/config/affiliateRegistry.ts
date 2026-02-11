@@ -65,34 +65,34 @@ export const SUBID_REGISTRY = {
 
 // Flight Partners (Priority order)
 const FLIGHT_PARTNERS: AffiliatePartner[] = [
-  { id: 'searadar', name: 'Searadar', logo: '✈️', priority: 100, isActive: true, isHealthy: true },
-  { id: 'skyscanner', name: 'Skyscanner', logo: '🔍', priority: 90, isActive: true, isHealthy: true },
-  { id: 'kayak', name: 'Kayak', logo: '🛫', priority: 80, isActive: true, isHealthy: true },
-  { id: 'google_flights', name: 'Google Flights', logo: '🌐', priority: 70, isActive: true, isHealthy: true },
+  { id: 'searadar', name: 'Searadar', logo: 'plane', priority: 100, isActive: true, isHealthy: true },
+  { id: 'skyscanner', name: 'Skyscanner', logo: 'search', priority: 90, isActive: true, isHealthy: true },
+  { id: 'kayak', name: 'Kayak', logo: 'plane-takeoff', priority: 80, isActive: true, isHealthy: true },
+  { id: 'google_flights', name: 'Google Flights', logo: 'globe', priority: 70, isActive: true, isHealthy: true },
 ];
 
 // Hotel Partners (Priority order)
 const HOTEL_PARTNERS: AffiliatePartner[] = [
-  { id: 'booking', name: 'Booking.com', logo: '🏨', priority: 100, isActive: true, isHealthy: true },
-  { id: 'hotels', name: 'Hotels.com', logo: '🛏️', priority: 95, isActive: true, isHealthy: true },
-  { id: 'expedia', name: 'Expedia', logo: '🌐', priority: 90, isActive: true, isHealthy: true },
-  { id: 'agoda', name: 'Agoda', logo: '🔴', priority: 85, isActive: true, isHealthy: true },
-  { id: 'priceline', name: 'Priceline', logo: '💰', priority: 80, isActive: true, isHealthy: true },
+  { id: 'booking', name: 'Booking.com', logo: 'building-2', priority: 100, isActive: true, isHealthy: true },
+  { id: 'hotels', name: 'Hotels.com', logo: 'bed-double', priority: 95, isActive: true, isHealthy: true },
+  { id: 'expedia', name: 'Expedia', logo: 'globe', priority: 90, isActive: true, isHealthy: true },
+  { id: 'agoda', name: 'Agoda', logo: 'circle-dot', priority: 85, isActive: true, isHealthy: true },
+  { id: 'priceline', name: 'Priceline', logo: 'dollar-sign', priority: 80, isActive: true, isHealthy: true },
 ];
 
 // Car Rental Partners (Priority order)
 const CAR_PARTNERS: AffiliatePartner[] = [
-  { id: 'rentalcars', name: 'Rentalcars.com', logo: '🚗', priority: 100, isActive: true, isHealthy: true },
-  { id: 'kayak_cars', name: 'Kayak Cars', logo: '🚙', priority: 90, isActive: true, isHealthy: true },
-  { id: 'expedia_cars', name: 'Expedia Cars', logo: '🚐', priority: 85, isActive: true, isHealthy: true },
-  { id: 'priceline_cars', name: 'Priceline Cars', logo: '🏎️', priority: 80, isActive: true, isHealthy: true },
+  { id: 'rentalcars', name: 'Rentalcars.com', logo: 'car', priority: 100, isActive: true, isHealthy: true },
+  { id: 'kayak_cars', name: 'Kayak Cars', logo: 'car-front', priority: 90, isActive: true, isHealthy: true },
+  { id: 'expedia_cars', name: 'Expedia Cars', logo: 'truck', priority: 85, isActive: true, isHealthy: true },
+  { id: 'priceline_cars', name: 'Priceline Cars', logo: 'crown', priority: 80, isActive: true, isHealthy: true },
 ];
 
 // Activities Partners (Priority order)
 const ACTIVITY_PARTNERS: AffiliatePartner[] = [
-  { id: 'klook', name: 'Klook', logo: '🎟️', priority: 100, isActive: true, isHealthy: true },
-  { id: 'viator', name: 'Viator', logo: '🎭', priority: 90, isActive: true, isHealthy: true },
-  { id: 'getyourguide', name: 'GetYourGuide', logo: '🗺️', priority: 85, isActive: true, isHealthy: true },
+  { id: 'klook', name: 'Klook', logo: 'ticket', priority: 100, isActive: true, isHealthy: true },
+  { id: 'viator', name: 'Viator', logo: 'drama', priority: 90, isActive: true, isHealthy: true },
+  { id: 'getyourguide', name: 'GetYourGuide', logo: 'map', priority: 85, isActive: true, isHealthy: true },
 ];
 
 // ============================================================================
