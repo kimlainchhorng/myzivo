@@ -9,7 +9,8 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock
+  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
+  Wallet, CreditCard
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,8 @@ import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } fro
 import { useReferrals } from "@/hooks/useReferrals";
 import { REFERRAL_REWARDS } from "@/config/referralProgram";
 import { useScheduledBookings } from "@/hooks/useScheduledBookings";
+import { useCustomerWallet } from "@/hooks/useCustomerWallet";
+import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -120,6 +123,9 @@ const AppHome = () => {
   const { referralCode, shareReferral } = useReferrals();
   const { getUpcoming } = useScheduledBookings();
   const upcomingBookings = getUpcoming();
+  const { balanceDollars } = useCustomerWallet();
+  const { getDefault } = useLocalPaymentMethods();
+  const defaultCard = getDefault();
 
   // Get user location on mount
   useEffect(() => {
@@ -491,6 +497,54 @@ const AppHome = () => {
               </div>
             );
           })()}
+
+          {/* WALLET SUMMARY CARD */}
+          {user && (
+            <div className="mb-5">
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-primary/5 border border-emerald-500/20 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-bold text-foreground">Wallet</span>
+                  </div>
+                  <button onClick={() => navigate("/account/wallet")} className="text-[10px] text-emerald-500 font-medium">
+                    See All
+                  </button>
+                </div>
+                <p className="text-3xl font-bold text-foreground mb-1">
+                  ${balanceDollars.toFixed(2)}
+                </p>
+                {defaultCard && (
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <CreditCard className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {defaultCard.brand} ····{defaultCard.last4}
+                    </span>
+                  </div>
+                )}
+                {!defaultCard && (
+                  <p className="text-xs text-muted-foreground mb-3">No payment method</p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigate("/account/gift-cards")}
+                    size="sm"
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-primary text-primary-foreground"
+                  >
+                    Add Funds
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/payment-methods")}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                  >
+                    Cards
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* RECENTLY USED */}
           {user && recentItems.length > 0 && (
