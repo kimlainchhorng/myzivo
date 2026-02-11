@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { LucideIcon, Shield, Globe, Zap, Headphones } from "lucide-react";
+import { LucideIcon, Shield, Globe, Zap, Headphones, Plane, PlaneTakeoff, PlaneLanding, Globe2, Hotel, Building2, Palmtree, Mountain, Car, CarFront, Route } from "lucide-react";
 
 /**
  * TOP-TIER TRAVEL HERO SECTION
@@ -16,7 +16,7 @@ const heroContent = {
     subheadline: "Real-time prices from global airlines. Secure ZIVO checkout.",
     gradient: "from-slate-950 via-blue-950/90 to-slate-950",
     accentGlow: "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(56, 189, 248, 0.15), transparent 50%)",
-    decorativeEmoji: ["✈️", "🌍", "🛫", "🌎", "🛬"],
+    decorativeIcons: [Plane, Globe, PlaneTakeoff, Globe2, PlaneLanding] as LucideIcon[],
     patternColor: "rgba(56, 189, 248, 0.03)",
     textGradient: "from-sky-400 via-cyan-400 to-blue-400",
     accentColor: "sky",
@@ -26,7 +26,7 @@ const heroContent = {
     subheadline: "500,000+ properties worldwide. Best rates from top booking sites.",
     gradient: "from-slate-950 via-amber-950/80 to-slate-950",
     accentGlow: "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(251, 191, 36, 0.12), transparent 50%)",
-    decorativeEmoji: ["🏨", "🌆", "🏖️", "🌴", "🏔️"],
+    decorativeIcons: [Hotel, Building2, Palmtree, Palmtree, Mountain] as LucideIcon[],
     patternColor: "rgba(251, 191, 36, 0.03)",
     textGradient: "from-amber-400 via-orange-400 to-yellow-400",
     accentColor: "amber",
@@ -36,7 +36,7 @@ const heroContent = {
     subheadline: "Rent from trusted providers in 800+ locations worldwide.",
     gradient: "from-slate-950 via-violet-950/80 to-slate-950",
     accentGlow: "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(139, 92, 246, 0.12), transparent 50%)",
-    decorativeEmoji: ["🚗", "🛣️", "🚙", "🏎️", "🛤️"],
+    decorativeIcons: [Car, Route, CarFront, Car, Route] as LucideIcon[],
     patternColor: "rgba(139, 92, 246, 0.03)",
     textGradient: "from-violet-400 via-purple-400 to-fuchsia-400",
     accentColor: "violet",
@@ -88,10 +88,10 @@ export default function TopTierHero({
 
         {/* Floating decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          {content.decorativeEmoji.map((emoji, i) => (
-            <span
+          {content.decorativeIcons.map((IconComp, i) => (
+            <div
               key={i}
-              className="absolute text-4xl sm:text-5xl opacity-[0.08] animate-pulse"
+              className="absolute opacity-[0.08] animate-pulse"
               style={{
                 left: `${10 + (i * 20)}%`,
                 top: `${15 + (i % 3) * 20}%`,
@@ -99,8 +99,8 @@ export default function TopTierHero({
                 animationDuration: `${3 + i}s`,
               }}
             >
-              {emoji}
-            </span>
+              <IconComp className="w-8 h-8 sm:w-10 sm:h-10 text-current" />
+            </div>
           ))}
         </div>
 

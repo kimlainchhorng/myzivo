@@ -69,7 +69,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
     color: 'text-slate-500',
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',
-    icon: '🧭',
+    icon: 'compass',
     benefits: [
       'Earn points on all bookings',
       'Access to deals hub',
@@ -86,7 +86,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
     color: 'text-sky-500',
     bgColor: 'bg-sky-500/10',
     borderColor: 'border-sky-500/30',
-    icon: '✈️',
+    icon: 'plane',
     benefits: [
       'All Explorer benefits',
       '+10% bonus on earned points',
@@ -104,7 +104,7 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
-    icon: '👑',
+    icon: 'crown',
     benefits: [
       'All Traveler benefits',
       '+25% bonus on earned points',

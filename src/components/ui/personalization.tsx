@@ -17,7 +17,11 @@ import {
   Check, 
   Award,
   Flame,
-  Shield
+  Shield,
+  Sun,
+  CloudSun,
+  Moon,
+  UtensilsCrossed
 } from "lucide-react";
 import { Card, CardContent } from "./card";
 import { Badge } from "./badge";
@@ -128,7 +132,7 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                   config.bg
                 )}
               >
-                {item.emoji || "📍"}
+                <MapPin className="w-6 h-6 text-primary/70" />
               </motion.div>
               <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">
                 {item.title}
@@ -207,7 +211,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
               whileHover={{ scale: 1.1, rotate: 5 }}
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center text-2xl shrink-0 shadow-lg"
             >
-              {item.emoji || "❤️"}
+              <Heart className="w-6 h-6 text-red-400/70" />
             </motion.div>
             <div className="flex-1 min-w-0">
               <p className="font-bold truncate group-hover:text-primary transition-colors">
@@ -310,11 +314,11 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
     return "Good evening";
   };
 
-  const greetingEmoji = () => {
+  const GreetingIcon = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "☀️";
-    if (hour < 18) return "🌤️";
-    return "🌙";
+    if (hour < 12) return <Sun className="w-5 h-5 text-amber-400" />;
+    if (hour < 18) return <CloudSun className="w-5 h-5 text-sky-400" />;
+    return <Moon className="w-5 h-5 text-indigo-400" />;
   };
 
   return (
@@ -336,7 +340,7 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <p className="text-sm text-muted-foreground font-medium">{getTimeOfDayGreeting()}</p>
-            <span className="text-lg">{greetingEmoji()}</span>
+            <GreetingIcon />
           </div>
           <motion.h1 
             initial={{ opacity: 0, x: -10 }}
@@ -668,7 +672,7 @@ export const RecommendationCard: React.FC<RecommendationProps> = ({
           whileHover={{ scale: 1.15, rotate: 10 }}
           className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-4xl shrink-0 shadow-lg"
         >
-          {emoji || "✨"}
+          <Sparkles className="w-8 h-8 text-primary/70" />
         </motion.div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
@@ -758,7 +762,7 @@ export const QuickRepeatOrders: React.FC<QuickRepeatProps> = ({
               whileHover={{ scale: 1.1, rotate: 5 }}
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-eats/20 to-eats/5 flex items-center justify-center text-2xl shrink-0 shadow-lg"
             >
-              {order.emoji || "🍽️"}
+              <UtensilsCrossed className="w-6 h-6 text-eats/70" />
             </motion.div>
             <div className="flex-1 min-w-0">
               <p className="font-bold truncate group-hover:text-eats transition-colors">

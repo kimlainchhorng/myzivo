@@ -72,7 +72,7 @@ export default function UnifiedDashboard() {
               <p className="text-sm text-muted-foreground">
                 {format(new Date(), "EEEE, MMMM d")}
               </p>
-              <h1 className="text-xl font-bold">Hello, {firstName} 👋</h1>
+              <h1 className="text-xl font-bold">Hello, {firstName}</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" asChild>

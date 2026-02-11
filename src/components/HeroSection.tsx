@@ -45,10 +45,22 @@ const HeroSection = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[1200px] h-[600px] sm:h-[1200px] bg-gradient-conic from-rides/8 via-transparent to-eats/8 rounded-full blur-3xl opacity-40" />
       <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static decorative emojis */}
-      <div className="absolute top-40 left-[5%] text-5xl hidden lg:block opacity-50">🚗</div>
-      <div className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-40">🍔</div>
-      <div className="absolute top-60 right-[12%] text-4xl hidden lg:block opacity-30">✨</div>
+      {/* Static decorative icons */}
+      <div className="absolute top-40 left-[5%] hidden lg:block opacity-40">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Car className="w-6 h-6 text-primary/50" />
+        </div>
+      </div>
+      <div className="absolute bottom-32 right-[6%] hidden lg:block opacity-30">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-eats/15 to-orange-400/15 flex items-center justify-center backdrop-blur-sm">
+          <UtensilsCrossed className="w-5 h-5 text-eats/50" />
+        </div>
+      </div>
+      <div className="absolute top-60 right-[12%] hidden lg:block opacity-25">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/15 to-yellow-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-5 h-5 text-amber-400/50" />
+        </div>
+      </div>
       
       {/* Animated grid lines - hidden on mobile for performance */}
       <div className="hidden sm:block absolute inset-0 opacity-[0.02]" style={{

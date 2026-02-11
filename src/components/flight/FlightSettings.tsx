@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, User, Bell, Shield, CreditCard, Plane } from "lucide-react";
+import { Sparkles, User, Bell, Shield, CreditCard, Plane, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 
 const FlightSettings = () => {
@@ -24,25 +24,31 @@ const FlightSettings = () => {
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
       <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        className="absolute -top-2 right-16 pointer-events-none hidden md:block opacity-30"
         animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        ⚙️
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500/15 to-slate-400/10 flex items-center justify-center backdrop-blur-sm">
+          <Settings className="w-5 h-5 text-slate-400/60" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
+        className="absolute top-20 right-4 pointer-events-none hidden md:block opacity-25"
         animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
-        ✨
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/15 to-yellow-400/10 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-4 h-4 text-amber-400/60" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block"
+        className="absolute top-40 right-8 pointer-events-none hidden lg:block opacity-20"
         animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
       >
-        ✈️
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500/15 to-sky-400/10 flex items-center justify-center backdrop-blur-sm">
+          <Plane className="w-4 h-4 text-sky-400/60" />
+        </div>
       </motion.div>
 
       <motion.div 

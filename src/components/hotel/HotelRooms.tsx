@@ -6,11 +6,11 @@ import { motion } from "framer-motion";
 
 const HotelRooms = () => {
   const rooms = [
-    { id: 1, name: "Standard Room", type: "standard", beds: "1 King Bed", maxGuests: 2, price: 129, available: 8, total: 15, amenities: ["wifi", "ac", "tv"], emoji: "🛏️" },
-    { id: 2, name: "Deluxe Room", type: "deluxe", beds: "1 King Bed", maxGuests: 2, price: 179, available: 5, total: 10, amenities: ["wifi", "ac", "tv"], emoji: "🛋️" },
-    { id: 3, name: "Suite", type: "suite", beds: "1 King + Sofa Bed", maxGuests: 4, price: 299, available: 2, total: 5, amenities: ["wifi", "ac", "tv"], emoji: "🌟" },
-    { id: 4, name: "Family Room", type: "family", beds: "2 Queen Beds", maxGuests: 4, price: 229, available: 3, total: 8, amenities: ["wifi", "ac", "tv"], emoji: "👨‍👩‍👧‍👦" },
-    { id: 5, name: "Presidential Suite", type: "presidential", beds: "1 King Bed", maxGuests: 2, price: 599, available: 1, total: 2, amenities: ["wifi", "ac", "tv"], emoji: "👑" },
+    { id: 1, name: "Standard Room", type: "standard", beds: "1 King Bed", maxGuests: 2, price: 129, available: 8, total: 15, amenities: ["wifi", "ac", "tv"] },
+    { id: 2, name: "Deluxe Room", type: "deluxe", beds: "1 King Bed", maxGuests: 2, price: 179, available: 5, total: 10, amenities: ["wifi", "ac", "tv"] },
+    { id: 3, name: "Suite", type: "suite", beds: "1 King + Sofa Bed", maxGuests: 4, price: 299, available: 2, total: 5, amenities: ["wifi", "ac", "tv"] },
+    { id: 4, name: "Family Room", type: "family", beds: "2 Queen Beds", maxGuests: 4, price: 229, available: 3, total: 8, amenities: ["wifi", "ac", "tv"] },
+    { id: 5, name: "Presidential Suite", type: "presidential", beds: "1 King Bed", maxGuests: 2, price: 599, available: 1, total: 2, amenities: ["wifi", "ac", "tv"] },
   ];
 
   const getTypeConfig = (type: string) => {
@@ -43,16 +43,20 @@ const HotelRooms = () => {
       <motion.div
         animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+        className="absolute top-0 right-12 pointer-events-none opacity-15 hidden lg:block"
       >
-        🛏️
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 flex items-center justify-center">
+          <BedDouble className="w-5 h-5 text-blue-400/60" />
+        </div>
       </motion.div>
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-        className="absolute top-24 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+        className="absolute top-24 right-0 pointer-events-none opacity-10 hidden lg:block"
       >
-        🔑
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/15 to-amber-400/10 flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-amber-400/60" />
+        </div>
       </motion.div>
 
       <motion.div 
@@ -101,7 +105,6 @@ const HotelRooms = () => {
                       <BedDouble className="h-6 w-6 text-white" />
                     </motion.div>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{room.emoji}</span>
                       <Badge className={`${typeConfig.bg} capitalize`}>{room.type}</Badge>
                     </div>
                   </div>
