@@ -1,138 +1,161 @@
 
 
-## Security Hardening: Protect ZIVO from Hackers
+## Phase 6A: Platform-Wide UX/UI Update -- Auth, Mobile Home, Desktop Polish, and Ads
 
-The security scan found **90 issues** across your database and edge functions. Here is a prioritized plan to lock everything down.
-
----
-
-### CRITICAL PRIORITY: Edge Functions Exposed Without Authentication
-
-Several edge functions that perform sensitive operations have `verify_jwt = false`, meaning **anyone on the internet can call them without logging in**.
-
-**Dangerous functions that must require JWT authentication:**
-
-| Function | Risk | Current | Fix |
-|----------|------|---------|-----|
-| `run-database-backup` | Anyone can trigger DB backups | No auth | Require JWT + admin check |
-| `run-storage-backup` | Anyone can trigger storage backups | No auth | Require JWT + admin check |
-| `process-flight-refund` | Anyone can trigger flight refunds | No auth | Require JWT |
-| `issue-flight-ticket` | Anyone can issue flight tickets | No auth | Require JWT |
-| `resolve-flight-incident` | Anyone can resolve incidents | No auth | Require JWT + admin check |
-| `update-eats-order` | Anyone can modify food orders | No auth | Require JWT |
-| `create-eats-payment-intent` | Anyone can create payment charges | No auth | Require JWT |
-| `redeem-gift-card` | Anyone can redeem gift cards | No auth | Require JWT |
-| `assess-fraud` | Anyone can call fraud assessment | No auth | Require JWT |
-| `maps-api-key` | Exposes your Google Maps API key | No auth | Require JWT |
-| `ai-support-chat` | Open AI endpoint (cost abuse) | No auth | Require JWT |
-
-**Changes:**
-- Update `supabase/config.toml` to set `verify_jwt = true` for all 11 functions above
-- Add auth token validation inside each edge function to verify the user is authenticated (and admin where needed)
-- Functions that are called by webhooks or cron jobs (like Stripe webhook, Twilio callbacks) will keep `verify_jwt = false` since they use their own authentication
+This is the first batch of the Phase 6 platform update, focused on the highest-impact visual and conversion improvements across the app.
 
 ---
 
-### HIGH PRIORITY: Fix Overly Permissive RLS Policies
+### 1. Fix Console Bug: Badge Ref Warning
 
-**1. `admin_login_attempts` -- Anyone (including unauthenticated users) can insert rows**
+The `Badge` component in `GroundTransportBooking.tsx` triggers a React ref warning. Replace the problematic `Badge` usage with a styled `<span>` to eliminate the console error.
 
-Current policy allows `anon` and `authenticated` to INSERT with `WITH CHECK (true)`. An attacker could flood this table with millions of fake rows (denial of service).
-
-Fix: Restrict INSERT to rate-limited, server-side only. Change the policy to allow only `service_role` inserts, or add a constraint like IP-based deduplication.
-
-**2. `kyc_events` -- Any logged-in user can insert fake KYC verification events**
-
-Current policy: `WITH CHECK (true)` for authenticated users. A malicious user could insert fake "verified" KYC events.
-
-Fix: Change to `WITH CHECK (auth.uid() = user_id)` so users can only insert events for themselves, and add a trigger to prevent inserting "approved" status directly.
-
-**3. `share_events` -- Public INSERT with no restrictions**
-
-Current policy allows anyone (even unauthenticated) to insert share events. This is a spam/abuse vector.
-
-Fix: Restrict to authenticated users with `WITH CHECK (auth.uid() = user_id)`.
+**File:** `src/components/flight/GroundTransportBooking.tsx`
 
 ---
 
-### HIGH PRIORITY: Add RLS Policies to 74 Unprotected Tables
+### 2. Login Page -- Premium Polish and Conversion CTA
 
-74 tables have RLS enabled but **no policies at all**. While this blocks all access (safe from leaks), it means the app cannot read or write to these tables from the client. Tables with sensitive user data need proper owner-based policies.
+- Add an animated gradient background pulse behind the form card for a more premium feel
+- Add a "Get Started Free" subtitle variant for first-time visitors
+- Add a small trust badge row below the social login buttons ("256-bit encrypted", "No spam, ever")
 
-**User data tables (need owner-only access):**
-
-```text
-user_addresses      -- Contains physical addresses
-user_preferences    -- User settings
-user_loyalty        -- Loyalty points
-user_memberships    -- Membership data
-user_subscriptions  -- Subscription data
-ai_conversations    -- Private AI chat history
-support_sessions    -- Support ticket data
-verifications       -- Identity verification
-trust_scores        -- User trust scores
-```
-
-Policy pattern for these:
-- SELECT: `auth.uid() = user_id` (users see own data only)
-- INSERT: `auth.uid() = user_id`
-- UPDATE: `auth.uid() = user_id`
-- DELETE: `auth.uid() = user_id`
-- Admin override: `has_role(auth.uid(), 'admin')`
-
-**Business/order tables (need owner + admin access):**
-
-```text
-orders              -- Customer orders
-disputes            -- Payment disputes
-settlements         -- Financial settlements
-tax_records         -- Tax information
-reviews             -- User reviews
-```
-
-**System/admin-only tables (need admin-only access):**
-
-```text
-admin_invitations   -- Contains invitation tokens and emails
-demand_metrics      -- Internal analytics
-system_alerts       -- System monitoring
-service_health      -- Infrastructure status
-financial_snapshots -- Financial data
-growth_metrics      -- Business metrics
-```
-
-**Reference data tables (need public read, admin write):**
-
-```text
-cities, currencies, languages, loyalty_tiers,
-subscription_plans, zones, zone_pricing_rates,
-achievements, rewards
-```
+**File:** `src/pages/Login.tsx`
 
 ---
 
-### MEDIUM PRIORITY: Clean Up Duplicate Policies
+### 3. Setup Page -- Progress Indicator and Welcome Header
 
-The `kyc_events` table has duplicate SELECT policies:
-- "Admins can view all KYC events" (appears twice with slightly different syntax)
-- "Users can view own KYC events" / "Users can view own kyc events" (duplicate)
+- Add a "Step 1 of 1" progress pill at the top so users know onboarding is quick
+- Add a "Welcome to ZIVO" greeting header with the user's name prefilled from auth metadata
+- Improve the submit button with a loading state that says "Setting up your account..."
 
-Fix: Drop the duplicates to avoid confusion and potential policy conflicts.
+**File:** `src/pages/Setup.tsx`
+
+---
+
+### 4. Mobile App Home -- Visual Hierarchy and Conversion
+
+- Replace the stock avatar with the user's actual profile avatar from Supabase (fallback to initials)
+- Add animated "NEW" / "POPULAR" badges on service cards (Delivery = NEW, Flights = POPULAR)
+- Add a "Trending Destinations" horizontal scroll section between the service grid and personalized rows showing popular flight routes
+- Add a promo banner slot for signed-out users: "Sign up and get $10 off your first booking"
+- Improve section spacing with subtle dividers
+
+**File:** `src/pages/app/AppHome.tsx`
+
+---
+
+### 5. Desktop Homepage -- Scroll Animations and Ad Placement
+
+- Add framer-motion `whileInView` fade-in animations to all homepage sections (HeroSection, WhyBookWithZivo, BentoFeatures, etc.)
+- Place a `SponsoredBanner` component between the "How It Works" and "Popular Routes" sections
+- Add a sticky "Search Flights" CTA bar that appears when scrolling past the hero
+- Add a glassmorphism effect to the NavBar on scroll (transparent at top, blurred when scrolled)
+
+**Files:** `src/pages/Index.tsx`, `src/components/home/NavBar.tsx`
+
+---
+
+### 6. NavBar Glassmorphism on Scroll
+
+- Track scroll position with `useEffect` + `scroll` event listener
+- When `scrollY > 50`, apply `bg-background/80 backdrop-blur-xl` instead of `bg-background/95 backdrop-blur-md`
+- Add smooth transition for the background change
+
+**File:** `src/components/home/NavBar.tsx`
+
+---
+
+### 7. Footer -- Newsletter Signup and Social Links
+
+- Add a newsletter email capture form at the top of the footer ("Get travel deals in your inbox")
+- Add social media icon links (Twitter/X, Instagram, Facebook, LinkedIn) in the bottom section
+- Clean up spacing for a more modern look
+
+**File:** `src/components/Footer.tsx`
+
+---
+
+### 8. Homepage Ad Banner Component
+
+Create a new `HomepageAdBanner` component for above-the-fold ad placement. This will be a dismissible banner with:
+- Gradient background matching ZIVO brand colors
+- Configurable headline, description, and CTA button
+- "Sponsored" disclosure label
+- Close button to dismiss
+
+**New file:** `src/components/ads/HomepageAdBanner.tsx`
+
+---
+
+### 9. Eats Page -- Featured Restaurants and Promo Banner
+
+- Add a "Featured Restaurants" hero section on the desktop Eats landing page pulling real restaurant data
+- Add a promo banner slot at the top of the page
+- Add a live order counter for social proof ("1,247 orders today")
+
+**File:** `src/pages/Eats.tsx`
+
+---
+
+### 10. Flight Search Page -- Trust and Conversion Elements
+
+- Add "Recently Searched" route chips below the search form (stored in localStorage)
+- Improve the compliance disclaimer styling to use a cleaner, less intrusive card design
+- Add a "Flexible Dates" badge near the date picker
+
+**File:** `src/pages/FlightSearch.tsx`
+
+---
+
+### 11. Hotels Page -- Quick Filters and Visual Polish
+
+- Add hotel category quick filter chips above results (Boutique, Resort, Business, Budget)
+- Add a "Best Value" badge on top-rated affordable results
+- Add a "Tonight's Deals" section when no search is active
+
+**File:** `src/pages/HotelsPage.tsx`
+
+---
+
+### 12. Cars Page -- Popular Makes and Trust Badge
+
+- Add a "Popular Makes" horizontal scroll with brand name chips (Tesla, BMW, Toyota, etc.)
+- Add a "Price Match Guarantee" trust badge in the hero section
+
+**File:** `src/pages/Cars.tsx`
+
+---
+
+### 13. Move Page -- Stronger CTAs and Waitlist
+
+- Add a waitlist email capture form ("Get notified when Move launches in your city")
+- Add a pricing preview section showing estimated costs for different package sizes
+- Improve the CTA buttons with animated hover effects
+
+**File:** `src/pages/Move.tsx`
 
 ---
 
 ### Summary of All Changes
 
-| Area | Files/SQL | Count |
-|------|-----------|-------|
-| Edge function JWT enforcement | `supabase/config.toml` + 11 edge function files | 12 files |
-| Fix permissive INSERT policies | SQL: 3 policy updates | 3 policies |
-| Add RLS policies to unprotected tables | SQL: ~74 tables x 4-5 policies each | ~300 policies |
-| Clean up duplicate policies | SQL: drop 2 duplicate policies | 2 policies |
+| Area | Files | Type |
+|------|-------|------|
+| Bug fix | `src/components/flight/GroundTransportBooking.tsx` | Fix |
+| Auth flow | `src/pages/Login.tsx`, `src/pages/Setup.tsx` | Polish |
+| Mobile home | `src/pages/app/AppHome.tsx` | Enhancement |
+| Desktop home | `src/pages/Index.tsx` | Polish + Ads |
+| NavBar | `src/components/home/NavBar.tsx` | Polish |
+| Footer | `src/components/Footer.tsx` | Enhancement |
+| New ad component | `src/components/ads/HomepageAdBanner.tsx` | New |
+| Eats | `src/pages/Eats.tsx` | Enhancement |
+| Flights | `src/pages/FlightSearch.tsx` | Polish |
+| Hotels | `src/pages/HotelsPage.tsx` | Enhancement |
+| Cars | `src/pages/Cars.tsx` | Enhancement |
+| Move | `src/pages/Move.tsx` | Enhancement |
 
-Due to the size, I recommend implementing this in **3 sub-phases**:
+**Total: 12 files modified + 1 new file created**
 
-1. **Sub-phase A**: Fix the 11 edge functions (config.toml + auth checks in function code) -- this is the most urgent because these are publicly callable right now
-2. **Sub-phase B**: Fix the 3 permissive INSERT policies + add policies to the ~15 sensitive user/order tables
-3. **Sub-phase C**: Add policies to the remaining ~59 system/reference tables + cleanup duplicates
+This covers all verticals with meaningful UX improvements, ad placements for revenue, and visual polish for both mobile and desktop. No database changes are required for this phase.
 
