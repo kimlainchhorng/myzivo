@@ -9275,6 +9275,8 @@ export type Database = {
           restricted_reason: string | null
           reviewer_notes: string | null
           rides_enabled: boolean | null
+          signup_device_fingerprint: string | null
+          signup_ip: string | null
           state: string | null
           status: Database["public"]["Enums"]["driver_status"] | null
           streak_days: number | null
@@ -9365,6 +9367,8 @@ export type Database = {
           restricted_reason?: string | null
           reviewer_notes?: string | null
           rides_enabled?: boolean | null
+          signup_device_fingerprint?: string | null
+          signup_ip?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           streak_days?: number | null
@@ -9455,6 +9459,8 @@ export type Database = {
           restricted_reason?: string | null
           reviewer_notes?: string | null
           rides_enabled?: boolean | null
+          signup_device_fingerprint?: string | null
+          signup_ip?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           streak_days?: number | null
@@ -35946,6 +35952,23 @@ export type Database = {
         Returns: string
       }
       create_driver_on_signup:
+        | {
+            Args: {
+              p_affiliate_code?: string
+              p_device_fingerprint?: string
+              p_email: string
+              p_full_name: string
+              p_license_number?: string
+              p_phone: string
+              p_referral_code?: string
+              p_signup_ip?: string
+              p_user_id: string
+              p_vehicle_model?: string
+              p_vehicle_plate?: string
+              p_vehicle_type?: string
+            }
+            Returns: string
+          }
         | {
             Args: {
               p_email: string

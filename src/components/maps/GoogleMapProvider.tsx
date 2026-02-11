@@ -80,6 +80,12 @@ export function GoogleMapProvider({ children }: GoogleMapProviderProps) {
 
     const fetchApiKey = async () => {
       try {
+        // Check if user is authenticated before calling protected edge function
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError("Authentication required for maps");
+          return;
+        }
         const { data, error: fnError } = await supabase.functions.invoke("maps-api-key");
         if (fnError) {
           console.error("[GoogleMapProvider] Edge function error:", fnError);
