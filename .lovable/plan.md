@@ -1,119 +1,109 @@
 
 
-## Phase 12E: Emoji Cleanup Batch 5 -- Pages, Data Files, and Config
+## Phase 12F: Emoji Cleanup Batch 6 -- Cars, Hotels, Flights, and Config
 
-This batch covers ~20 files across pages, data configs, admin components, and hooks that still contain raw emojis.
-
----
-
-### Batch 1: AppHome and Personalized Hook
-
-| File | Change |
-|------|--------|
-| `src/hooks/usePersonalizedHome.ts` (lines 24, 29-33) | Replace `emoji` property with `iconName` string. Map: `"coffee"`, `"utensils-crossed"`, `"cup-soda"`, `"moon"`, `"bird"`. Update `TimeContext` interface. |
-| `src/pages/app/AppHome.tsx` (line 150, 156, 374, 387, 394, 399, 403) | Update `PersonalizedRow` to accept `iconName` instead of `emoji`. Add icon lookup map for time context icons (`Coffee`, `UtensilsCrossed`, `CupSoda`, `Moon`, `Bird`). Remove emoji from ad banner headline (line 374 -- remove sun emoji). |
+This batch targets ~20 high-visibility files across car rental pages, hotel components, flight UI, ride forms, and config files.
 
 ---
 
-### Batch 2: TrendingNowSection and CuisinePhotoGrid
+### Batch 1: Car Components (Data-Driven Emojis)
 
-| File | Change |
-|------|--------|
-| `src/components/home/TrendingNowSection.tsx` (lines 12, 24, 36, 48) | Replace `image` emoji strings with Lucide icon names. Map: Tokyo `"landmark"`, Maldives `"palmtree"`, Paris `"landmark"`, NYC-London `"plane"`. Render icons in gradient containers instead of `<span className="text-6xl">` (line 108). |
-| `src/components/shared/CuisinePhotoGrid.tsx` (lines 18-25) | Remove unused `emoji` property from `cuisineCategories` array -- emojis are never rendered (photos are used instead). |
-
----
-
-### Batch 3: Data and Config Files
-
-| File | Change |
-|------|--------|
-| `src/data/affiliatePartners.ts` (lines 60, 177, 187, 198, 208, 219, 229) | Replace `logo` emojis with Lucide icon name strings: `"plane"`, `"bed-double"`, `"globe"`, `"car"`, `"car-front"`, `"shield"`, `"lock"`. |
-| `src/lib/revenueAnalytics.ts` (lines 66-73) | Replace `icon` emojis with Lucide icon name strings: `"plane"`, `"building-2"`, `"car"`, `"car-taxi-front"`, `"ticket"`, `"smartphone"`, `"luggage"`, `"scale"`. |
-| `src/hooks/useZivoWallet.ts` (lines 222-231) | Replace `icon` emojis with Lucide icon name strings: `"plane"`, `"car"`, `"car-front"`, `"car-taxi-front"`, `"utensils"`, `"package"`, `"building-2"`, `"ticket"`. Default fallback: `"credit-card"`. |
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `CarCategoryGrid.tsx` (lines 18-80) | `icon` emojis for 6 car categories | Replace with Lucide icon name strings: `"car"`, `"car-front"`, `"truck"`, `"crown"`, `"bus"` and render via icon lookup map |
+| `CarPopularLocations.tsx` (lines 9-16) | `image` city emojis (palm tree, beach, etc.) | Replace with Lucide icon names: `"palmtree"`, `"umbrella"`, `"landmark"`, `"mountain"`, `"coffee"` in gradient containers |
+| `CarRoadTripPlanner.tsx` (lines 14-47) | `image` trip emojis (wave, island, mountain) | Replace with Lucide icon names: `"waves"`, `"route"`, `"palmtree"`, `"mountain"` in emerald gradient containers |
+| `CarCustomerStories.tsx` (lines 12-36) | `avatar` people emojis | Replace with Lucide `User` icon in colored circles (same pattern as CarSocialProof) |
+| `CarResultCard.tsx` (line 129) | Fallback car emoji | Replace with Lucide `Car` icon in gradient container |
 
 ---
 
-### Batch 4: Flight and Insurance Components
+### Batch 2: Hotel Components
 
-| File | Change |
-|------|--------|
-| `src/components/flight/AirlinePartnersHub.tsx` (lines 37-47) | Replace `logo` flag/emoji strings with Lucide `"plane"` for all airlines. The component already renders airline codes prominently -- the logo is secondary. |
-| `src/components/flight/TravelInsuranceSelector.tsx` (lines 151-155) | Replace `icon` emojis with Lucide icon name strings: `"car"`, `"smartphone"`, `"mountain-snow"`, `"dog"`. |
-| `src/components/flight/FlightCurrencyConverter.tsx` (lines 5-11) | Keep flag emojis -- standard UI for currency/country selectors (same decision as CountrySelector). |
-
----
-
-### Batch 5: Page-Level Emojis
-
-| File | Change |
-|------|--------|
-| `src/pages/HotelsPage.tsx` (line 304) | Remove moon emoji from "Tonight's Deals" heading. |
-| `src/pages/Eats.tsx` (line 130) | Replace fire emoji with inline Lucide `Flame` icon. |
-| `src/pages/Terms.tsx` (line 112) | Replace warning emoji with Lucide `AlertTriangle` icon inline. |
-| `src/pages/lp/ExtrasLP.tsx` (lines 38, 43, 48) | Replace emoji divs with Lucide icons in gradient containers: `Search`, `BarChart3`, `Sparkles`. |
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `HotelDestinationGuides.tsx` (lines 11-55) | `image` city emojis (Eiffel Tower, temple, etc.) | Replace with Lucide icon names: `"landmark"`, `"building-2"`, `"palmtree"`, `"mountain"` in amber gradient containers |
+| `HotelSocialProof.tsx` (lines 6-10) | `avatar` people emojis | Replace with Lucide `User` icon in colored circles |
+| `HotelOverview.tsx` (lines 204-224) | Floating hotel/bed/sparkle emojis | Replace with Lucide `Building2`, `BedDouble`, `Sparkles` in gradient containers |
 
 ---
 
-### Batch 6: Admin and Social Proof
+### Batch 3: Flight Components
 
-| File | Change |
-|------|--------|
-| `src/components/admin/AdminAnalytics.tsx` (line 283) | Replace `★` character with Lucide `Star` icon inline. |
-| `src/components/admin/AdminDriverMessaging.tsx` (lines 444-447) | Replace emoji prefixes in SelectItem labels with Lucide icon names rendered inline: `Info`, `Gift`, `AlertTriangle`, `Siren`. |
-| `src/components/car/CarSocialProof.tsx` (lines 6-10) | Replace avatar emojis with Lucide `User` icon in colored circle. Update rendering (line 60). |
-| `src/components/maps/MapboxMap.tsx` (line 208) | Replace map emoji in empty state with Lucide `Map` icon in gradient container. |
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `FlightHeroSection.tsx` (line 44-48) | Airline `logo` flag emojis | Keep -- flag emojis are standard for country identification |
+| `FlightHeroSection.tsx` (lines 303-306) | Cabin class select item emojis | Replace with inline Lucide icons: `Plane`, `Gem`, `Briefcase`, `Crown` |
+| `FlightMobileAppPromo.tsx` (line 27) | Large plane emoji in phone mockup | Replace with Lucide `Plane` icon in sky gradient circle |
+| `FlightLoyaltyIntegration.tsx` (lines 41-44) | Alliance logo emojis | Replace with Lucide icons: `Star`, `Globe`, `Plane`, `Target` |
+| `InFlightServices.tsx` (lines 207-210) | Extra services icon emojis | Replace with Lucide icon names: `"bed-double"`, `"sparkles"`, `"wine"`, `"flower-2"` |
+| `FlightTicketCard.tsx` (line 391) | Leaf/plant emoji for CO2 | Replace with Lucide `Leaf` icon inline |
+| `FlightReviewsWidget.tsx` (lines 10-34) | `avatar` people emojis | Replace with Lucide `User` icon in colored circles |
+| `GroundTransportBooking.tsx` (lines 72-145) | Transport `icon` emojis | Replace with Lucide icon names: `"car"`, `"car-front"`, `"crown"`, `"bus"`, `"truck"` |
+
+---
+
+### Batch 4: Ride, AI, and Shared Components
+
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `RideRequestForm.tsx` (lines 46-58) | Ride type `icon` emojis | Replace with Lucide icon names: `"car"`, `"car-front"`, `"sparkles"` |
+| `SmartRecommendationCard.tsx` (lines 20-27) | `SERVICE_ICONS` emoji map | Replace with Lucide icon name strings: `"plane"`, `"building-2"`, `"car"`, `"car-taxi-front"`, `"utensils"`, `"package"` |
+| `NearbyCitySuggestions.tsx` (lines 74-79) | Transit icon emojis | Replace with Lucide icons: `Train`, `Bus`, `Car` |
+| `UberLikeRideRow.tsx` (line 160) | Person emoji for seats | Replace with Lucide `User` icon inline |
+
+---
+
+### Batch 5: Config and Data Files
+
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `loyaltyTiers.ts` (lines 28-79) | Tier medal/gem emojis | Replace with Lucide icon name strings: `"medal"`, `"award"`, `"trophy"`, `"gem"` |
+| `HizovoHome.tsx` (lines 25-28) | Destination `image` emojis | Replace with Lucide icon names: `"landmark"`, `"umbrella"`, `"palmtree"`, `"sparkles"` |
+| `CarSearch.tsx` (lines 73-93) | Car result `image` emojis | Replace with Lucide icon names: `"car"`, `"zap"`, `"car-front"` |
+| `DriverCTASection.tsx` (lines 57-91) | Floating emojis (rocket, star, car, money, trophy) | Replace with Lucide `Rocket`, `Star`, `Car`, `DollarSign`, `Trophy` in gradient containers |
+| `CustomerFlights.tsx` (lines 80-88) | Floating cloud/sparkle emojis | Replace with Lucide `Cloud`, `Sparkles` in gradient containers |
 
 ---
 
 ### Technical Details
 
-**usePersonalizedHome.ts refactor:**
+**Avatar replacement pattern (reused across CarCustomerStories, HotelSocialProof, FlightReviewsWidget):**
+Replace emoji avatars with a deterministic colored `User` icon circle based on the person's name:
 ```text
-// Interface change
-interface TimeContext {
-  period: TimePeriod;
-  headline: string;
-  iconName: string;  // was: emoji: string
-}
-
-// Data change
-{ period: "morning", headline: "Breakfast Spots", iconName: "coffee" }
+const colors = ["bg-sky-500/20 text-sky-400", "bg-violet-500/20 text-violet-400", ...];
+const colorIndex = name.charCodeAt(0) % colors.length;
+// Render: <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colors[colorIndex]}`}><User className="w-5 h-5" /></div>
 ```
 
-**AppHome PersonalizedRow refactor:**
-Add a `timeIcons` lookup alongside the existing `rowIcons` map:
+**Car/transport icon lookup pattern (reused across CarCategoryGrid, GroundTransportBooking, RideRequestForm):**
+Consumer components use a shared icon map:
 ```text
-const timeIcons: Record<string, { Icon: typeof Plane; color: string }> = {
-  coffee: { Icon: Coffee, color: "text-amber-400" },
-  "utensils-crossed": { Icon: UtensilsCrossed, color: "text-orange-400" },
-  ...
+const transportIcons: Record<string, typeof Car> = {
+  car: Car, "car-front": CarFront, bus: Bus, crown: Crown, truck: Truck, ...
 };
+const IconComp = transportIcons[item.icon] || Car;
 ```
-The component checks `rowIcons[title]` first, then `timeIcons[iconName]`, eliminating the emoji fallback.
 
-**TrendingNowSection refactor:**
-Replace `<span className="text-6xl">{item.image}</span>` with:
+**Floating emoji replacement pattern:**
 ```text
-<div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center">
-  <IconComponent className="w-8 h-8 text-primary/80" />
-</div>
+Before: <div class="absolute ... text-5xl opacity-40">emoji</div>
+After:  <div class="absolute ... opacity-30">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+            <Icon class="w-6 h-6 text-primary/50" />
+          </div>
+        </div>
 ```
-
-**Config files (affiliatePartners, revenueAnalytics, useZivoWallet):**
-These use `icon`/`logo` as strings rendered by consuming components. Changed to Lucide icon name strings. Consumer components should use an icon lookup map (same pattern as CarFeaturedVehicles).
 
 ### Summary
 
 | Batch | Files Modified |
 |-------|---------------|
-| 1: AppHome + hook | 2 |
-| 2: Trending + Cuisine | 2 |
-| 3: Data/config files | 3 |
-| 4: Flight/insurance | 2 (1 kept) |
-| 5: Page-level | 4 |
-| 6: Admin + social proof | 4 |
-| **Total** | **~17 files modified** |
+| 1: Car components | 5 |
+| 2: Hotel components | 3 |
+| 3: Flight components | 7 (1 kept) |
+| 4: Ride/AI/Shared | 4 |
+| 5: Config and data | 5 |
+| **Total** | **~24 files modified** |
 
 No new files. No database changes. No edge function changes.
-
