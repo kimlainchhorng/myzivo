@@ -22,10 +22,10 @@ const travelActions = [
 
 // Popular destinations
 const popularDestinations = [
-  { id: 1, city: "New York", country: "USA", code: "JFK", type: "flights", image: "🗽" },
-  { id: 2, city: "Miami", country: "USA", code: "MIA", type: "hotels", image: "🏖️" },
-  { id: 3, city: "Los Angeles", country: "USA", code: "LAX", type: "cars", image: "🌴" },
-  { id: 4, city: "Las Vegas", country: "USA", code: "LAS", type: "hotels", image: "🎰" },
+  { id: 1, city: "New York", country: "USA", code: "JFK", type: "flights" },
+  { id: 2, city: "Miami", country: "USA", code: "MIA", type: "hotels" },
+  { id: 3, city: "Los Angeles", country: "USA", code: "LAX", type: "cars" },
+  { id: 4, city: "Las Vegas", country: "USA", code: "LAS", type: "hotels" },
 ];
 
 // Current deals
@@ -61,7 +61,7 @@ const HizovoHome = () => {
                 </span>
               </div>
               <p className="text-muted-foreground text-sm">
-                {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''} ✈️
+                {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''}
               </p>
             </div>
             <button 
@@ -161,8 +161,8 @@ const HizovoHome = () => {
                 onClick={() => navigate(`/app/${dest.type}`)}
                 className="flex-shrink-0 w-32 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.98] transition-transform"
               >
-                <div className="w-full aspect-square bg-muted rounded-xl flex items-center justify-center text-4xl mb-2">
-                  {dest.image}
+                <div className="w-full aspect-square bg-muted rounded-xl flex items-center justify-center mb-2">
+                  <MapPin className="w-8 h-8 text-primary/60" />
                 </div>
                 <h4 className="font-bold text-sm truncate">{dest.city}</h4>
                 <p className="text-xs text-muted-foreground">{dest.country} • {dest.code}</p>

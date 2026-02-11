@@ -204,10 +204,10 @@ const entertainmentPackages: EntertainmentPackage[] = [
 ];
 
 const extraServices = [
-  { id: "extra_blanket", name: "Premium Blanket & Pillow", price: 15, icon: "🛏️" },
-  { id: "extra_amenity", name: "Amenity Kit", price: 20, icon: "🧴" },
-  { id: "extra_champagne", name: "Welcome Champagne", price: 35, icon: "🥂" },
-  { id: "extra_flowers", name: "Celebration Flowers", price: 45, icon: "💐" },
+  { id: "extra_blanket", name: "Premium Blanket & Pillow", price: 15, Icon: Coffee },
+  { id: "extra_amenity", name: "Amenity Kit", price: 20, Icon: Sparkles },
+  { id: "extra_champagne", name: "Welcome Champagne", price: 35, Icon: Wine },
+  { id: "extra_flowers", name: "Celebration Flowers", price: 45, Icon: Heart },
 ];
 
 const InFlightServices = ({
@@ -598,7 +598,9 @@ const InFlightServices = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Checkbox checked={isSelected} className="pointer-events-none" />
-                        <span className="text-2xl">{extra.icon}</span>
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <extra.Icon className="w-4 h-4 text-primary" />
+                        </div>
                         <span className="font-medium">{extra.name}</span>
                       </div>
                       <span className="font-bold">+${extra.price}</span>

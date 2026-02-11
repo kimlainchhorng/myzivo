@@ -11,7 +11,6 @@ const roadTrips = [
     distance: "380 miles",
     duration: "2-3 days",
     highlights: ["Big Sur", "Carmel", "Santa Barbara"],
-    image: "🌊",
     rating: 4.9,
     difficulty: "Easy",
   },
@@ -22,7 +21,6 @@ const roadTrips = [
     distance: "2,400 miles",
     duration: "7-10 days",
     highlights: ["Grand Canyon", "Santa Fe", "Mojave Desert"],
-    image: "🛣️",
     rating: 4.8,
     difficulty: "Moderate",
   },
@@ -33,7 +31,6 @@ const roadTrips = [
     distance: "160 miles",
     duration: "1-2 days",
     highlights: ["Seven Mile Bridge", "Islamorada", "Key Largo"],
-    image: "🏝️",
     rating: 4.7,
     difficulty: "Easy",
   },
@@ -44,7 +41,6 @@ const roadTrips = [
     distance: "469 miles",
     duration: "3-5 days",
     highlights: ["Shenandoah", "Asheville", "Great Smokies"],
-    image: "🏔️",
     rating: 4.8,
     difficulty: "Moderate",
   },
@@ -79,8 +75,8 @@ const CarRoadTripPlanner = () => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/10 flex items-center justify-center text-3xl">
-                  {trip.image}
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/10 flex items-center justify-center">
+                  <Route className="w-8 h-8 text-emerald-400" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">

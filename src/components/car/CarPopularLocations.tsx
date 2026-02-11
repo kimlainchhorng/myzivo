@@ -6,14 +6,14 @@ import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
 import { format, addDays } from "date-fns";
 
 const locations = [
-  { city: "Los Angeles", state: "CA", image: "🌴", cars: 850, avgPrice: 45, airport: "LAX", trending: true },
-  { city: "Miami", state: "FL", image: "🏖️", cars: 680, avgPrice: 42, airport: "MIA", trending: true },
-  { city: "Las Vegas", state: "NV", image: "🎰", cars: 590, avgPrice: 38, airport: "LAS", trending: true },
-  { city: "New York", state: "NY", image: "🗽", cars: 920, avgPrice: 55, airport: "JFK", trending: false },
-  { city: "San Francisco", state: "CA", image: "🌉", cars: 540, avgPrice: 52, airport: "SFO", trending: false },
-  { city: "Orlando", state: "FL", image: "🎢", cars: 710, avgPrice: 35, airport: "MCO", trending: true },
-  { city: "Denver", state: "CO", image: "🏔️", cars: 420, avgPrice: 48, airport: "DEN", trending: false },
-  { city: "Seattle", state: "WA", image: "☕", cars: 380, avgPrice: 50, airport: "SEA", trending: false },
+  { city: "Los Angeles", state: "CA", cars: 850, avgPrice: 45, airport: "LAX", trending: true },
+  { city: "Miami", state: "FL", cars: 680, avgPrice: 42, airport: "MIA", trending: true },
+  { city: "Las Vegas", state: "NV", cars: 590, avgPrice: 38, airport: "LAS", trending: true },
+  { city: "New York", state: "NY", cars: 920, avgPrice: 55, airport: "JFK", trending: false },
+  { city: "San Francisco", state: "CA", cars: 540, avgPrice: 52, airport: "SFO", trending: false },
+  { city: "Orlando", state: "FL", cars: 710, avgPrice: 35, airport: "MCO", trending: true },
+  { city: "Denver", state: "CO", cars: 420, avgPrice: 48, airport: "DEN", trending: false },
+  { city: "Seattle", state: "WA", cars: 380, avgPrice: 50, airport: "SEA", trending: false },
 ];
 
 interface CarPopularLocationsProps {
@@ -71,9 +71,9 @@ const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
             >
               <CardContent className="p-0">
                 <div className="relative h-24 sm:h-28 bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
-                  <span className="text-4xl sm:text-5xl transition-transform group-hover:scale-110">
-                    {loc.image}
-                  </span>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center transition-transform group-hover:scale-110">
+                    <MapPin className="w-7 h-7 text-violet-400" />
+                  </div>
                   {loc.trending && (
                     <Badge className="absolute top-2 right-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs">
                       <TrendingUp className="w-3 h-3 mr-1" />

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Smartphone, Bell, Zap, Download, Star, ArrowRight } from "lucide-react";
+import { Smartphone, Bell, Zap, Download, Star, ArrowRight, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const appFeatures = [
@@ -24,7 +24,9 @@ const FlightMobileAppPromo = () => {
               {/* Phone frame */}
               <div className="w-64 sm:w-72 h-[500px] sm:h-[550px] rounded-[40px] bg-gradient-to-br from-gray-800 to-gray-900 p-3 shadow-2xl shadow-sky-500/20">
                 <div className="w-full h-full rounded-[32px] bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex flex-col items-center justify-center overflow-hidden">
-                  <div className="text-6xl mb-4">✈️</div>
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500/30 to-blue-600/20 flex items-center justify-center mb-4 mx-auto">
+                    <Plane className="w-10 h-10 text-sky-300" />
+                  </div>
                   <h3 className="font-display font-bold text-xl text-white mb-2">ZIVO Flights</h3>
                   <p className="text-sm text-white/70 text-center px-6 mb-4">Your next adventure starts here</p>
                   <div className="flex gap-2">
@@ -39,7 +41,7 @@ const FlightMobileAppPromo = () => {
                 Save $50 Today!
               </div>
               <div className="absolute -bottom-4 -left-4 px-3 py-2 rounded-xl bg-sky-500 text-white text-xs font-bold shadow-lg">
-                🔔 Price Drop Alert
+                <Bell className="w-3 h-3 inline mr-1" /> Price Drop Alert
               </div>
             </div>
           </div>

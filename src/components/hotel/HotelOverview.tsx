@@ -204,23 +204,29 @@ const HotelOverview = () => {
       <motion.div
         animate={{ y: [0, -12, 0], rotate: [0, 3, 0] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+        className="absolute top-0 right-12 pointer-events-none opacity-20 hidden lg:block"
       >
-        🏨
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Hotel className="w-6 h-6 text-amber-500/50" />
+        </div>
       </motion.div>
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-        className="absolute top-20 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+        className="absolute top-20 right-0 pointer-events-none opacity-15 hidden lg:block"
       >
-        🛏️
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 flex items-center justify-center backdrop-blur-sm">
+          <BedDouble className="w-5 h-5 text-blue-500/50" />
+        </div>
       </motion.div>
       <motion.div
         animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
         transition={{ duration: 7, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-0 right-8 text-2xl pointer-events-none opacity-10 hidden lg:block"
+        className="absolute bottom-0 right-8 pointer-events-none opacity-10 hidden lg:block"
       >
-        ✨
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-5 h-5 text-primary/50" />
+        </div>
       </motion.div>
 
       <motion.div 

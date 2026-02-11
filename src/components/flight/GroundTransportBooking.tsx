@@ -26,6 +26,9 @@ import {
   Accessibility,
   Crown,
   Package,
+  CarFront,
+  Gem,
+  Bell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -42,7 +45,7 @@ interface TransportOption {
   luggage: number;
   rating: number;
   features: string[];
-  icon: string;
+  icon: typeof Car;
   popular?: boolean;
   eco?: boolean;
 }
@@ -69,7 +72,7 @@ const transportOptions: TransportOption[] = [
     luggage: 3,
     rating: 4.9,
     features: ["Meet & Greet", "Flight tracking", "Free waiting", "WiFi"],
-    icon: "🚗",
+    icon: Car,
     popular: true,
   },
   {
@@ -84,7 +87,7 @@ const transportOptions: TransportOption[] = [
     luggage: 5,
     rating: 4.9,
     features: ["Meet & Greet", "Flight tracking", "Free waiting", "WiFi", "Child seat"],
-    icon: "🚙",
+    icon: CarFront,
   },
   {
     id: "private_luxury",
@@ -98,7 +101,7 @@ const transportOptions: TransportOption[] = [
     luggage: 3,
     rating: 5.0,
     features: ["VIP Meet & Greet", "Flight tracking", "Champagne", "WiFi", "Newspaper"],
-    icon: "🏎️",
+    icon: Crown,
   },
   {
     id: "shared_shuttle",
@@ -112,7 +115,7 @@ const transportOptions: TransportOption[] = [
     luggage: 2,
     rating: 4.3,
     features: ["Door-to-door", "Shared ride", "WiFi"],
-    icon: "🚐",
+    icon: Bus,
     eco: true,
   },
   {
@@ -127,7 +130,7 @@ const transportOptions: TransportOption[] = [
     luggage: 2,
     rating: 4.5,
     features: ["Direct route", "USB charging", "WiFi"],
-    icon: "🚌",
+    icon: Bus,
     eco: true,
   },
   {
@@ -142,7 +145,7 @@ const transportOptions: TransportOption[] = [
     luggage: 2,
     rating: 4.4,
     features: ["Unlimited miles", "Insurance included", "GPS"],
-    icon: "🚗",
+    icon: Car,
   },
   {
     id: "rental_suv",
@@ -156,7 +159,7 @@ const transportOptions: TransportOption[] = [
     luggage: 4,
     rating: 4.6,
     features: ["Unlimited miles", "Insurance included", "GPS", "Child seat available"],
-    icon: "🚙",
+    icon: CarFront,
   },
   {
     id: "shuttle_hotel",
@@ -170,7 +173,7 @@ const transportOptions: TransportOption[] = [
     luggage: 2,
     rating: 4.2,
     features: ["Free for hotel guests", "Scheduled departures"],
-    icon: "🛎️",
+    icon: Bell,
   },
 ];
 
@@ -360,7 +363,9 @@ const GroundTransportBooking = ({
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
                               <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
-                              <span className="text-3xl">{option.icon}</span>
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                                <option.icon className="w-5 h-5 text-primary" />
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
                                   <div>
@@ -454,7 +459,9 @@ const GroundTransportBooking = ({
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{selectedDetails.icon}</span>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                      <selectedDetails.icon className="w-5 h-5 text-primary" />
+                    </div>
                     <div>
                       <h4 className="font-semibold">{selectedDetails.name}</h4>
                       <p className="text-xs text-muted-foreground">{selectedDetails.provider}</p>

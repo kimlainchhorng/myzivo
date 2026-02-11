@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Sparkles, Clock, DollarSign, Users, ArrowRight } from "lucide-react";
+import { Plane, Sparkles, Clock, DollarSign, Users, ArrowRight, Cloud } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,25 +66,31 @@ const CustomerFlights = () => {
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
       <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        className="absolute -top-2 right-16 pointer-events-none hidden md:block"
         animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        ✈️
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500/15 to-blue-500/15 flex items-center justify-center backdrop-blur-sm opacity-30">
+          <Plane className="w-5 h-5 text-sky-500/50" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
+        className="absolute top-20 right-4 pointer-events-none hidden md:block"
         animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
-        ✨
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm opacity-25">
+          <Sparkles className="w-4 h-4 text-primary/50" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block"
+        className="absolute top-40 right-8 pointer-events-none hidden lg:block"
         animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
       >
-        🌤️
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/15 to-yellow-500/15 flex items-center justify-center backdrop-blur-sm opacity-20">
+          <Cloud className="w-4 h-4 text-amber-500/50" />
+        </div>
       </motion.div>
 
       <motion.div 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Star, Quote, ChevronLeft, ChevronRight, MapPin, CheckCircle, Car } from "lucide-react";
+import { Star, Quote, ChevronLeft, ChevronRight, MapPin, CheckCircle, Car, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ const stories = [
     id: 1,
     name: "Michael Rodriguez",
     location: "Austin, TX",
-    avatar: "👨‍🦱",
+    avatarColor: "bg-sky-500/20 text-sky-400",
     rating: 5,
     title: "Perfect road trip experience!",
     review: "Rented a Jeep for our Grand Canyon trip. Pickup was seamless, car was spotless, and the unlimited mileage let us explore freely. Best rental experience I've had!",
@@ -21,7 +21,7 @@ const stories = [
     id: 2,
     name: "Lisa Park",
     location: "Seattle, WA",
-    avatar: "👩‍💻",
+    avatarColor: "bg-violet-500/20 text-violet-400",
     rating: 5,
     title: "Business travel made easy",
     review: "Needed a reliable car for client meetings. The Mercedes was immaculate and the premium service matched. Express checkout saved me so much time!",
@@ -33,7 +33,7 @@ const stories = [
     id: 3,
     name: "The Williams Family",
     location: "Chicago, IL",
-    avatar: "👨‍👩‍👧‍👦",
+    avatarColor: "bg-emerald-500/20 text-emerald-400",
     rating: 5,
     title: "Family vacation made perfect",
     review: "The minivan had everything we needed for our week-long Florida trip. Kids loved the entertainment system, and the free car seats were a huge plus!",
@@ -74,7 +74,9 @@ const CarCustomerStories = () => {
             <Quote className="w-10 h-10 text-primary/20 mb-4" />
             
             <div className="flex items-center gap-4 mb-6">
-              <div className="text-4xl">{current.avatar}</div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${current.avatarColor}`}>
+                <User className="w-6 h-6" />
+              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-lg">{current.name}</h4>

@@ -19,7 +19,8 @@ import {
   Crown,
   Check,
   ArrowRight,
-  Flame
+  Flame,
+  Leaf
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -388,7 +389,7 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
           </div>
           {flight.co2 && (
             <span className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
-              🌱 {flight.co2} CO₂
+              <Leaf className="w-3 h-3" /> {flight.co2} CO₂
             </span>
           )}
         </div>

@@ -3,7 +3,7 @@
  * AI-powered cross-service suggestions
  */
 
-import { X, Sparkles, ChevronRight } from "lucide-react";
+import { X, Sparkles, ChevronRight, Plane, Building2, Car, CarTaxiFront, UtensilsCrossed, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +17,13 @@ interface SmartRecommendationCardProps {
   onDismiss?: () => void;
 }
 
-const SERVICE_ICONS: Record<string, string> = {
-  flights: "✈️",
-  hotels: "🏨",
-  cars: "🚗",
-  rides: "🚕",
-  eats: "🍔",
-  move: "📦",
+const SERVICE_ICONS: Record<string, typeof Plane> = {
+  flights: Plane,
+  hotels: Building2,
+  cars: Car,
+  rides: CarTaxiFront,
+  eats: UtensilsCrossed,
+  move: Package,
 };
 
 export function SmartRecommendationCard({
@@ -34,7 +34,7 @@ export function SmartRecommendationCard({
   const markClicked = useMarkRecommendationClicked();
 
   const context = recommendation.context;
-  const icon = context.icon || SERVICE_ICONS[recommendation.recommended_service] || "✨";
+  const ServiceIcon = SERVICE_ICONS[recommendation.recommended_service] || Sparkles;
 
   // Mark as shown when component mounts
   useEffect(() => {
@@ -52,8 +52,8 @@ export function SmartRecommendationCard({
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Icon */}
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-            {icon}
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <ServiceIcon className="w-5 h-5 text-primary" />
           </div>
 
           {/* Content */}
