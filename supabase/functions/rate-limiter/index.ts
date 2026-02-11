@@ -6,7 +6,7 @@
  */
 
 // deno-lint-ignore-file no-explicit-any
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +25,7 @@ interface RateLimitConfig {
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
   'flights_search': { windowMs: 60000, maxRequests: 10 },  // 10 per user per minute
   'flights_search_ip': { windowMs: 60000, maxRequests: 30 }, // 30 per IP per minute
+  'flight_booking': { windowMs: 3600000, maxRequests: 5 }, // 5 bookings per hour
   'hotels_search': { windowMs: 60000, maxRequests: 30 },
   'cars_search': { windowMs: 60000, maxRequests: 30 },
   'contact_form': { windowMs: 60000, maxRequests: 5 },
@@ -184,6 +185,36 @@ Deno.serve(async (req) => {
     // Check for bot patterns
     const botScore = detectBot(userAgent, req.headers);
     
+    // Auto-block high bot scores for 5 minutes
+    if (botScore > 70) {
+      cacheEntry.blocked = true;
+      cacheEntry.resetAt = now + 300000; // 5 minutes
+      rateLimitCache.set(rateLimitKey, cacheEntry);
+      
+      await logRateLimitEvent(supabase, {
+        action,
+        clientIP,
+        sessionId,
+        userId,
+        userAgent,
+        blocked: true,
+        requestCount: cacheEntry.count,
+      });
+
+      return new Response(
+        JSON.stringify({
+          allowed: false,
+          blocked: true,
+          botScore,
+          message: 'Suspicious activity detected. Please try again later.',
+        }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         allowed: true,

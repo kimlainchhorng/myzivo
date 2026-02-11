@@ -14,7 +14,8 @@ export type RateLimitAction =
   | 'admin_action' 
   | 'login_attempt'
   | 'create_order'
-  | 'cancel_order';
+  | 'cancel_order'
+  | 'flight_booking';
 
 interface RateLimitResult {
   allowed: boolean;
@@ -38,7 +39,16 @@ const CLIENT_LIMITS: Record<RateLimitAction, { windowMs: number; max: number }> 
   login_attempt: { windowMs: 900000, max: 10 },
   create_order: { windowMs: 86400000, max: 30 }, // 30 orders per day
   cancel_order: { windowMs: 86400000, max: 8 },  // 8 cancels per day
+  flight_booking: { windowMs: 3600000, max: 5 }, // 5 bookings per hour
 };
+
+/**
+ * Pre-flight rate limit check for checkout flows
+ * Call before initiating any payment/checkout
+ */
+export async function checkCheckoutRateLimit(action: RateLimitAction = 'flight_booking'): Promise<RateLimitResult> {
+  return checkRateLimit(action);
+}
 
 /**
  * Check rate limit for an action (calls edge function)

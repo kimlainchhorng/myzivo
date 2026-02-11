@@ -54,33 +54,30 @@ async function listBucketFiles(
       return files;
     }
 
-    for (const item of data || []) {
-      if (item.id) {
-        // It's a file
-        files.push({
-          name: item.name,
-          size: item.metadata?.size || 0,
-          created_at: item.created_at || null,
-          path: item.name,
-        });
-      } else {
-        // It's a folder - list contents
-        const { data: folderData } = await supabase.storage
-          .from(bucketName)
-          .list(item.name, { limit: 1000 });
+    // Recursive function to list files at any depth
+    async function listRecursive(prefix: string) {
+      const { data: items } = await supabase.storage
+        .from(bucketName)
+        .list(prefix, { limit: 1000 });
 
-        for (const subItem of folderData || []) {
-          if (subItem.id) {
-            files.push({
-              name: subItem.name,
-              size: subItem.metadata?.size || 0,
-              created_at: subItem.created_at || null,
-              path: `${item.name}/${subItem.name}`,
-            });
-          }
+      for (const item of items || []) {
+        const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
+        if (item.id) {
+          // It's a file
+          files.push({
+            name: item.name,
+            size: item.metadata?.size || 0,
+            created_at: item.created_at || null,
+            path: fullPath,
+          });
+        } else {
+          // It's a folder - recurse into it
+          await listRecursive(fullPath);
         }
       }
     }
+
+    await listRecursive("");
   } catch (err) {
     console.warn(`Failed to list bucket ${bucketName}:`, err);
   }
