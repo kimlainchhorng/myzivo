@@ -63,14 +63,14 @@ export interface MonthlyReport {
 // ============================================
 
 export const PRODUCT_CONFIG: Record<string, { displayName: string; icon: string; color: string; commissionRate: number }> = {
-  flights: { displayName: 'Flights', icon: '✈️', color: 'bg-sky-500', commissionRate: 0.02 },
-  hotels: { displayName: 'Hotels', icon: '🏨', color: 'bg-amber-500', commissionRate: 0.04 },
-  car_rental: { displayName: 'Car Rental', icon: '🚗', color: 'bg-violet-500', commissionRate: 0.05 },
-  transfers: { displayName: 'Airport Transfers', icon: '🚕', color: 'bg-orange-500', commissionRate: 0.08 },
-  activities: { displayName: 'Activities / Things To Do', icon: '🎫', color: 'bg-emerald-500', commissionRate: 0.06 },
-  esim: { displayName: 'eSIM / Travel Internet', icon: '📱', color: 'bg-cyan-500', commissionRate: 0.12 },
-  luggage: { displayName: 'Luggage Storage', icon: '🧳', color: 'bg-pink-500', commissionRate: 0.10 },
-  compensation: { displayName: 'Compensation Services', icon: '⚖️', color: 'bg-red-500', commissionRate: 0.20 },
+  flights: { displayName: 'Flights', icon: 'plane', color: 'bg-sky-500', commissionRate: 0.02 },
+  hotels: { displayName: 'Hotels', icon: 'building-2', color: 'bg-amber-500', commissionRate: 0.04 },
+  car_rental: { displayName: 'Car Rental', icon: 'car', color: 'bg-violet-500', commissionRate: 0.05 },
+  transfers: { displayName: 'Airport Transfers', icon: 'car-taxi-front', color: 'bg-orange-500', commissionRate: 0.08 },
+  activities: { displayName: 'Activities / Things To Do', icon: 'ticket', color: 'bg-emerald-500', commissionRate: 0.06 },
+  esim: { displayName: 'eSIM / Travel Internet', icon: 'smartphone', color: 'bg-cyan-500', commissionRate: 0.12 },
+  luggage: { displayName: 'Luggage Storage', icon: 'luggage', color: 'bg-pink-500', commissionRate: 0.10 },
+  compensation: { displayName: 'Compensation Services', icon: 'scale', color: 'bg-red-500', commissionRate: 0.20 },
 };
 
 export const SUBID_REGISTRY: Record<string, { displayName: string; product: string }> = {

@@ -204,8 +204,8 @@ const MapboxMap = ({
       <div className={`relative ${className}`}>
         <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
           <div className="text-center p-6">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🗺️</span>
+            <div className="w-16 h-16 bg-gradient-to-br from-sky-500/20 to-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
             </div>
             <p className="text-white/60 text-sm">Map key not set</p>
             <p className="text-white/40 text-xs mt-1">Add VITE_MAPBOX_ACCESS_TOKEN to enable maps</p>

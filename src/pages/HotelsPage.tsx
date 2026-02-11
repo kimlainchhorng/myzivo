@@ -301,7 +301,7 @@ export default function HotelsPage() {
             <section className="py-12 bg-hotels/5">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold mb-2">Tonight's Deals 🌙</h2>
+                  <h2 className="text-2xl font-bold mb-2">Tonight's Deals</h2>
                   <p className="text-muted-foreground">Last-minute hotel deals for tonight</p>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">

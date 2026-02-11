@@ -15,13 +15,13 @@ interface CuisinePhotoGridProps {
 }
 
 // Cuisine categories with display names
-const cuisineCategories: { key: RestaurantCuisine; label: string; emoji?: string }[] = [
-  { key: "burger", label: "Burgers", emoji: "🍔" },
-  { key: "sushi", label: "Japanese", emoji: "🍣" },
-  { key: "pizza", label: "Italian", emoji: "🍕" },
-  { key: "taco", label: "Mexican", emoji: "🌮" },
-  { key: "noodles", label: "Asian", emoji: "🍜" },
-  { key: "salad", label: "Healthy", emoji: "🥗" },
+const cuisineCategories: { key: RestaurantCuisine; label: string }[] = [
+  { key: "burger", label: "Burgers" },
+  { key: "sushi", label: "Japanese" },
+  { key: "pizza", label: "Italian" },
+  { key: "taco", label: "Mexican" },
+  { key: "noodles", label: "Asian" },
+  { key: "salad", label: "Healthy" },
 ];
 
 export default function CuisinePhotoGrid({

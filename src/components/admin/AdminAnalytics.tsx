@@ -280,7 +280,7 @@ const AdminAnalytics = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Avg Rating</p>
-              <p className="text-lg font-semibold">4.8 ★</p>
+              <p className="text-lg font-semibold flex items-center gap-1">4.8 <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /></p>
             </div>
           </CardContent>
         </Card>

@@ -149,10 +149,10 @@ const insurancePlans: InsurancePlan[] = [
 ];
 
 const addons = [
-  { id: "rental_car", name: "Rental Car Damage", price: 15, icon: "🚗" },
-  { id: "electronics", name: "Electronics Protection", price: 25, icon: "📱" },
-  { id: "sports", name: "Adventure Sports", price: 35, icon: "🎿" },
-  { id: "pet", name: "Pet Care Coverage", price: 20, icon: "🐕" },
+  { id: "rental_car", name: "Rental Car Damage", price: 15, icon: "car" },
+  { id: "electronics", name: "Electronics Protection", price: 25, icon: "smartphone" },
+  { id: "sports", name: "Adventure Sports", price: 35, icon: "mountain-snow" },
+  { id: "pet", name: "Pet Care Coverage", price: 20, icon: "dog" },
 ];
 
 const TravelInsuranceSelector = ({
@@ -481,7 +481,9 @@ const TravelInsuranceSelector = ({
                             checked={isAddonSelected}
                             className="pointer-events-none"
                           />
-                          <span className="text-xl">{addon.icon}</span>
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Info className="w-4 h-4 text-primary" />
+                          </div>
                           <span className="font-medium">{addon.name}</span>
                         </div>
                         <span className="font-semibold">+${addon.price}</span>

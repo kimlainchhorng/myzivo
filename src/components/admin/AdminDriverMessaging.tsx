@@ -441,10 +441,10 @@ const AdminDriverMessaging = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="info">ℹ️ Information</SelectItem>
-                      <SelectItem value="promo">🎁 Promotion</SelectItem>
-                      <SelectItem value="alert">⚠️ Alert</SelectItem>
-                      <SelectItem value="urgent">🚨 Urgent</SelectItem>
+                      <SelectItem value="info"><span className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-blue-500" /> Information</span></SelectItem>
+                      <SelectItem value="promo"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-500" /> Promotion</span></SelectItem>
+                      <SelectItem value="alert"><span className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-orange-500" /> Alert</span></SelectItem>
+                      <SelectItem value="urgent"><span className="flex items-center gap-2"><Bell className="w-4 h-4 text-red-500" /> Urgent</span></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

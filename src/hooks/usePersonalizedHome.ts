@@ -21,16 +21,16 @@ type TimePeriod = "morning" | "lunch" | "afternoon" | "evening" | "late_night";
 interface TimeContext {
   period: TimePeriod;
   headline: string;
-  emoji: string;
+  iconName: string;
 }
 
 function getTimeContext(): TimeContext {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 11) return { period: "morning", headline: "Breakfast Spots", emoji: "☕" };
-  if (hour >= 11 && hour < 14) return { period: "lunch", headline: "Lunchtime Picks", emoji: "🍽️" };
-  if (hour >= 14 && hour < 17) return { period: "afternoon", headline: "Afternoon Bites", emoji: "🥤" };
-  if (hour >= 17 && hour < 22) return { period: "evening", headline: "Dinner & Delivery", emoji: "🌙" };
-  return { period: "late_night", headline: "Late Night Cravings", emoji: "🦉" };
+  if (hour >= 5 && hour < 11) return { period: "morning", headline: "Breakfast Spots", iconName: "coffee" };
+  if (hour >= 11 && hour < 14) return { period: "lunch", headline: "Lunchtime Picks", iconName: "utensils-crossed" };
+  if (hour >= 14 && hour < 17) return { period: "afternoon", headline: "Afternoon Bites", iconName: "cup-soda" };
+  if (hour >= 17 && hour < 22) return { period: "evening", headline: "Dinner & Delivery", iconName: "moon" };
+  return { period: "late_night", headline: "Late Night Cravings", iconName: "bird" };
 }
 
 const TIME_CUISINE_FILTERS: Record<TimePeriod, string[]> = {

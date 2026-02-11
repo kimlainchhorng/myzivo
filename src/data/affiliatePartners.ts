@@ -24,7 +24,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'skyscanner',
     name: 'Skyscanner',
-    logo: '🔍',
+    logo: 'search',
     baseUrl: 'https://www.skyscanner.com',
     urlTemplate: ({ origin, destination, departDate, returnDate }) => {
       const base = `https://www.skyscanner.com/transport/flights/${origin}/${destination}`;
@@ -40,7 +40,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'kayak',
     name: 'Kayak',
-    logo: '🛫',
+    logo: 'plane-takeoff',
     baseUrl: 'https://www.kayak.com',
     urlTemplate: ({ origin, destination, departDate, returnDate, cabinClass }) => {
       const cabin = cabinClass === 'business' ? 'b' : cabinClass === 'first' ? 'f' : 'e';
@@ -57,7 +57,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'momondo',
     name: 'Momondo',
-    logo: '✈️',
+    logo: 'plane',
     baseUrl: 'https://www.momondo.com',
     urlTemplate: ({ origin, destination, departDate }) => {
       const base = `https://www.momondo.com/flight-search/${origin}-${destination}`;
@@ -72,7 +72,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'kiwi',
     name: 'Kiwi.com',
-    logo: '🥝',
+    logo: 'globe',
     baseUrl: 'https://www.kiwi.com',
     urlTemplate: ({ origin, destination, departDate, passengers }) => {
       const pax = passengers || 1;
@@ -86,7 +86,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'trip',
     name: 'Trip.com',
-    logo: '🌏',
+    logo: 'globe',
     baseUrl: 'https://www.trip.com',
     urlTemplate: ({ origin, destination, departDate }) => {
       return `https://www.trip.com/flights/${origin}-${destination}?departdate=${departDate || ''}`;
@@ -99,7 +99,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'cheapflights',
     name: 'Cheapflights',
-    logo: '💰',
+    logo: 'dollar-sign',
     baseUrl: 'https://www.cheapflights.com',
     urlTemplate: ({ origin, destination, departDate, returnDate }) => {
       const base = `https://www.cheapflights.com/flight-search/${origin}-${destination}`;
@@ -115,7 +115,7 @@ export const affiliatePartners: AffiliatePartner[] = [
   {
     id: 'google_flights',
     name: 'Google Flights',
-    logo: '🔵',
+    logo: 'search',
     baseUrl: 'https://www.google.com/flights',
     urlTemplate: ({ origin, destination, departDate, returnDate }) => {
       return `https://www.google.com/travel/flights?q=Flights%20from%20${origin}%20to%20${destination}%20on%20${departDate || 'flexible'}${returnDate ? `%20returning%20${returnDate}` : ''}`;
@@ -164,7 +164,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'booking',
     name: 'Booking.com',
     type: 'hotel',
-    logo: '🏨',
+    logo: 'building-2',
     urlTemplate: (destination, dates) => 
       `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}${dates?.checkIn ? `&checkin=${dates.checkIn}` : ''}${dates?.checkOut ? `&checkout=${dates.checkOut}` : ''}`,
     tagline: 'Save on hotels at your destination',
@@ -174,7 +174,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'hotels',
     name: 'Hotels.com',
     type: 'hotel',
-    logo: '🛏️',
+    logo: 'bed-double',
     urlTemplate: (destination) => 
       `https://www.hotels.com/search.do?q-destination=${encodeURIComponent(destination)}`,
     tagline: 'Collect 10 nights, get 1 free',
@@ -184,7 +184,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'expedia',
     name: 'Expedia',
     type: 'hotel',
-    logo: '🌐',
+    logo: 'globe',
     urlTemplate: (destination) => 
       `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(destination)}`,
     tagline: 'Bundle & save with flight+hotel',
@@ -195,7 +195,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'rentalcars',
     name: 'Rentalcars.com',
     type: 'car',
-    logo: '🚗',
+    logo: 'car',
     urlTemplate: (destination) => 
       `https://www.rentalcars.com/SearchResults.do?searchType=destination&searchQuery=${encodeURIComponent(destination)}`,
     tagline: 'Compare car rental deals',
@@ -205,7 +205,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'enterprise',
     name: 'Enterprise',
     type: 'car',
-    logo: '🚙',
+    logo: 'car-front',
     urlTemplate: (destination) => 
       `https://www.enterprise.com/en/car-rental/locations/search.html?location=${encodeURIComponent(destination)}`,
     tagline: 'Pick up at the airport',
@@ -216,7 +216,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'worldnomads',
     name: 'World Nomads',
     type: 'insurance',
-    logo: '🛡️',
+    logo: 'shield',
     urlTemplate: (destination) => 
       `https://www.worldnomads.com/travel-insurance?destination=${encodeURIComponent(destination)}`,
     tagline: 'Travel insurance for adventurers',
@@ -226,7 +226,7 @@ export const crossSellPartners: CrossSellPartner[] = [
     id: 'allianz',
     name: 'Allianz Travel',
     type: 'insurance',
-    logo: '🔒',
+    logo: 'lock',
     urlTemplate: (destination) => 
       `https://www.allianztravelinsurance.com/travel-insurance.htm?destination=${encodeURIComponent(destination)}`,
     tagline: 'Trip protection plans',

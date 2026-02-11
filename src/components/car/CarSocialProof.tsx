@@ -1,13 +1,13 @@
-import { Users, TrendingUp, Clock, MapPin, Car, CheckCircle } from "lucide-react";
+import { Users, TrendingUp, Clock, MapPin, Car, CheckCircle, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 
 const recentRentals = [
-  { guest: "David K.", car: "Tesla Model 3", location: "LAX", time: "3 mins ago", avatar: "👨" },
-  { guest: "Jennifer L.", car: "BMW X5", location: "SFO", time: "7 mins ago", avatar: "👩" },
-  { guest: "Robert M.", car: "Jeep Wrangler", location: "MIA", time: "11 mins ago", avatar: "👨‍🦰" },
-  { guest: "Amanda S.", car: "Mercedes E-Class", location: "JFK", time: "15 mins ago", avatar: "👩‍🦱" },
-  { guest: "Chris P.", car: "Ford Mustang", location: "LAS", time: "18 mins ago", avatar: "👱" },
+  { guest: "David K.", car: "Tesla Model 3", location: "LAX", time: "3 mins ago", color: "bg-sky-500" },
+  { guest: "Jennifer L.", car: "BMW X5", location: "SFO", time: "7 mins ago", color: "bg-rose-500" },
+  { guest: "Robert M.", car: "Jeep Wrangler", location: "MIA", time: "11 mins ago", color: "bg-amber-500" },
+  { guest: "Amanda S.", car: "Mercedes E-Class", location: "JFK", time: "15 mins ago", color: "bg-emerald-500" },
+  { guest: "Chris P.", car: "Ford Mustang", location: "LAS", time: "18 mins ago", color: "bg-violet-500" },
 ];
 
 const liveStats = [
@@ -57,7 +57,9 @@ const CarSocialProof = () => {
 
         <div className={`mx-auto max-w-md transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-emerald-500/20 rounded-xl shadow-lg">
-            <div className="text-3xl">{recentRentals[currentRental].avatar}</div>
+            <div className={`w-10 h-10 rounded-full ${recentRentals[currentRental].color} flex items-center justify-center`}>
+              <User className="w-5 h-5 text-white" />
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-400" />

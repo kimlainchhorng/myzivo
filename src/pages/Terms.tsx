@@ -109,7 +109,7 @@ const Terms = () => {
             </div>
             <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20 space-y-4">
               <p className="text-foreground leading-relaxed font-medium">
-                ⚠️ Important: Hizivo does not issue airline tickets.
+                <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" /> Important: Hizivo does not issue airline tickets.
               </p>
               <p className="text-foreground leading-relaxed">
                 Flight bookings are completed with licensed airline partners. When you select a flight offer:
