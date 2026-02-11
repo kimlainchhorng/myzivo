@@ -32,6 +32,7 @@ import Signup from "./pages/Signup";
 
 // App (mobile-first) pages - lazy load
 const AppHome = lazy(() => import("./pages/app/AppHome"));
+const ScheduledBookingsPage = lazy(() => import("./pages/ScheduledBookingsPage"));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppRides = lazy(() => import("./pages/app/AppRides"));
 const AppEats = lazy(() => import("./pages/app/AppEats"));
@@ -669,6 +670,7 @@ const App = () => (
                 <Route path="/food" element={<SetupRequiredRoute><Eats /></SetupRequiredRoute>} />
                 <Route path="/move" element={<SetupRequiredRoute><Move /></SetupRequiredRoute>} />
                 <Route path="/more" element={<SetupRequiredRoute><AppMore /></SetupRequiredRoute>} />
+                <Route path="/scheduled" element={<SetupRequiredRoute><ScheduledBookingsPage /></SetupRequiredRoute>} />
 
                 {/* New Mobile App Routes (5-tab nav) */}
                 <Route path="/search" element={<SetupRequiredRoute><MobileSearch /></SetupRequiredRoute>} />
