@@ -42,7 +42,7 @@ const AppHeader = ({
       "fixed top-0 left-0 right-0 z-50 safe-area-top transition-all duration-200",
       transparent 
         ? "bg-transparent" 
-        : "bg-background border-b border-border"
+        : "bg-white dark:bg-background border-b border-border/50"
     )}>
       <div className="flex items-center justify-between h-14 px-4">
         {/* Left */}

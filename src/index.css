@@ -14,37 +14,37 @@
        ============================================= */
 
     /* Base Colors */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 89%;
-    --popover-foreground: 0 0% 9%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Primary Brand - Blue */
-    --primary: 161 93% 30%;
-    --primary-foreground: 151 80% 95%;
+    /* Primary Brand - Verdant Green */
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary */
-    --secondary: 0 0% 32%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 142 20% 96%;
+    --secondary-foreground: 142 50% 20%;
 
     /* Muted */
-    --muted: 0 0% 63%;
-    --muted-foreground: 0 0% 9%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
     /* Accent */
-    --accent: 166 76% 96%;
-    --accent-foreground: 173 80% 40%;
+    --accent: 142 30% 95%;
+    --accent-foreground: 142 71% 35%;
 
     /* Destructive */
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
     /* Borders & Inputs */
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 161 93% 30%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 142 71% 45%;
     --radius: 0.75rem;
 
     /* =============================================
@@ -85,28 +85,28 @@
     /* =============================================
        SHADOWS (Ramp-style Soft Shadows)
        ============================================= */
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    --shadow-md: 0 2px 8px -2px rgb(0 0 0 / 0.08), 0 4px 16px -4px rgb(0 0 0 / 0.06);
+    --shadow-lg: 0 4px 16px -2px rgb(0 0 0 / 0.08), 0 12px 32px -8px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 16px 40px -8px rgb(0 0 0 / 0.12);
 
     /* Premium Card Shadow */
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.03), 0 1px 2px -1px rgb(0 0 0 / 0.02);
-    --shadow-card-hover: 0 8px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -3px rgb(0 0 0 / 0.03);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 16px -2px rgb(0 0 0 / 0.06);
+    --shadow-card-hover: 0 8px 30px -5px rgb(0 0 0 / 0.1), 0 4px 12px -3px rgb(0 0 0 / 0.04);
 
     /* =============================================
        SIDEBAR
        ============================================= */
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 161 93% 30%;
-    --sidebar-primary-foreground: 151 80% 95%;
-    --sidebar-accent: 0 0% 32%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 83%;
-    --sidebar-ring: 161 93% 30%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 20% 96%;
+    --sidebar-accent-foreground: 142 50% 20%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 142 71% 45%;
     --sidebar: 0 0% 98%;
 
     /* =============================================
@@ -139,9 +139,9 @@
     --popover: 0 0% 25%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary Brand - Blue */
-    --primary: 158 64% 51%;
-    --primary-foreground: 165 91% 9%;
+    /* Primary Brand - Verdant Green */
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary */
     --secondary: 0 0% 45%;
@@ -162,7 +162,7 @@
     /* Borders & Inputs */
     --border: 0 0% 32%;
     --input: 0 0% 32%;
-    --ring: 158 64% 51%;
+    --ring: 142 71% 45%;
 
     /* Product Colors */
     --flights: 217 91% 60%;
@@ -194,12 +194,12 @@
     /* Sidebar */
     --sidebar: 0 0% 14%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 158 64% 51%;
-    --sidebar-primary-foreground: 165 91% 9%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 172 66% 50%;
     --sidebar-accent-foreground: 178 84% 10%;
     --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 158 64% 51%;
+    --sidebar-ring: 142 71% 45%;
     --chart-1: 156 71% 66%;
     --chart-2: 141 76% 73%;
     --chart-3: 170 76% 64%;

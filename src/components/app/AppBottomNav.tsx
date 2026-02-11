@@ -58,7 +58,7 @@ const AppBottomNav = () => {
             >
               <div className={cn(
                 "w-10 h-7 rounded-full flex items-center justify-center transition-all",
-                isActive && "bg-primary/10"
+                isActive && "bg-primary/15"
               )}>
                 <tab.icon className={cn(
                   "w-5 h-5 transition-transform",
