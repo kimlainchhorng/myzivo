@@ -34842,33 +34842,119 @@ export type Database = {
       }
       drivers_public: {
         Row: {
+          acceptance_rate: number | null
           avatar_url: string | null
+          completion_rate: number | null
           created_at: string | null
-          first_name: string | null
+          current_lat: number | null
+          current_lng: number | null
+          eats_enabled: boolean | null
+          full_name: string | null
+          home_city: string | null
           id: string | null
           is_online: boolean | null
+          is_verified: boolean | null
+          last_active_at: string | null
+          last_heading: number | null
+          last_speed: number | null
+          level: string | null
+          longest_streak: number | null
+          move_enabled: boolean | null
+          on_time_rate: number | null
+          performance_score: number | null
           rating: number | null
+          rating_count: number | null
+          region_id: string | null
+          rides_enabled: boolean | null
+          status: Database["public"]["Enums"]["driver_status"] | null
+          streak_days: number | null
+          total_deliveries: number | null
+          total_trips: number | null
+          updated_at: string | null
+          user_id: string | null
+          vehicle_model: string | null
           vehicle_type: string | null
+          zone_code: string | null
         }
         Insert: {
+          acceptance_rate?: number | null
           avatar_url?: string | null
+          completion_rate?: number | null
           created_at?: string | null
-          first_name?: never
+          current_lat?: number | null
+          current_lng?: number | null
+          eats_enabled?: boolean | null
+          full_name?: string | null
+          home_city?: string | null
           id?: string | null
           is_online?: boolean | null
+          is_verified?: boolean | null
+          last_active_at?: string | null
+          last_heading?: number | null
+          last_speed?: number | null
+          level?: string | null
+          longest_streak?: number | null
+          move_enabled?: boolean | null
+          on_time_rate?: number | null
+          performance_score?: number | null
           rating?: number | null
+          rating_count?: number | null
+          region_id?: string | null
+          rides_enabled?: boolean | null
+          status?: Database["public"]["Enums"]["driver_status"] | null
+          streak_days?: number | null
+          total_deliveries?: number | null
+          total_trips?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_model?: string | null
           vehicle_type?: string | null
+          zone_code?: string | null
         }
         Update: {
+          acceptance_rate?: number | null
           avatar_url?: string | null
+          completion_rate?: number | null
           created_at?: string | null
-          first_name?: never
+          current_lat?: number | null
+          current_lng?: number | null
+          eats_enabled?: boolean | null
+          full_name?: string | null
+          home_city?: string | null
           id?: string | null
           is_online?: boolean | null
+          is_verified?: boolean | null
+          last_active_at?: string | null
+          last_heading?: number | null
+          last_speed?: number | null
+          level?: string | null
+          longest_streak?: number | null
+          move_enabled?: boolean | null
+          on_time_rate?: number | null
+          performance_score?: number | null
           rating?: number | null
+          rating_count?: number | null
+          region_id?: string | null
+          rides_enabled?: boolean | null
+          status?: Database["public"]["Enums"]["driver_status"] | null
+          streak_days?: number | null
+          total_deliveries?: number | null
+          total_trips?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_model?: string | null
           vehicle_type?: string | null
+          zone_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drivers_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       food_orders_masked: {
         Row: {
@@ -35381,6 +35467,54 @@ export type Database = {
           opening_hours?: Json | null
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
+        }
+        Relationships: []
+      }
+      square_connections_safe: {
+        Row: {
+          created_at: string | null
+          env: string | null
+          error_message: string | null
+          id: string | null
+          last_sync_at: string | null
+          location_ids: string[] | null
+          scopes: string[] | null
+          square_location_id: string | null
+          square_merchant_id: string | null
+          status: string | null
+          token_type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          env?: string | null
+          error_message?: string | null
+          id?: string | null
+          last_sync_at?: string | null
+          location_ids?: string[] | null
+          scopes?: string[] | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          status?: string | null
+          token_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          env?: string | null
+          error_message?: string | null
+          id?: string | null
+          last_sync_at?: string | null
+          location_ids?: string[] | null
+          scopes?: string[] | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          status?: string | null
+          token_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

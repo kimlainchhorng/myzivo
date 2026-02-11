@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Scale, X, Plus, ArrowRight, Star, MapPin, Wifi, Coffee, Car } from "lucide-react";
+import { Scale, X, Plus, ArrowRight, Star, MapPin, Wifi, Coffee, Car, Building2, Umbrella, Mountain, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface CompareHotel {
   id: string;
   name: string;
-  image: string;
+  hotelIcon: LucideIcon;
+  iconGradient: string;
+  iconColor: string;
   rating: number;
   price: number;
   location: string;
@@ -14,9 +17,9 @@ interface CompareHotel {
 }
 
 const sampleHotels: CompareHotel[] = [
-  { id: "1", name: "Grand Plaza Hotel", image: "🏨", rating: 4.8, price: 299, location: "Downtown", amenities: ["wifi", "pool", "spa", "gym"] },
-  { id: "2", name: "Seaside Resort", image: "🏖️", rating: 4.6, price: 249, location: "Beachfront", amenities: ["wifi", "pool", "restaurant", "bar"] },
-  { id: "3", name: "Mountain Lodge", image: "🏔️", rating: 4.7, price: 189, location: "Mountain View", amenities: ["wifi", "fireplace", "hiking", "restaurant"] },
+  { id: "1", name: "Grand Plaza Hotel", hotelIcon: Building2, iconGradient: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-500", rating: 4.8, price: 299, location: "Downtown", amenities: ["wifi", "pool", "spa", "gym"] },
+  { id: "2", name: "Seaside Resort", hotelIcon: Umbrella, iconGradient: "from-sky-500/20 to-blue-500/20", iconColor: "text-sky-400", rating: 4.6, price: 249, location: "Beachfront", amenities: ["wifi", "pool", "restaurant", "bar"] },
+  { id: "3", name: "Mountain Lodge", hotelIcon: Mountain, iconGradient: "from-emerald-500/20 to-green-500/20", iconColor: "text-emerald-400", rating: 4.7, price: 189, location: "Mountain View", amenities: ["wifi", "fireplace", "hiking", "restaurant"] },
 ];
 
 const HotelCompareWidget = () => {
@@ -57,7 +60,9 @@ const HotelCompareWidget = () => {
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="text-6xl text-center mb-4">{hotel.image}</div>
+              <div className={cn("w-16 h-16 rounded-2xl bg-gradient-to-br mx-auto mb-4 flex items-center justify-center", hotel.iconGradient)}>
+                <hotel.hotelIcon className={cn("w-8 h-8", hotel.iconColor)} />
+              </div>
               <h3 className="font-bold text-lg text-center mb-2">{hotel.name}</h3>
               
               <div className="flex items-center justify-center gap-2 mb-4">

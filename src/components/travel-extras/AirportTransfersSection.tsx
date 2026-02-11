@@ -1,7 +1,8 @@
-import { Car, MapPin, Clock, Shield, ExternalLink, Sparkles } from "lucide-react";
+import { Car, MapPin, Clock, Shield, ExternalLink, Sparkles, CarTaxiFront, Bus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { 
   TRANSFER_PARTNERS, 
   AFFILIATE_DISCLOSURE_TEXT,
@@ -40,15 +41,22 @@ export default function AirportTransfersSection({ className = '', destination }:
     });
   };
 
-  const transferCards = TRANSFER_PARTNERS.map(partner => ({
-    ...partner,
-    description: partner.id === 'kiwitaxi' 
-      ? 'Book private airport transfers with fixed prices'
+  const transferCards = TRANSFER_PARTNERS.map(partner => {
+    const iconConfig = partner.id === 'kiwitaxi' 
+      ? { TransferIcon: CarTaxiFront, gradient: "from-amber-500/20 to-yellow-500/20", color: "text-amber-500" }
       : partner.id === 'gettransfer'
-      ? 'Compare transfer prices from local drivers'
-      : 'Shared shuttles & group transfers',
-    icon: partner.id === 'kiwitaxi' ? '🚕' : partner.id === 'gettransfer' ? '🚙' : '🚌',
-  }));
+      ? { TransferIcon: Car, gradient: "from-emerald-500/20 to-green-500/20", color: "text-emerald-500" }
+      : { TransferIcon: Bus, gradient: "from-sky-500/20 to-blue-500/20", color: "text-sky-500" };
+    return {
+      ...partner,
+      description: partner.id === 'kiwitaxi' 
+        ? 'Book private airport transfers with fixed prices'
+        : partner.id === 'gettransfer'
+        ? 'Compare transfer prices from local drivers'
+        : 'Shared shuttles & group transfers',
+      ...iconConfig,
+    };
+  });
 
   return (
     <section className={`py-10 sm:py-14 ${className}`}>
@@ -78,8 +86,8 @@ export default function AirportTransfersSection({ className = '', destination }:
             >
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
-                    {partner.icon}
+                  <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", partner.gradient)}>
+                    <partner.TransferIcon className={cn("w-6 h-6", partner.color)} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-base mb-1 group-hover:text-amber-500 transition-colors">

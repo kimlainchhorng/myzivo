@@ -4,7 +4,7 @@
  * Hotels/Cars: Indicative pricing with partner CTA
  */
 
-import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, ArrowRight, ShieldCheck, Check } from "lucide-react";
+import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, ArrowRight, ShieldCheck, Check, DollarSign, Star, Sparkles, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,9 +81,9 @@ const serviceConfig = {
     bg: "bg-amber-500",
     bgLight: "bg-amber-500/10",
     defaultPrices: [
-      { label: "Budget", price: 89, badge: "💰 Good Value Today", badgeColor: "bg-emerald-500" },
-      { label: "Comfort", price: 149, badge: "⭐ Frequently Booked", badgeColor: "bg-amber-500" },
-      { label: "Luxury", price: 279, badge: "✨ Popular Choice", badgeColor: "bg-purple-500" },
+      { label: "Budget", price: 89, badge: "Good Value Today", badgeIcon: DollarSign, badgeColor: "bg-emerald-500" },
+      { label: "Comfort", price: 149, badge: "Frequently Booked", badgeIcon: Star, badgeColor: "bg-amber-500" },
+      { label: "Luxury", price: 279, badge: "Popular Choice", badgeIcon: Sparkles, badgeColor: "bg-purple-500" },
     ],
   },
   cars: {
@@ -106,9 +106,9 @@ const serviceConfig = {
     bg: "bg-violet-500",
     bgLight: "bg-violet-500/10",
     defaultPrices: [
-      { label: "Economy", price: 35, badge: "💰 Good Value Today", badgeColor: "bg-emerald-500" },
-      { label: "Midsize", price: 52, badge: "⭐ Frequently Booked", badgeColor: "bg-amber-500" },
-      { label: "SUV", price: 78, badge: "🚐 Popular Choice", badgeColor: "bg-violet-500" },
+      { label: "Economy", price: 35, badge: "Good Value Today", badgeIcon: DollarSign, badgeColor: "bg-emerald-500" },
+      { label: "Midsize", price: 52, badge: "Frequently Booked", badgeIcon: Star, badgeColor: "bg-amber-500" },
+      { label: "SUV", price: 78, badge: "Popular Choice", badgeIcon: Truck, badgeColor: "bg-violet-500" },
     ],
   },
 };

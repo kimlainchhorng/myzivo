@@ -6,7 +6,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Hotel, Search, Calendar, Users, MapPin, ArrowRight, 
-  Shield, Star, Loader2, Wifi, Coffee, Car, UtensilsCrossed
+  Shield, Star, Loader2, Wifi, Coffee, Car, UtensilsCrossed,
+  Building2, Umbrella, Crown, type LucideIcon
 } from "lucide-react";
 import HizovoAppLayout from "@/components/app/HizovoAppLayout";
 import { Button } from "@/components/ui/button";
@@ -16,28 +17,32 @@ import { cn } from "@/lib/utils";
 import { createNewSearchSession } from "@/config/trackingParams";
 
 // Demo hotel results
-const hotelResults = [
+const hotelResults: { id: string; name: string; rating: number; stars: number; price: number; location: string; hotelIcon: LucideIcon; iconGradient: string; iconColor: string; amenities: string[]; refundable: boolean }[] = [
   { 
     id: "1", name: "Marriott Downtown", rating: 4.5, stars: 4, 
-    price: 189, location: "City Center", image: "🏨",
+    price: 189, location: "City Center", 
+    hotelIcon: Building2, iconGradient: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-500",
     amenities: ["wifi", "breakfast", "parking"],
     refundable: true
   },
   { 
     id: "2", name: "Hilton Beach Resort", rating: 4.7, stars: 5, 
-    price: 279, location: "Beachfront", image: "🏖️",
+    price: 279, location: "Beachfront",
+    hotelIcon: Umbrella, iconGradient: "from-sky-500/20 to-blue-500/20", iconColor: "text-sky-400",
     amenities: ["wifi", "breakfast", "pool", "spa"],
     refundable: true
   },
   { 
     id: "3", name: "Holiday Inn Express", rating: 4.2, stars: 3, 
-    price: 99, location: "Airport Area", image: "🏠",
+    price: 99, location: "Airport Area",
+    hotelIcon: Hotel, iconGradient: "from-emerald-500/20 to-green-500/20", iconColor: "text-emerald-400",
     amenities: ["wifi", "breakfast"],
     refundable: false
   },
   { 
     id: "4", name: "The Ritz-Carlton", rating: 4.9, stars: 5, 
-    price: 459, location: "Downtown", image: "👑",
+    price: 459, location: "Downtown",
+    hotelIcon: Crown, iconGradient: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400",
     amenities: ["wifi", "breakfast", "pool", "spa", "gym"],
     refundable: true
   },
@@ -173,8 +178,8 @@ const HizovoHotels = () => {
                   className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
                 >
                   <div className="flex gap-3">
-                    <div className="w-24 h-24 bg-muted rounded-xl flex items-center justify-center text-4xl flex-shrink-0">
-                      {hotel.image}
+                    <div className={`w-24 h-24 bg-gradient-to-br ${hotel.iconGradient} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                      <hotel.hotelIcon className={`w-10 h-10 ${hotel.iconColor}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold truncate">{hotel.name}</h3>

@@ -1,4 +1,4 @@
-import { Users, UtensilsCrossed, Star, Clock, Sparkles } from "lucide-react";
+import { Users, UtensilsCrossed, Star, Clock, Sparkles, TrendingUp, Globe } from "lucide-react";
 import { StatCard } from "@/components/ui/premium-card";
 import { cn } from "@/lib/utils";
 
@@ -10,9 +10,17 @@ const LiveStatsSection = () => {
       <div className="absolute top-1/2 left-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-radial from-eats/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating emojis */}
-      <div className="absolute top-20 left-[8%] text-3xl sm:text-4xl hidden md:block opacity-40">📈</div>
-      <div className="absolute bottom-20 right-[10%] text-3xl sm:text-4xl hidden md:block opacity-30">🌍</div>
+      {/* Floating icons */}
+      <div className="absolute top-20 left-[8%] hidden md:block opacity-30">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center backdrop-blur-sm">
+          <TrendingUp className="w-6 h-6 text-primary/60" />
+        </div>
+      </div>
+      <div className="absolute bottom-20 right-[10%] hidden md:block opacity-25">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Globe className="w-6 h-6 text-sky-400/60" />
+        </div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">

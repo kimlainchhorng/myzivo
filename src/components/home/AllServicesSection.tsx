@@ -29,12 +29,16 @@ const AllServicesSection = () => {
       <div className="absolute bottom-1/4 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-gradient-radial from-primary/8 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating emojis - CSS animated */}
-      <div className="absolute top-32 left-[8%] text-4xl sm:text-5xl hidden md:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
-        🚀
+      {/* Floating icons */}
+      <div className="absolute top-32 left-[8%] hidden md:block opacity-30 animate-bounce" style={{ animationDuration: '5s' }}>
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-7 h-7 text-primary/60" />
+        </div>
       </div>
-      <div className="absolute bottom-40 right-[10%] text-3xl sm:text-4xl hidden md:block opacity-35 animate-bounce" style={{ animationDuration: '6s', animationDelay: '1s' }}>
-        ✨
+      <div className="absolute bottom-40 right-[10%] hidden md:block opacity-25 animate-bounce" style={{ animationDuration: '6s', animationDelay: '1s' }}>
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-eats/20 to-orange-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-6 h-6 text-eats/60" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">

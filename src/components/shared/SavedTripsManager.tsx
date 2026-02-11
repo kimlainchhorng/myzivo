@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 interface SavedTrip {
   id: string;
   destination: string;
-  emoji: string;
+  iconGradient: string;
   services: ("flight" | "hotel" | "car")[];
   savedAt: string;
   expiresIn: string;
@@ -42,7 +42,7 @@ const mockSavedTrips: SavedTrip[] = [
   {
     id: "1",
     destination: "Paris",
-    emoji: "🇫🇷",
+    iconGradient: "from-rose-500/20 to-pink-500/20",
     services: ["flight", "hotel"],
     savedAt: "2 hours ago",
     expiresIn: "22 hours",
@@ -52,7 +52,7 @@ const mockSavedTrips: SavedTrip[] = [
   {
     id: "2",
     destination: "Tokyo",
-    emoji: "🇯🇵",
+    iconGradient: "from-pink-500/20 to-red-500/20",
     services: ["flight", "hotel", "car"],
     savedAt: "Yesterday",
     expiresIn: "2 days",
@@ -62,7 +62,7 @@ const mockSavedTrips: SavedTrip[] = [
   {
     id: "3",
     destination: "Bali",
-    emoji: "🏝️",
+    iconGradient: "from-teal-500/20 to-emerald-500/20",
     services: ["flight"],
     savedAt: "3 days ago",
     expiresIn: "4 days",
@@ -127,8 +127,9 @@ const SavedTripsManager = ({ className }: SavedTripsManagerProps) => {
             className="p-3 rounded-xl border bg-card/50 hover:bg-muted/30 transition-colors"
           >
             <div className="flex items-start gap-3">
-              {/* Destination */}
-              <div className="text-3xl">{trip.emoji}</div>
+              <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0", trip.iconGradient)}>
+                <MapPin className="w-5 h-5 text-foreground/70" />
+              </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
