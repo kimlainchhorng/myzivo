@@ -351,6 +351,7 @@ const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
+const MyReviewsPage = lazy(() => import("./pages/account/MyReviewsPage"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
@@ -988,6 +989,7 @@ const App = () => (
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
+                <Route path="/account/reviews" element={<ProtectedRoute><MyReviewsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
