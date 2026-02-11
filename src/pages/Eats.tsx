@@ -5,7 +5,7 @@
  * Mobile: Premium "Curated Dining" visual experience with real data
  */
 import { lazy, Suspense } from "react";
-import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, Truck, Loader2 } from "lucide-react";
+import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, Truck, Loader2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -127,7 +127,7 @@ export default function Eats() {
         <div className="bg-eats/5 border-b border-eats/10 py-2">
           <div className="container mx-auto px-4 text-center">
             <p className="text-sm text-eats font-medium">
-              🔥 <span className="font-bold">1,247</span> orders placed today
+              <Flame className="w-4 h-4 inline mr-1" /> <span className="font-bold">1,247</span> orders placed today
             </p>
           </div>
         </div>

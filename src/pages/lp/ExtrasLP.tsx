@@ -5,7 +5,7 @@
  * Users explore on ZIVO first, then are redirected to partners.
  */
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Search, BarChart3 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import LPHero from "@/components/lp/LPHero";
 import LPComplianceFooter from "@/components/lp/LPComplianceFooter";
@@ -35,17 +35,23 @@ export default function ExtrasLP() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto text-center">
             <div className="p-4">
-              <div className="text-3xl mb-2">🔍</div>
+              <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 flex items-center justify-center">
+                <Search className="w-6 h-6 text-teal-400" />
+              </div>
               <h3 className="font-semibold mb-1">Browse</h3>
               <p className="text-sm text-muted-foreground">Explore travel add-ons</p>
             </div>
             <div className="p-4">
-              <div className="text-3xl mb-2">📊</div>
+              <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-sky-400" />
+              </div>
               <h3 className="font-semibold mb-1">Compare</h3>
               <p className="text-sm text-muted-foreground">View partner options</p>
             </div>
             <div className="p-4">
-              <div className="text-3xl mb-2">✨</div>
+              <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-amber-400" />
+              </div>
               <h3 className="font-semibold mb-1">Book</h3>
               <p className="text-sm text-muted-foreground">Complete on partner site</p>
             </div>

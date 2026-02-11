@@ -220,14 +220,14 @@ export function useWalletSummary() {
 // Get service icon and color
 export function getServiceMeta(service: string) {
   const meta: Record<string, { icon: string; color: string; label: string }> = {
-    flights: { icon: "✈️", color: "text-blue-600", label: "Flights" },
-    cars: { icon: "🚗", color: "text-orange-600", label: "Car Rental" },
-    p2p_cars: { icon: "🚙", color: "text-emerald-600", label: "P2P Cars" },
-    rides: { icon: "🚕", color: "text-yellow-600", label: "Rides" },
-    eats: { icon: "🍔", color: "text-red-600", label: "Eats" },
-    move: { icon: "📦", color: "text-purple-600", label: "Move" },
-    hotels: { icon: "🏨", color: "text-teal-600", label: "Hotels" },
-    extras: { icon: "🎫", color: "text-pink-600", label: "Extras" },
+    flights: { icon: "plane", color: "text-blue-600", label: "Flights" },
+    cars: { icon: "car", color: "text-orange-600", label: "Car Rental" },
+    p2p_cars: { icon: "car-front", color: "text-emerald-600", label: "P2P Cars" },
+    rides: { icon: "car-taxi-front", color: "text-yellow-600", label: "Rides" },
+    eats: { icon: "utensils", color: "text-red-600", label: "Eats" },
+    move: { icon: "package", color: "text-purple-600", label: "Move" },
+    hotels: { icon: "building-2", color: "text-teal-600", label: "Hotels" },
+    extras: { icon: "ticket", color: "text-pink-600", label: "Extras" },
   };
-  return meta[service] || { icon: "💳", color: "text-gray-600", label: service };
+  return meta[service] || { icon: "credit-card", color: "text-gray-600", label: service };
 }

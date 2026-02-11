@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star, Sparkles
+  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star, Sparkles,
+  Coffee, UtensilsCrossed, CupSoda, Moon, Bird
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -147,13 +148,21 @@ const rowIcons: Record<string, { Icon: typeof Plane; color: string }> = {
   "Recommended for You": { Icon: Sparkles, color: "text-amber-400" },
 };
 
-const PersonalizedRow = ({ title, emoji, restaurants, navigate: nav }: { title: string; emoji?: string; restaurants: HomeRestaurant[]; navigate: (path: string) => void }) => {
+const timeIcons: Record<string, { Icon: typeof Plane; color: string }> = {
+  coffee: { Icon: Coffee, color: "text-amber-400" },
+  "utensils-crossed": { Icon: UtensilsCrossed, color: "text-orange-400" },
+  "cup-soda": { Icon: CupSoda, color: "text-teal-400" },
+  moon: { Icon: Moon, color: "text-indigo-400" },
+  bird: { Icon: Bird, color: "text-violet-400" },
+};
+
+const PersonalizedRow = ({ title, iconName, restaurants, navigate: nav }: { title: string; iconName?: string; restaurants: HomeRestaurant[]; navigate: (path: string) => void }) => {
   if (!restaurants.length) return null;
-  const iconConfig = rowIcons[title];
+  const iconConfig = rowIcons[title] || (iconName ? timeIcons[iconName] : undefined);
   return (
     <div>
       <h2 className="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-1.5">
-        {iconConfig ? <iconConfig.Icon className={`w-3.5 h-3.5 ${iconConfig.color}`} /> : emoji && <span className="mr-1">{emoji}</span>}
+        {iconConfig && <iconConfig.Icon className={`w-3.5 h-3.5 ${iconConfig.color}`} />}
         {title}
       </h2>
       <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -371,7 +380,7 @@ const AppHome = () => {
       {/* Mobile Ad Banner */}
       <div className="px-4 pb-4">
         <HomepageAdBanner
-          headline="Summer deals are here ☀️"
+          headline="Summer deals are here"
           description="Save up to 40% on flights and hotels to top destinations."
           ctaText="Browse Deals"
           ctaHref="/flights"
@@ -384,23 +393,23 @@ const AppHome = () => {
         {/* Time Context Banner */}
         <PersonalizedRow
           title={timeContext.headline}
-          emoji={timeContext.emoji}
+          iconName={timeContext.iconName}
           restaurants={timeSuggestions}
           navigate={navigate}
         />
 
         {/* Order Again (auth-gated) */}
         {user && orderAgain.length > 0 && (
-          <PersonalizedRow title="Order Again" emoji="🔄" restaurants={orderAgain} navigate={navigate} />
+          <PersonalizedRow title="Order Again" restaurants={orderAgain} navigate={navigate} />
         )}
 
         {/* Your Favorites (auth-gated) */}
         {user && favorites.length > 0 && (
-          <PersonalizedRow title="Your Favorites" emoji="❤️" restaurants={favorites} navigate={navigate} />
+          <PersonalizedRow title="Your Favorites" restaurants={favorites} navigate={navigate} />
         )}
 
         {/* Recommended for You */}
-        <PersonalizedRow title="Recommended for You" emoji="✨" restaurants={recommended} navigate={navigate} />
+        <PersonalizedRow title="Recommended for You" restaurants={recommended} navigate={navigate} />
       </div>
 
       {/* ZONE 3: Quick Actions (auth-gated) */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrendingUp, MapPin, Calendar, Users, ArrowRight, Flame, Star } from "lucide-react";
+import { TrendingUp, MapPin, Calendar, Users, ArrowRight, Flame, Star, Landmark, Palmtree, Plane, LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -9,7 +9,7 @@ const trendingItems = [
     type: "destination",
     title: "Tokyo, Japan",
     subtitle: "Cherry Blossom Season",
-    image: "🗼",
+    icon: Landmark,
     discount: "25% OFF",
     rating: 4.9,
     reviews: 2840,
@@ -21,7 +21,7 @@ const trendingItems = [
     type: "hotel",
     title: "Maldives Resort",
     subtitle: "Overwater Villas",
-    image: "🏝️",
+    icon: Palmtree,
     discount: "30% OFF",
     rating: 4.8,
     reviews: 1562,
@@ -33,7 +33,7 @@ const trendingItems = [
     type: "experience",
     title: "Paris City Tour",
     subtitle: "Skip-the-line Eiffel Tower",
-    image: "🗼",
+    icon: Landmark,
     discount: "15% OFF",
     rating: 4.9,
     reviews: 3210,
@@ -45,7 +45,7 @@ const trendingItems = [
     type: "flight",
     title: "NYC → London",
     subtitle: "Direct Flights",
-    image: "✈️",
+    icon: Plane,
     discount: "20% OFF",
     rating: 4.7,
     reviews: 890,
@@ -105,7 +105,9 @@ const TrendingNowSection = () => {
             >
               {/* Image Area */}
               <div className="relative h-48 bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center">
-                <span className="text-6xl">{item.image}</span>
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-teal-500/30 flex items-center justify-center">
+                  <item.icon className="w-8 h-8 text-primary/80" />
+                </div>
                 
                 {/* Discount Badge */}
                 <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-orange-500 text-white text-xs font-bold">

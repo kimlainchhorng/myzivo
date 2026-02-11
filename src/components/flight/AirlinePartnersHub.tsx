@@ -35,16 +35,16 @@ interface AirlinePartner {
 }
 
 const AIRLINE_PARTNERS: AirlinePartner[] = [
-  { id: '1', name: 'United Airlines', code: 'UA', alliance: 'Star Alliance', logo: '✈️', transferRate: 1000, minTransfer: 5000, linked: true, memberNumber: 'UA123456789', miles: 45000 },
-  { id: '2', name: 'Emirates', code: 'EK', alliance: 'Independent', logo: '🇦🇪', transferRate: 800, minTransfer: 10000, linked: true, memberNumber: 'EK987654321', miles: 28000 },
-  { id: '3', name: 'Lufthansa', code: 'LH', alliance: 'Star Alliance', logo: '🇩🇪', transferRate: 1000, minTransfer: 5000 },
-  { id: '4', name: 'British Airways', code: 'BA', alliance: 'oneworld', logo: '🇬🇧', transferRate: 900, minTransfer: 5000 },
-  { id: '5', name: 'Air France', code: 'AF', alliance: 'SkyTeam', logo: '🇫🇷', transferRate: 850, minTransfer: 5000 },
-  { id: '6', name: 'Singapore Airlines', code: 'SQ', alliance: 'Star Alliance', logo: '🇸🇬', transferRate: 1100, minTransfer: 10000 },
-  { id: '7', name: 'Qantas', code: 'QF', alliance: 'oneworld', logo: '🇦🇺', transferRate: 950, minTransfer: 5000 },
-  { id: '8', name: 'Delta Air Lines', code: 'DL', alliance: 'SkyTeam', logo: '🔺', transferRate: 1000, minTransfer: 5000 },
-  { id: '9', name: 'Japan Airlines', code: 'JL', alliance: 'oneworld', logo: '🇯🇵', transferRate: 900, minTransfer: 10000 },
-  { id: '10', name: 'KLM', code: 'KL', alliance: 'SkyTeam', logo: '🇳🇱', transferRate: 850, minTransfer: 5000 },
+  { id: '1', name: 'United Airlines', code: 'UA', alliance: 'Star Alliance', logo: 'plane', transferRate: 1000, minTransfer: 5000, linked: true, memberNumber: 'UA123456789', miles: 45000 },
+  { id: '2', name: 'Emirates', code: 'EK', alliance: 'Independent', logo: 'plane', transferRate: 800, minTransfer: 10000, linked: true, memberNumber: 'EK987654321', miles: 28000 },
+  { id: '3', name: 'Lufthansa', code: 'LH', alliance: 'Star Alliance', logo: 'plane', transferRate: 1000, minTransfer: 5000 },
+  { id: '4', name: 'British Airways', code: 'BA', alliance: 'oneworld', logo: 'plane', transferRate: 900, minTransfer: 5000 },
+  { id: '5', name: 'Air France', code: 'AF', alliance: 'SkyTeam', logo: 'plane', transferRate: 850, minTransfer: 5000 },
+  { id: '6', name: 'Singapore Airlines', code: 'SQ', alliance: 'Star Alliance', logo: 'plane', transferRate: 1100, minTransfer: 10000 },
+  { id: '7', name: 'Qantas', code: 'QF', alliance: 'oneworld', logo: 'plane', transferRate: 950, minTransfer: 5000 },
+  { id: '8', name: 'Delta Air Lines', code: 'DL', alliance: 'SkyTeam', logo: 'plane', transferRate: 1000, minTransfer: 5000 },
+  { id: '9', name: 'Japan Airlines', code: 'JL', alliance: 'oneworld', logo: 'plane', transferRate: 900, minTransfer: 10000 },
+  { id: '10', name: 'KLM', code: 'KL', alliance: 'SkyTeam', logo: 'plane', transferRate: 850, minTransfer: 5000 },
 ];
 
 const ALLIANCES = ['All', 'Star Alliance', 'oneworld', 'SkyTeam', 'Independent'];
@@ -119,7 +119,9 @@ export const AirlinePartnersHub = ({ className, zivoMiles = 45680 }: AirlinePart
                   className="flex-shrink-0 p-3 rounded-xl bg-card/50 border border-border/50 min-w-[180px]"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">{partner.logo}</span>
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center">
+                      <Plane className="w-4 h-4 text-sky-400" />
+                    </div>
                     <div>
                       <p className="font-medium text-sm">{partner.code}</p>
                       <p className="text-xs text-muted-foreground">{partner.memberNumber}</p>
@@ -177,7 +179,9 @@ export const AirlinePartnersHub = ({ className, zivoMiles = 45680 }: AirlinePart
                   : "bg-muted/30 border-border/50 hover:border-border"
               )}
             >
-              <div className="text-3xl">{partner.logo}</div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center">
+                <Plane className="w-5 h-5 text-sky-400" />
+              </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
