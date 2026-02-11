@@ -1,14 +1,15 @@
 /**
- * App Home Screen - Super App Hub
- * Layout: Promo Banner → Services Grid → Quick Actions → Recently Used → Favorites → Recommendations → Popular → Deals → Rides
+ * App Home Screen - Map-First Super App Hub
+ * Layout: Full-screen map + floating top bar + draggable bottom panel
+ * Panel: Quick Actions Grid → Promo Carousel → Recently Used → Favorites → Recommendations
  */
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { 
+import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import {
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, ChevronRight, Star, Sparkles,
-  UtensilsCrossed, Tag, Clock, Heart, History, Hotel
+  MapPin, Bell, LucideIcon, Package, Star, Sparkles,
+  UtensilsCrossed, Heart, History, Hotel
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
@@ -16,69 +17,12 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { formatDistanceToNow } from "date-fns";
+import useEmblaCarousel from "embla-carousel-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
-import flightsHeroImg from "@/assets/flights-hero.png";
-
-// Image Assets
-const assets = {
-  flights: flightsHeroImg,
-  hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
-  rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
-  food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
-  move: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800",
-  rentals: "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&q=80&w=800",
-};
-
-// Service badges
-const serviceBadges: Record<string, { label: string; color: string }> = {
-  Delivery: { label: "NEW", color: "bg-emerald-500" },
-  Flights: { label: "POPULAR", color: "bg-amber-500" },
-};
-
-// Service Card Component
-interface ServiceCardProps {
-  title: string;
-  subtitle: string;
-  img: string;
-  icon: LucideIcon;
-  onNavigate: () => void;
-  imgPosition?: string;
-}
-
-const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition = "center" }: ServiceCardProps) => {
-  const badge = serviceBadges[title];
-  return (
-    <motion.button
-      onClick={onNavigate}
-      whileTap={{ scale: 0.97 }}
-      className="relative rounded-2xl overflow-hidden group cursor-pointer border border-border/50 touch-manipulation h-28 shadow-sm"
-    >
-      <div className="absolute inset-0">
-        <img 
-          src={img} 
-          className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
-          alt={title}
-          style={{ objectPosition: imgPosition }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-      </div>
-      {badge && (
-        <div className={`absolute top-2 right-2 ${badge.color} px-1.5 py-0.5 rounded-md`}>
-          <span className="text-[8px] font-black text-white tracking-wider animate-pulse">{badge.label}</span>
-        </div>
-      )}
-      <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
-        <Icon className="w-4 h-4 text-white" />
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
-        <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
-      </div>
-    </motion.button>
-  );
-};
+import { GoogleMapProvider, GoogleMap } from "@/components/maps";
 
 // Restaurant Card for personalized rows
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
@@ -121,19 +65,21 @@ const SectionHeader = ({ icon: Icon, iconColor, title, onSeeAll }: { icon: Lucid
   </div>
 );
 
-// Nearby Rides data
-const rideOptions = [
-  { type: "Economy", eta: "3 min", price: "~$8", icon: Car },
-  { type: "Comfort", eta: "5 min", price: "~$14", icon: Car },
-  { type: "Premium", eta: "7 min", price: "~$22", icon: Car },
+// Quick Actions Grid config (3x2)
+const quickActions = [
+  { label: "Ride", icon: Car, href: "/rides", bg: "bg-primary/10", color: "text-primary" },
+  { label: "Eats", icon: UtensilsCrossed, href: "/eats", bg: "bg-orange-500/10", color: "text-orange-500" },
+  { label: "Delivery", icon: Package, href: "/move", bg: "bg-violet-500/10", color: "text-violet-500" },
+  { label: "Flights", icon: Plane, href: "/search?tab=flights", bg: "bg-sky-500/10", color: "text-sky-500" },
+  { label: "Hotels", icon: BedDouble, href: "/search?tab=hotels", bg: "bg-amber-500/10", color: "text-amber-500" },
+  { label: "Rentals", icon: Car, href: "/rent-car", bg: "bg-emerald-500/10", color: "text-emerald-500" },
 ];
 
-// Quick Actions Bar config
-const quickActionsBar = [
-  { label: "Book Ride", icon: Car, href: "/rides", bg: "bg-primary/10", color: "text-primary" },
-  { label: "Order Food", icon: Utensils, href: "/eats", bg: "bg-orange-500/10", color: "text-orange-500" },
-  { label: "Track Order", icon: Package, href: "/trips", bg: "bg-violet-500/10", color: "text-violet-500" },
-  { label: "Book Flight", icon: Plane, href: "/search?tab=flights", bg: "bg-sky-500/10", color: "text-sky-500" },
+// Promo banners
+const promos = [
+  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-primary to-emerald-400" },
+  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-400 to-amber-500" },
+  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-400 to-blue-500" },
 ];
 
 // Recently viewed type config
@@ -144,33 +90,89 @@ const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
   restaurant: { icon: Utensils, color: "bg-orange-500" },
 };
 
+// Bottom sheet snap points (as fractions of viewport height from bottom)
+const SNAP_COLLAPSED = 0.25;
+const SNAP_DEFAULT = 0.45;
+const SNAP_EXPANDED = 0.80;
+
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { timeSuggestions, recommended, favorites } = usePersonalizedHome();
+  const { recommended, favorites } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { deals } = useRecommendedDeals(6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
+  const { getCurrentLocation } = useCurrentLocation();
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Merge restaurant sources for "Popular Restaurants"
-  const popularRestaurants = [...recommended, ...timeSuggestions]
-    .filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i)
-    .slice(0, 10);
+  // Get user location on mount
+  useEffect(() => {
+    getCurrentLocation()
+      .then(loc => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .catch(() => {}); // Fallback handled by default center
+  }, [getCurrentLocation]);
 
-  const handleNavigate = useCallback((screen: string) => {
-    window.scrollTo(0, 0);
-    switch (screen) {
-      case "FLIGHTS": navigate("/search?tab=flights"); break;
-      case "HOTELS": navigate("/search?tab=hotels"); break;
-      case "RIDES": navigate("/rides"); break;
-      case "EATS": navigate("/eats"); break;
-      case "MOVE": navigate("/move"); break;
-      case "RENTALS": navigate("/rent-car"); break;
-      default: navigate("/search");
-    }
-  }, [navigate]);
+  const mapCenter = userLocation || { lat: 40.7128, lng: -74.006 };
+
+  // Promo carousel
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const [activePromo, setActivePromo] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setActivePromo(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    const autoplay = setInterval(() => emblaApi.scrollNext(), 4000);
+    return () => { clearInterval(autoplay); emblaApi.off("select", onSelect); };
+  }, [emblaApi]);
+
+  // Bottom sheet drag
+  const sheetY = useMotionValue(0);
+  const windowH = typeof window !== "undefined" ? window.innerHeight : 800;
+  const snapPoints = [
+    windowH * (1 - SNAP_EXPANDED),
+    windowH * (1 - SNAP_DEFAULT),
+    windowH * (1 - SNAP_COLLAPSED),
+  ];
+  const [currentSnap, setCurrentSnap] = useState(1); // default snap
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Set initial position to default snap
+    sheetY.set(snapPoints[1]);
+  }, []);
+
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    const currentY = sheetY.get();
+    const velocity = info.velocity.y;
+
+    // Find closest snap point, biased by velocity
+    let targetSnap = 1;
+    let minDist = Infinity;
+    snapPoints.forEach((snap, i) => {
+      const dist = Math.abs(currentY - snap) - velocity * (currentY > snap ? 0.15 : -0.15);
+      if (dist < minDist) {
+        minDist = dist;
+        targetSnap = i;
+      }
+    });
+
+    // Velocity-based override
+    if (velocity > 500 && targetSnap < 2) targetSnap = Math.min(targetSnap + 1, 2);
+    if (velocity < -500 && targetSnap > 0) targetSnap = Math.max(targetSnap - 1, 0);
+
+    setCurrentSnap(targetSnap);
+    animate(sheetY, snapPoints[targetSnap], {
+      type: "spring",
+      stiffness: 400,
+      damping: 40,
+    });
+  }, [sheetY, snapPoints]);
+
+  // Sheet height for content scrolling
+  const sheetHeight = useTransform(sheetY, (y) => windowH - y);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -184,260 +186,231 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <div className="relative min-h-screen bg-background font-sans text-foreground overflow-x-hidden selection:bg-primary/30">
-      
-      {/* TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-background/80 backdrop-blur-lg safe-area-top border-b border-border/50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
-            {avatarUrl ? (
-              <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
-            ) : (
-              <div className="w-full h-full rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
-                {initials}
-              </div>
-            )}
-          </div>
-          <div>
-            <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{greeting()}</div>
-            <div className="text-sm font-bold text-foreground">{userName}</div>
-          </div>
-        </div>
-        <button 
-          onClick={() => navigate("/alerts")}
-          className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
-        >
-          <Bell className="w-4 h-4 text-muted-foreground" />
-          <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
-        </button>
+    <div className="relative h-[100dvh] bg-background font-sans text-foreground overflow-hidden selection:bg-primary/30">
+
+      {/* FULL-SCREEN MAP BACKGROUND */}
+      <div className="absolute inset-0">
+        <GoogleMapProvider>
+          <GoogleMap
+            center={mapCenter}
+            zoom={14}
+            darkMode={false}
+            showControls={false}
+            className="w-full h-full"
+          />
+        </GoogleMapProvider>
       </div>
 
-      {/* LARGE PROMO BANNER */}
-      <div className="pt-20 px-4">
-        <div className="rounded-2xl bg-gradient-to-br from-primary to-emerald-400 p-6 text-white">
-          <h2 className="text-2xl font-bold mb-1">Travel smarter. Save more.</h2>
-          <p className="text-sm opacity-90 mb-4">Get up to 50% off flights, hotels, and rides</p>
+      {/* TOP OVERLAY */}
+      <div className="absolute top-0 left-0 right-0 z-30">
+        {/* Greeting bar */}
+        <div className="p-4 flex justify-between items-center bg-white/90 dark:bg-background/90 backdrop-blur-xl safe-area-top border-b border-border/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
+                  {initials}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{greeting()}</div>
+              <div className="text-sm font-bold text-foreground">{userName}</div>
+            </div>
+          </div>
           <button
-            onClick={() => navigate("/search")}
-            className="bg-white text-primary font-bold px-6 py-3 rounded-xl text-sm active:scale-95 transition-transform touch-manipulation"
+            onClick={() => navigate("/alerts")}
+            className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
           >
-            Explore Deals
+            <Bell className="w-4 h-4 text-muted-foreground" />
+            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
+          </button>
+        </div>
+
+        {/* Search bar */}
+        <div className="px-4 pt-3">
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="w-full touch-manipulation"
+          >
+            <div className="bg-white/95 dark:bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg active:scale-[0.99] transition-transform">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
+              <div className="h-5 w-[1px] bg-border" />
+              <div className="p-1.5 bg-primary/10 rounded-lg">
+                <MapPin className="w-3.5 h-3.5 text-primary" />
+              </div>
+            </div>
           </button>
         </div>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="px-4 py-4">
-        <button 
-          onClick={() => setIsSearchOpen(true)}
-          className="relative group w-full touch-manipulation"
+      {/* BOTTOM SLIDING PANEL */}
+      <motion.div
+        ref={sheetRef}
+        style={{ y: sheetY }}
+        drag="y"
+        dragConstraints={{ top: snapPoints[0], bottom: snapPoints[2] }}
+        dragElastic={0.05}
+        onDragEnd={handleDragEnd}
+        className="absolute left-0 right-0 z-40 bg-background rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-border/50"
+        initial={{ y: snapPoints[1] }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+        </div>
+
+        {/* Panel content - scrollable */}
+        <div
+          className="overflow-y-auto overscroll-contain px-4 pb-24"
+          style={{ maxHeight: `calc(${SNAP_EXPANDED * 100}vh - 48px)` }}
         >
-          <div className="relative bg-card border border-border rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.99] transition-transform shadow-sm">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
-            <div className="h-5 w-[1px] bg-border" />
-            <div className="p-1.5 bg-primary/10 rounded-lg">
-              <MapPin className="w-3.5 h-3.5 text-primary" />
+          {/* QUICK ACTIONS GRID (3x2) */}
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {quickActions.map((action) => (
+              <motion.button
+                key={action.label}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(action.href)}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border shadow-sm touch-manipulation"
+              >
+                <div className={`w-12 h-12 rounded-2xl ${action.bg} flex items-center justify-center`}>
+                  <action.icon className={`w-6 h-6 ${action.color}`} />
+                </div>
+                <span className="text-xs font-semibold text-foreground">{action.label}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* PROMO BANNER CAROUSEL */}
+          <div className="mb-5">
+            <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
+              <div className="flex">
+                {promos.map((promo, i) => (
+                  <div key={i} className="flex-[0_0_100%] min-w-0 px-0.5">
+                    <div className={`bg-gradient-to-br ${promo.gradient} rounded-2xl p-5 text-white`}>
+                      <h3 className="text-lg font-bold mb-1">{promo.title}</h3>
+                      <p className="text-sm opacity-90">{promo.subtitle}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-1.5 mt-2">
+              {promos.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                    i === activePromo ? "bg-primary" : "bg-muted-foreground/30"
+                  }`}
+                />
+              ))}
             </div>
           </div>
-        </button>
-      </div>
 
-      {/* SERVICES GRID (3×2) */}
-      <div className="px-4 pb-4">
-        <div className="grid grid-cols-2 gap-2">
-          <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
-          <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
-          <ServiceCard title="Delivery" subtitle="Package Delivery" img={assets.move} icon={Package} onNavigate={() => handleNavigate("MOVE")} imgPosition="center 40%" />
-          <ServiceCard title="Flights" subtitle="Global Travel" img={assets.flights} icon={Plane} onNavigate={() => handleNavigate("FLIGHTS")} imgPosition="center 60%" />
-          <ServiceCard title="Hotels" subtitle="Luxury Stays" img={assets.hotels} icon={BedDouble} onNavigate={() => handleNavigate("HOTELS")} imgPosition="center 60%" />
-          <ServiceCard title="Rentals" subtitle="Rent & Drive" img={assets.rentals} icon={Car} onNavigate={() => handleNavigate("RENTALS")} imgPosition="center 50%" />
-        </div>
-      </div>
-
-      {/* QUICK ACTIONS BAR */}
-      <div className="px-4 pb-4">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {quickActionsBar.map((action) => (
-            <motion.button
-              key={action.label}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(action.href)}
-              className="shrink-0 flex items-center gap-2.5 bg-card border border-border rounded-2xl px-4 py-3 touch-manipulation shadow-sm"
-            >
-              <div className={`w-9 h-9 ${action.bg} rounded-xl flex items-center justify-center`}>
-                <action.icon className={`w-4 h-4 ${action.color}`} />
+          {/* RECENTLY USED */}
+          {user && recentItems.length > 0 && (
+            <div className="mb-5">
+              <SectionHeader icon={History} iconColor="text-muted-foreground" title="Recently Used" onSeeAll={() => navigate("/trips")} />
+              <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+                {recentItems.slice(0, 8).map((item) => {
+                  const cfg = typeConfig[item.item_type] || { icon: MapPin, color: "bg-muted" };
+                  const ItemIcon = cfg.icon;
+                  const itemData = item.item_data as Record<string, any> | null;
+                  return (
+                    <motion.button
+                      key={item.id}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => navigate("/trips")}
+                      className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+                    >
+                      <div className={`w-8 h-8 ${cfg.color} rounded-xl flex items-center justify-center mb-2`}>
+                        <ItemIcon className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="text-xs font-semibold text-foreground truncate">
+                        {itemData?.name || item.item_type}
+                      </div>
+                      {itemData?.location && (
+                        <div className="text-[9px] text-muted-foreground truncate mt-0.5">{itemData.location}</div>
+                      )}
+                      <div className="text-[9px] text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(item.viewed_at), { addSuffix: true })}
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </div>
-              <span className="text-xs font-semibold text-foreground whitespace-nowrap">{action.label}</span>
-            </motion.button>
-          ))}
-        </div>
-      </div>
+            </div>
+          )}
 
-      {/* RECENTLY USED */}
-      {user && recentItems.length > 0 && (
-        <div className="px-4 pb-4">
-          <SectionHeader icon={History} iconColor="text-muted-foreground" title="Recently Used" onSeeAll={() => navigate("/trips")} />
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-            {recentItems.slice(0, 8).map((item) => {
-              const cfg = typeConfig[item.item_type] || { icon: MapPin, color: "bg-muted" };
-              const ItemIcon = cfg.icon;
-              const itemData = item.item_data as Record<string, any> | null;
-              return (
+          {/* FAVORITES */}
+          <div className="mb-5">
+            <SectionHeader icon={Heart} iconColor="text-destructive" title="Favorites" onSeeAll={() => navigate("/account")} />
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+              {favorites.map((r) => (
+                <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
+              ))}
+              {(savedLocations || []).map((loc) => (
                 <motion.button
-                  key={item.id}
+                  key={loc.id}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => navigate("/trips")}
-                  className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+                  onClick={() => navigate("/rides")}
+                  className="shrink-0 w-[140px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
                 >
-                  <div className={`w-8 h-8 ${cfg.color} rounded-xl flex items-center justify-center mb-2`}>
-                    <ItemIcon className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
+                    <MapPin className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="text-xs font-semibold text-foreground truncate">
-                    {itemData?.name || item.item_type}
-                  </div>
-                  {itemData?.location && (
-                    <div className="text-[9px] text-muted-foreground truncate mt-0.5">{itemData.location}</div>
-                  )}
-                  <div className="text-[9px] text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(item.viewed_at), { addSuffix: true })}
-                  </div>
+                  <div className="text-xs font-semibold text-foreground truncate">{loc.label}</div>
+                  <div className="text-[9px] text-muted-foreground truncate mt-0.5">{loc.address}</div>
                 </motion.button>
-              );
-            })}
+              ))}
+              {favorites.length === 0 && (!savedLocations || savedLocations.length === 0) && (
+                <div className="w-full rounded-2xl bg-card border border-dashed border-border p-6 flex flex-col items-center gap-2 text-center">
+                  <Heart className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Save your favorite spots</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* FAVORITES */}
-      <div className="px-4 pb-4">
-        <SectionHeader icon={Heart} iconColor="text-destructive" title="Favorites" onSeeAll={() => navigate("/account")} />
-        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-          {favorites.map((r) => (
-            <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
-          ))}
-          {(savedLocations || []).map((loc) => (
-            <motion.button
-              key={loc.id}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate("/rides")}
-              className="shrink-0 w-[140px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
-            >
-              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
-                <MapPin className="w-4 h-4 text-primary" />
+          {/* SMART RECOMMENDATIONS */}
+          {(recommended.length > 0 || deals.length > 0) && (
+            <div className="mb-5">
+              <SectionHeader icon={Sparkles} iconColor="text-amber-400" title="Recommended for You" onSeeAll={() => navigate("/eats")} />
+              <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+                {recommended.slice(0, 6).map((r) => (
+                  <div key={r.id} className="relative shrink-0">
+                    <RestaurantCard restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
+                    <div className="absolute top-1.5 right-1.5 bg-primary/90 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                      <span className="text-[8px] font-bold text-primary-foreground">Recommended</span>
+                    </div>
+                  </div>
+                ))}
+                {deals.slice(0, 3).map((deal) => (
+                  <motion.button
+                    key={deal.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate(deal.href)}
+                    className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+                  >
+                    <div className="inline-block px-2 py-0.5 rounded-lg bg-primary/10 mb-2">
+                      <span className="text-[10px] font-bold text-primary">{deal.discountLabel}</span>
+                    </div>
+                    <div className="text-xs font-semibold text-foreground truncate">{deal.name}</div>
+                    {deal.description && (
+                      <div className="text-[10px] text-muted-foreground truncate mt-0.5">{deal.description}</div>
+                    )}
+                  </motion.button>
+                ))}
               </div>
-              <div className="text-xs font-semibold text-foreground truncate">{loc.label}</div>
-              <div className="text-[9px] text-muted-foreground truncate mt-0.5">{loc.address}</div>
-            </motion.button>
-          ))}
-          {favorites.length === 0 && (!savedLocations || savedLocations.length === 0) && (
-            <div className="w-full rounded-2xl bg-card border border-dashed border-border p-6 flex flex-col items-center gap-2 text-center">
-              <Heart className="w-6 h-6 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Save your favorite spots</span>
             </div>
           )}
         </div>
-      </div>
-
-      {/* SMART RECOMMENDATIONS */}
-      {(recommended.length > 0 || deals.length > 0) && (
-        <div className="px-4 pb-4">
-          <SectionHeader icon={Sparkles} iconColor="text-amber-400" title="Recommended for You" onSeeAll={() => navigate("/eats")} />
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-            {recommended.slice(0, 6).map((r) => (
-              <div key={r.id} className="relative shrink-0">
-                <RestaurantCard restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
-                <div className="absolute top-1.5 right-1.5 bg-primary/90 backdrop-blur-sm rounded-full px-1.5 py-0.5">
-                  <span className="text-[8px] font-bold text-primary-foreground">Recommended</span>
-                </div>
-              </div>
-            ))}
-            {deals.slice(0, 3).map((deal) => (
-              <motion.button
-                key={deal.id}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(deal.href)}
-                className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
-              >
-                <div className="inline-block px-2 py-0.5 rounded-lg bg-primary/10 mb-2">
-                  <span className="text-[10px] font-bold text-primary">{deal.discountLabel}</span>
-                </div>
-                <div className="text-xs font-semibold text-foreground truncate">{deal.name}</div>
-                {deal.description && (
-                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">{deal.description}</div>
-                )}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* POPULAR RESTAURANTS */}
-      {popularRestaurants.length > 0 && (
-        <div className="px-4 pb-4">
-          <SectionHeader icon={UtensilsCrossed} iconColor="text-orange-400" title="Popular Restaurants" onSeeAll={() => navigate("/eats")} />
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-            {popularRestaurants.map((r) => (
-              <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TRAVEL DEALS */}
-      {deals.length > 0 && (
-        <div className="px-4 pb-4">
-          <SectionHeader icon={Tag} iconColor="text-primary" title="Travel Deals" onSeeAll={() => navigate("/deals")} />
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-            {deals.map((deal) => (
-              <motion.button
-                key={deal.id}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(deal.href)}
-                className="shrink-0 w-[160px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
-              >
-                <div className="inline-block px-2 py-0.5 rounded-lg bg-primary/10 mb-2">
-                  <span className="text-[10px] font-bold text-primary">{deal.discountLabel}</span>
-                </div>
-                <div className="text-xs font-semibold text-foreground truncate">{deal.name}</div>
-                {deal.description && (
-                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">{deal.description}</div>
-                )}
-                {deal.expiresAt && (
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Clock className="w-2.5 h-2.5 text-muted-foreground" />
-                    <span className="text-[9px] text-muted-foreground">Limited time</span>
-                  </div>
-                )}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* NEARBY RIDES */}
-      <div className="px-4 pb-4">
-        <SectionHeader icon={Car} iconColor="text-primary" title="Nearby Rides" onSeeAll={() => navigate("/rides")} />
-        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-          {rideOptions.map((ride) => (
-            <motion.button
-              key={ride.type}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate("/rides")}
-              className="shrink-0 w-[140px] rounded-2xl bg-card border border-border shadow-sm p-4 touch-manipulation text-left"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
-                <ride.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-sm font-bold text-foreground">{ride.type}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">{ride.eta} • {ride.price}</div>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom spacing for nav */}
-      <div className="pb-20" />
+      </motion.div>
 
       {/* Bottom Navigation */}
       <ZivoMobileNav />
