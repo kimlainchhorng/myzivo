@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { UtensilsCrossed, Leaf, Fish, Beef, Wheat, Star, Check } from "lucide-react";
+import { UtensilsCrossed, Leaf, Fish, Beef, Wheat, Star, Check, Wine, GlassWater, Cake, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const mealOptions = [
+const mealOptions: { id: string; name: string; description: string; dietary: string[]; price: number; mealIcon: LucideIcon; iconGradient: string; iconColor: string; rating: number; included?: boolean; icon?: LucideIcon }[] = [
   { 
     id: "standard", 
     name: "Classic Menu", 
     description: "Chef's choice of chicken or beef with sides",
     dietary: ["Contains gluten"],
     price: 0,
-    image: "🍗",
+    mealIcon: UtensilsCrossed,
+    iconGradient: "from-amber-500/20 to-orange-500/20",
+    iconColor: "text-amber-500",
     rating: 4.5,
     included: true
   },
@@ -21,7 +23,9 @@ const mealOptions = [
     description: "Garden fresh vegetables with quinoa and herbs",
     dietary: ["Vegetarian", "Vegan option available"],
     price: 5,
-    image: "🥗",
+    mealIcon: Leaf,
+    iconGradient: "from-emerald-500/20 to-green-500/20",
+    iconColor: "text-emerald-500",
     rating: 4.7,
     icon: Leaf
   },
@@ -31,7 +35,9 @@ const mealOptions = [
     description: "Grilled salmon with lemon butter and vegetables",
     dietary: ["Pescatarian", "High protein"],
     price: 12,
-    image: "🐟",
+    mealIcon: Fish,
+    iconGradient: "from-sky-500/20 to-blue-500/20",
+    iconColor: "text-sky-500",
     rating: 4.8,
     icon: Fish
   },
@@ -41,7 +47,9 @@ const mealOptions = [
     description: "Prime beef tenderloin with truffle mash",
     dietary: ["High protein", "Gluten-free"],
     price: 18,
-    image: "🥩",
+    mealIcon: Beef,
+    iconGradient: "from-red-500/20 to-rose-500/20",
+    iconColor: "text-red-500",
     rating: 4.9,
     icon: Beef
   },
@@ -51,7 +59,9 @@ const mealOptions = [
     description: "Rice-based dishes with fresh ingredients",
     dietary: ["Gluten-free", "Dairy-free option"],
     price: 8,
-    image: "🍚",
+    mealIcon: Wheat,
+    iconGradient: "from-amber-500/20 to-yellow-500/20",
+    iconColor: "text-amber-400",
     rating: 4.6,
     icon: Wheat
   },
@@ -100,7 +110,9 @@ const FlightMealPreorder = () => {
                   </div>
                 )}
 
-                <div className="text-5xl mb-4">{meal.image}</div>
+                <div className={cn("w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4", meal.iconGradient)}>
+                  <meal.mealIcon className={cn("w-8 h-8", meal.iconColor)} />
+                </div>
 
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-bold">{meal.name}</h3>
@@ -140,17 +152,19 @@ const FlightMealPreorder = () => {
         <div className="mt-8 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 p-6">
           <h3 className="font-bold mb-4">Enhance Your Meal</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { name: "Premium Wine", price: 15, emoji: "🍷" },
-              { name: "Champagne", price: 25, emoji: "🥂" },
-              { name: "Dessert Platter", price: 8, emoji: "🍰" },
-              { name: "Cheese Board", price: 12, emoji: "🧀" },
-            ].map((addon) => (
+            {([
+              { name: "Premium Wine", price: 15, addonIcon: Wine, gradient: "from-red-500/20 to-rose-500/20", color: "text-red-400" },
+              { name: "Champagne", price: 25, addonIcon: GlassWater, gradient: "from-amber-500/20 to-yellow-500/20", color: "text-amber-400" },
+              { name: "Dessert Platter", price: 8, addonIcon: Cake, gradient: "from-pink-500/20 to-rose-500/20", color: "text-pink-400" },
+              { name: "Cheese Board", price: 12, addonIcon: UtensilsCrossed, gradient: "from-amber-500/20 to-orange-500/20", color: "text-amber-500" },
+            ] as const).map((addon) => (
               <button
                 key={addon.name}
                 className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-center"
               >
-                <span className="text-3xl block mb-2">{addon.emoji}</span>
+                <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br mx-auto mb-2 flex items-center justify-center", addon.gradient)}>
+                  <addon.addonIcon className={cn("w-6 h-6", addon.color)} />
+                </div>
                 <p className="text-sm font-medium">{addon.name}</p>
                 <p className="text-xs text-muted-foreground">+${addon.price}</p>
               </button>
@@ -161,9 +175,15 @@ const FlightMealPreorder = () => {
         {/* Summary */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-xl border border-orange-500/20">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">
-              {mealOptions.find(m => m.id === selectedMeal)?.image || "🍽️"}
-            </span>
+            {(() => {
+              const selected = mealOptions.find(m => m.id === selectedMeal);
+              const MealIcon = selected?.mealIcon || UtensilsCrossed;
+              return (
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center", selected?.iconGradient || "from-muted to-muted")}>
+                  <MealIcon className={cn("w-5 h-5", selected?.iconColor || "text-muted-foreground")} />
+                </div>
+              );
+            })()}
             <div>
               <p className="font-bold">{mealOptions.find(m => m.id === selectedMeal)?.name || "No meal selected"}</p>
               <p className="text-sm text-muted-foreground">Your meal selection</p>

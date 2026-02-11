@@ -10,7 +10,8 @@ import {
   Clock,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MapPin
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { cn } from "@/lib/utils";
 interface BundleDeal {
   id: string;
   destination: string;
-  emoji: string;
+  iconGradient: string;
   image: string;
   services: ("flight" | "hotel" | "car")[];
   originalPrice: number;
@@ -41,7 +42,7 @@ const bundleDeals: BundleDeal[] = [
   {
     id: "1",
     destination: "Paris Getaway",
-    emoji: "🇫🇷",
+    iconGradient: "from-rose-500/20 to-purple-500/20",
     image: "bg-gradient-to-br from-rose-500/20 to-purple-500/20",
     services: ["flight", "hotel"],
     originalPrice: 1599,
@@ -56,7 +57,7 @@ const bundleDeals: BundleDeal[] = [
   {
     id: "2",
     destination: "Tokyo Explorer",
-    emoji: "🇯🇵",
+    iconGradient: "from-pink-500/20 to-red-500/20",
     image: "bg-gradient-to-br from-pink-500/20 to-red-500/20",
     services: ["flight", "hotel", "car"],
     originalPrice: 2890,
@@ -70,7 +71,7 @@ const bundleDeals: BundleDeal[] = [
   {
     id: "3",
     destination: "Bali Paradise",
-    emoji: "🏝️",
+    iconGradient: "from-teal-500/20 to-emerald-500/20",
     image: "bg-gradient-to-br from-teal-500/20 to-emerald-500/20",
     services: ["flight", "hotel"],
     originalPrice: 1899,
@@ -84,7 +85,7 @@ const bundleDeals: BundleDeal[] = [
   {
     id: "4",
     destination: "Dubai Luxury",
-    emoji: "🏙️",
+    iconGradient: "from-amber-500/20 to-orange-500/20",
     image: "bg-gradient-to-br from-amber-500/20 to-orange-500/20",
     services: ["flight", "hotel", "car"],
     originalPrice: 3299,
@@ -169,7 +170,9 @@ const BundleDealsCarousel = ({ className }: BundleDealsCarouselProps) => {
 
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-4xl">{deal.emoji}</span>
+                    <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center", deal.iconGradient)}>
+                      <MapPin className="w-6 h-6 text-foreground/70" />
+                    </div>
                     <div>
                       <h3 className="font-bold text-lg">{deal.destination}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

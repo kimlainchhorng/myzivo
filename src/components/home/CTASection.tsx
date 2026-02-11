@@ -1,4 +1,4 @@
-import { ArrowRight, Download, Sparkles, Star, Shield, Zap } from "lucide-react";
+import { ArrowRight, Download, Sparkles, Star, Shield, Zap, Rocket, Target, Apple, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -20,10 +20,22 @@ const CTASection = () => {
       <div className="absolute bottom-0 right-1/4 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-gradient-to-tl from-eats/25 to-orange-500/15 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
 
-      {/* Static floating emojis */}
-      <div className="absolute top-32 left-[10%] text-5xl sm:text-6xl hidden md:block opacity-50">🚀</div>
-      <div className="absolute bottom-40 right-[8%] text-4xl sm:text-5xl hidden md:block opacity-40">✨</div>
-      <div className="absolute top-56 right-[15%] text-3xl sm:text-4xl hidden md:block opacity-35">🎯</div>
+      {/* Floating icons */}
+      <div className="absolute top-32 left-[10%] hidden md:block opacity-40">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 to-teal-400/25 flex items-center justify-center backdrop-blur-sm">
+          <Rocket className="w-7 h-7 text-primary/70" />
+        </div>
+      </div>
+      <div className="absolute bottom-40 right-[8%] hidden md:block opacity-30">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-6 h-6 text-amber-400/60" />
+        </div>
+      </div>
+      <div className="absolute top-56 right-[15%] hidden md:block opacity-25">
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500/20 to-pink-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Target className="w-5 h-5 text-rose-400/60" />
+        </div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -102,7 +114,7 @@ const CTASection = () => {
               <div className="flex justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
                 <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-105 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity" />
-                  <div className="text-xl sm:text-2xl relative z-10">🍎</div>
+                  <div className="relative z-10"><Apple className="w-5 h-5 sm:w-6 sm:h-6" /></div>
                   <div className="text-left relative z-10">
                     <p className="text-[8px] sm:text-[10px] opacity-80">Download on the</p>
                     <p className="font-semibold text-xs sm:text-sm">App Store</p>
@@ -110,7 +122,7 @@ const CTASection = () => {
                 </div>
                 <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-105 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity" />
-                  <div className="text-xl sm:text-2xl relative z-10">▶️</div>
+                  <div className="relative z-10"><Play className="w-5 h-5 sm:w-6 sm:h-6" /></div>
                   <div className="text-left relative z-10">
                     <p className="text-[8px] sm:text-[10px] opacity-80">Get it on</p>
                     <p className="font-semibold text-xs sm:text-sm">Google Play</p>

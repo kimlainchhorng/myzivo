@@ -17,7 +17,9 @@ const restaurants = [
     rating: 4.8,
     deliveryTime: "15-25",
     deliveryFee: "Free",
-    image: "🍔",
+    icon: Flame,
+    gradient: "from-red-500/20 to-orange-500/20",
+    iconColor: "text-red-400",
     promoted: true,
   },
   {
@@ -27,7 +29,9 @@ const restaurants = [
     rating: 4.9,
     deliveryTime: "25-35",
     deliveryFee: "$2.99",
-    image: "🍣",
+    icon: UtensilsCrossed,
+    gradient: "from-pink-500/20 to-rose-500/20",
+    iconColor: "text-pink-400",
     promoted: false,
   },
   {
@@ -37,7 +41,9 @@ const restaurants = [
     rating: 4.7,
     deliveryTime: "20-30",
     deliveryFee: "Free",
-    image: "🍕",
+    icon: Pizza,
+    gradient: "from-eats/20 to-amber-500/20",
+    iconColor: "text-eats",
     promoted: true,
   },
   {
@@ -47,7 +53,9 @@ const restaurants = [
     rating: 4.6,
     deliveryTime: "15-20",
     deliveryFee: "$1.99",
-    image: "🌮",
+    icon: UtensilsCrossed,
+    gradient: "from-emerald-500/20 to-green-500/20",
+    iconColor: "text-emerald-400",
     promoted: false,
   },
 ];
@@ -60,18 +68,26 @@ const EatsSection = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-red-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating food emojis - CSS animated */}
-      <div className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-45 animate-float">
-        🍕
+      {/* Floating food icons */}
+      <div className="absolute top-32 left-[8%] hidden lg:block opacity-35 animate-float">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-eats/20 to-orange-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Pizza className="w-7 h-7 text-eats/70" />
+        </div>
       </div>
-      <div className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-35 animate-float-delayed">
-        🍜
+      <div className="absolute top-48 right-[10%] hidden lg:block opacity-25 animate-float-delayed">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center backdrop-blur-sm">
+          <UtensilsCrossed className="w-6 h-6 text-amber-400/60" />
+        </div>
       </div>
-      <div className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-35 animate-float">
-        🍔
+      <div className="absolute bottom-32 right-[15%] hidden lg:block opacity-25 animate-float">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500/20 to-rose-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Flame className="w-6 h-6 text-red-400/60" />
+        </div>
       </div>
-      <div className="absolute bottom-48 left-[12%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
-        🍣
+      <div className="absolute bottom-48 left-[12%] hidden lg:block opacity-20 animate-float-delayed">
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Coffee className="w-5 h-5 text-emerald-400/60" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
@@ -120,9 +136,9 @@ const EatsSection = () => {
             >
               {/* Image Area */}
               <div className="relative h-32 bg-muted flex items-center justify-center">
-                <span className="text-5xl group-hover:scale-110 transition-transform duration-200">
-                  {restaurant.image}
-                </span>
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${restaurant.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                  <restaurant.icon className={`w-8 h-8 ${restaurant.iconColor}`} />
+                </div>
                 {restaurant.promoted && (
                   <span className="absolute top-3 left-3 px-2 py-1 text-xs font-medium gradient-eats text-secondary-foreground rounded-full">
                     Promoted

@@ -1,17 +1,17 @@
-import { Sparkles, Star, Shield, CheckCircle2 } from "lucide-react";
+import { Sparkles, Star, Shield, CheckCircle2, Plane, Building2, Car, UtensilsCrossed, Globe, Handshake, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const partners = [
-  { name: "Delta Airlines", logo: "✈️", category: "Travel" },
-  { name: "Marriott", logo: "🏨", category: "Hotels" },
-  { name: "Enterprise", logo: "🚗", category: "Rentals" },
-  { name: "Uber Eats", logo: "🍔", category: "Delivery" },
-  { name: "Hilton", logo: "🏢", category: "Hotels" },
-  { name: "American Airlines", logo: "🛫", category: "Travel" },
-  { name: "Budget", logo: "🚙", category: "Rentals" },
-  { name: "DoorDash", logo: "🥡", category: "Delivery" },
-  { name: "United", logo: "🌍", category: "Travel" },
-  { name: "Hyatt", logo: "✨", category: "Hotels" },
+const partners: { name: string; icon: LucideIcon; gradient: string; category: string }[] = [
+  { name: "Delta Airlines", icon: Plane, gradient: "from-sky-500/20 to-blue-500/20", category: "Travel" },
+  { name: "Marriott", icon: Building2, gradient: "from-amber-500/20 to-orange-500/20", category: "Hotels" },
+  { name: "Enterprise", icon: Car, gradient: "from-violet-500/20 to-purple-500/20", category: "Rentals" },
+  { name: "Uber Eats", icon: UtensilsCrossed, gradient: "from-eats/20 to-orange-500/20", category: "Delivery" },
+  { name: "Hilton", icon: Building2, gradient: "from-sky-500/20 to-cyan-500/20", category: "Hotels" },
+  { name: "American Airlines", icon: Plane, gradient: "from-red-500/20 to-blue-500/20", category: "Travel" },
+  { name: "Budget", icon: Car, gradient: "from-emerald-500/20 to-green-500/20", category: "Rentals" },
+  { name: "DoorDash", icon: UtensilsCrossed, gradient: "from-red-500/20 to-rose-500/20", category: "Delivery" },
+  { name: "United", icon: Globe, gradient: "from-blue-500/20 to-indigo-500/20", category: "Travel" },
+  { name: "Hyatt", icon: Sparkles, gradient: "from-amber-500/20 to-yellow-500/20", category: "Hotels" },
 ];
 
 const trustBadges = [
@@ -28,12 +28,16 @@ const PartnersSection = () => {
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-tl from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
       
-      {/* Floating elements - CSS animated */}
-      <div className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-30 animate-bounce" style={{ animationDuration: '6s' }}>
-        🤝
+      {/* Floating icons */}
+      <div className="absolute top-24 right-[10%] hidden lg:block opacity-25 animate-bounce" style={{ animationDuration: '6s' }}>
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center backdrop-blur-sm">
+          <Handshake className="w-7 h-7 text-primary/60" />
+        </div>
       </div>
-      <div className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-25 animate-bounce" style={{ animationDuration: '7s', animationDelay: '1s' }}>
-        🌟
+      <div className="absolute bottom-32 left-[8%] hidden lg:block opacity-20 animate-bounce" style={{ animationDuration: '7s', animationDelay: '1s' }}>
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Star className="w-6 h-6 text-amber-400/60" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
@@ -86,7 +90,9 @@ const PartnersSection = () => {
                 key={`row1-${index}`}
                 className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-105 hover:-translate-y-1"
               >
-                <span className="text-3xl group-hover:scale-110 transition-transform">{partner.logo}</span>
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", partner.gradient)}>
+                  <partner.icon className="w-5 h-5 text-foreground/70" />
+                </div>
                 <div>
                   <span className="font-bold text-foreground whitespace-nowrap block">
                     {partner.name}
@@ -104,7 +110,9 @@ const PartnersSection = () => {
                 key={`row2-${index}`}
                 className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-105 hover:-translate-y-1"
               >
-                <span className="text-3xl group-hover:scale-110 transition-transform">{partner.logo}</span>
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", partner.gradient)}>
+                  <partner.icon className="w-5 h-5 text-foreground/70" />
+                </div>
                 <div>
                   <span className="font-bold text-foreground whitespace-nowrap block">
                     {partner.name}

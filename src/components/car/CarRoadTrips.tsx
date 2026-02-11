@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Map, Clock, Fuel, Camera, ArrowRight, Star, Navigation } from "lucide-react";
+import { Map, Clock, Fuel, Camera, ArrowRight, Star, Navigation, Waves, Route, Palmtree, Mountain, Car, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const roadTrips = [
@@ -13,7 +13,9 @@ const roadTrips = [
     duration: "2-3 days",
     highlights: ["Big Sur", "Monterey", "Santa Barbara"],
     rating: 4.9,
-    image: "🌊",
+    image: Waves as LucideIcon,
+    imageGradient: "from-sky-500/20 to-blue-500/20",
+    imageColor: "text-sky-400",
     scenicLevel: "Breathtaking"
   },
   {
@@ -24,7 +26,9 @@ const roadTrips = [
     duration: "7-10 days",
     highlights: ["Grand Canyon", "Painted Desert", "Santa Fe"],
     rating: 4.8,
-    image: "🛣️",
+    image: Route as LucideIcon,
+    imageGradient: "from-amber-500/20 to-orange-500/20",
+    imageColor: "text-amber-400",
     scenicLevel: "Iconic"
   },
   {
@@ -35,7 +39,9 @@ const roadTrips = [
     duration: "1-2 days",
     highlights: ["Seven Mile Bridge", "Bahia Honda", "Key Largo"],
     rating: 4.7,
-    image: "🏝️",
+    image: Palmtree as LucideIcon,
+    imageGradient: "from-emerald-500/20 to-teal-500/20",
+    imageColor: "text-emerald-400",
     scenicLevel: "Tropical"
   },
   {
@@ -46,7 +52,9 @@ const roadTrips = [
     duration: "3-4 days",
     highlights: ["Shenandoah", "Asheville", "Great Smokies"],
     rating: 4.8,
-    image: "🏔️",
+    image: Mountain as LucideIcon,
+    imageGradient: "from-violet-500/20 to-purple-500/20",
+    imageColor: "text-violet-400",
     scenicLevel: "Mountain Views"
   }
 ];
@@ -78,7 +86,9 @@ export default function CarRoadTrips() {
             className="p-4 rounded-xl border border-border/50 bg-muted/20 hover:border-emerald-500/30 transition-all group"
           >
             <div className="flex items-start gap-4">
-              <span className="text-4xl">{trip.image}</span>
+              <div className={cn("w-14 h-14 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0", trip.imageGradient)}>
+                <trip.image className={cn("w-7 h-7", trip.imageColor)} />
+              </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-medium group-hover:text-emerald-400 transition-colors">
@@ -133,7 +143,10 @@ export default function CarRoadTrips() {
 
         <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
           <h4 className="font-medium mb-2 flex items-center gap-2">
-            🚗 Road Trip Package
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
+              <Car className="w-4 h-4 text-emerald-400" />
+            </div>
+            Road Trip Package
           </h4>
           <p className="text-sm text-muted-foreground mb-3">
             Get 20% off rentals over 5 days + free GPS navigation & roadside assistance

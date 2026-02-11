@@ -10,7 +10,12 @@ import {
   ExternalLink,
   CheckCircle2,
   Snowflake,
-  Cog
+  Cog,
+  CarFront,
+  Truck,
+  Crown,
+  Bus,
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
@@ -76,17 +81,18 @@ export default function CarResultCardPro({
 }: CarResultCardProProps) {
   const { redirectWithParams, redirectSimple } = useCarRedirect('car_result_card', 'result_card');
 
-  // Category to emoji mapping
-  const categoryEmojis: Record<string, string> = {
-    'Economy': '🚗',
-    'Compact': '🚙',
-    'SUV': '🚐',
-    'Luxury': '🏎️',
-    'Van': '🚌',
-    'Convertible': '🏎️',
-    'Midsize': '🚗',
-    'Full-size': '🚙',
+  // Category to icon mapping
+  const categoryIcons: Record<string, LucideIcon> = {
+    'Economy': Car,
+    'Compact': Car,
+    'SUV': Truck,
+    'Luxury': Crown,
+    'Van': Bus,
+    'Convertible': Crown,
+    'Midsize': Car,
+    'Full-size': CarFront,
   };
+  const FallbackIcon = categoryIcons[category] || Car;
 
   const handleBookClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -129,7 +135,9 @@ export default function CarResultCardPro({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-6xl">{categoryEmojis[category] || '🚗'}</span>
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
+                  <FallbackIcon className="w-10 h-10 text-violet-400" />
+                </div>
               </div>
             )}
             <Badge className="absolute top-3 left-3 bg-violet-500/90 text-white text-[10px]">
