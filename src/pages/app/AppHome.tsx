@@ -9,10 +9,16 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel
+  UtensilsCrossed, Heart, History, Hotel, Gift
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
+import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useUserRewards } from "@/hooks/useUserRewards";
+import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -106,6 +112,8 @@ const AppHome = () => {
   const { data: savedLocations } = useSavedLocations(user?.id);
   const { getCurrentLocation } = useCurrentLocation();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { points, getNextTierProgress } = useLoyaltyPoints();
+  const { active: activeRewards } = useUserRewards();
 
   // Get user location on mount
   useEffect(() => {
@@ -311,6 +319,59 @@ const AppHome = () => {
               ))}
             </div>
           </div>
+
+          {/* REWARDS WALLET CARD */}
+          {user && (() => {
+            const tierName = getTierFromPoints(points.lifetime_points);
+            const tierConfig = ZIVO_TIERS[tierName];
+            const { nextTier, pointsNeeded } = getPointsToNextTier(points.lifetime_points);
+            const { progress } = getNextTierProgress();
+            const recentRewards = activeRewards.slice(0, 3);
+
+            return (
+              <div className="mb-5">
+                <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-emerald-500/10 border border-primary/20 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">My Rewards</span>
+                    </div>
+                    <Badge variant="outline" className={`text-xs ${tierConfig.color} ${tierConfig.borderColor}`}>
+                      {tierConfig.icon} {tierConfig.displayName}
+                    </Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {points.points_balance.toLocaleString()}
+                    <span className="text-lg text-muted-foreground ml-1">pts</span>
+                  </p>
+                  <Progress value={progress} className="h-2 mb-2" />
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {nextTier ? `${pointsNeeded.toLocaleString()} pts to ${ZIVO_TIERS[nextTier].displayName}` : "Max tier reached!"}
+                  </p>
+
+                  {recentRewards.length > 0 && (
+                    <div className="space-y-1 mb-3">
+                      {recentRewards.map((r) => (
+                        <div key={r.id} className="flex justify-between text-xs">
+                          <span className="text-foreground">+{r.reward_value} pts</span>
+                          <span className="text-muted-foreground">{r.reward_type}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => navigate("/rewards")}
+                    className="w-full bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground"
+                    size="sm"
+                  >
+                    <Gift className="w-4 h-4 mr-1.5" />
+                    Redeem Points
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* RECENTLY USED */}
           {user && recentItems.length > 0 && (
