@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plane, Hotel, CarFront, Search, Calendar, Users, MapPin, ArrowRight, Shield, ChevronDown } from "lucide-react";
+import { Plane, Hotel, CarFront, Search, Calendar, Users, MapPin, ArrowRight, Shield, ChevronDown, Building2, Umbrella, Home, Car, Truck, Crown, Star } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,21 +20,21 @@ const tabs: { id: TravelTab; label: string; icon: typeof Plane }[] = [
 
 // Demo results for each tab
 const flightResults = [
-  { id: 1, airline: "Delta", logo: "✈️", from: "JFK", to: "LAX", price: 199, duration: "5h 30m", stops: "Nonstop" },
-  { id: 2, airline: "United", logo: "✈️", from: "JFK", to: "LAX", price: 215, duration: "5h 45m", stops: "Nonstop" },
-  { id: 3, airline: "American", logo: "✈️", from: "JFK", to: "LAX", price: 189, duration: "6h 15m", stops: "1 stop" },
+  { id: 1, airline: "Delta", icon: Plane, iconColor: "text-sky-400", iconBg: "from-sky-500/20 to-blue-500/20", from: "JFK", to: "LAX", price: 199, duration: "5h 30m", stops: "Nonstop" },
+  { id: 2, airline: "United", icon: Plane, iconColor: "text-sky-400", iconBg: "from-sky-500/20 to-blue-500/20", from: "JFK", to: "LAX", price: 215, duration: "5h 45m", stops: "Nonstop" },
+  { id: 3, airline: "American", icon: Plane, iconColor: "text-sky-400", iconBg: "from-sky-500/20 to-blue-500/20", from: "JFK", to: "LAX", price: 189, duration: "6h 15m", stops: "1 stop" },
 ];
 
 const hotelResults = [
-  { id: 1, name: "Marriott Downtown", image: "🏨", rating: 4.5, price: 159, location: "City Center" },
-  { id: 2, name: "Hilton Beach Resort", image: "🏖️", rating: 4.7, price: 229, location: "Beachfront" },
-  { id: 3, name: "Budget Inn Express", image: "🏠", rating: 4.0, price: 89, location: "Airport Area" },
+  { id: 1, name: "Marriott Downtown", icon: Building2, iconColor: "text-amber-400", iconBg: "from-amber-500/20 to-orange-500/20", rating: 4.5, price: 159, location: "City Center" },
+  { id: 2, name: "Hilton Beach Resort", icon: Umbrella, iconColor: "text-amber-400", iconBg: "from-amber-500/20 to-orange-500/20", rating: 4.7, price: 229, location: "Beachfront" },
+  { id: 3, name: "Budget Inn Express", icon: Home, iconColor: "text-amber-400", iconBg: "from-amber-500/20 to-orange-500/20", rating: 4.0, price: 89, location: "Airport Area" },
 ];
 
 const carResults = [
-  { id: 1, type: "Economy", model: "Toyota Corolla", image: "🚗", price: 35, seats: 5 },
-  { id: 2, type: "SUV", model: "Ford Explorer", image: "🚙", price: 65, seats: 7 },
-  { id: 3, type: "Premium", model: "BMW 5 Series", image: "🚘", price: 95, seats: 5 },
+  { id: 1, type: "Economy", model: "Toyota Corolla", icon: Car, iconColor: "text-emerald-400", iconBg: "from-emerald-500/20 to-teal-500/20", price: 35, seats: 5 },
+  { id: 2, type: "SUV", model: "Ford Explorer", icon: Truck, iconColor: "text-emerald-400", iconBg: "from-emerald-500/20 to-teal-500/20", price: 65, seats: 7 },
+  { id: 3, type: "Premium", model: "BMW 5 Series", icon: Crown, iconColor: "text-emerald-400", iconBg: "from-emerald-500/20 to-teal-500/20", price: 95, seats: 5 },
 ];
 
 const AppTravel = () => {
@@ -195,8 +195,8 @@ const AppTravel = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-xl">
-                        {flight.logo}
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${flight.iconBg} flex items-center justify-center`}>
+                        <flight.icon className={`w-5 h-5 ${flight.iconColor}`} />
                       </div>
                       <div>
                         <p className="font-bold text-sm">{flight.airline}</p>
@@ -234,14 +234,16 @@ const AppTravel = () => {
                   className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
                 >
                   <div className="flex gap-3">
-                    <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                      {hotel.image}
-                    </div>
+                    <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${hotel.iconBg} flex items-center justify-center flex-shrink-0`}>
+                       <hotel.icon className={`w-8 h-8 ${hotel.iconColor}`} />
+                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-sm truncate">{hotel.name}</h3>
                       <p className="text-xs text-muted-foreground">{hotel.location}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {"⭐".repeat(Math.floor(hotel.rating))}
+                      <div className="flex items-center gap-0.5 mt-1">
+                        {Array.from({ length: Math.floor(hotel.rating) }).map((_, i) => (
+                          <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        ))}
                         <span className="text-xs font-medium ml-1">{hotel.rating}</span>
                       </div>
                     </div>
@@ -266,9 +268,9 @@ const AppTravel = () => {
                   className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
                 >
                   <div className="flex gap-3">
-                    <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                      {car.image}
-                    </div>
+                    <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${car.iconBg} flex items-center justify-center flex-shrink-0`}>
+                       <car.icon className={`w-8 h-8 ${car.iconColor}`} />
+                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-primary font-semibold">{car.type}</p>
                       <h3 className="font-bold text-sm">{car.model}</h3>

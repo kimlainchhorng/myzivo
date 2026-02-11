@@ -4,7 +4,7 @@
  * ZIVO is Merchant of Record - no affiliate redirects
  */
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -58,6 +58,7 @@ import {
   ActiveFiltersChips,
 } from "@/components/results";
 import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
+import SponsoredResultCard from "@/components/sponsored/SponsoredResultCard";
 import { FlightSearchFormPro } from "@/components/search";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -570,12 +571,25 @@ const FlightResults = () => {
               {/* Results - Only show if we have real API prices */}
               {!isLoading && isRealPrice && flightCards.length > 0 && (
                 <div className="space-y-4">
-                  {flightCards.map((flight) => (
-                    <FlightResultCard 
-                      key={flight.id} 
-                      flight={flight} 
-                      onViewDeal={handleViewDeal}
-                    />
+                  {flightCards.map((flight, index) => (
+                    <React.Fragment key={flight.id}>
+                      <FlightResultCard 
+                        flight={flight} 
+                        onViewDeal={handleViewDeal}
+                      />
+                      {(index + 1) % 5 === 0 && index < flightCards.length - 1 && (
+                        <SponsoredResultCard
+                          type="flight"
+                          title="Airport Transfer Deal"
+                          subtitle={`Pre-book your ride from ${destinationAirport?.city || destinationIata}`}
+                          price={29}
+                          currency="USD"
+                          partnerName="ZIVO Rides"
+                          ctaText="View Transfers"
+                          onCtaClick={() => navigate("/rides")}
+                        />
+                      )}
+                    </React.Fragment>
                   ))}
                 </div>
               )}

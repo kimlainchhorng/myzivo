@@ -4,7 +4,7 @@
  * Integrates affiliate deep links with proper consent + tracking
  */
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Hotel, AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
@@ -38,6 +38,7 @@ import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch"
 import { getCityBySlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
+import SponsoredResultCard from "@/components/sponsored/SponsoredResultCard";
 import { buildOutRedirectUrl, buildBookingDeepLink } from "@/lib/partnerDeepLinks";
 import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
@@ -374,8 +375,22 @@ export default function HotelResultsPage() {
                 {/* Results */}
                 {!isLoading && hotelCards.length > 0 && (
                   <div className="space-y-4">
-                    {hotelCards.map((hotel) => (
-                      <HotelResultCard key={hotel.id} hotel={hotel} onViewDeal={handleViewDeal} />
+                    {hotelCards.map((hotel, index) => (
+                      <React.Fragment key={hotel.id}>
+                        <HotelResultCard hotel={hotel} onViewDeal={handleViewDeal} />
+                        {(index + 1) % 5 === 0 && index < hotelCards.length - 1 && (
+                          <SponsoredResultCard
+                            type="hotel"
+                            title="Car Rental Deal"
+                            subtitle={`Explore ${cityName} with a rental car`}
+                            price={35}
+                            currency="USD"
+                            partnerName="ZIVO Cars"
+                            ctaText="View Cars"
+                            onCtaClick={() => window.open("/cars", "_blank")}
+                          />
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 )}
