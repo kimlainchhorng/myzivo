@@ -1,4 +1,4 @@
-import { Smartphone, Bell, Wallet, Map, Shield, Zap, Star, Download, ArrowRight } from "lucide-react";
+import { Smartphone, Bell, Wallet, Map, Shield, Zap, Star, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -123,8 +123,8 @@ const AppFeatures = () => {
               </Button>
             </div>
 
-            <p className="mt-4 text-xs text-muted-foreground">
-              ⭐ 4.9 rating • 2M+ downloads • Free to use
+            <p className="mt-4 text-xs text-muted-foreground flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> 4.9 rating • 2M+ downloads • Free to use
             </p>
           </div>
         </div>

@@ -28,6 +28,7 @@ import SmartOffersSection from "@/components/home/SmartOffersSection";
 import TestimonialsCarousel from "@/components/home/TestimonialsCarousel";
 import AppDownloadCTA from "@/components/home/AppDownloadCTA";
 import DestinationShowcase from "@/components/home/DestinationShowcase";
+import NewsletterSignup from "@/components/shared/NewsletterSignup";
 
 // Mobile app home - lazy load to match App.tsx pattern
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -131,6 +132,11 @@ const DesktopHomePage = () => {
         {/* 7. Social Proof / Platform Trust */}
         <FadeInSection>
           <SocialProofSection />
+        </FadeInSection>
+
+        {/* Newsletter CTA */}
+        <FadeInSection>
+          <NewsletterSignup />
         </FadeInSection>
 
         {/* 8. Airline Trust Section */}
