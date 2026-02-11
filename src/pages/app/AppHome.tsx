@@ -1,6 +1,6 @@
 /**
  * App Home Screen - Super App Hub
- * Three zones: Services Grid, Personalized Section, Quick Actions
+ * Layout: Promo Banner → Services Grid → 3 Scrolling Sections → Quick Actions
  */
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,20 +8,17 @@ import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star, Sparkles,
-  Coffee, UtensilsCrossed, CupSoda, Moon, Bird
+  Coffee, UtensilsCrossed, CupSoda, Moon, Bird, Tag, Clock
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
-import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
-import SmartOffersSection from "@/components/home/SmartOffersSection";
-import { WinBackBanner } from "@/components/home/WinBackBanner";
-import HomepageAdBanner from "@/components/ads/HomepageAdBanner";
 
 // Image Assets
 const assets = {
@@ -31,7 +28,6 @@ const assets = {
   food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
   move: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=800",
   rentals: "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&q=80&w=800",
-  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
 
 // Service badges
@@ -56,7 +52,7 @@ const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition
     <motion.button
       onClick={onNavigate}
       whileTap={{ scale: 0.97 }}
-      className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation h-28"
+      className="relative rounded-2xl overflow-hidden group cursor-pointer border border-border/50 touch-manipulation h-28 shadow-sm"
     >
       <div className="absolute inset-0">
         <img 
@@ -115,7 +111,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
   <motion.button
     onClick={onNavigate}
     whileTap={{ scale: 0.96 }}
-    className="shrink-0 w-[120px] rounded-2xl overflow-hidden bg-card border border-border shadow-sm touch-manipulation text-left"
+    className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border shadow-sm touch-manipulation text-left"
   >
     <div className="relative h-[100px]">
       <img
@@ -140,56 +136,36 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
   </motion.button>
 );
 
-// Horizontal scroll row
-// Map title keywords to Lucide icons
-const rowIcons: Record<string, { Icon: typeof Plane; color: string }> = {
-  "Order Again": { Icon: RefreshCw, color: "text-orange-400" },
-  "Your Favorites": { Icon: Star, color: "text-rose-400" },
-  "Recommended for You": { Icon: Sparkles, color: "text-amber-400" },
-};
+// Section Header
+const SectionHeader = ({ icon: Icon, iconColor, title, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; onSeeAll: () => void }) => (
+  <div className="flex items-center justify-between mb-2">
+    <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+      <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
+      {title}
+    </h2>
+    <button onClick={onSeeAll} className="text-xs text-primary font-semibold">See all</button>
+  </div>
+);
 
-const timeIcons: Record<string, { Icon: typeof Plane; color: string }> = {
-  coffee: { Icon: Coffee, color: "text-amber-400" },
-  "utensils-crossed": { Icon: UtensilsCrossed, color: "text-orange-400" },
-  "cup-soda": { Icon: CupSoda, color: "text-teal-400" },
-  moon: { Icon: Moon, color: "text-indigo-400" },
-  bird: { Icon: Bird, color: "text-violet-400" },
-};
-
-const PersonalizedRow = ({ title, iconName, restaurants, navigate: nav }: { title: string; iconName?: string; restaurants: HomeRestaurant[]; navigate: (path: string) => void }) => {
-  if (!restaurants.length) return null;
-  const iconConfig = rowIcons[title] || (iconName ? timeIcons[iconName] : undefined);
-  return (
-    <div>
-      <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
-        {iconConfig && <iconConfig.Icon className={`w-3.5 h-3.5 ${iconConfig.color}`} />}
-        {title}
-      </h2>
-      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-        {restaurants.map((r) => (
-          <RestaurantCard key={r.id} restaurant={r} onNavigate={() => nav(`/eats/restaurant/${r.id}`)} />
-        ))}
-      </div>
-    </div>
-  );
-};
+// Nearby Rides data
+const rideOptions = [
+  { type: "Economy", eta: "3 min", price: "~$8", icon: Car },
+  { type: "Comfort", eta: "5 min", price: "~$14", icon: Car },
+  { type: "Premium", eta: "7 min", price: "~$22", icon: Car },
+];
 
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { timeContext, timeSuggestions, orderAgain, favorites, recommended } = usePersonalizedHome();
+  const { timeSuggestions, recommended } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
+  const { deals } = useRecommendedDeals(6);
 
-  // Trending destinations
-  const trendingDestinations = [
-    { city: "Miami", color: "from-teal-500/30 to-emerald-500/30", price: "$89" },
-    { city: "New York", color: "from-sky-500/30 to-blue-500/30", price: "$120" },
-    { city: "Los Angeles", color: "from-amber-500/30 to-orange-500/30", price: "$99" },
-    { city: "Chicago", color: "from-slate-500/30 to-zinc-500/30", price: "$75" },
-    { city: "Las Vegas", color: "from-violet-500/30 to-purple-500/30", price: "$65" },
-    { city: "San Francisco", color: "from-rose-500/30 to-pink-500/30", price: "$110" },
-  ];
+  // Merge restaurant sources for "Popular Restaurants"
+  const popularRestaurants = [...recommended, ...timeSuggestions]
+    .filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i)
+    .slice(0, 10);
 
   const handleNavigate = useCallback((screen: string) => {
     window.scrollTo(0, 0);
@@ -215,7 +191,7 @@ const AppHome = () => {
   const avatarUrl = profile?.avatar_url;
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
-  // --- Zone 3: Last Meal ---
+  // Quick Actions data
   const { data: lastMeal } = useQuery({
     queryKey: ["home-last-meal", user?.id],
     queryFn: async () => {
@@ -234,7 +210,6 @@ const AppHome = () => {
     staleTime: 30_000,
   });
 
-  // --- Zone 3: Last Ride ---
   const { data: lastRide } = useQuery({
     queryKey: ["home-last-ride", user?.id],
     queryFn: async () => {
@@ -253,7 +228,6 @@ const AppHome = () => {
     staleTime: 30_000,
   });
 
-  // --- Zone 3: Upcoming Count ---
   const { data: upcomingCount } = useQuery({
     queryKey: ["home-upcoming-count", user?.id],
     queryFn: async () => {
@@ -272,7 +246,7 @@ const AppHome = () => {
   return (
     <div className="relative min-h-screen bg-background font-sans text-foreground overflow-x-hidden selection:bg-primary/30">
       
-      {/* 1. TOP BAR */}
+      {/* TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-background/80 backdrop-blur-lg safe-area-top border-b border-border/50">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
@@ -298,20 +272,26 @@ const AppHome = () => {
         </button>
       </div>
 
-      {/* 2. SEARCH */}
-      <div className="pt-20 px-4 pb-4">
-        {user && <WinBackBanner className="mb-4" />}
+      {/* LARGE PROMO BANNER */}
+      <div className="pt-20 px-4">
+        <div className="rounded-2xl bg-gradient-to-br from-primary to-emerald-400 p-6 text-white">
+          <h2 className="text-2xl font-bold mb-1">Travel smarter. Save more.</h2>
+          <p className="text-sm opacity-90 mb-4">Get up to 50% off flights, hotels, and rides</p>
+          <button
+            onClick={() => navigate("/search")}
+            className="bg-white text-primary font-bold px-6 py-3 rounded-xl text-sm active:scale-95 transition-transform touch-manipulation"
+          >
+            Explore Deals
+          </button>
+        </div>
+      </div>
 
-        <h1 className="text-2xl font-thin tracking-tight mb-0.5 text-foreground">
-          Explore the <span className="font-black italic">World</span>
-        </h1>
-        <p className="text-muted-foreground mb-4 text-sm">One app for every journey.</p>
-
+      {/* SEARCH BAR */}
+      <div className="px-4 py-4">
         <button 
           onClick={() => setIsSearchOpen(true)}
           className="relative group w-full touch-manipulation"
         >
-          <div className="absolute inset-0 bg-primary/5 rounded-2xl blur opacity-40 group-active:opacity-60 transition-opacity" />
           <div className="relative bg-card border border-border rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.99] transition-transform shadow-sm">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
@@ -323,50 +303,8 @@ const AppHome = () => {
         </button>
       </div>
 
-      {/* Promo banner for signed-out users */}
-      {!user && (
-        <div className="mx-4 mb-4 rounded-2xl bg-gradient-to-r from-primary to-sky-500 p-4 text-white">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-bold">Sign up & save</span>
-          </div>
-          <p className="text-xs opacity-85">Create a free account and get $10 off your first booking.</p>
-          <button
-            onClick={() => navigate("/login?mode=signup")}
-            className="mt-2 px-4 py-1.5 bg-white/20 backdrop-blur rounded-lg text-xs font-semibold active:scale-95 transition-transform"
-          >
-            Get Started
-          </button>
-        </div>
-      )}
-
-      {/* Trending Destinations */}
+      {/* SERVICES GRID (3×2) */}
       <div className="px-4 pb-4">
-        <div className="border-t border-border pt-4 mb-3" />
-        <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
-          <Plane className="w-3.5 h-3.5 text-sky-400" />Trending Destinations
-        </h2>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {trendingDestinations.map((dest) => (
-            <motion.button
-              key={dest.city}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(`/flights?to=${dest.city}`)}
-              className="shrink-0 px-3 py-2.5 rounded-xl bg-card border border-border shadow-sm touch-manipulation"
-            >
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dest.color} flex items-center justify-center mb-1.5 mx-auto`}>
-                <MapPin className="w-4 h-4 text-white" />
-              </div>
-              <div className="text-xs font-semibold text-foreground">{dest.city}</div>
-              <div className="text-[10px] text-primary font-bold">from {dest.price}</div>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* ZONE 1: Services Grid */}
-      <div className="px-4 pb-4">
-        <div className="border-t border-border pt-4 mb-3" />
         <div className="grid grid-cols-2 gap-2">
           <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
           <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
@@ -377,42 +315,71 @@ const AppHome = () => {
         </div>
       </div>
 
-      {/* Mobile Ad Banner */}
+      {/* POPULAR RESTAURANTS */}
+      {popularRestaurants.length > 0 && (
+        <div className="px-4 pb-4">
+          <SectionHeader icon={UtensilsCrossed} iconColor="text-orange-400" title="Popular Restaurants" onSeeAll={() => navigate("/eats")} />
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {popularRestaurants.map((r) => (
+              <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TRAVEL DEALS */}
+      {deals.length > 0 && (
+        <div className="px-4 pb-4">
+          <SectionHeader icon={Tag} iconColor="text-primary" title="Travel Deals" onSeeAll={() => navigate("/deals")} />
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {deals.map((deal) => (
+              <motion.button
+                key={deal.id}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => navigate(deal.href)}
+                className="shrink-0 w-[160px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+              >
+                <div className="inline-block px-2 py-0.5 rounded-lg bg-primary/10 mb-2">
+                  <span className="text-[10px] font-bold text-primary">{deal.discountLabel}</span>
+                </div>
+                <div className="text-xs font-semibold text-foreground truncate">{deal.name}</div>
+                {deal.description && (
+                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">{deal.description}</div>
+                )}
+                {deal.expiresAt && (
+                  <div className="flex items-center gap-1 mt-1.5">
+                    <Clock className="w-2.5 h-2.5 text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground">Limited time</span>
+                  </div>
+                )}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* NEARBY RIDES */}
       <div className="px-4 pb-4">
-        <HomepageAdBanner
-          headline="Summer deals are here"
-          description="Save up to 40% on flights and hotels to top destinations."
-          ctaText="Browse Deals"
-          ctaHref="/flights"
-        />
+        <SectionHeader icon={Car} iconColor="text-primary" title="Nearby Rides" onSeeAll={() => navigate("/rides")} />
+        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+          {rideOptions.map((ride) => (
+            <motion.button
+              key={ride.type}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate("/rides")}
+              className="shrink-0 w-[140px] rounded-2xl bg-card border border-border shadow-sm p-4 touch-manipulation text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                <ride.icon className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-sm font-bold text-foreground">{ride.type}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{ride.eta} • {ride.price}</div>
+            </motion.button>
+          ))}
+        </div>
       </div>
 
-      {/* ZONE 2: Personalized Rows */}
-      <div className="px-4 pb-4 space-y-4">
-        <div className="border-t border-border pt-4" />
-        {/* Time Context Banner */}
-        <PersonalizedRow
-          title={timeContext.headline}
-          iconName={timeContext.iconName}
-          restaurants={timeSuggestions}
-          navigate={navigate}
-        />
-
-        {/* Order Again (auth-gated) */}
-        {user && orderAgain.length > 0 && (
-          <PersonalizedRow title="Order Again" restaurants={orderAgain} navigate={navigate} />
-        )}
-
-        {/* Your Favorites (auth-gated) */}
-        {user && favorites.length > 0 && (
-          <PersonalizedRow title="Your Favorites" restaurants={favorites} navigate={navigate} />
-        )}
-
-        {/* Recommended for You */}
-        <PersonalizedRow title="Recommended for You" restaurants={recommended} navigate={navigate} />
-      </div>
-
-      {/* ZONE 3: Quick Actions (auth-gated) */}
+      {/* QUICK ACTIONS (auth-gated) */}
       {user && (
         <div className="px-4 pb-4 space-y-2">
           <h2 className="text-sm font-bold text-foreground mb-1">Quick Actions</h2>
@@ -457,14 +424,8 @@ const AppHome = () => {
         </div>
       )}
 
-      {/* Smart Offers (signed-in) / Recommended Deals (signed-out) */}
-      <div className="px-4 pb-24">
-        {user ? (
-          <SmartOffersSection className="py-6 px-0" />
-        ) : (
-          <RecommendedDealsSection className="py-6 px-0" />
-        )}
-      </div>
+      {/* Bottom spacing for nav */}
+      <div className="pb-20" />
 
       {/* Bottom Navigation */}
       <ZivoMobileNav />
