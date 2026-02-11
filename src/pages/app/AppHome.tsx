@@ -9,7 +9,7 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2
+  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,13 @@ import { useUserRewards } from "@/hooks/useUserRewards";
 import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
 import { useReferrals } from "@/hooks/useReferrals";
 import { REFERRAL_REWARDS } from "@/config/referralProgram";
+import { useScheduledBookings } from "@/hooks/useScheduledBookings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
@@ -117,6 +118,8 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
+  const { getUpcoming } = useScheduledBookings();
+  const upcomingBookings = getUpcoming();
 
   // Get user location on mount
   useEffect(() => {
@@ -425,6 +428,65 @@ const AppHome = () => {
                     <Share2 className="w-4 h-4 mr-1.5" />
                     Share Link
                   </Button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* UPCOMING SCHEDULED BOOKINGS */}
+          {user && upcomingBookings.length > 0 && (() => {
+            const next = upcomingBookings[0];
+            const nextDate = new Date(`${next.scheduledDate}T${next.scheduledTime}`);
+            const schedTypeConfig: Record<string, { icon: typeof Car; color: string; label: string }> = {
+              ride: { icon: Car, color: "text-primary", label: "Ride" },
+              eats: { icon: UtensilsCrossed, color: "text-orange-500", label: "Food" },
+              delivery: { icon: Package, color: "text-violet-500", label: "Delivery" },
+            };
+            const cfg = schedTypeConfig[next.type] || schedTypeConfig.ride;
+            const Icon = cfg.icon;
+            const formatTime12 = (t: string) => {
+              const [h, m] = t.split(":").map(Number);
+              const ampm = h >= 12 ? "PM" : "AM";
+              const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+              return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
+            };
+
+            return (
+              <div className="mb-5">
+                <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-emerald-500/5 border border-primary/15 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">Scheduled</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {upcomingBookings.length > 1 && (
+                        <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                          +{upcomingBookings.length - 1} more
+                        </Badge>
+                      )}
+                      <button onClick={() => navigate("/scheduled")} className="text-[10px] text-primary font-medium">
+                        View All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10`}>
+                      <Icon className={`w-5 h-5 ${cfg.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {cfg.label}{next.destination ? ` to ${next.destination}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(nextDate, "MMM d")} · {formatTime12(next.scheduledTime)}
+                      </p>
+                      {next.pickup && (
+                        <p className="text-[10px] text-muted-foreground truncate">{next.pickup}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
