@@ -18,7 +18,8 @@ import {
   Zap,
   Crown,
   Check,
-  ArrowRight
+  ArrowRight,
+  Flame
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -146,7 +147,9 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                     onError={() => setLogoError(true)}
                   />
                 ) : (
-                  <span className="text-3xl">{flight.airlineLogo || "✈️"}</span>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-cyan-500/15 flex items-center justify-center">
+                    <Plane className="w-5 h-5 text-sky-400" />
+                  </div>
                 )}
               </div>
               {isPremiumAirline && (
@@ -336,7 +339,7 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
               
               {flight.seatsLeft && flight.seatsLeft <= 5 && (
                 <p className="text-xs text-orange-500 font-semibold mt-1 animate-pulse flex items-center justify-end gap-1">
-                  🔥 Only {flight.seatsLeft} seats left
+                  <Flame className="w-3 h-3" /> Only {flight.seatsLeft} seats left
                 </p>
               )}
             </div>

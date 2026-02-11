@@ -1,4 +1,4 @@
-import { Car, UtensilsCrossed, Shield, Clock, CreditCard, Star, MapPin, Zap, Sparkles, ChevronRight } from "lucide-react";
+import { Car, UtensilsCrossed, Shield, Clock, CreditCard, Star, MapPin, Zap, Sparkles, ChevronRight, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -61,10 +61,22 @@ const FeaturesSection = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-radial from-violet-500/8 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating emojis */}
-      <div className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-40 animate-float">⚡</div>
-      <div className="absolute bottom-40 right-[6%] text-4xl hidden lg:block opacity-30 animate-float-delayed">🎯</div>
-      <div className="absolute top-1/2 right-[10%] text-4xl hidden lg:block opacity-25 animate-float">💫</div>
+      {/* Floating icon decorations */}
+      <div className="absolute top-32 left-[8%] hidden lg:block opacity-30 animate-float">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Zap className="w-6 h-6 text-amber-500/50" />
+        </div>
+      </div>
+      <div className="absolute bottom-40 right-[6%] hidden lg:block opacity-30 animate-float-delayed">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Target className="w-6 h-6 text-primary/50" />
+        </div>
+      </div>
+      <div className="absolute top-1/2 right-[10%] hidden lg:block opacity-25 animate-float">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/15 to-purple-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-6 h-6 text-violet-500/50" />
+        </div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-14 sm:mb-20 lg:mb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">

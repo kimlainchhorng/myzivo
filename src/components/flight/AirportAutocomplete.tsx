@@ -75,16 +75,17 @@ const AirportAutocomplete = ({
   };
 
   const getRegionIcon = (region: string) => {
-    const icons: Record<string, string> = {
-      'North America': '🇺🇸',
-      'Europe': '🇪🇺',
-      'Asia': '🌏',
-      'Middle East': '🕌',
-      'Oceania': '🌊',
-      'Africa': '🌍',
-      'South America': '🌎'
+    const colors: Record<string, string> = {
+      'North America': 'text-sky-400',
+      'Europe': 'text-indigo-400',
+      'Asia': 'text-amber-400',
+      'Middle East': 'text-orange-400',
+      'Oceania': 'text-cyan-400',
+      'Africa': 'text-emerald-400',
+      'South America': 'text-green-400'
     };
-    return icons[region] || '🌐';
+    const color = colors[region] || 'text-muted-foreground';
+    return <Globe className={cn("w-3.5 h-3.5", color)} />;
   };
 
   return (

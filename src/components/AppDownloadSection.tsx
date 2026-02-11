@@ -25,12 +25,16 @@ const AppDownloadSection = () => {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating emojis */}
-      <div className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40 animate-float">
-        📱
+      {/* Floating icon decorations */}
+      <div className="absolute top-32 left-[10%] hidden lg:block opacity-30 animate-float">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Smartphone className="w-6 h-6 text-primary/50" />
+        </div>
       </div>
-      <div className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
-        ⬇️
+      <div className="absolute bottom-40 right-[8%] hidden lg:block opacity-30 animate-float-delayed">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-green-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Download className="w-6 h-6 text-emerald-500/50" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
