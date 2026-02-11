@@ -20,6 +20,7 @@ import flightsHeroImg from "@/assets/flights-hero.png";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
+import HomepageAdBanner from "@/components/ads/HomepageAdBanner";
 
 // Image Assets
 const assets = {
@@ -139,11 +140,22 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 );
 
 // Horizontal scroll row
+// Map title keywords to Lucide icons
+const rowIcons: Record<string, { Icon: typeof Plane; color: string }> = {
+  "Order Again": { Icon: RefreshCw, color: "text-orange-400" },
+  "Your Favorites": { Icon: Star, color: "text-rose-400" },
+  "Recommended for You": { Icon: Sparkles, color: "text-amber-400" },
+};
+
 const PersonalizedRow = ({ title, emoji, restaurants, navigate: nav }: { title: string; emoji?: string; restaurants: HomeRestaurant[]; navigate: (path: string) => void }) => {
   if (!restaurants.length) return null;
+  const iconConfig = rowIcons[title];
   return (
     <div>
-      <h2 className="text-sm font-bold text-zinc-300 mb-2">{emoji && <span className="mr-1">{emoji}</span>}{title}</h2>
+      <h2 className="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-1.5">
+        {iconConfig ? <iconConfig.Icon className={`w-3.5 h-3.5 ${iconConfig.color}`} /> : emoji && <span className="mr-1">{emoji}</span>}
+        {title}
+      </h2>
       <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
         {restaurants.map((r) => (
           <RestaurantCard key={r.id} restaurant={r} onNavigate={() => nav(`/eats/restaurant/${r.id}`)} />
@@ -162,12 +174,12 @@ const AppHome = () => {
 
   // Trending destinations
   const trendingDestinations = [
-    { city: "Miami", emoji: "🌴", price: "$89" },
-    { city: "New York", emoji: "🗽", price: "$120" },
-    { city: "Los Angeles", emoji: "🌅", price: "$99" },
-    { city: "Chicago", emoji: "🏙️", price: "$75" },
-    { city: "Las Vegas", emoji: "🎰", price: "$65" },
-    { city: "San Francisco", emoji: "🌉", price: "$110" },
+    { city: "Miami", color: "from-teal-500/30 to-emerald-500/30", price: "$89" },
+    { city: "New York", color: "from-sky-500/30 to-blue-500/30", price: "$120" },
+    { city: "Los Angeles", color: "from-amber-500/30 to-orange-500/30", price: "$99" },
+    { city: "Chicago", color: "from-slate-500/30 to-zinc-500/30", price: "$75" },
+    { city: "Las Vegas", color: "from-violet-500/30 to-purple-500/30", price: "$65" },
+    { city: "San Francisco", color: "from-rose-500/30 to-pink-500/30", price: "$110" },
   ];
 
   const handleNavigate = useCallback((screen: string) => {
@@ -322,8 +334,8 @@ const AppHome = () => {
       {/* Trending Destinations */}
       <div className="px-4 pb-4">
         <div className="border-t border-white/5 pt-4 mb-3" />
-        <h2 className="text-sm font-bold text-zinc-300 mb-2">
-          <span className="mr-1">✈️</span>Trending Destinations
+        <h2 className="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-1.5">
+          <Plane className="w-3.5 h-3.5 text-sky-400" />Trending Destinations
         </h2>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {trendingDestinations.map((dest) => (
@@ -331,9 +343,11 @@ const AppHome = () => {
               key={dest.city}
               whileTap={{ scale: 0.96 }}
               onClick={() => navigate(`/flights?to=${dest.city}`)}
-              className="shrink-0 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 touch-manipulation"
+              className="shrink-0 px-3 py-2.5 rounded-xl bg-zinc-900/80 border border-white/10 touch-manipulation"
             >
-              <div className="text-lg mb-0.5">{dest.emoji}</div>
+              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dest.color} flex items-center justify-center mb-1.5 mx-auto`}>
+                <MapPin className="w-4 h-4 text-white" />
+              </div>
               <div className="text-xs font-semibold">{dest.city}</div>
               <div className="text-[10px] text-primary font-bold">from {dest.price}</div>
             </motion.button>
@@ -352,6 +366,16 @@ const AppHome = () => {
           <ServiceCard title="Hotels" subtitle="Luxury Stays" img={assets.hotels} icon={BedDouble} onNavigate={() => handleNavigate("HOTELS")} imgPosition="center 60%" />
           <ServiceCard title="Rentals" subtitle="Rent & Drive" img={assets.rentals} icon={Car} onNavigate={() => handleNavigate("RENTALS")} imgPosition="center 50%" />
         </div>
+      </div>
+
+      {/* Mobile Ad Banner */}
+      <div className="px-4 pb-4">
+        <HomepageAdBanner
+          headline="Summer deals are here ☀️"
+          description="Save up to 40% on flights and hotels to top destinations."
+          ctaText="Browse Deals"
+          ctaHref="/flights"
+        />
       </div>
 
       {/* ZONE 2: Personalized Rows */}

@@ -1,10 +1,10 @@
-import { Plane, Armchair, UtensilsCrossed, Wifi, Luggage, Check, X } from "lucide-react";
+import { Plane, Armchair, UtensilsCrossed, Wifi, Luggage, Check, X, Crown, Sparkles, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const cabinClasses = [
+const cabinClasses: { name: string; Icon: LucideIcon; color: string; priceRange: string; seatPitch: string; seatWidth: string; features: { meal: string; drinks: string; wifi: string; lounge: boolean; priority: boolean; luggage: string } }[] = [
   {
     name: "Economy",
-    icon: "✈️",
+    Icon: Plane,
     color: "from-slate-500 to-gray-500",
     priceRange: "$",
     seatPitch: "28-32\"",
@@ -20,7 +20,7 @@ const cabinClasses = [
   },
   {
     name: "Premium Economy",
-    icon: "🛩️",
+    Icon: Armchair,
     color: "from-blue-500 to-cyan-500",
     priceRange: "$$",
     seatPitch: "34-38\"",
@@ -36,7 +36,7 @@ const cabinClasses = [
   },
   {
     name: "Business",
-    icon: "🛫",
+    Icon: Crown,
     color: "from-violet-500 to-purple-500",
     priceRange: "$$$",
     seatPitch: "Lie-flat beds",
@@ -52,7 +52,7 @@ const cabinClasses = [
   },
   {
     name: "First Class",
-    icon: "✨",
+    Icon: Sparkles,
     color: "from-amber-500 to-orange-500",
     priceRange: "$$$$",
     seatPitch: "Private suites",
@@ -99,7 +99,7 @@ const FlightClassComparison = () => {
                     "w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3",
                     "bg-gradient-to-br", cabin.color
                   )}>
-                    <span className="text-2xl">{cabin.icon}</span>
+                    <cabin.Icon className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="font-bold text-lg">{cabin.name}</h3>
                   <p className="text-sky-400 font-bold">{cabin.priceRange}</p>

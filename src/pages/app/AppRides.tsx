@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
-  MapPin, Car, Clock, Users, Shield, Star, CheckCircle2, 
+  MapPin, Car, Clock, Users, Shield, Star, CheckCircle2, Crown,
   ChevronRight, ArrowRight, Phone, Mail, User, CreditCard, Loader2
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
@@ -31,10 +31,16 @@ interface RideOption {
 }
 
 const rideOptions: RideOption[] = [
-  { id: "standard", name: "Standard", icon: "🚗", multiplier: 1.0, seats: 4, description: "Affordable everyday rides" },
-  { id: "xl", name: "XL", icon: "🚙", multiplier: 1.3, seats: 6, description: "Extra space for groups" },
-  { id: "premium", name: "Premium", icon: "🚘", multiplier: 1.6, seats: 4, description: "High-end vehicles" },
+  { id: "standard", name: "Standard", icon: "standard", multiplier: 1.0, seats: 4, description: "Affordable everyday rides" },
+  { id: "xl", name: "XL", icon: "xl", multiplier: 1.3, seats: 6, description: "Extra space for groups" },
+  { id: "premium", name: "Premium", icon: "premium", multiplier: 1.6, seats: 4, description: "High-end vehicles" },
 ];
+
+const rideIconMap: Record<string, { Icon: typeof Car; color: string }> = {
+  standard: { Icon: Car, color: "text-sky-400" },
+  xl: { Icon: Car, color: "text-emerald-400" },
+  premium: { Icon: Crown, color: "text-amber-400" },
+};
 
 // Simple fare calculation (MVP)
 const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
@@ -249,8 +255,8 @@ const AppRides = () => {
                   onClick={() => handleSelectOption(option)}
                   className="w-full p-4 rounded-2xl bg-card border border-border/50 flex items-center gap-4 text-left touch-manipulation active:scale-[0.99] transition-transform hover:border-rides/30"
                 >
-                  <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                    {option.icon}
+                  <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center flex-shrink-0">
+                    {(() => { const cfg = rideIconMap[option.icon]; return cfg ? <cfg.Icon className={`w-7 h-7 ${cfg.color}`} /> : <Car className="w-7 h-7" />; })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -276,8 +282,8 @@ const AppRides = () => {
           <div className="space-y-4 animate-in fade-in slide-in-from-right duration-200">
             <div className="p-4 rounded-2xl bg-rides/5 border border-rides/20">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center text-2xl">
-                  {selectedOption.icon}
+                <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                  {(() => { const cfg = rideIconMap[selectedOption.icon]; return cfg ? <cfg.Icon className={`w-6 h-6 ${cfg.color}`} /> : <Car className="w-6 h-6" />; })()}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold">{selectedOption.name}</h3>
