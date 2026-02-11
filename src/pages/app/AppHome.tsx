@@ -1,21 +1,22 @@
 /**
  * App Home Screen - Super App Hub
- * Layout: Promo Banner → Services Grid → 3 Scrolling Sections → Quick Actions
+ * Layout: Promo Banner → Services Grid → Quick Actions → Recently Used → Favorites → Recommendations → Popular → Deals → Rides
  */
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star, Sparkles,
-  Coffee, UtensilsCrossed, CupSoda, Moon, Bird, Tag, Clock
+  MapPin, Bell, LucideIcon, Package, ChevronRight, Star, Sparkles,
+  UtensilsCrossed, Tag, Clock, Heart, History, Hotel
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { useSavedLocations } from "@/hooks/useSavedLocations";
+import { formatDistanceToNow } from "date-fns";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
@@ -79,33 +80,6 @@ const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition
   );
 };
 
-// Quick Action Card
-interface QuickActionCardProps {
-  icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
-  title: string;
-  subtitle: string;
-  onNavigate: () => void;
-}
-
-const QuickActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onNavigate }: QuickActionCardProps) => (
-  <motion.button
-    onClick={onNavigate}
-    whileTap={{ scale: 0.97 }}
-    className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 touch-manipulation text-left shadow-sm"
-  >
-    <div className={`w-8 h-8 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}>
-      <Icon className={`w-4 h-4 ${iconColor}`} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-semibold text-foreground truncate">{title}</div>
-      <div className="text-[10px] text-muted-foreground truncate">{subtitle}</div>
-    </div>
-    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-  </motion.button>
-);
-
 // Restaurant Card for personalized rows
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
   <motion.button
@@ -154,13 +128,31 @@ const rideOptions = [
   { type: "Premium", eta: "7 min", price: "~$22", icon: Car },
 ];
 
+// Quick Actions Bar config
+const quickActionsBar = [
+  { label: "Book Ride", icon: Car, href: "/rides", bg: "bg-primary/10", color: "text-primary" },
+  { label: "Order Food", icon: Utensils, href: "/eats", bg: "bg-orange-500/10", color: "text-orange-500" },
+  { label: "Track Order", icon: Package, href: "/trips", bg: "bg-violet-500/10", color: "text-violet-500" },
+  { label: "Book Flight", icon: Plane, href: "/search?tab=flights", bg: "bg-sky-500/10", color: "text-sky-500" },
+];
+
+// Recently viewed type config
+const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
+  hotel: { icon: Hotel, color: "bg-amber-500" },
+  flight: { icon: Plane, color: "bg-sky-500" },
+  car: { icon: Car, color: "bg-emerald-500" },
+  restaurant: { icon: Utensils, color: "bg-orange-500" },
+};
+
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { timeSuggestions, recommended } = usePersonalizedHome();
+  const { timeSuggestions, recommended, favorites } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { deals } = useRecommendedDeals(6);
+  const { items: recentItems } = useRecentlyViewed();
+  const { data: savedLocations } = useSavedLocations(user?.id);
 
   // Merge restaurant sources for "Popular Restaurants"
   const popularRestaurants = [...recommended, ...timeSuggestions]
@@ -190,58 +182,6 @@ const AppHome = () => {
   const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
   const avatarUrl = profile?.avatar_url;
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
-
-  // Quick Actions data
-  const { data: lastMeal } = useQuery({
-    queryKey: ["home-last-meal", user?.id],
-    queryFn: async () => {
-      const db = supabase as any;
-      const { data } = await db
-        .from("food_orders")
-        .select("id, restaurant_id, restaurants(name)")
-        .eq("user_id", user!.id)
-        .eq("status", "delivered")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
-
-  const { data: lastRide } = useQuery({
-    queryKey: ["home-last-ride", user?.id],
-    queryFn: async () => {
-      const db = supabase as any;
-      const { data } = await db
-        .from("trips")
-        .select("id, pickup_address")
-        .eq("user_id", user!.id)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
-
-  const { data: upcomingCount } = useQuery({
-    queryKey: ["home-upcoming-count", user?.id],
-    queryFn: async () => {
-      const db = supabase as any;
-      const [trips, hotels, orders] = await Promise.all([
-        db.from("trips").select("id", { count: "exact", head: true }).eq("user_id", user!.id).in("status", ["accepted", "in_progress"]),
-        db.from("hotel_bookings").select("id", { count: "exact", head: true }).eq("user_id", user!.id).gte("check_in_date", new Date().toISOString().split("T")[0]),
-        db.from("food_orders").select("id", { count: "exact", head: true }).eq("user_id", user!.id).in("status", ["pending", "preparing", "ready"]),
-      ]);
-      return (trips.count || 0) + (hotels.count || 0) + (orders.count || 0);
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
 
   return (
     <div className="relative min-h-screen bg-background font-sans text-foreground overflow-x-hidden selection:bg-primary/30">
@@ -315,6 +255,123 @@ const AppHome = () => {
         </div>
       </div>
 
+      {/* QUICK ACTIONS BAR */}
+      <div className="px-4 pb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {quickActionsBar.map((action) => (
+            <motion.button
+              key={action.label}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(action.href)}
+              className="shrink-0 flex items-center gap-2.5 bg-card border border-border rounded-2xl px-4 py-3 touch-manipulation shadow-sm"
+            >
+              <div className={`w-9 h-9 ${action.bg} rounded-xl flex items-center justify-center`}>
+                <action.icon className={`w-4 h-4 ${action.color}`} />
+              </div>
+              <span className="text-xs font-semibold text-foreground whitespace-nowrap">{action.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* RECENTLY USED */}
+      {user && recentItems.length > 0 && (
+        <div className="px-4 pb-4">
+          <SectionHeader icon={History} iconColor="text-muted-foreground" title="Recently Used" onSeeAll={() => navigate("/trips")} />
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {recentItems.slice(0, 8).map((item) => {
+              const cfg = typeConfig[item.item_type] || { icon: MapPin, color: "bg-muted" };
+              const ItemIcon = cfg.icon;
+              const itemData = item.item_data as Record<string, any> | null;
+              return (
+                <motion.button
+                  key={item.id}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate("/trips")}
+                  className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+                >
+                  <div className={`w-8 h-8 ${cfg.color} rounded-xl flex items-center justify-center mb-2`}>
+                    <ItemIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-xs font-semibold text-foreground truncate">
+                    {itemData?.name || item.item_type}
+                  </div>
+                  {itemData?.location && (
+                    <div className="text-[9px] text-muted-foreground truncate mt-0.5">{itemData.location}</div>
+                  )}
+                  <div className="text-[9px] text-muted-foreground mt-1">
+                    {formatDistanceToNow(new Date(item.viewed_at), { addSuffix: true })}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* FAVORITES */}
+      <div className="px-4 pb-4">
+        <SectionHeader icon={Heart} iconColor="text-destructive" title="Favorites" onSeeAll={() => navigate("/account")} />
+        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+          {favorites.map((r) => (
+            <RestaurantCard key={r.id} restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
+          ))}
+          {(savedLocations || []).map((loc) => (
+            <motion.button
+              key={loc.id}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate("/rides")}
+              className="shrink-0 w-[140px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+            >
+              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
+                <MapPin className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-xs font-semibold text-foreground truncate">{loc.label}</div>
+              <div className="text-[9px] text-muted-foreground truncate mt-0.5">{loc.address}</div>
+            </motion.button>
+          ))}
+          {favorites.length === 0 && (!savedLocations || savedLocations.length === 0) && (
+            <div className="w-full rounded-2xl bg-card border border-dashed border-border p-6 flex flex-col items-center gap-2 text-center">
+              <Heart className="w-6 h-6 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Save your favorite spots</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SMART RECOMMENDATIONS */}
+      {(recommended.length > 0 || deals.length > 0) && (
+        <div className="px-4 pb-4">
+          <SectionHeader icon={Sparkles} iconColor="text-amber-400" title="Recommended for You" onSeeAll={() => navigate("/eats")} />
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {recommended.slice(0, 6).map((r) => (
+              <div key={r.id} className="relative shrink-0">
+                <RestaurantCard restaurant={r} onNavigate={() => navigate(`/eats/restaurant/${r.id}`)} />
+                <div className="absolute top-1.5 right-1.5 bg-primary/90 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                  <span className="text-[8px] font-bold text-primary-foreground">Recommended</span>
+                </div>
+              </div>
+            ))}
+            {deals.slice(0, 3).map((deal) => (
+              <motion.button
+                key={deal.id}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => navigate(deal.href)}
+                className="shrink-0 w-[150px] rounded-2xl bg-card border border-border shadow-sm p-3 touch-manipulation text-left"
+              >
+                <div className="inline-block px-2 py-0.5 rounded-lg bg-primary/10 mb-2">
+                  <span className="text-[10px] font-bold text-primary">{deal.discountLabel}</span>
+                </div>
+                <div className="text-xs font-semibold text-foreground truncate">{deal.name}</div>
+                {deal.description && (
+                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">{deal.description}</div>
+                )}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* POPULAR RESTAURANTS */}
       {popularRestaurants.length > 0 && (
         <div className="px-4 pb-4">
@@ -378,51 +435,6 @@ const AppHome = () => {
           ))}
         </div>
       </div>
-
-      {/* QUICK ACTIONS (auth-gated) */}
-      {user && (
-        <div className="px-4 pb-4 space-y-2">
-          <h2 className="text-sm font-bold text-foreground mb-1">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-2">
-            <QuickActionCard
-              icon={RefreshCw}
-              iconBg="bg-orange-500/20"
-              iconColor="text-orange-400"
-              title={lastMeal ? "Reorder" : "Order Food"}
-              subtitle={lastMeal ? ((lastMeal.restaurants as any)?.name || "Last meal") : "Browse restaurants"}
-              onNavigate={() => {
-                if (lastMeal?.restaurant_id) {
-                  navigate(`/eats/restaurant/${lastMeal.restaurant_id}`);
-                } else {
-                  navigate("/eats");
-                }
-              }}
-            />
-            <QuickActionCard
-              icon={Navigation}
-              iconBg="bg-primary/20"
-              iconColor="text-primary"
-              title={lastRide ? "Rebook Ride" : "Book a Ride"}
-              subtitle={lastRide?.pickup_address || "Get moving"}
-              onNavigate={() => {
-                if (lastRide?.pickup_address) {
-                  navigate(`/rides?pickup=${encodeURIComponent(lastRide.pickup_address)}`);
-                } else {
-                  navigate("/rides");
-                }
-              }}
-            />
-          </div>
-          <QuickActionCard
-            icon={CalendarDays}
-            iconBg="bg-violet-500/20"
-            iconColor="text-violet-400"
-            title="Upcoming Bookings"
-            subtitle={upcomingCount ? `${upcomingCount} active` : "View all"}
-            onNavigate={() => navigate("/trips")}
-          />
-        </div>
-      )}
 
       {/* Bottom spacing for nav */}
       <div className="pb-20" />
