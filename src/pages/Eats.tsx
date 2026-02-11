@@ -123,6 +123,15 @@ export default function Eats() {
       <Header />
 
       <main className="pt-16">
+        {/* Live Order Counter */}
+        <div className="bg-eats/5 border-b border-eats/10 py-2">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-sm text-eats font-medium">
+              🔥 <span className="font-bold">1,247</span> orders placed today
+            </p>
+          </div>
+        </div>
+
         {/* Hero Section */}
         <section className="relative min-h-[70vh] flex items-center">
           {/* Background Image */}

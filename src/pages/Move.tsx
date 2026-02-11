@@ -253,6 +253,54 @@ export default function Move() {
           </div>
         </section>
 
+        {/* Pricing Preview */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                Estimated <span className="text-primary">Pricing</span>
+              </h2>
+              <p className="text-muted-foreground">Transparent pricing based on package size</p>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              {[
+                { size: "Small", desc: "Envelopes & small boxes", price: "$8", icon: "📦" },
+                { size: "Medium", desc: "Furniture & appliances", price: "$45", icon: "🪑" },
+                { size: "Large", desc: "Full apartment move", price: "$150+", icon: "🚚" },
+              ].map((tier) => (
+                <Card key={tier.size} className="text-center hover:border-primary/30 transition-colors">
+                  <CardContent className="p-6">
+                    <div className="text-3xl mb-3">{tier.icon}</div>
+                    <h3 className="font-bold text-lg mb-1">{tier.size}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{tier.desc}</p>
+                    <p className="text-2xl font-black text-primary">from {tier.price}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Waitlist */}
+        <section className="py-16">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-md mx-auto">
+              <h2 className="text-2xl font-bold mb-2">Coming to your city?</h2>
+              <p className="text-muted-foreground mb-6">Get notified when Move launches in your area.</p>
+              <form onSubmit={(e) => { e.preventDefault(); }} className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <Button type="submit" className="rounded-xl font-semibold">
+                  Notify Me
+                </Button>
+              </form>
+            </div>
+          </div>
+        </section>
+
         {/* Mobility Services Grid */}
         <MobilityFeaturesGrid className="bg-muted/20" showDriverCTA={true} />
 
@@ -271,7 +319,7 @@ export default function Move() {
               <Button
                 onClick={handleOpenZivoDriver}
                 size="lg"
-                className="h-14 px-10 text-lg rounded-2xl font-bold gap-3 shadow-lg"
+                className="h-14 px-10 text-lg rounded-2xl font-bold gap-3 shadow-lg hover:scale-105 transition-transform"
               >
                 Open ZIVO Driver
                 <ExternalLink className="w-5 h-5" />

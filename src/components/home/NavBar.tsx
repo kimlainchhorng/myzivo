@@ -51,8 +51,18 @@ export default function NavBar() {
   const { isActive: isMember } = useMembership();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   
   const moreRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll for glassmorphism effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -67,7 +77,12 @@ export default function NavBar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-50 border-b border-border transition-all duration-300",
+        scrolled
+          ? "bg-background/80 backdrop-blur-xl shadow-sm"
+          : "bg-background/95 backdrop-blur-md"
+      )}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}

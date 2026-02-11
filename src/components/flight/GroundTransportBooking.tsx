@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -245,10 +245,10 @@ const GroundTransportBooking = ({
           </p>
         </div>
         {bundleDiscount && (
-          <Badge className="gap-1 bg-emerald-500">
-            <Package className="h-3 w-3" />
-            15% Bundle Discount
-          </Badge>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500 text-white">
+              <Package className="h-3 w-3" />
+              15% Bundle Discount
+            </span>
         )}
       </div>
 
@@ -367,14 +367,14 @@ const GroundTransportBooking = ({
                                     <div className="flex items-center gap-2">
                                       <h3 className="font-semibold">{option.name}</h3>
                                       {option.popular && (
-                                        <Badge variant="secondary" className="text-[10px]">
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground">
                                           Popular
-                                        </Badge>
+                                        </span>
                                       )}
                                       {option.eco && (
-                                        <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-300">
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-600 border border-emerald-300">
                                           Eco
-                                        </Badge>
+                                        </span>
                                       )}
                                     </div>
                                     <p className="text-xs text-muted-foreground">{option.provider}</p>
@@ -421,10 +421,10 @@ const GroundTransportBooking = ({
                                   {option.features.slice(0, 4).map((feature) => {
                                     const Icon = featureIcons[feature] || CheckCircle2;
                                     return (
-                                      <Badge key={feature} variant="outline" className="text-[10px] gap-1">
+                                      <span key={feature} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border border-border text-muted-foreground">
                                         <Icon className="h-3 w-3" />
                                         {feature}
-                                      </Badge>
+                                      </span>
                                     );
                                   })}
                                 </div>

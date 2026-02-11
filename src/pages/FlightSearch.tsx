@@ -1,4 +1,5 @@
-import { Plane, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plane, ShieldCheck, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -23,6 +24,39 @@ import {
 } from "@/components/flight";
 import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
 
+// Recently Searched Chips Component
+const RecentlySearchedChips = () => {
+  const [searches, setSearches] = useState<Array<{ from: string; to: string }>>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("zivo_recent_flights");
+      if (stored) setSearches(JSON.parse(stored).slice(0, 5));
+    } catch {}
+  }, []);
+
+  if (!searches.length) return null;
+
+  return (
+    <section className="py-3 border-b border-border/30">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground shrink-0">Recent:</span>
+          {searches.map((s, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted text-xs font-medium shrink-0 hover:bg-muted/80 cursor-pointer transition-colors"
+            >
+              {s.from} → {s.to}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
  * Skyscanner / Kayak / Google Flights quality
@@ -46,13 +80,18 @@ const FlightSearch = () => {
           </BigSearchCard>
         </ImageHero>
 
-        {/* Legal Disclaimer - HIGH VISIBILITY near search */}
-        <section className="border-b border-border/50 py-4 bg-amber-500/5">
+        {/* Recently Searched Routes */}
+        <RecentlySearchedChips />
+
+        {/* Legal Disclaimer - Cleaner card design */}
+        <section className="py-4">
           <div className="container mx-auto px-4">
-            <p className="text-center text-sm text-muted-foreground font-medium">
-              <ShieldCheck className="w-4 h-4 inline mr-1.5 text-amber-500" />
-              {FLIGHT_DISCLAIMERS.ticketing}
-            </p>
+            <div className="max-w-2xl mx-auto p-3 rounded-xl bg-muted/50 border border-border/50 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                {FLIGHT_DISCLAIMERS.ticketing}
+              </p>
+            </div>
           </div>
         </section>
 

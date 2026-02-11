@@ -210,6 +210,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-black px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+      {/* Animated gradient background pulse */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-blue-600/20 to-transparent rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
       <div className="w-full max-w-md relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -228,7 +233,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-zinc-400 mt-2 text-sm sm:text-base"
             >
-              {isLogin ? "Welcome back, Traveler" : "Create your secure account"}
+              {isLogin ? "Welcome back, Traveler" : "Get Started Free — No credit card needed"}
             </motion.p>
           </div>
 
@@ -467,6 +472,19 @@ const Login = () => {
                 </>
               )}
             </button>
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-4 mt-4 text-zinc-500 text-[10px]">
+            <div className="flex items-center gap-1">
+              <Shield className="w-3 h-3" />
+              <span>256-bit encrypted</span>
+            </div>
+            <div className="w-px h-3 bg-zinc-700" />
+            <div className="flex items-center gap-1">
+              <Mail className="w-3 h-3" />
+              <span>No spam, ever</span>
+            </div>
           </div>
 
           {/* Toggle Mode */}
