@@ -1,87 +1,88 @@
 
 
-## Phase 12B (Continued): Sponsored Cards, Newsletter CTA, and Remaining Emoji Cleanup
+## Phase 12C: Emoji Cleanup Batch 3 -- High-Traffic Components
 
-This phase completes the remaining items from the Phase 12B plan: inserting sponsored cards into search results, adding the newsletter CTA to the desktop homepage, and cleaning up the last emoji-using files.
-
----
-
-### Part 1: Sponsored Cards in Flight and Hotel Results
-
-**Flight Results (`src/pages/FlightResults.tsx`):**
-- Import `SponsoredResultCard` from `src/components/sponsored/SponsoredResultCard.tsx`
-- In the results mapping loop (line ~573), insert a `SponsoredResultCard` after every 5th flight result
-- Card promotes airport transfers or hotel deals at the destination
-- Uses FTC-compliant "Sponsored" label (built into the component)
-
-**Hotel Results (`src/pages/HotelResultsPage.tsx`):**
-- Same pattern: import `SponsoredResultCard` and insert after every 5th hotel result (line ~377)
-- Card promotes car rentals or travel insurance at the destination
+This update targets the most visible remaining emoji files: floating decorations on marketing sections, data-driven partner/trending components, car flash deals, cross-sell hooks, and the Index.tsx ad banner text emoji.
 
 ---
 
-### Part 2: Newsletter CTA on Desktop Homepage
+### Batch 1: Floating Decoration Emojis (Marketing Sections)
 
-**Desktop Homepage (`src/pages/Index.tsx`):**
-- Import the existing `NewsletterSignup` component from `src/components/shared/NewsletterSignup.tsx`
-- Add it between `SocialProofSection` and `AirlineTrustSection` (between lines 134 and 137)
-- Wrapped in existing `FadeInSection` for consistent scroll animation
+Replace floating emoji decorations with styled Lucide icon containers across 5 section components:
+
+| File | Emojis | Lucide Replacements |
+|------|--------|---------------------|
+| `StatsSection.tsx` (lines 165-170) | chart emoji, rocket emoji | `BarChart3`, `Rocket` in gradient containers |
+| `FeaturesSection.tsx` (lines 65-67) | lightning, target, sparkle | `Zap`, `Target`, `Sparkles` in gradient containers |
+| `AppDownloadSection.tsx` (lines 29-34) | phone, download arrow | `Smartphone`, `Download` in gradient containers |
+| `CarRentalSettings.tsx` (lines 33-38) | gear, sparkle | `Settings`, `Sparkles` in gradient containers |
+| `Index.tsx` (line 115) | wave emoji in text string | Remove emoji from ad headline text |
+
+Pattern for each floating decoration:
+```text
+Before: <div class="absolute ... text-4xl opacity-40">emoji_char</div>
+After:  <div class="absolute ... opacity-30">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+            <Icon class="w-6 h-6 text-primary/50" />
+          </div>
+        </div>
+```
 
 ---
 
-### Part 3: Remaining Emoji Cleanup
+### Batch 2: Data-Driven Emoji Props
 
-**`src/pages/app/AppTravel.tsx`** -- Still has raw emojis in demo data:
-- `flightResults[].logo`: airplane emoji -> Lucide `Plane` icon in sky gradient
-- `hotelResults[].image`: hotel/beach/house emojis -> Lucide `Building2`, `Umbrella`, `Home` in amber gradient
-- `carResults[].image`: car emojis -> Lucide `Car`, `Truck`, `Crown` in emerald gradient
-- Star rating emojis (line 244) -> Lucide `Star` icons with fill
+Replace emoji properties in data arrays/objects with Lucide icon references:
 
-**`src/components/shared/AppFeatures.tsx`** -- Line 127:
-- Star emoji in rating text -> Lucide `Star` icon inline
+| File | Data Structure | Change |
+|------|---------------|--------|
+| `TrendingSection.tsx` | `defaultTrendingServices[].emoji` + floating emojis | Replace with Lucide icon components (`Plane`, `Flame`, `Palmtree`) |
+| `CarFlashDeals.tsx` | `deals[].image` (car emojis) | Replace with Lucide `Car`, `Zap`, `Truck`, `Crown` in emerald gradient |
+| `CarPartnerTrustStrip.tsx` | `carPartners[].emoji` | Replace with Lucide `Car`, `Key`, `Truck`, `Crown`, `Compass` icons |
+| `useCrossSellSuggestions.ts` | `icon` property (car, hotel, burger, taxi emojis) | Replace with Lucide icon name strings rendered by consumer |
+| `CarResultsPage.tsx` (line 515) | Empty state car emoji | Replace with Lucide `Car` in gradient circle |
 
-**`src/components/restaurant/RestaurantOverview.tsx`** -- Verify no emojis remain (initial scan shows Lucide icons already used)
+---
+
+### Batch 3: Flight Components
+
+| File | Emojis | Change |
+|------|--------|--------|
+| `FlightTicketCard.tsx` (line 149) | Plane emoji fallback for airline logo | Lucide `Plane` icon in sky gradient |
+| `FlightTicketCard.tsx` (line 339) | Fire emoji for "seats left" urgency | Lucide `Flame` icon inline |
+| `AirportAutocomplete.tsx` (lines 79-85) | Flag/globe emojis for regions | Lucide `Globe`, `MapPin` variants |
+
+---
+
+### Batch 4: Other Components
+
+| File | Emojis | Change |
+|------|--------|--------|
+| `UnifiedSearchHub.tsx` (lines 39-40) | Flag emojis for trending destinations | Lucide `MapPin` in colored circles |
+| `MapboxMap.tsx` (lines 116-118) | Car and pin emojis for map markers | Styled div markers with Lucide icons |
+| `RideCard.tsx` (line 69) | Fire emoji for surge pricing | Lucide `Flame` icon |
 
 ---
 
 ### Technical Details
 
-**Sponsored card insertion pattern (FlightResults.tsx):**
-```text
-{flightCards.map((flight, index) => (
-  <React.Fragment key={flight.id}>
-    <FlightResultCard flight={flight} onViewDeal={handleViewDeal} />
-    {(index + 1) % 5 === 0 && index < flightCards.length - 1 && (
-      <SponsoredResultCard
-        type="flight"
-        title="Airport Transfer Deal"
-        description="Pre-book your ride from the airport"
-        price={29}
-        currency="USD"
-        ctaText="View Transfer"
-        ctaHref="/rides"
-      />
-    )}
-  </React.Fragment>
-))}
-```
+**TrendingSection.tsx refactor:**
+The component currently accepts an `emoji` prop as a string. This will be changed to accept a Lucide icon component reference (e.g., `icon: Plane`). The `TrendingServiceCard` sub-component renders the icon in a gradient circle instead of a raw text span.
 
-**AppTravel.tsx emoji replacement pattern:**
-```text
-Before: { logo: "airplane_emoji", ... }
-After:  { icon: Plane, iconColor: "text-sky-400", iconBg: "from-sky-500/20 to-blue-500/20", ... }
-```
+**useCrossSellSuggestions.ts refactor:**
+The `icon` property changes from emoji strings to Lucide icon name strings (e.g., `"car"`, `"hotel"`, `"utensils"`). The consuming component maps these to Lucide components.
 
-Rendering changes from `<span>{item.logo}</span>` to a gradient icon container.
+**MapboxMap.tsx markers:**
+Replace `el.innerHTML = "emoji"` with a small styled div containing an SVG icon element, maintaining the same absolute positioning on the map.
 
 ### Summary
 
-| Part | Scope | Files Modified |
-|------|-------|---------------|
-| 1 | Sponsored cards in results | 2 (`FlightResults.tsx`, `HotelResultsPage.tsx`) |
-| 2 | Newsletter CTA on homepage | 1 (`Index.tsx`) |
-| 3 | Remaining emoji cleanup | 2 (`AppTravel.tsx`, `AppFeatures.tsx`) |
-| **Total** | | **5 files** |
+| Batch | Files Modified |
+|-------|---------------|
+| 1: Floating decorations | 5 |
+| 2: Data-driven props | 5 |
+| 3: Flight components | 2 |
+| 4: Other components | 3 |
+| **Total** | **15 files** |
 
 No new files. No database changes. No edge function changes.
-
