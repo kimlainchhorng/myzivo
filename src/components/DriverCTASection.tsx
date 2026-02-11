@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Car, DollarSign, Clock, Shield, ChevronRight, Calendar, Sparkles, TrendingUp, Zap, Users } from "lucide-react";
+import { Car, DollarSign, Clock, Shield, ChevronRight, Calendar, Sparkles, TrendingUp, Zap, Users, Rocket, Star, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const benefits = [
@@ -53,12 +53,15 @@ const DriverCTASection = () => {
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-bl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Static floating emojis outside card */}
-      <div className="absolute top-32 left-[6%] text-5xl hidden lg:block opacity-40 animate-float">
-        🚀
+      <div className="absolute top-32 left-[6%] hidden lg:block opacity-40 animate-float">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-teal-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Rocket className="w-7 h-7 text-primary/50" />
+        </div>
       </div>
-      <div className="absolute bottom-40 right-[5%] text-4xl hidden lg:block opacity-35 animate-float-delayed">
-        ⭐
+      <div className="absolute bottom-40 right-[5%] hidden lg:block opacity-35 animate-float-delayed">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/15 flex items-center justify-center backdrop-blur-sm">
+          <Star className="w-6 h-6 text-amber-500/50" />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
@@ -80,15 +83,20 @@ const DriverCTASection = () => {
           />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl" />
           
-          {/* Static floating elements inside card */}
-          <div className="absolute top-12 right-12 text-5xl hidden lg:block opacity-40 animate-float">
-            🚗
+          <div className="absolute top-12 right-12 hidden lg:block opacity-40 animate-float">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/15 to-blue-500/15 flex items-center justify-center backdrop-blur-sm">
+              <Car className="w-7 h-7 text-sky-500/50" />
+            </div>
           </div>
-          <div className="absolute bottom-24 right-1/4 text-4xl hidden lg:block opacity-30 animate-float-delayed">
-            💰
+          <div className="absolute bottom-24 right-1/4 hidden lg:block opacity-30 animate-float-delayed">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-green-500/15 flex items-center justify-center backdrop-blur-sm">
+              <DollarSign className="w-6 h-6 text-emerald-500/50" />
+            </div>
           </div>
-          <div className="absolute top-1/3 left-[5%] text-3xl hidden lg:block opacity-25 animate-float">
-            🏆
+          <div className="absolute top-1/3 left-[5%] hidden lg:block opacity-25 animate-float">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/15 flex items-center justify-center backdrop-blur-sm">
+              <Trophy className="w-5 h-5 text-amber-500/50" />
+            </div>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center relative">

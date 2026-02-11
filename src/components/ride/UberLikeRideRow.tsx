@@ -157,7 +157,7 @@ export function UberLikeRideRow({
               "ml-auto inline-flex items-center gap-0.5 font-medium text-zinc-500 shrink-0",
               compact ? "text-[11px]" : "text-[12px]"
             )}>
-              <span aria-hidden className={compact ? "text-[10px]" : "text-[11px]"}>👤</span> {seats}
+              <svg className={cn("shrink-0", compact ? "w-2.5 h-2.5" : "w-3 h-3")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> {seats}
             </span>
           </div>
 

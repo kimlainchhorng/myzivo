@@ -1,4 +1,4 @@
-import { Star, ThumbsUp, MessageSquare, ChevronRight, Verified, Quote } from "lucide-react";
+import { Star, ThumbsUp, MessageSquare, ChevronRight, Verified, Quote, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -7,7 +7,7 @@ const reviews = [
   {
     id: 1,
     author: "Sarah M.",
-    avatar: "👩",
+    avatarColor: "bg-sky-500/20 text-sky-400",
     rating: 5,
     route: "NYC → Paris",
     date: "2 days ago",
@@ -19,7 +19,7 @@ const reviews = [
   {
     id: 2,
     author: "James L.",
-    avatar: "👨",
+    avatarColor: "bg-violet-500/20 text-violet-400",
     rating: 5,
     route: "LAX → Tokyo",
     date: "1 week ago",
@@ -31,7 +31,7 @@ const reviews = [
   {
     id: 3,
     author: "Emma K.",
-    avatar: "👩‍🦰",
+    avatarColor: "bg-emerald-500/20 text-emerald-400",
     rating: 4,
     route: "London → Dubai",
     date: "2 weeks ago",
@@ -122,7 +122,9 @@ const FlightReviewsWidget = () => {
                 className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-xl p-5 hover:border-amber-500/30 transition-colors"
               >
                 <div className="flex items-start gap-4">
-                  <div className="text-3xl">{review.avatar}</div>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${review.avatarColor}`}>
+                    <User className="w-5 h-5" />
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-bold">{review.author}</span>

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { MapPin, Star, Hotel, ArrowRight, TrendingUp } from "lucide-react";
+import { MapPin, Star, Hotel, ArrowRight, TrendingUp, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -8,7 +8,7 @@ const destinations = [
     id: 1,
     city: "Paris",
     country: "France",
-    image: "🗼",
+    iconColor: "text-amber-400",
     hotels: 4250,
     avgPrice: 189,
     rating: 4.7,
@@ -19,7 +19,7 @@ const destinations = [
     id: 2,
     city: "Tokyo",
     country: "Japan",
-    image: "🏯",
+    iconColor: "text-rose-400",
     hotels: 3890,
     avgPrice: 165,
     rating: 4.8,
@@ -30,7 +30,7 @@ const destinations = [
     id: 3,
     city: "New York",
     country: "USA",
-    image: "🗽",
+    iconColor: "text-sky-400",
     hotels: 5120,
     avgPrice: 245,
     rating: 4.6,
@@ -41,7 +41,7 @@ const destinations = [
     id: 4,
     city: "Dubai",
     country: "UAE",
-    image: "🏙️",
+    iconColor: "text-violet-400",
     hotels: 2890,
     avgPrice: 210,
     rating: 4.8,
@@ -52,7 +52,7 @@ const destinations = [
     id: 5,
     city: "Bali",
     country: "Indonesia",
-    image: "🏝️",
+    iconColor: "text-emerald-400",
     hotels: 3450,
     avgPrice: 95,
     rating: 4.7,
@@ -63,7 +63,7 @@ const destinations = [
     id: 6,
     city: "London",
     country: "UK",
-    image: "🎡",
+    iconColor: "text-indigo-400",
     hotels: 4780,
     avgPrice: 195,
     rating: 4.6,
@@ -115,8 +115,8 @@ const HotelDestinationGuides = () => {
               )}
 
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center text-3xl">
-                  {dest.image}
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
+                  <Building2 className={`w-8 h-8 ${dest.iconColor}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg group-hover:text-amber-400 transition-colors">

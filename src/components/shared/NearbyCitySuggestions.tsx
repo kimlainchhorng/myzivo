@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Train, ArrowRight, X, Building2, ChevronRight } from "lucide-react";
+import { MapPin, Train, ArrowRight, X, Building2, ChevronRight, Bus, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NearbyCity {
@@ -71,11 +71,11 @@ export function NearbyCitySuggestions({
     current.savings > best.savings ? current : best
   );
 
-  const transitIcons = {
-    subway: "🚇",
-    train: "🚆",
-    bus: "🚌",
-    drive: "🚗",
+  const transitIcons: Record<string, typeof Train> = {
+    subway: Train,
+    train: Train,
+    bus: Bus,
+    drive: Car,
   };
 
   return (
@@ -121,7 +121,7 @@ export function NearbyCitySuggestions({
                   className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg">{transitIcons[city.transitType]}</span>
+                    {(() => { const TransitIcon = transitIcons[city.transitType] || Train; return <TransitIcon className="w-5 h-5 text-emerald-400" />; })()}
                     <div>
                       <p className="text-sm font-medium group-hover:text-emerald-400 transition-colors">
                         {city.name}

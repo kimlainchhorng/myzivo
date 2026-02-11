@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Calendar, Clock, Car, User, Phone, Mail, MessageSquare } from "lucide-react";
+import { MapPin, Calendar, Clock, Car, User, Phone, Mail, MessageSquare, CarFront, Sparkles } from "lucide-react";
 import { useCreateRideRequest, RideType } from "@/hooks/useRideRequests";
 import { cn } from "@/lib/utils";
 
@@ -43,19 +43,19 @@ const rideTypes = [
     value: "standard",
     label: "Standard",
     description: "Everyday rides, 1-4 passengers",
-    icon: "🚗",
+    Icon: Car,
   },
   {
     value: "xl",
     label: "XL",
     description: "Larger vehicles, 1-6 passengers",
-    icon: "🚙",
+    Icon: CarFront,
   },
   {
     value: "premium",
     label: "Premium",
     description: "Luxury vehicles, premium service",
-    icon: "✨",
+    Icon: Sparkles,
   },
 ];
 
@@ -228,7 +228,7 @@ export default function RideRequestForm({ onSuccess }: RideRequestFormProps) {
               onClick={() => setValue("ride_type", type.value as RideType)}
             >
               <CardContent className="p-4 text-center">
-                <span className="text-2xl mb-2 block">{type.icon}</span>
+                <span className="block mb-2"><type.Icon className="w-6 h-6 text-primary mx-auto" /></span>
                 <p className="font-semibold">{type.label}</p>
                 <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
               </CardContent>

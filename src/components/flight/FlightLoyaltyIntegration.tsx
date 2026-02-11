@@ -37,11 +37,11 @@ interface LoyaltyProgram {
   logo?: string;
 }
 
-const allianceLogos = {
-  star: "⭐",
-  oneworld: "🌍",
-  skyteam: "✈️",
-  independent: "🎯",
+const allianceIcons = {
+  star: { Icon: Star, color: "text-amber-400" },
+  oneworld: { Icon: Globe, color: "text-blue-400" },
+  skyteam: { Icon: Plane, color: "text-sky-400" },
+  independent: { Icon: Award, color: "text-violet-400" },
 };
 
 const tierColors = {
@@ -204,8 +204,8 @@ export const FlightLoyaltyIntegration = ({
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
                     {/* Program Logo/Icon */}
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
-                      {allianceLogos[program.alliance]}
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                      {(() => { const a = allianceIcons[program.alliance]; return <a.Icon className={`w-6 h-6 ${a.color}`} />; })()}
                     </div>
 
                     <div>
@@ -320,7 +320,7 @@ export const FlightLoyaltyIntegration = ({
                           : "bg-muted/30 border-border/50 hover:border-border"
                       )}
                     >
-                      <span className="text-xl">{allianceLogos[program.alliance]}</span>
+                      {(() => { const a = allianceIcons[program.alliance]; return <a.Icon className={`w-5 h-5 ${a.color}`} />; })()}
                       <div className="min-w-0">
                         <p className="text-xs font-medium truncate">{program.name}</p>
                         <p className="text-xs text-muted-foreground truncate">

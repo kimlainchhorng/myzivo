@@ -300,10 +300,10 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-card border border-border shadow-xl">
-                      <SelectItem value="economy">✈️ Economy</SelectItem>
-                      <SelectItem value="premium">💎 Premium Economy</SelectItem>
-                      <SelectItem value="business">👔 Business Class</SelectItem>
-                      <SelectItem value="first">👑 First Class</SelectItem>
+                      <SelectItem value="economy"><span className="flex items-center gap-2"><Plane className="w-4 h-4 text-sky-400" /> Economy</span></SelectItem>
+                      <SelectItem value="premium"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /> Premium Economy</span></SelectItem>
+                      <SelectItem value="business"><span className="flex items-center gap-2"><Shield className="w-4 h-4 text-blue-400" /> Business Class</span></SelectItem>
+                      <SelectItem value="first"><span className="flex items-center gap-2"><Crown className="w-4 h-4 text-amber-400" /> First Class</span></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -1,13 +1,13 @@
-import { Users, TrendingUp, Clock, MapPin, Star, CheckCircle } from "lucide-react";
+import { Users, TrendingUp, Clock, MapPin, Star, CheckCircle, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 
 const recentBookings = [
-  { guest: "Sarah M.", hotel: "Grand Hyatt", location: "New York", time: "2 mins ago", avatar: "👩" },
-  { guest: "Michael R.", hotel: "Marriott Resort", location: "Miami", time: "5 mins ago", avatar: "👨" },
-  { guest: "Emma L.", hotel: "Four Seasons", location: "Los Angeles", time: "8 mins ago", avatar: "👩‍🦰" },
-  { guest: "James K.", hotel: "Hilton Garden", location: "Chicago", time: "12 mins ago", avatar: "👨‍🦱" },
-  { guest: "Lisa P.", hotel: "Ritz Carlton", location: "Boston", time: "15 mins ago", avatar: "👱‍♀️" },
+  { guest: "Sarah M.", hotel: "Grand Hyatt", location: "New York", time: "2 mins ago", avatarColor: "bg-sky-500/20 text-sky-400" },
+  { guest: "Michael R.", hotel: "Marriott Resort", location: "Miami", time: "5 mins ago", avatarColor: "bg-violet-500/20 text-violet-400" },
+  { guest: "Emma L.", hotel: "Four Seasons", location: "Los Angeles", time: "8 mins ago", avatarColor: "bg-emerald-500/20 text-emerald-400" },
+  { guest: "James K.", hotel: "Hilton Garden", location: "Chicago", time: "12 mins ago", avatarColor: "bg-amber-500/20 text-amber-400" },
+  { guest: "Lisa P.", hotel: "Ritz Carlton", location: "Boston", time: "15 mins ago", avatarColor: "bg-rose-500/20 text-rose-400" },
 ];
 
 const liveStats = [
@@ -60,7 +60,9 @@ const HotelSocialProof = () => {
         {/* Recent Booking Toast */}
         <div className={`mx-auto max-w-md transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-primary/20 rounded-xl shadow-lg">
-            <div className="text-3xl">{recentBookings[currentBooking].avatar}</div>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${recentBookings[currentBooking].avatarColor}`}>
+              <User className="w-5 h-5" />
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-400" />
@@ -94,7 +96,9 @@ const HotelSocialProof = () => {
               } transition-all`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{booking.avatar}</span>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${booking.avatarColor}`}>
+                  <User className="w-3.5 h-3.5" />
+                </div>
                 <span className="text-xs font-medium truncate">{booking.guest}</span>
               </div>
               <p className="text-xs text-muted-foreground truncate">{booking.hotel}</p>
