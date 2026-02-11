@@ -1,64 +1,81 @@
 
 
-## Wallet and Payment Summary Card on Home Screen
+## Add "My Reviews" History Page
 
-Most of the Wallet and Payment system already exists in the codebase:
+Everything in the Ratings and Reviews system already exists except one piece: a dedicated page where users can browse their own past reviews across all service types.
+
+---
 
 ### What Already Exists (no changes needed)
 
-| Feature | Location |
-|---------|----------|
-| Credit Wallet page (balance, transactions, how to earn) | `src/pages/account/WalletPage.tsx` |
-| Wallet hook (balance, transactions, credits) | `src/hooks/useCustomerWallet.ts` |
-| Payment Methods page (add/remove/default card) | `src/pages/PaymentMethodsPage.tsx` |
-| Local payment methods hook | `src/hooks/useLocalPaymentMethods.ts` |
-| Payment method modal (Eats) | `src/components/eats/PaymentMethodModal.tsx` |
-| Routes for `/payment-methods` and `/account/wallet` | `src/App.tsx` |
+- Rating modals for rides, food, delivery, hotels, flights, cars
+- Star rating component, review display component
+- Eats reviews hook with `useMyOrderReviews()`
+- Order rating hook with submission logic
+- P2P review forms for vehicles and owners
+- Trip rating widget for flights/hotels
+
+---
 
 ### What Will Be Added
 
-**1 compact "Wallet" card** on the home sliding panel, positioned after the Scheduled Bookings card and before "Recently Used". It shows:
+**1. New Page: `src/pages/account/MyReviewsPage.tsx`**
 
-- Wallet icon + "Wallet" heading with "See All" link to `/account/wallet`
-- Current credit balance in large bold typography
-- Default payment method (card brand + last 4 from `useLocalPaymentMethods`)
-- "Add Funds" button navigating to `/account/gift-cards` (existing gift card redemption flow adds funds to wallet)
-- "Manage Cards" link to `/payment-methods`
+A full-screen review history page showing all past reviews the user has submitted. Accessible from Account settings.
+
+Content:
+- Header with back button and "My Reviews" title
+- Summary card: total reviews count, average rating given, breakdown by service type
+- Filter tabs: All / Rides / Food / Delivery / Hotels / Flights
+- List of review cards, each showing:
+  - Service type icon and name
+  - Star rating given
+  - Date submitted
+  - Comment text (if any)
+  - Tags selected (if any)
+- Empty state with star icon and "No reviews yet" message
+- Verdant green theme with rounded-2xl cards
+
+Data source: Pulls from `useMyOrderReviews()` for eats reviews. For other service types (rides, hotels, flights), since those reviews are stored only via the generic RatingModal callbacks (no persistent storage hook exists for non-eats reviews), the page will show eats reviews from Supabase and use localStorage for any other service reviews submitted through the RatingModal.
+
+**2. New Route**
+
+Add `/account/reviews` route in `App.tsx`.
+
+**3. Account Page Link**
+
+Add a "My Reviews" menu item in the account/settings page that links to `/account/reviews`.
 
 ---
 
 ### Technical Details
 
-**File modified**: `src/pages/app/AppHome.tsx` (1 file)
+**New files (1):**
 
-**New imports**:
-- `useCustomerWallet` from `@/hooks/useCustomerWallet`
-- `useLocalPaymentMethods` from `@/hooks/useLocalPaymentMethods`
-- `Wallet`, `CreditCard` icons from lucide-react
+| File | Purpose |
+|------|---------|
+| `src/pages/account/MyReviewsPage.tsx` | Review history page |
 
-**New hook calls** (at component top level alongside existing hooks):
-```
-const { balanceDollars } = useCustomerWallet();
-const { getDefault } = useLocalPaymentMethods();
-const defaultCard = getDefault();
-```
+**Modified files (2):**
 
-**Card placement**: After the Scheduled Bookings section (line ~493), before the "Recently Used" section (line ~495).
-
-**Card design**:
-- `rounded-2xl` with `bg-gradient-to-br from-emerald-500/10 to-primary/5 border border-emerald-500/20`
-- Wallet icon + "Wallet" title with "See All" link
-- Balance displayed as `$X.XX` in large bold text
-- Default card shown as small pill: "Visa ****4242"
-- Row of two buttons: "Add Funds" (primary) and "Cards" (outline) linking to `/account/gift-cards` and `/payment-methods`
-- Auth-gated: only shows when user is signed in
-
-**Summary**:
-
-| Item | Detail |
+| File | Change |
 |------|--------|
-| Files modified | 1 (`src/pages/app/AppHome.tsx`) |
-| New hooks imported | 2 (`useCustomerWallet`, `useLocalPaymentMethods`) |
-| Existing pages reused | WalletPage, PaymentMethodsPage, GiftCardsPage |
-| No new pages needed | All wallet, transaction, and payment management pages already exist |
+| `src/App.tsx` | Add `/account/reviews` route |
+| `src/pages/Account.tsx` | Add "My Reviews" menu item with Star icon |
+
+**Hook usage:**
+- `useMyOrderReviews()` from `useEatsReviews.ts` for food order reviews
+- `useAuth()` for gating
+
+**Card design:**
+```text
++-------------------------------------------+
+| [Utensils] Burger Palace          4.0 ★★★★|
+| Feb 10, 2026                              |
+| "Great food, fast delivery!"              |
+| [Fresh food] [Good portions]              |
++-------------------------------------------+
+```
+
+Styled with `rounded-2xl` cards, verdant green accents, large star icons matching the existing RatingModal aesthetic.
 
