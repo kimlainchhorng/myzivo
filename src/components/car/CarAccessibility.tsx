@@ -9,7 +9,7 @@ const accessibleVehicles = [
     capacity: "Up to 2 wheelchairs + 4 passengers",
     pricePerDay: 95,
     features: ["Power ramp", "Tie-down systems", "Lowered floor", "Extra headroom"],
-    image: "🚐",
+    Icon: "van" as const,
     available: 3,
   },
   {
@@ -18,7 +18,7 @@ const accessibleVehicles = [
     capacity: "5 passengers",
     pricePerDay: 55,
     features: ["Push/pull controls", "Spinner knob", "Standard sedan", "Automatic transmission"],
-    image: "🚗",
+    Icon: "car" as const,
     available: 5,
   },
   {
@@ -27,7 +27,7 @@ const accessibleVehicles = [
     capacity: "5 passengers",
     pricePerDay: 65,
     features: ["Power swivel seat", "Extra legroom", "Low step-in height", "Lumbar support"],
-    image: "🚙",
+    Icon: "suv" as const,
     available: 4,
   },
 ];
@@ -66,7 +66,9 @@ const CarAccessibility = () => {
                   key={vehicle.type}
                   className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 hover:border-blue-500/50 transition-colors"
                 >
-                  <div className="text-5xl mb-4">{vehicle.image}</div>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/30 to-cyan-500/30 flex items-center justify-center mb-4">
+                    <Car className="w-7 h-7 text-blue-400" />
+                  </div>
                   <Badge className="mb-2 bg-green-500/20 text-green-400 border-green-500/30">
                     {vehicle.available} Available
                   </Badge>

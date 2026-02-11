@@ -1,16 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Car, Truck, Zap, Crown, Gauge, Wind, Bus, LucideIcon, CircleDollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const categories = [
-  { name: "Economy", icon: "🚗", count: 245, avgPrice: 29, description: "Budget-friendly rides", color: "from-green-500 to-emerald-500" },
-  { name: "Compact", icon: "🚙", count: 189, avgPrice: 39, description: "Perfect for city", color: "from-blue-500 to-cyan-500" },
-  { name: "SUV", icon: "🚐", count: 156, avgPrice: 65, description: "Family adventures", color: "from-orange-500 to-amber-500" },
-  { name: "Luxury", icon: "🏎️", count: 78, avgPrice: 150, description: "Premium experience", color: "from-violet-500 to-purple-500" },
-  { name: "Sports", icon: "🏁", count: 45, avgPrice: 200, description: "Performance cars", color: "from-red-500 to-rose-500" },
-  { name: "Electric", icon: "⚡", count: 112, avgPrice: 75, description: "Eco-friendly", color: "from-teal-500 to-green-500" },
-  { name: "Convertible", icon: "🌴", count: 67, avgPrice: 95, description: "Open-top fun", color: "from-pink-500 to-rose-500" },
-  { name: "Van", icon: "🚌", count: 89, avgPrice: 85, description: "Group travel", color: "from-indigo-500 to-blue-500" },
+const categories: { name: string; Icon: LucideIcon; count: number; avgPrice: number; description: string; color: string }[] = [
+  { name: "Economy", Icon: CircleDollarSign, count: 245, avgPrice: 29, description: "Budget-friendly rides", color: "from-green-500 to-emerald-500" },
+  { name: "Compact", Icon: Car, count: 189, avgPrice: 39, description: "Perfect for city", color: "from-blue-500 to-cyan-500" },
+  { name: "SUV", Icon: Truck, count: 156, avgPrice: 65, description: "Family adventures", color: "from-orange-500 to-amber-500" },
+  { name: "Luxury", Icon: Crown, count: 78, avgPrice: 150, description: "Premium experience", color: "from-violet-500 to-purple-500" },
+  { name: "Sports", Icon: Gauge, count: 45, avgPrice: 200, description: "Performance cars", color: "from-red-500 to-rose-500" },
+  { name: "Electric", Icon: Zap, count: 112, avgPrice: 75, description: "Eco-friendly", color: "from-teal-500 to-green-500" },
+  { name: "Convertible", Icon: Wind, count: 67, avgPrice: 95, description: "Open-top fun", color: "from-pink-500 to-rose-500" },
+  { name: "Van", Icon: Bus, count: 89, avgPrice: 85, description: "Group travel", color: "from-indigo-500 to-blue-500" },
 ];
 
 interface CarCategoriesGridProps {
@@ -46,11 +46,11 @@ const CarCategoriesGrid = ({ onSelect }: CarCategoriesGridProps) => {
             >
               <CardContent className="p-4 text-center">
                 <div className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3",
+                  "w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3",
                   "bg-gradient-to-br shadow-lg transition-transform group-hover:scale-110",
                   category.color
                 )}>
-                  {category.icon}
+                  <category.Icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-sm mb-1 group-hover:text-violet-400 transition-colors">
                   {category.name}

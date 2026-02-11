@@ -25,6 +25,9 @@ import PriceAlertPromo from "@/components/home/PriceAlertPromo";
 import BentoFeatures from "@/components/home/BentoFeatures";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
+import TestimonialsCarousel from "@/components/home/TestimonialsCarousel";
+import AppDownloadCTA from "@/components/home/AppDownloadCTA";
+import DestinationShowcase from "@/components/home/DestinationShowcase";
 
 // Mobile app home - lazy load to match App.tsx pattern
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -105,6 +108,16 @@ const DesktopHomePage = () => {
           <PopularRoutesSection />
         </FadeInSection>
 
+        {/* Second Sponsored Ad Banner */}
+        <FadeInSection className="container mx-auto px-4 py-6">
+          <HomepageAdBanner
+            headline="Summer travel deals 🌊"
+            description="Exclusive fares to beach destinations — book before they're gone."
+            ctaText="View Deals"
+            ctaHref="/flights"
+          />
+        </FadeInSection>
+
         {/* 5.5. Smart Offers (signed-in) / Recommended Deals (signed-out) */}
         <FadeInSection>
           {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
@@ -125,9 +138,24 @@ const DesktopHomePage = () => {
           <AirlineTrustSection />
         </FadeInSection>
 
-        {/* 9. ZIVO Extras */}
+        {/* 9. Destination Showcase */}
+        <FadeInSection>
+          <DestinationShowcase />
+        </FadeInSection>
+
+        {/* 10. Testimonials */}
+        <FadeInSection>
+          <TestimonialsCarousel />
+        </FadeInSection>
+
+        {/* 11. ZIVO Extras */}
         <FadeInSection>
           <ExtrasSection />
+        </FadeInSection>
+
+        {/* 12. App Download CTA */}
+        <FadeInSection>
+          <AppDownloadCTA />
         </FadeInSection>
       </main>
 
