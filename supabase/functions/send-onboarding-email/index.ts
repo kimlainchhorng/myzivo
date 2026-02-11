@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "../_shared/deps.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 // For testing, use onboarding@resend.dev. For production, verify your domain at https://resend.com/domains

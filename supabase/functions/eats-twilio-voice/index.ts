@@ -2,8 +2,7 @@
  * ZIVO Eats — Twilio Voice Webhook
  * Returns TwiML to connect caller to the target participant
  */
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve, createClient } from "../_shared/deps.ts";
 
 serve(async (req) => {
   // Twilio sends form-urlencoded data for webhooks

@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "../_shared/deps.ts";
 
 // Security: Restrict CORS to known origins only
 const allowedOrigins = new Set([
