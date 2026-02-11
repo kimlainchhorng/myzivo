@@ -9,7 +9,7 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel, Gift
+  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,8 @@ import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useUserRewards } from "@/hooks/useUserRewards";
 import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
+import { useReferrals } from "@/hooks/useReferrals";
+import { REFERRAL_REWARDS } from "@/config/referralProgram";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -114,6 +116,7 @@ const AppHome = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
+  const { referralCode, shareReferral } = useReferrals();
 
   // Get user location on mount
   useEffect(() => {
@@ -367,6 +370,60 @@ const AppHome = () => {
                   >
                     <Gift className="w-4 h-4 mr-1.5" />
                     Redeem Points
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* INVITE FRIENDS REFERRAL CARD */}
+          {user && (() => {
+            const totalInvited = referralCode?.total_referrals || 0;
+            const totalEarned = referralCode?.total_earnings || 0;
+
+            return (
+              <div className="mb-5">
+                <div className="rounded-2xl bg-gradient-to-br from-violet-500/10 to-pink-500/10 border border-violet-500/20 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-violet-500" />
+                      <span className="text-sm font-bold text-foreground">Invite Friends</span>
+                    </div>
+                    <button onClick={() => navigate("/account/referrals")} className="text-[10px] text-violet-500 font-medium">
+                      See all
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Earn {REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} pts for every friend who books
+                  </p>
+
+                  {referralCode?.code && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="outline" className="font-mono text-xs tracking-wider px-3 py-1">
+                        {referralCode.code}
+                      </Badge>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 mb-3 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Invited</span>
+                      <p className="font-bold text-foreground">{totalInvited}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Earned</span>
+                      <p className="font-bold text-foreground">{totalEarned.toLocaleString()} pts</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => shareReferral()}
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-violet-500/30 text-violet-600 hover:bg-violet-500/10"
+                  >
+                    <Share2 className="w-4 h-4 mr-1.5" />
+                    Share Link
                   </Button>
                 </div>
               </div>
