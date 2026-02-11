@@ -62,6 +62,7 @@ export default function MobileAccount() {
       path: "/account/invoices"
     }] : []),
     { icon: Tag, label: "My Promos", path: "/account/promos" },
+    { icon: Star, label: "My Reviews", path: "/account/reviews" },
     { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
     { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
     { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
