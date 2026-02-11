@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
-import { encode as encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
+import { serve } from "../_shared/deps.ts";
+import { crypto } from "https://deno.land/std@0.190.0/crypto/mod.ts";
+import { encode as encodeHex } from "https://deno.land/std@0.190.0/encoding/hex.ts";
 
 /**
  * Aviasales Flights Search API Edge Function
