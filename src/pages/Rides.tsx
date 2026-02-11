@@ -728,7 +728,11 @@ function RidesInner() {
       <button
         onClick={() => {
           if (step === "request") {
-            navigate(-1); // Go back to previous page
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
           } else if (step === "options") {
             setStep("request");
           } else if (step === "confirm") {
