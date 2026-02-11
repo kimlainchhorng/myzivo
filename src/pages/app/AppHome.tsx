@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star
+  MapPin, Bell, LucideIcon, Package, RefreshCw, Navigation, CalendarDays, ChevronRight, Star, Sparkles
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import flightsHeroImg from "@/assets/flights-hero.png";
@@ -31,6 +32,12 @@ const assets = {
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
 
+// Service badges
+const serviceBadges: Record<string, { label: string; color: string }> = {
+  Delivery: { label: "NEW", color: "bg-emerald-500" },
+  Flights: { label: "POPULAR", color: "bg-amber-500" },
+};
+
 // Service Card Component
 interface ServiceCardProps {
   title: string;
@@ -41,30 +48,38 @@ interface ServiceCardProps {
   imgPosition?: string;
 }
 
-const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition = "center" }: ServiceCardProps) => (
-  <motion.button
-    onClick={onNavigate}
-    whileTap={{ scale: 0.97 }}
-    className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation h-28"
-  >
-    <div className="absolute inset-0">
-      <img 
-        src={img} 
-        className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
-        alt={title}
-        style={{ objectPosition: imgPosition }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-    </div>
-    <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
-      <Icon className="w-4 h-4 text-white" />
-    </div>
-    <div className="absolute bottom-0 left-0 right-0 p-3">
-      <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
-      <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
-    </div>
-  </motion.button>
-);
+const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, imgPosition = "center" }: ServiceCardProps) => {
+  const badge = serviceBadges[title];
+  return (
+    <motion.button
+      onClick={onNavigate}
+      whileTap={{ scale: 0.97 }}
+      className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation h-28"
+    >
+      <div className="absolute inset-0">
+        <img 
+          src={img} 
+          className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
+          alt={title}
+          style={{ objectPosition: imgPosition }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+      </div>
+      {badge && (
+        <div className={`absolute top-2 right-2 ${badge.color} px-1.5 py-0.5 rounded-md`}>
+          <span className="text-[8px] font-black text-white tracking-wider animate-pulse">{badge.label}</span>
+        </div>
+      )}
+      <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
+        <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
+      </div>
+    </motion.button>
+  );
+};
 
 // Quick Action Card
 interface QuickActionCardProps {
@@ -143,6 +158,17 @@ const AppHome = () => {
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { timeContext, timeSuggestions, orderAgain, favorites, recommended } = usePersonalizedHome();
+  const { data: profile } = useUserProfile();
+
+  // Trending destinations
+  const trendingDestinations = [
+    { city: "Miami", emoji: "🌴", price: "$89" },
+    { city: "New York", emoji: "🗽", price: "$120" },
+    { city: "Los Angeles", emoji: "🌅", price: "$99" },
+    { city: "Chicago", emoji: "🏙️", price: "$75" },
+    { city: "Las Vegas", emoji: "🎰", price: "$65" },
+    { city: "San Francisco", emoji: "🌉", price: "$110" },
+  ];
 
   const handleNavigate = useCallback((screen: string) => {
     window.scrollTo(0, 0);
@@ -164,7 +190,9 @@ const AppHome = () => {
     return "Good Evening";
   };
 
-  const userName = user?.email?.split('@')[0] || "Traveler";
+  const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
+  const avatarUrl = profile?.avatar_url;
+  const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   // --- Zone 3: Last Meal ---
   const { data: lastMeal } = useQuery({
@@ -226,8 +254,14 @@ const AppHome = () => {
       {/* 1. TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-white/20 p-0.5">
-            <img src={assets.avatar} className="w-full h-full rounded-full object-cover" alt="Profile" />
+          <div className="w-9 h-9 rounded-full border-2 border-white/20 p-0.5 overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
+            ) : (
+              <div className="w-full h-full rounded-full bg-primary/30 flex items-center justify-center text-sm font-bold text-white">
+                {initials}
+              </div>
+            )}
           </div>
           <div>
             <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest">{greeting()}</div>
@@ -268,8 +302,48 @@ const AppHome = () => {
         </button>
       </div>
 
+      {/* Promo banner for signed-out users */}
+      {!user && (
+        <div className="mx-4 mb-4 rounded-2xl bg-gradient-to-r from-primary to-sky-500 p-4 text-white">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-bold">Sign up & save</span>
+          </div>
+          <p className="text-xs opacity-85">Create a free account and get $10 off your first booking.</p>
+          <button
+            onClick={() => navigate("/login?mode=signup")}
+            className="mt-2 px-4 py-1.5 bg-white/20 backdrop-blur rounded-lg text-xs font-semibold active:scale-95 transition-transform"
+          >
+            Get Started
+          </button>
+        </div>
+      )}
+
+      {/* Trending Destinations */}
+      <div className="px-4 pb-4">
+        <div className="border-t border-white/5 pt-4 mb-3" />
+        <h2 className="text-sm font-bold text-zinc-300 mb-2">
+          <span className="mr-1">✈️</span>Trending Destinations
+        </h2>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {trendingDestinations.map((dest) => (
+            <motion.button
+              key={dest.city}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(`/flights?to=${dest.city}`)}
+              className="shrink-0 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 touch-manipulation"
+            >
+              <div className="text-lg mb-0.5">{dest.emoji}</div>
+              <div className="text-xs font-semibold">{dest.city}</div>
+              <div className="text-[10px] text-primary font-bold">from {dest.price}</div>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
       {/* ZONE 1: Services Grid */}
       <div className="px-4 pb-4">
+        <div className="border-t border-white/5 pt-4 mb-3" />
         <div className="grid grid-cols-2 gap-2">
           <ServiceCard title="Ride" subtitle="Premium Mobility" img={assets.rides} icon={Car} onNavigate={() => handleNavigate("RIDES")} imgPosition="center 40%" />
           <ServiceCard title="Eats" subtitle="Gourmet Delivery" img={assets.food} icon={Utensils} onNavigate={() => handleNavigate("EATS")} imgPosition="center 50%" />
@@ -282,6 +356,7 @@ const AppHome = () => {
 
       {/* ZONE 2: Personalized Rows */}
       <div className="px-4 pb-4 space-y-4">
+        <div className="border-t border-white/5 pt-4" />
         {/* Time Context Banner */}
         <PersonalizedRow
           title={timeContext.headline}

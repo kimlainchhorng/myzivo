@@ -145,6 +145,13 @@ const Setup = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md space-y-8">
+
+        {/* Progress pill */}
+        <div className="flex justify-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100">
+            Step 1 of 1
+          </span>
+        </div>
         
         {/* Icon */}
         <div className="flex justify-center">
@@ -154,7 +161,9 @@ const Setup = () => {
         </div>
 
         {/* Text */}
-        <h1 className="text-3xl font-black text-center text-zinc-900">Complete Your Profile</h1>
+        <h1 className="text-3xl font-black text-center text-zinc-900">
+          Welcome to ZIVO{fullName ? `, ${fullName.split(' ')[0]}` : ''}
+        </h1>
         <p className="text-center text-zinc-500 -mt-4">One last step before you fly.</p>
 
         {/* Form */}
@@ -224,7 +233,10 @@ const Setup = () => {
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {submitting ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Setting up your account...
+            </>
           ) : (
             <>
               Save & Continue

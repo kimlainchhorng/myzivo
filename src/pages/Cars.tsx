@@ -11,7 +11,7 @@ import SEOHead from "@/components/SEOHead";
 import { useState, useMemo } from "react";
 import { 
   Search, MapPin, Calendar, Car, Zap, Star, Users, 
-  Fuel, Settings2, X, SlidersHorizontal, ArrowRight
+  Fuel, Settings2, X, SlidersHorizontal, ArrowRight, Shield
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -184,12 +184,34 @@ export default function Cars() {
             <p className="text-lg text-muted-foreground max-w-2xl">
               Skip the rental counter. Book directly from local car owners for better prices and a personal touch.
             </p>
+            
+            {/* Price Match Guarantee Badge */}
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-600 font-medium">
+              <Shield className="w-4 h-4" />
+              Price Match Guarantee
+            </div>
+
             {filters.pickupDate && filters.returnDate && (
               <p className="text-muted-foreground mt-2">
                 {format(parseISO(filters.pickupDate), "MMM d")} -{" "}
                 {format(parseISO(filters.returnDate), "MMM d, yyyy")}
               </p>
             )}
+          </div>
+
+          {/* Popular Makes Scroll */}
+          <div className="mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 pb-2">
+              {["Tesla", "BMW", "Toyota", "Honda", "Mercedes", "Ford", "Chevrolet", "Audi", "Porsche", "Jeep"].map((make) => (
+                <button
+                  key={make}
+                  onClick={() => updateFilter("make", make.toLowerCase())}
+                  className="shrink-0 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+                >
+                  {make}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Filters Bar */}
