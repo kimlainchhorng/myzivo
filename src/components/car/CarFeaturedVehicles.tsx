@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Users, Fuel, Settings2, Heart, ArrowRight, Zap } from "lucide-react";
+import { Star, Users, Fuel, Settings2, Heart, ArrowRight, Zap, Car, Crown, Truck, CarFront } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const featuredVehicles = [
@@ -10,7 +10,7 @@ const featuredVehicles = [
     make: "Tesla",
     model: "Model 3",
     year: 2024,
-    image: "⚡",
+    image: "zap",
     category: "Electric",
     pricePerDay: 89,
     originalPrice: 119,
@@ -27,7 +27,7 @@ const featuredVehicles = [
     make: "Mercedes",
     model: "S-Class",
     year: 2024,
-    image: "🏎️",
+    image: "crown",
     category: "Luxury",
     pricePerDay: 299,
     originalPrice: 399,
@@ -44,7 +44,7 @@ const featuredVehicles = [
     make: "Jeep",
     model: "Wrangler",
     year: 2024,
-    image: "🚙",
+    image: "truck",
     category: "SUV",
     pricePerDay: 95,
     originalPrice: 125,
@@ -61,7 +61,7 @@ const featuredVehicles = [
     make: "Porsche",
     model: "911 Carrera",
     year: 2024,
-    image: "🚗",
+    image: "car",
     category: "Sports",
     pricePerDay: 450,
     originalPrice: 599,
@@ -115,9 +115,15 @@ const CarFeaturedVehicles = ({ onSelect }: CarFeaturedVehiclesProps) => {
                   "relative bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center",
                   vehicle.featured ? "h-48" : "h-40"
                 )}>
-                  <span className={cn("transition-transform group-hover:scale-110", vehicle.featured ? "text-8xl" : "text-6xl")}>
-                    {vehicle.image}
-                  </span>
+                  {(() => {
+                    const iconMap: Record<string, typeof Car> = { car: Car, crown: Crown, truck: Truck, zap: Zap, "car-front": CarFront };
+                    const IconComp = iconMap[vehicle.image] || Car;
+                    return (
+                      <div className={cn("rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/30 flex items-center justify-center transition-transform group-hover:scale-110", vehicle.featured ? "w-24 h-24" : "w-16 h-16")}>
+                        <IconComp className={cn("text-violet-300", vehicle.featured ? "w-12 h-12" : "w-8 h-8")} />
+                      </div>
+                    );
+                  })()}
                   <Badge className="absolute top-3 left-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white">
                     {vehicle.tag}
                   </Badge>

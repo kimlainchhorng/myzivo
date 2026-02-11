@@ -65,7 +65,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
           // Determine primary type and icon
           const types = [...new Set(items.map((item: any) => item.type))] as string[];
           const primaryType = types[0] || "hotels";
-          const icon = primaryType === "hotel" ? "🏨" : primaryType === "activity" ? "🎯" : primaryType === "transfer" ? "🚗" : "✈️";
+          const icon = primaryType === "hotel" ? "building-2" : primaryType === "activity" ? "target" : primaryType === "transfer" ? "car" : "plane";
 
           // Build subtitle from items
           const itemTitles = items.slice(0, 2).map((item: any) => item.title).join(", ");
@@ -113,7 +113,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             date: b.pickup_date,
             amount: Number(b.total_amount),
             currency: "USD",
-            icon: "🚙",
+            icon: "car-front",
             details: { booking: b },
           });
         });
@@ -138,7 +138,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             date: t.created_at,
             amount: 0,
             currency: "USD",
-            icon: "🚕",
+            icon: "car-taxi-front",
             details: { trip: t },
           });
         });
@@ -163,7 +163,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             date: o.created_at,
             amount: Number(o.total_amount) || 0,
             currency: "USD",
-            icon: "🍔",
+            icon: "utensils-crossed",
             details: { order: o },
           });
         });
@@ -188,7 +188,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             date: r.pickup_date,
             amount: Number(r.total_amount),
             currency: "USD",
-            icon: "🚗",
+            icon: "car",
             details: { rental: r },
           });
         });

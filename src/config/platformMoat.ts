@@ -109,15 +109,15 @@ export const ECOSYSTEM_MOAT = {
   description: 'ZIVO is not just flights — it\'s a complete travel platform',
   
   verticals: [
-    { id: 'flights', name: 'Flights', status: 'live', icon: '✈️' },
-    { id: 'hotels', name: 'Hotels', status: 'live', icon: '🏨' },
-    { id: 'cars', name: 'Car Rental', status: 'live', icon: '🚗' },
-    { id: 'activities', name: 'Activities', status: 'live', icon: '🎯' },
-    { id: 'business', name: 'Business Travel', status: 'planned', icon: '💼' },
-    { id: 'ai_planning', name: 'AI Trip Planning', status: 'beta', icon: '🤖' },
-    { id: 'rides', name: 'Rides', status: 'roadmap', icon: '🚕' },
-    { id: 'eats', name: 'Eats', status: 'roadmap', icon: '🍔' },
-    { id: 'move', name: 'Move (Logistics)', status: 'roadmap', icon: '📦' },
+    { id: 'flights', name: 'Flights', status: 'live', icon: 'plane' },
+    { id: 'hotels', name: 'Hotels', status: 'live', icon: 'building-2' },
+    { id: 'cars', name: 'Car Rental', status: 'live', icon: 'car' },
+    { id: 'activities', name: 'Activities', status: 'live', icon: 'target' },
+    { id: 'business', name: 'Business Travel', status: 'planned', icon: 'briefcase' },
+    { id: 'ai_planning', name: 'AI Trip Planning', status: 'beta', icon: 'brain' },
+    { id: 'rides', name: 'Rides', status: 'roadmap', icon: 'car-taxi-front' },
+    { id: 'eats', name: 'Eats', status: 'roadmap', icon: 'utensils-crossed' },
+    { id: 'move', name: 'Move (Logistics)', status: 'roadmap', icon: 'package' },
   ],
   
   benefits: [

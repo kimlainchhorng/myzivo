@@ -73,14 +73,14 @@ function generateIndicativeCars(
   count: number = 8
 ): CarResult[] {
   const categories = [
-    { category: "Economy", icon: "🚗", seats: 4, bags: 2, basePrice: 25, company: "Europcar" },
-    { category: "Compact", icon: "🚙", seats: 5, bags: 2, basePrice: 30, company: "Hertz" },
-    { category: "Midsize", icon: "🚗", seats: 5, bags: 3, basePrice: 38, company: "Avis" },
-    { category: "Full-size", icon: "🚐", seats: 5, bags: 4, basePrice: 45, company: "Budget" },
-    { category: "SUV", icon: "🚙", seats: 7, bags: 4, basePrice: 55, company: "Enterprise" },
-    { category: "Premium SUV", icon: "🚙", seats: 7, bags: 5, basePrice: 75, company: "National" },
-    { category: "Luxury", icon: "🏎️", seats: 5, bags: 3, basePrice: 95, company: "Sixt" },
-    { category: "Minivan", icon: "🚌", seats: 8, bags: 6, basePrice: 65, company: "Alamo" },
+    { category: "Economy", icon: "car", seats: 4, bags: 2, basePrice: 25, company: "Europcar" },
+    { category: "Compact", icon: "car-front", seats: 5, bags: 2, basePrice: 30, company: "Hertz" },
+    { category: "Midsize", icon: "car", seats: 5, bags: 3, basePrice: 38, company: "Avis" },
+    { category: "Full-size", icon: "truck", seats: 5, bags: 4, basePrice: 45, company: "Budget" },
+    { category: "SUV", icon: "car-front", seats: 7, bags: 4, basePrice: 55, company: "Enterprise" },
+    { category: "Premium SUV", icon: "car-front", seats: 7, bags: 5, basePrice: 75, company: "National" },
+    { category: "Luxury", icon: "crown", seats: 5, bags: 3, basePrice: 95, company: "Sixt" },
+    { category: "Minivan", icon: "bus", seats: 8, bags: 6, basePrice: 65, company: "Alamo" },
   ];
 
   // Location multiplier (some airports are more expensive)

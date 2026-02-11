@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Sparkles, ArrowRight, Clock, DollarSign } from "lucide-react";
+import { MapPin, Sparkles, ArrowRight, Clock, DollarSign, Car } from "lucide-react";
 import { useRiderTripHistory } from "@/hooks/useRiderTripHistory";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -51,25 +51,31 @@ const CustomerRides = () => {
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
       <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        className="absolute -top-2 right-16 pointer-events-none hidden md:block opacity-30"
         animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        🚗
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center backdrop-blur-sm">
+          <Car className="w-6 h-6 text-emerald-400/60" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
+        className="absolute top-20 right-4 pointer-events-none hidden md:block opacity-30"
         animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
-        ✨
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/15 to-sky-400/15 flex items-center justify-center backdrop-blur-sm">
+          <Sparkles className="w-5 h-5 text-primary/50" />
+        </div>
       </motion.div>
       <motion.div
-        className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block"
+        className="absolute top-40 right-8 pointer-events-none hidden lg:block opacity-30"
         animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
       >
-        📍
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-red-500/15 to-orange-500/15 flex items-center justify-center backdrop-blur-sm">
+          <MapPin className="w-4 h-4 text-red-400/50" />
+        </div>
       </motion.div>
 
       <motion.div 

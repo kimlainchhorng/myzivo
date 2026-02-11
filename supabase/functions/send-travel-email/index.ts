@@ -113,14 +113,14 @@ function generateRedirectConfirmationEmail(data: Record<string, unknown>) {
           <h1 style="color: #6366f1; font-size: 28px;">Hizovo</h1>
         </div>
         <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-          <p style="color: #065f46;">✈️ You're being redirected to <strong>${partnerName}</strong> to complete your booking</p>
+          <p style="color: #065f46;">You're being redirected to <strong>${partnerName}</strong> to complete your booking</p>
         </div>
         <h2>Your Trip Summary</h2>
         <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
           <p style="white-space: pre-line;">${tripSummary}</p>
         </div>
         <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-          <h3 style="color: #92400e;">⚠️ Important</h3>
+          <h3 style="color: #92400e;">Important</h3>
           <ul style="color: #78350f;">
             <li>Your booking will be processed by <strong>${partnerName}</strong></li>
             <li>${partnerName} is the merchant of record</li>
@@ -217,7 +217,7 @@ function generateSupportAutoReplyEmail(data: Record<string, unknown>) {
         </div>
         ${isBookingRelated ? `
           <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <h3 style="color: #92400e;">📋 Booking-Related Issue?</h3>
+            <h3 style="color: #92400e;">Booking-Related Issue?</h3>
             <p style="color: #78350f;">For booking changes, cancellations, or refunds, please contact ${partnerName || 'your booking partner'} directly. They are the merchant of record.</p>
           </div>
         ` : ''}
@@ -243,7 +243,7 @@ function generatePriceAlertEmail(data: Record<string, unknown>) {
   const savings = oldPrice && newPrice ? Math.round(Number(oldPrice) - Number(newPrice)) : null;
   
   return {
-    subject: `Price drop alert for your trip 👀`,
+    subject: `Price drop alert for your trip`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -252,7 +252,7 @@ function generatePriceAlertEmail(data: Record<string, unknown>) {
           <h1 style="background: linear-gradient(135deg, #10b981, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;">ZIVO</h1>
         </div>
         <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(99, 102, 241, 0.2)); border-radius: 12px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
-          <h2 style="margin: 0 0 8px 0; color: #10b981;">Price Drop Alert! 📉</h2>
+          <h2 style="margin: 0 0 8px 0; color: #10b981;">Price Drop Alert!</h2>
           <p style="font-size: 18px; margin: 0; color: #fafafa;">${origin} → ${destination}</p>
           ${savings ? `<p style="font-size: 14px; color: #10b981; margin-top: 12px;">Prices may have dropped</p>` : ''}
         </div>
@@ -288,7 +288,7 @@ function generateTripReminderEmail(data: Record<string, unknown>) {
           <h1 style="background: linear-gradient(135deg, #10b981, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;">ZIVO</h1>
         </div>
         <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.2)); border-radius: 12px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
-          <h2 style="margin: 0 0 8px 0; color: #0ea5e9;">Trip Reminder ✈️</h2>
+          <h2 style="margin: 0 0 8px 0; color: #0ea5e9;">Trip Reminder</h2>
           <p style="font-size: 20px; margin: 0; color: #fafafa;">Your trip to ${destination}</p>
           <p style="font-size: 16px; color: #a1a1aa; margin-top: 8px;">Departing ${departureDate} (${daysUntil} days away)</p>
         </div>
@@ -301,7 +301,7 @@ function generateTripReminderEmail(data: Record<string, unknown>) {
           </div>
         ` : ''}
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 16px; margin: 24px 0;">
-          <h3 style="color: #f59e0b; margin: 0 0 8px 0; font-size: 14px;">⚠️ Need to make changes?</h3>
+          <h3 style="color: #f59e0b; margin: 0 0 8px 0; font-size: 14px;">Need to make changes?</h3>
           <p style="color: #a1a1aa; font-size: 13px; margin: 0;">For booking changes, cancellations, or refunds, contact ${partnerName || 'your travel partner'} directly. They processed your booking and can assist you.</p>
         </div>
         <div style="text-align: center; margin: 32px 0;">
@@ -323,7 +323,7 @@ function generateBookingConfirmationEmail(data: Record<string, unknown>) {
   const { partnerName, tripSummary, tripsUrl } = data;
   
   return {
-    subject: `Your booking request has been received ✈️`,
+    subject: `Your booking request has been received`,
     html: `
       <!DOCTYPE html>
       <html>
