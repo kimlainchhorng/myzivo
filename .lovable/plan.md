@@ -1,50 +1,70 @@
 
 
-# Fix: Show Real Address Instead of Raw Coordinates
+# Upgrade Customer Home Screen and Booking Flow (2026 UX)
 
-## Problem
+Redesign the mobile `AppHome.tsx` to feel like a premium 2026 travel super-app with richer content sections, smarter previews, and a cleaner visual hierarchy.
 
-When the user's location is detected on the Rides page, the pickup field shows raw coordinates like `30.471521, -90.959525` instead of a human-readable address like "109 Hickory St, Denham Springs, LA".
+## What Changes
 
-## Root Cause
+### 1. Saved Places Row (below search bar)
+Add a horizontal row of saved locations (Home, Work, plus any user-saved places) directly under the search bar. Each is a compact pill with an icon and label that navigates to the Rides page with the destination pre-selected. Shows "Add" pill if user has fewer than 2 saved places.
 
-The `reverseGeocode` function in `useCurrentLocation.ts` (line 65-79) calls the **Mapbox** geocoding API using `VITE_MAPBOX_ACCESS_TOKEN`. This token is empty/not configured, so the API call fails and the code falls back to returning raw coordinates:
+### 2. Upgraded Quick Actions Grid
+Enlarge the 3x2 service grid cards with slightly bigger icons and subtle shadow depth. Add a thin accent line at the top of each card matching the service color for visual pop.
 
-```
-return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-```
+### 3. Popular Services Section (new)
+Add a new horizontal scroll section titled "Popular Near You" with three card types:
+- **Popular Restaurants** -- pull top-rated from the `restaurants` table, show image + name + rating + cuisine
+- **Popular Destinations** -- use destination photos from `config/photos`, show city image + name + "from $X" label
+- **Trending Rides** -- show popular ride routes (static data: "Airport Transfer", "Downtown", "Beach") with estimated price and ETA preview
 
-The rest of the app has already migrated to **Google Maps via edge functions** (the `maps-autocomplete`, `maps-place-details`, `maps-route` edge functions all use `GOOGLE_MAPS_API_KEY` server-side). But `reverseGeocode` was never migrated -- it still relies on the old Mapbox client-side token.
+Each card is a large (160px wide) rounded card with image, gradient overlay, and info at the bottom.
 
-## Solution
+### 4. Smart ETA and Price Preview
+Add a "Quick Estimate" card near the top (below saved places) that shows:
+- Estimated pickup time based on time of day (e.g., "~4 min pickup" during normal hours, "~8 min" during peak)
+- A price preview for a standard ride ("~$12-18 to Downtown")
+- Tapping opens the Rides booking flow
 
-Two changes:
+This uses simple time-of-day logic (no API call needed) to give users a feel for pricing before they commit.
 
-### 1. New edge function: `maps-reverse-geocode`
+### 5. Visual Polish
+- Larger card corner radius (rounded-3xl on featured cards)
+- Verdant/emerald theme accents on section headers
+- Smoother spacing between sections (gap-6 instead of mb-5)
+- Section dividers using subtle gradient lines
+- Cards use `shadow-sm hover:shadow-md` for depth
 
-Create a new Supabase edge function that calls Google's Geocoding API server-side to convert coordinates to an address. Pattern matches the existing `maps-place-details` function.
+## Technical Details
 
-- Accepts `{ lat, lng }` in the request body
-- Calls `https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={KEY}`
-- Returns `{ ok: true, address: "109 Hickory St, Denham Springs, LA 70726" }`
-
-### 2. Update `reverseGeocode` in `useCurrentLocation.ts`
-
-Replace the broken Mapbox API call with a call to the new edge function via `supabase.functions.invoke("maps-reverse-geocode", { body: { lat, lng } })`. Remove the `MAPBOX_TOKEN` constant since it's no longer needed.
-
-### 3. Add `reverseGeocode` to `mapsApi.ts`
-
-Add a `reverseGeocode(lat, lng)` function to the centralized maps API service, following the same pattern as `getPlaceDetails`. Then `useCurrentLocation.ts` imports and uses it.
-
-### Files Changed
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `supabase/functions/maps-reverse-geocode/index.ts` | New edge function for Google reverse geocoding |
-| `src/services/mapsApi.ts` | Add `reverseGeocode(lat, lng)` function |
-| `src/hooks/useCurrentLocation.ts` | Replace Mapbox call with `mapsApi.reverseGeocode`, remove `MAPBOX_TOKEN` |
+| `src/pages/app/AppHome.tsx` | Add saved places row, popular services section, quick estimate card, visual polish upgrades |
 
-### Result
+### Data Sources
+- **Saved places**: Already fetched via `useSavedLocations(user?.id)` (line 110)
+- **Popular restaurants**: Already fetched via `usePersonalizedHome()` `recommended` array (line 106)
+- **Destinations**: Import `destinationPhotos` from `@/config/photos`
+- **ETA/Price preview**: Simple time-of-day calculation (no new hooks needed)
 
-The pickup field will show a real street address like "109 Hickory St, Denham Springs, LA" instead of raw coordinates. The floating pickup card on the map will also show the real address.
+### New Section Order (top to bottom)
+1. Header (greeting + avatar + bell)
+2. Search bar
+3. Saved places pills (Home, Work, +Add)
+4. Quick Estimate card (ETA + price preview)
+5. Quick Actions grid (3x2)
+6. Popular Near You (horizontal scroll: restaurants, destinations, rides)
+7. Promo carousel
+8. Rewards card
+9. Referral card
+10. Scheduled bookings
+11. Wallet summary
+12. Recently Used
+13. Favorites
+14. Recommendations
+
+### No New Dependencies
+All data hooks and components already exist. The upgrade is purely layout and UI restructuring within `AppHome.tsx`.
 
