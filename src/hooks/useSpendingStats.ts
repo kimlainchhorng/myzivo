@@ -62,7 +62,21 @@ export function useSpendingStats(): SpendingStats {
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data || [];
+
+      // Fetch tips for these rides from driver_earnings
+      const tripIds = (data || []).map(r => r.id);
+      let tipMap: Record<string, number> = {};
+      if (tripIds.length > 0) {
+        const { data: tips } = await supabase
+          .from("driver_earnings")
+          .select("trip_id, tip_amount")
+          .in("trip_id", tripIds);
+        tips?.forEach(t => {
+          if (t.trip_id && t.tip_amount) tipMap[t.trip_id] = t.tip_amount;
+        });
+      }
+
+      return (data || []).map(r => ({ ...r, tip_amount: tipMap[r.id] || 0 }));
     },
     enabled: !!user?.id,
   });
@@ -107,9 +121,10 @@ export function useSpendingStats(): SpendingStats {
       id: r.id,
       type: "rides" as const,
       title: `Ride to ${r.dropoff_address?.split(",")[0] || "destination"}`,
-      amount: r.fare_amount || 0,
+      amount: (r.fare_amount || 0) + (r.tip_amount || 0),
       date: r.created_at,
       status: r.status,
+      tip: r.tip_amount > 0 ? r.tip_amount : undefined,
     })),
     ...travelOrders.map((t: any) => {
       const firstItem = t.travel_order_items?.[0];

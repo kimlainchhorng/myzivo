@@ -551,3 +551,70 @@ export const updateRideStatusAndDispatch = async (
     return { success: false, error: categorizeError(err), attempts: 1 };
   }
 };
+
+// Save a tip for a completed ride
+export const saveRideTip = async (
+  tripId: string,
+  tipAmount: number
+): Promise<UpdateRideResult> => {
+  if (!isOnline()) {
+    return {
+      success: false,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  try {
+    // Try to update existing driver_earnings row for this trip
+    const { data: existing, error: fetchError } = await supabase
+      .from("driver_earnings")
+      .select("id")
+      .eq("trip_id", tripId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (existing) {
+      const { error } = await supabase
+        .from("driver_earnings")
+        .update({ tip_amount: tipAmount })
+        .eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      // Fetch trip to get driver_id
+      const { data: trip, error: tripError } = await supabase
+        .from("trips")
+        .select("driver_id, fare_amount")
+        .eq("id", tripId)
+        .single();
+
+      if (tripError || !trip?.driver_id) {
+        console.warn("[saveRideTip] No trip or driver found for trip:", tripId);
+        return { success: false, error: categorizeError(tripError || new Error("No driver found")), attempts: 1 };
+      }
+
+      const { error } = await supabase
+        .from("driver_earnings")
+        .insert({
+          driver_id: trip.driver_id,
+          trip_id: tripId,
+          tip_amount: tipAmount,
+          amount: trip.fare_amount || 0,
+          earning_type: "ride",
+        } as any);
+      if (error) throw error;
+    }
+
+    console.log("[saveRideTip] Tip saved:", tipAmount, "for trip:", tripId);
+    return { success: true, error: null, attempts: 1 };
+  } catch (err) {
+    console.error("[saveRideTip] Failed:", err);
+    return { success: false, error: categorizeError(err), attempts: 1 };
+  }
+};
