@@ -1,126 +1,104 @@
 
 
-# Unified ZIVO Design System (2026 UI Standard)
+# Add Real-Time Activity Feed and Status Updates
 
 ## Current State
 
-The project already has a solid foundation: CSS custom properties in `index.css`, a `brandTokens.ts` config, Shadcn UI components, and service-specific color tokens. However, there are inconsistencies:
+The project already has strong real-time foundations:
 
-- Button variants reference undefined CSS classes (`gradient-rides`, `gradient-eats`, `glass-card`)
-- Spacing is ad-hoc across components (mix of `p-4`, `p-6`, `p-8`, `gap-3`, `gap-4`, etc.)
-- Card styles vary: some use `rounded-2xl shadow-md`, others use `rounded-3xl`, custom glassmorphism, or inline styles
-- Typography uses different font stacks (`Inter` in CSS body vs `Work Sans` in Tailwind config vs `Outfit` in brandTokens)
-- No centralized spacing scale or layout utilities beyond Tailwind defaults
-- Admin/Mission Control uses a completely separate dark theme with different patterns
+- **Customer trips**: `TripTracker` with live map, status steps, ETA, driver location
+- **Customer orders**: `useOrderTracking` with realtime Supabase subscriptions + driver polling
+- **Notifications**: `NotificationCenter` popover with trip/order/delivery categories
+- **Toasts**: `RealtimeOrderToasts` for dispatch events, `useCrossAppRealtime` for customer/driver/restaurant order updates
+- **Driver feed**: `useDriverActivityFeed` for historical activity (completed trips, earnings, payouts)
+- **Ride notifications**: `useRideStatusNotifications` with status banners and sounds
+- **Admin**: `ActivityStream` for live admin event monitoring
+
+## What's Missing
+
+1. **Customer Activity Timeline** -- No unified timeline showing live events from ALL active services (rides + eats + deliveries) in one scrollable feed
+2. **Restaurant Live Feed** -- Restaurant dashboard has stats but no live event timeline (order received, driver arriving, pickup completed)
+3. **Driver Live Feed** -- Driver has historical activity but no real-time timeline of current-session events with animations
+4. **Unified Activity Feed Component** -- No reusable timeline component that works across all three roles
 
 ## Plan
 
-### 1. Fix Broken CSS Classes + Add Missing Utilities (index.css)
+### 1. Create Reusable Activity Timeline Component
 
-Add the missing utility classes that button variants and components reference:
+New file: `src/components/shared/ActivityTimeline.tsx`
 
-- `.gradient-rides` -- emerald gradient background
-- `.gradient-eats` -- orange/red gradient background  
-- `.glass-card` -- glassmorphic card with backdrop-blur
-- `.glow-rides` -- emerald glow shadow
-- `.glow-eats` -- orange glow shadow
+A reusable, animated timeline component that renders a vertical list of status events with:
+- Time column (left) showing relative time ("Just now", "2 min ago")
+- Status icon (colored circle with Lucide icon, matching service type)
+- Title and subtitle text
+- Animated entry (slide-in + fade-in for new items)
+- Verdant theme, rounded cards, `card-interactive` hover effect
+- Scrollable with `ScrollArea` component
+- Empty state with illustration
 
-Add standardized spacing utility classes:
-- `.space-section` (16px padding)
-- `.space-section-lg` (24px padding)
-- `.space-card` (16px padding, 24px on larger screens)
+Props: `items: TimelineItem[]` where each item has `id`, `icon`, `iconColor`, `title`, `subtitle`, `timestamp`, `status` (active/completed/pending).
 
-Add loading skeleton styles for lists:
-- `.skeleton-card` -- card-shaped loading placeholder
-- `.skeleton-text` -- text line loading placeholder
-- `.skeleton-avatar` -- circular loading placeholder
+### 2. Customer Activity Feed Section (AppHome.tsx)
 
-### 2. Standardize Typography (index.css)
+Add a "Recent Activity" section to the home screen (after Quick Actions, before Popular Near You) showing:
+- Active trip status updates (from `useRiderTripRealtime` subscription data)
+- Active food order updates (from `useCustomerOrdersRealtime`)
+- Recent completed items from notifications
 
-Consolidate on **Inter** as the primary UI font across all contexts (body, headings, buttons). Keep Work Sans and Lora as secondary/serif options but remove the conflict between CSS body font-family and Tailwind config.
+This section only appears when the user has active or recent (last 2 hours) orders/trips. Uses the new `ActivityTimeline` component.
 
-Update the typography utility classes to use consistent sizes:
-- `.text-display-lg`: 48px (large titles)
-- `.text-display`: 36px (page titles)
-- `.text-heading-lg`: 30px (section headers)
-- `.text-heading`: 24px (card headers)
-- `.text-subheading`: 18px (sub-sections)
-- `.text-body-lg`: 18px (featured body)
-- `.text-body`: 16px (standard body)
-- `.text-small`: 14px (secondary text)
-- `.text-caption`: 12px (captions, labels)
+New hook: `src/hooks/useCustomerActivityFeed.ts`
+- Queries active trips + active food_orders for the current user
+- Subscribes to realtime changes on both tables
+- Merges events into a unified sorted timeline
+- Returns `{ items: TimelineItem[], hasActiveItems: boolean }`
 
-### 3. Standardize Card System (card.tsx + index.css)
+### 3. Restaurant Live Feed
 
-Update the base `Card` component and add CSS utility variants so all cards follow the same pattern:
+New file: `src/components/restaurant/RestaurantActivityFeed.tsx`
 
-- Base card: `rounded-2xl`, `border border-border/50`, `shadow-sm`, `p-4 sm:p-6`
-- `.card-elevated`: stronger shadow for prominent cards
-- `.card-soft`: subtle background, minimal border
-- `.card-glass`: glassmorphic with backdrop-blur (for dark overlays)
-- `.card-interactive`: adds hover lift + shadow transition
+Add a "Live Orders" timeline tab/section to the restaurant dashboard showing:
+- "New order received" (on INSERT to food_orders)
+- "Driver assigned" (on driver_id change)
+- "Driver arriving" (on status change to ready_for_pickup with driver)
+- "Order picked up" (on status change to out_for_delivery)
+- "Order delivered" (on status change to delivered)
 
-### 4. Standardize Button System (button.tsx)
+Uses Supabase realtime subscription filtered by `restaurant_id`. Rendered using the shared `ActivityTimeline` component. Added as a new tab or section in `RestaurantDashboard.tsx`.
 
-Fix the broken variant classes and ensure all button variants work:
+### 4. Driver Session Feed
 
-- `default`: Verdant green bg, white text, rounded-xl
-- `secondary`: Outline style, neutral border
-- `destructive`: Red accent, white text
-- `outline`: Border only, transparent bg
-- `ghost`: No border, subtle hover
-- `rides`: Emerald gradient (fix missing CSS)
-- `eats`: Orange gradient (fix missing CSS)
-- `glass`: Glassmorphic (fix missing CSS)
-- `hero`: Dark bg, light text, bold
+New file: `src/components/driver/DriverSessionFeed.tsx`
 
-### 5. Standardize Icon Usage (index.css)
+Real-time feed for the driver's current session showing:
+- "New ride request" / "New delivery request" 
+- "Pickup ready" notifications
+- "Trip started" / "Trip completed"
+- Earnings credited
 
-Add icon sizing utility classes matching the existing `componentSizes.icon` tokens:
+Uses existing `useDriverActivityFeed` for historical data + adds a realtime subscription layer for live events during the current session. Session events stored in component state (not DB) and cleared on app restart.
 
-- `.icon-xs`: 12px
-- `.icon-sm`: 16px
-- `.icon-md`: 20px (default)
-- `.icon-lg`: 24px
-- `.icon-xl`: 32px
+### 5. Push Notification Enhancement
 
-Ensure all icons use consistent `strokeWidth={1.5}` via a CSS default.
+The push notification infrastructure already exists (`useWebPush`, `usePushNotifications`, service worker). The realtime hooks already trigger toasts. No new push notification code is needed -- the existing `RealtimeSyncContext` handles cross-role notifications. The new feeds simply provide a visual timeline alongside the existing toast/push system.
 
-### 6. Standardize Navigation Patterns (AppBottomNav.tsx, AppHeader.tsx)
-
-Ensure bottom nav and header follow the same pattern:
-- Bottom nav: 64px height, safe-area padding, `bg-card border-t`
-- Header: 56px height, safe-area padding, `bg-background/95 backdrop-blur-sm`
-- Back button: consistent chevron icon, same size across all pages
-- Search bars: consistent height (44px), rounded-xl, muted background
-
-### 7. Add Smooth Transition Defaults (index.css)
-
-Standardize interaction animations:
-- Button press: `active:scale-[0.98]` (already on default, extend to all)
-- Card hover: `transition-all duration-200 hover:shadow-md`
-- Page transitions: keep existing framer-motion fade-ins
-- Loading skeletons: `animate-pulse` with `bg-muted rounded-lg`
-
-### 8. Dark Mode Ready (already implemented)
-
-The `.dark` theme is already defined in `index.css` with all CSS variables. Verify all new utility classes respect dark mode by using `hsl(var(--...))` references instead of hardcoded colors.
-
-## Files Modified
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/index.css` | Add missing gradient/glass/glow classes, spacing utilities, skeleton styles, icon utilities, fix typography scale, add `.text-caption` |
-| `src/components/ui/button.tsx` | Fix variant class references to use properly defined CSS classes |
-| `src/components/ui/card.tsx` | Add `card-interactive` hover effect to base styling |
-| `src/config/brandTokens.ts` | Align font references to Inter, add spacing scale tokens, add icon size tokens |
+| `src/components/shared/ActivityTimeline.tsx` | New reusable timeline component |
+| `src/hooks/useCustomerActivityFeed.ts` | New hook: unified customer activity from trips + orders |
+| `src/pages/app/AppHome.tsx` | Add "Recent Activity" section using customer feed |
+| `src/components/restaurant/RestaurantActivityFeed.tsx` | New live order timeline for restaurant dashboard |
+| `src/pages/RestaurantDashboard.tsx` | Add activity feed tab |
+| `src/components/driver/DriverSessionFeed.tsx` | New session-based live feed for drivers |
 
-## What This Does NOT Change
+## Technical Details
 
-- No structural layout changes to existing pages
-- No new dependencies
-- No changes to routing or data fetching
-- Dark mode theme stays as-is (already complete)
-- Service-specific colors stay as-is (already well-defined)
-- Admin Mission Control theme stays separate (intentionally different aesthetic)
+- All realtime subscriptions use Supabase `postgres_changes` (consistent with existing patterns)
+- Timeline items animate in using CSS `animate-in slide-in-from-left` (no heavy framer-motion)
+- Each feed limits to 50 most recent events to prevent memory bloat
+- Customer feed auto-hides when no active items exist
+- All components use the design system: `rounded-2xl`, `border-border/50`, `shadow-sm`, Verdant accents, `text-caption` for timestamps
+- No new dependencies required
 
