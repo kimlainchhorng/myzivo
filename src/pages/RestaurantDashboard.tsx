@@ -2,25 +2,29 @@ import React, { useState } from "react";
 import { Loader2, User, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   UtensilsCrossed, 
   Menu as MenuIcon,
   ClipboardList,
   BarChart3,
   Settings,
   LogOut,
-  Store
+  Store,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import RestaurantOverview from "@/components/restaurant/RestaurantOverview";
 import RestaurantOrders from "@/components/restaurant/RestaurantOrders";
 import RestaurantMenu from "@/components/restaurant/RestaurantMenu";
 import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import RestaurantActivityFeed from "@/components/restaurant/RestaurantActivityFeed";
 import MerchantNotificationBell from "@/components/merchant/MerchantNotificationBell";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
@@ -37,11 +41,27 @@ const RestaurantDashboard = () => {
 
   const navItems = [
     { value: "overview", label: "Overview", icon: Store, gradient: "from-eats to-red-500" },
+    { value: "activity", label: "Activity", icon: Activity, gradient: "from-emerald-500 to-teal-500" },
     { value: "orders", label: "Orders", icon: ClipboardList, gradient: "from-amber-500 to-orange-500" },
     { value: "menu", label: "Menu", icon: UtensilsCrossed, gradient: "from-emerald-500 to-green-500" },
     { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-sky-500 to-blue-500" },
     { value: "settings", label: "Settings", icon: Settings, gradient: "from-violet-500 to-purple-500" },
   ];
+
+  // Get restaurant ID for activity feed
+  const { data: restaurantData } = useQuery({
+    queryKey: ["user-restaurant-id", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from("restaurants")
+        .select("id")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   const handleLogout = async () => {
     await signOut();
@@ -238,6 +258,10 @@ const RestaurantDashboard = () => {
 
             <TabsContent value="overview" className="mt-0">
               <RestaurantOverview />
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-0">
+              <RestaurantActivityFeed restaurantId={restaurantData?.id} />
             </TabsContent>
 
             <TabsContent value="orders" className="mt-0">
