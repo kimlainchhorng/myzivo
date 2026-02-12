@@ -30,6 +30,8 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
+import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
+import ActivityTimeline from "@/components/shared/ActivityTimeline";
 import { destinationPhotos } from "@/config/photos";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
@@ -158,6 +160,7 @@ const AppHome = () => {
   const defaultCard = getDefault();
 
   const estimate = getQuickEstimate();
+  const { items: activityItems, hasActiveItems } = useCustomerActivityFeed();
 
   // Promo carousel
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -300,6 +303,18 @@ const AppHome = () => {
               </motion.button>
             ))}
           </div>
+
+          {/* ─── RECENT ACTIVITY ─── */}
+          {user && activityItems.length > 0 && (
+            <div>
+              <SectionHeader icon={Clock} iconColor="text-primary" title="Recent Activity" onSeeAll={() => navigate("/trips")} />
+              <ActivityTimeline
+                items={activityItems}
+                maxHeight="280px"
+                emptyMessage="No recent activity"
+              />
+            </div>
+          )}
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
