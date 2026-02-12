@@ -169,6 +169,32 @@ export function haversineMiles(
 }
 
 /**
+ * Reverse geocode coordinates to a human-readable address
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke("maps-reverse-geocode", {
+      body: { lat, lng },
+    });
+
+    if (error) {
+      console.error("[mapsApi] Reverse geocode invoke error:", error);
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+
+    if (!data?.ok) {
+      console.warn("[mapsApi] Reverse geocode returned error:", data?.error);
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+
+    return data.address ?? `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  } catch (e) {
+    console.error("[mapsApi] Reverse geocode exception:", e);
+    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  }
+}
+
+/**
  * Check if driver is within arrival threshold of a location
  */
 export function isWithinArrivalThreshold(

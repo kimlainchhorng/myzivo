@@ -1,0 +1,60 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { lat, lng } = await req.json();
+
+    if (typeof lat !== "number" || typeof lng !== "number") {
+      return new Response(JSON.stringify({ error: "Missing lat/lng" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    if (!key) {
+      console.error("[maps-reverse-geocode] GOOGLE_MAPS_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Maps service unavailable" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${encodeURIComponent(key)}`;
+
+    console.log(`[maps-reverse-geocode] Reverse geocoding: ${lat}, ${lng}`);
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status !== "OK" || !data.results?.length) {
+      console.error("[maps-reverse-geocode] Google API error:", data.status, data.error_message);
+      return new Response(JSON.stringify({ error: "No address found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const address = data.results[0].formatted_address;
+    console.log(`[maps-reverse-geocode] Found: ${address}`);
+
+    return new Response(JSON.stringify({ ok: true, address }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("[maps-reverse-geocode] Error:", e);
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

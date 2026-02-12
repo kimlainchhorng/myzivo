@@ -3547,33 +3547,42 @@ export type Database = {
       }
       business_account_users: {
         Row: {
+          approved_services: string[] | null
           business_id: string | null
           created_at: string | null
           id: string
+          is_active: boolean
           joined_at: string
           joined_via: string | null
           payment_preference: string
           role: string | null
+          spending_limit_monthly: number | null
           user_id: string | null
         }
         Insert: {
+          approved_services?: string[] | null
           business_id?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean
           joined_at?: string
           joined_via?: string | null
           payment_preference?: string
           role?: string | null
+          spending_limit_monthly?: number | null
           user_id?: string | null
         }
         Update: {
+          approved_services?: string[] | null
           business_id?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean
           joined_at?: string
           joined_via?: string | null
           payment_preference?: string
           role?: string | null
+          spending_limit_monthly?: number | null
           user_id?: string | null
         }
         Relationships: [
