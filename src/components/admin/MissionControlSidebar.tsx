@@ -5,13 +5,14 @@
  import { useNavigate, useLocation } from "react-router-dom";
  import { motion } from "framer-motion";
  import {
-   LayoutDashboard,
-   Plane,
-   Hotel,
-   Users,
-   AlertCircle,
-   Activity,
- } from "lucide-react";
+  LayoutDashboard,
+  Plane,
+  Hotel,
+  Users,
+  AlertCircle,
+  Activity,
+  HeartPulse,
+} from "lucide-react";
  import { useSupplierHealth } from "@/hooks/useSupplierHealth";
  import { cn } from "@/lib/utils";
  
@@ -20,8 +21,9 @@
    { id: "bookings", path: "/admin/ops/bookings", icon: Plane, label: "Live Bookings" },
    { id: "inventory", path: "/admin/ops/inventory", icon: Hotel, label: "Inventory" },
    { id: "travelers", path: "/admin/ops/travelers", icon: Users, label: "Travelers" },
-   { id: "resolutions", path: "/admin/ops/resolutions", icon: AlertCircle, label: "Resolutions", alertCount: 2 },
- ];
+  { id: "resolutions", path: "/admin/ops/resolutions", icon: AlertCircle, label: "Resolutions", alertCount: 2 },
+  { id: "system-health", path: "/admin/system-health", icon: HeartPulse, label: "System Health" },
+];
  
  const MissionControlSidebar = () => {
    const navigate = useNavigate();
