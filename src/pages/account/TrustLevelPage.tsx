@@ -9,9 +9,10 @@ import { TRUST_TIERS } from "@/config/trustLevel";
 import { cn } from "@/lib/utils";
 
 const colorMap: Record<string, { bg: string; text: string; progress: string; ring: string }> = {
+  violet: { bg: "bg-violet-500/10", text: "text-violet-600", progress: "[&>div]:bg-violet-500", ring: "border-violet-500" },
   emerald: { bg: "bg-emerald-500/10", text: "text-emerald-600", progress: "[&>div]:bg-emerald-500", ring: "border-emerald-500" },
   amber: { bg: "bg-amber-500/10", text: "text-amber-600", progress: "[&>div]:bg-amber-500", ring: "border-amber-500" },
-  red: { bg: "bg-red-500/10", text: "text-red-600", progress: "[&>div]:bg-red-500", ring: "border-red-500" },
+  slate: { bg: "bg-slate-500/10", text: "text-slate-600", progress: "[&>div]:bg-slate-500", ring: "border-slate-500" },
 };
 
 export default function TrustLevelPage() {
@@ -29,7 +30,7 @@ export default function TrustLevelPage() {
   }
 
   const tier = TRUST_TIERS[level];
-  const colors = colorMap[tier.color];
+  const colors = colorMap[tier.color] || colorMap.slate;
   const Icon = tier.icon;
 
   return (

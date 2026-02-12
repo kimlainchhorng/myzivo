@@ -15,6 +15,7 @@ import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import { useLiveDriverTracking } from "@/hooks/useLiveDriverTracking";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
+import PassengerTrustBadge from "@/components/driver/PassengerTrustBadge";
 import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 
 // Default coordinates for Baton Rouge
@@ -259,6 +260,9 @@ const RideDriverPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Passenger Trust Badge */}
+            <PassengerTrustBadge tripId={state.tripId} />
 
             {/* Car Info */}
             <div className="flex items-center justify-between py-3 px-4 bg-white/5 rounded-xl">

@@ -63,12 +63,45 @@ export function useAccountTrustLevel(): TrustLevelResult {
     staleTime: 60_000,
   });
 
-  const isLoading = profileLoading || verificationLoading || ordersLoading;
+  // Fetch trip stats for cancellation rate and rider rating
+  const { data: tripStats, isLoading: tripStatsLoading } = useQuery({
+    queryKey: ["trust-trip-stats", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { totalTrips: 0, cancelledTrips: 0, avgRiderRating: 0, ratedTrips: 0 };
+      
+      const { data: trips, error } = await supabase
+        .from("trips")
+        .select("status, rider_rating")
+        .eq("rider_id", user.id);
+      
+      if (error) {
+        console.error("Error fetching trip stats for trust:", error);
+        return { totalTrips: 0, cancelledTrips: 0, avgRiderRating: 0, ratedTrips: 0 };
+      }
+
+      const totalTrips = trips?.length ?? 0;
+      const cancelledTrips = trips?.filter(t => t.status === "cancelled").length ?? 0;
+      const ratedTrips = trips?.filter(t => t.rider_rating != null) ?? [];
+      const avgRiderRating = ratedTrips.length >= 2
+        ? ratedTrips.reduce((sum, t) => sum + (t.rider_rating ?? 0), 0) / ratedTrips.length
+        : 0;
+
+      return { totalTrips, cancelledTrips, avgRiderRating, ratedTrips: ratedTrips.length };
+    },
+    enabled: !!user?.id,
+    staleTime: 60_000,
+  });
+
+  const isLoading = profileLoading || verificationLoading || ordersLoading || tripStatsLoading;
 
   return useMemo(() => {
     const now = new Date();
     const createdAt = profile?.created_at ? new Date(profile.created_at) : now;
     const accountAgeDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+
+    const cancellationRate = (tripStats?.totalTrips ?? 0) >= 3
+      ? (tripStats?.cancelledTrips ?? 0) / (tripStats?.totalTrips ?? 1)
+      : 0;
 
     const earnedMap: Record<string, boolean> = {
       email_verified: !!profile?.email_verified,
@@ -79,6 +112,8 @@ export function useAccountTrustLevel(): TrustLevelResult {
       has_orders: orderCount > 0,
       frequent_user: orderCount >= 5,
       profile_complete: !!(profile?.full_name && profile?.phone),
+      low_cancellation_rate: (tripStats?.totalTrips ?? 0) >= 3 && cancellationRate < 0.15,
+      good_rider_rating: (tripStats?.ratedTrips ?? 0) >= 2 && (tripStats?.avgRiderRating ?? 0) >= 4.0,
     };
 
     const signals: SignalResult[] = TRUST_SIGNALS.map((signal) => ({
@@ -102,5 +137,5 @@ export function useAccountTrustLevel(): TrustLevelResult {
       benefits: tier.benefits,
       isLoading,
     };
-  }, [profile, verification, orderCount, isLoading]);
+  }, [profile, verification, orderCount, tripStats, isLoading]);
 }

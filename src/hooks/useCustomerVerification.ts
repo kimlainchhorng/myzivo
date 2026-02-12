@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +46,44 @@ export function useCustomerVerification() {
   const status: VerificationStatus = !verification
     ? "not_started"
     : (verification.status as VerificationStatus);
+
+  // Realtime subscription for verification status changes
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`verification-status-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "customer_identity_verifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newStatus = (payload.new as any)?.status;
+          const rejectionReason = (payload.new as any)?.rejection_reason;
+
+          if (newStatus === "verified") {
+            toast.success("Your identity is now verified! Trust score updated.", {
+              duration: 5000,
+            });
+          } else if (newStatus === "rejected") {
+            toast.warning(`Verification rejected: ${rejectionReason || "Please try again."}`, {
+              duration: 8000,
+            });
+          }
+
+          queryClient.invalidateQueries({ queryKey });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient, queryKey]);
 
   const uploadMutation = useMutation({
     mutationFn: async ({ type, file }: { type: "id" | "selfie"; file: File }) => {
@@ -94,7 +133,7 @@ export function useCustomerVerification() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success("Verification submitted for review");
+      toast.success("Verification submitted — you'll be notified when reviewed");
     },
     onError: (err: Error) => {
       toast.error("Submission failed: " + err.message);

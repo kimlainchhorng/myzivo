@@ -1,4 +1,4 @@
-import { ShieldCheck, Shield, ShieldAlert, LucideIcon } from "lucide-react";
+import { ShieldCheck, Shield, ShieldAlert, Star, LucideIcon } from "lucide-react";
 
 export interface TrustSignal {
   id: string;
@@ -22,15 +22,30 @@ export const TRUST_SIGNALS: TrustSignal[] = [
   { id: "identity_verified", label: "Identity verified", weight: 20, improvement: "Complete identity verification", improvementPath: "/account/verification" },
   { id: "account_age_30", label: "Account older than 30 days", weight: 10 },
   { id: "account_age_90", label: "Account older than 90 days", weight: 10 },
-  { id: "has_orders", label: "Completed at least 1 order", weight: 10, improvement: "Complete your first booking" },
-  { id: "frequent_user", label: "Completed 5+ orders", weight: 10, improvement: "Keep booking to build trust" },
+  { id: "has_orders", label: "Completed at least 1 trip", weight: 5, improvement: "Complete your first trip" },
+  { id: "frequent_user", label: "Completed 5+ trips", weight: 5, improvement: "Keep riding to build trust" },
   { id: "profile_complete", label: "Profile complete", weight: 10, improvement: "Add your full name and phone number", improvementPath: "/profile" },
+  { id: "low_cancellation_rate", label: "Low cancellation rate", weight: 5, improvement: "Keep your cancellation rate below 15%" },
+  { id: "good_rider_rating", label: "Good passenger rating", weight: 5, improvement: "Maintain a 4.0+ rider rating" },
 ];
 
 export const TRUST_TIERS: Record<string, TrustTier> = {
-  excellent: {
-    min: 80,
-    label: "Excellent",
+  top_rider: {
+    min: 85,
+    label: "Top Rider",
+    color: "violet",
+    icon: Star,
+    benefits: [
+      "Priority matching with top-rated drivers",
+      "Fastest checkout experience",
+      "Exclusive promotional offers",
+      "Priority customer support",
+      "VIP recognition badge",
+    ],
+  },
+  trusted: {
+    min: 65,
+    label: "Trusted",
     color: "emerald",
     icon: ShieldCheck,
     benefits: [
@@ -40,9 +55,9 @@ export const TRUST_TIERS: Record<string, TrustTier> = {
       "Priority customer support",
     ],
   },
-  good: {
-    min: 50,
-    label: "Good",
+  verified: {
+    min: 30,
+    label: "Verified",
     color: "amber",
     icon: Shield,
     benefits: [
@@ -51,22 +66,23 @@ export const TRUST_TIERS: Record<string, TrustTier> = {
       "Regular promotional offers",
     ],
   },
-  needs_attention: {
+  new_rider: {
     min: 0,
-    label: "Needs Attention",
-    color: "red",
+    label: "New",
+    color: "slate",
     icon: ShieldAlert,
     benefits: [
-      "Additional verifications required",
-      "Limited promotional offers",
+      "Complete verifications to unlock benefits",
+      "Build trust by completing trips",
     ],
   },
 };
 
-export type TrustLevel = "excellent" | "good" | "needs_attention";
+export type TrustLevel = "top_rider" | "trusted" | "verified" | "new_rider";
 
 export function getTierForScore(score: number): TrustLevel {
-  if (score >= 80) return "excellent";
-  if (score >= 50) return "good";
-  return "needs_attention";
+  if (score >= 85) return "top_rider";
+  if (score >= 65) return "trusted";
+  if (score >= 30) return "verified";
+  return "new_rider";
 }
