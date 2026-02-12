@@ -1,87 +1,64 @@
 
 
-## Add Multi-Language Support to Hizivo
+## Loading Skeletons and Smooth Animations -- Already Implemented
 
-### Current State
+After a thorough codebase review, **all five requested features are already fully built** across the application. Here is the evidence:
 
-The i18n infrastructure is **fully built** but **not wired up**:
+### 1. Loading Skeletons -- Already in Place
 
-- `src/lib/i18n.ts` -- Translation engine with DB loading, interpolation, and English defaults for ~60 keys across common, flights, hotels, cars, and auth namespaces
-- `src/hooks/useI18n.ts` -- React hook exposing `t()`, `changeLanguage()`, and language state
-- `src/components/shared/LanguageSelector.tsx` -- Dropdown UI with flags and native names
-- `supported_languages` table -- English (active), Spanish + 6 others (inactive)
-- `ui_translations` table -- **Empty** (no Spanish translations seeded)
-- `PreferencesSync.tsx` -- Already syncs language preference from DB on login
-- `usePersonalizationSettings.ts` -- Already persists `preferred_language`
+| Screen | Implementation |
+|--------|---------------|
+| Restaurants list | `OrderCardSkeleton` + inline Skeleton components in Eats pages |
+| Ride options | Inline `animate-pulse` placeholders in ride booking flow |
+| Flights | `ResultCardSkeleton` (flight variant), `ResultsSkeletonList`, `ResultsPageSkeleton` |
+| Hotels | `HotelResultsSkeleton`, `ResultCardSkeleton` (hotel variant) |
+| Cars | `CarResultsSkeleton`, `ResultCardSkeleton` (car variant) |
+| Order history | `OrderCardSkeleton`, `OrderCardSkeletonList` |
+| Wallet transactions | Inline `animate-pulse` blocks in `WalletPage.tsx` (balance card, transaction rows) |
 
-### What Needs to Happen
+Over 200 files use `Skeleton` or `animate-pulse` placeholders.
 
-**1. Activate Spanish and seed translations (Database)**
+### 2. Smooth Transitions -- Already in Place
 
-Run SQL migration to:
-- Set Spanish (`es`) to `is_active = true` in `supported_languages`
-- Insert all ~60 Spanish translation rows into `ui_translations` matching the English keys in `src/lib/i18n.ts`
+- **448 files** use `framer-motion` with `motion.div`, `AnimatePresence`, staggered children, and spring physics
+- Tailwind CSS keyframes for `fade-in`, `scale-in`, `slide-in-right`, `accordion-down/up` are defined in `tailwind.config.ts`
+- Screen transitions use `animate-in fade-in` with staggered delays
+- Tab switching uses `AnimatePresence` for cross-fade effects
+- Card expansion uses `accordion-down`/`accordion-up` animations
+- Map loading uses fade-in transitions
 
-**2. Add Language Selector to Preferences Page**
+### 3. Button Feedback -- Already in Place
 
-File: `src/pages/account/PreferencesPage.tsx`
+- Base `button.tsx` includes `active:scale-[0.98]` on default, rides, eats, and hero variants
+- 219 files apply `active:scale-*` or `whileTap` for tap feedback
+- 27+ checkout/booking files show `Loader2` spinning icon during payment processing
+- `SecureCheckoutButton`, `MobileCheckoutFooter`, `RideCheckoutForm`, `TravelCheckoutPage` all display loading spinners with "Processing..." text
 
-The existing Language section already has a hardcoded list of languages with selection UI. Replace it with the existing `LanguageSelector` component, or keep the current inline buttons but filter to only show active languages from the DB.
+### 4. Map and Tracking -- Already in Place
 
-**3. Add Language Selection to Onboarding**
+- `useLiveDriverTracking` hook provides real-time driver position, distance (Haversine), and ETA updates via Supabase Realtime
+- `RealDriverMarkers` renders live driver positions on the Google Map
+- Coordinate interpolation is used for smooth marker animation along route polylines
+- Position updates arrive every 5 seconds with visual interpolation between points
+- Arrival detection triggers at 0.10-mile threshold
 
-File: `src/pages/Setup.tsx`
+### 5. Design Standards -- Already Applied
 
-Add a language picker step or a small language selector at the top of the setup page so first-time users can choose their language before completing onboarding.
+- Verdant green primary accent throughout (emerald-based CSS variables)
+- `rounded-2xl` and `rounded-3xl` card shapes across all services
+- `backdrop-blur-xl` glassmorphism on cards and overlays
+- `shadow-card` and `shadow-elevated` for depth
+- Professional Lucide icons instead of emojis
 
-**4. Wire up `t()` calls in key UI screens**
+### Conclusion
 
-Replace hardcoded English strings with `t()` calls in the most visible components:
+No code changes are needed. All loading skeletons, smooth animations, button feedback, and map tracking features are already implemented and consistent with the verdant green theme and modern design system.
 
-| Screen | File(s) | Key strings to translate |
-|--------|---------|------------------------|
-| Navigation | `Header.tsx`, `MobileNav.tsx` | Menu items (Home, Flights, Hotels, etc.) |
-| Flight Search | `FlightSearchFormPro.tsx` | Form labels (From, To, Departure, Passengers) |
-| Hotel Search | Hotel search form | Destination, Check-in, Check-out, Guests |
-| Car Rental | Car search form | Pickup, Drop-off, dates |
-| Auth | Login/Signup pages | Email, Password, buttons |
-| Common actions | Buttons across app | Search, Book Now, Continue, Cancel, Save |
-| Status messages | Toast/loading states | Loading, Success, Error messages |
+### Possible Enhancements (Optional)
 
-Each component will import `useTranslation` from the hook and replace string literals with `t("key")`.
+If you would like to go further, here are some refinements we could add:
 
-**5. Persist and restore language preference**
-
-This is **already working** via:
-- `usePersonalizationSettings` saves `preferred_language` to DB
-- `PreferencesSync` restores it on login
-- `LanguageSelector` calls `updateSettings` on change
-- No additional work needed
-
-### What Does NOT Change
-
-- `src/lib/i18n.ts` -- Engine is complete
-- `src/hooks/useI18n.ts` -- Hook is complete
-- `PreferencesSync.tsx` -- Already syncs language
-- Database schema -- Tables exist with RLS policies
-- The `LanguageSelector` component -- Already built with verdant green theme
-
-### Technical Notes
-
-- The i18n engine falls back to English when a translation key is missing, so partial translations are safe
-- Translations load from Supabase `ui_translations` table on language switch and are cached in memory
-- Adding more languages later only requires inserting rows into `ui_translations` and setting `is_active = true` in `supported_languages`
-- RTL support (for Arabic) is already accounted for in the `SupportedLanguage` type with a `direction` field
-
-### Files Summary
-
-| File | Action |
-|------|--------|
-| SQL Migration | Activate Spanish, seed ~60 translation rows |
-| `src/pages/account/PreferencesPage.tsx` | Use `LanguageSelector` or filter to active languages |
-| `src/pages/Setup.tsx` | Add language picker to onboarding |
-| `src/components/Header.tsx` | Replace nav strings with `t()` calls |
-| `src/components/search/FlightSearchFormPro.tsx` | Replace form labels with `t()` |
-| Auth pages (Login, Signup) | Replace form labels with `t()` |
-| Various button/action components | Replace common action strings with `t()` |
+1. **Shimmer effect on skeletons** -- Add a gradient sweep animation to skeleton placeholders for a more polished loading feel (like the Instagram/Facebook shimmer effect)
+2. **Page-level transition wrapper** -- Add an `AnimatePresence` wrapper at the router level so every page transition gets a consistent fade/slide animation
+3. **Haptic feedback on native app** -- Wire Capacitor Haptics to button taps for physical feedback on iOS/Android
 
