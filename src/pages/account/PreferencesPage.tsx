@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, DollarSign, Check } from "lucide-react";
+import { ArrowLeft, Globe, DollarSign, Check, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useI18n } from "@/hooks/useI18n";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizationSettings } from "@/hooks/usePersonalizationSettings";
 import { SUPPORTED_CURRENCIES } from "@/config/currencies";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 const languages = [
   { code: "en", name: "English", native: "English", flag: "🇺🇸" },
@@ -60,11 +61,31 @@ const PreferencesPage = () => {
           </Button>
           <div>
             <h1 className="font-display text-xl sm:text-2xl font-bold">Preferences</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm">Language & currency settings</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">Appearance, language & currency</p>
           </div>
         </div>
 
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Appearance Section */}
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Palette className="h-5 w-5 text-primary" />
+                Appearance
+              </CardTitle>
+              <CardDescription>Choose your preferred theme</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <ThemeToggle
+                onChange={(theme) => {
+                  if (user) {
+                    updateSettings({ preferred_theme: theme } as any);
+                  }
+                }}
+              />
+            </CardContent>
+          </Card>
+
           {/* Language Section */}
           <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
             <CardHeader className="pb-3">

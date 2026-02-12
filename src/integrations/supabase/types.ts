@@ -32794,6 +32794,105 @@ export type Database = {
           },
         ]
       }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          last_payload_bytes: number | null
+          last_received_at: string | null
+          last_response_ms: number | null
+          name: string
+          retry_count: number
+          source: string
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_payload_bytes?: number | null
+          last_received_at?: string | null
+          last_response_ms?: number | null
+          name: string
+          retry_count?: number
+          source: string
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_payload_bytes?: number | null
+          last_received_at?: string | null
+          last_response_ms?: number | null
+          name?: string
+          retry_count?: number
+          source?: string
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      webhook_event_logs: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          error_details: string | null
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          retry_count: number
+          service: string
+          source: string | null
+          status: string
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          error_details?: string | null
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retry_count?: number
+          service: string
+          source?: string | null
+          status?: string
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          error_details?: string | null
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retry_count?: number
+          service?: string
+          source?: string | null
+          status?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       withdrawal_rate_limits: {
         Row: {
           created_at: string
