@@ -40,6 +40,7 @@ import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplet
 import { useAirportSearch } from "./hooks/useLocationSearch";
 import { MobileDatePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
 import { useFlightFunnel } from "@/hooks/useFlightFunnel";
+import { useTranslation } from "@/hooks/useI18n";
 
 type TripType = "roundtrip" | "oneway";
 type CabinClass = "economy" | "premium" | "business" | "first";
@@ -75,6 +76,7 @@ export default function FlightSearchFormPro({
   const isMobile = useIsMobile();
   const { search: searchAirports, getPopular, getByCode, allOptions } = useAirportSearch();
   const { trackSearchStarted } = useFlightFunnel();
+  const { t } = useTranslation("flights");
 
   // Trip type
   const [tripType, setTripType] = useState<TripType>(initialTripType);
@@ -241,8 +243,8 @@ export default function FlightSearchFormPro({
       {/* Trip Type Toggle */}
       <div className="flex gap-2 mb-4">
         {[
-          { id: "roundtrip" as TripType, label: "Round Trip", icon: RefreshCw },
-          { id: "oneway" as TripType, label: "One Way", icon: Plane },
+          { id: "roundtrip" as TripType, label: t("flights.roundtrip"), icon: RefreshCw },
+          { id: "oneway" as TripType, label: t("flights.oneway"), icon: Plane },
         ].map((type) => (
           <button
             key={type.id}
@@ -273,7 +275,7 @@ export default function FlightSearchFormPro({
             searchFn={searchAirports}
             popularFn={getPopular}
             placeholder="From where?"
-            label="From"
+            label={t("flights.from")}
             icon="plane"
             accentColor="sky"
             error={errors.from}
@@ -299,7 +301,7 @@ export default function FlightSearchFormPro({
             searchFn={(q, l) => searchAirports(q, l).filter(o => o.value !== fromOption?.value)}
             popularFn={(l) => getPopular(l).filter(o => o.value !== fromOption?.value)}
             placeholder="To where?"
-            label="To"
+            label={t("flights.to")}
             icon="plane"
             accentColor="sky"
             error={errors.to}
@@ -323,7 +325,7 @@ export default function FlightSearchFormPro({
           {/* Departure Date */}
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
-              Departure <span className="text-destructive">*</span>
+              {t("flights.departure")} <span className="text-destructive">*</span>
             </Label>
             
             {/* Mobile: Full-screen sheet */}
@@ -401,7 +403,7 @@ export default function FlightSearchFormPro({
           {tripType === "roundtrip" && (
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">
-                Return <span className="text-destructive">*</span>
+                {t("flights.return")} <span className="text-destructive">*</span>
               </Label>
               
               {/* Mobile: Full-screen sheet */}
@@ -498,7 +500,7 @@ export default function FlightSearchFormPro({
             <>
               {/* Desktop: Separate popovers */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">Passengers</Label>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">{t("flights.passengers")}</Label>
                 <Popover open={isPassengerOpen} onOpenChange={setIsPassengerOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -547,7 +549,7 @@ export default function FlightSearchFormPro({
 
               {/* Cabin Class - Desktop */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">Cabin</Label>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">{t("flights.class")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -601,7 +603,7 @@ export default function FlightSearchFormPro({
         )}
       >
         <Search className="w-5 h-5 mr-2" />
-        Search Flights
+        {t("flights.search_title")}
       </Button>
       
       {/* Helper text below button */}
