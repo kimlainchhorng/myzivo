@@ -115,9 +115,9 @@ export const brandColors = {
 
 export const typography = {
   fonts: {
-    display: "'Outfit', system-ui, sans-serif",
+    display: "'Inter', system-ui, sans-serif",
     sans: "'Inter', system-ui, sans-serif",
-    mono: "'Space Mono', monospace",
+    mono: "'Inconsolata', monospace",
   },
   
   sizes: {
