@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useI18n } from "@/hooks/useI18n";
@@ -13,6 +14,7 @@ export function PreferencesSync() {
   const { user } = useAuth();
   const { currency, setCurrency } = useCurrency();
   const { currentLanguage, changeLanguage } = useI18n();
+  const { theme, setTheme } = useTheme();
   const { settings, isLoading } = usePersonalizationSettings();
   const hasSynced = useRef(false);
 
@@ -35,8 +37,13 @@ export function PreferencesSync() {
       changeLanguage(prefLanguage);
     }
 
+    const prefTheme = (settings as any).preferred_theme;
+    if (prefTheme && prefTheme !== theme) {
+      setTheme(prefTheme);
+    }
+
     hasSynced.current = true;
-  }, [user, isLoading, settings, currency, setCurrency, currentLanguage, changeLanguage]);
+  }, [user, isLoading, settings, currency, setCurrency, currentLanguage, changeLanguage, theme, setTheme]);
 
   return null;
 }
