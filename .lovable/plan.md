@@ -1,81 +1,83 @@
 
 
-## Add "My Reviews" History Page
+## Expand Help Center to Cover All ZIVO Services
 
-Everything in the Ratings and Reviews system already exists except one piece: a dedicated page where users can browse their own past reviews across all service types.
+The core Help Center infrastructure already exists. The gap is that the in-app Help Center (`RiderHelpPage.tsx` at `/help`) only covers ride-related FAQs. This plan expands it into a full-service Help Center with the requested topic sections and a direct link to support chat.
 
 ---
 
 ### What Already Exists (no changes needed)
 
-- Rating modals for rides, food, delivery, hotels, flights, cars
-- Star rating component, review display component
-- Eats reviews hook with `useMyOrderReviews()`
-- Order rating hook with submission logic
-- P2P review forms for vehicles and owners
-- Trip rating widget for flights/hotels
+| Feature | File |
+|---------|------|
+| Live Support Chat with image upload | `LiveSupportChatPage.tsx` at `/support/chat` |
+| AI Chat Widget (floating) | `LiveChatWidget.tsx` |
+| Ticket creation form | `NewTicketPage.tsx` at `/help/new` |
+| Ticket history list | `MyTicketsPage.tsx` at `/help/tickets` |
+| "Get Help" on order detail | `EatsOrderDetail.tsx` |
+| Support Center (unified tickets) | `SupportCenterPage.tsx` |
+| FAQ search component | `FAQSection.tsx` (shared) |
 
 ---
 
-### What Will Be Added
+### What Will Be Changed
 
-**1. New Page: `src/pages/account/MyReviewsPage.tsx`**
+**1. Expanded Help Center: `src/pages/help/RiderHelpPage.tsx`**
 
-A full-screen review history page showing all past reviews the user has submitted. Accessible from Account settings.
+Replace the ride-only FAQ list with a section-based Help Center covering all services:
 
-Content:
-- Header with back button and "My Reviews" title
-- Summary card: total reviews count, average rating given, breakdown by service type
-- Filter tabs: All / Rides / Food / Delivery / Hotels / Flights
-- List of review cards, each showing:
-  - Service type icon and name
-  - Star rating given
-  - Date submitted
-  - Comment text (if any)
-  - Tags selected (if any)
-- Empty state with star icon and "No reviews yet" message
-- Verdant green theme with rounded-2xl cards
+**Topic sections** (displayed as icon cards at the top):
+- Trips and Orders (car icon) -- ride issues, food orders, delivery tracking
+- Payments and Wallet (wallet icon) -- charges, refunds, wallet balance, payment methods
+- Account and Login (user icon) -- password reset, phone update, profile settings
+- Promotions and Rewards (gift icon) -- promo codes, referrals, loyalty points
 
-Data source: Pulls from `useMyOrderReviews()` for eats reviews. For other service types (rides, hotels, flights), since those reviews are stored only via the generic RatingModal callbacks (no persistent storage hook exists for non-eats reviews), the page will show eats reviews from Supabase and use localStorage for any other service reviews submitted through the RatingModal.
+Tapping a section filters the FAQ list to that topic. Each section gets 3-4 FAQs covering the relevant service areas.
 
-**2. New Route**
+**New "Chat with Support" button** added prominently above the existing "Report an Issue" card. Links to `/support/chat` for live agent chat.
 
-Add `/account/reviews` route in `App.tsx`.
+**Updated FAQ data**: Expand from 11 ride-only FAQs to ~20 FAQs across all four sections, each tagged with a section category.
 
-**3. Account Page Link**
+**2. "Get Help" on Ride History** (if not already present)
 
-Add a "My Reviews" menu item in the account/settings page that links to `/account/reviews`.
+Add a "Get Help" button to ride trip detail/history that navigates to `/support/chat?context=ride&rideId=XXX`, matching the existing pattern in `EatsOrderDetail.tsx`.
 
 ---
 
 ### Technical Details
 
-**New files (1):**
-
-| File | Purpose |
-|------|---------|
-| `src/pages/account/MyReviewsPage.tsx` | Review history page |
-
-**Modified files (2):**
+**Modified files (1):**
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add `/account/reviews` route |
-| `src/pages/Account.tsx` | Add "My Reviews" menu item with Star icon |
+| `src/pages/help/RiderHelpPage.tsx` | Expand to full-service Help Center with 4 topic sections, broader FAQs, and chat support link |
 
-**Hook usage:**
-- `useMyOrderReviews()` from `useEatsReviews.ts` for food order reviews
-- `useAuth()` for gating
-
-**Card design:**
+**Section cards design:**
 ```text
-+-------------------------------------------+
-| [Utensils] Burger Palace          4.0 ★★★★|
-| Feb 10, 2026                              |
-| "Great food, fast delivery!"              |
-| [Fresh food] [Good portions]              |
-+-------------------------------------------+
++-------------------+  +-------------------+
+| [Car]             |  | [Wallet]          |
+| Trips & Orders    |  | Payments & Wallet |
++-------------------+  +-------------------+
++-------------------+  +-------------------+
+| [User]            |  | [Gift]            |
+| Account & Login   |  | Promos & Rewards  |
++-------------------+  +-------------------+
 ```
 
-Styled with `rounded-2xl` cards, verdant green accents, large star icons matching the existing RatingModal aesthetic.
+Styled as a 2x2 grid of tappable cards with verdant green icon backgrounds (`bg-emerald-500/10`), `rounded-2xl`, and large readable labels.
+
+**New FAQ categories added:**
+- "Payments" -- wallet balance, refund timing, adding payment methods, subscription charges
+- "Account" -- password reset, email change, phone verification, account deletion
+- "Promotions" -- applying promo codes, referral rewards, loyalty points, expiration
+- Existing ride/driver/safety/lost item categories remain
+
+**Chat support button placement:**
+Between the search bar and category filters, a prominent card with:
+- MessageCircle icon + "Chat with Support"
+- Subtitle: "Get instant help from our team"
+- Links to `/support/chat`
+- Verdant green gradient background
+
+**No new files or routes needed** -- all infrastructure already exists.
 
