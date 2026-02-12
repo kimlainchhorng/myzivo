@@ -1,83 +1,87 @@
 
 
-## Expand Help Center to Cover All ZIVO Services
+## Add Promo Codes to Travel Checkouts
 
-The core Help Center infrastructure already exists. The gap is that the in-app Help Center (`RiderHelpPage.tsx` at `/help`) only covers ride-related FAQs. This plan expands it into a full-service Help Center with the requested topic sections and a direct link to support chat.
+The Promo Codes and Discounts system is already 95% built across ZIVO. Here is what exists and what needs to be added.
+
+### Already Exists (no changes needed)
+
+| Feature | Location |
+|---------|----------|
+| Promotions page (coupons, offers, referrals, loyalty) | `src/pages/Promotions.tsx` |
+| Promo code input for Rides | `src/components/ride/PromoCodeInput.tsx` |
+| Promo code input for Eats (with inline variant) | `src/components/eats/PromoCodeInput.tsx` + `EatsCheckout.tsx` |
+| Unified promo validation hook (RPC-based) | `src/hooks/usePromotionValidation.ts` |
+| Ride-specific promo validation | `src/hooks/useRidePromoValidation.ts` |
+| Eats promo hook | `src/hooks/useEatsPromo.ts` |
+| General promo code hook | `src/hooks/usePromoCode.ts` |
+| Promo code service (validate, calculate discount) | `src/lib/promoCodeService.ts` |
+| Admin promotions CRUD | `src/components/admin/AdminPromotions.tsx` |
+| Dispatch promotions management | `src/pages/dispatch/DispatchPromotions.tsx` |
+| Promo banner for homepage | `src/components/shared/PromoCodeBanner.tsx` |
+| Marketing promo banner | `src/components/marketing/PromoBanner.tsx` |
+| Automatic promotions on restaurants | Already shown via restaurant cards with promo badges |
+| Discount types (percentage, fixed, free delivery) | Supported in `promotions` table and validation RPC |
+
+### What Will Be Added
+
+Promo code input sections on the three travel checkout pages that currently lack them: **Flights**, **Hotels/Travel**, and **Cars**.
 
 ---
 
-### What Already Exists (no changes needed)
+**1. Flight Checkout (`src/pages/FlightCheckout.tsx`)**
 
-| Feature | File |
-|---------|------|
-| Live Support Chat with image upload | `LiveSupportChatPage.tsx` at `/support/chat` |
-| AI Chat Widget (floating) | `LiveChatWidget.tsx` |
-| Ticket creation form | `NewTicketPage.tsx` at `/help/new` |
-| Ticket history list | `MyTicketsPage.tsx` at `/help/tickets` |
-| "Get Help" on order detail | `EatsOrderDetail.tsx` |
-| Support Center (unified tickets) | `SupportCenterPage.tsx` |
-| FAQ search component | `FAQSection.tsx` (shared) |
+- Import `usePromotionValidation` hook with `serviceType: 'flights'`
+- Add a promo code input section in the price breakdown area (before the total)
+- When a valid promo is applied, show the discount as a line item and adjust the total
+- Pass the promo code to the checkout function for server-side re-validation
 
----
+**2. Travel Checkout (`src/pages/TravelCheckoutPage.tsx`)**
 
-### What Will Be Changed
+- Import `usePromotionValidation` hook with `serviceType: 'hotels'`
+- Add a promo code input section in the order summary before the total line
+- Adjust the `total` calculation to subtract the discount amount
+- Show applied promo badge with remove button
 
-**1. Expanded Help Center: `src/pages/help/RiderHelpPage.tsx`**
+**3. Car Checkout (`src/pages/CarCheckoutPage.tsx`)**
 
-Replace the ride-only FAQ list with a section-based Help Center covering all services:
-
-**Topic sections** (displayed as icon cards at the top):
-- Trips and Orders (car icon) -- ride issues, food orders, delivery tracking
-- Payments and Wallet (wallet icon) -- charges, refunds, wallet balance, payment methods
-- Account and Login (user icon) -- password reset, phone update, profile settings
-- Promotions and Rewards (gift icon) -- promo codes, referrals, loyalty points
-
-Tapping a section filters the FAQ list to that topic. Each section gets 3-4 FAQs covering the relevant service areas.
-
-**New "Chat with Support" button** added prominently above the existing "Report an Issue" card. Links to `/support/chat` for live agent chat.
-
-**Updated FAQ data**: Expand from 11 ride-only FAQs to ~20 FAQs across all four sections, each tagged with a section category.
-
-**2. "Get Help" on Ride History** (if not already present)
-
-Add a "Get Help" button to ride trip detail/history that navigates to `/support/chat?context=ride&rideId=XXX`, matching the existing pattern in `EatsOrderDetail.tsx`.
+- Import `usePromotionValidation` hook with `serviceType: 'cars'`
+- Add a promo code input section before the "Proceed to Partner" button
+- Display discount amount in the summary
+- Note: since car checkout redirects to a partner, the discount is informational (the promo would need partner integration to actually apply)
 
 ---
 
 ### Technical Details
 
-**Modified files (1):**
+**Files modified (3):**
 
 | File | Change |
 |------|--------|
-| `src/pages/help/RiderHelpPage.tsx` | Expand to full-service Help Center with 4 topic sections, broader FAQs, and chat support link |
+| `src/pages/FlightCheckout.tsx` | Add promo input, discount line item, adjusted total |
+| `src/pages/TravelCheckoutPage.tsx` | Add promo input, discount line item, adjusted total |
+| `src/pages/CarCheckoutPage.tsx` | Add promo input, discount display |
 
-**Section cards design:**
+**Shared hook used:** `usePromotionValidation` from `src/hooks/usePromotionValidation.ts` -- the same RPC-based validation already used in Eats checkout. Each page passes its own `serviceType` ('flights', 'hotels', 'cars') so the backend can enforce service-specific promo restrictions.
+
+**Promo input UI pattern** (consistent across all three pages):
+
 ```text
-+-------------------+  +-------------------+
-| [Car]             |  | [Wallet]          |
-| Trips & Orders    |  | Payments & Wallet |
-+-------------------+  +-------------------+
-+-------------------+  +-------------------+
-| [User]            |  | [Gift]            |
-| Account & Login   |  | Promos & Rewards  |
-+-------------------+  +-------------------+
++------------------------------------------+
+| [Tag icon] Promo code     [  Apply  ]    |
++------------------------------------------+
 ```
 
-Styled as a 2x2 grid of tappable cards with verdant green icon backgrounds (`bg-emerald-500/10`), `rounded-2xl`, and large readable labels.
+When applied:
 
-**New FAQ categories added:**
-- "Payments" -- wallet balance, refund timing, adding payment methods, subscription charges
-- "Account" -- password reset, email change, phone verification, account deletion
-- "Promotions" -- applying promo codes, referral rewards, loyalty points, expiration
-- Existing ride/driver/safety/lost item categories remain
+```text
++------------------------------------------+
+| [Check] SUMMER20  -$15.00        [X]     |
+| "20% off summer travel"                  |
++------------------------------------------+
+```
 
-**Chat support button placement:**
-Between the search bar and category filters, a prominent card with:
-- MessageCircle icon + "Chat with Support"
-- Subtitle: "Get instant help from our team"
-- Links to `/support/chat`
-- Verdant green gradient background
+Styled with emerald green success state (`bg-emerald-500/10 border-emerald-500/20`), matching the existing Eats checkout promo pattern.
 
-**No new files or routes needed** -- all infrastructure already exists.
+**No new files, hooks, or database changes needed.** All validation, discount types, and admin management already exist.
 
