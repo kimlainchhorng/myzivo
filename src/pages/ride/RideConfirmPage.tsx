@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp, Tag, X, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp, Tag, X, Loader2, Heart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
@@ -57,6 +60,9 @@ const RideConfirmPage = () => {
   const defaultCard = getDefault();
   const { refetch: checkAvailableDrivers } = useAvailableDriversCount();
   const [promoInput, setPromoInput] = useState("");
+  const [tipAmount, setTipAmount] = useState<number>(0);
+  const [showCustomTipModal, setShowCustomTipModal] = useState(false);
+  const [customTipInput, setCustomTipInput] = useState("");
 
   // Restore pending ride confirmation after login
   useEffect(() => {
@@ -648,6 +654,88 @@ const RideConfirmPage = () => {
             <p className="text-xs text-destructive mt-2">{promoError}</p>
           )}
         </motion.div>
+
+        {/* Pre-Ride Tip Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Heart className="w-4 h-4 text-emerald-500" />
+            <h3 className="text-sm font-semibold">Add a tip for your driver</h3>
+          </div>
+          
+          <div className="flex gap-2">
+            {[1, 3, 5].map((amount) => (
+              <button
+                key={amount}
+                onClick={() => setTipAmount(tipAmount === amount ? 0 : amount)}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                  tipAmount === amount
+                    ? "bg-emerald-500 text-white border-emerald-500"
+                    : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                )}
+              >
+                ${amount}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                setCustomTipInput(tipAmount > 0 && ![1, 3, 5].includes(tipAmount) ? tipAmount.toString() : "");
+                setShowCustomTipModal(true);
+              }}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                tipAmount > 0 && ![1, 3, 5].includes(tipAmount)
+                  ? "bg-emerald-500 text-white border-emerald-500"
+                  : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+              )}
+            >
+              {tipAmount > 0 && ![1, 3, 5].includes(tipAmount) ? `$${tipAmount}` : "Custom"}
+            </button>
+          </div>
+          
+          <p className="text-xs text-white/30 mt-2 text-center">100% of tip goes to your driver</p>
+        </motion.div>
+
+        {/* Custom Tip Modal */}
+        <Dialog open={showCustomTipModal} onOpenChange={setShowCustomTipModal}>
+          <DialogContent className="bg-zinc-900 border-white/10 max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Custom Tip</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">$</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={customTipInput}
+                  onChange={(e) => setCustomTipInput(e.target.value)}
+                  className="pl-7 bg-zinc-800 border-white/10 text-lg h-12"
+                  autoFocus
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  const val = parseFloat(customTipInput);
+                  if (!isNaN(val) && val > 0) {
+                    setTipAmount(Math.round(val * 100) / 100);
+                    setShowCustomTipModal(false);
+                  }
+                }}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-11"
+              >
+                Add Tip
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* No Drivers Available Message */}
         <AnimatePresence>

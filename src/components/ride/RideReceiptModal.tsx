@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, CheckCircle2, Loader2 } from "lucide-react";
+import { Star, CheckCircle2, Loader2, Heart } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { saveRideRating } from "@/lib/supabaseRide";
+import { saveRideRating, saveRideTip } from "@/lib/supabaseRide";
 import { PLATFORM_COMMISSION_RATE, DRIVER_SHARE_RATE } from "@/config/adminConfig";
+import { toast } from "sonner";
 
 interface RideReceiptModalProps {
   isOpen: boolean;
@@ -41,6 +43,10 @@ const RideReceiptModal = ({
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [ratingError, setRatingError] = useState<string | null>(null);
+  const [tipSaved, setTipSaved] = useState(false);
+  const [isSavingTip, setIsSavingTip] = useState(false);
+  const [showCustomTip, setShowCustomTip] = useState(false);
+  const [customTipValue, setCustomTipValue] = useState("");
 
   // Format elapsed time for display
   const formatTime = (seconds: number) => {
@@ -88,7 +94,23 @@ const RideReceiptModal = ({
     setHasRated(true);
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
+    // Save tip if selected and not yet saved
+    if (selectedTip && selectedTip > 0 && !tipSaved && tripId) {
+      setIsSavingTip(true);
+      const result = await saveRideTip(tripId, selectedTip);
+      setIsSavingTip(false);
+      if (result.success) {
+        setTipSaved(true);
+        toast.success("Tip added! 100% goes to your driver.");
+        // Brief delay to show confirmation
+        await new Promise(r => setTimeout(r, 1200));
+      } else {
+        toast.error("Failed to save tip. Please try again.");
+        return;
+      }
+    }
+
     onDone();
     // Reset state for next use
     setRating(0);
@@ -96,6 +118,9 @@ const RideReceiptModal = ({
     setSelectedTip(null);
     setFeedback("");
     setRatingError(null);
+    setTipSaved(false);
+    setShowCustomTip(false);
+    setCustomTipValue("");
   };
 
   return (
@@ -274,35 +299,108 @@ const RideReceiptModal = ({
           transition={{ delay: 0.35 }}
           className="py-4 border-t border-white/10"
         >
-          <p className="text-center text-white/60 mb-3">Add a tip</p>
-          <div className="flex justify-center gap-2">
-            {[1, 3, 5].map((amount) => (
-              <motion.button
-                key={amount}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedTip(selectedTip === amount ? null : amount)}
-                className={cn(
-                  "px-5 py-2 rounded-full text-sm font-semibold transition-all border",
-                  selectedTip === amount
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
-                )}
-              >
-                ${amount}
-              </motion.button>
-            ))}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Heart className="w-4 h-4 text-emerald-500" />
+            <p className="text-white/60">Add a tip</p>
           </div>
-          {selectedTip && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={() => setSelectedTip(null)}
-              className="block mx-auto mt-2 text-xs text-white/40 hover:text-white/60"
+
+          {tipSaved ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
             >
-              No tip
-            </motion.button>
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              <span className="text-sm text-emerald-400 font-medium">
+                ${selectedTip?.toFixed(2)} tip added — 100% goes to your driver
+              </span>
+            </motion.div>
+          ) : (
+            <>
+              <div className="flex justify-center gap-2">
+                {[1, 3, 5].map((amount) => (
+                  <motion.button
+                    key={amount}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isSavingTip}
+                    onClick={() => setSelectedTip(selectedTip === amount ? null : amount)}
+                    className={cn(
+                      "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                      selectedTip === amount
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                    )}
+                  >
+                    ${amount}
+                  </motion.button>
+                ))}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  disabled={isSavingTip}
+                  onClick={() => {
+                    setCustomTipValue(selectedTip && ![1, 3, 5].includes(selectedTip) ? selectedTip.toString() : "");
+                    setShowCustomTip(true);
+                  }}
+                  className={cn(
+                    "px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                    selectedTip && ![1, 3, 5].includes(selectedTip)
+                      ? "bg-emerald-500 text-white border-emerald-500"
+                      : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                  )}
+                >
+                  Custom
+                </motion.button>
+              </div>
+              {selectedTip && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={() => setSelectedTip(null)}
+                  className="block mx-auto mt-2 text-xs text-white/40 hover:text-white/60"
+                >
+                  No tip
+                </motion.button>
+              )}
+              <p className="text-xs text-white/30 mt-2 text-center">100% of tip goes to your driver</p>
+            </>
           )}
         </motion.div>
+
+        {/* Custom Tip Dialog */}
+        <Dialog open={showCustomTip} onOpenChange={setShowCustomTip}>
+          <DialogContent className="bg-zinc-900 border-white/10 max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Custom Tip</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">$</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={customTipValue}
+                  onChange={(e) => setCustomTipValue(e.target.value)}
+                  className="pl-7 bg-zinc-800 border-white/10 text-lg h-12"
+                  autoFocus
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  const val = parseFloat(customTipValue);
+                  if (!isNaN(val) && val > 0) {
+                    setSelectedTip(Math.round(val * 100) / 100);
+                    setShowCustomTip(false);
+                  }
+                }}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-11"
+              >
+                Add Tip
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Done Button */}
         <motion.div
@@ -312,9 +410,17 @@ const RideReceiptModal = ({
         >
           <Button
             onClick={handleDone}
+            disabled={isSavingTip}
             className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90"
           >
-            DONE
+            {isSavingTip ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving tip...
+              </>
+            ) : (
+              "DONE"
+            )}
           </Button>
         </motion.div>
       </DialogContent>

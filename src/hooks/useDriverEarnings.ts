@@ -5,6 +5,7 @@ interface JobEarning {
   id: string;
   type: 'ride' | 'eats' | 'move';
   amount: number;
+  tipAmount: number;
   date: string;
   customerName?: string;
   pickupAddress: string;
@@ -16,6 +17,11 @@ interface DriverEarningsData {
   week: number;
   month: number;
   pending: number;
+  tips: {
+    today: number;
+    week: number;
+    month: number;
+  };
   tripsByType: {
     ride: number;
     eats: number;
@@ -34,6 +40,7 @@ export const useDriverEarnings = (driverId: string | undefined) => {
           week: 0,
           month: 0,
           pending: 0,
+          tips: { today: 0, week: 0, month: 0 },
           tripsByType: { ride: 0, eats: 0, move: 0 },
           completedJobs: [],
         };
@@ -72,19 +79,41 @@ export const useDriverEarnings = (driverId: string | undefined) => {
         .gte('delivered_at', monthStart.toISOString())
         .order('delivered_at', { ascending: false });
 
+      // Fetch tip amounts from driver_earnings
+      const { data: earningsTips } = await supabase
+        .from('driver_earnings')
+        .select('trip_id, tip_amount')
+        .eq('driver_id', driverId)
+        .gte('created_at', monthStart.toISOString());
+
+      // Build tip lookup by trip_id
+      const tipByTripId: Record<string, number> = {};
+      earningsTips?.forEach(e => {
+        if (e.trip_id && e.tip_amount) tipByTripId[e.trip_id] = e.tip_amount;
+      });
+
       // Calculate earnings
       let today = 0, week = 0, month = 0;
+      const tips = { today: 0, week: 0, month: 0 };
       const tripsByType = { ride: 0, eats: 0, move: 0 };
       const completedJobs: JobEarning[] = [];
 
       // Process trips
       trips?.forEach(trip => {
         const amount = trip.fare_amount || 0;
+        const tipAmt = tipByTripId[trip.id] || 0;
         const date = new Date(trip.completed_at!);
         
         month += amount;
         if (date >= weekStart) week += amount;
         if (date >= todayStart) today += amount;
+
+        // Tip totals
+        if (tipAmt > 0) {
+          tips.month += tipAmt;
+          if (date >= weekStart) tips.week += tipAmt;
+          if (date >= todayStart) tips.today += tipAmt;
+        }
         
         const type = (trip.service_type as 'ride' | 'eats' | 'move') || 'ride';
         tripsByType[type]++;
@@ -93,6 +122,7 @@ export const useDriverEarnings = (driverId: string | undefined) => {
           id: trip.id,
           type,
           amount,
+          tipAmount: tipAmt,
           date: trip.completed_at!,
           customerName: trip.customer_name || undefined,
           pickupAddress: trip.pickup_address,
@@ -103,11 +133,18 @@ export const useDriverEarnings = (driverId: string | undefined) => {
       // Process food orders
       foodOrders?.forEach(order => {
         const amount = order.delivery_fee || 0;
+        const tipAmt = (order as any).tip_amount || 0;
         const date = new Date(order.updated_at!);
         
         month += amount;
         if (date >= weekStart) week += amount;
         if (date >= todayStart) today += amount;
+
+        if (tipAmt > 0) {
+          tips.month += tipAmt;
+          if (date >= weekStart) tips.week += tipAmt;
+          if (date >= todayStart) tips.today += tipAmt;
+        }
         
         tripsByType.eats++;
 
@@ -115,6 +152,7 @@ export const useDriverEarnings = (driverId: string | undefined) => {
           id: order.id,
           type: 'eats',
           amount,
+          tipAmount: tipAmt,
           date: order.updated_at!,
           customerName: order.customer_name || undefined,
           pickupAddress: 'Restaurant',
@@ -137,6 +175,7 @@ export const useDriverEarnings = (driverId: string | undefined) => {
           id: pkg.id,
           type: 'move',
           amount,
+          tipAmount: 0,
           date: pkg.delivered_at!,
           customerName: pkg.customer_name || undefined,
           pickupAddress: pkg.pickup_address,
@@ -161,8 +200,9 @@ export const useDriverEarnings = (driverId: string | undefined) => {
         week,
         month,
         pending,
+        tips,
         tripsByType,
-        completedJobs: completedJobs.slice(0, 50), // Limit to 50 most recent
+        completedJobs: completedJobs.slice(0, 50),
       };
     },
     enabled: !!driverId,
