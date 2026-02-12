@@ -4,9 +4,12 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Phone, Check, Loader2, ArrowRight } from "lucide-react";
+import { User, Phone, Check, Loader2, ArrowRight, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/hooks/useI18n";
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { usePersonalizationSettings } from "@/hooks/usePersonalizationSettings";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -14,6 +17,10 @@ const Setup = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const { currentLanguage, changeLanguage } = useI18n();
+  const { data: supportedLanguages } = useSupportedLanguages(true);
+  const { updateSettings } = usePersonalizationSettings();
+  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -146,12 +153,28 @@ const Setup = () => {
     <div className="min-h-screen bg-white flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md space-y-8">
 
-        {/* Progress pill */}
-        <div className="flex justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100">
-            Step 1 of 1
-          </span>
-        </div>
+        {/* Language Picker */}
+        {activeLanguages.length > 1 && (
+          <div className="flex justify-center gap-2">
+            {activeLanguages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => {
+                  changeLanguage(lang.code);
+                  if (user) updateSettings({ preferred_language: lang.code });
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  currentLanguage === lang.code
+                    ? "bg-primary/10 text-primary border-primary/30"
+                    : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                }`}
+              >
+                <span>{lang.flag_emoji}</span>
+                {lang.native_name}
+              </button>
+            ))}
+          </div>
+        )}
         
         {/* Icon */}
         <div className="flex justify-center">

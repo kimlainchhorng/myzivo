@@ -10,18 +10,7 @@ import { SUPPORTED_CURRENCIES } from "@/config/currencies";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
-const languages = [
-  { code: "en", name: "English", native: "English", flag: "🇺🇸" },
-  { code: "es", name: "Spanish", native: "Español", flag: "🇪🇸" },
-  { code: "fr", name: "French", native: "Français", flag: "🇫🇷" },
-  { code: "de", name: "German", native: "Deutsch", flag: "🇩🇪" },
-  { code: "it", name: "Italian", native: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Portuguese", native: "Português", flag: "🇵🇹" },
-  { code: "ja", name: "Japanese", native: "日本語", flag: "🇯🇵" },
-  { code: "zh", name: "Chinese", native: "中文", flag: "🇨🇳" },
-  { code: "ko", name: "Korean", native: "한국어", flag: "🇰🇷" },
-  { code: "ar", name: "Arabic", native: "العربية", flag: "🇸🇦" },
-];
+import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
 const PreferencesPage = () => {
   const navigate = useNavigate();
@@ -29,6 +18,8 @@ const PreferencesPage = () => {
   const { currency, setCurrency } = useCurrency();
   const { user } = useAuth();
   const { updateSettings } = usePersonalizationSettings();
+  const { data: supportedLanguages } = useSupportedLanguages(true);
+  const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
 
   const handleLanguageChange = async (langCode: string) => {
     await changeLanguage(langCode);
@@ -97,7 +88,7 @@ const PreferencesPage = () => {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-1">
-                {languages.map((lang) => (
+                {activeLanguages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageChange(lang.code)}
@@ -107,10 +98,10 @@ const PreferencesPage = () => {
                         : "hover:bg-muted"
                     }`}
                   >
-                    <span className="text-xl">{lang.flag}</span>
+                    <span className="text-xl">{lang.flag_emoji}</span>
                     <div className="flex-1 text-left">
                       <p className="font-medium text-sm">{lang.name}</p>
-                      <p className="text-xs text-muted-foreground">{lang.native}</p>
+                      <p className="text-xs text-muted-foreground">{lang.native_name}</p>
                     </div>
                     {currentLanguage === lang.code && (
                       <Check className="w-4 h-4 text-primary" />

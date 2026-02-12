@@ -2650,6 +2650,72 @@ export type Database = {
           },
         ]
       }
+      background_jobs: {
+        Row: {
+          attempts: number
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          error_stack: string | null
+          finished_at: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          max_attempts: number
+          payload: Json | null
+          priority: number
+          related_id: string | null
+          related_type: string | null
+          retried_by: string | null
+          scheduled_for: string | null
+          service: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_type: string
+          last_error?: string | null
+          max_attempts?: number
+          payload?: Json | null
+          priority?: number
+          related_id?: string | null
+          related_type?: string | null
+          retried_by?: string | null
+          scheduled_for?: string | null
+          service: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_type?: string
+          last_error?: string | null
+          max_attempts?: number
+          payload?: Json | null
+          priority?: number
+          related_id?: string | null
+          related_type?: string | null
+          retried_by?: string | null
+          scheduled_for?: string | null
+          service?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_target: string
