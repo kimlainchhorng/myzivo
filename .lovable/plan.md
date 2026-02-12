@@ -1,115 +1,92 @@
 
 
-# Driver Ratings and Passenger Feedback System
+# Passenger Verification and Trust Score Enhancement
 
-## What Already Exists
+## What Already Exists (No Changes Needed)
 
-The project has significant rating infrastructure already built:
+The project already has extensive infrastructure covering most of the requested features:
 
-- **Customer rates driver (rides)**: Star rating in `RideReceiptModal` saves to `trips.rating` and `trips.feedback`
-- **Customer rates driver + restaurant (food)**: Full rating page at `/rate/:code` with stars, tags, comments, contact-back
-- **Admin quality dashboard**: `DispatchQuality` page with KPIs, worst performers, low ratings, distribution charts (reads from `order_ratings` table)
-- **Customer reviews page**: `MyReviewsPage` at `/account/reviews` shows past food order ratings
-- **Reusable components**: `StarRating`, `TagSelector`, `TripRatingWidget`
+- **Account verification**: Phone OTP, email verification, identity document upload with selfie (VerificationPage at `/account/verification`)
+- **Trust score calculation**: `useAccountTrustLevel` hook with 8 signals (email, phone, identity, account age, orders, profile completeness)
+- **Trust level display**: `TrustLevelPage` at `/account/trust` with score breakdown, benefits, and improvement suggestions
+- **Trust level card**: `TrustLevelCard` on mobile account page showing score and tier
+- **Fraud detection**: `check-fraud-signals` edge function detecting refund abuse, cancellation spikes, velocity spikes, wrong PIN attempts
+- **Admin user management**: Full admin panel with user profiles, activity timelines, status management
+- **Privacy controls**: DSAR/GDPR-compliant privacy page at `/account/privacy`
+- **Driver rates passenger**: `RatePassengerModal` saving `rider_rating` to trips table
 
-## What's Missing
+## What's Being Added
 
-1. **Driver rates passenger** -- No database column, no UI
-2. **Post-ride rating with feedback categories** -- Current ride rating is basic (stars + free text). No structured categories like "driving quality", "cleanliness", "friendliness", "navigation"
-3. **Driver's own rating dashboard** -- Drivers can't see their avg rating, trends, or feedback
-4. **Low-rating alerts for drivers** -- No notification when rating drops
-5. **Ride ratings in unified quality dashboard** -- Admin quality dashboard only reads `order_ratings` (food), not `trips` ratings
+### 1. Rename Trust Tiers to Rider-Specific Labels
 
-## Plan
+Update `src/config/trustLevel.ts` to use rider-friendly tier names:
+- "Needs Attention" (0-29) becomes **"New"**
+- "Good" (30-64) becomes **"Verified"**
+- "Excellent" (65-84) becomes **"Trusted"**
+- Add a new tier: **"Top Rider"** (85-100)
 
-### 1. Database Changes
+Add two new trust signals:
+- `low_cancellation_rate`: "Low cancellation rate" (weight 5) -- earned when cancellation rate is below 15%
+- `good_rider_rating`: "Good passenger rating" (weight 5) -- earned when average rider_rating >= 4.0
 
-Add columns to the `trips` table:
-- `rider_rating` (integer, 1-5) -- driver's rating of the passenger
-- `rider_feedback` (text) -- driver's comment about the passenger
-- `rating_categories` (jsonb) -- structured categories for customer's driver rating (e.g., `{ driving: 4, cleanliness: 5, friendliness: 5, navigation: 3 }`)
-- `rating_tags` (text array) -- feedback tags similar to food order ratings
+### 2. Update Trust Score Calculation
 
-### 2. Post-Ride Rating Enhancement (Customer Side)
+Update `src/hooks/useAccountTrustLevel.ts` to:
+- Query `trips` table for cancellation rate (cancelled vs total trips)
+- Query `trips` table for average `rider_rating` (from driver feedback)
+- Include these two new signals in the earned map
 
-Update `RideReceiptModal.tsx` to add feedback category chips after the star rating:
-- **Driving Quality** (1-5 mini stars or thumbs)
-- **Cleanliness** (1-5)
-- **Friendliness** (1-5)
-- **Navigation** (1-5)
-- Feedback tags: "Great conversation", "Smooth ride", "Clean car", "Late arrival", "Unsafe driving", "Rude behavior"
-- Keep the existing overall star rating as primary
+### 3. Passenger Trust Badge for Drivers
 
-Update `saveRideRating` in `supabaseRide.ts` to save the new category and tag fields.
+Create `src/components/driver/PassengerTrustBadge.tsx`:
+- A compact badge component showing the rider's trust tier icon, label, verification status, and average rating
+- Displayed when a driver receives a ride request or views the active trip
+- Fetches rider profile data (trust signals) using the rider_id from the trip
 
-### 3. Driver Rates Passenger (New UI)
+Create `src/hooks/usePassengerTrust.ts`:
+- Given a `riderId`, queries profiles and trips to compute trust score for that rider
+- Returns tier label, verification badges (email, phone, identity), avg rider rating, total trips
 
-Create `src/components/driver/RatePassengerModal.tsx`:
-- Appears after trip completion in the driver app
-- Star rating (1-5) for the passenger
-- Quick feedback chips: "Punctual", "Respectful", "Good directions", "Late to pickup", "No-show", "Incorrect address", "Rude"
-- Optional comment field (max 200 chars)
-- Saves to `trips.rider_rating` and `trips.rider_feedback`
+Integrate into `src/pages/ride/RideDriverPage.tsx`:
+- Show `PassengerTrustBadge` in the pickup information card
 
-Create `src/hooks/useRatePassenger.ts`:
-- Mutation to update `trips.rider_rating` and `trips.rider_feedback`
-- Only allowed for completed trips where `driver_id` matches current user
+### 4. Admin Trust Distribution Panel
 
-Integrate into `RideDriverPage.tsx` -- show the modal after trip reaches "completed" status.
+Create `src/components/admin/AdminTrustDistribution.tsx`:
+- Summary cards: count of users per trust tier (New, Verified, Trusted, Top Rider)
+- Flagged users list (from `user_limits` where `is_blocked = true` or `risk_events` in last 7 days)
+- Trust score distribution bar chart
 
-### 4. Driver Rating Dashboard
+Add as a new section in `AdminUserManagement.tsx` or as an additional tab in the admin dashboard.
 
-Create `src/components/driver/DriverRatingDashboard.tsx`:
-- Summary card: Average rating, total rated trips, rating trend (up/down arrow)
-- Star distribution bar chart (how many 1-star, 2-star, etc.)
-- Recent feedback list (last 10 comments from passengers)
-- Category averages (driving, cleanliness, friendliness, navigation)
+### 5. Verification Status Notifications
 
-Create `src/hooks/useDriverRatings.ts`:
-- Fetches trips where `driver_id` matches, aggregates ratings
-- Calculates 7-day and 30-day trends
-- Returns category breakdowns from `rating_categories` jsonb
-
-Add a "My Ratings" card to `DriverHomePage.tsx` showing avg rating and quick link, and a full section in `DriverAccountPage.tsx`.
-
-### 5. Low-Rating Detection and Driver Notifications
-
-Create `src/hooks/useDriverRatingAlerts.ts`:
-- Subscribes to realtime changes on `trips` table filtered by driver_id
-- When a new rating arrives that is 2 stars or below, shows a toast notification
-- When 7-day average drops below 4.0, shows a warning banner on DriverHomePage
-- When positive feedback is received (5 stars), shows a congratulatory toast
-
-Add a rating alert banner component to `DriverHomePage.tsx` that shows when avg rating is declining.
-
-### 6. Admin Dashboard Enhancement
-
-Update `useQualityMetrics.ts` to also query `trips` table ratings alongside `order_ratings`, giving the admin a unified view of both ride and food delivery quality.
-
-Add a "Rides" tab to `DispatchQuality.tsx` showing ride-specific rating metrics.
+Update `src/hooks/useCustomerVerification.ts`:
+- After `submitMutation` success, show toast "Verification submitted -- you'll be notified when reviewed"
+- Add a realtime subscription on `customer_identity_verifications` for changes to `status` field
+- When status changes to "verified", show success toast "Your identity is now verified! Trust score updated."
+- When status changes to "rejected", show warning toast with rejection reason
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/lib/supabaseRide.ts` | Extend `SaveRatingPayload` with categories, tags; add `savePassengerRating` function |
-| `src/components/ride/RideReceiptModal.tsx` | Add feedback category chips and tags after star rating |
-| `src/components/driver/RatePassengerModal.tsx` | New: driver rates passenger modal |
-| `src/hooks/useRatePassenger.ts` | New: mutation hook for driver rating passenger |
-| `src/components/driver/DriverRatingDashboard.tsx` | New: driver's own rating stats and trends |
-| `src/hooks/useDriverRatings.ts` | New: fetch and aggregate driver's own ratings |
-| `src/hooks/useDriverRatingAlerts.ts` | New: realtime low-rating detection and toasts |
-| `src/pages/driver/DriverHomePage.tsx` | Add rating summary card and alert banner |
-| `src/pages/driver/DriverAccountPage.tsx` | Add full rating dashboard section |
-| `src/hooks/useQualityMetrics.ts` | Include `trips` ratings in admin quality metrics |
-| `src/pages/dispatch/DispatchQuality.tsx` | Add "Rides" tab for ride-specific quality data |
+| `src/config/trustLevel.ts` | Add "Top Rider" tier, rename tiers, add 2 new signals |
+| `src/hooks/useAccountTrustLevel.ts` | Query cancellation rate and avg rider_rating, include new signals |
+| `src/components/driver/PassengerTrustBadge.tsx` | New: compact rider trust badge for drivers |
+| `src/hooks/usePassengerTrust.ts` | New: fetch and compute trust for a given rider |
+| `src/pages/ride/RideDriverPage.tsx` | Show PassengerTrustBadge in pickup card |
+| `src/components/admin/AdminTrustDistribution.tsx` | New: trust tier distribution and flagged users panel |
+| `src/pages/AdminDashboard.tsx` | Add trust distribution tab |
+| `src/hooks/useCustomerVerification.ts` | Add realtime subscription for verification status notifications |
+| `src/components/account/TrustLevelCard.tsx` | Update color map for new "Top Rider" tier |
+| `src/pages/account/TrustLevelPage.tsx` | Update color map for new tier |
 
 ## Technical Notes
 
-- New `trips` columns (`rider_rating`, `rider_feedback`, `rating_categories`, `rating_tags`) will be added via SQL migration
-- `rating_categories` uses JSONB for flexible category storage without schema changes if categories evolve
-- Driver can only rate a passenger on trips where they are the assigned driver (enforced in the mutation)
-- Rating is only allowed after trip status is "completed" (enforced both in UI and query filter)
-- No editing of ratings after submission (one-time write, enforced by checking if `rating` or `rider_rating` is already set)
-- All new components follow the verdant theme with existing design system tokens
+- Trust tiers will use 4 levels instead of 3, with adjusted score thresholds (0-29, 30-64, 65-84, 85-100)
+- Cancellation rate calculated as: cancelled trips / total trips (only counted if user has 3+ trips to avoid penalizing new users)
+- Average rider_rating only included if the rider has been rated on 2+ trips
+- PassengerTrustBadge is read-only and fetches data server-side via Supabase with RLS (driver can only see limited passenger profile data)
+- No new database tables needed -- all data sources already exist (profiles, trips, customer_identity_verifications, risk_events, user_limits)
 
