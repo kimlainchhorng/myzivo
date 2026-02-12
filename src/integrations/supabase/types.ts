@@ -15972,6 +15972,7 @@ export type Database = {
           target_city: string | null
           target_criteria: Json | null
           target_restaurant_id: string | null
+          target_segment_id: string | null
           title: string | null
           trigger_config: Json | null
           trigger_type: string | null
@@ -16004,6 +16005,7 @@ export type Database = {
           target_city?: string | null
           target_criteria?: Json | null
           target_restaurant_id?: string | null
+          target_segment_id?: string | null
           title?: string | null
           trigger_config?: Json | null
           trigger_type?: string | null
@@ -16036,12 +16038,21 @@ export type Database = {
           target_city?: string | null
           target_criteria?: Json | null
           target_restaurant_id?: string | null
+          target_segment_id?: string | null
           title?: string | null
           trigger_config?: Json | null
           trigger_type?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_target_segment_id_fkey"
+            columns: ["target_segment_id"]
+            isOneToOne: false
+            referencedRelation: "push_segments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_plans: {
         Row: {

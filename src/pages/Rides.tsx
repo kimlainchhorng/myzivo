@@ -156,57 +156,26 @@ function RidesMapView({
 
   return (
     <div className="relative w-full h-full bg-[#e5e3df]">
-      {showLoading ? (
-        // Loading state
-        <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-          <div className="absolute inset-0 opacity-30">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ccc" strokeWidth="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-          <div className="flex flex-col items-center gap-2 z-10">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="text-sm text-zinc-600">Loading map...</span>
-          </div>
-        </div>
-      ) : showFallback ? (
-        // Fallback: Static map-like background with pulsing location dot
-        <div className="w-full h-full relative overflow-hidden">
-          {/* Map-like grid pattern */}
-          <div className="absolute inset-0 opacity-30">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid-fallback" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ccc" strokeWidth="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid-fallback)" />
-            </svg>
-          </div>
+      {showLoading || showFallback ? (
+        // Clean branded placeholder — no grid, no spinner
+        <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-emerald-950 to-zinc-900">
+          {/* Subtle radial glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl" />
           
-          {/* Simulated roads */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-0 right-0 h-2 bg-white/60" />
-            <div className="absolute top-1/2 left-0 right-0 h-3 bg-white/80" />
-            <div className="absolute top-3/4 left-0 right-0 h-2 bg-white/60" />
-            <div className="absolute left-1/4 top-0 bottom-0 w-2 bg-white/60" />
-            <div className="absolute left-1/2 top-0 bottom-0 w-3 bg-white/80" />
-            <div className="absolute left-3/4 top-0 bottom-0 w-2 bg-white/60" />
-          </div>
-          
-          {/* Current location marker */}
+          {/* Pulsing location dot */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-blue-500/20 animate-ping absolute -inset-6" />
-              <div className="w-12 h-12 rounded-full bg-blue-500/30 absolute -inset-3" />
-              <div className="w-6 h-6 rounded-full bg-blue-500 border-4 border-white shadow-lg relative z-10" />
+            <div className="relative flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-emerald-500/15 animate-ping-slow absolute" />
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 absolute" />
+              <div className="w-4 h-4 rounded-full bg-emerald-400 border-2 border-white shadow-lg relative z-10" />
             </div>
           </div>
+
+          {showFallback && (
+            <div className="absolute bottom-4 inset-x-0 flex justify-center">
+              <span className="text-xs text-white/40">Map unavailable</span>
+            </div>
+          )}
         </div>
       ) : (
         // Google Map with ZIVO light theme (Uber-inspired)
