@@ -1,12 +1,11 @@
 import { useState, useCallback } from "react";
+import { reverseGeocode as mapsReverseGeocode } from "@/services/mapsApi";
 
 export type CurrentLocation = {
   lat: number;
   lng: number;
   accuracy: number;
 };
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 export const useCurrentLocation = () => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -63,19 +62,7 @@ export const useCurrentLocation = () => {
   }, []);
 
   const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-      );
-      const data = await response.json();
-      
-      if (data.features && data.features.length > 0) {
-        return data.features[0].place_name;
-      }
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    } catch {
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    }
+    return mapsReverseGeocode(lat, lng);
   }, []);
 
   return {
