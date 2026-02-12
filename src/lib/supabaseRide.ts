@@ -378,6 +378,13 @@ export interface SaveRatingPayload {
   tripId: string;
   rating: number; // 1-5
   feedback?: string; // Optional comment
+  ratingCategories?: {
+    driving?: number;
+    cleanliness?: number;
+    friendliness?: number;
+    navigation?: number;
+  };
+  ratingTags?: string[];
 }
 
 export const saveRideRating = async (
@@ -398,13 +405,22 @@ export const saveRideRating = async (
   }
 
   try {
+    const updateData: Record<string, unknown> = {
+      rating: payload.rating,
+      feedback: payload.feedback || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (payload.ratingCategories) {
+      updateData.rating_categories = payload.ratingCategories;
+    }
+    if (payload.ratingTags && payload.ratingTags.length > 0) {
+      updateData.rating_tags = payload.ratingTags;
+    }
+
     const { error } = await supabase
       .from("trips")
-      .update({
-        rating: payload.rating,
-        feedback: payload.feedback || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData as any)
       .eq("id", payload.tripId);
 
     if (error) throw error;

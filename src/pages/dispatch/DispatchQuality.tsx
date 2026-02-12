@@ -3,8 +3,9 @@
  * Quality metrics dashboard for dispatch panel
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QualityKPICards from "@/components/dispatch/QualityKPICards";
 import QualityCharts from "@/components/dispatch/QualityCharts";
 import WorstPerformers from "@/components/dispatch/WorstPerformers";
@@ -42,17 +43,33 @@ const DispatchQuality = () => {
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <QualityKPICards kpis={kpis} isLoading={kpisLoading} />
+      <Tabs defaultValue="food" className="w-full">
+        <TabsList>
+          <TabsTrigger value="food">Food Delivery</TabsTrigger>
+          <TabsTrigger value="rides">Rides</TabsTrigger>
+        </TabsList>
 
-      {/* Charts */}
-      <QualityCharts distribution={distribution} isLoading={distributionLoading} />
+        <TabsContent value="food" className="space-y-6 mt-4">
+          {/* KPI Cards */}
+          <QualityKPICards kpis={kpis} isLoading={kpisLoading} />
 
-      {/* Worst Performers */}
-      <WorstPerformers performers={performers} isLoading={performersLoading} />
+          {/* Charts */}
+          <QualityCharts distribution={distribution} isLoading={distributionLoading} />
 
-      {/* Recent Low Ratings */}
-      <RecentLowRatings ratings={lowRatings} isLoading={lowRatingsLoading} />
+          {/* Worst Performers */}
+          <WorstPerformers performers={performers} isLoading={performersLoading} />
+
+          {/* Recent Low Ratings */}
+          <RecentLowRatings ratings={lowRatings} isLoading={lowRatingsLoading} />
+        </TabsContent>
+
+        <TabsContent value="rides" className="space-y-6 mt-4">
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg font-medium">Ride Ratings</p>
+            <p className="text-sm mt-1">Ride quality metrics from the trips table will appear here as ratings accumulate.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

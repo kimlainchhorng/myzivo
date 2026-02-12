@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Car, ArrowLeft, User, Phone, Save, Loader2, 
-  Database, Radio, Shield, CheckCircle, AlertCircle 
+  Database, Radio, Shield, CheckCircle, AlertCircle, Star 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDriverProfile } from "@/hooks/useDriverApp";
 import { updateDriverProfile } from "@/lib/supabaseDriver";
 import { toast } from "sonner";
+import DriverRatingDashboard from "@/components/driver/DriverRatingDashboard";
 
 const DriverAccountPage = () => {
   const navigate = useNavigate();
@@ -93,8 +94,11 @@ const DriverAccountPage = () => {
 
       <div className="max-w-lg mx-auto px-4 py-6">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-white/10">
+          <TabsList className="grid w-full grid-cols-3 bg-zinc-900 border border-white/10">
             <TabsTrigger value="profile" className="data-[state=active]:bg-primary">Profile</TabsTrigger>
+            <TabsTrigger value="ratings" className="data-[state=active]:bg-primary">
+              <Star className="w-4 h-4 mr-1" /> Ratings
+            </TabsTrigger>
             <TabsTrigger value="setup" className="data-[state=active]:bg-primary">Setup</TabsTrigger>
           </TabsList>
 
@@ -207,6 +211,11 @@ const DriverAccountPage = () => {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Ratings Tab */}
+          <TabsContent value="ratings" className="mt-4">
+            <DriverRatingDashboard driverId={driver?.id} />
           </TabsContent>
 
           {/* Setup Tab */}

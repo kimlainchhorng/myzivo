@@ -47,6 +47,8 @@ const RideReceiptModal = ({
   const [isSavingTip, setIsSavingTip] = useState(false);
   const [showCustomTip, setShowCustomTip] = useState(false);
   const [customTipValue, setCustomTipValue] = useState("");
+  const [ratingCategories, setRatingCategories] = useState<Record<string, number>>({});
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Format elapsed time for display
   const formatTime = (seconds: number) => {
@@ -81,6 +83,8 @@ const RideReceiptModal = ({
         tripId,
         rating,
         feedback: feedback.trim() || undefined,
+        ratingCategories: Object.keys(ratingCategories).length > 0 ? ratingCategories : undefined,
+        ratingTags: selectedTags.length > 0 ? selectedTags : undefined,
       });
       
       setIsSaving(false);
@@ -121,6 +125,30 @@ const RideReceiptModal = ({
     setTipSaved(false);
     setShowCustomTip(false);
     setCustomTipValue("");
+    setRatingCategories({});
+    setSelectedTags([]);
+  };
+
+  const RIDE_FEEDBACK_TAGS = [
+    { id: "great_conversation", label: "Great conversation", positive: true },
+    { id: "smooth_ride", label: "Smooth ride", positive: true },
+    { id: "clean_car", label: "Clean car", positive: true },
+    { id: "late_arrival", label: "Late arrival", positive: false },
+    { id: "unsafe_driving", label: "Unsafe driving", positive: false },
+    { id: "rude_behavior", label: "Rude behavior", positive: false },
+  ];
+
+  const CATEGORY_LABELS = [
+    { key: "driving", label: "Driving" },
+    { key: "cleanliness", label: "Cleanliness" },
+    { key: "friendliness", label: "Friendliness" },
+    { key: "navigation", label: "Navigation" },
+  ];
+
+  const toggleFeedbackTag = (tagId: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
+    );
   };
 
   return (
@@ -223,7 +251,63 @@ const RideReceiptModal = ({
             ))}
           </div>
 
-          {/* Feedback Textarea */}
+          {/* Category Ratings */}
+          {rating > 0 && !hasRated && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-4 space-y-3"
+            >
+              <p className="text-xs text-white/40 text-center">Rate specific areas (optional)</p>
+              <div className="grid grid-cols-2 gap-2">
+                {CATEGORY_LABELS.map(({ key, label }) => (
+                  <div key={key} className="p-2 bg-white/5 rounded-xl">
+                    <p className="text-xs text-white/60 mb-1">{label}</p>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setRatingCategories((prev) => ({ ...prev, [key]: s }))}
+                          className="p-0.5"
+                        >
+                          <Star
+                            className={cn(
+                              "w-4 h-4 transition-colors",
+                              (ratingCategories[key] || 0) >= s
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-white/15"
+                            )}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feedback Tags */}
+              <div className="flex flex-wrap gap-1.5">
+                {RIDE_FEEDBACK_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => toggleFeedbackTag(tag.id)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-xs font-medium transition-all border",
+                      selectedTags.includes(tag.id)
+                        ? tag.positive
+                          ? "bg-green-600 border-green-600 text-white"
+                          : "bg-destructive border-destructive text-white"
+                        : "bg-transparent border-white/15 text-white/60 hover:bg-white/5"
+                    )}
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {!hasRated && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
