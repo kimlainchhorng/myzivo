@@ -86,8 +86,12 @@ const SetupRequiredRoute = ({ children }: SetupRequiredRouteProps) => {
     );
   }
 
-  // If setup is not complete, redirect to setup page
+  // If setup is not complete, check onboarding first
   if (setupStatus && !setupStatus.isComplete) {
+    const onboardingSeen = localStorage.getItem("hizovo-onboarding-seen");
+    if (!onboardingSeen) {
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to="/setup" replace />;
   }
 

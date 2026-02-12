@@ -166,6 +166,7 @@ const HotelDashboard = lazy(() => import("./pages/HotelDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Setup = lazy(() => import("./pages/Setup"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -808,6 +809,7 @@ const App = () => (
                 <Route path="/hotels-dashboard" element={<HotelDashboard />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
                 <Route path="/setup" element={<Setup />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
