@@ -1,64 +1,77 @@
 
 
-## Loading Skeletons and Smooth Animations -- Already Implemented
+## Add Onboarding Welcome Screens for First-Time Users
 
-After a thorough codebase review, **all five requested features are already fully built** across the application. Here is the evidence:
+### Current Flow
 
-### 1. Loading Skeletons -- Already in Place
+```text
+Login/Signup --> Email Verify --> /setup (profile form) --> / (Home)
+```
 
-| Screen | Implementation |
-|--------|---------------|
-| Restaurants list | `OrderCardSkeleton` + inline Skeleton components in Eats pages |
-| Ride options | Inline `animate-pulse` placeholders in ride booking flow |
-| Flights | `ResultCardSkeleton` (flight variant), `ResultsSkeletonList`, `ResultsPageSkeleton` |
-| Hotels | `HotelResultsSkeleton`, `ResultCardSkeleton` (hotel variant) |
-| Cars | `CarResultsSkeleton`, `ResultCardSkeleton` (car variant) |
-| Order history | `OrderCardSkeleton`, `OrderCardSkeletonList` |
-| Wallet transactions | Inline `animate-pulse` blocks in `WalletPage.tsx` (balance card, transaction rows) |
+### Proposed Flow
 
-Over 200 files use `Skeleton` or `animate-pulse` placeholders.
+```text
+Login/Signup --> Email Verify --> /onboarding (4 welcome slides) --> /setup (profile form) --> / (Home)
+```
 
-### 2. Smooth Transitions -- Already in Place
+The onboarding carousel shows only once, before the profile setup form.
 
-- **448 files** use `framer-motion` with `motion.div`, `AnimatePresence`, staggered children, and spring physics
-- Tailwind CSS keyframes for `fade-in`, `scale-in`, `slide-in-right`, `accordion-down/up` are defined in `tailwind.config.ts`
-- Screen transitions use `animate-in fade-in` with staggered delays
-- Tab switching uses `AnimatePresence` for cross-fade effects
-- Card expansion uses `accordion-down`/`accordion-up` animations
-- Map loading uses fade-in transitions
+### Implementation
 
-### 3. Button Feedback -- Already in Place
+**1. New Page: `src/pages/Onboarding.tsx`**
 
-- Base `button.tsx` includes `active:scale-[0.98]` on default, rides, eats, and hero variants
-- 219 files apply `active:scale-*` or `whileTap` for tap feedback
-- 27+ checkout/booking files show `Loader2` spinning icon during payment processing
-- `SecureCheckoutButton`, `MobileCheckoutFooter`, `RideCheckoutForm`, `TravelCheckoutPage` all display loading spinners with "Processing..." text
+A full-screen swipeable carousel with 4 slides:
 
-### 4. Map and Tracking -- Already in Place
+| Slide | Title | Description | Icon |
+|-------|-------|-------------|------|
+| 1 | Ride Anywhere Easily | Your ride, one tap away | Car (Lucide) |
+| 2 | Order Food & Delivery Fast | Meals and packages delivered | UtensilsCrossed |
+| 3 | Book Flights, Hotels & Rentals | Travel the world with ZIVO | Plane |
+| 4 | Earn Rewards & Save Money | Credits, cashback, and perks | Gift |
 
-- `useLiveDriverTracking` hook provides real-time driver position, distance (Haversine), and ETA updates via Supabase Realtime
-- `RealDriverMarkers` renders live driver positions on the Google Map
-- Coordinate interpolation is used for smooth marker animation along route polylines
-- Position updates arrive every 5 seconds with visual interpolation between points
-- Arrival detection triggers at 0.10-mile threshold
+Features:
+- Framer Motion `AnimatePresence` for smooth slide transitions
+- Progress dots at the bottom (verdant green active dot)
+- "Next" button advances slides (verdant green gradient)
+- "Skip" text button in top-right corner jumps to the end
+- Final slide shows "Get Started" button instead of "Next"
+- Large centered Lucide icons inside verdant green gradient containers (matching 2026 Spatial UI)
+- Clean white background, large readable text, rounded card shapes
+- Completion stored in `localStorage` key `hizovo-onboarding-seen`
 
-### 5. Design Standards -- Already Applied
+**2. Route Registration: `src/App.tsx`**
 
-- Verdant green primary accent throughout (emerald-based CSS variables)
-- `rounded-2xl` and `rounded-3xl` card shapes across all services
-- `backdrop-blur-xl` glassmorphism on cards and overlays
-- `shadow-card` and `shadow-elevated` for depth
-- Professional Lucide icons instead of emojis
+- Add lazy import for `Onboarding`
+- Add route: `<Route path="/onboarding" element={<Onboarding />} />`
+- Place it alongside other public auth routes (login, signup, verify)
 
-### Conclusion
+**3. Redirect Logic: `src/components/auth/SetupRequiredRoute.tsx`**
 
-No code changes are needed. All loading skeletons, smooth animations, button feedback, and map tracking features are already implemented and consistent with the verdant green theme and modern design system.
+After email verification passes and before the setup redirect, check if onboarding has been seen:
+- If `localStorage.getItem("hizovo-onboarding-seen")` is falsy and setup is not complete, redirect to `/onboarding` instead of `/setup`
+- The onboarding page itself navigates to `/setup` on completion
 
-### Possible Enhancements (Optional)
+**4. Design Details**
 
-If you would like to go further, here are some refinements we could add:
+- Verdant green gradient on icons: `bg-gradient-to-br from-primary to-emerald-400`
+- Active dot: `bg-primary` (verdant green), inactive: `bg-muted`
+- "Get Started" button: full-width verdant green gradient with shadow
+- Skip button: subtle `text-muted-foreground` in corner
+- Responsive: max-w-md centered, works on all screen sizes
+- Dark mode compatible using semantic Tailwind classes (`bg-background`, `text-foreground`)
 
-1. **Shimmer effect on skeletons** -- Add a gradient sweep animation to skeleton placeholders for a more polished loading feel (like the Instagram/Facebook shimmer effect)
-2. **Page-level transition wrapper** -- Add an `AnimatePresence` wrapper at the router level so every page transition gets a consistent fade/slide animation
-3. **Haptic feedback on native app** -- Wire Capacitor Haptics to button taps for physical feedback on iOS/Android
+### Files Summary
+
+| File | Action |
+|------|--------|
+| `src/pages/Onboarding.tsx` | New -- 4-slide welcome carousel |
+| `src/App.tsx` | Add route for `/onboarding` |
+| `src/components/auth/SetupRequiredRoute.tsx` | Add onboarding check before setup redirect |
+
+### Technical Notes
+
+- localStorage-based "seen" flag ensures the carousel never shows again, even across sessions
+- No database column needed -- this is a lightweight UX enhancement, not a security gate
+- The onboarding page is accessible without authentication (public route) so it loads instantly after email verification
+- Framer Motion is already installed and used extensively throughout the app
 
