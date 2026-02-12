@@ -1,104 +1,93 @@
 
 
-# Add Real-Time Activity Feed and Status Updates
+# Add Live Map Tracking Enhancements
 
 ## Current State
 
-The project already has strong real-time foundations:
+The project already has a comprehensive live tracking system:
 
-- **Customer trips**: `TripTracker` with live map, status steps, ETA, driver location
-- **Customer orders**: `useOrderTracking` with realtime Supabase subscriptions + driver polling
-- **Notifications**: `NotificationCenter` popover with trip/order/delivery categories
-- **Toasts**: `RealtimeOrderToasts` for dispatch events, `useCrossAppRealtime` for customer/driver/restaurant order updates
-- **Driver feed**: `useDriverActivityFeed` for historical activity (completed trips, earnings, payouts)
-- **Ride notifications**: `useRideStatusNotifications` with status banners and sounds
-- **Admin**: `ActivityStream` for live admin event monitoring
+- **Customer Rides**: `RideTripPage` with `TripMapView`, real-time driver location via `useDriverLocationRealtime`, route interpolation, progress bar, ETA countdown, auto-complete at 100m threshold
+- **Customer Eats**: `DeliveryMap` with driver/restaurant/delivery markers, stale detection, heading rotation
+- **Driver View**: `DriverMapView` + `RideDriverPage` with pickup route, arrival detection
+- **Real-time Hooks**: `useLiveDriverTracking` (Supabase Realtime on drivers table), `useLiveDriverLocation` (driver_locations table), `useTrafficAwareEta` (traffic-aware via Google Directions)
+- **Map Infrastructure**: `GoogleMap` component with DirectionsService routing, ZIVO-branded markers, dark/light themes, RealDriverMarkers with debug overlay
 
 ## What's Missing
 
-1. **Customer Activity Timeline** -- No unified timeline showing live events from ALL active services (rides + eats + deliveries) in one scrollable feed
-2. **Restaurant Live Feed** -- Restaurant dashboard has stats but no live event timeline (order received, driver arriving, pickup completed)
-3. **Driver Live Feed** -- Driver has historical activity but no real-time timeline of current-session events with animations
-4. **Unified Activity Feed Component** -- No reusable timeline component that works across all three roles
+1. **Smooth animated marker movement** -- Driver markers currently jump between positions. No CSS/JS interpolation between location updates for fluid motion.
+2. **Restaurant driver-approaching map** -- Restaurant dashboard shows stats but no live map of the driver approaching for pickup.
+3. **Floating ETA card on map** -- Trip/delivery maps show ETA in separate cards below the map, not as a floating overlay on the map itself.
+4. **Driver heading on ride markers** -- Ride `TripMapView` uses a generic car icon without heading rotation (Eats `DeliveryMap` already supports heading).
 
 ## Plan
 
-### 1. Create Reusable Activity Timeline Component
+### 1. Animated Driver Marker Component
 
-New file: `src/components/shared/ActivityTimeline.tsx`
+New file: `src/components/maps/AnimatedDriverMarker.tsx`
 
-A reusable, animated timeline component that renders a vertical list of status events with:
-- Time column (left) showing relative time ("Just now", "2 min ago")
-- Status icon (colored circle with Lucide icon, matching service type)
-- Title and subtitle text
-- Animated entry (slide-in + fade-in for new items)
-- Verdant theme, rounded cards, `card-interactive` hover effect
-- Scrollable with `ScrollArea` component
-- Empty state with illustration
+A reusable Google Maps overlay marker that smoothly animates between position updates using CSS transitions:
 
-Props: `items: TimelineItem[]` where each item has `id`, `icon`, `iconColor`, `title`, `subtitle`, `timestamp`, `status` (active/completed/pending).
+- Wraps `OverlayViewF` with a `transition: transform 1s ease-out` on the container div
+- Tracks previous position and uses `requestAnimationFrame` to lerp between old and new coordinates over ~1 second
+- Shows the existing white car SVG with heading-based rotation
+- Falls back to instant positioning if the jump distance exceeds 1 mile (teleport detection)
+- Replaces the static `MarkerF` used for driver type in `GoogleMap.tsx` and the static arrow in `DeliveryMap.tsx`
 
-### 2. Customer Activity Feed Section (AppHome.tsx)
+### 2. Floating ETA Overlay Card
 
-Add a "Recent Activity" section to the home screen (after Quick Actions, before Popular Near You) showing:
-- Active trip status updates (from `useRiderTripRealtime` subscription data)
-- Active food order updates (from `useCustomerOrdersRealtime`)
-- Recent completed items from notifications
+New file: `src/components/maps/FloatingEtaCard.tsx`
 
-This section only appears when the user has active or recent (last 2 hours) orders/trips. Uses the new `ActivityTimeline` component.
+A compact, glassmorphic card positioned absolutely over the map (top-right corner):
 
-New hook: `src/hooks/useCustomerActivityFeed.ts`
-- Queries active trips + active food_orders for the current user
-- Subscribes to realtime changes on both tables
-- Merges events into a unified sorted timeline
-- Returns `{ items: TimelineItem[], hasActiveItems: boolean }`
+- Shows ETA in minutes, distance remaining, and a traffic indicator dot (green/yellow/red)
+- Auto-updates when props change with a subtle number-flip animation
+- Uses the design system: `rounded-2xl`, `backdrop-blur-xl`, `border-white/10`, verdant accent
+- Accepts props: `etaMinutes`, `distanceMiles`, `trafficLevel`, `statusLabel`
 
-### 3. Restaurant Live Feed
+### 3. Restaurant Driver Approaching Map
 
-New file: `src/components/restaurant/RestaurantActivityFeed.tsx`
+New file: `src/components/restaurant/RestaurantDriverMap.tsx`
 
-Add a "Live Orders" timeline tab/section to the restaurant dashboard showing:
-- "New order received" (on INSERT to food_orders)
-- "Driver assigned" (on driver_id change)
-- "Driver arriving" (on status change to ready_for_pickup with driver)
-- "Order picked up" (on status change to out_for_delivery)
-- "Order delivered" (on status change to delivered)
+A compact map card for the restaurant dashboard showing drivers approaching for pickup:
 
-Uses Supabase realtime subscription filtered by `restaurant_id`. Rendered using the shared `ActivityTimeline` component. Added as a new tab or section in `RestaurantDashboard.tsx`.
+- Shows restaurant location (orange marker) at center
+- Shows assigned drivers for active orders with animated markers
+- Subscribes to `food_orders` filtered by restaurant_id with status "ready" or "out_for_delivery" + their assigned driver locations
+- Displays floating ETA card for the nearest approaching driver
+- Uses `GoogleMap` component with light theme
 
-### 4. Driver Session Feed
+Integration: Add this as a card in `RestaurantDashboard.tsx` alongside the existing activity feed.
 
-New file: `src/components/driver/DriverSessionFeed.tsx`
-
-Real-time feed for the driver's current session showing:
-- "New ride request" / "New delivery request" 
-- "Pickup ready" notifications
-- "Trip started" / "Trip completed"
-- Earnings credited
-
-Uses existing `useDriverActivityFeed` for historical data + adds a realtime subscription layer for live events during the current session. Session events stored in component state (not DB) and cleared on app restart.
-
-### 5. Push Notification Enhancement
-
-The push notification infrastructure already exists (`useWebPush`, `usePushNotifications`, service worker). The realtime hooks already trigger toasts. No new push notification code is needed -- the existing `RealtimeSyncContext` handles cross-role notifications. The new feeds simply provide a visual timeline alongside the existing toast/push system.
-
-## Files Changed
+### 4. Update Existing Map Views
 
 | File | Change |
 |------|--------|
-| `src/components/shared/ActivityTimeline.tsx` | New reusable timeline component |
-| `src/hooks/useCustomerActivityFeed.ts` | New hook: unified customer activity from trips + orders |
-| `src/pages/app/AppHome.tsx` | Add "Recent Activity" section using customer feed |
-| `src/components/restaurant/RestaurantActivityFeed.tsx` | New live order timeline for restaurant dashboard |
-| `src/pages/RestaurantDashboard.tsx` | Add activity feed tab |
-| `src/components/driver/DriverSessionFeed.tsx` | New session-based live feed for drivers |
+| `src/components/maps/GoogleMap.tsx` | Replace static `MarkerF` for driver-type markers with the new `AnimatedDriverMarker` |
+| `src/components/ride/TripMapView.tsx` | Add `FloatingEtaCard` overlay, pass heading to animated marker |
+| `src/components/ride/DriverMapView.tsx` | Add `FloatingEtaCard` overlay showing distance to pickup |
+| `src/components/eats/DeliveryMap.tsx` | Replace static arrow `Marker` with `AnimatedDriverMarker`, add `FloatingEtaCard` |
+| `src/pages/RestaurantDashboard.tsx` | Add `RestaurantDriverMap` card |
 
 ## Technical Details
 
-- All realtime subscriptions use Supabase `postgres_changes` (consistent with existing patterns)
-- Timeline items animate in using CSS `animate-in slide-in-from-left` (no heavy framer-motion)
-- Each feed limits to 50 most recent events to prevent memory bloat
-- Customer feed auto-hides when no active items exist
-- All components use the design system: `rounded-2xl`, `border-border/50`, `shadow-sm`, Verdant accents, `text-caption` for timestamps
-- No new dependencies required
+### Smooth Animation Approach
+
+The animated marker uses CSS `transform` transitions on the OverlayView container. When a new lat/lng arrives:
+
+1. Convert lat/lng to pixel position (handled by Google Maps OverlayView)
+2. The OverlayView automatically repositions -- we add `transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)` to the wrapper div
+3. If distance between old and new position exceeds 1 mile, skip animation (driver likely reassigned or GPS jump)
+
+This avoids complex requestAnimationFrame coordinate math and leverages the browser's GPU-accelerated CSS transitions.
+
+### Performance
+
+- Driver location updates arrive every 5-10 seconds via Supabase Realtime (existing pattern)
+- CSS transitions consume minimal CPU vs JS animation loops
+- Restaurant map only subscribes when restaurant dashboard is open
+- FloatingEtaCard uses `React.memo` to prevent unnecessary re-renders
+
+### No New Dependencies
+
+All implementations use existing libraries: `@react-google-maps/api`, `framer-motion` (already installed), CSS transitions, and existing Supabase realtime hooks.
 
