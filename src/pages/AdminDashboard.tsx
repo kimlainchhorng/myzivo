@@ -119,6 +119,7 @@ import AdminReportBuilder from "@/components/admin/AdminReportBuilder";
 import AdminRevenueAttribution from "@/components/admin/AdminRevenueAttribution";
 import AdminCohortAnalysis from "@/components/admin/AdminCohortAnalysis";
 import AdminAffiliateAnalytics from "@/components/admin/AdminAffiliateAnalytics";
+import AdminTrustDistribution from "@/components/admin/AdminTrustDistribution";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -308,6 +309,7 @@ const AdminDashboard = () => {
       { value: "referrals", label: "Referrals", icon: Share2, gradient: "from-purple-500 to-pink-500" },
       { value: "cancellations", label: "Cancellations", icon: XCircle, gradient: "from-red-500 to-orange-500" },
       { value: "ratings", label: "Ratings", icon: Star, gradient: "from-amber-500 to-yellow-500" },
+      { value: "trust-distribution", label: "Trust Levels", icon: ShieldCheck, gradient: "from-violet-500 to-purple-500" },
     ]},
   ];
 
@@ -597,6 +599,7 @@ const AdminDashboard = () => {
             <TabsContent value="report-builder" className="mt-0"><AdminReportBuilder /></TabsContent>
             <TabsContent value="attribution" className="mt-0"><AdminRevenueAttribution /></TabsContent>
             <TabsContent value="cohort" className="mt-0"><AdminCohortAnalysis /></TabsContent>
+            <TabsContent value="trust-distribution" className="mt-0"><AdminTrustDistribution /></TabsContent>
           </Tabs>
         </main>
       </div>
