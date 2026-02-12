@@ -1,11 +1,10 @@
 /**
- * App Home Screen - Map-First Super App Hub
- * Layout: Full-screen map + floating top bar + draggable bottom panel
- * Panel: Quick Actions Grid → Promo Carousel → Recently Used → Favorites → Recommendations
+ * App Home Screen - Travel-First Scrollable Layout
+ * Clean scrollable design with quick actions, promos, rewards, and personalized content.
  */
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Search, Plane, Car, Utensils, BedDouble,
   MapPin, Bell, LucideIcon, Package, Star, Sparkles,
@@ -29,12 +28,10 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
-import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
-import { GoogleMapProvider, GoogleMap } from "@/components/maps";
 
 // Restaurant Card for personalized rows
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
@@ -102,11 +99,6 @@ const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
   restaurant: { icon: Utensils, color: "bg-orange-500" },
 };
 
-// Bottom sheet snap points (as fractions of viewport height from bottom)
-const SNAP_COLLAPSED = 0.25;
-const SNAP_DEFAULT = 0.45;
-const SNAP_EXPANDED = 0.80;
-
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -116,8 +108,6 @@ const AppHome = () => {
   const { deals } = useRecommendedDeals(6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
-  const { getCurrentLocation } = useCurrentLocation();
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
@@ -126,15 +116,6 @@ const AppHome = () => {
   const { balanceDollars } = useCustomerWallet();
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
-
-  // Get user location on mount
-  useEffect(() => {
-    getCurrentLocation()
-      .then(loc => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {}); // Fallback handled by default center
-  }, [getCurrentLocation]);
-
-  const mapCenter = userLocation || { lat: 40.7128, lng: -74.006 };
 
   // Promo carousel
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -148,52 +129,6 @@ const AppHome = () => {
     return () => { clearInterval(autoplay); emblaApi.off("select", onSelect); };
   }, [emblaApi]);
 
-  // Bottom sheet drag
-  const sheetY = useMotionValue(0);
-  const windowH = typeof window !== "undefined" ? window.innerHeight : 800;
-  const snapPoints = [
-    windowH * (1 - SNAP_EXPANDED),
-    windowH * (1 - SNAP_DEFAULT),
-    windowH * (1 - SNAP_COLLAPSED),
-  ];
-  const [currentSnap, setCurrentSnap] = useState(1); // default snap
-  const sheetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Set initial position to default snap
-    sheetY.set(snapPoints[1]);
-  }, []);
-
-  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    const currentY = sheetY.get();
-    const velocity = info.velocity.y;
-
-    // Find closest snap point, biased by velocity
-    let targetSnap = 1;
-    let minDist = Infinity;
-    snapPoints.forEach((snap, i) => {
-      const dist = Math.abs(currentY - snap) - velocity * (currentY > snap ? 0.15 : -0.15);
-      if (dist < minDist) {
-        minDist = dist;
-        targetSnap = i;
-      }
-    });
-
-    // Velocity-based override
-    if (velocity > 500 && targetSnap < 2) targetSnap = Math.min(targetSnap + 1, 2);
-    if (velocity < -500 && targetSnap > 0) targetSnap = Math.max(targetSnap - 1, 0);
-
-    setCurrentSnap(targetSnap);
-    animate(sheetY, snapPoints[targetSnap], {
-      type: "spring",
-      stiffness: 400,
-      damping: 40,
-    });
-  }, [sheetY, snapPoints]);
-
-  // Sheet height for content scrolling
-  const sheetHeight = useTransform(sheetY, (y) => windowH - y);
-
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -206,88 +141,57 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <div className="relative h-[100dvh] bg-background font-sans text-foreground overflow-hidden selection:bg-primary/30">
-
-      {/* FULL-SCREEN MAP BACKGROUND */}
-      <div className="absolute inset-0">
-        <GoogleMapProvider>
-          <GoogleMap
-            center={mapCenter}
-            zoom={14}
-            darkMode={false}
-            showControls={false}
-            className="w-full h-full"
-          />
-        </GoogleMapProvider>
-      </div>
-
-      {/* TOP OVERLAY */}
-      <div className="absolute top-0 left-0 right-0 z-30">
-        {/* Greeting bar */}
-        <div className="p-4 flex justify-between items-center bg-white/90 dark:bg-background/90 backdrop-blur-xl safe-area-top border-b border-border/30">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
-              ) : (
-                <div className="w-full h-full rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
-                  {initials}
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{greeting()}</div>
-              <div className="text-sm font-bold text-foreground">{userName}</div>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate("/alerts")}
-            className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
-          >
-            <Bell className="w-4 h-4 text-muted-foreground" />
-            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
-          </button>
-        </div>
-
-        {/* Search bar */}
-        <div className="px-4 pt-3">
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="w-full touch-manipulation"
-          >
-            <div className="bg-white/95 dark:bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg active:scale-[0.99] transition-transform">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
-              <div className="h-5 w-[1px] bg-border" />
-              <div className="p-1.5 bg-primary/10 rounded-lg">
-                <MapPin className="w-3.5 h-3.5 text-primary" />
+    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30">
+      {/* Scrollable content */}
+      <div className="overflow-y-auto pb-20">
+        {/* Gradient header zone */}
+        <div className="bg-gradient-to-b from-primary/5 to-background">
+          {/* Greeting bar */}
+          <div className="p-4 flex justify-between items-center safe-area-top">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full border-2 border-border p-0.5 overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
+                    {initials}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{greeting()}</div>
+                <div className="text-sm font-bold text-foreground">{userName}</div>
               </div>
             </div>
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => navigate("/alerts")}
+              className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
+            >
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
+            </button>
+          </div>
 
-      {/* BOTTOM SLIDING PANEL */}
-      <motion.div
-        ref={sheetRef}
-        style={{ y: sheetY }}
-        drag="y"
-        dragConstraints={{ top: snapPoints[0], bottom: snapPoints[2] }}
-        dragElastic={0.05}
-        onDragEnd={handleDragEnd}
-        className="absolute left-0 right-0 z-40 bg-background rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-border/50"
-        initial={{ y: snapPoints[1] }}
-      >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
-          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+          {/* Search bar */}
+          <div className="px-4 pb-4">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="w-full touch-manipulation"
+            >
+              <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg active:scale-[0.99] transition-transform">
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
+                <div className="h-5 w-[1px] bg-border" />
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
 
-        {/* Panel content - scrollable */}
-        <div
-          className="overflow-y-auto overscroll-contain px-4 pb-24"
-          style={{ maxHeight: `calc(${SNAP_EXPANDED * 100}vh - 48px)` }}
-        >
+        {/* Main content */}
+        <div className="px-4">
           {/* QUICK ACTIONS GRID (3x2) */}
           <div className="grid grid-cols-3 gap-3 mb-5">
             {quickActions.map((action) => (
@@ -319,7 +223,6 @@ const AppHome = () => {
                 ))}
               </div>
             </div>
-            {/* Dot indicators */}
             <div className="flex justify-center gap-1.5 mt-2">
               {promos.map((_, i) => (
                 <div
@@ -644,7 +547,7 @@ const AppHome = () => {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Bottom Navigation */}
       <ZivoMobileNav />
