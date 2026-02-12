@@ -1,77 +1,94 @@
 
+# System Health Monitoring Dashboard
 
-## Add Onboarding Welcome Screens for First-Time Users
+## Overview
 
-### Current Flow
+Most of the infrastructure already exists. This plan fills the gaps by creating a unified health monitoring page and adding uptime tracking, a log viewer, and automated alerting.
 
-```text
-Login/Signup --> Email Verify --> /setup (profile form) --> / (Home)
-```
+## What Already Exists (No Changes Needed)
 
-### Proposed Flow
+- Service health status table and real-time monitoring hooks
+- Live metrics panel with active users, rides, orders, deliveries
+- Flight system health monitoring (Duffel, Stripe, bookings)
+- Performance tracking utilities for API latency
+- Global error reporting with attack pattern detection
+- Admin alert center for security events
 
-```text
-Login/Signup --> Email Verify --> /onboarding (4 welcome slides) --> /setup (profile form) --> / (Home)
-```
+## What Will Be Built
 
-The onboarding carousel shows only once, before the profile setup form.
+### 1. Unified System Health Page
 
-### Implementation
+A new admin page at `/admin/system-health` that consolidates all service statuses into one view with:
 
-**1. New Page: `src/pages/Onboarding.tsx`**
+- Status cards for each service (API, Database, Payments, Notifications, Duffel, Stripe) showing green/yellow/red indicators
+- Uptime percentage calculated from `service_health_status` check history
+- Last downtime event timestamp per service
+- Average response time per service from `performance_metrics`
 
-A full-screen swipeable carousel with 4 slides:
+### 2. Uptime History Tracking
 
-| Slide | Title | Description | Icon |
-|-------|-------|-------------|------|
-| 1 | Ride Anywhere Easily | Your ride, one tap away | Car (Lucide) |
-| 2 | Order Food & Delivery Fast | Meals and packages delivered | UtensilsCrossed |
-| 3 | Book Flights, Hotels & Rentals | Travel the world with ZIVO | Plane |
-| 4 | Earn Rewards & Save Money | Credits, cashback, and perks | Gift |
+A new database table `service_uptime_log` to record state changes:
 
-Features:
-- Framer Motion `AnimatePresence` for smooth slide transitions
-- Progress dots at the bottom (verdant green active dot)
-- "Next" button advances slides (verdant green gradient)
-- "Skip" text button in top-right corner jumps to the end
-- Final slide shows "Get Started" button instead of "Next"
-- Large centered Lucide icons inside verdant green gradient containers (matching 2026 Spatial UI)
-- Clean white background, large readable text, rounded card shapes
-- Completion stored in `localStorage` key `hizovo-onboarding-seen`
+- Columns: `id`, `service_key`, `previous_status`, `new_status`, `changed_at`, `duration_seconds`
+- A database trigger on `service_health_status` that logs whenever a service status changes
+- The dashboard calculates uptime percentage from this log over the selected time range
 
-**2. Route Registration: `src/App.tsx`**
+### 3. System Logs Viewer
 
-- Add lazy import for `Onboarding`
-- Add route: `<Route path="/onboarding" element={<Onboarding />} />`
-- Place it alongside other public auth routes (login, signup, verify)
+A new component showing recent errors and warnings:
 
-**3. Redirect Logic: `src/components/auth/SetupRequiredRoute.tsx`**
+- Reads from `flight_admin_alerts` (existing) and a new generalized `system_logs` table
+- Columns: `id`, `level` (error/warning/info), `source` (service name), `message`, `meta` (JSONB), `created_at`
+- Filterable by level, source, and date range
+- Auto-refreshes every 30 seconds
 
-After email verification passes and before the setup redirect, check if onboarding has been seen:
-- If `localStorage.getItem("hizovo-onboarding-seen")` is falsy and setup is not complete, redirect to `/onboarding` instead of `/setup`
-- The onboarding page itself navigates to `/setup` on completion
+### 4. Automated Health Alerts
 
-**4. Design Details**
+Extend the existing alert infrastructure:
 
-- Verdant green gradient on icons: `bg-gradient-to-br from-primary to-emerald-400`
-- Active dot: `bg-primary` (verdant green), inactive: `bg-muted`
-- "Get Started" button: full-width verdant green gradient with shadow
-- Skip button: subtle `text-muted-foreground` in corner
-- Responsive: max-w-md centered, works on all screen sizes
-- Dark mode compatible using semantic Tailwind classes (`bg-background`, `text-foreground`)
+- A new edge function `check-system-health` that runs on a schedule (every 5 minutes via pg_cron or external cron)
+- Checks each service in `service_health_status` for non-operational states
+- Queries `performance_metrics` for error rate spikes (>20% in last 10 minutes)
+- Creates entries in `flight_admin_alerts` (generalized) when thresholds are breached
+- Sends admin notifications via the existing notification pipeline
 
-### Files Summary
+### 5. Admin Navigation Integration
 
-| File | Action |
-|------|--------|
-| `src/pages/Onboarding.tsx` | New -- 4-slide welcome carousel |
-| `src/App.tsx` | Add route for `/onboarding` |
-| `src/components/auth/SetupRequiredRoute.tsx` | Add onboarding check before setup redirect |
+- Add "System Health" link to the admin sidebar/navigation
+- Add route `/admin/system-health` to the router
 
-### Technical Notes
+## Technical Details
 
-- localStorage-based "seen" flag ensures the carousel never shows again, even across sessions
-- No database column needed -- this is a lightweight UX enhancement, not a security gate
-- The onboarding page is accessible without authentication (public route) so it loads instantly after email verification
-- Framer Motion is already installed and used extensively throughout the app
+### New Files
 
+1. **`src/pages/admin/SystemHealthDashboard.tsx`** -- Main page with tabs: Overview, Uptime, Logs, Alerts
+2. **`src/components/admin/health/ServiceStatusGrid.tsx`** -- Grid of service status cards with colored indicators
+3. **`src/components/admin/health/UptimeChart.tsx`** -- Recharts area chart showing uptime over time
+4. **`src/components/admin/health/SystemLogsViewer.tsx`** -- Filterable table of recent errors/warnings
+5. **`src/components/admin/health/HealthAlertRules.tsx`** -- Configuration for alert thresholds
+6. **`src/hooks/useSystemHealthDashboard.ts`** -- Hook combining service status, uptime, and metrics queries
+7. **`supabase/functions/check-system-health/index.ts`** -- Scheduled edge function for automated health checks
+
+### Database Changes
+
+1. **`service_uptime_log`** table to track status transitions with duration
+2. **`system_logs`** table for generalized error/warning logging
+3. Trigger on `service_health_status` to auto-log changes to `service_uptime_log`
+
+### Design
+
+- Verdant green theme consistent with existing admin pages
+- Status indicators: green (operational), yellow (degraded), red (down)
+- Cards with large numbers for key metrics (uptime %, response time, active counts)
+- Recharts for uptime and response time trend charts
+- Framer Motion animations matching existing dashboard style
+- Skeleton loading states during data fetch
+
+### Implementation Order
+
+1. Create database tables and trigger
+2. Build the hooks for data fetching
+3. Build UI components (status grid, uptime chart, logs viewer)
+4. Create the main dashboard page and add routing
+5. Build the `check-system-health` edge function
+6. Wire alerts into existing notification pipeline
