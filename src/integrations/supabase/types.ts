@@ -7847,26 +7847,32 @@ export type Database = {
       }
       driver_incentive_progress: {
         Row: {
+          bonus_status: string
           completed: boolean | null
           driver_id: string | null
           id: string
           incentive_id: string | null
+          paid_at: string | null
           progress: number | null
           updated_at: string | null
         }
         Insert: {
+          bonus_status?: string
           completed?: boolean | null
           driver_id?: string | null
           id?: string
           incentive_id?: string | null
+          paid_at?: string | null
           progress?: number | null
           updated_at?: string | null
         }
         Update: {
+          bonus_status?: string
           completed?: boolean | null
           driver_id?: string | null
           id?: string
           incentive_id?: string | null
+          paid_at?: string | null
           progress?: number | null
           updated_at?: string | null
         }
