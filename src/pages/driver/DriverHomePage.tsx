@@ -15,6 +15,8 @@ import {
   useDriverActiveTrip 
 } from "@/hooks/useDriverApp";
 import { useDriverEatsOrders } from "@/hooks/useDriverEatsOrders";
+import { useDriverRatings } from "@/hooks/useDriverRatings";
+import { useDriverRatingAlerts } from "@/hooks/useDriverRatingAlerts";
 import { supabase } from "@/integrations/supabase/client";
 
 const DriverHomePage = () => {
@@ -28,7 +30,10 @@ const DriverHomePage = () => {
     markDelivered, 
     unassignOrder 
   } = useDriverEatsOrders(driver?.id);
+  const { data: ratingStats } = useDriverRatings(driver?.id);
 
+  // Realtime rating alerts
+  useDriverRatingAlerts(driver?.id);
   // Start location tracking when online
   useDriverLocationTracking(driver?.id, driver?.is_online ?? false);
 
@@ -231,6 +236,50 @@ const DriverHomePage = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* My Ratings Card */}
+        {ratingStats && ratingStats.totalRated > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <Card
+              className="bg-zinc-900/80 border-white/10 cursor-pointer hover:bg-zinc-800/80 transition-colors"
+              onClick={() => navigate("/driver/account?tab=ratings")}
+            >
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">My Ratings</p>
+                    <p className="text-sm text-white/60">
+                      {ratingStats.avgRating.toFixed(1)} avg · {ratingStats.totalRated} rated
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/30" />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Rating Alert Banner */}
+        {ratingStats && ratingStats.avgRating > 0 && ratingStats.avgRating < 4.0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3"
+          >
+            <Star className="w-5 h-5 text-red-400" />
+            <div>
+              <p className="text-sm font-medium text-red-400">Rating below 4.0</p>
+              <p className="text-xs text-white/40">Focus on improving your service quality</p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Active Eats Deliveries */}
         {driver.is_online && eatsOrders.length > 0 && (

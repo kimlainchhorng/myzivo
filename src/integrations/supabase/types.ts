@@ -32847,11 +32847,15 @@ export type Database = {
           pickup_saved_location_id: string | null
           platform_fee: number | null
           rating: number | null
+          rating_categories: Json | null
+          rating_tags: string[] | null
           refund_amount: number | null
           refund_status: string | null
           region_id: string | null
           ride_type: string | null
+          rider_feedback: string | null
           rider_id: string | null
+          rider_rating: number | null
           service_type: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["trip_status"] | null
@@ -32915,11 +32919,15 @@ export type Database = {
           pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
+          rating_categories?: Json | null
+          rating_tags?: string[] | null
           refund_amount?: number | null
           refund_status?: string | null
           region_id?: string | null
           ride_type?: string | null
+          rider_feedback?: string | null
           rider_id?: string | null
+          rider_rating?: number | null
           service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
@@ -32983,11 +32991,15 @@ export type Database = {
           pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
+          rating_categories?: Json | null
+          rating_tags?: string[] | null
           refund_amount?: number | null
           refund_status?: string | null
           region_id?: string | null
           ride_type?: string | null
+          rider_feedback?: string | null
           rider_id?: string | null
+          rider_rating?: number | null
           service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
