@@ -41,22 +41,7 @@ function GoogleMapProviderInner({
     libraries: LIBRARIES,
   });
 
-  if (loadError) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[200px] bg-background/50 text-muted-foreground text-sm">
-        Failed to load Google Maps
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[200px] bg-background/50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  // Always render children — map components check isLoaded themselves
   return (
     <GoogleMapsContext.Provider value={{ isLoaded, loadError }}>
       {children}

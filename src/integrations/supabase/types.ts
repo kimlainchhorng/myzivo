@@ -10620,27 +10620,39 @@ export type Database = {
       featured_listings: {
         Row: {
           boost_amount: number | null
+          clicks: number
           created_at: string | null
           ends_at: string
           id: string
+          impressions: number
+          listing_type: string
+          max_redemptions: number | null
           restaurant_id: string
           starts_at: string
           status: string | null
         }
         Insert: {
           boost_amount?: number | null
+          clicks?: number
           created_at?: string | null
           ends_at: string
           id?: string
+          impressions?: number
+          listing_type?: string
+          max_redemptions?: number | null
           restaurant_id: string
           starts_at: string
           status?: string | null
         }
         Update: {
           boost_amount?: number | null
+          clicks?: number
           created_at?: string | null
           ends_at?: string
           id?: string
+          impressions?: number
+          listing_type?: string
+          max_redemptions?: number | null
           restaurant_id?: string
           starts_at?: string
           status?: string | null
