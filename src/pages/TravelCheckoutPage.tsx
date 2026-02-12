@@ -18,6 +18,8 @@ import { useTravelCheckout } from "@/hooks/useTravelCheckout";
 import { useServiceMaintenance } from "@/hooks/useServiceMaintenance";
 import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { format } from "date-fns";
+import { usePromotionValidation } from "@/hooks/usePromotionValidation";
+import { Tag, X, CheckCircle2, Loader2 as PromoLoader } from "lucide-react";
 
 const TravelCheckoutPage = () => {
   const navigate = useNavigate();
@@ -34,13 +36,26 @@ const TravelCheckoutPage = () => {
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [promoCode, setPromoCode] = useState("");
+  const { isValidating: promoValidating, appliedPromo, error: promoError, validateCode: validatePromo, removePromo } = usePromotionValidation({ serviceType: 'hotels' });
 
   const isLoading = isCreatingOrder || isStartingCheckout;
   const error = orderError || checkoutError;
 
   const subtotal = getTotal();
   const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
-  const total = subtotal + serviceFee;
+  const promoDiscount = appliedPromo?.valid ? (appliedPromo.discount_amount || 0) : 0;
+  const total = Math.max(0, subtotal + serviceFee - promoDiscount);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || promoValidating) return;
+    await validatePromo(promoCode.trim(), subtotal + serviceFee);
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode("");
+    removePromo();
+  };
 
   // Show maintenance screen if travel service is paused
   if (maintenanceLoading) {
@@ -344,6 +359,49 @@ const TravelCheckoutPage = () => {
 
                 <Separator />
 
+                {/* Promo Code */}
+                {appliedPromo?.valid ? (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-xs">{appliedPromo.code}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 text-xs">−${promoDiscount.toFixed(2)}</span>
+                      </div>
+                      {appliedPromo.description && <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>}
+                    </div>
+                    <button onClick={handleRemovePromo} className="p-1 rounded-lg hover:bg-emerald-500/10" aria-label="Remove promo">
+                      <X className="w-3.5 h-3.5 text-emerald-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground font-medium">Promo Code</label>
+                    <div className="flex gap-1.5">
+                      <div className="relative flex-1">
+                        <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                        <Input
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                          placeholder="Enter code"
+                          disabled={promoValidating}
+                          className="pl-8 h-9 uppercase text-sm"
+                          style={{ fontSize: "16px" }}
+                        />
+                      </div>
+                      <Button size="sm" onClick={handleApplyPromo} disabled={!promoCode.trim() || promoValidating} className="h-9 px-3">
+                        {promoValidating ? <PromoLoader className="w-3.5 h-3.5 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                  </div>
+                )}
+
+                <Separator />
+
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
@@ -353,6 +411,12 @@ const TravelCheckoutPage = () => {
                     <span className="text-muted-foreground">Service Fee</span>
                     <span>${serviceFee.toFixed(2)}</span>
                   </div>
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>Promo Discount</span>
+                      <span>−${promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-semibold text-base">
                     <span>Total</span>

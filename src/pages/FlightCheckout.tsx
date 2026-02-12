@@ -44,6 +44,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFlightsCanBook } from '@/hooks/useFlightsLaunchStatus';
 import { useFlightFunnel } from '@/hooks/useFlightFunnel';
+import { usePromotionValidation } from '@/hooks/usePromotionValidation';
+import { Tag, X, CheckCircle2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const FlightCheckout = () => {
   const navigate = useNavigate();
@@ -61,6 +64,8 @@ const FlightCheckout = () => {
   const createCheckout = useCreateFlightCheckout();
   const { canBook, isInternalTest, isPaused, pauseReason, isLoading: bookingCheckLoading, phase } = useFlightsCanBook();
   const { trackCheckoutStarted } = useFlightFunnel();
+  const { isValidating: promoValidating, appliedPromo, error: promoError, validateCode: validatePromo, removePromo } = usePromotionValidation({ serviceType: 'flights' });
+  const [promoCode, setPromoCode] = useState('');
 
   // Load passenger data from session storage
   useEffect(() => {
@@ -250,6 +255,19 @@ const FlightCheckout = () => {
 
   const baseFare = offer.price * 0.85;
   const taxesFees = offer.price * 0.15;
+  const totalBeforeDiscount = offer.price * passengerCount;
+  const promoDiscount = appliedPromo?.valid ? (appliedPromo.discount_amount || 0) : 0;
+  const finalTotal = Math.max(0, totalBeforeDiscount - promoDiscount);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || promoValidating) return;
+    await validatePromo(promoCode.trim(), totalBeforeDiscount);
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    removePromo();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -455,6 +473,53 @@ const FlightCheckout = () => {
                 currency={offer.currency}
                 showNoHiddenFees
               />
+
+              {/* Promo Code */}
+              <Card>
+                <CardContent className="p-4">
+                  {appliedPromo?.valid ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">{appliedPromo.code}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 text-sm">−${promoDiscount.toFixed(2)}</span>
+                        </div>
+                        {appliedPromo.description && (
+                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>
+                        )}
+                      </div>
+                      <button onClick={handleRemovePromo} className="p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" aria-label="Remove promo code">
+                        <X className="w-4 h-4 text-emerald-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground font-medium">Promo Code</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                            placeholder="Enter code"
+                            disabled={promoValidating}
+                            className="pl-10 h-11 uppercase"
+                            style={{ fontSize: '16px' }}
+                          />
+                        </div>
+                        <Button onClick={handleApplyPromo} disabled={!promoCode.trim() || promoValidating} className="h-11 px-5">
+                          {promoValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                        </Button>
+                      </div>
+                      {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Accepted Payment Methods */}
               <AcceptedPaymentMethods />

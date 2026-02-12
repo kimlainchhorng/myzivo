@@ -3,19 +3,34 @@
  * Embedded partner checkout with security messaging
  */
 
+import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ArrowLeft, Shield, Lock, CheckCircle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Shield, Lock, CheckCircle, ExternalLink, Tag, X, CheckCircle2, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RampGlobalDisclaimer } from "@/components/results";
+import { usePromotionValidation } from "@/hooks/usePromotionValidation";
 
 export default function CarCheckoutPage() {
   const [searchParams] = useSearchParams();
 
   const category = searchParams.get("category") || "Economy";
   const name = searchParams.get("name") || "";
+  const [promoCode, setPromoCode] = useState("");
+  const { isValidating: promoValidating, appliedPromo, error: promoError, validateCode: validatePromo, removePromo } = usePromotionValidation({ serviceType: 'cars' });
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || promoValidating) return;
+    await validatePromo(promoCode.trim(), 0);
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode("");
+    removePromo();
+  };
 
   // For now, redirect to partner site
   const handleProceedToPartner = () => {
@@ -114,6 +129,47 @@ export default function CarCheckoutPage() {
                   Booking for: <span className="font-medium text-foreground">{name}</span>
                 </p>
               )}
+              {/* Promo Code */}
+              <div className="w-full max-w-sm mb-4">
+                {appliedPromo?.valid ? (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">{appliedPromo.code}</span>
+                      </div>
+                      {appliedPromo.description && <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>}
+                    </div>
+                    <button onClick={handleRemovePromo} className="p-1.5 rounded-lg hover:bg-emerald-500/10" aria-label="Remove promo">
+                      <X className="w-4 h-4 text-emerald-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                          placeholder="Promo code"
+                          disabled={promoValidating}
+                          className="pl-10 h-11 uppercase"
+                          style={{ fontSize: "16px" }}
+                        />
+                      </div>
+                      <Button onClick={handleApplyPromo} disabled={!promoCode.trim() || promoValidating} className="h-11 px-5">
+                        {promoValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                  </div>
+                )}
+              </div>
+
               <Button 
                 onClick={handleProceedToPartner}
                 size="lg"
