@@ -1,31 +1,50 @@
 
 
-# Fix: Rides Page Map Shows Blank/Loading Area
+# Fix: Show Real Address Instead of Raw Coordinates
 
 ## Problem
 
-The `/rides` page uses a full-screen map in the top half of the screen. When the Google Maps API hasn't loaded (no API key, user not logged in, slow network), this area shows either a blank white space or a grid pattern with a spinner -- making the page look broken, as shown in your screenshot.
+When the user's location is detected on the Rides page, the pickup field shows raw coordinates like `30.471521, -90.959525` instead of a human-readable address like "109 Hickory St, Denham Springs, LA".
+
+## Root Cause
+
+The `reverseGeocode` function in `useCurrentLocation.ts` (line 65-79) calls the **Mapbox** geocoding API using `VITE_MAPBOX_ACCESS_TOKEN`. This token is empty/not configured, so the API call fails and the code falls back to returning raw coordinates:
+
+```
+return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+```
+
+The rest of the app has already migrated to **Google Maps via edge functions** (the `maps-autocomplete`, `maps-place-details`, `maps-route` edge functions all use `GOOGLE_MAPS_API_KEY` server-side). But `reverseGeocode` was never migrated -- it still relies on the old Mapbox client-side token.
 
 ## Solution
 
-Improve the `RidesMapView` fallback to show a polished, branded placeholder instead of a broken-looking loading state. The map area will show a clean ZIVO-branded static background with a subtle gradient and location pin -- making it look intentional rather than broken.
+Two changes:
 
-### Changes to `src/pages/Rides.tsx`
+### 1. New edge function: `maps-reverse-geocode`
 
-**Replace the loading/fallback states in `RidesMapView`** (lines 157-210):
+Create a new Supabase edge function that calls Google's Geocoding API server-side to convert coordinates to an address. Pattern matches the existing `maps-place-details` function.
 
-1. **Loading state**: Replace the grid-pattern + spinner with a clean gradient background (`bg-gradient-to-br from-emerald-50 to-teal-50`) showing a subtle animated location pulse -- looks polished instead of broken
-2. **Error fallback**: Replace the fake road lines with the same clean gradient + a small "Map unavailable" label so users know it's not broken
-3. Both states still render all the floating cards (pickup card, dropoff card, locate button) so the UI remains functional
+- Accepts `{ lat, lng }` in the request body
+- Calls `https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={KEY}`
+- Returns `{ ok: true, address: "109 Hickory St, Denham Springs, LA 70726" }`
 
-### What stays the same
+### 2. Update `reverseGeocode` in `useCurrentLocation.ts`
 
-- The actual Google Map renders normally when the API loads
-- All floating cards (pickup, dropoff, ETA badge) remain
-- Bottom sheet with booking flow is unchanged
-- All pricing, routing, and booking logic untouched
+Replace the broken Mapbox API call with a call to the new edge function via `supabase.functions.invoke("maps-reverse-geocode", { body: { lat, lng } })`. Remove the `MAPBOX_TOKEN` constant since it's no longer needed.
+
+### 3. Add `reverseGeocode` to `mapsApi.ts`
+
+Add a `reverseGeocode(lat, lng)` function to the centralized maps API service, following the same pattern as `getPlaceDetails`. Then `useCurrentLocation.ts` imports and uses it.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `supabase/functions/maps-reverse-geocode/index.ts` | New edge function for Google reverse geocoding |
+| `src/services/mapsApi.ts` | Add `reverseGeocode(lat, lng)` function |
+| `src/hooks/useCurrentLocation.ts` | Replace Mapbox call with `mapsApi.reverseGeocode`, remove `MAPBOX_TOKEN` |
 
 ### Result
 
-Instead of a blank white area or janky grid pattern, users see a clean branded background that looks intentional. The booking flow works identically -- the map is just a visual enhancement, not a requirement.
+The pickup field will show a real street address like "109 Hickory St, Denham Springs, LA" instead of raw coordinates. The floating pickup card on the map will also show the real address.
 
