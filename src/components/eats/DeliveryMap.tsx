@@ -5,6 +5,9 @@
 import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import AnimatedDriverMarker from "@/components/maps/AnimatedDriverMarker";
+import FloatingEtaCard from "@/components/maps/FloatingEtaCard";
+import { haversineMiles } from "@/services/mapsApi";
 import { MapPin, Navigation, Loader2 } from "lucide-react";
 
 interface DeliveryStop {
@@ -169,22 +172,27 @@ export function DeliveryMap({
           }}
         />
 
-        {/* Driver Location Marker with heading rotation */}
+        {/* Animated Driver Marker with heading rotation */}
         {hasDriverLocation && (
-          <Marker
+          <AnimatedDriverMarker
             position={{ lat: driverLat!, lng: driverLng! }}
-            icon={{
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 6,
-              fillColor: "#f97316",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-              rotation: driverHeading ?? 0,
-            }}
+            heading={driverHeading}
+            isStale={isLocationStale}
           />
         )}
       </GoogleMap>
+
+      {/* Floating ETA Card */}
+      {hasDriverLocation && (
+        <FloatingEtaCard
+          etaMinutes={(() => {
+            const dist = haversineMiles(driverLat!, driverLng!, deliveryLat, deliveryLng);
+            return Math.max(1, Math.ceil(dist / 0.5));
+          })()}
+          distanceMiles={haversineMiles(driverLat!, driverLng!, deliveryLat, deliveryLng)}
+          statusLabel="Driver ETA"
+        />
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 justify-between">
