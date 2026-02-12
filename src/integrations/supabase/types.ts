@@ -6257,6 +6257,42 @@ export type Database = {
           },
         ]
       }
+      customer_streaks: {
+        Row: {
+          created_at: string
+          current_count: number
+          id: string
+          last_activity_date: string | null
+          longest_count: number
+          reward_claimed_at: string | null
+          streak_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_count?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_count?: number
+          reward_claimed_at?: string | null
+          streak_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_count?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_count?: number
+          reward_claimed_at?: string | null
+          streak_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_wallet_transactions: {
         Row: {
           amount_cents: number
@@ -21052,6 +21088,51 @@ export type Database = {
           description?: string | null
           id?: string
           key?: string
+        }
+        Relationships: []
+      }
+      personalized_offers: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string
+          discount_value: number
+          expires_at: string
+          id: string
+          offer_type: string
+          redeemed_at: string | null
+          segment: string | null
+          target_restaurant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          discount_value?: number
+          expires_at: string
+          id?: string
+          offer_type?: string
+          redeemed_at?: string | null
+          segment?: string | null
+          target_restaurant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          discount_value?: number
+          expires_at?: string
+          id?: string
+          offer_type?: string
+          redeemed_at?: string | null
+          segment?: string | null
+          target_restaurant_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
