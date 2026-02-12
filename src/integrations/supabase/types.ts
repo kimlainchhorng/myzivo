@@ -579,6 +579,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notifications: {
+        Row: {
+          category: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          link: string | null
+          message: string
+          severity: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          link?: string | null
+          message: string
+          severity?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       admin_security_alerts: {
         Row: {
           alert_type: string
@@ -9699,6 +9741,8 @@ export type Database = {
       eats_zones: {
         Row: {
           at_risk_threshold_minutes: number | null
+          center_lat: number | null
+          center_lng: number | null
           city_id: string | null
           city_name: string
           created_at: string
@@ -9706,7 +9750,9 @@ export type Database = {
           delivery_fee_per_mile: number
           id: string
           is_active: boolean
+          polygon: Json | null
           service_fee_percent: number
+          services_enabled: Json
           sla_delivery_buffer_minutes: number | null
           sla_pickup_buffer_minutes: number | null
           sla_prep_minutes: number | null
@@ -9718,6 +9764,8 @@ export type Database = {
         }
         Insert: {
           at_risk_threshold_minutes?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
           city_id?: string | null
           city_name: string
           created_at?: string
@@ -9725,7 +9773,9 @@ export type Database = {
           delivery_fee_per_mile?: number
           id?: string
           is_active?: boolean
+          polygon?: Json | null
           service_fee_percent?: number
+          services_enabled?: Json
           sla_delivery_buffer_minutes?: number | null
           sla_pickup_buffer_minutes?: number | null
           sla_prep_minutes?: number | null
@@ -9737,6 +9787,8 @@ export type Database = {
         }
         Update: {
           at_risk_threshold_minutes?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
           city_id?: string | null
           city_name?: string
           created_at?: string
@@ -9744,7 +9796,9 @@ export type Database = {
           delivery_fee_per_mile?: number
           id?: string
           is_active?: boolean
+          polygon?: Json | null
           service_fee_percent?: number
+          services_enabled?: Json
           sla_delivery_buffer_minutes?: number | null
           sla_pickup_buffer_minutes?: number | null
           sla_prep_minutes?: number | null
@@ -26562,6 +26616,33 @@ export type Database = {
         }
         Relationships: []
       }
+      service_uptime_log: {
+        Row: {
+          changed_at: string
+          duration_seconds: number | null
+          id: string
+          new_status: string
+          previous_status: string | null
+          service_key: string
+        }
+        Insert: {
+          changed_at?: string
+          duration_seconds?: number | null
+          id?: string
+          new_status: string
+          previous_status?: string | null
+          service_key: string
+        }
+        Update: {
+          changed_at?: string
+          duration_seconds?: number | null
+          id?: string
+          new_status?: string
+          previous_status?: string | null
+          service_key?: string
+        }
+        Relationships: []
+      }
       service_usage: {
         Row: {
           created_at: string | null
@@ -28696,6 +28777,33 @@ export type Database = {
           resolved_at?: string | null
           severity?: string
           title?: string
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string
+          id: string
+          level: string
+          message: string
+          meta: Json | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: string
+          message: string
+          meta?: Json | null
+          source: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          meta?: Json | null
+          source?: string
         }
         Relationships: []
       }
