@@ -1,74 +1,87 @@
 
 
-## Add Dark Mode Support to Hizivo
+## Add Multi-Language Support to Hizivo
 
 ### Current State
 
-- The `.dark` CSS class with all dark theme variables (background, cards, borders, product colors, shadows) is **already fully defined** in `src/index.css` (lines 129-210) with verdant green primary accents
-- `next-themes` is **already installed** as a dependency
-- `sonner.tsx` already imports `useTheme` from `next-themes` and is ready
-- The `tailwind.config.ts` already has `darkMode: ["class"]` configured
-- **What is missing**: No `ThemeProvider` wraps the app, and no toggle UI exists anywhere
+The i18n infrastructure is **fully built** but **not wired up**:
 
-### Changes Required
+- `src/lib/i18n.ts` -- Translation engine with DB loading, interpolation, and English defaults for ~60 keys across common, flights, hotels, cars, and auth namespaces
+- `src/hooks/useI18n.ts` -- React hook exposing `t()`, `changeLanguage()`, and language state
+- `src/components/shared/LanguageSelector.tsx` -- Dropdown UI with flags and native names
+- `supported_languages` table -- English (active), Spanish + 6 others (inactive)
+- `ui_translations` table -- **Empty** (no Spanish translations seeded)
+- `PreferencesSync.tsx` -- Already syncs language preference from DB on login
+- `usePersonalizationSettings.ts` -- Already persists `preferred_language`
 
-**1. Wrap the app with next-themes ThemeProvider**
+### What Needs to Happen
 
-File: `src/App.tsx`
+**1. Activate Spanish and seed translations (Database)**
 
-- Import `ThemeProvider` from `next-themes`
-- Wrap the outermost provider tree with `<ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">`
-- This enables the `dark` class to be toggled on `<html>`, activating all existing CSS variables
+Run SQL migration to:
+- Set Spanish (`es`) to `is_active = true` in `supported_languages`
+- Insert all ~60 Spanish translation rows into `ui_translations` matching the English keys in `src/lib/i18n.ts`
 
-**2. Create a Theme Toggle component**
-
-New file: `src/components/shared/ThemeToggle.tsx`
-
-- Three-option selector: Light / Dark / System
-- Uses `useTheme()` from `next-themes` to read and set theme
-- Verdant green highlight on the active option
-- Icons: Sun, Moon, Monitor (from Lucide)
-- Compact pill-style toggle suitable for both settings page and header placement
-
-**3. Add Appearance section to Preferences page**
+**2. Add Language Selector to Preferences Page**
 
 File: `src/pages/account/PreferencesPage.tsx`
 
-- Add a new "Appearance" card section (above Language) with the Palette icon
-- Embed the ThemeToggle component inside it
-- Three large tap-friendly buttons: Light, Dark, System
-- Active state uses `bg-primary/10 text-primary` (matching existing language/currency selection pattern)
+The existing Language section already has a hardcoded list of languages with selection UI. Replace it with the existing `LanguageSelector` component, or keep the current inline buttons but filter to only show active languages from the DB.
 
-**4. Persist theme preference to database (for logged-in users)**
+**3. Add Language Selection to Onboarding**
 
-File: `src/pages/account/PreferencesPage.tsx`
+File: `src/pages/Setup.tsx`
 
-- When theme changes, call `updateSettings({ preferred_theme: theme })` to sync to the personalization settings table (same pattern as language/currency)
+Add a language picker step or a small language selector at the top of the setup page so first-time users can choose their language before completing onboarding.
 
-File: `src/components/shared/PreferencesSync.tsx`
+**4. Wire up `t()` calls in key UI screens**
 
-- Add theme sync: on login, read `settings.preferred_theme` and call `setTheme()` if it differs from the current theme
+Replace hardcoded English strings with `t()` calls in the most visible components:
 
-### What Does NOT Need to Change
+| Screen | File(s) | Key strings to translate |
+|--------|---------|------------------------|
+| Navigation | `Header.tsx`, `MobileNav.tsx` | Menu items (Home, Flights, Hotels, etc.) |
+| Flight Search | `FlightSearchFormPro.tsx` | Form labels (From, To, Departure, Passengers) |
+| Hotel Search | Hotel search form | Destination, Check-in, Check-out, Guests |
+| Car Rental | Car search form | Pickup, Drop-off, dates |
+| Auth | Login/Signup pages | Email, Password, buttons |
+| Common actions | Buttons across app | Search, Book Now, Continue, Cancel, Save |
+| Status messages | Toast/loading states | Loading, Success, Error messages |
 
-- `index.css` -- dark variables are complete
-- `tailwind.config.ts` -- `darkMode: ["class"]` is set
-- All UI components using `bg-background`, `text-foreground`, `bg-card`, `border-border`, etc. will automatically respond to dark mode since they reference CSS variables
-- Product accent colors (flights blue, hotels amber, eats red, etc.) already have dark variants defined
+Each component will import `useTranslation` from the hook and replace string literals with `t("key")`.
+
+**5. Persist and restore language preference**
+
+This is **already working** via:
+- `usePersonalizationSettings` saves `preferred_language` to DB
+- `PreferencesSync` restores it on login
+- `LanguageSelector` calls `updateSettings` on change
+- No additional work needed
+
+### What Does NOT Change
+
+- `src/lib/i18n.ts` -- Engine is complete
+- `src/hooks/useI18n.ts` -- Hook is complete
+- `PreferencesSync.tsx` -- Already syncs language
+- Database schema -- Tables exist with RLS policies
+- The `LanguageSelector` component -- Already built with verdant green theme
 
 ### Technical Notes
 
-- `next-themes` handles SSR flash prevention, localStorage persistence, and system preference detection out of the box
-- `storageKey: "hizovo-theme"` keeps the theme preference in localStorage for instant load
-- The `attribute: "class"` setting matches the existing Tailwind `darkMode: ["class"]` configuration
-- Components using hardcoded colors (e.g., `bg-black`, `text-white`, `bg-zinc-950`) in service-specific pages (Eats, Rides) are already dark-themed and will remain consistent
+- The i18n engine falls back to English when a translation key is missing, so partial translations are safe
+- Translations load from Supabase `ui_translations` table on language switch and are cached in memory
+- Adding more languages later only requires inserting rows into `ui_translations` and setting `is_active = true` in `supported_languages`
+- RTL support (for Arabic) is already accounted for in the `SupportedLanguage` type with a `direction` field
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/App.tsx` | Add `ThemeProvider` wrapper |
-| `src/components/shared/ThemeToggle.tsx` | New -- three-option theme selector |
-| `src/pages/account/PreferencesPage.tsx` | Add Appearance section with theme toggle |
-| `src/components/shared/PreferencesSync.tsx` | Sync DB theme preference on login |
+| SQL Migration | Activate Spanish, seed ~60 translation rows |
+| `src/pages/account/PreferencesPage.tsx` | Use `LanguageSelector` or filter to active languages |
+| `src/pages/Setup.tsx` | Add language picker to onboarding |
+| `src/components/Header.tsx` | Replace nav strings with `t()` calls |
+| `src/components/search/FlightSearchFormPro.tsx` | Replace form labels with `t()` |
+| Auth pages (Login, Signup) | Replace form labels with `t()` |
+| Various button/action components | Replace common action strings with `t()` |
 
