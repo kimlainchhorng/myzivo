@@ -1,87 +1,117 @@
 
 
-## Add Promo Codes to Travel Checkouts
+## Add Driver and Courier Tipping System
 
-The Promo Codes and Discounts system is already 95% built across ZIVO. Here is what exists and what needs to be added.
-
-### Already Exists (no changes needed)
-
-| Feature | Location |
-|---------|----------|
-| Promotions page (coupons, offers, referrals, loyalty) | `src/pages/Promotions.tsx` |
-| Promo code input for Rides | `src/components/ride/PromoCodeInput.tsx` |
-| Promo code input for Eats (with inline variant) | `src/components/eats/PromoCodeInput.tsx` + `EatsCheckout.tsx` |
-| Unified promo validation hook (RPC-based) | `src/hooks/usePromotionValidation.ts` |
-| Ride-specific promo validation | `src/hooks/useRidePromoValidation.ts` |
-| Eats promo hook | `src/hooks/useEatsPromo.ts` |
-| General promo code hook | `src/hooks/usePromoCode.ts` |
-| Promo code service (validate, calculate discount) | `src/lib/promoCodeService.ts` |
-| Admin promotions CRUD | `src/components/admin/AdminPromotions.tsx` |
-| Dispatch promotions management | `src/pages/dispatch/DispatchPromotions.tsx` |
-| Promo banner for homepage | `src/components/shared/PromoCodeBanner.tsx` |
-| Marketing promo banner | `src/components/marketing/PromoBanner.tsx` |
-| Automatic promotions on restaurants | Already shown via restaurant cards with promo badges |
-| Discount types (percentage, fixed, free delivery) | Supported in `promotions` table and validation RPC |
-
-### What Will Be Added
-
-Promo code input sections on the three travel checkout pages that currently lack them: **Flights**, **Hotels/Travel**, and **Cars**.
+The tipping infrastructure is partially built but needs to be connected end-to-end. Here is the current state and what needs to change.
 
 ---
 
-**1. Flight Checkout (`src/pages/FlightCheckout.tsx`)**
+### What Already Exists (no changes needed)
 
-- Import `usePromotionValidation` hook with `serviceType: 'flights'`
-- Add a promo code input section in the price breakdown area (before the total)
-- When a valid promo is applied, show the discount as a line item and adjust the total
-- Pass the promo code to the checkout function for server-side re-validation
+| Feature | Location |
+|---------|----------|
+| Eats TipSelector (percentage-based, custom amount, modal) | `src/components/eats/TipSelector.tsx` |
+| Tip in Eats checkout and cart | `EatsCheckout.tsx`, `EatsCart.tsx` |
+| Eats tip saved to `food_orders.tip_amount` / `tip_cents` | Database columns exist |
+| Post-ride tip UI ($1/$3/$5 buttons) | `RideReceiptModal.tsx` (lines 270-305) |
+| `driver_earnings` table with `tip_amount` column | Database schema |
+| `driver_payments` table with `tip_amount` column | Database schema |
+| Admin driver earnings with tip totals | `AdminDriverEarnings.tsx` |
+| Spending stats includes tips from food orders | `useSpendingStats.ts` |
 
-**2. Travel Checkout (`src/pages/TravelCheckoutPage.tsx`)**
+### What Is Missing (gaps to fill)
 
-- Import `usePromotionValidation` hook with `serviceType: 'hotels'`
-- Add a promo code input section in the order summary before the total line
-- Adjust the `total` calculation to subtract the discount amount
-- Show applied promo badge with remove button
+1. **Ride tips are not saved to the database** -- the RideReceiptModal has tip buttons but `selectedTip` is local state only and never persisted
+2. **No tip option before booking a ride** (pre-checkout tip)
+3. **No tip for package deliveries** (Move service)
+4. **Driver earnings dashboard does not include tips** -- `useDriverEarnings` only sums `fare_amount` / `delivery_fee` / `actual_payout`, ignoring tip columns
+5. **No tip history visible in user transaction/order history**
 
-**3. Car Checkout (`src/pages/CarCheckoutPage.tsx`)**
+---
 
-- Import `usePromotionValidation` hook with `serviceType: 'cars'`
-- Add a promo code input section before the "Proceed to Partner" button
-- Display discount amount in the summary
-- Note: since car checkout redirects to a partner, the discount is informational (the promo would need partner integration to actually apply)
+### Changes
+
+**1. Persist ride tips to the database**
+
+File: `src/lib/supabaseRide.ts`
+
+Add a new `saveRideTip` function that updates the `driver_earnings` table for the given trip, setting `tip_amount`. Also record the tip in the trip's `customer_total` update if possible.
+
+File: `src/components/ride/RideReceiptModal.tsx`
+
+- Call `saveRideTip` when the user selects a tip and taps "DONE"
+- Add a "Custom" tip button alongside $1/$3/$5 (opens a small input like the Eats TipSelector custom modal)
+- Show a confirmation toast after tip is saved
+- Style the tip buttons with emerald green active state instead of the current primary color, matching the verdant theme
+
+**2. Pre-ride tip option on the confirm page**
+
+File: `src/pages/ride/RideConfirmPage.tsx`
+
+- Add a compact TipSelector section below the fare breakdown (before the "Confirm Ride" button)
+- Use quick buttons: $1, $3, $5, Custom
+- Pass `tipAmount` to the ride creation flow so it's included in the trip record
+- Store the tip in `driver_earnings.tip_amount` when the earnings record is created
+
+**3. Post-delivery tip for packages (Move)**
+
+File: `src/components/ride/RideReceiptModal.tsx` (or a new shared component)
+
+Create a reusable `PostTripTipCard` component extracted from the existing tip section in RideReceiptModal. This component can be used by both rides and package delivery completion screens.
+
+File: Look for the package delivery completion flow and add the tip card there. If no completion screen exists for package deliveries, add a tip option to the delivery detail/history page.
+
+**4. Include tips in driver earnings dashboard**
+
+File: `src/hooks/useDriverEarnings.ts`
+
+- Update the trips query to also select `tip_amount` from `driver_earnings` table (join or separate query)
+- Add `tips` field to `DriverEarningsData` interface (today/week/month tip totals)
+- Add tip amount to each `JobEarning` item
+- Include tips in the earnings totals (today, week, month)
+
+**5. Show tips in user transaction history**
+
+File: `src/hooks/useSpendingStats.ts` (already partially done for eats)
+
+- For ride transactions, fetch the associated `driver_earnings.tip_amount` and include it in the transaction display
+- Add a "Tip" line item in ride receipts when viewing past trips
 
 ---
 
 ### Technical Details
 
-**Files modified (3):**
+**Files modified (4-5):**
 
 | File | Change |
 |------|--------|
-| `src/pages/FlightCheckout.tsx` | Add promo input, discount line item, adjusted total |
-| `src/pages/TravelCheckoutPage.tsx` | Add promo input, discount line item, adjusted total |
-| `src/pages/CarCheckoutPage.tsx` | Add promo input, discount display |
+| `src/components/ride/RideReceiptModal.tsx` | Persist tip to DB, add custom tip button, emerald theme, confirmation message |
+| `src/lib/supabaseRide.ts` | Add `saveRideTip()` function |
+| `src/pages/ride/RideConfirmPage.tsx` | Add pre-ride tip selector with $1/$3/$5/Custom buttons |
+| `src/hooks/useDriverEarnings.ts` | Include tip amounts in earnings calculations |
 
-**Shared hook used:** `usePromotionValidation` from `src/hooks/usePromotionValidation.ts` -- the same RPC-based validation already used in Eats checkout. Each page passes its own `serviceType` ('flights', 'hotels', 'cars') so the backend can enforce service-specific promo restrictions.
-
-**Promo input UI pattern** (consistent across all three pages):
-
-```text
-+------------------------------------------+
-| [Tag icon] Promo code     [  Apply  ]    |
-+------------------------------------------+
-```
-
-When applied:
+**Tip button design (consistent across all services):**
 
 ```text
-+------------------------------------------+
-| [Check] SUMMER20  -$15.00        [X]     |
-| "20% off summer travel"                  |
-+------------------------------------------+
++-------+  +-------+  +-------+  +----------+
+|  $1   |  |  $3   |  |  $5   |  |  Custom  |
++-------+  +-------+  +-------+  +----------+
 ```
 
-Styled with emerald green success state (`bg-emerald-500/10 border-emerald-500/20`), matching the existing Eats checkout promo pattern.
+Active state: `bg-emerald-500 text-white border-emerald-500`
+Inactive state: `bg-white/5 text-white/80 border-white/10`
 
-**No new files, hooks, or database changes needed.** All validation, discount types, and admin management already exist.
+**Confirmation after tipping:**
+
+A toast notification: "Tip added! 100% goes to your driver."
+
+Plus an inline emerald check badge in the receipt.
+
+**Database interaction:**
+
+- `saveRideTip` will update `driver_earnings` where `trip_id` matches, setting `tip_amount`
+- If no `driver_earnings` row exists yet (edge case), it will insert one
+- For pre-ride tips, the tip is passed through the ride creation payload and included when the `driver_earnings` record is created upon trip completion
+
+**No new database columns needed** -- `driver_earnings.tip_amount`, `food_orders.tip_amount`, and `food_orders.tip_cents` already exist.
 
