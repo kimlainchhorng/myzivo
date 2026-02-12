@@ -10539,6 +10539,78 @@ export type Database = {
         }
         Relationships: []
       }
+      fare_calculations: {
+        Row: {
+          base_fare: number
+          booking_fee: number
+          breakdown_json: Json | null
+          created_at: string
+          distance_charge: number
+          distance_miles: number
+          duration_minutes: number
+          id: string
+          minimum_fare_applied: boolean
+          order_id: string | null
+          ride_type: string
+          service_fee: number
+          service_type: string
+          subtotal: number
+          surge_amount: number
+          surge_multiplier: number
+          time_adjustment: number
+          time_charge: number
+          time_multiplier: number
+          total_fare: number
+          zone_id: string | null
+        }
+        Insert: {
+          base_fare?: number
+          booking_fee?: number
+          breakdown_json?: Json | null
+          created_at?: string
+          distance_charge?: number
+          distance_miles?: number
+          duration_minutes?: number
+          id?: string
+          minimum_fare_applied?: boolean
+          order_id?: string | null
+          ride_type?: string
+          service_fee?: number
+          service_type?: string
+          subtotal?: number
+          surge_amount?: number
+          surge_multiplier?: number
+          time_adjustment?: number
+          time_charge?: number
+          time_multiplier?: number
+          total_fare?: number
+          zone_id?: string | null
+        }
+        Update: {
+          base_fare?: number
+          booking_fee?: number
+          breakdown_json?: Json | null
+          created_at?: string
+          distance_charge?: number
+          distance_miles?: number
+          duration_minutes?: number
+          id?: string
+          minimum_fare_applied?: boolean
+          order_id?: string | null
+          ride_type?: string
+          service_fee?: number
+          service_type?: string
+          subtotal?: number
+          surge_amount?: number
+          surge_multiplier?: number
+          time_adjustment?: number
+          time_charge?: number
+          time_multiplier?: number
+          total_fare?: number
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
       featured_listings: {
         Row: {
           boost_amount: number | null

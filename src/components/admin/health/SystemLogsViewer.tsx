@@ -39,7 +39,7 @@ export default function SystemLogsViewer() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex gap-3">
-        <Select value={level} onValueChange={setLevel}>
+        <Select value={level} onValueChange={(v) => setLevel(v === "all" ? "" : v)}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="All levels" />
           </SelectTrigger>
@@ -50,7 +50,7 @@ export default function SystemLogsViewer() {
             <SelectItem value="info">Info</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={source} onValueChange={setSource}>
+        <Select value={source} onValueChange={(v) => setSource(v === "all" ? "" : v)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
