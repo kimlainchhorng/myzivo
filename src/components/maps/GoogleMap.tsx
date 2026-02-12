@@ -9,12 +9,14 @@
 import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
 import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
+import { useGoogleMaps } from "./GoogleMapProvider";
 import ZivoPickupMarker from "./ZivoPickupMarker";
 import ZivoDropoffMarker from "./ZivoDropoffMarker";
 import RealDriverMarkers from "./RealDriverMarkers";
 
 // ZIVO Dark map theme - premium, removes "Google look"
-const ZIVO_DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
+// NOTE: Types cast to any[] to avoid referencing google.maps at module scope (crashes before API loads)
+const ZIVO_DARK_MAP_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
@@ -25,10 +27,10 @@ const ZIVO_DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
-];
+] as any[];
 
 // ZIVO Light map theme - Uber-inspired clean look
-const ZIVO_LIGHT_MAP_STYLE: google.maps.MapTypeStyle[] = [
+const ZIVO_LIGHT_MAP_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#f5f6f7" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#111827" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#f5f6f7" }] },
@@ -39,7 +41,7 @@ const ZIVO_LIGHT_MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#374151" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbeafe" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3b82f6" }] },
-];
+] as any[];
 
 export interface MapMarker {
   id: string;
@@ -96,6 +98,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   pickup,
   dropoff,
 }, ref) => {
+  const { isLoaded } = useGoogleMaps();
   const mapRef = useRef<google.maps.Map | null>(null);
   
   // Directions state for route rendering
@@ -117,7 +120,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
 
   // Map options
-  const options = useMemo<google.maps.MapOptions>(() => ({
+  const options = useMemo(() => ({
     styles: darkMode ? ZIVO_DARK_MAP_STYLE : ZIVO_LIGHT_MAP_STYLE,
     disableDefaultUI: !showControls,
     clickableIcons: false,
@@ -188,18 +191,30 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   }, [onMapClick]);
 
   // Driver marker icon (for legacy markers)
-  const driverIcon = useMemo(() => ({
-    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-    fillColor: "#f59e0b",
-    fillOpacity: 1,
-    strokeColor: "#ffffff",
-    strokeWeight: 2,
-    scale: 2,
-    anchor: new google.maps.Point(12, 24),
-  }), []);
+  const driverIcon = useMemo(() => {
+    if (!window.google) return undefined;
+    return {
+      path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
+      fillColor: "#f59e0b",
+      fillOpacity: 1,
+      strokeColor: "#ffffff",
+      strokeWeight: 2,
+      scale: 2,
+      anchor: new google.maps.Point(12, 24),
+    };
+  }, []);
 
   // Determine effective center
   const effectiveCenter = pickup || center;
+
+  // Don't render the map until Google Maps API is loaded
+  if (!isLoaded) {
+    return (
+      <div className={cn("relative flex items-center justify-center bg-background/50", className)}>
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative", className)}>
@@ -218,7 +233,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
             options={{
               origin: pickup,
               destination: dropoff,
-              travelMode: google.maps.TravelMode.DRIVING,
+              travelMode: window.google?.maps?.TravelMode?.DRIVING ?? ("DRIVING" as any),
             }}
             callback={(result, status) => {
               setDirectionsRequested(true);
@@ -265,15 +280,17 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
             return null;
           }
 
-          let icon: google.maps.Symbol | google.maps.Icon | undefined;
+          let icon: any;
           
-          if (marker.icon) {
+          if (marker.icon && window.google) {
             const size = marker.iconSize || 36;
             icon = {
               url: marker.icon,
               scaledSize: new google.maps.Size(size, size),
               anchor: new google.maps.Point(size / 2, size / 2),
             };
+          } else if (marker.icon) {
+            icon = { url: marker.icon };
           } else if (marker.type === "driver") {
             icon = driverIcon;
           }
