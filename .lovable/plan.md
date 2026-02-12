@@ -1,93 +1,115 @@
 
 
-# Add Live Map Tracking Enhancements
+# Driver Ratings and Passenger Feedback System
 
-## Current State
+## What Already Exists
 
-The project already has a comprehensive live tracking system:
+The project has significant rating infrastructure already built:
 
-- **Customer Rides**: `RideTripPage` with `TripMapView`, real-time driver location via `useDriverLocationRealtime`, route interpolation, progress bar, ETA countdown, auto-complete at 100m threshold
-- **Customer Eats**: `DeliveryMap` with driver/restaurant/delivery markers, stale detection, heading rotation
-- **Driver View**: `DriverMapView` + `RideDriverPage` with pickup route, arrival detection
-- **Real-time Hooks**: `useLiveDriverTracking` (Supabase Realtime on drivers table), `useLiveDriverLocation` (driver_locations table), `useTrafficAwareEta` (traffic-aware via Google Directions)
-- **Map Infrastructure**: `GoogleMap` component with DirectionsService routing, ZIVO-branded markers, dark/light themes, RealDriverMarkers with debug overlay
+- **Customer rates driver (rides)**: Star rating in `RideReceiptModal` saves to `trips.rating` and `trips.feedback`
+- **Customer rates driver + restaurant (food)**: Full rating page at `/rate/:code` with stars, tags, comments, contact-back
+- **Admin quality dashboard**: `DispatchQuality` page with KPIs, worst performers, low ratings, distribution charts (reads from `order_ratings` table)
+- **Customer reviews page**: `MyReviewsPage` at `/account/reviews` shows past food order ratings
+- **Reusable components**: `StarRating`, `TagSelector`, `TripRatingWidget`
 
 ## What's Missing
 
-1. **Smooth animated marker movement** -- Driver markers currently jump between positions. No CSS/JS interpolation between location updates for fluid motion.
-2. **Restaurant driver-approaching map** -- Restaurant dashboard shows stats but no live map of the driver approaching for pickup.
-3. **Floating ETA card on map** -- Trip/delivery maps show ETA in separate cards below the map, not as a floating overlay on the map itself.
-4. **Driver heading on ride markers** -- Ride `TripMapView` uses a generic car icon without heading rotation (Eats `DeliveryMap` already supports heading).
+1. **Driver rates passenger** -- No database column, no UI
+2. **Post-ride rating with feedback categories** -- Current ride rating is basic (stars + free text). No structured categories like "driving quality", "cleanliness", "friendliness", "navigation"
+3. **Driver's own rating dashboard** -- Drivers can't see their avg rating, trends, or feedback
+4. **Low-rating alerts for drivers** -- No notification when rating drops
+5. **Ride ratings in unified quality dashboard** -- Admin quality dashboard only reads `order_ratings` (food), not `trips` ratings
 
 ## Plan
 
-### 1. Animated Driver Marker Component
+### 1. Database Changes
 
-New file: `src/components/maps/AnimatedDriverMarker.tsx`
+Add columns to the `trips` table:
+- `rider_rating` (integer, 1-5) -- driver's rating of the passenger
+- `rider_feedback` (text) -- driver's comment about the passenger
+- `rating_categories` (jsonb) -- structured categories for customer's driver rating (e.g., `{ driving: 4, cleanliness: 5, friendliness: 5, navigation: 3 }`)
+- `rating_tags` (text array) -- feedback tags similar to food order ratings
 
-A reusable Google Maps overlay marker that smoothly animates between position updates using CSS transitions:
+### 2. Post-Ride Rating Enhancement (Customer Side)
 
-- Wraps `OverlayViewF` with a `transition: transform 1s ease-out` on the container div
-- Tracks previous position and uses `requestAnimationFrame` to lerp between old and new coordinates over ~1 second
-- Shows the existing white car SVG with heading-based rotation
-- Falls back to instant positioning if the jump distance exceeds 1 mile (teleport detection)
-- Replaces the static `MarkerF` used for driver type in `GoogleMap.tsx` and the static arrow in `DeliveryMap.tsx`
+Update `RideReceiptModal.tsx` to add feedback category chips after the star rating:
+- **Driving Quality** (1-5 mini stars or thumbs)
+- **Cleanliness** (1-5)
+- **Friendliness** (1-5)
+- **Navigation** (1-5)
+- Feedback tags: "Great conversation", "Smooth ride", "Clean car", "Late arrival", "Unsafe driving", "Rude behavior"
+- Keep the existing overall star rating as primary
 
-### 2. Floating ETA Overlay Card
+Update `saveRideRating` in `supabaseRide.ts` to save the new category and tag fields.
 
-New file: `src/components/maps/FloatingEtaCard.tsx`
+### 3. Driver Rates Passenger (New UI)
 
-A compact, glassmorphic card positioned absolutely over the map (top-right corner):
+Create `src/components/driver/RatePassengerModal.tsx`:
+- Appears after trip completion in the driver app
+- Star rating (1-5) for the passenger
+- Quick feedback chips: "Punctual", "Respectful", "Good directions", "Late to pickup", "No-show", "Incorrect address", "Rude"
+- Optional comment field (max 200 chars)
+- Saves to `trips.rider_rating` and `trips.rider_feedback`
 
-- Shows ETA in minutes, distance remaining, and a traffic indicator dot (green/yellow/red)
-- Auto-updates when props change with a subtle number-flip animation
-- Uses the design system: `rounded-2xl`, `backdrop-blur-xl`, `border-white/10`, verdant accent
-- Accepts props: `etaMinutes`, `distanceMiles`, `trafficLevel`, `statusLabel`
+Create `src/hooks/useRatePassenger.ts`:
+- Mutation to update `trips.rider_rating` and `trips.rider_feedback`
+- Only allowed for completed trips where `driver_id` matches current user
 
-### 3. Restaurant Driver Approaching Map
+Integrate into `RideDriverPage.tsx` -- show the modal after trip reaches "completed" status.
 
-New file: `src/components/restaurant/RestaurantDriverMap.tsx`
+### 4. Driver Rating Dashboard
 
-A compact map card for the restaurant dashboard showing drivers approaching for pickup:
+Create `src/components/driver/DriverRatingDashboard.tsx`:
+- Summary card: Average rating, total rated trips, rating trend (up/down arrow)
+- Star distribution bar chart (how many 1-star, 2-star, etc.)
+- Recent feedback list (last 10 comments from passengers)
+- Category averages (driving, cleanliness, friendliness, navigation)
 
-- Shows restaurant location (orange marker) at center
-- Shows assigned drivers for active orders with animated markers
-- Subscribes to `food_orders` filtered by restaurant_id with status "ready" or "out_for_delivery" + their assigned driver locations
-- Displays floating ETA card for the nearest approaching driver
-- Uses `GoogleMap` component with light theme
+Create `src/hooks/useDriverRatings.ts`:
+- Fetches trips where `driver_id` matches, aggregates ratings
+- Calculates 7-day and 30-day trends
+- Returns category breakdowns from `rating_categories` jsonb
 
-Integration: Add this as a card in `RestaurantDashboard.tsx` alongside the existing activity feed.
+Add a "My Ratings" card to `DriverHomePage.tsx` showing avg rating and quick link, and a full section in `DriverAccountPage.tsx`.
 
-### 4. Update Existing Map Views
+### 5. Low-Rating Detection and Driver Notifications
+
+Create `src/hooks/useDriverRatingAlerts.ts`:
+- Subscribes to realtime changes on `trips` table filtered by driver_id
+- When a new rating arrives that is 2 stars or below, shows a toast notification
+- When 7-day average drops below 4.0, shows a warning banner on DriverHomePage
+- When positive feedback is received (5 stars), shows a congratulatory toast
+
+Add a rating alert banner component to `DriverHomePage.tsx` that shows when avg rating is declining.
+
+### 6. Admin Dashboard Enhancement
+
+Update `useQualityMetrics.ts` to also query `trips` table ratings alongside `order_ratings`, giving the admin a unified view of both ride and food delivery quality.
+
+Add a "Rides" tab to `DispatchQuality.tsx` showing ride-specific rating metrics.
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/maps/GoogleMap.tsx` | Replace static `MarkerF` for driver-type markers with the new `AnimatedDriverMarker` |
-| `src/components/ride/TripMapView.tsx` | Add `FloatingEtaCard` overlay, pass heading to animated marker |
-| `src/components/ride/DriverMapView.tsx` | Add `FloatingEtaCard` overlay showing distance to pickup |
-| `src/components/eats/DeliveryMap.tsx` | Replace static arrow `Marker` with `AnimatedDriverMarker`, add `FloatingEtaCard` |
-| `src/pages/RestaurantDashboard.tsx` | Add `RestaurantDriverMap` card |
+| `src/lib/supabaseRide.ts` | Extend `SaveRatingPayload` with categories, tags; add `savePassengerRating` function |
+| `src/components/ride/RideReceiptModal.tsx` | Add feedback category chips and tags after star rating |
+| `src/components/driver/RatePassengerModal.tsx` | New: driver rates passenger modal |
+| `src/hooks/useRatePassenger.ts` | New: mutation hook for driver rating passenger |
+| `src/components/driver/DriverRatingDashboard.tsx` | New: driver's own rating stats and trends |
+| `src/hooks/useDriverRatings.ts` | New: fetch and aggregate driver's own ratings |
+| `src/hooks/useDriverRatingAlerts.ts` | New: realtime low-rating detection and toasts |
+| `src/pages/driver/DriverHomePage.tsx` | Add rating summary card and alert banner |
+| `src/pages/driver/DriverAccountPage.tsx` | Add full rating dashboard section |
+| `src/hooks/useQualityMetrics.ts` | Include `trips` ratings in admin quality metrics |
+| `src/pages/dispatch/DispatchQuality.tsx` | Add "Rides" tab for ride-specific quality data |
 
-## Technical Details
+## Technical Notes
 
-### Smooth Animation Approach
-
-The animated marker uses CSS `transform` transitions on the OverlayView container. When a new lat/lng arrives:
-
-1. Convert lat/lng to pixel position (handled by Google Maps OverlayView)
-2. The OverlayView automatically repositions -- we add `transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)` to the wrapper div
-3. If distance between old and new position exceeds 1 mile, skip animation (driver likely reassigned or GPS jump)
-
-This avoids complex requestAnimationFrame coordinate math and leverages the browser's GPU-accelerated CSS transitions.
-
-### Performance
-
-- Driver location updates arrive every 5-10 seconds via Supabase Realtime (existing pattern)
-- CSS transitions consume minimal CPU vs JS animation loops
-- Restaurant map only subscribes when restaurant dashboard is open
-- FloatingEtaCard uses `React.memo` to prevent unnecessary re-renders
-
-### No New Dependencies
-
-All implementations use existing libraries: `@react-google-maps/api`, `framer-motion` (already installed), CSS transitions, and existing Supabase realtime hooks.
+- New `trips` columns (`rider_rating`, `rider_feedback`, `rating_categories`, `rating_tags`) will be added via SQL migration
+- `rating_categories` uses JSONB for flexible category storage without schema changes if categories evolve
+- Driver can only rate a passenger on trips where they are the assigned driver (enforced in the mutation)
+- Rating is only allowed after trip status is "completed" (enforced both in UI and query filter)
+- No editing of ratings after submission (one-time write, enforced by checking if `rating` or `rider_rating` is already set)
+- All new components follow the verdant theme with existing design system tokens
 
