@@ -261,6 +261,10 @@
   .text-small {
     @apply text-xs sm:text-sm;
   }
+
+  .text-caption {
+    @apply text-[0.75rem] leading-4 tracking-wide;
+  }
 }
 
 @layer components {
@@ -343,6 +347,110 @@
   /* Focus Ring */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* =============================================
+     GRADIENT BACKGROUNDS (Service-specific)
+     ============================================= */
+  .gradient-rides {
+    background: linear-gradient(135deg, hsl(160 84% 39%), hsl(174 72% 40%));
+  }
+
+  .gradient-eats {
+    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(0 84% 60%));
+  }
+
+  /* =============================================
+     GLASSMORPHIC CARD
+     ============================================= */
+  .glass-card {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  /* =============================================
+     GLOW EFFECTS (Service-specific)
+     ============================================= */
+  .glow-rides {
+    box-shadow: 0 4px 20px hsl(160 84% 39% / 0.25);
+  }
+
+  .glow-eats {
+    box-shadow: 0 4px 20px hsl(25 95% 53% / 0.25);
+  }
+
+  /* =============================================
+     CARD VARIANTS
+     ============================================= */
+  .card-glass {
+    background: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  .card-interactive {
+    @apply transition-all duration-200;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* =============================================
+     SPACING UTILITIES
+     ============================================= */
+  .space-section {
+    @apply py-4;
+  }
+
+  .space-section-lg {
+    @apply py-6;
+  }
+
+  .space-card {
+    @apply p-4 sm:p-6;
+  }
+
+  /* =============================================
+     SKELETON LOADERS
+     ============================================= */
+  .skeleton-card {
+    @apply animate-pulse rounded-2xl bg-muted h-32;
+  }
+
+  .skeleton-text {
+    @apply animate-pulse rounded-lg bg-muted h-4;
+  }
+
+  .skeleton-avatar {
+    @apply animate-pulse rounded-full bg-muted w-10 h-10;
+  }
+
+  /* =============================================
+     ICON SIZING
+     ============================================= */
+  .icon-xs {
+    @apply w-3 h-3;
+  }
+
+  .icon-sm {
+    @apply w-4 h-4;
+  }
+
+  .icon-md {
+    @apply w-5 h-5;
+  }
+
+  .icon-lg {
+    @apply w-6 h-6;
+  }
+
+  .icon-xl {
+    @apply w-8 h-8;
   }
 }
 
