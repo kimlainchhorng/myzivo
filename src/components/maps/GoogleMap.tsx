@@ -13,6 +13,7 @@ import { useGoogleMaps } from "./GoogleMapProvider";
 import ZivoPickupMarker from "./ZivoPickupMarker";
 import ZivoDropoffMarker from "./ZivoDropoffMarker";
 import RealDriverMarkers from "./RealDriverMarkers";
+import AnimatedDriverMarker from "./AnimatedDriverMarker";
 
 // ZIVO Dark map theme - premium, removes "Google look"
 // NOTE: Types cast to any[] to avoid referencing google.maps at module scope (crashes before API loads)
@@ -280,6 +281,17 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
             return null;
           }
 
+          // Use AnimatedDriverMarker for driver type
+          if (marker.type === "driver") {
+            return (
+              <AnimatedDriverMarker
+                key={marker.id}
+                position={marker.position}
+                label={marker.title}
+              />
+            );
+          }
+
           let icon: any;
           
           if (marker.icon && window.google) {
@@ -291,8 +303,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
             };
           } else if (marker.icon) {
             icon = { url: marker.icon };
-          } else if (marker.type === "driver") {
-            icon = driverIcon;
           }
 
           return (

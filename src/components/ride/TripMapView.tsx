@@ -6,6 +6,7 @@
  */
 
 import GoogleMap, { MapMarker } from "@/components/maps/GoogleMap";
+import FloatingEtaCard from "@/components/maps/FloatingEtaCard";
 
 interface TripMapViewProps {
   pickupLocation: { lat: number; lng: number };
@@ -13,6 +14,9 @@ interface TripMapViewProps {
   carPosition: { lat: number; lng: number };
   isArrived: boolean;
   routeCoordinates?: [number, number][];
+  etaMinutes?: number | null;
+  distanceMiles?: number | null;
+  trafficLevel?: "light" | "moderate" | "heavy" | null;
 }
 
 const TripMapView = ({ 
@@ -21,6 +25,9 @@ const TripMapView = ({
   carPosition, 
   isArrived,
   routeCoordinates,
+  etaMinutes,
+  distanceMiles,
+  trafficLevel,
 }: TripMapViewProps) => {
   const markers: MapMarker[] = [
     {
@@ -56,6 +63,12 @@ const TripMapView = ({
         routePath={routePath}
         showControls={false}
         darkMode={true}
+      />
+      <FloatingEtaCard
+        etaMinutes={etaMinutes ?? null}
+        distanceMiles={distanceMiles}
+        trafficLevel={trafficLevel}
+        statusLabel={isArrived ? "Arrived" : "To destination"}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none" />
     </div>

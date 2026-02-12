@@ -25,6 +25,7 @@ import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import RestaurantActivityFeed from "@/components/restaurant/RestaurantActivityFeed";
+import RestaurantDriverMap from "@/components/restaurant/RestaurantDriverMap";
 import MerchantNotificationBell from "@/components/merchant/MerchantNotificationBell";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
@@ -260,7 +261,10 @@ const RestaurantDashboard = () => {
               <RestaurantOverview />
             </TabsContent>
 
-            <TabsContent value="activity" className="mt-0">
+            <TabsContent value="activity" className="mt-0 space-y-6">
+              {restaurantData?.id && (
+                <RestaurantDriverMap restaurantId={restaurantData.id} />
+              )}
               <RestaurantActivityFeed restaurantId={restaurantData?.id} />
             </TabsContent>
 
