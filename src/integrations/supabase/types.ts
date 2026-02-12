@@ -1847,6 +1847,164 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          partner_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          status: string
+          total_requests: number
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string
+          partner_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          total_requests?: number
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          partner_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          total_requests?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "api_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_partners: {
+        Row: {
+          burst_limit: number
+          contact_email: string
+          created_at: string
+          created_by: string | null
+          daily_limit: number
+          description: string | null
+          id: string
+          name: string
+          permissions: string[]
+          rate_limit_per_hour: number
+          rate_limit_per_minute: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          burst_limit?: number
+          contact_email: string
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          description?: string | null
+          id?: string
+          name: string
+          permissions?: string[]
+          rate_limit_per_hour?: number
+          rate_limit_per_minute?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          burst_limit?: number
+          contact_email?: string
+          created_at?: string
+          created_by?: string | null
+          daily_limit?: number
+          description?: string | null
+          id?: string
+          name?: string
+          permissions?: string[]
+          rate_limit_per_hour?: number
+          rate_limit_per_minute?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      api_request_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          method: string
+          partner_id: string
+          response_time_ms: number | null
+          status_code: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method: string
+          partner_id: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string
+          partner_id?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_request_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_request_logs_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "api_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_installs: {
         Row: {
           app_version: string | null
@@ -2833,6 +2991,38 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_events: {
+        Row: {
+          batch_id: string
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_events_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batch_stops: {
         Row: {
           actual_time: string | null
@@ -2938,6 +3128,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      batching_config: {
+        Row: {
+          auto_batch_enabled: boolean
+          distance_threshold_km: number
+          id: number
+          max_detour_minutes: number
+          max_stops_per_batch: number
+          recalculate_on_add: boolean
+          recalculate_on_cancel: boolean
+          traffic_aware: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_batch_enabled?: boolean
+          distance_threshold_km?: number
+          id?: number
+          max_detour_minutes?: number
+          max_stops_per_batch?: number
+          recalculate_on_add?: boolean
+          recalculate_on_cancel?: boolean
+          traffic_aware?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_batch_enabled?: boolean
+          distance_threshold_km?: number
+          id?: number
+          max_detour_minutes?: number
+          max_stops_per_batch?: number
+          recalculate_on_add?: boolean
+          recalculate_on_cancel?: boolean
+          traffic_aware?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      behavior_anomalies: {
+        Row: {
+          anomaly_type: string
+          created_at: string
+          description: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_reviewed: boolean
+          meta: Json | null
+          reviewed_by: string | null
+          severity: string
+        }
+        Insert: {
+          anomaly_type: string
+          created_at?: string
+          description: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_reviewed?: boolean
+          meta?: Json | null
+          reviewed_by?: string | null
+          severity: string
+        }
+        Update: {
+          anomaly_type?: string
+          created_at?: string
+          description?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_reviewed?: boolean
+          meta?: Json | null
+          reviewed_by?: string | null
+          severity?: string
+        }
+        Relationships: []
       }
       beta_launch_checklist: {
         Row: {
@@ -3461,6 +3729,7 @@ export type Database = {
           logo_url: string | null
           name: string
           primary_color: string | null
+          services_available: string[]
         }
         Insert: {
           created_at?: string | null
@@ -3469,6 +3738,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           primary_color?: string | null
+          services_available?: string[]
         }
         Update: {
           created_at?: string | null
@@ -3477,6 +3747,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           primary_color?: string | null
+          services_available?: string[]
         }
         Relationships: []
       }
@@ -6535,6 +6806,115 @@ export type Database = {
           },
         ]
       }
+      demand_engine_alerts: {
+        Row: {
+          alert_type: string
+          city: string | null
+          created_at: string
+          forecast_hour: string | null
+          gap: number | null
+          id: string
+          is_read: boolean | null
+          message: string
+          predicted_drivers: number | null
+          predicted_orders: number | null
+          service_type: string | null
+          severity: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          city?: string | null
+          created_at?: string
+          forecast_hour?: string | null
+          gap?: number | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          predicted_drivers?: number | null
+          predicted_orders?: number | null
+          service_type?: string | null
+          severity?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          city?: string | null
+          created_at?: string
+          forecast_hour?: string | null
+          gap?: number | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          predicted_drivers?: number | null
+          predicted_orders?: number | null
+          service_type?: string | null
+          severity?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_engine_alerts_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demand_engine_snapshots: {
+        Row: {
+          accuracy_pct: number | null
+          actual_drivers: number | null
+          actual_orders: number | null
+          city: string | null
+          created_at: string
+          forecast_hour: string
+          horizon: string | null
+          id: string
+          predicted_drivers: number | null
+          predicted_orders: number
+          service_type: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          accuracy_pct?: number | null
+          actual_drivers?: number | null
+          actual_orders?: number | null
+          city?: string | null
+          created_at?: string
+          forecast_hour: string
+          horizon?: string | null
+          id?: string
+          predicted_drivers?: number | null
+          predicted_orders: number
+          service_type?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          accuracy_pct?: number | null
+          actual_drivers?: number | null
+          actual_orders?: number | null
+          city?: string | null
+          created_at?: string
+          forecast_hour?: string
+          horizon?: string | null
+          id?: string
+          predicted_drivers?: number | null
+          predicted_orders?: number
+          service_type?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_engine_snapshots_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_forecasts: {
         Row: {
           confidence: number | null
@@ -7365,6 +7745,60 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          driver_id: string
+          end_time: string
+          id: string
+          is_available: boolean
+          preferred_zone: string | null
+          specific_date: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          driver_id: string
+          end_time: string
+          id?: string
+          is_available?: boolean
+          preferred_zone?: string | null
+          specific_date?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          driver_id?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          preferred_zone?: string | null
+          specific_date?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_availability_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_availability_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_balances: {
         Row: {
           available_balance: number | null
@@ -7689,6 +8123,9 @@ export type Database = {
           renewal_requested: boolean | null
           renewal_requested_at: string | null
           renewal_requested_by: string | null
+          resubmission_reason: string | null
+          resubmission_requested_at: string | null
+          resubmission_requested_by: string | null
           reviewed_at: string | null
           status: string
           uploaded_at: string
@@ -7712,6 +8149,9 @@ export type Database = {
           renewal_requested?: boolean | null
           renewal_requested_at?: string | null
           renewal_requested_by?: string | null
+          resubmission_reason?: string | null
+          resubmission_requested_at?: string | null
+          resubmission_requested_by?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
@@ -7735,6 +8175,9 @@ export type Database = {
           renewal_requested?: boolean | null
           renewal_requested_at?: string | null
           renewal_requested_by?: string | null
+          resubmission_reason?: string | null
+          resubmission_requested_at?: string | null
+          resubmission_requested_by?: string | null
           reviewed_at?: string | null
           status?: string
           uploaded_at?: string
@@ -7833,6 +8276,114 @@ export type Database = {
           },
         ]
       }
+      driver_earnings_forecast_cache: {
+        Row: {
+          avg_earnings_per_trip_cents: number
+          avg_trips_per_hour: number
+          computed_at: string
+          driver_id: string
+          estimated_daily_earnings_cents: number
+          estimated_weekly_earnings_cents: number
+          forecast_date: string
+          id: string
+          surge_bonus_estimate_cents: number
+        }
+        Insert: {
+          avg_earnings_per_trip_cents?: number
+          avg_trips_per_hour?: number
+          computed_at?: string
+          driver_id: string
+          estimated_daily_earnings_cents?: number
+          estimated_weekly_earnings_cents?: number
+          forecast_date: string
+          id?: string
+          surge_bonus_estimate_cents?: number
+        }
+        Update: {
+          avg_earnings_per_trip_cents?: number
+          avg_trips_per_hour?: number
+          computed_at?: string
+          driver_id?: string
+          estimated_daily_earnings_cents?: number
+          estimated_weekly_earnings_cents?: number
+          forecast_date?: string
+          id?: string
+          surge_bonus_estimate_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_earnings_forecast_cache_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_forecast_cache_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_earnings_goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_value: number
+          driver_id: string
+          goal_type: string
+          id: string
+          is_completed: boolean
+          period_end: string
+          period_start: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          driver_id: string
+          goal_type: string
+          id?: string
+          is_completed?: boolean
+          period_end: string
+          period_start: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          driver_id?: string
+          goal_type?: string
+          id?: string
+          is_completed?: boolean
+          period_end?: string
+          period_start?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_earnings_goals_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_goals_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_expenses: {
         Row: {
           amount: number
@@ -7886,6 +8437,44 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_hiring_targets: {
+        Row: {
+          city: string | null
+          created_at: string
+          deadline: string | null
+          id: string
+          target_drivers: number
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          target_drivers: number
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          target_drivers?: number
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_hiring_targets_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -8518,6 +9107,63 @@ export type Database = {
           },
         ]
       }
+      driver_rebalancing_events: {
+        Row: {
+          accepted: boolean
+          created_at: string
+          driver_id: string
+          from_zone: string | null
+          id: string
+          responded_at: string | null
+          suggestion_type: string
+          to_zone: string
+          trip_accepted_after: boolean
+          wait_time_after_min: number | null
+          wait_time_before_min: number | null
+        }
+        Insert: {
+          accepted?: boolean
+          created_at?: string
+          driver_id: string
+          from_zone?: string | null
+          id?: string
+          responded_at?: string | null
+          suggestion_type?: string
+          to_zone: string
+          trip_accepted_after?: boolean
+          wait_time_after_min?: number | null
+          wait_time_before_min?: number | null
+        }
+        Update: {
+          accepted?: boolean
+          created_at?: string
+          driver_id?: string
+          from_zone?: string | null
+          id?: string
+          responded_at?: string | null
+          suggestion_type?: string
+          to_zone?: string
+          trip_accepted_after?: boolean
+          wait_time_after_min?: number | null
+          wait_time_before_min?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_rebalancing_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_rebalancing_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_referrals: {
         Row: {
           approved_at: string | null
@@ -8841,6 +9487,73 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_scheduled_shifts: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          driver_id: string
+          end_time: string
+          id: string
+          shift_date: string
+          shift_slot_id: string | null
+          start_time: string
+          status: string
+          updated_at: string
+          zone: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          driver_id: string
+          end_time: string
+          id?: string
+          shift_date: string
+          shift_slot_id?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string
+          zone?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          driver_id?: string
+          end_time?: string
+          id?: string
+          shift_date?: string
+          shift_slot_id?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_scheduled_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_scheduled_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_scheduled_shifts_shift_slot_id_fkey"
+            columns: ["shift_slot_id"]
+            isOneToOne: false
+            referencedRelation: "shift_slots"
             referencedColumns: ["id"]
           },
         ]
@@ -10036,6 +10749,240 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_incident_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          incident_id: string
+          mime_type: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          incident_id: string
+          mime_type: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          incident_id?: string
+          mime_type?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_incident_attachments_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_incident_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          incident_id: string
+          message: string
+          new_value: string | null
+          note_type: string
+          old_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id: string
+          message: string
+          new_value?: string | null
+          note_type?: string
+          old_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id?: string
+          message?: string
+          new_value?: string | null
+          note_type?: string
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_incident_notes_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_incidents: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          incident_number: string
+          incident_type: string
+          location_description: string | null
+          priority: string
+          related_driver_id: string | null
+          related_order_id: string | null
+          related_restaurant_id: string | null
+          reporter_contact: string | null
+          reporter_name: string | null
+          reporter_role: string | null
+          reporter_user_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_number: string
+          incident_type: string
+          location_description?: string | null
+          priority?: string
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          reporter_role?: string | null
+          reporter_user_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          incident_number?: string
+          incident_type?: string
+          location_description?: string | null
+          priority?: string
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          reporter_role?: string | null
+          reporter_user_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_incidents_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_incidents_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -14061,6 +15008,152 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_driver_queue: {
+        Row: {
+          assigned_at: string | null
+          created_at: string
+          driver_id: string
+          hub_id: string
+          id: string
+          joined_at: string
+          left_at: string | null
+          position: number
+          status: string
+          trip_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          created_at?: string
+          driver_id: string
+          hub_id: string
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          position: number
+          status?: string
+          trip_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          created_at?: string
+          driver_id?: string
+          hub_id?: string
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          position?: number
+          status?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_driver_queue_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_driver_queue_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_driver_queue_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "transport_hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_metrics: {
+        Row: {
+          avg_wait_time_min: number | null
+          drivers_in_queue: number
+          hub_id: string
+          id: string
+          revenue_cents: number
+          timestamp: string
+          trips_completed: number
+        }
+        Insert: {
+          avg_wait_time_min?: number | null
+          drivers_in_queue?: number
+          hub_id: string
+          id?: string
+          revenue_cents?: number
+          timestamp?: string
+          trips_completed?: number
+        }
+        Update: {
+          avg_wait_time_min?: number | null
+          drivers_in_queue?: number
+          hub_id?: string
+          id?: string
+          revenue_cents?: number
+          timestamp?: string
+          trips_completed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_metrics_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "transport_hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_zones: {
+        Row: {
+          created_at: string
+          hub_id: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          lat: number
+          lng: number
+          name: string
+          sort_order: number
+          zone_type: string
+        }
+        Insert: {
+          created_at?: string
+          hub_id: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          lat: number
+          lng: number
+          name: string
+          sort_order?: number
+          zone_type: string
+        }
+        Update: {
+          created_at?: string
+          hub_id?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          name?: string
+          sort_order?: number
+          zone_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_zones_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "transport_hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_verifications: {
         Row: {
           admin_override: boolean | null
@@ -14394,6 +15487,245 @@ export type Database = {
           title?: string | null
         }
         Relationships: []
+      }
+      insurance_claim_documents: {
+        Row: {
+          claim_id: string
+          created_at: string
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          claim_id: string
+          created_at?: string
+          document_type?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          claim_id?: string
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claim_documents_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_claim_notes: {
+        Row: {
+          claim_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          message: string
+          new_value: string | null
+          note_type: string
+          old_value: string | null
+        }
+        Insert: {
+          claim_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message: string
+          new_value?: string | null
+          note_type?: string
+          old_value?: string | null
+        }
+        Update: {
+          claim_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+          new_value?: string | null
+          note_type?: string
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claim_notes_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_claims: {
+        Row: {
+          approved_amount_cents: number | null
+          assigned_at: string | null
+          assigned_to: string | null
+          city: string | null
+          claim_amount_cents: number | null
+          claim_number: string
+          claim_type: string
+          created_at: string
+          description: string | null
+          id: string
+          payment_date: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          rejection_reason: string | null
+          related_driver_id: string | null
+          related_order_id: string | null
+          related_restaurant_id: string | null
+          reporter_contact: string | null
+          reporter_name: string | null
+          reporter_role: string
+          reporter_user_id: string | null
+          resolved_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_amount_cents?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          claim_amount_cents?: number | null
+          claim_number: string
+          claim_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          rejection_reason?: string | null
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          reporter_role: string
+          reporter_user_id?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_amount_cents?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          claim_amount_cents?: number | null
+          claim_number?: string
+          claim_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          rejection_reason?: string | null
+          related_driver_id?: string | null
+          related_order_id?: string | null
+          related_restaurant_id?: string | null
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          reporter_role?: string
+          reporter_user_id?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_driver_id_fkey"
+            columns: ["related_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_related_restaurant_id_fkey"
+            columns: ["related_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_items: {
         Row: {
@@ -16305,6 +17637,71 @@ export type Database = {
           },
         ]
       }
+      menu_item_prep_stats: {
+        Row: {
+          avg_prep_minutes: number
+          id: string
+          item_name: string
+          max_prep_minutes: number
+          min_prep_minutes: number
+          peak_hour_avg_minutes: number
+          restaurant_id: string
+          sample_count: number
+          updated_at: string
+        }
+        Insert: {
+          avg_prep_minutes?: number
+          id?: string
+          item_name: string
+          max_prep_minutes?: number
+          min_prep_minutes?: number
+          peak_hour_avg_minutes?: number
+          restaurant_id: string
+          sample_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_prep_minutes?: number
+          id?: string
+          item_name?: string
+          max_prep_minutes?: number
+          min_prep_minutes?: number
+          peak_hour_avg_minutes?: number
+          restaurant_id?: string
+          sample_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_prep_stats_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_prep_stats_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_prep_stats_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_prep_stats_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category: string
@@ -16562,6 +17959,9 @@ export type Database = {
           renewal_requested: boolean | null
           renewal_requested_at: string | null
           renewal_requested_by: string | null
+          resubmission_reason: string | null
+          resubmission_requested_at: string | null
+          resubmission_requested_by: string | null
           status: string
           uploaded_at: string
         }
@@ -16583,6 +17983,9 @@ export type Database = {
           renewal_requested?: boolean | null
           renewal_requested_at?: string | null
           renewal_requested_by?: string | null
+          resubmission_reason?: string | null
+          resubmission_requested_at?: string | null
+          resubmission_requested_by?: string | null
           status?: string
           uploaded_at?: string
         }
@@ -16604,6 +18007,9 @@ export type Database = {
           renewal_requested?: boolean | null
           renewal_requested_at?: string | null
           renewal_requested_by?: string | null
+          resubmission_reason?: string | null
+          resubmission_requested_at?: string | null
+          resubmission_requested_by?: string | null
           status?: string
           uploaded_at?: string
         }
@@ -20899,6 +22305,118 @@ export type Database = {
           },
         ]
       }
+      peak_event_metrics: {
+        Row: {
+          active_orders: number
+          avg_wait_time_min: number | null
+          demand_ratio: number | null
+          event_id: string
+          id: string
+          online_drivers: number
+          revenue_cents: number
+          timestamp: string
+          trips_completed: number
+        }
+        Insert: {
+          active_orders?: number
+          avg_wait_time_min?: number | null
+          demand_ratio?: number | null
+          event_id: string
+          id?: string
+          online_drivers?: number
+          revenue_cents?: number
+          timestamp?: string
+          trips_completed?: number
+        }
+        Update: {
+          active_orders?: number
+          avg_wait_time_min?: number | null
+          demand_ratio?: number | null
+          event_id?: string
+          id?: string
+          online_drivers?: number
+          revenue_cents?: number
+          timestamp?: string
+          trips_completed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peak_event_metrics_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "peak_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      peak_events: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_time: string
+          event_date: string
+          expected_demand_level: string
+          id: string
+          incentive_id: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          start_time: string
+          status: string
+          surge_multiplier: number | null
+          updated_at: string
+          zones: string[]
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          event_date: string
+          expected_demand_level?: string
+          id?: string
+          incentive_id?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          start_time: string
+          status?: string
+          surge_multiplier?: number | null
+          updated_at?: string
+          zones?: string[]
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          event_date?: string
+          expected_demand_level?: string
+          id?: string
+          incentive_id?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          start_time?: string
+          status?: string
+          surge_multiplier?: number | null
+          updated_at?: string
+          zones?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peak_events_incentive_id_fkey"
+            columns: ["incentive_id"]
+            isOneToOne: false
+            referencedRelation: "driver_incentives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_profile_changes: {
         Row: {
           change_data: Json
@@ -21665,6 +23183,39 @@ export type Database = {
           service_fee_flat?: number
           service_fee_percent?: number
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pricing_config_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          config_table: string
+          field_name: string
+          id: string
+          new_value: string
+          old_value: string | null
+          record_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          config_table: string
+          field_name: string
+          id?: string
+          new_value: string
+          old_value?: string | null
+          record_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          config_table?: string
+          field_name?: string
+          id?: string
+          new_value?: string
+          old_value?: string | null
+          record_id?: string
         }
         Relationships: []
       }
@@ -23539,6 +25090,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           polygon: Json | null
+          services_enabled: string[]
           state: string
           timezone: string | null
           updated_at: string | null
@@ -23557,6 +25109,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           polygon?: Json | null
+          services_enabled?: string[]
           state: string
           timezone?: string | null
           updated_at?: string | null
@@ -23575,6 +25128,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           polygon?: Json | null
+          services_enabled?: string[]
           state?: string
           timezone?: string | null
           updated_at?: string | null
@@ -24864,6 +26418,157 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restricted_zone_logs: {
+        Row: {
+          action: string
+          created_at: string
+          driver_id: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          service_type: string | null
+          user_id: string | null
+          zone_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          service_type?: string | null
+          user_id?: string | null
+          zone_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          service_type?: string | null
+          user_id?: string | null
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restricted_zone_logs_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "restricted_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restricted_zone_rules: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          end_time: string | null
+          event_id: string | null
+          id: string
+          is_active: boolean
+          rule_type: string
+          start_date: string | null
+          start_time: string | null
+          zone_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          is_active?: boolean
+          rule_type: string
+          start_date?: string | null
+          start_time?: string | null
+          zone_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          is_active?: boolean
+          rule_type?: string
+          start_date?: string | null
+          start_time?: string | null
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restricted_zone_rules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "restricted_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restricted_zones: {
+        Row: {
+          center_lat: number | null
+          center_lng: number | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          delivery_allowed: boolean
+          id: string
+          is_active: boolean
+          name: string
+          polygon: Json
+          redirect_message: string | null
+          restaurant_allowed: boolean
+          ride_allowed: boolean
+          updated_at: string
+          warning_message: string | null
+          zone_type: string
+        }
+        Insert: {
+          center_lat?: number | null
+          center_lng?: number | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_allowed?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          polygon: Json
+          redirect_message?: string | null
+          restaurant_allowed?: boolean
+          ride_allowed?: boolean
+          updated_at?: string
+          warning_message?: string | null
+          zone_type: string
+        }
+        Update: {
+          center_lat?: number | null
+          center_lng?: number | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_allowed?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          polygon?: Json
+          redirect_message?: string | null
+          restaurant_allowed?: boolean
+          ride_allowed?: boolean
+          updated_at?: string
+          warning_message?: string | null
+          zone_type?: string
+        }
+        Relationships: []
       }
       retention_events: {
         Row: {
@@ -27282,6 +28987,59 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_fees: {
+        Row: {
+          amount: number
+          condition_config: Json
+          condition_type: string
+          created_at: string
+          fee_type: string
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          service_types: string[]
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          amount?: number
+          condition_config?: Json
+          condition_type: string
+          created_at?: string
+          fee_type: string
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          service_types?: string[]
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          amount?: number
+          condition_config?: Json
+          condition_type?: string
+          created_at?: string
+          fee_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          service_types?: string[]
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_fees_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -29914,15 +31672,80 @@ export type Database = {
           },
         ]
       }
+      training_certifications: {
+        Row: {
+          certified_at: string | null
+          course_id: string
+          created_at: string
+          driver_id: string
+          expires_at: string | null
+          id: string
+          quiz_attempt_id: string | null
+          status: string
+        }
+        Insert: {
+          certified_at?: string | null
+          course_id: string
+          created_at?: string
+          driver_id: string
+          expires_at?: string | null
+          id?: string
+          quiz_attempt_id?: string | null
+          status?: string
+        }
+        Update: {
+          certified_at?: string | null
+          course_id?: string
+          created_at?: string
+          driver_id?: string
+          expires_at?: string | null
+          id?: string
+          quiz_attempt_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_certifications_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_quiz_attempt_id_fkey"
+            columns: ["quiz_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "training_quiz_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_courses: {
         Row: {
           badge_id: string | null
           category: string
+          certification_validity_days: number | null
           created_at: string
           description: string
           duration_minutes: number
           id: string
+          is_active: boolean | null
           is_locked_by_default: boolean | null
+          is_required: boolean | null
           lessons_count: number
           prerequisite_course_id: string | null
           sort_order: number | null
@@ -29931,11 +31754,14 @@ export type Database = {
         Insert: {
           badge_id?: string | null
           category?: string
+          certification_validity_days?: number | null
           created_at?: string
           description: string
           duration_minutes?: number
           id?: string
+          is_active?: boolean | null
           is_locked_by_default?: boolean | null
+          is_required?: boolean | null
           lessons_count?: number
           prerequisite_course_id?: string | null
           sort_order?: number | null
@@ -29944,11 +31770,14 @@ export type Database = {
         Update: {
           badge_id?: string | null
           category?: string
+          certification_validity_days?: number | null
           created_at?: string
           description?: string
           duration_minutes?: number
           id?: string
+          is_active?: boolean | null
           is_locked_by_default?: boolean | null
+          is_required?: boolean | null
           lessons_count?: number
           prerequisite_course_id?: string | null
           sort_order?: number | null
@@ -29958,6 +31787,50 @@ export type Database = {
           {
             foreignKeyName: "training_courses_prerequisite_course_id_fkey"
             columns: ["prerequisite_course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_lessons: {
+        Row: {
+          content_text: string | null
+          content_type: string
+          content_url: string | null
+          course_id: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          content_text?: string | null
+          content_type?: string
+          content_url?: string | null
+          course_id: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          content_text?: string | null
+          content_type?: string
+          content_url?: string | null
+          course_id?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_lessons_course_id_fkey"
+            columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "training_courses"
             referencedColumns: ["id"]
@@ -30008,6 +31881,131 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_quiz_attempts: {
+        Row: {
+          answers: Json | null
+          completed_at: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          passed: boolean
+          quiz_id: string
+          score: number
+        }
+        Insert: {
+          answers?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          passed?: boolean
+          quiz_id: string
+          score?: number
+        }
+        Update: {
+          answers?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          passed?: boolean
+          quiz_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quiz_attempts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "training_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_quiz_questions: {
+        Row: {
+          created_at: string
+          id: string
+          options: Json
+          question: string
+          quiz_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          options?: Json
+          question: string
+          quiz_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          options?: Json
+          question?: string
+          quiz_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "training_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_quizzes: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          max_attempts: number
+          passing_score: number
+          time_limit_minutes: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          max_attempts?: number
+          passing_score?: number
+          time_limit_minutes?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          max_attempts?: number
+          passing_score?: number
+          time_limit_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quizzes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: true
+            referencedRelation: "training_courses"
             referencedColumns: ["id"]
           },
         ]
@@ -30140,6 +32138,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transport_hubs: {
+        Row: {
+          address: string | null
+          airport_fee: number
+          city: string | null
+          created_at: string
+          flat_rate_amount: number | null
+          flat_rate_enabled: boolean
+          hub_type: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          lat: number
+          lng: number
+          max_queue_size: number
+          name: string
+          queue_enabled: boolean
+          surge_multiplier_override: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          airport_fee?: number
+          city?: string | null
+          created_at?: string
+          flat_rate_amount?: number | null
+          flat_rate_enabled?: boolean
+          hub_type: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          lat: number
+          lng: number
+          max_queue_size?: number
+          name: string
+          queue_enabled?: boolean
+          surge_multiplier_override?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          airport_fee?: number
+          city?: string | null
+          created_at?: string
+          flat_rate_amount?: number | null
+          flat_rate_enabled?: boolean
+          hub_type?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          max_queue_size?: number
+          name?: string
+          queue_enabled?: boolean
+          surge_multiplier_override?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       travel_bookings: {
         Row: {
@@ -30985,6 +33043,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trust_safety_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          created_by: string
+          details: string | null
+          entity_id: string
+          entity_type: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          created_by: string
+          details?: string | null
+          entity_id: string
+          entity_type: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          created_by?: string
+          details?: string | null
+          entity_id?: string
+          entity_type?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+        }
+        Relationships: []
       }
       trust_scores: {
         Row: {
