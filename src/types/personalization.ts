@@ -69,7 +69,7 @@ export interface CreateSavedSearchInput {
 // Favorites
 // ============================================
 
-export type FavoriteItemType = 'hotel' | 'activity' | 'flight_route' | 'car' | 'transfer';
+export type FavoriteItemType = 'hotel' | 'activity' | 'flight_route' | 'car' | 'transfer' | 'restaurant' | 'destination' | 'flight';
 
 export interface UserFavorite {
   id: string;

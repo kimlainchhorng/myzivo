@@ -1006,6 +1006,7 @@ const App = () => (
                 <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
+                <Route path="/account/saved-places" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
                 <Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
                 <Route path="/account/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />

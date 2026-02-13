@@ -145,7 +145,7 @@ const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { recommended, favorites } = usePersonalizedHome();
+  const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { deals } = useRecommendedDeals(6);
   const { items: recentItems } = useRecentlyViewed();
@@ -307,6 +307,41 @@ const AppHome = () => {
               </motion.button>
             ))}
           </div>
+
+          {/* ─── ORDER AGAIN ─── */}
+          {user && orderAgain.length > 0 && (
+            <div>
+              <SectionHeader icon={History} iconColor="text-orange-500" title="Order Again" onSeeAll={() => navigate("/eats")} />
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {orderAgain.map((r) => (
+                  <motion.button
+                    key={r.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate(`/eats/restaurant/${r.id}`)}
+                    className="shrink-0 w-[160px] rounded-3xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-shadow touch-manipulation text-left"
+                  >
+                    <div className="relative h-[90px]">
+                      <img
+                        src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
+                        alt={r.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      <div className="absolute bottom-1.5 right-1.5 bg-orange-500 rounded-full px-2 py-0.5">
+                        <span className="text-[8px] font-bold text-white">Reorder</span>
+                      </div>
+                    </div>
+                    <div className="p-2.5">
+                      <div className="text-xs font-semibold text-foreground truncate">{r.name}</div>
+                      {r.cuisine_type && (
+                        <div className="text-[9px] text-muted-foreground truncate mt-0.5">{r.cuisine_type}</div>
+                      )}
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ─── RECENT ACTIVITY ─── */}
           {user && activityItems.length > 0 && (

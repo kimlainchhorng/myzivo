@@ -25912,6 +25912,63 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_referrals: number | null
+          name: string
+          referee_bonus_cents: number
+          referrer_bonus_cents: number
+          starts_at: string
+          target_city: string | null
+          target_role: string
+          total_conversions: number
+          total_cost_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_referrals?: number | null
+          name: string
+          referee_bonus_cents?: number
+          referrer_bonus_cents?: number
+          starts_at?: string
+          target_city?: string | null
+          target_role?: string
+          total_conversions?: number
+          total_cost_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_referrals?: number | null
+          name?: string
+          referee_bonus_cents?: number
+          referrer_bonus_cents?: number
+          starts_at?: string
+          target_city?: string | null
+          target_role?: string
+          total_conversions?: number
+          total_cost_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string
@@ -25929,6 +25986,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      referral_fraud_flags: {
+        Row: {
+          created_at: string
+          details: Json | null
+          flag_type: string
+          id: string
+          referee_id: string | null
+          referral_id: string | null
+          referrer_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          flag_type: string
+          id?: string
+          referee_id?: string | null
+          referral_id?: string | null
+          referrer_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          flag_type?: string
+          id?: string
+          referee_id?: string | null
+          referral_id?: string | null
+          referrer_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_fraud_flags_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_settings: {
         Row: {
@@ -26995,63 +27099,81 @@ export type Database = {
       }
       restaurant_ads: {
         Row: {
+          ad_type: string
           clicks: number | null
           cost_per_click: number
           created_at: string | null
           created_by: string | null
           daily_budget: number
+          description: string | null
           end_date: string | null
           id: string
+          image_url: string | null
           impressions: number | null
           is_approved: boolean | null
           name: string | null
           orders_from_ads: number | null
           paused_at: string | null
           placement: string | null
+          rejection_reason: string | null
           restaurant_id: string
           spent: number | null
           start_date: string | null
           status: string | null
+          target_city: string | null
+          target_zone: string | null
           total_budget: number | null
         }
         Insert: {
+          ad_type?: string
           clicks?: number | null
           cost_per_click: number
           created_at?: string | null
           created_by?: string | null
           daily_budget: number
+          description?: string | null
           end_date?: string | null
           id?: string
+          image_url?: string | null
           impressions?: number | null
           is_approved?: boolean | null
           name?: string | null
           orders_from_ads?: number | null
           paused_at?: string | null
           placement?: string | null
+          rejection_reason?: string | null
           restaurant_id: string
           spent?: number | null
           start_date?: string | null
           status?: string | null
+          target_city?: string | null
+          target_zone?: string | null
           total_budget?: number | null
         }
         Update: {
+          ad_type?: string
           clicks?: number | null
           cost_per_click?: number
           created_at?: string | null
           created_by?: string | null
           daily_budget?: number
+          description?: string | null
           end_date?: string | null
           id?: string
+          image_url?: string | null
           impressions?: number | null
           is_approved?: boolean | null
           name?: string | null
           orders_from_ads?: number | null
           paused_at?: string | null
           placement?: string | null
+          rejection_reason?: string | null
           restaurant_id?: string
           spent?: number | null
           start_date?: string | null
           status?: string | null
+          target_city?: string | null
+          target_zone?: string | null
           total_budget?: number | null
         }
         Relationships: []
@@ -34735,6 +34857,42 @@ export type Database = {
           },
         ]
       }
+      trip_pins: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          id: string
+          is_verified: boolean
+          max_attempts: number
+          pin_code: string
+          trip_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_verified?: boolean
+          max_attempts?: number
+          pin_code: string
+          trip_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_verified?: boolean
+          max_attempts?: number
+          pin_code?: string
+          trip_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       trip_shares: {
         Row: {
           created_at: string | null
@@ -38367,12 +38525,14 @@ export type Database = {
       }
       zivo_referrals: {
         Row: {
+          campaign_id: string | null
           created_at: string | null
           credited_at: string | null
           first_booking_at: string | null
           first_booking_id: string | null
           first_booking_service: string | null
           id: string
+          is_flagged: boolean | null
           referee_credit_amount: number | null
           referee_id: string
           referral_code: string
@@ -38381,12 +38541,14 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string | null
           credited_at?: string | null
           first_booking_at?: string | null
           first_booking_id?: string | null
           first_booking_service?: string | null
           id?: string
+          is_flagged?: boolean | null
           referee_credit_amount?: number | null
           referee_id: string
           referral_code: string
@@ -38395,12 +38557,14 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string | null
           credited_at?: string | null
           first_booking_at?: string | null
           first_booking_id?: string | null
           first_booking_service?: string | null
           id?: string
+          is_flagged?: boolean | null
           referee_credit_amount?: number | null
           referee_id?: string
           referral_code?: string
@@ -38408,7 +38572,15 @@ export type Database = {
           referrer_id?: string
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "zivo_referrals_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "referral_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zivo_revenue: {
         Row: {
@@ -40878,6 +41050,7 @@ export type Database = {
       generate_all_forecasts: { Args: never; Returns: number }
       generate_compliance_alerts: { Args: never; Returns: undefined }
       generate_referral_code: { Args: never; Returns: string }
+      generate_trip_pin: { Args: { p_trip_id: string }; Returns: string }
       generate_zone_forecast: {
         Args: {
           p_hours_ahead?: number
@@ -41484,6 +41657,10 @@ export type Database = {
           error_message: string
           success: boolean
         }[]
+      }
+      verify_trip_pin: {
+        Args: { p_pin: string; p_trip_id: string }
+        Returns: Json
       }
     }
     Enums: {
