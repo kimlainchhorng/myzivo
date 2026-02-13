@@ -12,7 +12,7 @@ import {
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
   Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X, Receipt,
-  ChevronUp, ChevronDown
+  ChevronUp, ChevronDown, CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,8 @@ import { PromoCodeInput } from "@/components/ride/PromoCodeInput";
 import { RidePriceBreakdownWithPromo } from "@/components/ride/RidePriceBreakdownWithPromo";
 import { useRidePromoValidation, ValidatedRidePromo } from "@/hooks/useRidePromoValidation";
 import { useDriverAvailability } from "@/hooks/useLiveDriverTracking";
+import { ScheduleRideSheet } from "@/components/schedule/ScheduleRideSheet";
+import { useCreateScheduledBooking } from "@/hooks/useScheduledBookings";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -286,7 +288,9 @@ function RidesInner() {
   const [showStopSuggestions, setShowStopSuggestions] = useState(false);
   const { suggestions: stopSuggestions, fetchSuggestions: fetchStopSuggestions, clearSuggestions: clearStopSuggestions } = useGoogleMapsGeocode();
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showScheduleSheet, setShowScheduleSheet] = useState(false);
   
+  const createScheduledBooking = useCreateScheduledBooking();
   
   // Zone-based pricing using pickup coordinates
   const { zone: pricingZone } = usePricingZone(pickupCoords?.lat, pickupCoords?.lng);
@@ -1244,12 +1248,21 @@ function RidesInner() {
         {/* Sticky CTA Buttons - ZIVO emerald gradient */}
         {step === "request" && selectedOption && dropoff && (
           <div className="flex-shrink-0 p-4 bg-gradient-to-t from-[#FFFBF5] via-[#FFFBF5] to-[#FFFBF5]/90 border-t border-emerald-100">
-            <Button
-              onClick={handleFindRides}
-              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25"
-            >
-              Choose {selectedOption.name}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleFindRides}
+                className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25"
+              >
+                Choose {selectedOption.name}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowScheduleSheet(true)}
+                className="h-12 px-4 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              >
+                <CalendarDays className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
 
@@ -1280,6 +1293,36 @@ function RidesInner() {
 
       {/* Debug Panel - enabled via localStorage.setItem('zivo_debug_pricing', 'true') */}
       <PricingDebugPanel quote={currentQuote} show={showDebugPanel} />
+
+      {/* Schedule Ride Sheet */}
+      <ScheduleRideSheet
+        open={showScheduleSheet}
+        onOpenChange={setShowScheduleSheet}
+        pickup={pickup}
+        dropoff={dropoff}
+        rideName={selectedOption?.name}
+        estimatedPrice={selectedOption ? getFareDisplay(selectedOption) : undefined}
+        onConfirm={(date, time) => {
+          const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          createScheduledBooking.mutate({
+            booking_type: "ride",
+            scheduled_date: fmt(date),
+            scheduled_time: time,
+            pickup_address: pickup,
+            destination_address: dropoff || undefined,
+            pickup_lat: pickupCoords?.lat,
+            pickup_lng: pickupCoords?.lng,
+            destination_lat: dropoffCoords?.lat,
+            destination_lng: dropoffCoords?.lng,
+            estimated_price: currentQuote?.total,
+            details: {
+              rideType: selectedOption?.id,
+              rideName: selectedOption?.name,
+              stops: stops.map(s => s.address).filter(Boolean),
+            },
+          });
+        }}
+      />
 
       {/* Mobile Nav - hidden when bottom sheet is shown */}
       {isMobile && step === "success" && <ZivoMobileNav />}

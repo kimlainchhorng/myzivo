@@ -23,7 +23,7 @@ import { useUserRewards } from "@/hooks/useUserRewards";
 import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
 import { useReferrals } from "@/hooks/useReferrals";
 import { REFERRAL_REWARDS } from "@/config/referralProgram";
-import { useScheduledBookings } from "@/hooks/useScheduledBookings";
+import { useScheduledBookingsQuery } from "@/hooks/useScheduledBookings";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -153,8 +153,12 @@ const AppHome = () => {
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
-  const { getUpcoming } = useScheduledBookings();
-  const upcomingBookings = getUpcoming();
+  const { data: allBookings = [] } = useScheduledBookingsQuery();
+  const upcomingBookings = allBookings.filter((b) => {
+    if (b.status !== "scheduled" && b.status !== "confirmed") return false;
+    const bookingDate = new Date(`${b.scheduled_date}T${b.scheduled_time}`);
+    return bookingDate > new Date();
+  }).sort((a, b) => new Date(`${a.scheduled_date}T${a.scheduled_time}`).getTime() - new Date(`${b.scheduled_date}T${b.scheduled_time}`).getTime());
   const { balanceDollars } = useCustomerWallet();
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
@@ -517,13 +521,13 @@ const AppHome = () => {
           {/* ─── UPCOMING SCHEDULED BOOKINGS ─── */}
           {user && upcomingBookings.length > 0 && (() => {
             const next = upcomingBookings[0];
-            const nextDate = new Date(`${next.scheduledDate}T${next.scheduledTime}`);
+            const nextDate = new Date(`${next.scheduled_date}T${next.scheduled_time}`);
             const schedTypeConfig: Record<string, { icon: typeof Car; color: string; label: string }> = {
               ride: { icon: Car, color: "text-primary", label: "Ride" },
               eats: { icon: UtensilsCrossed, color: "text-orange-500", label: "Food" },
               delivery: { icon: Package, color: "text-violet-500", label: "Delivery" },
             };
-            const cfg = schedTypeConfig[next.type] || schedTypeConfig.ride;
+            const cfg = schedTypeConfig[next.booking_type] || schedTypeConfig.ride;
             const Icon = cfg.icon;
             const formatTime12 = (t: string) => {
               const [h, m] = t.split(":").map(Number);
@@ -557,13 +561,13 @@ const AppHome = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">
-                      {cfg.label}{next.destination ? ` to ${next.destination}` : ""}
+                      {cfg.label}{next.destination_address ? ` to ${next.destination_address}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(nextDate, "MMM d")} · {formatTime12(next.scheduledTime)}
+                      {format(nextDate, "MMM d")} · {formatTime12(next.scheduled_time)}
                     </p>
-                    {next.pickup && (
-                      <p className="text-[10px] text-muted-foreground truncate">{next.pickup}</p>
+                    {next.pickup_address && (
+                      <p className="text-[10px] text-muted-foreground truncate">{next.pickup_address}</p>
                     )}
                   </div>
                 </div>
