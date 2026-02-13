@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { calculateDirectionAlignment } from "./useDriverDestinationMode";
 
 export interface DriverQueueEntry {
   id: string;
@@ -39,6 +40,7 @@ export interface DriverScoreBreakdown {
   ratingScore: number;
   fairnessScore: number;
   freshnessScore: number;
+  destinationBonus: number;
 }
 
 // Get driver queue for a region
@@ -117,9 +119,15 @@ export const useDriverQueue = (regionId: string | null) => {
 };
 
 // Get online drivers with scores for a region (for queue visualization)
-export const useDriversWithScores = (regionId: string | null, pickupLat?: number, pickupLng?: number) => {
+export const useDriversWithScores = (
+  regionId: string | null,
+  pickupLat?: number,
+  pickupLng?: number,
+  dropoffLat?: number,
+  dropoffLng?: number
+) => {
   return useQuery({
-    queryKey: ["drivers-with-scores", regionId, pickupLat, pickupLng],
+    queryKey: ["drivers-with-scores", regionId, pickupLat, pickupLng, dropoffLat, dropoffLng],
     queryFn: async () => {
       if (!regionId) return [];
 
@@ -142,6 +150,22 @@ export const useDriversWithScores = (regionId: string | null, pickupLat?: number
         .eq("is_active", true);
 
       if (queueError) throw queueError;
+
+      // Get active destination sessions for all drivers in region
+      const driverIds = (drivers || []).map((d) => d.id);
+      let destSessionMap = new Map<string, { destination_lat: number; destination_lng: number }>();
+      
+      if (driverIds.length > 0) {
+        const { data: destSessions } = await (supabase as any)
+          .from("destination_mode_sessions")
+          .select("driver_id, destination_lat, destination_lng")
+          .in("driver_id", driverIds)
+          .eq("status", "active");
+
+        for (const s of destSessions || []) {
+          destSessionMap.set(s.driver_id, s);
+        }
+      }
 
       // Build map of queue entries by driver
       const queueMap = new Map(queueEntries?.map((q) => [q.driver_id, q]) || []);
@@ -183,7 +207,25 @@ export const useDriversWithScores = (regionId: string | null, pickupLat?: number
           else if (secondsSinceActive < 120) freshnessScore = 4;
         }
 
-        const totalScore = distanceScore + ratingScore + fairnessScore + freshnessScore;
+        // Destination alignment bonus (up to 20 points)
+        let destinationBonus = 0;
+        const destSession = destSessionMap.get(driver.id);
+        if (destSession && dropoffLat && dropoffLng && pickupLat && pickupLng) {
+          const alignment = calculateDirectionAlignment(
+            pickupLat,
+            pickupLng,
+            dropoffLat,
+            dropoffLng,
+            destSession.destination_lat,
+            destSession.destination_lng
+          );
+          // Only award bonus if alignment > 0.6 (within ~55° of destination direction)
+          if (alignment > 0.6) {
+            destinationBonus = Math.round(alignment * 20);
+          }
+        }
+
+        const totalScore = distanceScore + ratingScore + fairnessScore + freshnessScore + destinationBonus;
 
         // Express priority boost is applied at dispatch time via auto_assign_order_v2
 
@@ -202,6 +244,8 @@ export const useDriversWithScores = (regionId: string | null, pickupLat?: number
           ratingScore: Math.round(ratingScore * 100) / 100,
           fairnessScore: Math.round(fairnessScore * 100) / 100,
           freshnessScore,
+          destinationBonus,
+          hasDestinationMode: !!destSession,
         };
       });
 

@@ -33228,30 +33228,33 @@ export type Database = {
           certified_at: string | null
           course_id: string
           created_at: string
-          driver_id: string
+          driver_id: string | null
           expires_at: string | null
           id: string
           quiz_attempt_id: string | null
+          restaurant_id: string | null
           status: string
         }
         Insert: {
           certified_at?: string | null
           course_id: string
           created_at?: string
-          driver_id: string
+          driver_id?: string | null
           expires_at?: string | null
           id?: string
           quiz_attempt_id?: string | null
+          restaurant_id?: string | null
           status?: string
         }
         Update: {
           certified_at?: string | null
           course_id?: string
           created_at?: string
-          driver_id?: string
+          driver_id?: string | null
           expires_at?: string | null
           id?: string
           quiz_attempt_id?: string | null
+          restaurant_id?: string | null
           status?: string
         }
         Relationships: [
@@ -33283,6 +33286,34 @@ export type Database = {
             referencedRelation: "training_quiz_attempts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "training_certifications_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       training_courses: {
@@ -33300,6 +33331,7 @@ export type Database = {
           lessons_count: number
           prerequisite_course_id: string | null
           sort_order: number | null
+          target_role: string
           title: string
         }
         Insert: {
@@ -33316,6 +33348,7 @@ export type Database = {
           lessons_count?: number
           prerequisite_course_id?: string | null
           sort_order?: number | null
+          target_role?: string
           title: string
         }
         Update: {
@@ -33332,6 +33365,7 @@ export type Database = {
           lessons_count?: number
           prerequisite_course_id?: string | null
           sort_order?: number | null
+          target_role?: string
           title?: string
         }
         Relationships: [
@@ -33394,8 +33428,9 @@ export type Database = {
           completed_lessons: number
           course_id: string
           created_at: string
-          driver_id: string
+          driver_id: string | null
           id: string
+          restaurant_id: string | null
           started_at: string
           updated_at: string
         }
@@ -33404,8 +33439,9 @@ export type Database = {
           completed_lessons?: number
           course_id: string
           created_at?: string
-          driver_id: string
+          driver_id?: string | null
           id?: string
+          restaurant_id?: string | null
           started_at?: string
           updated_at?: string
         }
@@ -33414,8 +33450,9 @@ export type Database = {
           completed_lessons?: number
           course_id?: string
           created_at?: string
-          driver_id?: string
+          driver_id?: string | null
           id?: string
+          restaurant_id?: string | null
           started_at?: string
           updated_at?: string
         }
@@ -33434,6 +33471,34 @@ export type Database = {
             referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "training_progress_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_progress_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_progress_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_progress_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       training_quiz_attempts: {
@@ -33441,30 +33506,33 @@ export type Database = {
           answers: Json | null
           completed_at: string | null
           created_at: string
-          driver_id: string
+          driver_id: string | null
           id: string
           passed: boolean
           quiz_id: string
+          restaurant_id: string | null
           score: number
         }
         Insert: {
           answers?: Json | null
           completed_at?: string | null
           created_at?: string
-          driver_id: string
+          driver_id?: string | null
           id?: string
           passed?: boolean
           quiz_id: string
+          restaurant_id?: string | null
           score?: number
         }
         Update: {
           answers?: Json | null
           completed_at?: string | null
           created_at?: string
-          driver_id?: string
+          driver_id?: string | null
           id?: string
           passed?: boolean
           quiz_id?: string
+          restaurant_id?: string | null
           score?: number
         }
         Relationships: [
@@ -33489,10 +33557,39 @@ export type Database = {
             referencedRelation: "training_quizzes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "training_quiz_attempts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       training_quiz_questions: {
         Row: {
+          correct_answer: number
           created_at: string
           id: string
           options: Json
@@ -33501,6 +33598,7 @@ export type Database = {
           sort_order: number | null
         }
         Insert: {
+          correct_answer?: number
           created_at?: string
           id?: string
           options?: Json
@@ -33509,6 +33607,7 @@ export type Database = {
           sort_order?: number | null
         }
         Update: {
+          correct_answer?: number
           created_at?: string
           id?: string
           options?: Json

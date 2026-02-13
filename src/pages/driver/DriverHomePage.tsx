@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import DriverOnlineToggle from "@/components/driver/DriverOnlineToggle";
 import DriverNotificationBell from "@/components/driver/DriverNotificationBell";
+import DestinationModePanel from "@/components/driver/DestinationModePanel";
 import { EatsOrderCard } from "@/components/driver/EatsOrderCard";
 import { 
   useDriverProfile, 
@@ -204,6 +205,18 @@ const DriverHomePage = () => {
             isOnline={driver.is_online ?? false}
             onToggle={handleToggleOnline}
             isLoading={updateStatus.isPending}
+          />
+        </motion.div>
+
+        {/* Destination Mode */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <DestinationModePanel
+            driverId={driver.id}
+            isOnline={driver.is_online ?? false}
           />
         </motion.div>
 
