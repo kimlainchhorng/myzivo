@@ -2,7 +2,8 @@
  * Cancel Membership
  * Cancels a ZIVO+ subscription at period end
  */
-import { serve, createClient, Stripe } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: any) => {

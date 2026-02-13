@@ -2,7 +2,8 @@
  * Process Dispute Refund Edge Function
  * Handles partial or full refunds via Stripe for order disputes
  */
-import { serve, createClient, Stripe } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {

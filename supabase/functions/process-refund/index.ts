@@ -2,7 +2,8 @@
  * Process Refund
  * Admin-only endpoint to refund ride or eats payments
  */
-import { serve, Stripe, createClient } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface RefundRequest {

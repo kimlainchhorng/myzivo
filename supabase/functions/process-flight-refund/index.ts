@@ -4,7 +4,8 @@
  * Actions: 'request' (user), 'process' (admin), 'auto' (after ticketing failure)
  */
 
-import { serve, createClient, Stripe } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const DUFFEL_API_URL = "https://api.duffel.com";

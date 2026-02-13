@@ -2,7 +2,8 @@
  * Create Eats Payment Intent
  * Creates a Stripe PaymentIntent for embedded checkout with Stripe Elements
  */
-import { serve, Stripe, createClient } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface CreatePaymentIntentRequest {
