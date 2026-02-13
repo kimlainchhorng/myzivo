@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shield, MapPin, UserCheck } from "lucide-react";
+import { UnifiedOrderTimeline } from "@/components/shared/UnifiedOrderTimeline";
 import { Trip } from "@/hooks/useTrips";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import { useUnreadMessageCount } from "@/hooks/useTripChat";
@@ -256,52 +257,14 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
               {trip.status?.replace("_", " ")}
             </Badge>
           </div>
-
-          <div className="relative">
-            {/* Progress Line */}
-            <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-muted" />
-            <div 
-              className="absolute left-[11px] top-0 w-0.5 bg-primary transition-all duration-500 ease-out"
-              style={{ height: `${Math.min((currentStepIndex / (statusSteps.length - 1)) * 100, 100)}%` }}
-            />
-            
-            <div className="space-y-2.5">
-              {statusSteps.slice(0, 5).map((step, index) => (
-                <div 
-                  key={step.status} 
-                  className="flex items-center gap-3 relative animate-in fade-in slide-in-from-left-2 duration-200"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center z-10 transition-all duration-300",
-                    index < currentStepIndex 
-                      ? "bg-primary text-primary-foreground" 
-                      : index === currentStepIndex
-                      ? "bg-primary text-primary-foreground ring-2 ring-primary/20"
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    {index < currentStepIndex ? (
-                      <span className="text-[10px]">✓</span>
-                    ) : index === currentStepIndex ? (
-                      step.lucideIcon ? (
-                        <step.lucideIcon className="w-3 h-3 animate-pulse" />
-                      ) : (
-                        <span className="text-[10px] animate-pulse">{step.icon}</span>
-                      )
-                    ) : (
-                      <span className="text-[9px]">{index + 1}</span>
-                    )}
-                  </div>
-                  <span className={cn(
-                    "text-xs font-medium transition-colors",
-                    index <= currentStepIndex ? "text-foreground" : "text-muted-foreground"
-                  )}>
-                    {step.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <UnifiedOrderTimeline
+            serviceType="ride"
+            viewerRole="customer"
+            currentStatus={trip.status}
+            timestamps={{
+              requested: trip.created_at,
+            }}
+          />
         </CardContent>
       </Card>
 

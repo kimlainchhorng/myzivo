@@ -27,7 +27,7 @@ import { useOrderEditWindow } from "@/hooks/useOrderEditWindow";
 import { useOrderDelayDetection } from "@/hooks/useOrderDelayDetection";
 import { useDelayNotification } from "@/hooks/useDelayNotification";
 import { useOrderEditing } from "@/hooks/useOrderEditing";
-import { StatusTimeline } from "@/components/eats/StatusTimeline";
+import { UnifiedOrderTimeline } from "@/components/shared/UnifiedOrderTimeline";
 import { DriverInfoCard } from "@/components/eats/DriverInfoCard";
 import { DeliveryMap } from "@/components/eats/DeliveryMap";
 import { EtaCountdown } from "@/components/eats/EtaCountdown";
@@ -671,19 +671,20 @@ function EatsOrderDetailContent() {
             <Clock className="w-4 h-4 text-orange-500" />
             Order Status
           </h2>
-          <StatusTimeline 
-            currentStatus={order.status} 
-            timestamps={timestamps}
-            driverId={order.driver_id}
-            assignedAt={order.assigned_at}
-            dispatchPhase={dispatchStatus.phase}
-            prepProgressPercent={prepProgress.progressPercent}
-            isBatched={batchInfo.isBatched}
-            batchPosition={
-              batchInfo.isBatched && batchInfo.currentStopOrder
-                ? { current: batchInfo.currentStopOrder, total: batchInfo.totalStops, customerStop: batchInfo.customerStopOrder ?? 0 }
-                : null
-            }
+          <UnifiedOrderTimeline
+            serviceType="eats"
+            viewerRole="customer"
+            currentStatus={order.status}
+            timestamps={{
+              placed: timestamps.placed_at || timestamps.created_at,
+              confirmed: timestamps.accepted_at,
+              preparing: timestamps.prepared_at,
+              picked_up: timestamps.ready_at || timestamps.picked_up_at,
+              out_for_delivery: timestamps.picked_up_at,
+              delivered: timestamps.delivered_at,
+            }}
+            etaPickup={order.eta_pickup}
+            etaDropoff={order.eta_dropoff}
           />
         </motion.div>
 

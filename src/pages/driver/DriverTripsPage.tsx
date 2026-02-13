@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Car, Radio, Loader2 } from "lucide-react";
+import { UnifiedOrderTimeline } from "@/components/shared/UnifiedOrderTimeline";
 import { Button } from "@/components/ui/button";
 import TripRequestCard from "@/components/driver/TripRequestCard";
 import ActiveTripCard from "@/components/driver/ActiveTripCard";
@@ -123,6 +124,17 @@ const DriverTripsPage = () => {
               onUpdateStatus={handleUpdateStatus}
               isUpdating={updateTripStatus.isPending}
             />
+            <div className="mt-4 bg-zinc-900/80 border border-white/5 rounded-2xl p-4">
+              <h3 className="font-semibold text-sm mb-3">Trip Progress</h3>
+              <UnifiedOrderTimeline
+                serviceType="ride"
+                viewerRole="driver"
+                currentStatus={activeTrip.status}
+                timestamps={{
+                  requested: activeTrip.created_at,
+                }}
+              />
+            </div>
           </motion.div>
         )}
 
