@@ -10819,6 +10819,48 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_tiers: {
+        Row: {
+          benefits_json: Json
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          min_acceptance_rate: number
+          min_deliveries: number
+          min_on_time_rate: number
+          min_rating: number
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          benefits_json?: Json
+          color?: string
+          created_at?: string
+          icon?: string
+          id: string
+          min_acceptance_rate?: number
+          min_deliveries?: number
+          min_on_time_rate?: number
+          min_rating?: number
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          benefits_json?: Json
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          min_acceptance_rate?: number
+          min_deliveries?: number
+          min_on_time_rate?: number
+          min_rating?: number
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       driver_training_progress: {
         Row: {
           completed_at: string | null
@@ -11125,6 +11167,7 @@ export type Database = {
           stripe_payouts_enabled: boolean | null
           suspicious_count: number | null
           tenant_id: string | null
+          tier: string | null
           total_deliveries: number | null
           total_trips: number | null
           updated_at: string
@@ -11217,6 +11260,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean | null
           suspicious_count?: number | null
           tenant_id?: string | null
+          tier?: string | null
           total_deliveries?: number | null
           total_trips?: number | null
           updated_at?: string
@@ -11309,6 +11353,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean | null
           suspicious_count?: number | null
           tenant_id?: string | null
+          tier?: string | null
           total_deliveries?: number | null
           total_trips?: number | null
           updated_at?: string
@@ -27441,6 +27486,111 @@ export type Database = {
           },
         ]
       }
+      restaurant_tiers: {
+        Row: {
+          benefits_json: Json
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          min_orders: number
+          min_rating: number
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          benefits_json?: Json
+          color?: string
+          created_at?: string
+          icon?: string
+          id: string
+          min_orders?: number
+          min_rating?: number
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          benefits_json?: Json
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          min_orders?: number
+          min_rating?: number
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      restaurant_wallet_transactions: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          restaurant_id: string
+          status: string
+          type: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          restaurant_id: string
+          status?: string
+          type: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          restaurant_id?: string
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      restaurant_wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string
+          id: string
+          lifetime_earnings_cents: number
+          paid_out_cents: number
+          pending_cents: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          lifetime_earnings_cents?: number
+          paid_out_cents?: number
+          pending_cents?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          lifetime_earnings_cents?: number
+          paid_out_cents?: number
+          pending_cents?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           accepts_delivery: boolean | null
@@ -27496,6 +27646,7 @@ export type Database = {
           onboarding_step: number | null
           opening_hours: Json | null
           owner_id: string | null
+          partner_tier: string | null
           pause_new_orders: boolean | null
           phone: string
           plan_code: string | null
@@ -27581,6 +27732,7 @@ export type Database = {
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
+          partner_tier?: string | null
           pause_new_orders?: boolean | null
           phone: string
           plan_code?: string | null
@@ -27666,6 +27818,7 @@ export type Database = {
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
+          partner_tier?: string | null
           pause_new_orders?: boolean | null
           phone?: string
           plan_code?: string | null
@@ -29440,6 +29593,93 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      scheduled_bookings: {
+        Row: {
+          booking_type: string
+          cancellation_reason: string | null
+          created_at: string
+          destination_address: string | null
+          destination_lat: number | null
+          destination_lng: number | null
+          details: Json | null
+          driver_assigned_at: string | null
+          driver_id: string | null
+          estimated_price: number | null
+          id: string
+          pickup_address: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          reminder_sent: boolean
+          restaurant_id: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_type: string
+          cancellation_reason?: string | null
+          created_at?: string
+          destination_address?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          details?: Json | null
+          driver_assigned_at?: string | null
+          driver_id?: string | null
+          estimated_price?: number | null
+          id?: string
+          pickup_address: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          reminder_sent?: boolean
+          restaurant_id?: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_type?: string
+          cancellation_reason?: string | null
+          created_at?: string
+          destination_address?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          details?: Json | null
+          driver_assigned_at?: string | null
+          driver_id?: string | null
+          estimated_price?: number | null
+          id?: string
+          pickup_address?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          reminder_sent?: boolean
+          restaurant_id?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_bookings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_bookings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_reports: {
         Row: {
@@ -32902,6 +33142,36 @@ export type Database = {
           subject?: string | null
           updated_at?: string | null
           usage_count?: number | null
+        }
+        Relationships: []
+      }
+      tier_history: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          new_tier: string
+          old_tier: string | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          new_tier: string
+          old_tier?: string | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          new_tier?: string
+          old_tier?: string | null
+          reason?: string | null
         }
         Relationships: []
       }
