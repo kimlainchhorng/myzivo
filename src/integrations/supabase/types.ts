@@ -43000,16 +43000,26 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: number
       }
-      credit_customer_wallet: {
-        Args: {
-          p_amount_cents: number
-          p_description?: string
-          p_reference_id?: string
-          p_type: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      credit_customer_wallet:
+        | {
+            Args: {
+              p_amount_cents: number
+              p_reason?: string
+              p_reference_id?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount_cents: number
+              p_description?: string
+              p_reference_id?: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       credit_driver_earnings: {
         Args: {
           p_amount_cents: number

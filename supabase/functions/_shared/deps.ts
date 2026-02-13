@@ -7,5 +7,5 @@
  */
 
 export { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-export { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-export { default as Stripe } from "https://esm.sh/stripe@18.5.0";
+export { createClient } from "npm:@supabase/supabase-js@2.57.2";
+export { default as Stripe } from "npm:stripe@18.5.0";

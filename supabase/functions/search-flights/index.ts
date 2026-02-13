@@ -1,6 +1,4 @@
 import { serve } from "../_shared/deps.ts";
-import { crypto } from "https://deno.land/std@0.190.0/crypto/mod.ts";
-import { encode as encodeHex } from "https://deno.land/std@0.190.0/encoding/hex.ts";
 
 /**
  * Aviasales Flights Search API Edge Function
@@ -106,7 +104,7 @@ async function createMd5Signature(signatureString: string): Promise<string> {
   const data = encoder.encode(signatureString);
   const hashBuffer = await crypto.subtle.digest("MD5", data);
   const hashArray = new Uint8Array(hashBuffer);
-  return new TextDecoder().decode(encodeHex(hashArray));
+  return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
