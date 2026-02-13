@@ -1,4 +1,5 @@
 import { serve, createClient } from "../_shared/deps.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 /**
  * Duffel Flights API Edge Function
@@ -10,12 +11,6 @@ import { serve, createClient } from "../_shared/deps.ts";
  * 
  * Includes search logging for admin debugging
  */
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
 
 const DUFFEL_API_URL = 'https://api.duffel.com';
 
@@ -699,7 +694,44 @@ interface DuffelOfferTransformed {
   passengers: number;
 }
 
+// ---- Input validation helpers ----
+const IATA_RE = /^[A-Z]{3}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VALID_CABIN = new Set(['economy', 'premium_economy', 'business', 'first']);
+const VALID_PAX_TYPE = new Set(['adult', 'child', 'infant_without_seat']);
+
+function validateCreateOfferRequest(p: Record<string, unknown>): string | null {
+  const slices = p.slices as unknown[];
+  if (!Array.isArray(slices) || slices.length < 1 || slices.length > 2) return 'slices must be an array of 1-2 items';
+  for (const s of slices) {
+    const sl = s as Record<string, string>;
+    if (!sl.origin || !IATA_RE.test(sl.origin)) return 'Invalid origin IATA code';
+    if (!sl.destination || !IATA_RE.test(sl.destination)) return 'Invalid destination IATA code';
+    if (!sl.departure_date || !DATE_RE.test(sl.departure_date)) return 'Invalid departure_date format';
+  }
+  const passengers = p.passengers as unknown[];
+  if (!Array.isArray(passengers) || passengers.length < 1 || passengers.length > 9) return 'passengers must be 1-9';
+  for (const px of passengers) {
+    const pxObj = px as Record<string, string>;
+    if (!VALID_PAX_TYPE.has(pxObj.type)) return 'Invalid passenger type';
+  }
+  if (p.cabin_class && !VALID_CABIN.has(p.cabin_class as string)) return 'Invalid cabin_class';
+  return null;
+}
+
+function validateGetOffers(p: Record<string, unknown>): string | null {
+  if (typeof p.offer_request_id !== 'string' || !p.offer_request_id) return 'offer_request_id required';
+  return null;
+}
+
+function validateGetOffer(p: Record<string, unknown>): string | null {
+  if (typeof p.offer_id !== 'string' || !p.offer_id) return 'offer_id required';
+  return null;
+}
+
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -708,6 +740,27 @@ serve(async (req) => {
     const { action, ...params } = await req.json();
 
     console.log('[Duffel] Action:', action);
+
+    // Validate action
+    if (typeof action !== 'string' || !['createOfferRequest', 'getOffers', 'getOffer', 'createOrder'].includes(action)) {
+      return new Response(
+        JSON.stringify({ error: `Unknown action: ${action}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate params per action
+    let validationError: string | null = null;
+    if (action === 'createOfferRequest') validationError = validateCreateOfferRequest(params);
+    else if (action === 'getOffers') validationError = validateGetOffers(params);
+    else if (action === 'getOffer') validationError = validateGetOffer(params);
+
+    if (validationError) {
+      return new Response(
+        JSON.stringify({ error: validationError }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     let result;
 
