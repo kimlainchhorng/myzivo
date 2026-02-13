@@ -1,92 +1,92 @@
 
 
-# Passenger Verification and Trust Score Enhancement
+# Unified Order and Trip Timeline
 
-## What Already Exists (No Changes Needed)
+## Current State
 
-The project already has extensive infrastructure covering most of the requested features:
+The codebase has **separate** timeline implementations for different services:
+- **Eats orders**: `StatusTimeline.tsx` -- detailed vertical timeline with driver substeps, prep progress, batch delivery info
+- **Rides**: `TripTracker.tsx` -- inline status steps (emoji-based) embedded in the map view
+- **Activity feeds**: `ActivityTimeline.tsx` -- reusable feed-style component for recent events
+- **Generic tracker**: `StatusTracker` UI component (horizontal/vertical step indicators)
+- **Real-time**: Full Supabase Realtime subscriptions for trips, orders, and driver location
+- **Audit trail**: `order_events` table logs every status change for food orders
 
-- **Account verification**: Phone OTP, email verification, identity document upload with selfie (VerificationPage at `/account/verification`)
-- **Trust score calculation**: `useAccountTrustLevel` hook with 8 signals (email, phone, identity, account age, orders, profile completeness)
-- **Trust level display**: `TrustLevelPage` at `/account/trust` with score breakdown, benefits, and improvement suggestions
-- **Trust level card**: `TrustLevelCard` on mobile account page showing score and tier
-- **Fraud detection**: `check-fraud-signals` edge function detecting refund abuse, cancellation spikes, velocity spikes, wrong PIN attempts
-- **Admin user management**: Full admin panel with user profiles, activity timelines, status management
-- **Privacy controls**: DSAR/GDPR-compliant privacy page at `/account/privacy`
-- **Driver rates passenger**: `RatePassengerModal` saving `rider_rating` to trips table
+What's **missing** is a single, unified timeline component that:
+- Works for both rides AND food orders with a consistent visual style
+- Adapts its steps based on service type (ride vs delivery)
+- Shows real-time ETA alongside each step
+- Can be rendered from the `order_events` audit trail for historical views
+- Provides role-aware views (customer, driver, restaurant) from the same component
 
-## What's Being Added
+## What Will Be Built
 
-### 1. Rename Trust Tiers to Rider-Specific Labels
+### 1. Unified Timeline Component
 
-Update `src/config/trustLevel.ts` to use rider-friendly tier names:
-- "Needs Attention" (0-29) becomes **"New"**
-- "Good" (30-64) becomes **"Verified"**
-- "Excellent" (65-84) becomes **"Trusted"**
-- Add a new tier: **"Top Rider"** (85-100)
+Create `src/components/shared/UnifiedOrderTimeline.tsx`:
+- A single vertical timeline component accepting a `serviceType` prop ("ride" | "eats")
+- Renders the correct step sequence per service type:
+  - **Rides**: Requested, Driver Assigned, Driver En Route, Driver Arrived, Pickup, Trip In Progress, Completed
+  - **Eats**: Order Placed, Confirmed, Preparing, Driver Assigned, Driver En Route, Picked Up, Out for Delivery, Delivered
+- Each step shows: status icon, label, timestamp (when completed), and ETA (when current/upcoming)
+- Visual states: completed (green check), current (animated pulse), pending (muted), delayed (amber warning)
+- Accepts a `viewerRole` prop ("customer" | "driver" | "restaurant") to customize labels
+  - Customer sees "Driver arriving" / Driver sees "Heading to pickup" / Restaurant sees "Driver approaching"
+- Uses framer-motion for smooth step transitions
 
-Add two new trust signals:
-- `low_cancellation_rate`: "Low cancellation rate" (weight 5) -- earned when cancellation rate is below 15%
-- `good_rider_rating`: "Good passenger rating" (weight 5) -- earned when average rider_rating >= 4.0
+### 2. Timeline Data Hook
 
-### 2. Update Trust Score Calculation
+Create `src/hooks/useUnifiedTimeline.ts`:
+- Accepts either a `tripId` (rides) or `orderId` (eats)
+- For **eats**: queries `food_orders` for current status + timestamps, queries `order_events` for full event history
+- For **rides**: queries `trips` table for status + timestamps
+- Subscribes to Supabase Realtime for live updates (reuses existing channel patterns from `useTripRealtime` and `useCrossAppRealtime`)
+- Computes ETA for current step using existing ETA fields (`eta_pickup`, `eta_dropoff`)
+- Returns normalized timeline steps with completion timestamps, current step index, and delay status
 
-Update `src/hooks/useAccountTrustLevel.ts` to:
-- Query `trips` table for cancellation rate (cancelled vs total trips)
-- Query `trips` table for average `rider_rating` (from driver feedback)
-- Include these two new signals in the earned map
+### 3. Integration Points
 
-### 3. Passenger Trust Badge for Drivers
+**Customer ride view** -- Update `src/components/rider/TripTracker.tsx`:
+- Replace the inline emoji-based status steps with `UnifiedOrderTimeline` (serviceType="ride", viewerRole="customer")
 
-Create `src/components/driver/PassengerTrustBadge.tsx`:
-- A compact badge component showing the rider's trust tier icon, label, verification status, and average rating
-- Displayed when a driver receives a ride request or views the active trip
-- Fetches rider profile data (trust signals) using the rider_id from the trip
+**Customer order detail** -- Update `src/pages/EatsOrderDetail.tsx`:
+- Replace `StatusTimeline` import with `UnifiedOrderTimeline` (serviceType="eats", viewerRole="customer")
+- Pass existing timestamps and dispatch phase data through
 
-Create `src/hooks/usePassengerTrust.ts`:
-- Given a `riderId`, queries profiles and trips to compute trust score for that rider
-- Returns tier label, verification badges (email, phone, identity), avg rider rating, total trips
+**Driver ride view** -- Update `src/pages/driver/DriverTripsPage.tsx`:
+- Add `UnifiedOrderTimeline` to active trip card (serviceType="ride", viewerRole="driver")
 
-Integrate into `src/pages/ride/RideDriverPage.tsx`:
-- Show `PassengerTrustBadge` in the pickup information card
+**Driver eats view** -- Where driver views active delivery, add timeline (serviceType="eats", viewerRole="driver")
 
-### 4. Admin Trust Distribution Panel
+**Restaurant view** -- Update restaurant order detail to use `UnifiedOrderTimeline` (serviceType="eats", viewerRole="restaurant")
 
-Create `src/components/admin/AdminTrustDistribution.tsx`:
-- Summary cards: count of users per trust tier (New, Verified, Trusted, Top Rider)
-- Flagged users list (from `user_limits` where `is_blocked = true` or `risk_events` in last 7 days)
-- Trust score distribution bar chart
+### 4. Notification Sync
 
-Add as a new section in `AdminUserManagement.tsx` or as an additional tab in the admin dashboard.
+Update `src/hooks/useUnifiedTimeline.ts` to emit timeline change events that the existing notification center can consume:
+- When a step completes, dispatch to the notification store (reuses existing `RealtimeSyncContext` patterns)
+- No new notification infrastructure needed -- just connect timeline state changes to the existing notification triggers
 
-### 5. Verification Status Notifications
+## Files to Create
 
-Update `src/hooks/useCustomerVerification.ts`:
-- After `submitMutation` success, show toast "Verification submitted -- you'll be notified when reviewed"
-- Add a realtime subscription on `customer_identity_verifications` for changes to `status` field
-- When status changes to "verified", show success toast "Your identity is now verified! Trust score updated."
-- When status changes to "rejected", show warning toast with rejection reason
+| File | Description |
+|------|-------------|
+| `src/components/shared/UnifiedOrderTimeline.tsx` | Unified vertical timeline component with role-aware labels, ETA display, delay indicators |
+| `src/hooks/useUnifiedTimeline.ts` | Data hook: fetches status, subscribes to realtime, computes ETA, returns normalized steps |
 
-## Files Changed
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/config/trustLevel.ts` | Add "Top Rider" tier, rename tiers, add 2 new signals |
-| `src/hooks/useAccountTrustLevel.ts` | Query cancellation rate and avg rider_rating, include new signals |
-| `src/components/driver/PassengerTrustBadge.tsx` | New: compact rider trust badge for drivers |
-| `src/hooks/usePassengerTrust.ts` | New: fetch and compute trust for a given rider |
-| `src/pages/ride/RideDriverPage.tsx` | Show PassengerTrustBadge in pickup card |
-| `src/components/admin/AdminTrustDistribution.tsx` | New: trust tier distribution and flagged users panel |
-| `src/pages/AdminDashboard.tsx` | Add trust distribution tab |
-| `src/hooks/useCustomerVerification.ts` | Add realtime subscription for verification status notifications |
-| `src/components/account/TrustLevelCard.tsx` | Update color map for new "Top Rider" tier |
-| `src/pages/account/TrustLevelPage.tsx` | Update color map for new tier |
+| `src/components/rider/TripTracker.tsx` | Replace inline status steps with UnifiedOrderTimeline |
+| `src/pages/EatsOrderDetail.tsx` | Swap StatusTimeline for UnifiedOrderTimeline |
+| `src/pages/driver/DriverTripsPage.tsx` | Add UnifiedOrderTimeline to active trip detail |
 
 ## Technical Notes
 
-- Trust tiers will use 4 levels instead of 3, with adjusted score thresholds (0-29, 30-64, 65-84, 85-100)
-- Cancellation rate calculated as: cancelled trips / total trips (only counted if user has 3+ trips to avoid penalizing new users)
-- Average rider_rating only included if the rider has been rated on 2+ trips
-- PassengerTrustBadge is read-only and fetches data server-side via Supabase with RLS (driver can only see limited passenger profile data)
-- No new database tables needed -- all data sources already exist (profiles, trips, customer_identity_verifications, risk_events, user_limits)
+- The component reuses existing color tokens from the verdant theme (`--rides`, `--eats`, emerald/amber for status states)
+- ETA integration pulls from existing `eta_pickup`/`eta_dropoff` fields on trips and food_orders tables
+- Realtime subscriptions follow the same channel pattern used in `RealtimeSyncContext` to avoid duplicate connections
+- The `order_events` table is already populated by all status mutations, so historical timelines work immediately
+- No database migrations needed -- all required tables and columns already exist
+- The existing `StatusTimeline` and `StatusTracker` components remain available for any pages not yet migrated
 
