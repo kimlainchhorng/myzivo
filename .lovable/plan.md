@@ -1,92 +1,91 @@
 
 
-# Unified Order and Trip Timeline
+## Marketing Website and Landing Pages for ZIVO
 
-## Current State
+### Current State
 
-The codebase has **separate** timeline implementations for different services:
-- **Eats orders**: `StatusTimeline.tsx` -- detailed vertical timeline with driver substeps, prep progress, batch delivery info
-- **Rides**: `TripTracker.tsx` -- inline status steps (emoji-based) embedded in the map view
-- **Activity feeds**: `ActivityTimeline.tsx` -- reusable feed-style component for recent events
-- **Generic tracker**: `StatusTracker` UI component (horizontal/vertical step indicators)
-- **Real-time**: Full Supabase Realtime subscriptions for trips, orders, and driver location
-- **Audit trail**: `order_events` table logs every status change for food orders
+Your marketing website is already well-built with most pages in place:
+- **Home page** with hero, services, how it works, testimonials, and app download
+- **About, FAQ, How It Works, Contact, Partners, Careers** pages all exist
+- **Install page** with PWA download guidance for iOS/Android
+- **Restaurant Registration** form exists (but no marketing landing page)
+- **SEO infrastructure** with meta tags, Open Graph, and FAQ schema markup
 
-What's **missing** is a single, unified timeline component that:
-- Works for both rides AND food orders with a consistent visual style
-- Adapts its steps based on service type (ride vs delivery)
-- Shows real-time ETA alongside each step
-- Can be rendered from the `order_events` audit trail for historical views
-- Provides role-aware views (customer, driver, restaurant) from the same component
+### What Needs to Be Added
 
-## What Will Be Built
+Three dedicated marketing landing pages are missing. These would serve as public-facing pages to attract each user type with tailored messaging and clear calls to action.
 
-### 1. Unified Timeline Component
+---
 
-Create `src/components/shared/UnifiedOrderTimeline.tsx`:
-- A single vertical timeline component accepting a `serviceType` prop ("ride" | "eats")
-- Renders the correct step sequence per service type:
-  - **Rides**: Requested, Driver Assigned, Driver En Route, Driver Arrived, Pickup, Trip In Progress, Completed
-  - **Eats**: Order Placed, Confirmed, Preparing, Driver Assigned, Driver En Route, Picked Up, Out for Delivery, Delivered
-- Each step shows: status icon, label, timestamp (when completed), and ETA (when current/upcoming)
-- Visual states: completed (green check), current (animated pulse), pending (muted), delayed (amber warning)
-- Accepts a `viewerRole` prop ("customer" | "driver" | "restaurant") to customize labels
-  - Customer sees "Driver arriving" / Driver sees "Heading to pickup" / Restaurant sees "Driver approaching"
-- Uses framer-motion for smooth step transitions
+### 1. Customer Landing Page (`/for-customers`)
 
-### 2. Timeline Data Hook
+A public page showcasing all ZIVO services from the customer perspective.
 
-Create `src/hooks/useUnifiedTimeline.ts`:
-- Accepts either a `tripId` (rides) or `orderId` (eats)
-- For **eats**: queries `food_orders` for current status + timestamps, queries `order_events` for full event history
-- For **rides**: queries `trips` table for status + timestamps
-- Subscribes to Supabase Realtime for live updates (reuses existing channel patterns from `useTripRealtime` and `useCrossAppRealtime`)
-- Computes ETA for current step using existing ETA fields (`eta_pickup`, `eta_dropoff`)
-- Returns normalized timeline steps with completion timestamps, current step index, and delay status
+**Sections:**
+- Hero with tagline ("Your all-in-one travel and mobility app")
+- Service cards: Book Rides, Order Food, Send Packages, Search Flights, Compare Hotels, Rent Cars
+- Benefits list (no hidden fees, compare options, trusted partners)
+- App screenshots placeholder area
+- Download/signup CTA buttons
+- FAQ section specific to customers
 
-### 3. Integration Points
+---
 
-**Customer ride view** -- Update `src/components/rider/TripTracker.tsx`:
-- Replace the inline emoji-based status steps with `UnifiedOrderTimeline` (serviceType="ride", viewerRole="customer")
+### 2. Driver Landing Page (`/drive`)
 
-**Customer order detail** -- Update `src/pages/EatsOrderDetail.tsx`:
-- Replace `StatusTimeline` import with `UnifiedOrderTimeline` (serviceType="eats", viewerRole="customer")
-- Pass existing timestamps and dispatch phase data through
+A recruitment-focused page to attract new drivers.
 
-**Driver ride view** -- Update `src/pages/driver/DriverTripsPage.tsx`:
-- Add `UnifiedOrderTimeline` to active trip card (serviceType="ride", viewerRole="driver")
+**Sections:**
+- Hero with earnings-focused headline ("Drive with ZIVO. Earn on your schedule.")
+- Earnings examples (e.g., "Drivers earn up to $X/week")
+- How it works (3 steps: Sign up, Get approved, Start earning)
+- Requirements list (valid license, vehicle, smartphone, background check)
+- Benefits (flexible hours, weekly payouts, in-app support)
+- Driver signup form (name, email, phone, city, vehicle type) with Zod validation
+- FAQ section for driver-specific questions
 
-**Driver eats view** -- Where driver views active delivery, add timeline (serviceType="eats", viewerRole="driver")
+---
 
-**Restaurant view** -- Update restaurant order detail to use `UnifiedOrderTimeline` (serviceType="eats", viewerRole="restaurant")
+### 3. Restaurant Marketing Page (`/for-restaurants`)
 
-### 4. Notification Sync
+A page to attract restaurant partners, separate from the existing registration form.
 
-Update `src/hooks/useUnifiedTimeline.ts` to emit timeline change events that the existing notification center can consume:
-- When a step completes, dispatch to the notification store (reuses existing `RealtimeSyncContext` patterns)
-- No new notification infrastructure needed -- just connect timeline state changes to the existing notification triggers
+**Sections:**
+- Hero with growth-focused headline ("Reach more hungry customers with ZIVO Eats")
+- Benefits cards (increased orders, easy management, fast payouts, marketing tools)
+- How it works (3 steps: Apply, Set up menu, Start receiving orders)
+- Dashboard preview section (feature highlights of the restaurant dashboard)
+- Testimonial/social proof placeholder
+- CTA button linking to existing `/restaurant-registration` form
+- FAQ section for restaurant-specific questions
 
-## Files to Create
+---
 
-| File | Description |
-|------|-------------|
-| `src/components/shared/UnifiedOrderTimeline.tsx` | Unified vertical timeline component with role-aware labels, ETA display, delay indicators |
-| `src/hooks/useUnifiedTimeline.ts` | Data hook: fetches status, subscribes to realtime, computes ETA, returns normalized steps |
+### 4. Route Registration
 
-## Files to Modify
+Add the three new routes to the app router:
+- `/for-customers` renders CustomerLandingPage
+- `/drive` renders DriverLandingPage
+- `/for-restaurants` renders RestaurantMarketingPage
 
-| File | Change |
-|------|--------|
-| `src/components/rider/TripTracker.tsx` | Replace inline status steps with UnifiedOrderTimeline |
-| `src/pages/EatsOrderDetail.tsx` | Swap StatusTimeline for UnifiedOrderTimeline |
-| `src/pages/driver/DriverTripsPage.tsx` | Add UnifiedOrderTimeline to active trip detail |
+---
 
-## Technical Notes
+### Technical Details
 
-- The component reuses existing color tokens from the verdant theme (`--rides`, `--eats`, emerald/amber for status states)
-- ETA integration pulls from existing `eta_pickup`/`eta_dropoff` fields on trips and food_orders tables
-- Realtime subscriptions follow the same channel pattern used in `RealtimeSyncContext` to avoid duplicate connections
-- The `order_events` table is already populated by all status mutations, so historical timelines work immediately
-- No database migrations needed -- all required tables and columns already exist
-- The existing `StatusTimeline` and `StatusTracker` components remain available for any pages not yet migrated
+- **Files to create:**
+  - `src/pages/ForCustomers.tsx`
+  - `src/pages/Drive.tsx`
+  - `src/pages/ForRestaurants.tsx`
+
+- **Patterns followed:**
+  - Uses existing `Header`, `Footer`, `SEOHead`, `FAQSchema` components
+  - Verdant theme with `Card`, `Badge`, `Button` from the UI library
+  - Zod-validated lead capture form on the Driver page
+  - Lucide icons in gradient containers (no raw emojis)
+  - Mobile-first responsive layout with `rounded-2xl` card shapes
+  - Framer Motion fade-in animations matching the home page pattern
+
+- **SEO:**
+  - Each page gets `SEOHead` with unique title, description, and canonical URL
+  - Driver and Restaurant pages include `FAQSchema` for rich snippets
 
