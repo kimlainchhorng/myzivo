@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
   UtensilsCrossed, Clock, User, 
-  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle, Tag, X, CreditCard, Wallet
+  ArrowLeft, Plus, Minus, Loader2, CheckCircle, Truck, AlertCircle, Tag, X, CreditCard, Wallet, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ import { IncentiveBoostBanner } from "@/components/eats/IncentiveBoostBanner";
 import { LiveDemandBanner } from "@/components/eats/LiveDemandBanner";
 import { PaymentTypeSelector, type PaymentType } from "@/components/eats/PaymentTypeSelector";
 import { PeakDriverBanner } from "@/components/eats/PeakDriverBanner";
+import { DeliverySpeedSelector } from "@/components/eats/DeliverySpeedSelector";
 import { DeliveryFeeBreakdownCard } from "@/components/eats/DeliveryFeeBreakdownCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
 import { SavedAddressSelector } from "@/components/eats/SavedAddressSelector";
@@ -61,6 +62,8 @@ import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useEatsPayment } from "@/hooks/useEatsPayment";
 import { StripePaymentSheet } from "@/components/eats/StripePaymentSheet";
 import { TipSelector } from "@/components/eats/TipSelector";
+import { EXPRESS_DELIVERY } from "@/config/expressDelivery";
+import { ExpressBadge } from "@/components/shared/ExpressBadge";
 
 const checkoutSchema = z.object({
   customer_name: z.string().min(2, "Name is required"),
@@ -132,6 +135,7 @@ function EatsCheckoutContent() {
   const [selectedReward, setSelectedReward] = useState<any>(null);
   const [paymentType, setPaymentType] = useState<PaymentType>("card");
   const [tipAmount, setTipAmount] = useState(0);
+  const [isExpress, setIsExpress] = useState(false);
 
   // Stripe payment state
   const { createPaymentIntent, confirmPaymentSuccess, isCreating: isCreatingPayment, error: paymentError, clearError: clearPaymentError } = useEatsPayment();
@@ -150,8 +154,9 @@ function EatsCheckoutContent() {
     setSelectedReward(reward);
   }, []);
   const subtotal = getSubtotal();
-  const pricing = useEatsDeliveryPricing(subtotal);
+  const pricing = useEatsDeliveryPricing(subtotal, undefined, null, null, isExpress);
   const deliveryFee = pricing.totalDeliveryFee;
+  const expressFee = pricing.expressFee;
 
   const restaurantId = items.length > 0 ? items[0].restaurantId : null;
   const restaurantName = items.length > 0 ? items[0].restaurantName : "";
@@ -796,6 +801,27 @@ function EatsCheckoutContent() {
                   </Card>
                 )}
 
+                {/* Express Delivery Speed Selector */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                      Delivery Speed
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <DeliverySpeedSelector
+                      isExpress={isExpress}
+                      onSelect={setIsExpress}
+                      expressFee={EXPRESS_DELIVERY.FEE}
+                      standardEtaMin={eta.etaMinRange}
+                      standardEtaMax={eta.etaMaxRange}
+                      expressEtaMin={Math.round(eta.etaMinRange * EXPRESS_DELIVERY.ETA_MULTIPLIER)}
+                      expressEtaMax={Math.round(eta.etaMaxRange * EXPRESS_DELIVERY.ETA_MULTIPLIER)}
+                    />
+                  </CardContent>
+                </Card>
+
                 {/* Payment Type */}
                 <Card>
                   <CardHeader>
@@ -946,6 +972,19 @@ function EatsCheckoutContent() {
 
                     <hr />
                     <DeliveryFeeBreakdownCard pricing={pricing} />
+
+                    {/* Express fee line item */}
+                    {isExpress && expressFee > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 fill-current" />
+                          Express Delivery
+                        </span>
+                        <span className="font-medium text-amber-600 dark:text-amber-400">
+                          +${expressFee.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Tip Selector */}
                     <TipSelector

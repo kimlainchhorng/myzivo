@@ -10,6 +10,7 @@ import { DEFAULT_EATS_ZONE } from "@/lib/pricing";
 import { useEatsSurgePricing } from "@/hooks/useEatsSurgePricing";
 import { getTierPerks, type ZivoTier } from "@/config/zivoPoints";
 import { higherTier } from "@/config/loyaltyTiers";
+import { EXPRESS_DELIVERY } from "@/config/expressDelivery";
 
 const DEFAULT_ESTIMATED_MILES = 2;
 
@@ -34,6 +35,8 @@ export interface EatsDeliveryPricing {
   smallOrderFee: number;
   tax: number;
   taxRate: number;
+  // Express
+  expressFee: number;
   // Totals
   subtotal: number;
   orderTotal: number;
@@ -49,12 +52,14 @@ export interface EatsDeliveryPricing {
  * @param estimatedMiles - Estimated delivery distance (default 2 mi)
  * @param tier - User's points-based loyalty tier (null if not logged in)
  * @param orderBasedTier - User's order-count-based tier (null if not computed)
+ * @param isExpress - Whether express delivery is selected
  */
 export function useEatsDeliveryPricing(
   subtotal: number,
   estimatedMiles: number = DEFAULT_ESTIMATED_MILES,
   tier: ZivoTier | null = null,
-  orderBasedTier: ZivoTier | null = null
+  orderBasedTier: ZivoTier | null = null,
+  isExpress: boolean = false
 ): EatsDeliveryPricing {
   const surge = useEatsSurgePricing();
   const zone = DEFAULT_EATS_ZONE;
@@ -94,7 +99,8 @@ export function useEatsDeliveryPricing(
     const smallOrderFee = discountedSubtotal < zone.small_order_threshold ? zone.small_order_fee : 0;
     const tax = round(discountedSubtotal * zone.tax_rate);
 
-    const orderTotal = round(discountedSubtotal + surgedDeliveryFee + serviceFee + smallOrderFee + tax);
+    const expressFee = isExpress ? EXPRESS_DELIVERY.FEE : 0;
+    const orderTotal = round(discountedSubtotal + surgedDeliveryFee + serviceFee + smallOrderFee + tax + expressFee);
 
     return {
       baseFee,
@@ -110,6 +116,7 @@ export function useEatsDeliveryPricing(
       smallOrderFee,
       tax,
       taxRate: zone.tax_rate,
+      expressFee,
       subtotal: round(subtotal),
       orderTotal,
       surgeActive: surge.isActive && !loyaltyFreeDelivery,
@@ -117,5 +124,5 @@ export function useEatsDeliveryPricing(
       surgeLabel: surge.isActive && !loyaltyFreeDelivery ? "Delivery fee adjusted due to high demand." : "",
       isLoading: surge.isLoading,
     };
-  }, [subtotal, estimatedMiles, surge.multiplier, surge.isActive, surge.isLoading, zone, tier, orderBasedTier]);
+  }, [subtotal, estimatedMiles, surge.multiplier, surge.isActive, surge.isLoading, zone, tier, orderBasedTier, isExpress]);
 }

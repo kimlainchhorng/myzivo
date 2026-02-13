@@ -185,6 +185,8 @@ export const useDriversWithScores = (regionId: string | null, pickupLat?: number
 
         const totalScore = distanceScore + ratingScore + fairnessScore + freshnessScore;
 
+        // Express priority boost is applied at dispatch time via auto_assign_order_v2
+
         return {
           driverId: driver.id,
           driverName: driver.full_name,

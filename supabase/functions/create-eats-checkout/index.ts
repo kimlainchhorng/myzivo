@@ -27,6 +27,8 @@ interface EatsCheckoutRequest {
   tax: number;
   total: number;
   special_instructions?: string;
+  is_express?: boolean;
+  express_fee?: number;
 }
 
 serve(async (req) => {
@@ -59,6 +61,8 @@ serve(async (req) => {
       tax,
       total,
       special_instructions,
+      is_express,
+      express_fee,
     } = body;
 
     // Check if eats service is in maintenance
@@ -104,6 +108,8 @@ serve(async (req) => {
         tax: tax || 0,
         total_amount: total,
         special_instructions: special_instructions || null,
+        is_express: is_express || false,
+        express_fee: express_fee || 0,
         status: "pending",
         payment_status: "pending",
       })
@@ -149,6 +155,18 @@ serve(async (req) => {
           currency: "usd",
           product_data: { name: "Tax" },
           unit_amount: Math.round(tax * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    // Add express fee
+    if (is_express && express_fee && express_fee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: { name: "Express Delivery" },
+          unit_amount: Math.round(express_fee * 100),
         },
         quantity: 1,
       });
