@@ -1169,6 +1169,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_forecast_runs: {
+        Row: {
+          accuracy_score: number | null
+          created_at: string
+          forecast_horizon_hours: number
+          forecasts_generated: number
+          id: string
+          incentives_auto_applied: number
+          incentives_suggested: number
+          metadata: Json | null
+          model_used: string | null
+          run_at: string
+          zones_processed: number
+        }
+        Insert: {
+          accuracy_score?: number | null
+          created_at?: string
+          forecast_horizon_hours?: number
+          forecasts_generated?: number
+          id?: string
+          incentives_auto_applied?: number
+          incentives_suggested?: number
+          metadata?: Json | null
+          model_used?: string | null
+          run_at?: string
+          zones_processed?: number
+        }
+        Update: {
+          accuracy_score?: number | null
+          created_at?: string
+          forecast_horizon_hours?: number
+          forecasts_generated?: number
+          id?: string
+          incentives_auto_applied?: number
+          incentives_suggested?: number
+          metadata?: Json | null
+          model_used?: string | null
+          run_at?: string
+          zones_processed?: number
+        }
+        Relationships: []
+      }
       ai_fraud_alerts: {
         Row: {
           action_taken: string | null
@@ -2287,6 +2329,54 @@ export type Database = {
           old_values?: Json | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      auto_incentive_rules: {
+        Row: {
+          auto_apply: boolean
+          bonus_amount_max: number
+          bonus_amount_min: number
+          created_at: string
+          created_by: string | null
+          id: string
+          incentive_duration_hours: number
+          is_active: boolean
+          min_shortage_threshold: number
+          name: string
+          service_type: string | null
+          target_zone_codes: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          auto_apply?: boolean
+          bonus_amount_max?: number
+          bonus_amount_min?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incentive_duration_hours?: number
+          is_active?: boolean
+          min_shortage_threshold?: number
+          name: string
+          service_type?: string | null
+          target_zone_codes?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          auto_apply?: boolean
+          bonus_amount_max?: number
+          bonus_amount_min?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incentive_duration_hours?: number
+          is_active?: boolean
+          min_shortage_threshold?: number
+          name?: string
+          service_type?: string | null
+          target_zone_codes?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3980,6 +4070,71 @@ export type Database = {
         }
         Relationships: []
       }
+      business_approval_requests: {
+        Row: {
+          approval_notes: string | null
+          approver_id: string | null
+          business_id: string
+          created_at: string
+          decided_at: string | null
+          description: string
+          dropoff_location: string | null
+          estimated_cost_cents: number | null
+          id: string
+          pickup_location: string | null
+          request_type: string
+          requested_at: string
+          requester_id: string
+          status: Database["public"]["Enums"]["approval_status"]
+          trigger_reason: string
+          updated_at: string
+        }
+        Insert: {
+          approval_notes?: string | null
+          approver_id?: string | null
+          business_id: string
+          created_at?: string
+          decided_at?: string | null
+          description: string
+          dropoff_location?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          pickup_location?: string | null
+          request_type: string
+          requested_at?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["approval_status"]
+          trigger_reason: string
+          updated_at?: string
+        }
+        Update: {
+          approval_notes?: string | null
+          approver_id?: string | null
+          business_id?: string
+          created_at?: string
+          decided_at?: string | null
+          description?: string
+          dropoff_location?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          pickup_location?: string | null
+          request_type?: string
+          requested_at?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["approval_status"]
+          trigger_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_approval_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_authorized_drivers: {
         Row: {
           business_account_id: string
@@ -4029,6 +4184,598 @@ export type Database = {
             columns: ["business_account_id"]
             isOneToOne: false
             referencedRelation: "business_renter_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_billing_alerts: {
+        Row: {
+          alert_type: string
+          business_id: string
+          created_at: string
+          id: string
+          invoice_id: string | null
+          is_read: boolean
+          message: string
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          business_id: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          is_read?: boolean
+          message: string
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          is_read?: boolean
+          message?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_billing_alerts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_billing_alerts_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_cost_centers: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          department_id: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_cost_centers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_cost_centers_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "business_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_departments: {
+        Row: {
+          budget_cents: number | null
+          business_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          manager_email: string | null
+          manager_name: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          budget_cents?: number | null
+          business_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_email?: string | null
+          manager_name?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          budget_cents?: number | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_email?: string | null
+          manager_name?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_departments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_employee_departments: {
+        Row: {
+          assigned_at: string
+          business_id: string
+          department_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          business_id: string
+          department_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          business_id?: string
+          department_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_employee_departments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_employee_departments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "business_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_expense_settings: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          require_department: boolean
+          require_expense_code: boolean
+          require_trip_purpose: boolean
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          require_department?: boolean
+          require_expense_code?: boolean
+          require_trip_purpose?: boolean
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          require_department?: boolean
+          require_expense_code?: boolean
+          require_trip_purpose?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_expense_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_invoice_audit_log: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          id: string
+          invoice_id: string
+          new_values: Json | null
+          old_values: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_id: string
+          new_values?: Json | null
+          old_values?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_invoice_audit_log_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          dropoff_location: string | null
+          employee_email: string | null
+          employee_name: string | null
+          id: string
+          invoice_id: string
+          line_type: Database["public"]["Enums"]["invoice_line_item_type"]
+          metadata: Json | null
+          pickup_location: string | null
+          quantity: number
+          total_cents: number
+          trip_date: string | null
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          dropoff_location?: string | null
+          employee_email?: string | null
+          employee_name?: string | null
+          id?: string
+          invoice_id: string
+          line_type?: Database["public"]["Enums"]["invoice_line_item_type"]
+          metadata?: Json | null
+          pickup_location?: string | null
+          quantity?: number
+          total_cents?: number
+          trip_date?: string | null
+          unit_price_cents?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          dropoff_location?: string | null
+          employee_email?: string | null
+          employee_name?: string | null
+          id?: string
+          invoice_id?: string
+          line_type?: Database["public"]["Enums"]["invoice_line_item_type"]
+          metadata?: Json | null
+          pickup_location?: string | null
+          quantity?: number
+          total_cents?: number
+          trip_date?: string | null
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_invoices: {
+        Row: {
+          billing_period_end: string
+          billing_period_start: string
+          business_id: string
+          created_at: string
+          currency: string
+          discount_cents: number
+          due_date: string
+          fees_cents: number
+          id: string
+          invoice_number: string
+          issued_at: string | null
+          notes: string | null
+          paid_amount_cents: number | null
+          paid_at: string | null
+          payment_method_id: string | null
+          payment_terms: string
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal_cents: number
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          billing_period_end: string
+          billing_period_start: string
+          business_id: string
+          created_at?: string
+          currency?: string
+          discount_cents?: number
+          due_date: string
+          fees_cents?: number
+          id?: string
+          invoice_number: string
+          issued_at?: string | null
+          notes?: string | null
+          paid_amount_cents?: number | null
+          paid_at?: string | null
+          payment_method_id?: string | null
+          payment_terms?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_period_end?: string
+          billing_period_start?: string
+          business_id?: string
+          created_at?: string
+          currency?: string
+          discount_cents?: number
+          due_date?: string
+          fees_cents?: number
+          id?: string
+          invoice_number?: string
+          issued_at?: string | null
+          notes?: string | null
+          paid_amount_cents?: number | null
+          paid_at?: string | null
+          payment_method_id?: string | null
+          payment_terms?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_invoices_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_payment_methods: {
+        Row: {
+          bank_name: string | null
+          brand: string | null
+          business_id: string
+          created_at: string
+          external_id: string | null
+          id: string
+          is_autopay: boolean
+          is_default: boolean
+          label: string
+          last_four: string | null
+          method_type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at: string
+        }
+        Insert: {
+          bank_name?: string | null
+          brand?: string | null
+          business_id: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          is_autopay?: boolean
+          is_default?: boolean
+          label: string
+          last_four?: string | null
+          method_type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+        }
+        Update: {
+          bank_name?: string | null
+          brand?: string | null
+          business_id?: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          is_autopay?: boolean
+          is_default?: boolean
+          label?: string
+          last_four?: string | null
+          method_type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_payment_methods_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_policies: {
+        Row: {
+          airport_rides_allowed: boolean
+          allow_comfort: boolean
+          allow_delivery: boolean
+          allow_eats: boolean
+          allow_economy: boolean
+          allow_premium: boolean
+          allow_rides: boolean
+          allow_suv: boolean
+          allow_travel: boolean
+          allowed_cities: string[] | null
+          approval_threshold_cents: number | null
+          business_hours_end: string | null
+          business_hours_only: boolean
+          business_hours_start: string | null
+          business_id: string
+          created_at: string
+          id: string
+          max_spend_per_day_cents: number | null
+          max_spend_per_month_cents: number | null
+          max_spend_per_ride_cents: number | null
+          require_approval_after_hours: boolean
+          require_approval_out_of_policy: boolean
+          require_approval_premium: boolean
+          restricted_zones: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          airport_rides_allowed?: boolean
+          allow_comfort?: boolean
+          allow_delivery?: boolean
+          allow_eats?: boolean
+          allow_economy?: boolean
+          allow_premium?: boolean
+          allow_rides?: boolean
+          allow_suv?: boolean
+          allow_travel?: boolean
+          allowed_cities?: string[] | null
+          approval_threshold_cents?: number | null
+          business_hours_end?: string | null
+          business_hours_only?: boolean
+          business_hours_start?: string | null
+          business_id: string
+          created_at?: string
+          id?: string
+          max_spend_per_day_cents?: number | null
+          max_spend_per_month_cents?: number | null
+          max_spend_per_ride_cents?: number | null
+          require_approval_after_hours?: boolean
+          require_approval_out_of_policy?: boolean
+          require_approval_premium?: boolean
+          restricted_zones?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          airport_rides_allowed?: boolean
+          allow_comfort?: boolean
+          allow_delivery?: boolean
+          allow_eats?: boolean
+          allow_economy?: boolean
+          allow_premium?: boolean
+          allow_rides?: boolean
+          allow_suv?: boolean
+          allow_travel?: boolean
+          allowed_cities?: string[] | null
+          approval_threshold_cents?: number | null
+          business_hours_end?: string | null
+          business_hours_only?: boolean
+          business_hours_start?: string | null
+          business_id?: string
+          created_at?: string
+          id?: string
+          max_spend_per_day_cents?: number | null
+          max_spend_per_month_cents?: number | null
+          max_spend_per_ride_cents?: number | null
+          require_approval_after_hours?: boolean
+          require_approval_out_of_policy?: boolean
+          require_approval_premium?: boolean
+          restricted_zones?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_policies_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_policy_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          business_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_values: Json | null
+          notes: string | null
+          old_values: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          business_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_values?: Json | null
+          notes?: string | null
+          old_values?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          business_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_values?: Json | null
+          notes?: string | null
+          old_values?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_policy_audit_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -4110,6 +4857,67 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      business_trip_expenses: {
+        Row: {
+          amount_cents: number
+          business_id: string
+          cost_center_id: string | null
+          created_at: string
+          department_id: string | null
+          employee_id: string
+          id: string
+          trip_date: string
+          trip_purpose: string | null
+          trip_type: string
+        }
+        Insert: {
+          amount_cents?: number
+          business_id: string
+          cost_center_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          employee_id: string
+          id?: string
+          trip_date?: string
+          trip_purpose?: string | null
+          trip_type: string
+        }
+        Update: {
+          amount_cents?: number
+          business_id?: string
+          cost_center_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          employee_id?: string
+          id?: string
+          trip_date?: string
+          trip_purpose?: string | null
+          trip_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_trip_expenses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_trip_expenses_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "business_cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_trip_expenses_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "business_departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       call_logs: {
         Row: {
@@ -6959,48 +7767,67 @@ export type Database = {
       }
       demand_forecasts: {
         Row: {
+          ai_generated: boolean | null
+          ai_run_id: string | null
           confidence: number | null
           created_at: string | null
           current_drivers_online: number | null
           forecast_for: string
           forecast_type: string | null
           id: string
+          incentive_applied: boolean | null
           metadata: Json | null
           predicted_drivers_needed: number
           predicted_orders: number
+          suggested_incentive_amount: number | null
           surge_predicted: boolean | null
           tenant_id: string | null
           zone_code: string
         }
         Insert: {
+          ai_generated?: boolean | null
+          ai_run_id?: string | null
           confidence?: number | null
           created_at?: string | null
           current_drivers_online?: number | null
           forecast_for: string
           forecast_type?: string | null
           id?: string
+          incentive_applied?: boolean | null
           metadata?: Json | null
           predicted_drivers_needed: number
           predicted_orders: number
+          suggested_incentive_amount?: number | null
           surge_predicted?: boolean | null
           tenant_id?: string | null
           zone_code: string
         }
         Update: {
+          ai_generated?: boolean | null
+          ai_run_id?: string | null
           confidence?: number | null
           created_at?: string | null
           current_drivers_online?: number | null
           forecast_for?: string
           forecast_type?: string | null
           id?: string
+          incentive_applied?: boolean | null
           metadata?: Json | null
           predicted_drivers_needed?: number
           predicted_orders?: number
+          suggested_incentive_amount?: number | null
           surge_predicted?: boolean | null
           tenant_id?: string | null
           zone_code?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "demand_forecasts_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_forecast_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "demand_forecasts_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -8556,33 +9383,72 @@ export type Database = {
       }
       driver_incentives: {
         Row: {
+          admin_approved: boolean | null
+          admin_approved_at: string | null
+          admin_approved_by: string | null
+          ai_run_id: string | null
+          auto_rule_id: string | null
           bonus_amount: number | null
           conditions_json: Json | null
           created_at: string | null
           end_time: string | null
           id: string
           name: string | null
+          source: string | null
           start_time: string | null
+          status: string | null
+          zone_code: string | null
         }
         Insert: {
+          admin_approved?: boolean | null
+          admin_approved_at?: string | null
+          admin_approved_by?: string | null
+          ai_run_id?: string | null
+          auto_rule_id?: string | null
           bonus_amount?: number | null
           conditions_json?: Json | null
           created_at?: string | null
           end_time?: string | null
           id?: string
           name?: string | null
+          source?: string | null
           start_time?: string | null
+          status?: string | null
+          zone_code?: string | null
         }
         Update: {
+          admin_approved?: boolean | null
+          admin_approved_at?: string | null
+          admin_approved_by?: string | null
+          ai_run_id?: string | null
+          auto_rule_id?: string | null
           bonus_amount?: number | null
           conditions_json?: Json | null
           created_at?: string | null
           end_time?: string | null
           id?: string
           name?: string | null
+          source?: string | null
           start_time?: string | null
+          status?: string | null
+          zone_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_incentives_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_forecast_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_incentives_auto_rule_id_fkey"
+            columns: ["auto_rule_id"]
+            isOneToOne: false
+            referencedRelation: "auto_incentive_rules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_limits: {
         Row: {
@@ -10578,8 +11444,12 @@ export type Database = {
           created_at: string
           delivery_fee_base: number
           delivery_fee_per_mile: number
+          express_enabled: boolean
+          express_fee_cents: number
+          express_time_reduction_percent: number
           id: string
           is_active: boolean
+          max_express_per_zone: number
           polygon: Json | null
           service_fee_percent: number
           services_enabled: Json
@@ -10601,8 +11471,12 @@ export type Database = {
           created_at?: string
           delivery_fee_base?: number
           delivery_fee_per_mile?: number
+          express_enabled?: boolean
+          express_fee_cents?: number
+          express_time_reduction_percent?: number
           id?: string
           is_active?: boolean
+          max_express_per_zone?: number
           polygon?: Json | null
           service_fee_percent?: number
           services_enabled?: Json
@@ -10624,8 +11498,12 @@ export type Database = {
           created_at?: string
           delivery_fee_base?: number
           delivery_fee_per_mile?: number
+          express_enabled?: boolean
+          express_fee_cents?: number
+          express_time_reduction_percent?: number
           id?: string
           is_active?: boolean
+          max_express_per_zone?: number
           polygon?: Json | null
           service_fee_percent?: number
           services_enabled?: Json
@@ -10906,11 +11784,17 @@ export type Database = {
           assigned_at: string | null
           assigned_to: string | null
           city: string | null
+          claim_amount_cents: number | null
+          claim_resolved_at: string | null
+          claim_submitted_at: string | null
           created_at: string
           description: string | null
           id: string
           incident_number: string
           incident_type: string
+          insurance_claim_number: string | null
+          insurance_payment_status: string | null
+          insurance_provider: string | null
           location_description: string | null
           priority: string
           related_driver_id: string | null
@@ -10932,11 +11816,17 @@ export type Database = {
           assigned_at?: string | null
           assigned_to?: string | null
           city?: string | null
+          claim_amount_cents?: number | null
+          claim_resolved_at?: string | null
+          claim_submitted_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
           incident_number: string
           incident_type: string
+          insurance_claim_number?: string | null
+          insurance_payment_status?: string | null
+          insurance_provider?: string | null
           location_description?: string | null
           priority?: string
           related_driver_id?: string | null
@@ -10958,11 +11848,17 @@ export type Database = {
           assigned_at?: string | null
           assigned_to?: string | null
           city?: string | null
+          claim_amount_cents?: number | null
+          claim_resolved_at?: string | null
+          claim_submitted_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
           incident_number?: string
           incident_type?: string
+          insurance_claim_number?: string | null
+          insurance_payment_status?: string | null
+          insurance_provider?: string | null
           location_description?: string | null
           priority?: string
           related_driver_id?: string | null
@@ -13240,10 +14136,12 @@ export type Database = {
           eta_dropoff: string | null
           eta_minutes: number | null
           eta_pickup: string | null
+          express_fee_cents: number
           happy_hour_id: string | null
           id: string
           inactivity_warning_at: string | null
           is_business_order: boolean | null
+          is_express: boolean
           is_group_order: boolean | null
           is_multi_stop: boolean | null
           is_scheduled: boolean | null
@@ -13409,10 +14307,12 @@ export type Database = {
           eta_dropoff?: string | null
           eta_minutes?: number | null
           eta_pickup?: string | null
+          express_fee_cents?: number
           happy_hour_id?: string | null
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_express?: boolean
           is_group_order?: boolean | null
           is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
@@ -13578,10 +14478,12 @@ export type Database = {
           eta_dropoff?: string | null
           eta_minutes?: number | null
           eta_pickup?: string | null
+          express_fee_cents?: number
           happy_hour_id?: string | null
           id?: string
           inactivity_warning_at?: string | null
           is_business_order?: boolean | null
+          is_express?: boolean
           is_group_order?: boolean | null
           is_multi_stop?: boolean | null
           is_scheduled?: boolean | null
@@ -34538,6 +35440,99 @@ export type Database = {
           },
         ]
       }
+      vehicle_inspections: {
+        Row: {
+          admin_status: string | null
+          completed_date: string | null
+          created_at: string
+          driver_id: string
+          due_date: string | null
+          expiry_date: string | null
+          id: string
+          inspection_type: string
+          notes: string | null
+          receipt_url: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          admin_status?: string | null
+          completed_date?: string | null
+          created_at?: string
+          driver_id: string
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          inspection_type?: string
+          notes?: string | null
+          receipt_url?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          admin_status?: string | null
+          completed_date?: string | null
+          created_at?: string
+          driver_id?: string
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          inspection_type?: string
+          notes?: string | null
+          receipt_url?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_inspections_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_maintenance_reminders: {
         Row: {
           completed_at: string | null
@@ -39756,6 +40751,18 @@ export type Database = {
         | "denied"
         | "paid_out"
         | "closed"
+      invoice_line_item_type:
+        | "ride"
+        | "delivery"
+        | "eats"
+        | "flight"
+        | "hotel"
+        | "rental"
+        | "fee"
+        | "tax"
+        | "discount"
+        | "credit"
+      invoice_status: "draft" | "issued" | "paid" | "overdue" | "cancelled"
       launch_alert_severity: "info" | "warning" | "critical"
       launch_alert_type:
         | "booking_failure"
@@ -39836,6 +40843,7 @@ export type Database = {
       p2p_vehicle_status: "pending" | "approved" | "rejected" | "suspended"
       partner_booking_status: "pending" | "returned" | "failed" | "timeout"
       partner_status: "pending" | "active" | "suspended" | "inactive"
+      payment_method_type: "card" | "bank"
       pricing_rule_type:
         | "markup_percent"
         | "markup_flat"
@@ -40093,6 +41101,19 @@ export const Constants = {
         "paid_out",
         "closed",
       ],
+      invoice_line_item_type: [
+        "ride",
+        "delivery",
+        "eats",
+        "flight",
+        "hotel",
+        "rental",
+        "fee",
+        "tax",
+        "discount",
+        "credit",
+      ],
+      invoice_status: ["draft", "issued", "paid", "overdue", "cancelled"],
       launch_alert_severity: ["info", "warning", "critical"],
       launch_alert_type: [
         "booking_failure",
@@ -40183,6 +41204,7 @@ export const Constants = {
       p2p_vehicle_status: ["pending", "approved", "rejected", "suspended"],
       partner_booking_status: ["pending", "returned", "failed", "timeout"],
       partner_status: ["pending", "active", "suspended", "inactive"],
+      payment_method_type: ["card", "bank"],
       pricing_rule_type: [
         "markup_percent",
         "markup_flat",
