@@ -3,8 +3,9 @@
  * Reusable filter controls for car rentals
  */
 
-import { Car, DollarSign, Users, Briefcase, Settings } from "lucide-react";
+import { Car, DollarSign, Users, Briefcase, Settings, Fuel, ShieldCheck } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,13 @@ const bagOptions = [
   { value: 3, label: "3+ bags" },
 ];
 
+const fuelTypeOptions = [
+  { id: "Gasoline", label: "Gasoline" },
+  { id: "Diesel", label: "Diesel" },
+  { id: "Electric", label: "Electric" },
+  { id: "Hybrid", label: "Hybrid" },
+];
+
 const transmissionOptions = [
   { id: "Automatic", label: "Automatic" },
   { id: "Manual", label: "Manual" },
@@ -58,6 +66,13 @@ export function CarFiltersContent({
       ? filters.transmission.filter((t) => t !== id)
       : [...filters.transmission, id];
     onFilterChange({ transmission: newTransmission });
+  };
+
+  const toggleFuelType = (id: string) => {
+    const next = (filters.fuelType || []).includes(id)
+      ? (filters.fuelType || []).filter((f) => f !== id)
+      : [...(filters.fuelType || []), id];
+    onFilterChange({ fuelType: next });
   };
 
   const toggleSupplier = (id: string) => {
@@ -195,6 +210,37 @@ export function CarFiltersContent({
           </div>
         </div>
       )}
+
+      {/* Fuel Type */}
+      <div>
+        <Label className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Fuel className="w-4 h-4 text-muted-foreground" />
+          Fuel Type
+        </Label>
+        <div className="space-y-2">
+          {fuelTypeOptions.map((f) => (
+            <label key={f.id} className="flex items-center gap-3 cursor-pointer group">
+              <Checkbox
+                checked={(filters.fuelType || []).includes(f.id)}
+                onCheckedChange={() => toggleFuelType(f.id)}
+              />
+              <span className="flex-1 group-hover:text-foreground transition-colors text-sm">{f.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Free Cancellation */}
+      <div className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-xl border border-border/50">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          <Label className="text-sm font-medium cursor-pointer">Free Cancellation</Label>
+        </div>
+        <Switch
+          checked={filters.freeCancellation || false}
+          onCheckedChange={(v) => onFilterChange({ freeCancellation: v })}
+        />
+      </div>
 
       {/* Filter Note */}
       <p className="text-[10px] text-muted-foreground italic mt-4 px-1">

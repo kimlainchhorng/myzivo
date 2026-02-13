@@ -19,21 +19,27 @@ interface ActiveFiltersChipsProps {
   filters: FilterChip[];
   onRemove: (id: string) => void;
   onClearAll: () => void;
-  service?: "flights" | "hotels" | "cars";
+  service?: "flights" | "hotels" | "cars" | "eats" | "rides" | "delivery";
   resultsCount?: number;
   className?: string;
 }
 
-const chipColors = {
+const chipColors: Record<string, string> = {
   flights: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 hover:bg-sky-500/20",
   hotels: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20",
   cars: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 hover:bg-violet-500/20",
+  eats: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30 hover:bg-orange-500/20",
+  rides: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20",
+  delivery: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 hover:bg-violet-500/20",
 };
 
-const clearButtonColors = {
+const clearButtonColors: Record<string, string> = {
   flights: "text-sky-600 dark:text-sky-400 hover:bg-sky-500/10",
   hotels: "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10",
   cars: "text-violet-600 dark:text-violet-400 hover:bg-violet-500/10",
+  eats: "text-orange-600 dark:text-orange-400 hover:bg-orange-500/10",
+  rides: "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10",
+  delivery: "text-violet-600 dark:text-violet-400 hover:bg-violet-500/10",
 };
 
 export function ActiveFiltersChips({

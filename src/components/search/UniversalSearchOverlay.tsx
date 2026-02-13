@@ -20,12 +20,14 @@ interface UniversalSearchOverlayProps {
   onClose: () => void;
 }
 
-type TabKey = "all" | "eats" | "rides" | "orders" | "help";
+type TabKey = "all" | "eats" | "rides" | "orders" | "flights" | "hotels" | "help";
 
 const TABS: { key: TabKey; label: string; icon: typeof Search }[] = [
   { key: "all", label: "All", icon: Search },
   { key: "eats", label: "Food", icon: Utensils },
   { key: "rides", label: "Rides", icon: Car },
+  { key: "flights", label: "Flights", icon: Plane },
+  { key: "hotels", label: "Hotels", icon: BedDouble },
   { key: "orders", label: "History", icon: ShoppingBag },
   { key: "help", label: "Help", icon: HelpCircle },
 ];
@@ -316,7 +318,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
 
     cards.push({
       key: "hotels-action",
-      category: "all",
+      category: "hotels",
       icon: BedDouble,
       iconColor: "text-amber-500",
       iconBg: "bg-amber-500/10",
@@ -327,13 +329,24 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
 
     cards.push({
       key: "flights-action",
-      category: "all",
+      category: "flights",
       icon: Plane,
       iconColor: "text-sky-500",
       iconBg: "bg-sky-500/10",
       title: `Search flights to "${debouncedQuery}"`,
       subtitle: "ZIVO Flights",
       action: () => handleNavigate(`/search?tab=flights`),
+    });
+
+    cards.push({
+      key: "rentals-action",
+      category: "all",
+      icon: Car,
+      iconColor: "text-emerald-500",
+      iconBg: "bg-emerald-500/10",
+      title: `Rent a car in "${debouncedQuery}"`,
+      subtitle: "ZIVO Rentals",
+      action: () => handleNavigate(`/rent-car`),
     });
 
     // Help results
@@ -358,6 +371,8 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
     all: cards.length,
     eats: cards.filter(c => c.category === "eats").length,
     rides: cards.filter(c => c.category === "rides").length,
+    flights: cards.filter(c => c.category === "flights").length,
+    hotels: cards.filter(c => c.category === "hotels").length,
     orders: cards.filter(c => c.category === "orders").length,
     help: cards.filter(c => c.category === "help").length,
   };

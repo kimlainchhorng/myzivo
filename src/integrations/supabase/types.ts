@@ -23806,6 +23806,39 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_score_history: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metrics_snapshot: Json
+          period_end: string
+          period_start: string
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metrics_snapshot?: Json
+          period_end: string
+          period_start: string
+          score: number
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metrics_snapshot?: Json
+          period_end?: string
+          period_start?: string
+          score?: number
+        }
+        Relationships: []
+      }
       permissions: {
         Row: {
           category: string
@@ -27641,13 +27674,16 @@ export type Database = {
           max_active_orders: number | null
           min_order_cents: number | null
           name: string
+          on_time_rate: number | null
           onboarding_completed_at: string | null
           onboarding_status: string
           onboarding_step: number | null
           opening_hours: Json | null
+          order_accuracy: number | null
           owner_id: string | null
           partner_tier: string | null
           pause_new_orders: boolean | null
+          performance_score: number | null
           phone: string
           plan_code: string | null
           plan_updated_at: string | null
@@ -27727,13 +27763,16 @@ export type Database = {
           max_active_orders?: number | null
           min_order_cents?: number | null
           name: string
+          on_time_rate?: number | null
           onboarding_completed_at?: string | null
           onboarding_status?: string
           onboarding_step?: number | null
           opening_hours?: Json | null
+          order_accuracy?: number | null
           owner_id?: string | null
           partner_tier?: string | null
           pause_new_orders?: boolean | null
+          performance_score?: number | null
           phone: string
           plan_code?: string | null
           plan_updated_at?: string | null
@@ -27813,13 +27852,16 @@ export type Database = {
           max_active_orders?: number | null
           min_order_cents?: number | null
           name?: string
+          on_time_rate?: number | null
           onboarding_completed_at?: string | null
           onboarding_status?: string
           onboarding_step?: number | null
           opening_hours?: Json | null
+          order_accuracy?: number | null
           owner_id?: string | null
           partner_tier?: string | null
           pause_new_orders?: boolean | null
+          performance_score?: number | null
           phone?: string
           plan_code?: string | null
           plan_updated_at?: string | null

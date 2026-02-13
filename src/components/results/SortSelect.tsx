@@ -51,6 +51,30 @@ export const carSortOptions: SortOption[] = [
   { value: "company", label: "Supplier A-Z" },
 ];
 
+// Eats: Recommended default, then price/speed/rating options
+export const eatsSortOptions: SortOption[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "price", label: "Price: Low to High" },
+  { value: "eta", label: "Fastest Delivery" },
+  { value: "rating", label: "Top Rated" },
+  { value: "distance", label: "Nearest" },
+];
+
+// Rides: Recommended default, then price/speed options
+export const rideSortOptions: SortOption[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "price", label: "Price: Low to High" },
+  { value: "eta", label: "Fastest ETA" },
+  { value: "rating", label: "Top Rated" },
+];
+
+// Delivery: Recommended default, then price/speed options
+export const deliverySortOptions: SortOption[] = [
+  { value: "recommended", label: "Recommended" },
+  { value: "price", label: "Price: Low to High" },
+  { value: "eta", label: "Fastest ETA" },
+];
+
 export function SortSelect({ value, onValueChange, options, className }: SortSelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange}>

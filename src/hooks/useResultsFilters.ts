@@ -60,6 +60,8 @@ export interface CarFiltersState {
   bags: number | null;
   transmission: string[];
   suppliers: string[];
+  fuelType: string[];
+  freeCancellation: boolean;
 }
 
 export const defaultCarFilters: CarFiltersState = {
@@ -69,12 +71,69 @@ export const defaultCarFilters: CarFiltersState = {
   bags: null,
   transmission: [],
   suppliers: [],
+  fuelType: [],
+  freeCancellation: false,
+};
+
+// ============= Eats Filters =============
+export interface EatsFiltersState {
+  cuisines: string[];
+  priceRanges: string[];
+  minRating: number | null;
+  maxDeliveryTime: number | null;
+  maxDistance: number | null;
+  freeDelivery: boolean;
+  hasPromos: boolean;
+  dietPreferences: string[];
+}
+
+export const defaultEatsFilters: EatsFiltersState = {
+  cuisines: [],
+  priceRanges: [],
+  minRating: null,
+  maxDeliveryTime: null,
+  maxDistance: null,
+  freeDelivery: false,
+  hasPromos: false,
+  dietPreferences: [],
+};
+
+// ============= Ride Filters =============
+export interface RideFiltersState {
+  vehicleTypes: string[];
+  maxEta: number | null;
+  maxPrice: number;
+  wheelchairAccessible: boolean;
+  scheduledOnly: boolean;
+}
+
+export const defaultRideFilters: RideFiltersState = {
+  vehicleTypes: [],
+  maxEta: null,
+  maxPrice: 200,
+  wheelchairAccessible: false,
+  scheduledOnly: false,
+};
+
+// ============= Delivery Filters =============
+export interface DeliveryFiltersState {
+  serviceTypes: string[];
+  maxEta: number | null;
+  maxPrice: number;
+  packageSizes: string[];
+}
+
+export const defaultDeliveryFilters: DeliveryFiltersState = {
+  serviceTypes: [],
+  maxEta: null,
+  maxPrice: 200,
+  packageSizes: [],
 };
 
 // ============= Generic Hook =============
 interface UseResultsFiltersOptions<T> {
   defaultFilters: T;
-  service: "flights" | "hotels" | "cars";
+  service: "flights" | "hotels" | "cars" | "eats" | "rides" | "delivery";
   filtersToUrl: (filters: T) => Record<string, string>;
   urlToFilters: (params: URLSearchParams) => Partial<T>;
   filtersToChips: (filters: T) => FilterChip[];
@@ -190,6 +249,37 @@ export function useResultsFilters<T>({
             if (category === "bags") f.bags = null;
             if (category === "transmission") f.transmission = f.transmission.filter((t) => t !== value);
             if (category === "supplier") f.suppliers = f.suppliers.filter((s) => s !== value);
+            if (category === "fuel") f.fuelType = f.fuelType.filter((ft) => ft !== value);
+            if (category === "cancellation") f.freeCancellation = false;
+            break;
+          }
+          case "eats": {
+            const f = updated as unknown as EatsFiltersState;
+            if (category === "cuisine") f.cuisines = f.cuisines.filter((c) => c !== value);
+            if (category === "price") f.priceRanges = f.priceRanges.filter((p) => p !== value);
+            if (category === "rating") f.minRating = null;
+            if (category === "time") f.maxDeliveryTime = null;
+            if (category === "distance") f.maxDistance = null;
+            if (category === "delivery") f.freeDelivery = false;
+            if (category === "promo") f.hasPromos = false;
+            if (category === "diet") f.dietPreferences = f.dietPreferences.filter((d) => d !== value);
+            break;
+          }
+          case "rides": {
+            const f = updated as unknown as RideFiltersState;
+            if (category === "vehicle") f.vehicleTypes = f.vehicleTypes.filter((v) => v !== value);
+            if (category === "eta") f.maxEta = null;
+            if (category === "price") f.maxPrice = 200;
+            if (category === "accessible") f.wheelchairAccessible = false;
+            if (category === "scheduled") f.scheduledOnly = false;
+            break;
+          }
+          case "delivery": {
+            const f = updated as unknown as DeliveryFiltersState;
+            if (category === "service") f.serviceTypes = f.serviceTypes.filter((s) => s !== value);
+            if (category === "eta") f.maxEta = null;
+            if (category === "price") f.maxPrice = 200;
+            if (category === "size") f.packageSizes = f.packageSizes.filter((p) => p !== value);
             break;
           }
         }
@@ -391,6 +481,8 @@ export function useCarFilters() {
       bags: filters.bags ? String(filters.bags) : "",
       transmission: filters.transmission.length > 0 ? filters.transmission.join(",") : "",
       supplier: filters.suppliers.length > 0 ? filters.suppliers.join(",") : "",
+      fuel: filters.fuelType.length > 0 ? filters.fuelType.join(",") : "",
+      free_cancel: filters.freeCancellation ? "1" : "",
     }),
     urlToFilters: (params) => ({
       maxPrice: parseInt(params.get("price_max") || "500", 10),
@@ -399,6 +491,8 @@ export function useCarFilters() {
       bags: parseInt(params.get("bags") || "", 10) || null,
       transmission: params.get("transmission")?.split(",").filter(Boolean) || [],
       suppliers: params.get("supplier")?.split(",").filter(Boolean) || [],
+      fuelType: params.get("fuel")?.split(",").filter(Boolean) || [],
+      freeCancellation: params.get("free_cancel") === "1",
     }),
     filtersToChips: (filters) => {
       const chips: FilterChip[] = [];
@@ -427,6 +521,113 @@ export function useCarFilters() {
         chips.push({ id: `supplier:${supplier}`, label: supplier, category: "Supplier" });
       });
 
+      filters.fuelType.forEach((fuel) => {
+        chips.push({ id: `fuel:${fuel}`, label: fuel, category: "Fuel" });
+      });
+
+      if (filters.freeCancellation) {
+        chips.push({ id: "cancellation:free", label: "Free Cancel", category: "Cancel" });
+      }
+
+      return chips;
+    },
+  });
+}
+
+// ============= Eats Filters Hook =============
+export function useEatsFilters() {
+  return useResultsFilters<EatsFiltersState>({
+    defaultFilters: defaultEatsFilters,
+    service: "eats",
+    filtersToUrl: (filters) => ({
+      cuisine: filters.cuisines.length > 0 ? filters.cuisines.join(",") : "",
+      price: filters.priceRanges.length > 0 ? filters.priceRanges.join(",") : "",
+      rating: filters.minRating ? String(filters.minRating) : "",
+      time: filters.maxDeliveryTime ? String(filters.maxDeliveryTime) : "",
+      distance: filters.maxDistance ? String(filters.maxDistance) : "",
+      free_delivery: filters.freeDelivery ? "1" : "",
+      promos: filters.hasPromos ? "1" : "",
+      diet: filters.dietPreferences.length > 0 ? filters.dietPreferences.join(",") : "",
+    }),
+    urlToFilters: (params) => ({
+      cuisines: params.get("cuisine")?.split(",").filter(Boolean) || [],
+      priceRanges: params.get("price")?.split(",").filter(Boolean) || [],
+      minRating: parseFloat(params.get("rating") || "") || null,
+      maxDeliveryTime: parseInt(params.get("time") || "", 10) || null,
+      maxDistance: parseInt(params.get("distance") || "", 10) || null,
+      freeDelivery: params.get("free_delivery") === "1",
+      hasPromos: params.get("promos") === "1",
+      dietPreferences: params.get("diet")?.split(",").filter(Boolean) || [],
+    }),
+    filtersToChips: (filters) => {
+      const chips: FilterChip[] = [];
+      filters.cuisines.forEach((c) => chips.push({ id: `cuisine:${c}`, label: c.charAt(0).toUpperCase() + c.slice(1), category: "Cuisine" }));
+      filters.priceRanges.forEach((p) => chips.push({ id: `price:${p}`, label: p, category: "Price" }));
+      if (filters.minRating) chips.push({ id: `rating:${filters.minRating}`, label: `${filters.minRating}+`, category: "Rating" });
+      if (filters.maxDeliveryTime) chips.push({ id: `time:${filters.maxDeliveryTime}`, label: `${filters.maxDeliveryTime} min`, category: "ETA" });
+      if (filters.maxDistance) chips.push({ id: `distance:${filters.maxDistance}`, label: `${filters.maxDistance} mi`, category: "Distance" });
+      if (filters.freeDelivery) chips.push({ id: "delivery:free", label: "Free Delivery", category: "Offer" });
+      if (filters.hasPromos) chips.push({ id: "promo:active", label: "Promos", category: "Offer" });
+      filters.dietPreferences.forEach((d) => chips.push({ id: `diet:${d}`, label: d.replace("_", " "), category: "Diet" }));
+      return chips;
+    },
+  });
+}
+
+// ============= Ride Filters Hook =============
+export function useRideFilters() {
+  return useResultsFilters<RideFiltersState>({
+    defaultFilters: defaultRideFilters,
+    service: "rides",
+    filtersToUrl: (filters) => ({
+      vehicle: filters.vehicleTypes.length > 0 ? filters.vehicleTypes.join(",") : "",
+      eta: filters.maxEta ? String(filters.maxEta) : "",
+      price_max: filters.maxPrice < 200 ? String(filters.maxPrice) : "",
+      accessible: filters.wheelchairAccessible ? "1" : "",
+      scheduled: filters.scheduledOnly ? "1" : "",
+    }),
+    urlToFilters: (params) => ({
+      vehicleTypes: params.get("vehicle")?.split(",").filter(Boolean) || [],
+      maxEta: parseInt(params.get("eta") || "", 10) || null,
+      maxPrice: parseInt(params.get("price_max") || "200", 10),
+      wheelchairAccessible: params.get("accessible") === "1",
+      scheduledOnly: params.get("scheduled") === "1",
+    }),
+    filtersToChips: (filters) => {
+      const chips: FilterChip[] = [];
+      filters.vehicleTypes.forEach((v) => chips.push({ id: `vehicle:${v}`, label: v.charAt(0).toUpperCase() + v.slice(1), category: "Vehicle" }));
+      if (filters.maxEta) chips.push({ id: `eta:${filters.maxEta}`, label: `${filters.maxEta} min`, category: "ETA" });
+      if (filters.maxPrice < 200) chips.push({ id: "price:max", label: `$${filters.maxPrice}`, category: "Max Price" });
+      if (filters.wheelchairAccessible) chips.push({ id: "accessible:yes", label: "Accessible", category: "Access" });
+      if (filters.scheduledOnly) chips.push({ id: "scheduled:yes", label: "Scheduled", category: "Type" });
+      return chips;
+    },
+  });
+}
+
+// ============= Delivery Filters Hook =============
+export function useDeliveryFilters() {
+  return useResultsFilters<DeliveryFiltersState>({
+    defaultFilters: defaultDeliveryFilters,
+    service: "delivery",
+    filtersToUrl: (filters) => ({
+      service_type: filters.serviceTypes.length > 0 ? filters.serviceTypes.join(",") : "",
+      eta: filters.maxEta ? String(filters.maxEta) : "",
+      price_max: filters.maxPrice < 200 ? String(filters.maxPrice) : "",
+      size: filters.packageSizes.length > 0 ? filters.packageSizes.join(",") : "",
+    }),
+    urlToFilters: (params) => ({
+      serviceTypes: params.get("service_type")?.split(",").filter(Boolean) || [],
+      maxEta: parseInt(params.get("eta") || "", 10) || null,
+      maxPrice: parseInt(params.get("price_max") || "200", 10),
+      packageSizes: params.get("size")?.split(",").filter(Boolean) || [],
+    }),
+    filtersToChips: (filters) => {
+      const chips: FilterChip[] = [];
+      filters.serviceTypes.forEach((s) => chips.push({ id: `service:${s}`, label: s.charAt(0).toUpperCase() + s.slice(1), category: "Service" }));
+      if (filters.maxEta) chips.push({ id: `eta:${filters.maxEta}`, label: `${filters.maxEta} min`, category: "ETA" });
+      if (filters.maxPrice < 200) chips.push({ id: "price:max", label: `$${filters.maxPrice}`, category: "Max Price" });
+      filters.packageSizes.forEach((p) => chips.push({ id: `size:${p}`, label: p.charAt(0).toUpperCase() + p.slice(1), category: "Size" }));
       return chips;
     },
   });

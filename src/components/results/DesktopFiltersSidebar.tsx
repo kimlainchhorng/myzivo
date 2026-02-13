@@ -13,14 +13,17 @@ interface DesktopFiltersSidebarProps {
   children: ReactNode;
   activeCount: number;
   onClearAll: () => void;
-  service?: "flights" | "hotels" | "cars";
+  service?: "flights" | "hotels" | "cars" | "eats" | "rides" | "delivery";
   className?: string;
 }
 
-const serviceColors = {
+const serviceColors: Record<string, string> = {
   flights: "text-sky-500",
   hotels: "text-amber-500",
   cars: "text-violet-500",
+  eats: "text-orange-500",
+  rides: "text-emerald-500",
+  delivery: "text-violet-500",
 };
 
 export function DesktopFiltersSidebar({
