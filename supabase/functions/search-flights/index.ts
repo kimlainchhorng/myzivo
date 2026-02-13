@@ -13,11 +13,8 @@ import { encode as encodeHex } from "https://deno.land/std@0.190.0/encoding/hex.
  * 4. Poll results using search_id → until is_over=true
  */
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-ip',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+// CORS headers are now generated per-request via getCorsHeaders()
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // In-memory cache for search results (5-10 min TTL)
 const searchCache = new Map<string, { data: FlightSearchResult; timestamp: number }>();
@@ -704,7 +701,8 @@ async function getBookingLink(
   searchId: string,
   resultsUrl: string,
   proposalId: string,
-  token: string
+  token: string,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   const marker = Deno.env.get('TRAVELPAYOUTS_MARKER') || AFFILIATE_MARKER;
   
@@ -755,7 +753,28 @@ async function getBookingLink(
   }
 }
 
+// ---- Input validation ----
+const IATA_RE = /^[A-Z]{3}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VALID_CABIN_SEARCH = new Set(['economy', 'premium', 'business', 'first']);
+const VALID_TRIP_TYPE = new Set(['oneway', 'roundtrip']);
+
+function validateSearchParams(p: unknown): string | null {
+  if (!p || typeof p !== 'object') return 'Missing searchParams';
+  const sp = p as Record<string, unknown>;
+  if (typeof sp.origin !== 'string' || !IATA_RE.test(sp.origin.toUpperCase())) return 'Invalid origin IATA code';
+  if (typeof sp.destination !== 'string' || !IATA_RE.test(sp.destination.toUpperCase())) return 'Invalid destination IATA code';
+  if (typeof sp.departureDate !== 'string' || !DATE_RE.test(sp.departureDate)) return 'Invalid departureDate format (YYYY-MM-DD)';
+  if (sp.returnDate && (typeof sp.returnDate !== 'string' || !DATE_RE.test(sp.returnDate))) return 'Invalid returnDate format';
+  if (typeof sp.passengers !== 'number' || sp.passengers < 1 || sp.passengers > 9) return 'passengers must be 1-9';
+  if (sp.cabinClass && !VALID_CABIN_SEARCH.has(sp.cabinClass as string)) return 'Invalid cabinClass';
+  if (sp.tripType && !VALID_TRIP_TYPE.has(sp.tripType as string)) return 'Invalid tripType';
+  return null;
+}
+
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -777,16 +796,25 @@ serve(async (req) => {
         );
       }
       
-      if (!searchId || !resultsUrl || !proposalId) {
+      if (!searchId || typeof searchId !== 'string' || !resultsUrl || typeof resultsUrl !== 'string' || !proposalId || typeof proposalId !== 'string') {
         return new Response(
           JSON.stringify({ error: 'Missing required parameters: searchId, resultsUrl, proposalId' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      return await getBookingLink(searchId, resultsUrl, proposalId, token);
+      return await getBookingLink(searchId, resultsUrl, proposalId, token, corsHeaders);
     }
     
+    // Validate search params
+    const validationError = validateSearchParams(params);
+    if (validationError) {
+      return new Response(
+        JSON.stringify({ error: validationError }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Default action: search
     // Get user IP from header or fallback
     const userIp = req.headers.get('x-user-ip') || 
@@ -914,10 +942,10 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('[Search] Error:', error);
+    // corsHeaders already defined at top of handler
     return new Response(
       JSON.stringify({ 
         error: 'Search failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
         fallback: true
       }),
       { 

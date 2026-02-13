@@ -1529,6 +1529,82 @@ export type Database = {
         }
         Relationships: []
       }
+      airport_fee_rules: {
+        Row: {
+          airport_id: string
+          apply_when: string
+          fee_type: string
+          fee_value: number
+          id: string
+          is_active: boolean
+          service_type: string
+        }
+        Insert: {
+          airport_id: string
+          apply_when?: string
+          fee_type: string
+          fee_value?: number
+          id?: string
+          is_active?: boolean
+          service_type: string
+        }
+        Update: {
+          airport_id?: string
+          apply_when?: string
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          is_active?: boolean
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airport_fee_rules_airport_id_fkey"
+            columns: ["airport_id"]
+            isOneToOne: false
+            referencedRelation: "airports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      airports: {
+        Row: {
+          city_id: string
+          code: string | null
+          created_at: string
+          geo_polygon: Json | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          city_id: string
+          code?: string | null
+          created_at?: string
+          geo_polygon?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          city_id?: string
+          code?: string | null
+          created_at?: string
+          geo_polygon?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airports_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           body: string
@@ -2248,6 +2324,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      approvals: {
+        Row: {
+          approver_user_id: string | null
+          company_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          object_id: string | null
+          object_type: string
+          requested_by_user_id: string
+          status: string | null
+        }
+        Insert: {
+          approver_user_id?: string | null
+          company_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          object_id?: string | null
+          object_type: string
+          requested_by_user_id: string
+          status?: string | null
+        }
+        Update: {
+          approver_user_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          object_id?: string | null
+          object_type?: string
+          requested_by_user_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_approver_user_id_fkey"
+            columns: ["approver_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_approver_user_id_fkey"
+            columns: ["approver_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_requested_by_user_id_fkey"
+            columns: ["requested_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_requested_by_user_id_fkey"
+            columns: ["requested_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_alerts: {
         Row: {
@@ -5217,6 +5365,44 @@ export type Database = {
           },
         ]
       }
+      cancellation_fee_rules: {
+        Row: {
+          city_id: string
+          fee_type: string
+          fee_value: number
+          free_cancel_window_minutes: number
+          id: string
+          is_active: boolean
+          service_type: string
+        }
+        Insert: {
+          city_id: string
+          fee_type: string
+          fee_value?: number
+          free_cancel_window_minutes?: number
+          id?: string
+          is_active?: boolean
+          service_type: string
+        }
+        Update: {
+          city_id?: string
+          fee_type?: string
+          fee_value?: number
+          free_cancel_window_minutes?: number
+          id?: string
+          is_active?: boolean
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_fee_rules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_rules: {
         Row: {
           active: boolean | null
@@ -6010,30 +6196,438 @@ export type Database = {
       }
       cities: {
         Row: {
+          active: boolean | null
+          city: string | null
           country: string | null
           created_at: string | null
           currency: string | null
           id: string
           is_active: boolean | null
           name: string
+          state: string | null
+          timezone: string | null
         }
         Insert: {
+          active?: boolean | null
+          city?: string | null
           country?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
           is_active?: boolean | null
           name: string
+          state?: string | null
+          timezone?: string | null
         }
         Update: {
+          active?: boolean | null
+          city?: string | null
           country?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
+          state?: string | null
+          timezone?: string | null
         }
         Relationships: []
+      }
+      city_health_alerts: {
+        Row: {
+          alert_type: string
+          city_id: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          message: string
+          metric_name: string | null
+          metric_value: number | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          threshold_value: number | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          city_id: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message: string
+          metric_name?: string | null
+          metric_value?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          threshold_value?: number | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          city_id?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          threshold_value?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_health_alerts_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_health_recommendations: {
+        Row: {
+          actioned_at: string | null
+          actioned_by: string | null
+          category: string
+          city_id: string
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          impact_estimate: string | null
+          is_actioned: boolean
+          priority: number
+          title: string
+        }
+        Insert: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          category: string
+          city_id: string
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          impact_estimate?: string | null
+          is_actioned?: boolean
+          priority?: number
+          title: string
+        }
+        Update: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          category?: string
+          city_id?: string
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          impact_estimate?: string | null
+          is_actioned?: boolean
+          priority?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_health_recommendations_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_health_scores: {
+        Row: {
+          active_drivers: number | null
+          avg_wait_time_min: number | null
+          cancellation_rate_pct: number | null
+          city_id: string
+          created_at: string
+          customer_retention_pct: number | null
+          demand_score: number
+          driver_utilization_pct: number | null
+          financial_score: number
+          health_status: string
+          id: string
+          overall_score: number
+          profit_margin_pct: number | null
+          revenue_cents: number | null
+          revenue_growth_pct: number | null
+          score_change_30d: number | null
+          score_change_7d: number | null
+          scored_date: string
+          service_quality_score: number
+          supply_score: number
+          trips_growth_pct: number | null
+          trips_per_day: number | null
+        }
+        Insert: {
+          active_drivers?: number | null
+          avg_wait_time_min?: number | null
+          cancellation_rate_pct?: number | null
+          city_id: string
+          created_at?: string
+          customer_retention_pct?: number | null
+          demand_score?: number
+          driver_utilization_pct?: number | null
+          financial_score?: number
+          health_status?: string
+          id?: string
+          overall_score?: number
+          profit_margin_pct?: number | null
+          revenue_cents?: number | null
+          revenue_growth_pct?: number | null
+          score_change_30d?: number | null
+          score_change_7d?: number | null
+          scored_date?: string
+          service_quality_score?: number
+          supply_score?: number
+          trips_growth_pct?: number | null
+          trips_per_day?: number | null
+        }
+        Update: {
+          active_drivers?: number | null
+          avg_wait_time_min?: number | null
+          cancellation_rate_pct?: number | null
+          city_id?: string
+          created_at?: string
+          customer_retention_pct?: number | null
+          demand_score?: number
+          driver_utilization_pct?: number | null
+          financial_score?: number
+          health_status?: string
+          id?: string
+          overall_score?: number
+          profit_margin_pct?: number | null
+          revenue_cents?: number | null
+          revenue_growth_pct?: number | null
+          score_change_30d?: number | null
+          score_change_7d?: number | null
+          scored_date?: string
+          service_quality_score?: number
+          supply_score?: number
+          trips_growth_pct?: number | null
+          trips_per_day?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_health_scores_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_launch_checklist: {
+        Row: {
+          category: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_completed: boolean
+          is_required: boolean
+          launch_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          category?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean
+          is_required?: boolean
+          launch_id: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean
+          is_required?: boolean
+          launch_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_launch_checklist_launch_id_fkey"
+            columns: ["launch_id"]
+            isOneToOne: false
+            referencedRelation: "city_launches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_launch_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          template_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          template_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          template_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      city_launches: {
+        Row: {
+          active_drivers: number
+          actual_launch_date: string | null
+          approved_drivers: number
+          city_id: string
+          created_at: string
+          current_drivers: number
+          current_restaurants: number
+          demand_readiness: number
+          driver_readiness: number
+          id: string
+          launched_by: string | null
+          marketing_status: string
+          notes: string | null
+          operational_readiness: number
+          pricing_configured: boolean
+          readiness_score: number
+          services_enabled: string[]
+          status: string
+          surge_configured: boolean
+          target_drivers: number
+          target_launch_date: string | null
+          target_restaurants: number
+          updated_at: string
+        }
+        Insert: {
+          active_drivers?: number
+          actual_launch_date?: string | null
+          approved_drivers?: number
+          city_id: string
+          created_at?: string
+          current_drivers?: number
+          current_restaurants?: number
+          demand_readiness?: number
+          driver_readiness?: number
+          id?: string
+          launched_by?: string | null
+          marketing_status?: string
+          notes?: string | null
+          operational_readiness?: number
+          pricing_configured?: boolean
+          readiness_score?: number
+          services_enabled?: string[]
+          status?: string
+          surge_configured?: boolean
+          target_drivers?: number
+          target_launch_date?: string | null
+          target_restaurants?: number
+          updated_at?: string
+        }
+        Update: {
+          active_drivers?: number
+          actual_launch_date?: string | null
+          approved_drivers?: number
+          city_id?: string
+          created_at?: string
+          current_drivers?: number
+          current_restaurants?: number
+          demand_readiness?: number
+          driver_readiness?: number
+          id?: string
+          launched_by?: string | null
+          marketing_status?: string
+          notes?: string | null
+          operational_readiness?: number
+          pricing_configured?: boolean
+          readiness_score?: number
+          services_enabled?: string[]
+          status?: string
+          surge_configured?: boolean
+          target_drivers?: number
+          target_launch_date?: string | null
+          target_restaurants?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_launches_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_onboarding: {
+        Row: {
+          city_id: string
+          notes: string | null
+          status: string
+          target_launch_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          city_id: string
+          notes?: string | null
+          status?: string
+          target_launch_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string
+          notes?: string | null
+          status?: string
+          target_launch_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_onboarding_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       city_pricing: {
         Row: {
@@ -6073,6 +6667,175 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      city_required_driver_documents: {
+        Row: {
+          city_id: string
+          document_type: string
+          expires: boolean
+          id: string
+          is_active: boolean
+          required: boolean
+        }
+        Insert: {
+          city_id: string
+          document_type: string
+          expires?: boolean
+          id?: string
+          is_active?: boolean
+          required?: boolean
+        }
+        Update: {
+          city_id?: string
+          document_type?: string
+          expires?: boolean
+          id?: string
+          is_active?: boolean
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_required_driver_documents_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_settings: {
+        Row: {
+          city_id: string
+          created_at: string
+          minimum_driver_supply: number
+          services_enabled: Json | null
+          state_id: string | null
+          surge_enabled: boolean
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          minimum_driver_supply?: number
+          services_enabled?: Json | null
+          state_id?: string | null
+          surge_enabled?: boolean
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          minimum_driver_supply?: number
+          services_enabled?: Json | null
+          state_id?: string | null
+          surge_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_settings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_settings_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_surge_rules: {
+        Row: {
+          city_id: string
+          day_of_week: number | null
+          enabled: boolean
+          end_time: string | null
+          id: string
+          max_multiplier: number
+          min_multiplier: number
+          note: string | null
+          start_time: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          city_id: string
+          day_of_week?: number | null
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          max_multiplier?: number
+          min_multiplier?: number
+          note?: string | null
+          start_time?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          city_id?: string
+          day_of_week?: number | null
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          max_multiplier?: number
+          min_multiplier?: number
+          note?: string | null
+          start_time?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_surge_rules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_surge_rules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_waitlist: {
+        Row: {
+          city_id: string
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          interest_type: string
+          notified_at: string | null
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          interest_type?: string
+          notified_at?: string | null
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          interest_type?: string
+          notified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_waitlist_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "launch_cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commission_settings: {
         Row: {
@@ -6207,6 +6970,33 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          billing_email: string | null
+          created_at: string | null
+          id: string
+          name: string
+          preferred_currency: string | null
+          status: string | null
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          preferred_currency?: string | null
+          status?: string | null
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          preferred_currency?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       company_invite_codes: {
         Row: {
           business_id: string
@@ -6247,6 +7037,90 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_members: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_policies: {
+        Row: {
+          allowed_services: Json | null
+          approval_required_over: number | null
+          company_id: string
+          created_at: string | null
+          max_daily: number | null
+          max_monthly: number | null
+          max_per_trip: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_services?: Json | null
+          approval_required_over?: number | null
+          company_id: string
+          created_at?: string | null
+          max_daily?: number | null
+          max_monthly?: number | null
+          max_per_trip?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_services?: Json | null
+          approval_required_over?: number | null
+          company_id?: string
+          created_at?: string | null
+          max_daily?: number | null
+          max_monthly?: number | null
+          max_per_trip?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -6696,6 +7570,122 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cost_optimization_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_resolved: boolean
+          metric_name: string | null
+          metric_value: number | null
+          recommendation: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          rule_id: string | null
+          severity: string
+          threshold_value: number | null
+          title: string
+        }
+        Insert: {
+          alert_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_resolved?: boolean
+          metric_name?: string | null
+          metric_value?: number | null
+          recommendation?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity?: string
+          threshold_value?: number | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_resolved?: boolean
+          metric_name?: string | null
+          metric_value?: number | null
+          recommendation?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity?: string
+          threshold_value?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_optimization_alerts_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cost_optimization_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cost_optimization_rules: {
+        Row: {
+          action_params: Json
+          action_type: string
+          condition_metric: string
+          condition_operator: string
+          condition_threshold: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_auto_apply: boolean
+          is_enabled: boolean
+          last_triggered_at: string | null
+          name: string
+          rule_type: string
+          trigger_count: number
+          updated_at: string
+        }
+        Insert: {
+          action_params?: Json
+          action_type?: string
+          condition_metric: string
+          condition_operator?: string
+          condition_threshold: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_auto_apply?: boolean
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name: string
+          rule_type?: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Update: {
+          action_params?: Json
+          action_type?: string
+          condition_metric?: string
+          condition_operator?: string
+          condition_threshold?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_auto_apply?: boolean
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name?: string
+          rule_type?: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       countries: {
         Row: {
@@ -7629,6 +8619,78 @@ export type Database = {
           retention_period_days?: number
         }
         Relationships: []
+      }
+      deliveries: {
+        Row: {
+          city_id: string | null
+          created_at: string | null
+          customer_user_id: string
+          delivery_fee: number | null
+          driver_user_id: string | null
+          dropoff_location: Json | null
+          id: string
+          pickup_location: Json | null
+          status: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          created_at?: string | null
+          customer_user_id: string
+          delivery_fee?: number | null
+          driver_user_id?: string | null
+          dropoff_location?: Json | null
+          id?: string
+          pickup_location?: Json | null
+          status?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          created_at?: string | null
+          customer_user_id?: string
+          delivery_fee?: number | null
+          driver_user_id?: string | null
+          dropoff_location?: Json | null
+          id?: string
+          pickup_location?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_driver_user_id_fkey"
+            columns: ["driver_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_driver_user_id_fkey"
+            columns: ["driver_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_batches: {
         Row: {
@@ -9025,6 +10087,33 @@ export type Database = {
           },
         ]
       }
+      driver_document_status: {
+        Row: {
+          document_type: string
+          driver_user_id: string
+          expires_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          document_type: string
+          driver_user_id: string
+          expires_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          document_type?: string
+          driver_user_id?: string
+          expires_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           approved_at: string | null
@@ -10310,6 +11399,41 @@ export type Database = {
           },
         ]
       }
+      driver_requirements: {
+        Row: {
+          id: string
+          min_driver_age: number
+          required_documents: Json | null
+          requires_background_check: boolean
+          requires_vehicle_inspection: boolean
+          state_id: string
+        }
+        Insert: {
+          id?: string
+          min_driver_age?: number
+          required_documents?: Json | null
+          requires_background_check?: boolean
+          requires_vehicle_inspection?: boolean
+          state_id: string
+        }
+        Update: {
+          id?: string
+          min_driver_age?: number
+          required_documents?: Json | null
+          requires_background_check?: boolean
+          requires_vehicle_inspection?: boolean
+          state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_requirements_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_reward_history: {
         Row: {
           created_at: string
@@ -11107,6 +12231,7 @@ export type Database = {
           can_go_online: boolean
           cancel_count: number
           city: string | null
+          city_id: string | null
           completion_rate: number | null
           compliance_status: string | null
           created_at: string
@@ -11146,6 +12271,7 @@ export type Database = {
           prev_location_at: string | null
           priority_score: number | null
           rating: number | null
+          rating_avg: number | null
           rating_count: number | null
           referral_code: string
           region_id: string | null
@@ -11175,6 +12301,7 @@ export type Database = {
           vehicle_model: string | null
           vehicle_plate: string
           vehicle_type: string
+          verification_status: string | null
           zip_code: string | null
           zone_code: string | null
         }
@@ -11200,6 +12327,7 @@ export type Database = {
           can_go_online?: boolean
           cancel_count?: number
           city?: string | null
+          city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
           created_at?: string
@@ -11239,6 +12367,7 @@ export type Database = {
           prev_location_at?: string | null
           priority_score?: number | null
           rating?: number | null
+          rating_avg?: number | null
           rating_count?: number | null
           referral_code?: string
           region_id?: string | null
@@ -11268,6 +12397,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_plate: string
           vehicle_type: string
+          verification_status?: string | null
           zip_code?: string | null
           zone_code?: string | null
         }
@@ -11293,6 +12423,7 @@ export type Database = {
           can_go_online?: boolean
           cancel_count?: number
           city?: string | null
+          city_id?: string | null
           completion_rate?: number | null
           compliance_status?: string | null
           created_at?: string
@@ -11332,6 +12463,7 @@ export type Database = {
           prev_location_at?: string | null
           priority_score?: number | null
           rating?: number | null
+          rating_avg?: number | null
           rating_count?: number | null
           referral_code?: string
           region_id?: string | null
@@ -11361,6 +12493,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_plate?: string
           vehicle_type?: string
+          verification_status?: string | null
           zip_code?: string | null
           zone_code?: string | null
         }
@@ -11377,6 +12510,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {
@@ -12597,6 +13737,60 @@ export type Database = {
         }
         Relationships: []
       }
+      fare_breakdowns: {
+        Row: {
+          base_amount: number
+          city_id: string
+          created_at: string
+          currency: string
+          discount_amount: number
+          distance_amount: number
+          fee_amount: number
+          id: string
+          object_id: string
+          object_type: string
+          surge_multiplier: number
+          tax_amount: number
+          time_amount: number
+          total_amount: number
+          zone_id: string | null
+        }
+        Insert: {
+          base_amount?: number
+          city_id: string
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          distance_amount?: number
+          fee_amount?: number
+          id?: string
+          object_id: string
+          object_type: string
+          surge_multiplier?: number
+          tax_amount?: number
+          time_amount?: number
+          total_amount?: number
+          zone_id?: string | null
+        }
+        Update: {
+          base_amount?: number
+          city_id?: string
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          distance_amount?: number
+          fee_amount?: number
+          id?: string
+          object_id?: string
+          object_type?: string
+          surge_multiplier?: number
+          tax_amount?: number
+          time_amount?: number
+          total_amount?: number
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
       fare_calculations: {
         Row: {
           base_fare: number
@@ -12736,6 +13930,67 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_rules: {
+        Row: {
+          city_id: string | null
+          fee_name: string
+          fee_type: string
+          fee_value: number
+          id: string
+          is_active: boolean
+          scope: string
+          service_type: string
+          state_id: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          fee_name: string
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          is_active?: boolean
+          scope?: string
+          service_type: string
+          state_id?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          fee_name?: string
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          is_active?: boolean
+          scope?: string
+          service_type?: string
+          state_id?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_rules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_rules_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_rules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -14172,6 +15427,62 @@ export type Database = {
           },
         ]
       }
+      food_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          menu_item_id: string
+          order_id: string
+          price_each: number
+          qty: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          menu_item_id: string
+          order_id: string
+          price_each?: number
+          qty?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          menu_item_id?: string
+          order_id?: string
+          price_each?: number
+          qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_orders: {
         Row: {
           accepted_at: string | null
@@ -14205,6 +15516,7 @@ export type Database = {
           customer_id: string
           customer_name: string | null
           customer_phone: string | null
+          customer_user_id: string | null
           deliver_by: string | null
           delivered_at: string | null
           delivery_address: string
@@ -14376,6 +15688,7 @@ export type Database = {
           customer_id: string
           customer_name?: string | null
           customer_phone?: string | null
+          customer_user_id?: string | null
           deliver_by?: string | null
           delivered_at?: string | null
           delivery_address: string
@@ -14547,6 +15860,7 @@ export type Database = {
           customer_id?: string
           customer_name?: string | null
           customer_phone?: string | null
+          customer_user_id?: string | null
           deliver_by?: string | null
           delivered_at?: string | null
           delivery_address?: string
@@ -14713,6 +16027,20 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -17195,6 +18523,105 @@ export type Database = {
           name?: string | null
         }
         Relationships: []
+      }
+      launch_cities: {
+        Row: {
+          country: string
+          created_at: string
+          customer_interest_count: number
+          description: string | null
+          driver_interest_count: number
+          estimated_launch_date: string | null
+          fleet_interest_count: number
+          hero_image_url: string | null
+          id: string
+          is_visible: boolean
+          name: string
+          restaurant_interest_count: number
+          services_available: string[] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          customer_interest_count?: number
+          description?: string | null
+          driver_interest_count?: number
+          estimated_launch_date?: string | null
+          fleet_interest_count?: number
+          hero_image_url?: string | null
+          id?: string
+          is_visible?: boolean
+          name: string
+          restaurant_interest_count?: number
+          services_available?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          customer_interest_count?: number
+          description?: string | null
+          driver_interest_count?: number
+          estimated_launch_date?: string | null
+          fleet_interest_count?: number
+          hero_image_url?: string | null
+          id?: string
+          is_visible?: boolean
+          name?: string
+          restaurant_interest_count?: number
+          services_available?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      launch_compliance_checklist: {
+        Row: {
+          city_id: string | null
+          id: string
+          item: string
+          notes: string | null
+          state_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city_id?: string | null
+          id?: string
+          item: string
+          notes?: string | null
+          state_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string | null
+          id?: string
+          item?: string
+          notes?: string | null
+          state_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_compliance_checklist_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_compliance_checklist_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       launch_monitoring_alerts: {
         Row: {
@@ -22903,6 +24330,87 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_portal_applications: {
+        Row: {
+          city_id: string | null
+          city_name: string
+          company_name: string | null
+          converted_to_application_id: string | null
+          created_at: string
+          documents_json: Json | null
+          email: string
+          full_name: string
+          id: string
+          notes: string | null
+          partner_type: string
+          phone: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_type: string | null
+          status: string
+          tracking_code: string
+          updated_at: string
+        }
+        Insert: {
+          city_id?: string | null
+          city_name: string
+          company_name?: string | null
+          converted_to_application_id?: string | null
+          created_at?: string
+          documents_json?: Json | null
+          email: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          partner_type: string
+          phone?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_type?: string | null
+          status?: string
+          tracking_code?: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string | null
+          city_name?: string
+          company_name?: string | null
+          converted_to_application_id?: string | null
+          created_at?: string
+          documents_json?: Json | null
+          email?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          partner_type?: string
+          phone?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_type?: string | null
+          status?: string
+          tracking_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_portal_applications_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "launch_cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_portal_applications_converted_to_application_id_fkey"
+            columns: ["converted_to_application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_redirect_logs: {
         Row: {
           booking_ref: string | null
@@ -24378,6 +25886,55 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_assignments: {
+        Row: {
+          city_id: string | null
+          id: string
+          is_active: boolean
+          pricing_profile_id: string
+          service_type: string
+          zone_id: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          id?: string
+          is_active?: boolean
+          pricing_profile_id: string
+          service_type: string
+          zone_id?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          id?: string
+          is_active?: boolean
+          pricing_profile_id?: string
+          service_type?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_assignments_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_assignments_pricing_profile_id_fkey"
+            columns: ["pricing_profile_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_assignments_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_config: {
         Row: {
           base_fare: number
@@ -24474,6 +26031,45 @@ export type Database = {
           multiplier?: number | null
           ride_type?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pricing_profiles: {
+        Row: {
+          base_fee: number
+          effective_from: string
+          id: string
+          is_active: boolean
+          minimum_fare: number
+          name: string
+          per_mile: number
+          per_minute: number
+          platform_fee_percent: number
+          service_type: string
+        }
+        Insert: {
+          base_fee?: number
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          minimum_fare?: number
+          name: string
+          per_mile?: number
+          per_minute?: number
+          platform_fee_percent?: number
+          service_type: string
+        }
+        Update: {
+          base_fee?: number
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          minimum_fare?: number
+          name?: string
+          per_mile?: number
+          per_minute?: number
+          platform_fee_percent?: number
+          service_type?: string
         }
         Relationships: []
       }
@@ -24738,6 +26334,7 @@ export type Database = {
           phone_e164: string | null
           phone_verified: boolean
           phone_verified_at: string | null
+          role: string | null
           selected_city_id: string | null
           selected_city_name: string | null
           setup_complete: boolean | null
@@ -24775,6 +26372,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
           setup_complete?: boolean | null
@@ -24812,6 +26410,7 @@ export type Database = {
           phone_e164?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
+          role?: string | null
           selected_city_id?: string | null
           selected_city_name?: string | null
           setup_complete?: boolean | null
@@ -27677,6 +29276,70 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_users: {
+        Row: {
+          created_at: string | null
+          restaurant_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          restaurant_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          restaurant_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_users_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_wallet_transactions: {
         Row: {
           amount_cents: number
@@ -27771,6 +29434,7 @@ export type Database = {
           cancel_at_period_end: boolean | null
           cancel_rate: number | null
           city: string | null
+          city_id: string | null
           closed_reason: string | null
           commission_rate: number | null
           compliance_status: string | null
@@ -27812,6 +29476,7 @@ export type Database = {
           prep_time_accuracy: number | null
           prep_time_minutes: number | null
           rating: number | null
+          rating_avg: number | null
           rating_count: number | null
           ratings_count: number | null
           referred_by_restaurant_id: string | null
@@ -27860,6 +29525,7 @@ export type Database = {
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           city?: string | null
+          city_id?: string | null
           closed_reason?: string | null
           commission_rate?: number | null
           compliance_status?: string | null
@@ -27901,6 +29567,7 @@ export type Database = {
           prep_time_accuracy?: number | null
           prep_time_minutes?: number | null
           rating?: number | null
+          rating_avg?: number | null
           rating_count?: number | null
           ratings_count?: number | null
           referred_by_restaurant_id?: string | null
@@ -27949,6 +29616,7 @@ export type Database = {
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           city?: string | null
+          city_id?: string | null
           closed_reason?: string | null
           commission_rate?: number | null
           compliance_status?: string | null
@@ -27990,6 +29658,7 @@ export type Database = {
           prep_time_accuracy?: number | null
           prep_time_minutes?: number | null
           rating?: number | null
+          rating_avg?: number | null
           rating_count?: number | null
           ratings_count?: number | null
           referred_by_restaurant_id?: string | null
@@ -28027,6 +29696,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurants_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {
@@ -30222,6 +31898,57 @@ export type Database = {
         }
         Relationships: []
       }
+      service_availability_rules: {
+        Row: {
+          city_id: string | null
+          day_of_week: number | null
+          enabled: boolean
+          end_time: string | null
+          id: string
+          note: string | null
+          service_type: string
+          start_time: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          day_of_week?: number | null
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          note?: string | null
+          service_type: string
+          start_time?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          day_of_week?: number | null
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          note?: string | null
+          service_type?: string
+          start_time?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_availability_rules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_availability_rules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_health: {
         Row: {
           checked_at: string | null
@@ -30461,6 +32188,41 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      service_zones: {
+        Row: {
+          active: boolean | null
+          city_id: string
+          created_at: string | null
+          id: string
+          name: string
+          polygon: Json | null
+        }
+        Insert: {
+          active?: boolean | null
+          city_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          polygon?: Json | null
+        }
+        Update: {
+          active?: boolean | null
+          city_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          polygon?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_zones_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settlements: {
         Row: {
@@ -31640,6 +33402,156 @@ export type Database = {
           },
         ]
       }
+      state_regulatory_rules: {
+        Row: {
+          details: Json | null
+          id: string
+          is_active: boolean
+          required: boolean
+          rule_name: string
+          rule_type: string
+          state_id: string
+        }
+        Insert: {
+          details?: Json | null
+          id?: string
+          is_active?: boolean
+          required?: boolean
+          rule_name: string
+          rule_type: string
+          state_id: string
+        }
+        Update: {
+          details?: Json | null
+          id?: string
+          is_active?: boolean
+          required?: boolean
+          rule_name?: string
+          rule_type?: string
+          state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "state_regulatory_rules_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_goal_updates: {
+        Row: {
+          delta: number
+          goal_id: string
+          id: string
+          note: string | null
+          recorded_at: string
+          source: string
+          value: number
+        }
+        Insert: {
+          delta?: number
+          goal_id: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          source?: string
+          value: number
+        }
+        Update: {
+          delta?: number
+          goal_id?: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          source?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_goal_updates_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_goals: {
+        Row: {
+          assigned_team: string | null
+          assigned_user_id: string | null
+          category: string
+          city_id: string | null
+          created_at: string
+          created_by: string | null
+          current_value: number
+          description: string | null
+          end_date: string
+          goal_type: string
+          id: string
+          priority: string
+          service_type: string | null
+          start_date: string
+          status: string
+          target_value: number
+          title: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_team?: string | null
+          assigned_user_id?: string | null
+          category?: string
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_value?: number
+          description?: string | null
+          end_date: string
+          goal_type?: string
+          id?: string
+          priority?: string
+          service_type?: string | null
+          start_date: string
+          status?: string
+          target_value: number
+          title: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_team?: string | null
+          assigned_user_id?: string | null
+          category?: string
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_value?: number
+          description?: string | null
+          end_date?: string
+          goal_type?: string
+          id?: string
+          priority?: string
+          service_type?: string | null
+          start_date?: string
+          status?: string
+          target_value?: number
+          title?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_goals_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_connect_accounts: {
         Row: {
           charges_enabled: boolean | null
@@ -32794,6 +34706,60 @@ export type Database = {
           tax_rate?: number | null
         }
         Relationships: []
+      }
+      tax_rules: {
+        Row: {
+          city_id: string | null
+          flat_fee: number
+          id: string
+          included_in_price: boolean
+          is_active: boolean
+          scope: string
+          service_type: string
+          state_id: string | null
+          tax_name: string
+          tax_rate_percent: number
+        }
+        Insert: {
+          city_id?: string | null
+          flat_fee?: number
+          id?: string
+          included_in_price?: boolean
+          is_active?: boolean
+          scope?: string
+          service_type: string
+          state_id?: string | null
+          tax_name: string
+          tax_rate_percent?: number
+        }
+        Update: {
+          city_id?: string | null
+          flat_fee?: number
+          id?: string
+          included_in_price?: boolean
+          is_active?: boolean
+          scope?: string
+          service_type?: string
+          state_id?: string | null
+          tax_name?: string
+          tax_rate_percent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_rules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_rules_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "us_states"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_role_definitions: {
         Row: {
@@ -34923,6 +36889,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          city_id: string | null
           completed_at: string | null
           created_at: string
           customer_email: string | null
@@ -34932,6 +36899,7 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           customer_total: number | null
+          customer_user_id: string | null
           distance_km: number | null
           distance_miles: number | null
           driver_id: string | null
@@ -34943,10 +36911,12 @@ export type Database = {
           dropoff_address_type: string | null
           dropoff_lat: number
           dropoff_lng: number
+          dropoff_location: Json | null
           dropoff_saved_location_id: string | null
           duration_minutes: number | null
           estimated_minutes: number | null
           fare_amount: number | null
+          fare_total: number | null
           feedback: string | null
           id: string
           inactivity_warning_at: string | null
@@ -34965,6 +36935,7 @@ export type Database = {
           pickup_address_type: string | null
           pickup_lat: number
           pickup_lng: number
+          pickup_location: Json | null
           pickup_saved_location_id: string | null
           platform_fee: number | null
           rating: number | null
@@ -34997,6 +36968,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          city_id?: string | null
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -35006,6 +36978,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_total?: number | null
+          customer_user_id?: string | null
           distance_km?: number | null
           distance_miles?: number | null
           driver_id?: string | null
@@ -35017,10 +36990,12 @@ export type Database = {
           dropoff_address_type?: string | null
           dropoff_lat: number
           dropoff_lng: number
+          dropoff_location?: Json | null
           dropoff_saved_location_id?: string | null
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
+          fare_total?: number | null
           feedback?: string | null
           id?: string
           inactivity_warning_at?: string | null
@@ -35039,6 +37014,7 @@ export type Database = {
           pickup_address_type?: string | null
           pickup_lat: number
           pickup_lng: number
+          pickup_location?: Json | null
           pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
@@ -35071,6 +37047,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          city_id?: string | null
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -35080,6 +37057,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_total?: number | null
+          customer_user_id?: string | null
           distance_km?: number | null
           distance_miles?: number | null
           driver_id?: string | null
@@ -35091,10 +37069,12 @@ export type Database = {
           dropoff_address_type?: string | null
           dropoff_lat?: number
           dropoff_lng?: number
+          dropoff_location?: Json | null
           dropoff_saved_location_id?: string | null
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
+          fare_total?: number | null
           feedback?: string | null
           id?: string
           inactivity_warning_at?: string | null
@@ -35113,6 +37093,7 @@ export type Database = {
           pickup_address_type?: string | null
           pickup_lat?: number
           pickup_lng?: number
+          pickup_location?: Json | null
           pickup_saved_location_id?: string | null
           platform_fee?: number | null
           rating?: number | null
@@ -35138,6 +37119,27 @@ export type Database = {
           zone_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "trips_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trips_driver_id_fkey"
             columns: ["driver_id"]
@@ -35356,6 +37358,33 @@ export type Database = {
           namespace?: string
           updated_at?: string
           value?: string
+        }
+        Relationships: []
+      }
+      us_states: {
+        Row: {
+          country: string
+          id: string
+          is_active: boolean
+          state_code: string
+          state_name: string
+          timezone_default: string | null
+        }
+        Insert: {
+          country?: string
+          id?: string
+          is_active?: boolean
+          state_code: string
+          state_name: string
+          timezone_default?: string | null
+        }
+        Update: {
+          country?: string
+          id?: string
+          is_active?: boolean
+          state_code?: string
+          state_name?: string
+          timezone_default?: string | null
         }
         Relationships: []
       }
@@ -37246,18 +39275,24 @@ export type Database = {
           balance: number | null
           driver_id: string | null
           id: string
+          owner_id: string | null
+          owner_type: string | null
           updated_at: string | null
         }
         Insert: {
           balance?: number | null
           driver_id?: string | null
           id?: string
+          owner_id?: string | null
+          owner_type?: string | null
           updated_at?: string | null
         }
         Update: {
           balance?: number | null
           driver_id?: string | null
           id?: string
+          owner_id?: string | null
+          owner_type?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -40823,6 +42858,10 @@ export type Database = {
         Returns: Json
       }
       award_order_points: { Args: { p_order_id: string }; Returns: Json }
+      build_realtime_topic: {
+        Args: { _id: string; _schema: string; _table: string }
+        Returns: string
+      }
       calculate_clv_tier: { Args: { p_clv_score: number }; Returns: string }
       calculate_order_price: {
         Args: {
@@ -41160,6 +43199,7 @@ export type Database = {
           ip_address: unknown
         }[]
       }
+      get_jwt_role: { Args: never; Returns: string }
       get_merchant_orders: {
         Args: { p_limit?: number; p_restaurant_id: string; p_status?: string }
         Returns: {
@@ -41249,6 +43289,15 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_pricing_for_trip: {
+        Args: {
+          p_city_id: string
+          p_service_type?: string
+          p_timestamp?: string
+          p_zone_id?: string
+        }
+        Returns: Json
+      }
       get_referral_device_groups: {
         Args: { hours?: number; min_count?: number }
         Returns: {
@@ -41342,6 +43391,7 @@ export type Database = {
       }
       get_tier_from_points: { Args: { lifetime_pts: number }; Returns: string }
       get_today_ad_spend: { Args: { p_ad_id: string }; Returns: number }
+      get_user_role: { Args: { p_user_id?: string }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
         Returns: {
@@ -41420,7 +43470,8 @@ export type Database = {
       }
       is_admin:
         | { Args: never; Returns: boolean }
-        | { Args: { user_uuid: string }; Returns: boolean }
+        | { Args: { user_uuid?: string }; Returns: boolean }
+      is_admin_by_user_id: { Args: { p_user_id?: string }; Returns: boolean }
       is_admin_manager_plus: { Args: { _user_id: string }; Returns: boolean }
       is_admin_user: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -41428,8 +43479,17 @@ export type Database = {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
+      is_business_user: { Args: { p_user_id?: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
+        Returns: boolean
+      }
+      is_company_admin: {
+        Args: { _company_id: string; _uid: string }
+        Returns: boolean
+      }
+      is_company_member: {
+        Args: { _company_id: string; _uid: string }
         Returns: boolean
       }
       is_customer: { Args: { _user_id?: string }; Returns: boolean }
@@ -41437,12 +43497,22 @@ export type Database = {
         Args: { _damage_report_id: string; _user_id: string }
         Returns: boolean
       }
+      is_driver: { Args: { p_user_id?: string }; Returns: boolean }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
+      is_restaurant_member: {
+        Args: { _restaurant_id: string; _uid: string }
+        Returns: boolean
+      }
       is_restaurant_owner: {
         Args: { p_restaurant_id: string }
         Returns: boolean
       }
+      is_restaurant_owner_or_manager: {
+        Args: { _restaurant_id: string; _uid: string }
+        Returns: boolean
+      }
+      is_restaurant_user: { Args: { p_user_id?: string }; Returns: boolean }
       is_service_available: {
         Args: { p_service_name: string }
         Returns: boolean
@@ -41677,6 +43747,8 @@ export type Database = {
         | "customer"
         | "owner"
         | "manager"
+        | "restaurant_user"
+        | "business_user"
       approval_status: "pending" | "approved" | "rejected"
       beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
@@ -42022,6 +44094,8 @@ export const Constants = {
         "customer",
         "owner",
         "manager",
+        "restaurant_user",
+        "business_user",
       ],
       approval_status: ["pending", "approved", "rejected"],
       beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],
