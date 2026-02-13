@@ -268,14 +268,29 @@ export function DispatchLiveMap({
 
       const content = document.createElement("div");
       content.className = "p-2 min-w-[200px]";
-      content.innerHTML = `
-        <div class="font-semibold text-foreground">${driver.full_name}</div>
-        <div class="text-sm text-muted-foreground">${driver.vehicle_type}</div>
-        <div class="text-xs text-muted-foreground mt-1">
-          ${driver.activeOrder ? `Active: ${driver.activeOrder.restaurant_name}` : "Available"}
-        </div>
-        ${selectedOrderId && !driver.activeOrder ? `<button id="assign-${driver.id}" class="mt-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded">Assign to Order</button>` : ""}
-      `;
+
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "font-semibold text-foreground";
+      nameDiv.textContent = driver.full_name;
+      content.appendChild(nameDiv);
+
+      const vehicleDiv = document.createElement("div");
+      vehicleDiv.className = "text-sm text-muted-foreground";
+      vehicleDiv.textContent = driver.vehicle_type;
+      content.appendChild(vehicleDiv);
+
+      const statusDiv = document.createElement("div");
+      statusDiv.className = "text-xs text-muted-foreground mt-1";
+      statusDiv.textContent = driver.activeOrder ? `Active: ${driver.activeOrder.restaurant_name}` : "Available";
+      content.appendChild(statusDiv);
+
+      if (selectedOrderId && !driver.activeOrder) {
+        const assignBtn = document.createElement("button");
+        assignBtn.id = `assign-${driver.id}`;
+        assignBtn.className = "mt-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded";
+        assignBtn.textContent = "Assign to Order";
+        content.appendChild(assignBtn);
+      }
 
       infoWindowRef.current.setContent(content);
       
