@@ -27242,6 +27242,66 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_reviews: {
+        Row: {
+          accuracy_rating: number | null
+          created_at: string
+          customer_id: string
+          feedback: string | null
+          flagged_at: string | null
+          flagged_by: string | null
+          flagged_reason: string | null
+          food_rating: number
+          id: string
+          is_flagged: boolean
+          is_visible: boolean
+          order_id: string
+          overall_rating: number
+          packaging_rating: number | null
+          restaurant_id: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy_rating?: number | null
+          created_at?: string
+          customer_id: string
+          feedback?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
+          food_rating: number
+          id?: string
+          is_flagged?: boolean
+          is_visible?: boolean
+          order_id: string
+          overall_rating: number
+          packaging_rating?: number | null
+          restaurant_id: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy_rating?: number | null
+          created_at?: string
+          customer_id?: string
+          feedback?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
+          food_rating?: number
+          id?: string
+          is_flagged?: boolean
+          is_visible?: boolean
+          order_id?: string
+          overall_rating?: number
+          packaging_rating?: number | null
+          restaurant_id?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       restaurant_status_log: {
         Row: {
           action: string
@@ -27948,6 +28008,56 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      review_reports: {
+        Row: {
+          action_taken: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          review_id: string
+          review_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          action_taken?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          review_id: string
+          review_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          action_taken?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          review_id?: string
+          review_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
