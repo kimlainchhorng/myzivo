@@ -2,7 +2,8 @@
  * Customer Portal Membership
  * Creates a Stripe Customer Portal session for subscription management
  */
-import { serve, createClient, Stripe } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: any) => {

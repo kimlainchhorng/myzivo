@@ -3,7 +3,8 @@
  * Creates a Stripe Checkout session for a travel order
  * Includes fraud assessment before proceeding
  */
-import { serve, Stripe, createClient } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface CheckoutRequest {

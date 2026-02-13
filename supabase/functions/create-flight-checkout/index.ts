@@ -4,7 +4,8 @@
  * ZIVO is the Merchant of Record
  */
 
-import { serve, Stripe, createClient } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface FlightPassenger {

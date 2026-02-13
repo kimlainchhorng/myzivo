@@ -3,7 +3,8 @@
  * Creates or updates a Stripe Express account for car owners
  * Returns an onboarding URL for the owner to complete
  */
-import { serve, createClient, Stripe } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
