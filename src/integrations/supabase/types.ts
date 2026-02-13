@@ -26770,6 +26770,151 @@ export type Database = {
           },
         ]
       }
+      resolution_cases: {
+        Row: {
+          assigned_to: string | null
+          case_number: string
+          created_at: string
+          description: string | null
+          id: string
+          issue_type: string
+          order_id: string | null
+          order_type: string | null
+          priority: string
+          reporter_id: string
+          reporter_role: string
+          resolution_amount_cents: number | null
+          resolution_notes: string | null
+          resolution_type: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_number?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type: string
+          order_id?: string | null
+          order_type?: string | null
+          priority?: string
+          reporter_id: string
+          reporter_role: string
+          resolution_amount_cents?: number | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_number?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_type?: string
+          order_id?: string | null
+          order_type?: string | null
+          priority?: string
+          reporter_id?: string
+          reporter_role?: string
+          resolution_amount_cents?: number | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      resolution_evidence: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resolution_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "resolution_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resolution_messages: {
+        Row: {
+          attachment_type: string | null
+          attachment_url: string | null
+          case_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resolution_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "resolution_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_ads: {
         Row: {
           clicks: number | null
