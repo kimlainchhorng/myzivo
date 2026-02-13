@@ -396,6 +396,9 @@ const InvestorRelations = lazy(() => import("./pages/NotFound")); // Removed: pl
 const StrategicPartnerships = lazy(() => import("./pages/NotFound")); // Removed: internal
 const FinancialTransparency = lazy(() => import("./pages/NotFound")); // Removed: internal
 const Careers = lazy(() => import("./pages/Careers"));
+const ForCustomers = lazy(() => import("./pages/ForCustomers"));
+const Drive = lazy(() => import("./pages/Drive"));
+const ForRestaurants = lazy(() => import("./pages/ForRestaurants"));
 const EcosystemMap = lazy(() => import("./pages/NotFound")); // Removed: internal diagram
 const StrategicRoadmap = lazy(() => import("./pages/NotFound")); // Removed: internal
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
@@ -962,6 +965,9 @@ const App = () => (
                 <Route path="/do-not-sell" element={<DoNotSell />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                 <Route path="/partner-disclosure" element={<PartnerDisclosure />} />
+                <Route path="/for-customers" element={<ForCustomers />} />
+                <Route path="/drive" element={<Drive />} />
+                <Route path="/for-restaurants" element={<ForRestaurants />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
