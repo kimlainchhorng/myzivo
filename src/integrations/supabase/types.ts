@@ -42915,6 +42915,7 @@ export type Database = {
         }
         Returns: Json
       }
+      check_login_rate_limit: { Args: { _email: string }; Returns: boolean }
       check_sla_breaches: { Args: never; Returns: number }
       check_sms_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_user_role: {
