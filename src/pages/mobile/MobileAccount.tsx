@@ -6,7 +6,7 @@ import { useNavigate, Navigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Users, UserPlus, Mail, Bell, CreditCard, Gift, 
   HelpCircle, FileText, Shield, ChevronRight, LogOut, 
-  Settings, Star, ExternalLink, Crown, Tag, Building2
+  Settings, Star, ExternalLink, Crown, Tag, Building2, MapPin, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,33 +47,42 @@ export default function MobileAccount() {
     .join('')
     .toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
-  const accountItems: MenuItem[] = [
+  const profileItems: MenuItem[] = [
+    { icon: User, label: "Edit Profile", path: "/profile" },
     { icon: Crown, label: isMember ? "ZIVO+ Member" : "Join ZIVO+", path: "/account/membership" },
     { 
       icon: Building2, 
       label: businessMembership?.isMember ? businessMembership.company?.name || "Business Account" : "Business Account", 
       path: "/account/business",
-      badge: businessMembership?.isMember ? undefined : undefined
     },
-    // Show Invoices link only for business members
     ...(businessMembership?.isMember ? [{
       icon: FileText,
       label: "Invoices",
       path: "/account/invoices"
     }] : []),
-    { icon: Tag, label: "My Promos", path: "/account/promos" },
-    { icon: Star, label: "My Reviews", path: "/account/reviews" },
-    { icon: Bell, label: "Push Notifications", path: "/account/notifications" },
-    { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
-    { icon: Mail, label: "Email Preferences", path: "/profile#notifications" },
+    { icon: Shield, label: "Identity Verification", path: "/account/verification" },
+  ];
+
+  const settingsItems: MenuItem[] = [
+    { icon: Bell, label: "Notifications", path: "/account/notifications" },
     { icon: CreditCard, label: "Payment Methods", path: "/profile#payment" },
     { icon: Gift, label: "ZIVO Rewards", path: "/wallet", badge: "New" },
+    { icon: Tag, label: "My Promos", path: "/account/promos" },
+    { icon: Star, label: "My Reviews", path: "/account/reviews" },
+    { icon: MapPin, label: "Saved Addresses", path: "/account/addresses" },
+    { icon: Users, label: "Saved Travelers", path: "/profile#travelers" },
     { icon: UserPlus, label: "Invite Friends", path: "/account/referrals" },
-    { icon: Shield, label: "Identity Verification", path: "/account/verification" },
+  ];
+
+  const securityItems: MenuItem[] = [
+    { icon: Shield, label: "Security Settings", path: "/account/security" },
+    { icon: Lock, label: "Privacy & Data", path: "/account/privacy" },
+    { icon: Settings, label: "App Preferences", path: "/account/preferences" },
   ];
 
   const supportItems: MenuItem[] = [
     { icon: HelpCircle, label: "Support & Help", path: "/support" },
+    { icon: HelpCircle, label: "Help Center", path: "/help" },
     { icon: FileText, label: "Terms of Service", path: "/terms-of-service" },
     { icon: Shield, label: "Privacy Policy", path: "/privacy-policy" },
     { icon: FileText, label: "Partner Disclosure", path: "/partner-disclosure" },
@@ -189,17 +198,51 @@ export default function MobileAccount() {
       {/* My Loyalty Level */}
       <LoyaltyLevelSection />
 
-      {/* Account Settings */}
+      {/* Profile & Membership */}
       <div className="px-4">
         <h3 className="text-sm font-medium text-muted-foreground mb-2 px-1">
-          Account Settings
+          Profile & Membership
         </h3>
         <Card>
           <CardContent className="p-2">
-            {accountItems.map((item, i) => (
+            {profileItems.map((item, i) => (
               <div key={item.path}>
                 <MenuItem item={item} />
-                {i < accountItems.length - 1 && <Separator className="my-1" />}
+                {i < profileItems.length - 1 && <Separator className="my-1" />}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Settings & Payments */}
+      <div className="px-4 mt-6">
+        <h3 className="text-sm font-medium text-muted-foreground mb-2 px-1">
+          Settings & Payments
+        </h3>
+        <Card>
+          <CardContent className="p-2">
+            {settingsItems.map((item, i) => (
+              <div key={item.path}>
+                <MenuItem item={item} />
+                {i < settingsItems.length - 1 && <Separator className="my-1" />}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Security & Privacy */}
+      <div className="px-4 mt-6">
+        <h3 className="text-sm font-medium text-muted-foreground mb-2 px-1">
+          Security & Privacy
+        </h3>
+        <Card>
+          <CardContent className="p-2">
+            {securityItems.map((item, i) => (
+              <div key={item.path}>
+                <MenuItem item={item} />
+                {i < securityItems.length - 1 && <Separator className="my-1" />}
               </div>
             ))}
           </CardContent>
