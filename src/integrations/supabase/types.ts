@@ -28230,6 +28230,45 @@ export type Database = {
           },
         ]
       }
+      scheduling_settings: {
+        Row: {
+          available_end_hour: number
+          available_start_hour: number
+          cancellation_cutoff_minutes: number
+          created_at: string
+          id: string
+          max_advance_days: number
+          min_advance_minutes: number
+          scheduling_enabled: boolean
+          service_type: string
+          updated_at: string
+        }
+        Insert: {
+          available_end_hour?: number
+          available_start_hour?: number
+          cancellation_cutoff_minutes?: number
+          created_at?: string
+          id?: string
+          max_advance_days?: number
+          min_advance_minutes?: number
+          scheduling_enabled?: boolean
+          service_type: string
+          updated_at?: string
+        }
+        Update: {
+          available_end_hour?: number
+          available_start_hour?: number
+          cancellation_cutoff_minutes?: number
+          created_at?: string
+          id?: string
+          max_advance_days?: number
+          min_advance_minutes?: number
+          scheduling_enabled?: boolean
+          service_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       search_logs: {
         Row: {
           created_at: string | null
@@ -30505,6 +30544,47 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_analytics: {
+        Row: {
+          active_drivers: number
+          active_orders: number
+          demand_ratio: number | null
+          id: string
+          multiplier: number
+          recorded_at: string
+          zone_id: string | null
+          zone_name: string | null
+        }
+        Insert: {
+          active_drivers?: number
+          active_orders?: number
+          demand_ratio?: number | null
+          id?: string
+          multiplier?: number
+          recorded_at?: string
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Update: {
+          active_drivers?: number
+          active_orders?: number
+          demand_ratio?: number | null
+          id?: string
+          multiplier?: number
+          recorded_at?: string
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_analytics_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "surge_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       surge_events: {
         Row: {
           city_id: string | null
@@ -30741,38 +30821,50 @@ export type Database = {
       surge_zones: {
         Row: {
           base_multiplier: number
+          city: string | null
           created_at: string
           id: string
           is_active: boolean
           lat: number
           lng: number
+          max_multiplier: number
           name: string
           peak_hours_only: boolean
           radius_km: number
+          service_type: string | null
+          surge_enabled: boolean
           updated_at: string
         }
         Insert: {
           base_multiplier?: number
+          city?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           lat: number
           lng: number
+          max_multiplier?: number
           name: string
           peak_hours_only?: boolean
           radius_km?: number
+          service_type?: string | null
+          surge_enabled?: boolean
           updated_at?: string
         }
         Update: {
           base_multiplier?: number
+          city?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           lat?: number
           lng?: number
+          max_multiplier?: number
           name?: string
           peak_hours_only?: boolean
           radius_km?: number
+          service_type?: string | null
+          surge_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -32995,6 +33087,7 @@ export type Database = {
           feedback: string | null
           id: string
           inactivity_warning_at: string | null
+          is_scheduled: boolean
           last_driver_lat: number | null
           last_driver_lng: number | null
           last_progress_at: string | null
@@ -33021,6 +33114,7 @@ export type Database = {
           rider_feedback: string | null
           rider_id: string | null
           rider_rating: number | null
+          scheduled_for: string | null
           service_type: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["trip_status"] | null
@@ -33067,6 +33161,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           inactivity_warning_at?: string | null
+          is_scheduled?: boolean
           last_driver_lat?: number | null
           last_driver_lng?: number | null
           last_progress_at?: string | null
@@ -33093,6 +33188,7 @@ export type Database = {
           rider_feedback?: string | null
           rider_id?: string | null
           rider_rating?: number | null
+          scheduled_for?: string | null
           service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
@@ -33139,6 +33235,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           inactivity_warning_at?: string | null
+          is_scheduled?: boolean
           last_driver_lat?: number | null
           last_driver_lng?: number | null
           last_progress_at?: string | null
@@ -33165,6 +33262,7 @@ export type Database = {
           rider_feedback?: string | null
           rider_id?: string | null
           rider_rating?: number | null
+          scheduled_for?: string | null
           service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null

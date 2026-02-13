@@ -25,6 +25,8 @@ interface CreatePaymentIntentRequest {
   deliveryAddress: string;
   promoCode?: string;
   specialInstructions?: string;
+  isExpress?: boolean;
+  expressFee?: number;
 }
 
 serve(async (req) => {
@@ -103,6 +105,8 @@ serve(async (req) => {
       promo_code: body.promoCode || null,
       discount_amount: body.discountAmount || 0,
       tip_amount: body.tipAmount || 0,
+      is_express: body.isExpress || false,
+      express_fee: body.expressFee || 0,
       status: "pending",
       payment_status: "pending",
       payment_type: "card",
