@@ -465,6 +465,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_broadcasts: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          id: string
+          recipient_count: number | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          target_city: string | null
+          target_role: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          created_at?: string
+          id?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          target_city?: string | null
+          target_role?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          target_city?: string | null
+          target_role?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       admin_driver_actions: {
         Row: {
           action_type: string
@@ -9617,6 +9659,7 @@ export type Database = {
           created_at: string
           driver_id: string
           haptic_feedback_enabled: boolean | null
+          has_seen_walkthrough: boolean
           id: string
           notification_earnings: boolean | null
           notification_messages: boolean | null
@@ -9643,6 +9686,7 @@ export type Database = {
           created_at?: string
           driver_id: string
           haptic_feedback_enabled?: boolean | null
+          has_seen_walkthrough?: boolean
           id?: string
           notification_earnings?: boolean | null
           notification_messages?: boolean | null
@@ -9669,6 +9713,7 @@ export type Database = {
           created_at?: string
           driver_id?: string
           haptic_feedback_enabled?: boolean | null
+          has_seen_walkthrough?: boolean
           id?: string
           notification_earnings?: boolean | null
           notification_messages?: boolean | null
@@ -10418,36 +10463,57 @@ export type Database = {
       }
       eats_reviews: {
         Row: {
+          accuracy_rating: number | null
           comment: string | null
           created_at: string | null
           delivery_rating: number | null
           food_rating: number | null
           id: string
+          is_flagged: boolean | null
+          merchant_reply: string | null
+          merchant_reply_at: string | null
           order_id: string
+          packaging_rating: number | null
+          photo_url: string | null
           rating: number
           restaurant_id: string
+          tags: string[] | null
           user_id: string
         }
         Insert: {
+          accuracy_rating?: number | null
           comment?: string | null
           created_at?: string | null
           delivery_rating?: number | null
           food_rating?: number | null
           id?: string
+          is_flagged?: boolean | null
+          merchant_reply?: string | null
+          merchant_reply_at?: string | null
           order_id: string
+          packaging_rating?: number | null
+          photo_url?: string | null
           rating: number
           restaurant_id: string
+          tags?: string[] | null
           user_id: string
         }
         Update: {
+          accuracy_rating?: number | null
           comment?: string | null
           created_at?: string | null
           delivery_rating?: number | null
           food_rating?: number | null
           id?: string
+          is_flagged?: boolean | null
+          merchant_reply?: string | null
+          merchant_reply_at?: string | null
           order_id?: string
+          packaging_rating?: number | null
+          photo_url?: string | null
           rating?: number
           restaurant_id?: string
+          tags?: string[] | null
           user_id?: string
         }
         Relationships: [
@@ -21818,6 +21884,57 @@ export type Database = {
           },
         ]
       }
+      passenger_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          driver_id: string
+          food_order_id: string | null
+          id: string
+          rating: number
+          tags: string[] | null
+          trip_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          driver_id: string
+          food_order_id?: string | null
+          id?: string
+          rating: number
+          tags?: string[] | null
+          trip_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          driver_id?: string
+          food_order_id?: string | null
+          id?: string
+          rating?: number
+          tags?: string[] | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_ratings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passenger_ratings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_disputes: {
         Row: {
           amount_cents: number | null
@@ -24404,6 +24521,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      rating_flags: {
+        Row: {
+          created_at: string
+          details: Json | null
+          driver_id: string
+          flag_type: string
+          id: string
+          resolution_note: string | null
+          resolved: boolean
+          resolved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          driver_id: string
+          flag_type: string
+          id?: string
+          resolution_note?: string | null
+          resolved?: boolean
+          resolved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          driver_id?: string
+          flag_type?: string
+          id?: string
+          resolution_note?: string | null
+          resolved?: boolean
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rating_flags_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rating_flags_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reassignment_logs: {
         Row: {
