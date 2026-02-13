@@ -1531,6 +1531,7 @@ export type Database = {
       }
       airport_fee_rules: {
         Row: {
+          active: boolean
           airport_id: string
           apply_when: string
           fee_type: string
@@ -1540,6 +1541,7 @@ export type Database = {
           service_type: string
         }
         Insert: {
+          active?: boolean
           airport_id: string
           apply_when?: string
           fee_type: string
@@ -1549,6 +1551,7 @@ export type Database = {
           service_type: string
         }
         Update: {
+          active?: boolean
           airport_id?: string
           apply_when?: string
           fee_type?: string
@@ -1569,6 +1572,7 @@ export type Database = {
       }
       airports: {
         Row: {
+          active: boolean
           city_id: string
           code: string | null
           created_at: string
@@ -1578,6 +1582,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          active?: boolean
           city_id: string
           code?: string | null
           created_at?: string
@@ -1587,6 +1592,7 @@ export type Database = {
           name: string
         }
         Update: {
+          active?: boolean
           city_id?: string
           code?: string | null
           created_at?: string
@@ -5367,6 +5373,7 @@ export type Database = {
       }
       cancellation_fee_rules: {
         Row: {
+          active: boolean
           city_id: string
           fee_type: string
           fee_value: number
@@ -5376,6 +5383,7 @@ export type Database = {
           service_type: string
         }
         Insert: {
+          active?: boolean
           city_id: string
           fee_type: string
           fee_value?: number
@@ -5385,6 +5393,7 @@ export type Database = {
           service_type: string
         }
         Update: {
+          active?: boolean
           city_id?: string
           fee_type?: string
           fee_value?: number
@@ -6670,6 +6679,7 @@ export type Database = {
       }
       city_required_driver_documents: {
         Row: {
+          active: boolean
           city_id: string
           document_type: string
           expires: boolean
@@ -6678,6 +6688,7 @@ export type Database = {
           required: boolean
         }
         Insert: {
+          active?: boolean
           city_id: string
           document_type: string
           expires?: boolean
@@ -6686,6 +6697,7 @@ export type Database = {
           required?: boolean
         }
         Update: {
+          active?: boolean
           city_id?: string
           document_type?: string
           expires?: boolean
@@ -13936,6 +13948,7 @@ export type Database = {
       }
       fee_rules: {
         Row: {
+          active: boolean
           city_id: string | null
           fee_name: string
           fee_type: string
@@ -13948,6 +13961,7 @@ export type Database = {
           zone_id: string | null
         }
         Insert: {
+          active?: boolean
           city_id?: string | null
           fee_name: string
           fee_type?: string
@@ -13960,6 +13974,7 @@ export type Database = {
           zone_id?: string | null
         }
         Update: {
+          active?: boolean
           city_id?: string | null
           fee_name?: string
           fee_type?: string
@@ -25888,6 +25903,7 @@ export type Database = {
       }
       pricing_assignments: {
         Row: {
+          active: boolean
           city_id: string | null
           id: string
           is_active: boolean
@@ -25896,6 +25912,7 @@ export type Database = {
           zone_id: string | null
         }
         Insert: {
+          active?: boolean
           city_id?: string | null
           id?: string
           is_active?: boolean
@@ -25904,6 +25921,7 @@ export type Database = {
           zone_id?: string | null
         }
         Update: {
+          active?: boolean
           city_id?: string | null
           id?: string
           is_active?: boolean
@@ -26036,6 +26054,7 @@ export type Database = {
       }
       pricing_profiles: {
         Row: {
+          active: boolean
           base_fee: number
           effective_from: string
           id: string
@@ -26048,6 +26067,7 @@ export type Database = {
           service_type: string
         }
         Insert: {
+          active?: boolean
           base_fee?: number
           effective_from?: string
           id?: string
@@ -26060,6 +26080,7 @@ export type Database = {
           service_type: string
         }
         Update: {
+          active?: boolean
           base_fee?: number
           effective_from?: string
           id?: string
@@ -33404,6 +33425,7 @@ export type Database = {
       }
       state_regulatory_rules: {
         Row: {
+          active: boolean
           details: Json | null
           id: string
           is_active: boolean
@@ -33413,6 +33435,7 @@ export type Database = {
           state_id: string
         }
         Insert: {
+          active?: boolean
           details?: Json | null
           id?: string
           is_active?: boolean
@@ -33422,6 +33445,7 @@ export type Database = {
           state_id: string
         }
         Update: {
+          active?: boolean
           details?: Json | null
           id?: string
           is_active?: boolean
@@ -34373,6 +34397,7 @@ export type Database = {
         Row: {
           created_at: string | null
           day_of_week: number[] | null
+          enabled: boolean
           ends_at: string | null
           id: string
           is_active: boolean | null
@@ -34389,6 +34414,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           day_of_week?: number[] | null
+          enabled?: boolean
           ends_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -34405,6 +34431,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           day_of_week?: number[] | null
+          enabled?: boolean
           ends_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -34709,6 +34736,7 @@ export type Database = {
       }
       tax_rules: {
         Row: {
+          active: boolean
           city_id: string | null
           flat_fee: number
           id: string
@@ -34721,6 +34749,7 @@ export type Database = {
           tax_rate_percent: number
         }
         Insert: {
+          active?: boolean
           city_id?: string | null
           flat_fee?: number
           id?: string
@@ -34733,6 +34762,7 @@ export type Database = {
           tax_rate_percent?: number
         }
         Update: {
+          active?: boolean
           city_id?: string | null
           flat_fee?: number
           id?: string
