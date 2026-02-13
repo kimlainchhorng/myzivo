@@ -137,6 +137,7 @@ const AccountRewardsPage = lazy(() => import("./pages/account/AccountRewardsPage
 
 // Merchant Ads
 const MerchantAdsPage = lazy(() => import("./pages/merchant/MerchantAdsPage"));
+const MerchantReviewsPage = lazy(() => import("./pages/merchant/MerchantReviewsPage"));
 
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
@@ -894,6 +895,7 @@ const App = () => (
 
                 {/* Restaurant Ads Routes */}
                 <Route path="/merchant/ads" element={<ProtectedRoute><MerchantAdsPage /></ProtectedRoute>} />
+                <Route path="/merchant/reviews" element={<ProtectedRoute><MerchantReviewsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads" element={<ProtectedRoute><AdminAdsPage /></ProtectedRoute>} />
 
                 {/* P2P Car Rental - Owner Routes */}

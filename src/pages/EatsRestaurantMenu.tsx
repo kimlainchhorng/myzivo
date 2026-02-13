@@ -39,6 +39,7 @@ import { ActivePromotionsSection } from "@/components/eats/ActivePromotionsSecti
 import { useUpcomingDemandAlert } from "@/hooks/useUpcomingDemandAlert";
 import { PeakDemandAlert } from "@/components/eats/PeakDemandAlert";
 import { useDriverIncentives } from "@/hooks/useDriverIncentives";
+import { RestaurantReviewsSection } from "@/components/eats/RestaurantReviewsSection";
 
 function MenuItemCard({ item, restaurantId, restaurantName, canOrder = true, isServiceMaintenance = false }: { 
   item: MenuItem; 
@@ -496,6 +497,17 @@ function EatsRestaurantMenuContent() {
               </div>
             )}
           </div>
+
+          {/* Reviews Section */}
+          {restaurant && (
+            <div className="mt-12">
+              <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-gradient-to-b from-primary to-primary/50 rounded-full" />
+                Customer Reviews
+              </h2>
+              <RestaurantReviewsSection restaurantId={restaurant.id} />
+            </div>
+          )}
         </div>
 
         {/* Floating Cart Button */}
