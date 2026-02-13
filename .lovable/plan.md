@@ -1,91 +1,93 @@
 
 
-## Marketing Website and Landing Pages for ZIVO
+# Priority Orders and Express Delivery Option
 
-### Current State
+## Overview
+Add an Express Delivery tier to ZIVO Eats and Rides that lets customers pay a premium fee for faster service -- priority dispatch, reduced batching delays, and prominent "Express" badges across all touchpoints (customer, driver, restaurant, admin).
 
-Your marketing website is already well-built with most pages in place:
-- **Home page** with hero, services, how it works, testimonials, and app download
-- **About, FAQ, How It Works, Contact, Partners, Careers** pages all exist
-- **Install page** with PWA download guidance for iOS/Android
-- **Restaurant Registration** form exists (but no marketing landing page)
-- **SEO infrastructure** with meta tags, Open Graph, and FAQ schema markup
+## What Changes
 
-### What Needs to Be Added
+### 1. Database -- New Columns
+- Add `is_express` (boolean, default false) and `express_fee` (numeric, default 0) columns to the `food_orders` table
+- Add `is_express` and `express_fee` columns to `ride_requests` table
+- Add admin-configurable settings row in `pricing_settings` for express fee amount and zone-level caps
 
-Three dedicated marketing landing pages are missing. These would serve as public-facing pages to attract each user type with tailored messaging and clear calls to action.
+### 2. New Component -- `DeliverySpeedSelector`
+A radio-card selector placed in the Eats checkout between "Delivery Time" and "Payment Method" sections:
+- **Standard** -- current ETA range, no extra fee
+- **Express** -- reduced ETA (roughly 30% faster), shows additional fee (e.g. +$2.99), highlighted with a lightning bolt badge
+- Displays side-by-side ETA comparison so customers see the value clearly
 
----
+### 3. Eats Checkout Integration (`EatsCheckout.tsx`)
+- Add `isExpress` and `expressFee` state
+- Wire `DeliverySpeedSelector` into the form between the Timing card and Payment card
+- Add express fee as a line item in the Order Summary sidebar
+- Include `is_express` and `express_fee` in the order creation payload (both cash and Stripe flows)
+- Adjust total calculation: `total = currentTotal + expressFee`
 
-### 1. Customer Landing Page (`/for-customers`)
+### 4. Pricing Hook Update (`useEatsDeliveryPricing.ts`)
+- Accept optional `isExpress` parameter
+- When express is selected, apply the configured express fee to the total
+- Export express fee amount for display
 
-A public page showcasing all ZIVO services from the customer perspective.
+### 5. Express Badge Component
+A small reusable `<ExpressBadge />` component (lightning bolt icon + "Express" text in amber/orange) used across:
+- Customer order tracking page
+- Driver trip request modal and active delivery view
+- Restaurant order dashboard
+- Dispatch Kanban cards
 
-**Sections:**
-- Hero with tagline ("Your all-in-one travel and mobility app")
-- Service cards: Book Rides, Order Food, Send Packages, Search Flights, Compare Hotels, Rent Cars
-- Benefits list (no hidden fees, compare options, trusted partners)
-- App screenshots placeholder area
-- Download/signup CTA buttons
-- FAQ section specific to customers
+### 6. Dispatch Priority Boost
+- In `useDriverQueue.ts` scoring logic, add a priority boost (+15 points) for express orders so they rank higher in the assignment queue
+- Reduce batching delay tolerance for express orders (skip batching or use tighter proximity window)
+- In `auto_assign_order_v2` RPC call, pass `is_express` flag for server-side priority handling
 
----
+### 7. Driver Interface Updates
+- Show `<ExpressBadge />` on incoming trip request
+- Display higher estimated earnings (base + express bonus)
+- Add "Priority" label in active delivery view
 
-### 2. Driver Landing Page (`/drive`)
+### 8. Restaurant Interface Updates
+- Show `<ExpressBadge />` on incoming orders
+- Display suggested faster prep time for express orders
+- Optional kitchen priority queue indicator
 
-A recruitment-focused page to attract new drivers.
+### 9. Order Tracking Updates
+- Show "Express" badge next to order status
+- Display the faster ETA estimate the customer selected
 
-**Sections:**
-- Hero with earnings-focused headline ("Drive with ZIVO. Earn on your schedule.")
-- Earnings examples (e.g., "Drivers earn up to $X/week")
-- How it works (3 steps: Sign up, Get approved, Start earning)
-- Requirements list (valid license, vehicle, smartphone, background check)
-- Benefits (flexible hours, weekly payouts, in-app support)
-- Driver signup form (name, email, phone, city, vehicle type) with Zod validation
-- FAQ section for driver-specific questions
+### 10. Edge Function Updates
+- `create-eats-checkout` and `create-eats-payment-intent`: accept and store `is_express` and `express_fee`, add express fee as a Stripe line item
+- Webhook handler: preserve express flag on payment confirmation
 
----
+### 11. Admin Analytics (Lightweight)
+- Add express order count and express revenue to existing admin dashboard metrics
+- Filter support for express vs standard in order lists
 
-### 3. Restaurant Marketing Page (`/for-restaurants`)
+## Technical Details
 
-A page to attract restaurant partners, separate from the existing registration form.
+### File Changes Summary
 
-**Sections:**
-- Hero with growth-focused headline ("Reach more hungry customers with ZIVO Eats")
-- Benefits cards (increased orders, easy management, fast payouts, marketing tools)
-- How it works (3 steps: Apply, Set up menu, Start receiving orders)
-- Dashboard preview section (feature highlights of the restaurant dashboard)
-- Testimonial/social proof placeholder
-- CTA button linking to existing `/restaurant-registration` form
-- FAQ section for restaurant-specific questions
+| File | Change |
+|------|--------|
+| `src/components/eats/DeliverySpeedSelector.tsx` | New component -- Standard vs Express radio cards |
+| `src/components/shared/ExpressBadge.tsx` | New reusable badge component |
+| `src/pages/EatsCheckout.tsx` | Add state, wire selector, update total, pass to order creation |
+| `src/hooks/useEatsDeliveryPricing.ts` | Accept `isExpress` param, include express fee in pricing |
+| `src/hooks/useDriverQueue.ts` | Add priority boost for express orders in scoring |
+| `src/hooks/useCreateFoodOrder` (or equivalent) | Pass `is_express` and `express_fee` fields |
+| `supabase/functions/create-eats-checkout/index.ts` | Accept and store express fields, add Stripe line item |
+| `supabase/functions/create-eats-payment-intent/index.ts` | Same as above |
+| `src/components/dispatch/KanbanColumn.tsx` | Show ExpressBadge on express order cards |
+| `src/pages/eats/EatsOrderDetail.tsx` (or equivalent) | Show ExpressBadge in tracking view |
+| Database migration | Add `is_express` and `express_fee` columns to `food_orders` and `ride_requests` |
 
----
+### Express Fee Configuration
+- Default express fee: $2.99
+- Stored as a constant initially, with admin override via `pricing_settings` table
+- Express ETA reduction: multiply standard ETA by 0.7 (30% faster display)
 
-### 4. Route Registration
-
-Add the three new routes to the app router:
-- `/for-customers` renders CustomerLandingPage
-- `/drive` renders DriverLandingPage
-- `/for-restaurants` renders RestaurantMarketingPage
-
----
-
-### Technical Details
-
-- **Files to create:**
-  - `src/pages/ForCustomers.tsx`
-  - `src/pages/Drive.tsx`
-  - `src/pages/ForRestaurants.tsx`
-
-- **Patterns followed:**
-  - Uses existing `Header`, `Footer`, `SEOHead`, `FAQSchema` components
-  - Verdant theme with `Card`, `Badge`, `Button` from the UI library
-  - Zod-validated lead capture form on the Driver page
-  - Lucide icons in gradient containers (no raw emojis)
-  - Mobile-first responsive layout with `rounded-2xl` card shapes
-  - Framer Motion fade-in animations matching the home page pattern
-
-- **SEO:**
-  - Each page gets `SEOHead` with unique title, description, and canonical URL
-  - Driver and Restaurant pages include `FAQSchema` for rich snippets
+### Fairness Safeguard
+- Cap express orders at a configurable percentage per zone (e.g., max 30% of active orders can be express) to prevent standard order starvation
+- If cap is reached, express option is grayed out with "Express unavailable right now" message
 
