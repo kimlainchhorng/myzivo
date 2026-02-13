@@ -19,12 +19,12 @@ interface FiltersSheetProps {
   onApply: () => void;
   onReset: () => void;
   hasActiveFilters?: boolean;
-  service?: "flights" | "hotels" | "cars";
+  service?: "flights" | "hotels" | "cars" | "eats" | "rides" | "delivery";
   resultsCount?: number;
   isLoading?: boolean;
 }
 
-const serviceColors = {
+const serviceColors: Record<string, { button: string; badge: string; accent: string }> = {
   flights: {
     button: "bg-sky-500 hover:bg-sky-600",
     badge: "bg-sky-500",
@@ -36,6 +36,21 @@ const serviceColors = {
     accent: "text-amber-500",
   },
   cars: {
+    button: "bg-violet-500 hover:bg-violet-600",
+    badge: "bg-violet-500",
+    accent: "text-violet-500",
+  },
+  eats: {
+    button: "bg-orange-500 hover:bg-orange-600",
+    badge: "bg-orange-500",
+    accent: "text-orange-500",
+  },
+  rides: {
+    button: "bg-emerald-500 hover:bg-emerald-600",
+    badge: "bg-emerald-500",
+    accent: "text-emerald-500",
+  },
+  delivery: {
     button: "bg-violet-500 hover:bg-violet-600",
     badge: "bg-violet-500",
     accent: "text-violet-500",
@@ -112,7 +127,7 @@ export function FiltersSheet({
 interface FiltersTriggerProps {
   onClick: () => void;
   activeCount?: number;
-  service?: "flights" | "hotels" | "cars";
+  service?: "flights" | "hotels" | "cars" | "eats" | "rides" | "delivery";
   className?: string;
 }
 
