@@ -5164,6 +5164,59 @@ export type Database = {
           },
         ]
       }
+      campaign_recipients: {
+        Row: {
+          campaign_id: string
+          channel: string
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          campaign_id: string
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id: string
+          user_type?: string
+        }
+        Update: {
+          campaign_id?: string
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "notification_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_rules: {
         Row: {
           active: boolean | null
@@ -19615,6 +19668,90 @@ export type Database = {
           skip_reason?: string | null
           status?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_campaigns: {
+        Row: {
+          action_data: Json | null
+          action_url: string | null
+          body: string
+          campaign_type: string
+          category: string
+          clicked_count: number | null
+          created_at: string
+          created_by: string | null
+          delivered_count: number | null
+          id: string
+          name: string
+          opened_count: number | null
+          repeat_schedule: string | null
+          repeat_until: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          target_activity: string | null
+          target_audience: string
+          target_city: string | null
+          target_filters: Json | null
+          target_tier: string | null
+          title: string
+          total_recipients: number | null
+          updated_at: string
+        }
+        Insert: {
+          action_data?: Json | null
+          action_url?: string | null
+          body: string
+          campaign_type?: string
+          category?: string
+          clicked_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number | null
+          id?: string
+          name: string
+          opened_count?: number | null
+          repeat_schedule?: string | null
+          repeat_until?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          target_activity?: string | null
+          target_audience?: string
+          target_city?: string | null
+          target_filters?: Json | null
+          target_tier?: string | null
+          title: string
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Update: {
+          action_data?: Json | null
+          action_url?: string | null
+          body?: string
+          campaign_type?: string
+          category?: string
+          clicked_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number | null
+          id?: string
+          name?: string
+          opened_count?: number | null
+          repeat_schedule?: string | null
+          repeat_until?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          target_activity?: string | null
+          target_audience?: string
+          target_city?: string | null
+          target_filters?: Json | null
+          target_tier?: string | null
+          title?: string
+          total_recipients?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
