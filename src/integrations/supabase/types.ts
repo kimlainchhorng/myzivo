@@ -9185,6 +9185,7 @@ export type Database = {
           app_version: string | null
           created_at: string | null
           device_name: string | null
+          enabled: boolean
           id: string
           is_active: boolean | null
           last_used_at: string | null
@@ -9199,6 +9200,7 @@ export type Database = {
           app_version?: string | null
           created_at?: string | null
           device_name?: string | null
+          enabled?: boolean
           id?: string
           is_active?: boolean | null
           last_used_at?: string | null
@@ -9213,6 +9215,7 @@ export type Database = {
           app_version?: string | null
           created_at?: string | null
           device_name?: string | null
+          enabled?: boolean
           id?: string
           is_active?: boolean | null
           last_used_at?: string | null
@@ -9259,6 +9262,47 @@ export type Database = {
           selected_driver_id?: string | null
         }
         Relationships: []
+      }
+      dispatch_attempts: {
+        Row: {
+          attempt_no: number
+          created_at: string
+          id: string
+          job_id: string
+          max_drivers: number
+          offer_ttl_seconds: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_no: number
+          created_at?: string
+          id?: string
+          job_id: string
+          max_drivers?: number
+          offer_ttl_seconds?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_no?: number
+          created_at?: string
+          id?: string
+          job_id?: string
+          max_drivers?: number
+          offer_ttl_seconds?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_attempts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dispatch_logs: {
         Row: {

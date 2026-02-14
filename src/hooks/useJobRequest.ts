@@ -33,12 +33,12 @@ export interface DispatchResult {
   driver_count?: number;
 }
 
-// Call the auto-dispatch edge function for a job
+// Call the redispatch-loop edge function for a job
 export const dispatchJob = async (jobId: string): Promise<DispatchResult> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   const res = await fetch(
-    `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+    `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/redispatch-loop`,
     {
       method: "POST",
       headers: {
@@ -48,7 +48,8 @@ export const dispatchJob = async (jobId: string): Promise<DispatchResult> => {
       },
       body: JSON.stringify({
         job_id: jobId,
-        max_drivers: 3,
+        max_attempts: 4,
+        base_max_drivers: 3,
         offer_ttl_seconds: 25,
       }),
     }

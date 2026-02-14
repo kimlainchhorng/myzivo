@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -81,8 +81,29 @@ const RequestServicePage = () => {
   const [notes, setNotes] = useState("");
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [showRetry, setShowRetry] = useState(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { job, isLoading: jobLoading, clearJob } = useJobRealtime(activeJobId);
+
+  // Show "Try Again" after 30s if still no driver
+  useEffect(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    setShowRetry(false);
+
+    if (activeJobId && job?.status === "requested" && !job.assigned_driver_id) {
+      retryTimerRef.current = setTimeout(() => {
+        setShowRetry(true);
+      }, 30_000);
+    }
+
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, [activeJobId, job?.status, job?.assigned_driver_id]);
 
   const handleSubmit = async () => {
     if (!pickup.trim() || !dropoff.trim()) return;
@@ -275,24 +296,26 @@ const RequestServicePage = () => {
                 </div>
               </div>
 
-              {/* Retry button */}
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full max-w-xs"
-                onClick={handleRetryDispatch}
-                disabled={isRetrying}
-              >
-                {isRetrying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Retrying...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" /> Retry Search
-                  </>
-                )}
-              </Button>
+              {/* Try Again button — appears after 30s with no driver */}
+              {showRetry && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full max-w-xs"
+                  onClick={handleRetryDispatch}
+                  disabled={isRetrying}
+                >
+                  {isRetrying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Retrying...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" /> Try Again
+                    </>
+                  )}
+                </Button>
+              )}
             </motion.div>
           )}
 
