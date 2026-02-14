@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,15 @@ import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+
+interface PricingBreakdown {
+  base_fare: number;
+  per_mile: number;
+  per_minute: number;
+  airport_fee: number;
+  final_multiplier: number;
+  total: number;
+}
 
 export default function RequestRidePage() {
   const navigate = useNavigate();
@@ -26,8 +35,14 @@ export default function RequestRidePage() {
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const dropoffGeocode = useGoogleMapsGeocode();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeInput, setActiveInput] = useState<"pickup" | "dropoff" | null>(null);
+
+  // Two-step flow state
+  const [step, setStep] = useState<"address" | "pricing">("address");
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [draftJobId, setDraftJobId] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
 
   // Use current location for pickup
   const handleUseMyLocation = useCallback(async () => {
@@ -47,8 +62,7 @@ export default function RequestRidePage() {
   const handleSelectSuggestion = (suggestion: Suggestion, field: "pickup" | "dropoff") => {
     if (field === "pickup") {
       setPickupAddress(suggestion.placeName);
-      // For Google autocomplete we don't get coords directly — we'll geocode on submit
-      setPickupCoords(null); // Will be resolved via place details or we require "Use my location"
+      setPickupCoords(null);
       pickupGeocode.clearSuggestions();
     } else {
       setDropoffAddress(suggestion.placeName);
@@ -58,7 +72,7 @@ export default function RequestRidePage() {
     setActiveInput(null);
   };
 
-  // Geocode an address to coordinates using the edge function
+  // Geocode an address to coordinates
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -85,216 +99,333 @@ export default function RequestRidePage() {
     }
   };
 
-  // Submit ride request
-  const handleRequestRide = async () => {
-    if (!user) {
-      toast.error("Please sign in first");
-      return;
-    }
+  // STEP 1: Get Price — create draft job + call pricing pipeline
+  const handleGetPrice = async () => {
+    if (!user) { toast.error("Please sign in first"); return; }
+    if (!pickupAddress.trim()) { toast.error("Please enter a pickup address"); return; }
+    if (!dropoffAddress.trim()) { toast.error("Please enter a dropoff address for pricing"); return; }
 
-    if (!pickupAddress.trim()) {
-      toast.error("Please enter a pickup address");
-      return;
-    }
-
-    setIsSubmitting(true);
+    setIsLoadingPrice(true);
 
     try {
-      // Resolve pickup coords if not already set (from "Use my location")
+      // Resolve coords
       let finalPickup = pickupCoords;
       if (!finalPickup) {
         finalPickup = await geocodeAddress(pickupAddress);
-        if (!finalPickup) {
-          toast.error("Could not resolve pickup location. Try 'Use my location'.");
-          setIsSubmitting(false);
-          return;
-        }
+        if (!finalPickup) { toast.error("Could not resolve pickup location."); return; }
         setPickupCoords(finalPickup);
       }
 
-      // Resolve dropoff coords if address provided
       let finalDropoff = dropoffCoords;
-      if (dropoffAddress.trim() && !finalDropoff) {
+      if (!finalDropoff) {
         finalDropoff = await geocodeAddress(dropoffAddress);
-        if (finalDropoff) setDropoffCoords(finalDropoff);
+        if (!finalDropoff) { toast.error("Could not resolve dropoff location."); return; }
+        setDropoffCoords(finalDropoff);
       }
 
-      // 1) Insert job row
+      // 1) Create draft job (status='created')
       const { data: job, error } = await supabase
         .from("jobs")
         .insert({
           customer_id: user.id,
           job_type: "ride",
-          status: "requested",
+          status: "created",
           pickup_address: pickupAddress,
           pickup_lat: finalPickup.lat,
           pickup_lng: finalPickup.lng,
-          dropoff_address: dropoffAddress || null,
-          dropoff_lat: finalDropoff?.lat ?? null,
-          dropoff_lng: finalDropoff?.lng ?? null,
+          dropoff_address: dropoffAddress,
+          dropoff_lat: finalDropoff.lat,
+          dropoff_lng: finalDropoff.lng,
         } as any)
         .select()
         .single();
 
-      if (error || !job) {
-        throw new Error(error?.message || "Failed to create ride request");
+      if (error || !job) throw new Error(error?.message || "Failed to create draft job");
+      const jobId = (job as any).id;
+      setDraftJobId(jobId);
+
+      // 2) Call pricing pipeline: trip-estimate → zone/surge → apply pricing
+      const [estimateRes, zoneRes] = await Promise.all([
+        supabase.functions.invoke("trip-estimate", { body: { job_id: jobId } }),
+        supabase.rpc("assign_job_zone_and_surge_postgis" as any, { p_job_id: jobId }),
+      ]);
+
+      if (estimateRes.error) console.error("[GetPrice] trip-estimate error:", estimateRes.error);
+      if (zoneRes.error) console.error("[GetPrice] zone/surge error:", zoneRes.error);
+
+      // 3) Apply pricing
+      const { error: pricingError } = await supabase.rpc("apply_pricing_to_job" as any, { p_job_id: jobId });
+      if (pricingError) console.error("[GetPrice] apply_pricing error:", pricingError);
+
+      // 4) Fetch the priced job
+      const { data: pricedJob } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("id", jobId)
+        .single();
+
+      if (pricedJob) {
+        const j = pricedJob as any;
+        setPricing({
+          base_fare: j.pricing_base_fare ?? 0,
+          per_mile: j.pricing_per_mile ?? 0,
+          per_minute: j.pricing_per_minute ?? 0,
+          airport_fee: j.pricing_airport_fee ?? 0,
+          final_multiplier: j.pricing_final_multiplier ?? 1,
+          total: j.pricing_total_estimate ?? 0,
+        });
       }
 
-      const jobId = (job as any).id;
+      setStep("pricing");
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setIsLoadingPrice(false);
+    }
+  };
 
-      // 2) Dispatch via dispatch-start edge function (JWT attached)
+  // STEP 2: Confirm — update status to 'requested' and dispatch
+  const handleConfirmRide = async () => {
+    if (!draftJobId) return;
+    setIsConfirming(true);
+
+    try {
+      // Update status to 'requested'
+      const { error: updateError } = await supabase
+        .from("jobs")
+        .update({ status: "requested" } as any)
+        .eq("id", draftJobId);
+
+      if (updateError) throw updateError;
+
+      // Dispatch
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
-        body: { job_id: jobId, offer_ttl_seconds: 25 },
+        body: { job_id: draftJobId, offer_ttl_seconds: 25 },
       });
 
       if (dispatchError) {
         console.error("[RequestRide] dispatch-start error:", dispatchError);
-        // Don't fail the request — job is created, dispatch can retry
       }
 
-      // 3) Navigate to trip status
-      navigate(`/trip-status/${jobId}`);
+      navigate(`/trip-status/${draftJobId}`);
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      toast.error(err.message || "Failed to confirm ride");
     } finally {
-      setIsSubmitting(false);
+      setIsConfirming(false);
     }
   };
+
+  const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted transition">
+        <button
+          onClick={() => step === "pricing" ? setStep("address") : navigate(-1)}
+          className="p-1.5 rounded-full hover:bg-muted transition"
+        >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
           <Car className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">Request a Ride</h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            {step === "address" ? "Request a Ride" : "Confirm Price"}
+          </h1>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 py-6 space-y-5 max-w-lg mx-auto w-full">
-        {/* Pickup */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Pickup Location</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-            <Input
-              placeholder="Enter pickup address"
-              value={pickupAddress}
-              onChange={(e) => {
-                setPickupAddress(e.target.value);
-                setPickupCoords(null);
-                pickupGeocode.fetchSuggestions(e.target.value);
-                setActiveInput("pickup");
-              }}
-              onFocus={() => setActiveInput("pickup")}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Use my location button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleUseMyLocation}
-            disabled={isGettingLocation}
-            className="w-full gap-2"
-          >
-            {isGettingLocation ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Navigation className="w-4 h-4" />
-            )}
-            Use my location
-          </Button>
-
-          {/* Pickup suggestions */}
-          {activeInput === "pickup" && pickupGeocode.suggestions.length > 0 && (
+        <AnimatePresence mode="wait">
+          {step === "address" ? (
             <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-lg shadow-md overflow-hidden"
+              key="address"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-5"
             >
-              {pickupGeocode.suggestions.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => handleSelectSuggestion(s, "pickup")}
-                  className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground"
+              {/* Pickup */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Pickup Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                  <Input
+                    placeholder="Enter pickup address"
+                    value={pickupAddress}
+                    onChange={(e) => {
+                      setPickupAddress(e.target.value);
+                      setPickupCoords(null);
+                      pickupGeocode.fetchSuggestions(e.target.value);
+                      setActiveInput("pickup");
+                    }}
+                    onFocus={() => setActiveInput("pickup")}
+                    className="pl-10"
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUseMyLocation}
+                  disabled={isGettingLocation}
+                  className="w-full gap-2"
                 >
-                  {s.placeName}
-                </button>
-              ))}
+                  {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                  Use my location
+                </Button>
+
+                {activeInput === "pickup" && pickupGeocode.suggestions.length > 0 && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
+                    {pickupGeocode.suggestions.map((s) => (
+                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "pickup")} className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground">
+                        {s.placeName}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+
+                {pickupCoords && (
+                  <p className="text-xs text-muted-foreground">📍 {pickupCoords.lat.toFixed(4)}, {pickupCoords.lng.toFixed(4)}</p>
+                )}
+              </div>
+
+              {/* Dropoff */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Dropoff Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
+                  <Input
+                    placeholder="Enter dropoff address"
+                    value={dropoffAddress}
+                    onChange={(e) => {
+                      setDropoffAddress(e.target.value);
+                      setDropoffCoords(null);
+                      dropoffGeocode.fetchSuggestions(e.target.value);
+                      setActiveInput("dropoff");
+                    }}
+                    onFocus={() => setActiveInput("dropoff")}
+                    className="pl-10"
+                  />
+                </div>
+
+                {activeInput === "dropoff" && dropoffGeocode.suggestions.length > 0 && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
+                    {dropoffGeocode.suggestions.map((s) => (
+                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "dropoff")} className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground">
+                        {s.placeName}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Get Price Button */}
+              <Button
+                onClick={handleGetPrice}
+                disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()}
+                className="w-full h-14 text-base font-semibold gap-2"
+                size="lg"
+              >
+                {isLoadingPrice ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />Calculating price…</>
+                ) : (
+                  <><DollarSign className="w-5 h-5" />Get Price</>
+                )}
+              </Button>
             </motion.div>
-          )}
-
-          {pickupCoords && (
-            <p className="text-xs text-muted-foreground">
-              📍 {pickupCoords.lat.toFixed(4)}, {pickupCoords.lng.toFixed(4)}
-            </p>
-          )}
-        </div>
-
-        {/* Dropoff (optional) */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Dropoff Location <span className="text-muted-foreground">(optional)</span></label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
-            <Input
-              placeholder="Enter dropoff address"
-              value={dropoffAddress}
-              onChange={(e) => {
-                setDropoffAddress(e.target.value);
-                setDropoffCoords(null);
-                dropoffGeocode.fetchSuggestions(e.target.value);
-                setActiveInput("dropoff");
-              }}
-              onFocus={() => setActiveInput("dropoff")}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Dropoff suggestions */}
-          {activeInput === "dropoff" && dropoffGeocode.suggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-lg shadow-md overflow-hidden"
-            >
-              {dropoffGeocode.suggestions.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => handleSelectSuggestion(s, "dropoff")}
-                  className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground"
-                >
-                  {s.placeName}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </div>
-
-        {/* Request Button */}
-        <Button
-          onClick={handleRequestRide}
-          disabled={isSubmitting || !pickupAddress.trim()}
-          className="w-full h-14 text-base font-semibold gap-2"
-          size="lg"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Creating ride…
-            </>
           ) : (
-            <>
-              <Car className="w-5 h-5" />
-              Request Ride
-            </>
+            <motion.div
+              key="pricing"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-5"
+            >
+              {/* Route summary */}
+              <div className="space-y-2 p-4 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center gap-1 pt-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    <div className="w-0.5 h-8 bg-border" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-destructive" />
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pickup</p>
+                      <p className="text-sm font-medium text-foreground truncate">{pickupAddress}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Dropoff</p>
+                      <p className="text-sm font-medium text-foreground truncate">{dropoffAddress}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price breakdown */}
+              {pricing && (
+                <div className="space-y-2 p-4 rounded-xl bg-card border border-border">
+                  <div className="flex items-center gap-2 pb-2 border-b border-border">
+                    <Receipt className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Fare Breakdown</span>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Base fare</span>
+                      <span className="text-foreground">{formatUSD(pricing.base_fare)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Distance charge</span>
+                      <span className="text-foreground">{formatUSD(pricing.per_mile)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Time charge</span>
+                      <span className="text-foreground">{formatUSD(pricing.per_minute)}</span>
+                    </div>
+                    {pricing.airport_fee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Airport fee</span>
+                        <span className="text-foreground">{formatUSD(pricing.airport_fee)}</span>
+                      </div>
+                    )}
+                    {pricing.final_multiplier !== 1 && (
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Surge ({pricing.final_multiplier.toFixed(2)}×)</span>
+                        <span>applied</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between pt-3 border-t border-border font-bold text-lg">
+                    <span className="text-foreground">Estimated Total</span>
+                    <span className="text-primary">{formatUSD(pricing.total)}</span>
+                  </div>
+
+                  <p className="text-[10px] text-muted-foreground pt-1">
+                    Final price may vary based on actual route, traffic, and wait time.
+                  </p>
+                </div>
+              )}
+
+              {/* Confirm Button */}
+              <Button
+                onClick={handleConfirmRide}
+                disabled={isConfirming}
+                className="w-full h-14 text-base font-semibold gap-2"
+                size="lg"
+              >
+                {isConfirming ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />Confirming…</>
+                ) : (
+                  <><ChevronRight className="w-5 h-5" />Confirm Ride</>
+                )}
+              </Button>
+            </motion.div>
           )}
-        </Button>
+        </AnimatePresence>
       </div>
 
       <ZivoMobileNav />
