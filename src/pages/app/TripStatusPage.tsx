@@ -1,14 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Car, Loader2, CheckCircle2, MapPin, User, XCircle, WifiOff, Navigation,
+  ArrowLeft, Car, Loader2, CheckCircle2, MapPin, User, XCircle, WifiOff, Navigation, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useJobRealtime, cancelJob } from "@/hooks/useJobRequest";
+import { useJobRealtime } from "@/hooks/useJobRequest";
 import { useDriverLocationRealtime } from "@/hooks/useDriverLocationRealtime";
 import { useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
@@ -77,14 +78,30 @@ export default function TripStatusPage() {
     return { lat: 30.45, lng: -91.18 }; // Default: Baton Rouge
   }, [driverLoc?.lat, driverLoc?.lng, job?.pickup_lat, job?.pickup_lng]);
 
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelResult, setCancelResult] = useState<{ fee_cents?: number; action?: string } | null>(null);
+
   const handleCancel = async () => {
-    if (!jobId) return;
+    if (!jobId || isCancelling) return;
+    setIsCancelling(true);
     try {
-      await cancelJob(jobId);
-      toast.info("Ride cancelled");
-      navigate("/rides");
+      const { data, error } = await supabase.functions.invoke("cancel-job-payment", {
+        body: { job_id: jobId, cancel_reason: "customer_cancel" },
+      });
+
+      if (error) throw new Error(error.message || "Failed to cancel");
+
+      if (data?.action === "cancel_fee_charged" && data?.amount) {
+        setCancelResult({ fee_cents: data.amount, action: data.action });
+        toast.info(`Ride cancelled. Cancellation fee: $${(data.amount / 100).toFixed(2)}`);
+      } else {
+        setCancelResult({ action: data?.action || "voided" });
+        toast.info("Ride cancelled — no fee charged");
+      }
     } catch {
       toast.error("Failed to cancel ride");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -201,11 +218,34 @@ export default function TripStatusPage() {
                 </div>
               )}
 
-              {/* Action buttons */}
-              {(status === "requested" || status === "assigned") && (
-                <Button variant="destructive" size="sm" onClick={handleCancel} className="w-full">
-                  Cancel Ride
+              {/* Cancel button */}
+              {(status === "requested" || status === "assigned") && !cancelResult && (
+                <Button variant="destructive" size="sm" onClick={handleCancel} disabled={isCancelling} className="w-full gap-2">
+                  {isCancelling ? <><Loader2 className="w-4 h-4 animate-spin" />Cancelling…</> : "Cancel Ride"}
                 </Button>
+              )}
+
+              {/* Cancellation result */}
+              {cancelResult && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                    <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-foreground">Ride cancelled</p>
+                      {cancelResult.fee_cents && cancelResult.fee_cents > 0 ? (
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          Cancellation fee: <span className="font-semibold text-foreground">${(cancelResult.fee_cents / 100).toFixed(2)}</span>
+                          {" "}(reason: {cancelResult.action === "cancel_fee_charged" ? "late cancellation" : "policy"})
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground text-xs mt-0.5">No cancellation fee charged</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={() => navigate("/rides")} className="w-full">
+                    Back to Rides
+                  </Button>
+                </div>
               )}
 
               {isTerminal && (
