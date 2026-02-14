@@ -45,6 +45,7 @@ const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RequestServicePage = lazy(() => import("./pages/app/RequestServicePage"));
 const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
 const TripStatusPage = lazy(() => import("./pages/app/TripStatusPage"));
+const ReceiptPage = lazy(() => import("./pages/app/ReceiptPage"));
 
 // New Mobile-first pages (5-tab nav: Home, Search, Trips, Alerts, Account)
 const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
@@ -686,6 +687,7 @@ const App = () => (
                 <Route path="/request-service" element={<SetupRequiredRoute><RequestServicePage /></SetupRequiredRoute>} />
                 <Route path="/request-ride" element={<SetupRequiredRoute><RequestRidePage /></SetupRequiredRoute>} />
                 <Route path="/trip-status/:jobId" element={<SetupRequiredRoute><TripStatusPage /></SetupRequiredRoute>} />
+                <Route path="/receipt/:jobId" element={<SetupRequiredRoute><ReceiptPage /></SetupRequiredRoute>} />
 
                 {/* New Mobile App Routes (5-tab nav) */}
                 <Route path="/search" element={<SetupRequiredRoute><MobileSearch /></SetupRequiredRoute>} />
