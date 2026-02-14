@@ -13,33 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import JobTrackingMap from "@/components/app/JobTrackingMap";
 
-const SUPABASE_URL = "https://slirphzzwcogdbkeicff.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
 
 interface OtpData {
   otp: string;
   expires_at: string;
-}
-
-async function generateJobOtp(jobId: string): Promise<OtpData | null> {
-  const { data: { session } } = await supabase.auth.getSession();
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/otp-generate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.access_token ?? ""}`,
-        apikey: SUPABASE_ANON,
-      },
-      body: JSON.stringify({ job_id: jobId, digits: 4, ttl_minutes: 120 }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.ok) return null;
-    return { otp: data.otp, expires_at: data.expires_at };
-  } catch {
-    return null;
-  }
 }
 
 // ─── OTP Countdown Hook ───
@@ -55,6 +32,76 @@ function useCountdown(expiresAt: string | null) {
   }, [expiresAt]);
 
   return secondsLeft;
+}
+
+// ─── Hook: fetch OTP from job_otps table + realtime ───
+function useJobOtp(jobId: string | null, jobStatus: JobStatus | undefined) {
+  const [otpData, setOtpData] = useState<OtpData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const shouldShow = jobStatus === "assigned" || jobStatus === "arrived" || jobStatus === "in_progress";
+
+  const fetchOtp = useCallback(async (jid: string) => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("job_otps")
+      .select("otp_plain, expires_at")
+      .eq("job_id", jid)
+      .is("verified_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[useJobOtp] query error:", error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data && (data as any).otp_plain) {
+      setOtpData({ otp: (data as any).otp_plain, expires_at: (data as any).expires_at });
+      setIsLoading(false);
+    } else {
+      setOtpData(null);
+      setIsLoading(false);
+      retryRef.current = setTimeout(() => fetchOtp(jid), 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+    setOtpData(null);
+
+    if (!jobId || !shouldShow) return;
+
+    fetchOtp(jobId);
+
+    const channel = supabase
+      .channel(`otp-${jobId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "job_otps", filter: `job_id=eq.${jobId}` },
+        (payload) => {
+          const row = payload.new as any;
+          if (row && row.otp_plain) {
+            setOtpData({ otp: row.otp_plain, expires_at: row.expires_at });
+          } else if (payload.eventType === "DELETE") {
+            setOtpData(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (retryRef.current) clearTimeout(retryRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [jobId, shouldShow, fetchOtp]);
+
+  const clear = useCallback(() => { setOtpData(null); }, []);
+
+  return { otpData, isLoading, clear };
 }
 
 function formatCountdown(s: number): string {
@@ -136,12 +183,8 @@ const RequestServicePage = () => {
   const [showRetry, setShowRetry] = useState(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // OTP state — kept in memory only, never localStorage
-  const [otpData, setOtpData] = useState<OtpData | null>(null);
-  const [isOtpLoading, setIsOtpLoading] = useState(false);
-  const otpFetchedForStatus = useRef<string | null>(null);
-
   const { job, isLoading: jobLoading, clearJob } = useJobRealtime(activeJobId);
+  const { otpData, isLoading: isOtpLoading, clear: clearOtp } = useJobOtp(activeJobId, job?.status);
   const otpSecondsLeft = useCountdown(otpData?.expires_at ?? null);
 
   // Show "Try Again" after 30s if still no driver
@@ -199,37 +242,7 @@ const RequestServicePage = () => {
     setPickup("");
     setDropoff("");
     setNotes("");
-    setOtpData(null);
-    otpFetchedForStatus.current = null;
-  };
-
-  // Auto-generate OTP when job transitions to assigned/arrived
-  useEffect(() => {
-    if (!activeJobId || !job) return;
-    const s = job.status;
-    if ((s === "assigned" || s === "arrived") && otpFetchedForStatus.current !== s && !otpData) {
-      otpFetchedForStatus.current = s;
-      setIsOtpLoading(true);
-      generateJobOtp(activeJobId)
-        .then((data) => {
-          if (data) setOtpData(data);
-          else toast.error("Failed to generate verification code");
-        })
-        .finally(() => setIsOtpLoading(false));
-    }
-  }, [activeJobId, job?.status, otpData]);
-
-  const handleRegenerateOtp = async () => {
-    if (!activeJobId) return;
-    setIsOtpLoading(true);
-    const data = await generateJobOtp(activeJobId);
-    if (data) {
-      setOtpData(data);
-      toast.success("New code generated");
-    } else {
-      toast.error("Failed to regenerate code");
-    }
-    setIsOtpLoading(false);
+    clearOtp();
   };
 
   const isSearching = job?.status === "requested";
@@ -459,8 +472,8 @@ const RequestServicePage = () => {
                 className="h-[280px] w-full"
               />
 
-              {/* OTP Verification Code — shown for assigned/arrived */}
-              {(job!.status === "assigned" || job!.status === "arrived") && (
+              {/* OTP Verification Code — shown for assigned/arrived/in_progress */}
+              {(job!.status === "assigned" || job!.status === "arrived" || job!.status === "in_progress") && (
                 <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-primary" />
@@ -490,35 +503,21 @@ const RequestServicePage = () => {
                           </div>
                         ))}
                       </div>
-                      {/* Countdown */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Timer className="w-3.5 h-3.5" />
-                          {otpSecondsLeft > 0 ? (
-                            <span>Expires in {formatCountdown(otpSecondsLeft)}</span>
-                          ) : (
-                            <span className="text-destructive">Expired</span>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={handleRegenerateOtp}
-                          disabled={isOtpLoading}
-                        >
-                          {isOtpLoading ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <>
-                              <RefreshCw className="w-3 h-3 mr-1" /> Regenerate
-                            </>
-                          )}
-                        </Button>
+                      {/* Expiry info */}
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Timer className="w-3.5 h-3.5" />
+                        {otpSecondsLeft > 0 ? (
+                          <span>Expires in {formatCountdown(otpSecondsLeft)}</span>
+                        ) : (
+                          <span className="text-destructive">Expired</span>
+                        )}
                       </div>
                     </>
                   ) : (
-                    <p className="text-xs text-destructive">Could not generate code. Try again.</p>
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Generating code...</span>
+                    </div>
                   )}
                 </div>
               )}
