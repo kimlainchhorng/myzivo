@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,11 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
 interface PricingBreakdown {
   base_fare: number;
@@ -18,6 +22,80 @@ interface PricingBreakdown {
   airport_fee: number;
   final_multiplier: number;
   total: number;
+}
+
+// Inner payment form using Stripe Elements
+function PaymentForm({ 
+  onSuccess, 
+  isProcessing, 
+  setIsProcessing,
+  totalCents,
+}: { 
+  onSuccess: () => void;
+  isProcessing: boolean;
+  setIsProcessing: (v: boolean) => void;
+  totalCents: number;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsProcessing(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href, // fallback, we handle inline
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      toast.error(error.message || "Payment failed");
+      setIsProcessing(false);
+    } else {
+      onSuccess();
+    }
+  };
+
+  const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-4 rounded-xl bg-card border border-border">
+        <div className="flex items-center gap-2 pb-3 border-b border-border mb-4">
+          <CreditCard className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Payment Details</span>
+        </div>
+        <PaymentElement 
+          options={{
+            layout: "tabs",
+          }}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+        <Lock className="w-3 h-3" />
+        <span>Secured by Stripe · TLS 1.3 encrypted</span>
+      </div>
+
+      <Button
+        type="submit"
+        disabled={!stripe || isProcessing}
+        className="w-full h-14 text-base font-semibold gap-2"
+        size="lg"
+      >
+        {isProcessing ? (
+          <><Loader2 className="w-5 h-5 animate-spin" />Processing…</>
+        ) : (
+          <><Lock className="w-5 h-5" />Pay {formatUSD(totalCents)}</>
+        )}
+      </Button>
+    </form>
+  );
 }
 
 export default function RequestRidePage() {
@@ -30,19 +108,21 @@ export default function RequestRidePage() {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const pickupGeocode = useGoogleMapsGeocode();
 
-  // Dropoff state (optional)
+  // Dropoff state
   const [dropoffAddress, setDropoffAddress] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const dropoffGeocode = useGoogleMapsGeocode();
 
   const [activeInput, setActiveInput] = useState<"pickup" | "dropoff" | null>(null);
 
-  // Two-step flow state
-  const [step, setStep] = useState<"address" | "pricing">("address");
+  // Three-step flow state
+  const [step, setStep] = useState<"address" | "pricing" | "payment">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [draftJobId, setDraftJobId] = useState<string | null>(null);
   const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   // Use current location for pickup
   const handleUseMyLocation = useCallback(async () => {
@@ -58,7 +138,6 @@ export default function RequestRidePage() {
     }
   }, [getCurrentLocation, reverseGeocode, pickupGeocode]);
 
-  // Select a suggestion
   const handleSelectSuggestion = (suggestion: Suggestion, field: "pickup" | "dropoff") => {
     if (field === "pickup") {
       setPickupAddress(suggestion.placeName);
@@ -72,7 +151,6 @@ export default function RequestRidePage() {
     setActiveInput(null);
   };
 
-  // Geocode an address to coordinates
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -108,7 +186,6 @@ export default function RequestRidePage() {
     setIsLoadingPrice(true);
 
     try {
-      // Resolve coords
       let finalPickup = pickupCoords;
       if (!finalPickup) {
         finalPickup = await geocodeAddress(pickupAddress);
@@ -144,7 +221,7 @@ export default function RequestRidePage() {
       const jobId = (job as any).id;
       setDraftJobId(jobId);
 
-      // 2) Call pricing pipeline: trip-estimate → zone/surge → apply pricing
+      // 2) Call pricing pipeline
       const [estimateRes, zoneRes] = await Promise.all([
         supabase.functions.invoke("trip-estimate", { body: { job_id: jobId } }),
         supabase.rpc("assign_job_zone_and_surge_postgis" as any, { p_job_id: jobId }),
@@ -184,10 +261,33 @@ export default function RequestRidePage() {
     }
   };
 
-  // STEP 2: Confirm — update status to 'requested' and dispatch
-  const handleConfirmRide = async () => {
+  // STEP 2: Confirm Price → create PaymentIntent → show Stripe Elements
+  const handleConfirmPrice = async () => {
     if (!draftJobId) return;
     setIsConfirming(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment-intent", {
+        body: { job_id: draftJobId },
+      });
+
+      if (error) throw new Error(error.message || "Failed to create payment intent");
+
+      const secret = data?.client_secret || data?.clientSecret;
+      if (!secret) throw new Error("No client_secret returned");
+
+      setClientSecret(secret);
+      setStep("payment");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to initialize payment");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  // STEP 3: After Stripe payment succeeds → update status + dispatch
+  const handlePaymentSuccess = async () => {
+    if (!draftJobId) return;
 
     try {
       // Update status to 'requested'
@@ -196,49 +296,69 @@ export default function RequestRidePage() {
         .update({ status: "requested" } as any)
         .eq("id", draftJobId);
 
-      if (updateError) throw updateError;
+      if (updateError) console.error("[RequestRide] status update error:", updateError);
 
       // Dispatch
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
         body: { job_id: draftJobId, offer_ttl_seconds: 25 },
       });
 
-      if (dispatchError) {
-        console.error("[RequestRide] dispatch-start error:", dispatchError);
-      }
+      if (dispatchError) console.error("[RequestRide] dispatch-start error:", dispatchError);
 
       navigate(`/trip-status/${draftJobId}`);
     } catch (err: any) {
-      toast.error(err.message || "Failed to confirm ride");
-    } finally {
-      setIsConfirming(false);
+      // Payment succeeded even if dispatch fails, navigate anyway
+      navigate(`/trip-status/${draftJobId}`);
     }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
+  const stepTitle = step === "address" 
+    ? "Request a Ride" 
+    : step === "pricing" 
+      ? "Confirm Price" 
+      : "Payment";
+
+  const handleBack = () => {
+    if (step === "payment") setStep("pricing");
+    else if (step === "pricing") setStep("address");
+    else navigate(-1);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-        <button
-          onClick={() => step === "pricing" ? setStep("address") : navigate(-1)}
-          className="p-1.5 rounded-full hover:bg-muted transition"
-        >
+        <button onClick={handleBack} className="p-1.5 rounded-full hover:bg-muted transition">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
           <Car className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">
-            {step === "address" ? "Request a Ride" : "Confirm Price"}
-          </h1>
+          <h1 className="text-lg font-semibold text-foreground">{stepTitle}</h1>
+        </div>
+      </div>
+
+      {/* Step indicator */}
+      <div className="px-4 pt-4 max-w-lg mx-auto w-full">
+        <div className="flex gap-1.5">
+          {["address", "pricing", "payment"].map((s, i) => (
+            <div
+              key={s}
+              className={`h-1 flex-1 rounded-full transition-colors ${
+                i <= ["address", "pricing", "payment"].indexOf(step)
+                  ? "bg-primary"
+                  : "bg-muted"
+              }`}
+            />
+          ))}
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 py-6 space-y-5 max-w-lg mx-auto w-full">
         <AnimatePresence mode="wait">
-          {step === "address" ? (
+          {step === "address" && (
             <motion.div
               key="address"
               initial={{ opacity: 0, x: -20 }}
@@ -265,13 +385,7 @@ export default function RequestRidePage() {
                   />
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUseMyLocation}
-                  disabled={isGettingLocation}
-                  className="w-full gap-2"
-                >
+                <Button variant="outline" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation} className="w-full gap-2">
                   {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
                   Use my location
                 </Button>
@@ -321,13 +435,7 @@ export default function RequestRidePage() {
                 )}
               </div>
 
-              {/* Get Price Button */}
-              <Button
-                onClick={handleGetPrice}
-                disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()}
-                className="w-full h-14 text-base font-semibold gap-2"
-                size="lg"
-              >
+              <Button onClick={handleGetPrice} disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} className="w-full h-14 text-base font-semibold gap-2" size="lg">
                 {isLoadingPrice ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />Calculating price…</>
                 ) : (
@@ -335,7 +443,9 @@ export default function RequestRidePage() {
                 )}
               </Button>
             </motion.div>
-          ) : (
+          )}
+
+          {step === "pricing" && (
             <motion.div
               key="pricing"
               initial={{ opacity: 0, x: 20 }}
@@ -410,19 +520,57 @@ export default function RequestRidePage() {
                 </div>
               )}
 
-              {/* Confirm Button */}
-              <Button
-                onClick={handleConfirmRide}
-                disabled={isConfirming}
-                className="w-full h-14 text-base font-semibold gap-2"
-                size="lg"
-              >
+              <Button onClick={handleConfirmPrice} disabled={isConfirming} className="w-full h-14 text-base font-semibold gap-2" size="lg">
                 {isConfirming ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Confirming…</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment…</>
                 ) : (
-                  <><ChevronRight className="w-5 h-5" />Confirm Ride</>
+                  <><CreditCard className="w-5 h-5" />Continue to Payment</>
                 )}
               </Button>
+            </motion.div>
+          )}
+
+          {step === "payment" && clientSecret && (
+            <motion.div
+              key="payment"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-5"
+            >
+              {/* Compact route + price summary */}
+              <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground truncate">{pickupAddress}</p>
+                  <p className="text-xs text-muted-foreground truncate">→ {dropoffAddress}</p>
+                </div>
+                {pricing && (
+                  <span className="text-lg font-bold text-primary ml-3 shrink-0">
+                    {formatUSD(pricing.total)}
+                  </span>
+                )}
+              </div>
+
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: "night",
+                    variables: {
+                      colorPrimary: "hsl(142, 76%, 36%)",
+                      borderRadius: "12px",
+                    },
+                  },
+                }}
+              >
+                <PaymentForm
+                  onSuccess={handlePaymentSuccess}
+                  isProcessing={isProcessingPayment}
+                  setIsProcessing={setIsProcessingPayment}
+                  totalCents={pricing?.total ?? 0}
+                />
+              </Elements>
             </motion.div>
           )}
         </AnimatePresence>
