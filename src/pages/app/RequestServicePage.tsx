@@ -34,7 +34,7 @@ function useCountdown(expiresAt: string | null) {
   return secondsLeft;
 }
 
-// ─── Hook: fetch OTP from job_otps table + realtime ───
+// ─── Hook: fetch OTP via otp-get edge function + realtime ───
 function useJobOtp(jobId: string | null, jobStatus: JobStatus | undefined) {
   const [otpData, setOtpData] = useState<OtpData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,26 +44,40 @@ function useJobOtp(jobId: string | null, jobStatus: JobStatus | undefined) {
 
   const fetchOtp = useCallback(async (jid: string) => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("job_otps")
-      .select("otp_plain, expires_at")
-      .eq("job_id", jid)
-      .is("verified_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/otp-get`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token ?? ""}`,
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
+          },
+          body: JSON.stringify({ job_id: jid }),
+        }
+      );
 
-    if (error) {
-      console.error("[useJobOtp] query error:", error);
-      setIsLoading(false);
-      return;
-    }
+      if (!res.ok) {
+        console.error("[useJobOtp] edge fn error:", res.status);
+        setIsLoading(false);
+        retryRef.current = setTimeout(() => fetchOtp(jid), 2000);
+        return;
+      }
 
-    if (data && (data as any).otp_plain) {
-      setOtpData({ otp: (data as any).otp_plain, expires_at: (data as any).expires_at });
-      setIsLoading(false);
-    } else {
-      setOtpData(null);
+      const data = await res.json();
+      if (data.ok && data.otp) {
+        setOtpData({ otp: data.otp, expires_at: data.expires_at });
+        setIsLoading(false);
+      } else {
+        // No OTP yet — retry in 2s
+        setOtpData(null);
+        setIsLoading(false);
+        retryRef.current = setTimeout(() => fetchOtp(jid), 2000);
+      }
+    } catch (err) {
+      console.error("[useJobOtp] fetch error:", err);
       setIsLoading(false);
       retryRef.current = setTimeout(() => fetchOtp(jid), 2000);
     }
@@ -77,18 +91,16 @@ function useJobOtp(jobId: string | null, jobStatus: JobStatus | undefined) {
 
     fetchOtp(jobId);
 
+    // Realtime: re-fetch when job_otps changes (don't read otp_plain from payload)
     const channel = supabase
       .channel(`otp-${jobId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "job_otps", filter: `job_id=eq.${jobId}` },
-        (payload) => {
-          const row = payload.new as any;
-          if (row && row.otp_plain) {
-            setOtpData({ otp: row.otp_plain, expires_at: row.expires_at });
-          } else if (payload.eventType === "DELETE") {
-            setOtpData(null);
-          }
+        () => {
+          // Re-fetch via edge function on any change
+          if (retryRef.current) clearTimeout(retryRef.current);
+          fetchOtp(jobId);
         }
       )
       .subscribe();

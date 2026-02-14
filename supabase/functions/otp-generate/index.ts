@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceKey);
+    const encKey = Deno.env.get("OTP_ENCRYPTION_KEY");
 
     // Verify caller is the job customer
     const { data: job, error: jobErr } = await admin
@@ -101,14 +102,17 @@ Deno.serve(async (req) => {
       .eq("job_id", job_id)
       .is("verified_at", null);
 
-    const { error: insertErr } = await admin.from("job_otps").insert({
+    const insertPayload: Record<string, unknown> = {
       job_id,
       otp_hash: otpHash,
       otp_last4: otp.slice(-4),
+      otp_plain: otp,
       expires_at: expiresAt,
       attempts: 0,
       max_attempts: 5,
-    });
+    };
+
+    const { error: insertErr } = await admin.from("job_otps").insert(insertPayload);
 
     if (insertErr) {
       console.error("[otp-generate] Insert error:", insertErr);
