@@ -97,16 +97,8 @@ export const useCreateJob = () => {
 
       if (error) throw error;
 
-      const created = job as unknown as Job;
-
-      // Immediately call auto-dispatch
-      try {
-        await dispatchJob(created.id);
-      } catch (e) {
-        console.warn("[useCreateJob] Auto-dispatch call failed, will retry:", e);
-      }
-
-      return created;
+      // Return job without dispatching — caller handles payment hold first
+      return job as unknown as Job;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -115,6 +107,15 @@ export const useCreateJob = () => {
       toast.error("Failed to create job: " + err.message);
     },
   });
+};
+
+// Cancel a job (set status to cancelled)
+export const cancelJob = async (jobId: string) => {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ status: "cancelled" } as any)
+    .eq("id", jobId);
+  if (error) throw error;
 };
 
 export const useJobRealtime = (jobId: string | null) => {

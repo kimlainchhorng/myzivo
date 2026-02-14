@@ -230,3 +230,6 @@ verify_jwt = false
 
 [functions.otp-get]
 verify_jwt = false
+
+[functions.stripe-hold-create]
+verify_jwt = false
