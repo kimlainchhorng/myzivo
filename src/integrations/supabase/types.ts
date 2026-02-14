@@ -44451,6 +44451,14 @@ export type Database = {
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }
+      complete_trip_finalize: {
+        Args: {
+          p_final_miles: number
+          p_final_minutes: number
+          p_job_id: string
+        }
+        Returns: Json
+      }
       compute_cancel_fee: { Args: { p_job_id: string }; Returns: Json }
       compute_est_payout: { Args: { p_job_id: string }; Returns: number }
       compute_zone_surge: { Args: { p_zone_id: string }; Returns: number }
@@ -44595,10 +44603,13 @@ export type Database = {
           newly_dispatched_count: number
         }[]
       }
+      driver_complete_trip: { Args: { p_job_id: string }; Returns: Json }
       driver_decline_offer: {
         Args: { p_offer_id: string; p_reason: string }
         Returns: Json
       }
+      driver_mark_arrived: { Args: { p_job_id: string }; Returns: Json }
+      driver_start_trip: { Args: { p_job_id: string }; Returns: Json }
       dropgeometrycolumn:
         | {
             Args: {
