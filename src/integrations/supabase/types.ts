@@ -18490,6 +18490,41 @@ export type Database = {
           },
         ]
       }
+      job_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          job_id: string
+          meta: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          job_id: string
+          meta?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          job_id?: string
+          meta?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_offers: {
         Row: {
           created_at: string
@@ -37073,6 +37108,47 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_locations: {
+        Row: {
+          driver_id: string
+          heading: number | null
+          id: string
+          job_id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          speed: number | null
+        }
+        Insert: {
+          driver_id: string
+          heading?: number | null
+          id?: string
+          job_id: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Update: {
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          job_id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_locations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_messages: {
         Row: {
           content: string
@@ -43152,14 +43228,7 @@ export type Database = {
       }
     }
     Functions: {
-      accept_job_offer: {
-        Args: { p_offer_id: string }
-        Returns: {
-          assigned_driver_id: string
-          job_id: string
-          status: Database["public"]["Enums"]["job_status"]
-        }[]
-      }
+      accept_job_offer: { Args: { p_offer_id: string }; Returns: Json }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {
         Args: { p_accepted: boolean; p_recommendation_id: string }
