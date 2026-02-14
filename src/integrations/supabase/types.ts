@@ -25346,6 +25346,72 @@ export type Database = {
           },
         ]
       }
+      payment_records: {
+        Row: {
+          amount_total_cents: number
+          charge_id: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          driver_amount_cents: number
+          driver_id: string | null
+          id: string
+          job_id: string
+          payment_intent_id: string | null
+          platform_fee_cents: number
+          status: string
+          stripe_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_total_cents: number
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_id: string
+          driver_amount_cents: number
+          driver_id?: string | null
+          id?: string
+          job_id: string
+          payment_intent_id?: string | null
+          platform_fee_cents: number
+          status?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_total_cents?: number
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          driver_amount_cents?: number
+          driver_id?: string | null
+          id?: string
+          job_id?: string
+          payment_intent_id?: string | null
+          platform_fee_cents?: number
+          status?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_records_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "admin_active_jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "payment_records_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_batches: {
         Row: {
           created_at: string
