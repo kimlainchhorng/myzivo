@@ -425,6 +425,7 @@ const TravelHandoffPage = lazy(() => import("./pages/admin/TravelHandoffPage"));
 const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
 const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
+const PhoneCompliancePage = lazy(() => import("./pages/admin/PhoneCompliancePage"));
 const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
 const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
@@ -1060,6 +1061,7 @@ const App = () => (
                 <Route path="/admin/jobs" element={<ProtectedRoute requireAdmin><AdminJobsPage /></ProtectedRoute>} />
                 <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><SettingsHub /></ProtectedRoute>} />
                 <Route path="/admin/settings/invites" element={<ProtectedRoute requireAdmin><InviteManagement /></ProtectedRoute>} />
+                <Route path="/admin/phone-compliance" element={<ProtectedRoute requireAdmin><PhoneCompliancePage /></ProtectedRoute>} />
                 
                 {/* Rewards / Loyalty */}
                 <Route path="/rewards" element={<RewardsPage />} />
