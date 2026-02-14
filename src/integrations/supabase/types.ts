@@ -105,13 +105,6 @@ export type Database = {
             foreignKeyName: "account_deletion_requests_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "account_deletion_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -446,13 +439,6 @@ export type Database = {
             foreignKeyName: "admin_2fa_credentials_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "admin_2fa_credentials_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -585,13 +571,6 @@ export type Database = {
             foreignKeyName: "admin_broadcasts_sent_by_fkey"
             columns: ["sent_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "admin_broadcasts_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -716,13 +695,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "admin_login_attempts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "admin_login_attempts_user_id_fkey"
@@ -880,13 +852,6 @@ export type Database = {
             foreignKeyName: "admin_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "admin_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -972,13 +937,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "affiliate_click_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "affiliate_click_logs_user_id_fkey"
@@ -1153,13 +1111,6 @@ export type Database = {
             foreignKeyName: "affiliate_payouts_paid_by_fkey"
             columns: ["paid_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "affiliate_payouts_paid_by_fkey"
-            columns: ["paid_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -1226,13 +1177,6 @@ export type Database = {
             foreignKeyName: "affiliates_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "affiliates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -1291,13 +1235,6 @@ export type Database = {
             foreignKeyName: "ai_conversation_flags_flagged_by_fkey"
             columns: ["flagged_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "ai_conversation_flags_flagged_by_fkey"
-            columns: ["flagged_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -1307,13 +1244,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ai_conversation_flags_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ai_conversation_flags_resolved_by_fkey"
@@ -1415,13 +1345,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ai_faq_responses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ai_faq_responses_created_by_fkey"
@@ -1533,13 +1456,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ai_fraud_alerts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ai_fraud_alerts_user_id_fkey"
@@ -1764,13 +1680,6 @@ export type Database = {
             foreignKeyName: "ai_recommendations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "ai_recommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -1811,13 +1720,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ai_search_rankings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ai_search_rankings_user_id_fkey"
@@ -2126,13 +2028,6 @@ export type Database = {
             foreignKeyName: "analytics_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "analytics_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2433,13 +2328,6 @@ export type Database = {
             foreignKeyName: "api_keys_revoked_by_fkey"
             columns: ["revoked_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "api_keys_revoked_by_fkey"
-            columns: ["revoked_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2498,13 +2386,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "api_partners_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "api_partners_created_by_fkey"
@@ -2624,13 +2505,6 @@ export type Database = {
             foreignKeyName: "app_installs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "app_installs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2711,13 +2585,6 @@ export type Database = {
             foreignKeyName: "application_events_actor_user_id_fkey"
             columns: ["actor_user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "application_events_actor_user_id_fkey"
-            columns: ["actor_user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2785,13 +2652,6 @@ export type Database = {
             foreignKeyName: "applications_applicant_user_id_fkey"
             columns: ["applicant_user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "applications_applicant_user_id_fkey"
-            columns: ["applicant_user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2806,13 +2666,6 @@ export type Database = {
             foreignKeyName: "applications_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "applications_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -2822,13 +2675,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "applications_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "applications_assigned_to_fkey"
@@ -2957,13 +2803,6 @@ export type Database = {
             foreignKeyName: "audit_alerts_acknowledged_by_fkey"
             columns: ["acknowledged_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "audit_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -3068,13 +2907,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "auto_incentive_rules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "auto_incentive_rules_created_by_fkey"
@@ -4397,13 +4229,6 @@ export type Database = {
             foreignKeyName: "blocked_entities_blocked_by_fkey"
             columns: ["blocked_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "blocked_entities_blocked_by_fkey"
-            columns: ["blocked_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -4508,13 +4333,6 @@ export type Database = {
             foreignKeyName: "booking_audit_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "booking_audit_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -4568,13 +4386,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "booking_returns_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "booking_returns_user_id_fkey"
@@ -4726,13 +4537,6 @@ export type Database = {
             foreignKeyName: "bundling_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "bundling_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -4865,13 +4669,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "business_accounts_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "business_accounts_owner_id_fkey"
@@ -5680,13 +5477,6 @@ export type Database = {
             foreignKeyName: "business_renter_accounts_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "business_renter_accounts_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -5696,13 +5486,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "business_renter_accounts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "business_renter_accounts_user_id_fkey"
@@ -5821,13 +5604,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "call_logs_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "call_logs_created_by_fkey"
@@ -6252,13 +6028,6 @@ export type Database = {
             foreignKeyName: "canned_responses_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "canned_responses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -6445,13 +6214,6 @@ export type Database = {
             foreignKeyName: "car_owner_documents_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "car_owner_documents_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -6572,13 +6334,6 @@ export type Database = {
             foreignKeyName: "car_owner_profiles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "car_owner_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -6631,13 +6386,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "car_rental_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "car_rental_settings_updated_by_fkey"
@@ -6845,13 +6593,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "carts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "carts_user_id_fkey"
@@ -7953,13 +7694,6 @@ export type Database = {
             foreignKeyName: "company_invite_codes_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "company_invite_codes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -8436,13 +8170,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "conversations_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "conversations_created_by_fkey"
@@ -9202,13 +8929,6 @@ export type Database = {
             foreignKeyName: "customer_identity_verifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "customer_identity_verifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -9431,13 +9151,6 @@ export type Database = {
             foreignKeyName: "customer_profiles_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "customer_profiles_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -9552,13 +9265,6 @@ export type Database = {
             foreignKeyName: "customer_wallet_transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "customer_wallet_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -9596,13 +9302,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "customer_wallets_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "customer_wallets_user_id_fkey"
@@ -9648,13 +9347,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "customers_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "customers_id_fkey"
@@ -10229,13 +9921,6 @@ export type Database = {
             foreignKeyName: "device_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "device_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -10301,13 +9986,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "device_tokens_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "device_tokens_user_id_fkey"
@@ -10451,13 +10129,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "dispatch_driver_history_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "dispatch_driver_history_driver_id_fkey"
@@ -10612,13 +10283,6 @@ export type Database = {
             foreignKeyName: "dispatch_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "dispatch_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -10673,13 +10337,6 @@ export type Database = {
             foreignKeyName: "dispute_audit_logs_actor_id_fkey"
             columns: ["actor_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "dispute_audit_logs_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -10726,13 +10383,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "dispute_cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "dispute_cases_assigned_to_fkey"
@@ -11587,13 +11237,6 @@ export type Database = {
             foreignKeyName: "driver_documents_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "driver_documents_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -11617,13 +11260,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "driver_documents_renewal_requested_by_fkey"
-            columns: ["renewal_requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "driver_documents_renewal_requested_by_fkey"
@@ -12006,13 +11642,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "driver_incentives_admin_approved_by_fkey"
-            columns: ["admin_approved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "driver_incentives_admin_approved_by_fkey"
@@ -12554,13 +12183,6 @@ export type Database = {
             foreignKeyName: "driver_penalties_applied_by_fkey"
             columns: ["applied_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "driver_penalties_applied_by_fkey"
-            columns: ["applied_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -12635,13 +12257,6 @@ export type Database = {
             foreignKeyName: "driver_profiles_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "driver_profiles_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -12676,13 +12291,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "driver_push_ids_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "driver_push_ids_driver_id_fkey"
@@ -13526,13 +13134,6 @@ export type Database = {
             foreignKeyName: "driver_state_events_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "driver_state_events_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -13627,13 +13228,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "driver_stripe_accounts_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "driver_stripe_accounts_driver_id_fkey"
@@ -14224,13 +13818,6 @@ export type Database = {
             foreignKeyName: "drivers_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "drivers_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -14261,13 +13848,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "drivers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "drivers_user_id_fkey"
@@ -14337,13 +13917,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "drivers_status_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "drivers_status_driver_id_fkey"
@@ -15460,13 +15033,6 @@ export type Database = {
             foreignKeyName: "experiment_assignments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "experiment_assignments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -15582,13 +15148,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "experiments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "experiments_created_by_fkey"
@@ -16162,13 +15721,6 @@ export type Database = {
             foreignKeyName: "fleet_owner_profiles_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "fleet_owner_profiles_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -16178,13 +15730,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "fleet_owner_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "fleet_owner_profiles_user_id_fkey"
@@ -16319,13 +15864,6 @@ export type Database = {
             foreignKeyName: "fleet_team_members_invited_by_fkey"
             columns: ["invited_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "fleet_team_members_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -16335,13 +15873,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "fleet_team_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "fleet_team_members_user_id_fkey"
@@ -16405,13 +15936,6 @@ export type Database = {
             foreignKeyName: "flight_admin_alerts_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "flight_admin_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -16455,13 +15979,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "flight_api_limits_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "flight_api_limits_updated_by_fkey"
@@ -16552,13 +16069,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "flight_beta_invites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "flight_beta_invites_user_id_fkey"
@@ -16890,13 +16400,6 @@ export type Database = {
             foreignKeyName: "flight_funnel_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "flight_funnel_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -16961,13 +16464,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "flight_incident_logs_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "flight_incident_logs_resolved_by_fkey"
@@ -17214,13 +16710,6 @@ export type Database = {
             foreignKeyName: "flight_search_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "flight_search_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -17277,13 +16766,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "flight_ticketing_logs_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "flight_ticketing_logs_created_by_fkey"
@@ -17477,13 +16959,6 @@ export type Database = {
             foreignKeyName: "flights_launch_settings_emergency_pause_by_fkey"
             columns: ["emergency_pause_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "flights_launch_settings_emergency_pause_by_fkey"
-            columns: ["emergency_pause_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -17493,13 +16968,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "flights_launch_settings_status_changed_by_fkey"
-            columns: ["status_changed_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "flights_launch_settings_status_changed_by_fkey"
@@ -18290,13 +17758,6 @@ export type Database = {
             foreignKeyName: "food_orders_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "food_orders_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -18910,13 +18371,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "gift_cards_purchaser_user_id_fkey"
-            columns: ["purchaser_user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "gift_cards_purchaser_user_id_fkey"
@@ -19905,13 +19359,6 @@ export type Database = {
             foreignKeyName: "incident_logs_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "incident_logs_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -19921,13 +19368,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "incident_logs_reported_by_fkey"
-            columns: ["reported_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "incident_logs_reported_by_fkey"
@@ -20103,13 +19543,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "incident_updates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "incident_updates_created_by_fkey"
@@ -20660,13 +20093,6 @@ export type Database = {
             foreignKeyName: "job_events_actor_id_fkey"
             columns: ["actor_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "job_events_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -20742,13 +20168,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "job_offers_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "job_offers_driver_id_fkey"
@@ -20871,13 +20290,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "job_payments_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "job_payments_customer_id_fkey"
@@ -21062,13 +20474,6 @@ export type Database = {
             foreignKeyName: "jobs_assigned_driver_id_fkey"
             columns: ["assigned_driver_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "jobs_assigned_driver_id_fkey"
-            columns: ["assigned_driver_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -21083,13 +20488,6 @@ export type Database = {
             foreignKeyName: "jobs_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "jobs_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -21099,13 +20497,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "jobs_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "jobs_merchant_id_fkey"
@@ -21181,13 +20572,6 @@ export type Database = {
             foreignKeyName: "knowledge_base_articles_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "knowledge_base_articles_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -21197,13 +20581,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "knowledge_base_articles_last_reviewed_by_fkey"
-            columns: ["last_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "knowledge_base_articles_last_reviewed_by_fkey"
@@ -21502,13 +20879,6 @@ export type Database = {
             foreignKeyName: "launch_monitoring_alerts_acknowledged_by_fkey"
             columns: ["acknowledged_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "launch_monitoring_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -21518,13 +20888,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "launch_monitoring_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "launch_monitoring_alerts_resolved_by_fkey"
@@ -21576,13 +20939,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "launch_phase_log_started_by_fkey"
-            columns: ["started_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "launch_phase_log_started_by_fkey"
@@ -21708,13 +21064,6 @@ export type Database = {
             foreignKeyName: "launch_status_paused_by_fkey"
             columns: ["paused_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "launch_status_paused_by_fkey"
-            columns: ["paused_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -21812,13 +21161,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ledger_entries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ledger_entries_user_id_fkey"
@@ -22084,13 +21426,6 @@ export type Database = {
             foreignKeyName: "live_chat_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "live_chat_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -22196,13 +21531,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "login_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "login_sessions_user_id_fkey"
@@ -22360,13 +21688,6 @@ export type Database = {
             foreignKeyName: "loyalty_points_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "loyalty_points_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -22472,13 +21793,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "loyalty_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "loyalty_settings_updated_by_fkey"
@@ -22665,13 +21979,6 @@ export type Database = {
             foreignKeyName: "maintenance_history_performed_by_fkey"
             columns: ["performed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "maintenance_history_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -22807,13 +22114,6 @@ export type Database = {
             foreignKeyName: "maintenance_mode_disabled_by_fkey"
             columns: ["disabled_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "maintenance_mode_disabled_by_fkey"
-            columns: ["disabled_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -22823,13 +22123,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "maintenance_mode_enabled_by_fkey"
-            columns: ["enabled_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "maintenance_mode_enabled_by_fkey"
@@ -23074,13 +22367,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "membership_usage_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "membership_usage_user_id_fkey"
@@ -23639,13 +22925,6 @@ export type Database = {
             foreignKeyName: "merchant_documents_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "merchant_documents_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -23683,13 +22962,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "merchant_documents_renewal_requested_by_fkey"
-            columns: ["renewal_requested_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "merchant_documents_renewal_requested_by_fkey"
@@ -24189,13 +23461,6 @@ export type Database = {
             foreignKeyName: "messages_sender_user_id_fkey"
             columns: ["sender_user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "messages_sender_user_id_fkey"
-            columns: ["sender_user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -24257,13 +23522,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "monthly_reports_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "monthly_reports_generated_by_fkey"
@@ -24443,13 +23701,6 @@ export type Database = {
             foreignKeyName: "notification_campaigns_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "notification_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -24514,13 +23765,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "notification_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "notification_preferences_user_id_fkey"
@@ -24667,13 +23911,6 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -24776,13 +24013,6 @@ export type Database = {
             foreignKeyName: "operations_checklists_completed_by_fkey"
             columns: ["completed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "operations_checklists_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -24873,13 +24103,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ops_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ops_alerts_resolved_by_fkey"
@@ -25097,13 +24320,6 @@ export type Database = {
             foreignKeyName: "order_actions_actor_user_id_fkey"
             columns: ["actor_user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "order_actions_actor_user_id_fkey"
-            columns: ["actor_user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -25278,13 +24494,6 @@ export type Database = {
             foreignKeyName: "order_disputes_assigned_admin_id_fkey"
             columns: ["assigned_admin_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "order_disputes_assigned_admin_id_fkey"
-            columns: ["assigned_admin_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -25294,13 +24503,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "order_disputes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "order_disputes_created_by_fkey"
@@ -25370,13 +24572,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "order_events_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "order_events_actor_id_fkey"
@@ -25505,13 +24700,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "order_item_modifications_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "order_item_modifications_actor_id_fkey"
@@ -25721,13 +24909,6 @@ export type Database = {
             foreignKeyName: "order_ratings_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "order_ratings_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -25737,13 +24918,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "order_ratings_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "order_ratings_deleted_by_fkey"
@@ -25772,13 +24946,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "order_ratings_flagged_by_fkey"
-            columns: ["flagged_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "order_ratings_flagged_by_fkey"
@@ -26159,13 +25326,6 @@ export type Database = {
             foreignKeyName: "otp_codes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "otp_codes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -26464,13 +25624,6 @@ export type Database = {
             foreignKeyName: "p2p_bookings_renter_id_fkey"
             columns: ["renter_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "p2p_bookings_renter_id_fkey"
-            columns: ["renter_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -26567,13 +25720,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_claim_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_claim_documents_uploaded_by_fkey"
@@ -26876,13 +26022,6 @@ export type Database = {
             foreignKeyName: "p2p_disputes_raised_by_fkey"
             columns: ["raised_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "p2p_disputes_raised_by_fkey"
-            columns: ["raised_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -26892,13 +26031,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_disputes_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_disputes_resolved_by_fkey"
@@ -27005,13 +26137,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_enhanced_claims_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_enhanced_claims_reviewed_by_fkey"
@@ -27173,13 +26298,6 @@ export type Database = {
             foreignKeyName: "p2p_launch_checklists_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "p2p_launch_checklists_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -27239,13 +26357,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_launch_cities_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_launch_cities_created_by_fkey"
@@ -27337,13 +26448,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_payouts_held_by_fkey"
-            columns: ["held_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_payouts_held_by_fkey"
@@ -27505,13 +26609,6 @@ export type Database = {
             foreignKeyName: "p2p_renter_invites_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "p2p_renter_invites_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -27626,13 +26723,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "p2p_reviews_reviewer_id_fkey"
-            columns: ["reviewer_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "p2p_reviews_reviewer_id_fkey"
@@ -28056,13 +27146,6 @@ export type Database = {
             foreignKeyName: "partner_checkout_config_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "partner_checkout_config_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -28218,13 +27301,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "partner_redirect_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "partner_redirect_logs_user_id_fkey"
@@ -28426,13 +27502,6 @@ export type Database = {
             foreignKeyName: "payment_records_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "payment_records_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -28442,13 +27511,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "payment_records_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "payment_records_driver_id_fkey"
@@ -28520,13 +27582,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "payout_batches_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "payout_batches_driver_id_fkey"
@@ -28820,13 +27875,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "payout_schedules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "payout_schedules_created_by_fkey"
@@ -29206,13 +28254,6 @@ export type Database = {
             foreignKeyName: "performance_adjustments_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "performance_adjustments_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -29532,13 +28573,6 @@ export type Database = {
             foreignKeyName: "platform_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "platform_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -29588,13 +28622,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "points_ledger_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "points_ledger_user_id_fkey"
@@ -29651,13 +28678,6 @@ export type Database = {
             foreignKeyName: "policy_consents_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "policy_consents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -29701,13 +28721,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "policy_versions_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "policy_versions_updated_by_fkey"
@@ -29887,13 +28900,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "price_calculations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "price_calculations_user_id_fkey"
@@ -30236,13 +29242,6 @@ export type Database = {
             foreignKeyName: "pricing_rules_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "pricing_rules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -30384,13 +29383,6 @@ export type Database = {
             foreignKeyName: "production_launch_checklist_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "production_launch_checklist_verified_by_fkey"
-            columns: ["verified_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -30458,13 +29450,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "production_test_bookings_tested_by_fkey"
-            columns: ["tested_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "production_test_bookings_tested_by_fkey"
@@ -30599,13 +29584,6 @@ export type Database = {
             foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -30634,13 +29612,6 @@ export type Database = {
             foreignKeyName: "profiles_user_fk"
             columns: ["id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "profiles_user_fk"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -30650,13 +29621,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "profiles_user_id_fkey"
@@ -30783,13 +29747,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "promo_redemptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "promo_redemptions_user_id_fkey"
@@ -31201,13 +30158,6 @@ export type Database = {
             foreignKeyName: "push_campaigns_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "push_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -31323,13 +30273,6 @@ export type Database = {
             foreignKeyName: "push_notification_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "push_notification_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -31432,13 +30375,6 @@ export type Database = {
             foreignKeyName: "push_segments_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "push_segments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -31507,13 +30443,6 @@ export type Database = {
             foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -31560,13 +30489,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "push_tokens_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "push_tokens_user_id_fkey"
@@ -32156,13 +31078,6 @@ export type Database = {
             foreignKeyName: "refund_requests_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "refund_requests_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -32243,13 +31158,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "refunds_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "refunds_initiated_by_fkey"
@@ -32680,13 +31588,6 @@ export type Database = {
             foreignKeyName: "renter_documents_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "renter_documents_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -32762,13 +31663,6 @@ export type Database = {
             foreignKeyName: "renter_profiles_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "renter_profiles_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -32778,13 +31672,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "renter_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "renter_profiles_user_id_fkey"
@@ -33250,13 +32137,6 @@ export type Database = {
             foreignKeyName: "restaurant_ads_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "restaurant_ads_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -33621,13 +32501,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "restaurant_status_log_actor_user_id_fkey"
-            columns: ["actor_user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "restaurant_status_log_actor_user_id_fkey"
@@ -34694,13 +33567,6 @@ export type Database = {
             foreignKeyName: "reward_redemptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "reward_redemptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -35350,13 +34216,6 @@ export type Database = {
             foreignKeyName: "risk_events_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "risk_events_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -35373,13 +34232,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "risk_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "risk_events_user_id_fkey"
@@ -35448,13 +34300,6 @@ export type Database = {
             foreignKeyName: "risk_flags_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "risk_flags_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -35464,13 +34309,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "risk_flags_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "risk_flags_created_by_fkey"
@@ -35530,13 +34368,6 @@ export type Database = {
             foreignKeyName: "risk_holds_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "risk_holds_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -35546,13 +34377,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "risk_holds_lifted_by_fkey"
-            columns: ["lifted_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "risk_holds_lifted_by_fkey"
@@ -35652,13 +34476,6 @@ export type Database = {
             foreignKeyName: "risk_scores_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "risk_scores_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -35726,13 +34543,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "risk_status_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "risk_status_user_id_fkey"
@@ -36148,13 +34958,6 @@ export type Database = {
             foreignKeyName: "saved_locations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "saved_locations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -36228,13 +35031,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "saved_travelers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "saved_travelers_user_id_fkey"
@@ -36336,13 +35132,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "scheduled_bookings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "scheduled_bookings_user_id_fkey"
@@ -36569,13 +35358,6 @@ export type Database = {
             foreignKeyName: "search_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "search_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -36654,13 +35436,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "security_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "security_events_user_id_fkey"
@@ -36954,13 +35729,6 @@ export type Database = {
             foreignKeyName: "service_health_status_override_by_fkey"
             columns: ["override_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "service_health_status_override_by_fkey"
-            columns: ["override_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -37043,13 +35811,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "service_status_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "service_status_updated_by_fkey"
@@ -37507,13 +36268,6 @@ export type Database = {
             foreignKeyName: "sms_daily_limits_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "sms_daily_limits_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -37557,13 +36311,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "sms_otp_codes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "sms_otp_codes_user_id_fkey"
@@ -37748,13 +36495,6 @@ export type Database = {
             foreignKeyName: "square_catalog_categories_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "square_catalog_categories_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -37807,13 +36547,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_catalog_items_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_catalog_items_user_id_fkey"
@@ -37891,13 +36624,6 @@ export type Database = {
             foreignKeyName: "square_connections_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "square_connections_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -37938,13 +36664,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_item_modifier_lists_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_item_modifier_lists_user_id_fkey"
@@ -38008,13 +36727,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_item_variations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_item_variations_user_id_fkey"
@@ -38095,13 +36807,6 @@ export type Database = {
             foreignKeyName: "square_items_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "square_items_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -38145,13 +36850,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_modifiers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_modifiers_user_id_fkey"
@@ -38212,13 +36910,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_orders_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_orders_user_id_fkey"
@@ -38285,13 +36976,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "square_sync_jobs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "square_sync_jobs_user_id_fkey"
@@ -39620,13 +38304,6 @@ export type Database = {
             foreignKeyName: "surge_overrides_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "surge_overrides_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -39944,13 +38621,6 @@ export type Database = {
             foreignKeyName: "system_incidents_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "system_incidents_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40216,13 +38886,6 @@ export type Database = {
             foreignKeyName: "tenant_admin_alerts_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "tenant_admin_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40299,13 +38962,6 @@ export type Database = {
             foreignKeyName: "tenant_audit_log_actor_id_fkey"
             columns: ["actor_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "tenant_audit_log_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40359,13 +39015,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "tenant_invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "tenant_invitations_invited_by_fkey"
@@ -40432,13 +39081,6 @@ export type Database = {
             foreignKeyName: "tenant_memberships_invited_by_fkey"
             columns: ["invited_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "tenant_memberships_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40455,13 +39097,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "tenant_memberships_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "tenant_memberships_user_id_fkey"
@@ -40516,13 +39151,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "tenants_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "tenants_owner_id_fkey"
@@ -40583,13 +39211,6 @@ export type Database = {
             foreignKeyName: "ticket_attachments_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "ticket_attachments_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40627,13 +39248,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ticket_comments_author_user_id_fkey"
-            columns: ["author_user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ticket_comments_author_user_id_fkey"
@@ -40700,13 +39314,6 @@ export type Database = {
             foreignKeyName: "ticket_escalations_escalated_by_fkey"
             columns: ["escalated_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "ticket_escalations_escalated_by_fkey"
-            columns: ["escalated_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -40716,13 +39323,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ticket_escalations_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ticket_escalations_resolved_by_fkey"
@@ -40772,13 +39372,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ticket_events_actor_user_id_fkey"
-            columns: ["actor_user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ticket_events_actor_user_id_fkey"
@@ -40875,13 +39468,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "ticket_templates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "ticket_templates_created_by_fkey"
@@ -41925,13 +40511,6 @@ export type Database = {
             foreignKeyName: "travel_bookings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "travel_bookings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -42013,13 +40592,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "travel_handoff_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "travel_handoff_settings_updated_by_fkey"
@@ -42266,13 +40838,6 @@ export type Database = {
             foreignKeyName: "travel_orders_cancelled_by_fkey"
             columns: ["cancelled_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "travel_orders_cancelled_by_fkey"
-            columns: ["cancelled_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -42282,13 +40847,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "travel_orders_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "travel_orders_user_id_fkey"
@@ -42428,13 +40986,6 @@ export type Database = {
             foreignKeyName: "travel_search_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "travel_search_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -42490,13 +41041,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "travelers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "travelers_user_id_fkey"
@@ -42563,13 +41107,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "trip_locations_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "trip_locations_driver_id_fkey"
@@ -43079,13 +41616,6 @@ export type Database = {
             foreignKeyName: "trips_rider_id_fkey"
             columns: ["rider_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "trips_rider_id_fkey"
-            columns: ["rider_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -43250,13 +41780,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "trusted_devices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "trusted_devices_user_id_fkey"
@@ -43429,13 +41952,6 @@ export type Database = {
             foreignKeyName: "user_behavior_signals_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_behavior_signals_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -43521,13 +42037,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "user_clv_scores_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "user_clv_scores_user_id_fkey"
@@ -43629,13 +42138,6 @@ export type Database = {
             foreignKeyName: "user_devices_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_devices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -43720,13 +42222,6 @@ export type Database = {
             foreignKeyName: "user_email_preferences_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_email_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -43764,13 +42259,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "user_favorites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "user_favorites_user_id_fkey"
@@ -43884,13 +42372,6 @@ export type Database = {
             foreignKeyName: "user_limits_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_limits_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -43940,13 +42421,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "user_locale_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "user_locale_preferences_user_id_fkey"
@@ -44073,13 +42547,6 @@ export type Database = {
             foreignKeyName: "user_personalization_settings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_personalization_settings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -44191,13 +42658,6 @@ export type Database = {
             foreignKeyName: "user_recently_viewed_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_recently_viewed_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -44261,13 +42721,6 @@ export type Database = {
             foreignKeyName: "user_roles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -44326,13 +42779,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "user_saved_searches_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "user_saved_searches_user_id_fkey"
@@ -44839,13 +43285,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "vehicle_reservations_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "vehicle_reservations_created_by_fkey"
@@ -45711,13 +44150,6 @@ export type Database = {
             foreignKeyName: "watchlist_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "watchlist_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -46089,13 +44521,6 @@ export type Database = {
             foreignKeyName: "zivo_credits_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_credits_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -46190,13 +44615,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_cross_sell_suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_cross_sell_suggestions_user_id_fkey"
@@ -46464,13 +44882,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_payment_methods_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_payment_methods_user_id_fkey"
@@ -46797,13 +45208,6 @@ export type Database = {
             foreignKeyName: "zivo_promo_redemptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_promo_redemptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -46847,13 +45251,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_referral_codes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_referral_codes_user_id_fkey"
@@ -46962,13 +45359,6 @@ export type Database = {
             foreignKeyName: "zivo_referrals_referee_id_fkey"
             columns: ["referee_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_referrals_referee_id_fkey"
-            columns: ["referee_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -46978,13 +45368,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_referrals_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_referrals_referrer_id_fkey"
@@ -47237,13 +45620,6 @@ export type Database = {
             foreignKeyName: "zivo_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -47363,13 +45739,6 @@ export type Database = {
             foreignKeyName: "zivo_support_tickets_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_support_tickets_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -47417,13 +45786,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_user_badges_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_user_badges_user_id_fkey"
@@ -47498,13 +45860,6 @@ export type Database = {
             foreignKeyName: "zivo_user_preferences_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "zivo_user_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -47557,13 +45912,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_wallet_credits_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_wallet_credits_user_id_fkey"
@@ -47637,13 +45985,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "zivo_wallet_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "zivo_wallet_transactions_user_id_fkey"
@@ -47809,13 +46150,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "jobs_assigned_driver_id_fkey"
-            columns: ["assigned_driver_id"]
-            isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "jobs_assigned_driver_id_fkey"
@@ -48374,13 +46708,6 @@ export type Database = {
             foreignKeyName: "drivers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "drivers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -48851,13 +47178,6 @@ export type Database = {
             foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -48872,13 +47192,6 @@ export type Database = {
             foreignKeyName: "profiles_user_fk"
             columns: ["id"]
             isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "profiles_user_fk"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -48888,13 +47201,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "profiles_user_id_fkey"
@@ -49140,13 +47446,6 @@ export type Database = {
             foreignKeyName: "square_connections_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "square_connections_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -49325,13 +47624,6 @@ export type Database = {
             foreignKeyName: "trips_rider_id_fkey"
             columns: ["rider_id"]
             isOneToOne: false
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "trips_rider_id_fkey"
-            columns: ["rider_id"]
-            isOneToOne: false
             referencedRelation: "v_driver_phone_status"
             referencedColumns: ["driver_id"]
           },
@@ -49373,27 +47665,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_customer_phone_status: {
-        Row: {
-          customer_id: string | null
-          is_verified: boolean | null
-          phone: string | null
-          phone_confirmed_at: string | null
-        }
-        Insert: {
-          customer_id?: string | null
-          is_verified?: never
-          phone?: string | null
-          phone_confirmed_at?: string | null
-        }
-        Update: {
-          customer_id?: string | null
-          is_verified?: never
-          phone?: string | null
-          phone_confirmed_at?: string | null
-        }
-        Relationships: []
-      }
       v_driver_dispatch_ready: {
         Row: {
           charges_enabled: boolean | null
@@ -49412,13 +47683,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "v_admin_driver_compliance"
             referencedColumns: ["driver_id"]
-          },
-          {
-            foreignKeyName: "drivers_status_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: true
-            referencedRelation: "v_customer_phone_status"
-            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "drivers_status_driver_id_fkey"
@@ -50542,6 +48806,15 @@ export type Database = {
           status: string
           total_amount: number
           updated_at: string
+        }[]
+      }
+      get_my_phone_status: {
+        Args: never
+        Returns: {
+          customer_id: string
+          is_verified: boolean
+          phone: string
+          phone_confirmed_at: string
         }[]
       }
       get_my_tenant_permissions: {
