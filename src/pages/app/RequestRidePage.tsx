@@ -142,13 +142,13 @@ export default function RequestRidePage() {
 
       const jobId = (job as any).id;
 
-      // 2) Dispatch via auto-dispatch edge function (JWT attached)
-      const { error: dispatchError } = await supabase.functions.invoke("auto-dispatch", {
-        body: { job_id: jobId, max_drivers: 3, offer_ttl_seconds: 25 },
+      // 2) Dispatch via dispatch-start edge function (JWT attached)
+      const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
+        body: { job_id: jobId, offer_ttl_seconds: 25 },
       });
 
       if (dispatchError) {
-        console.error("[RequestRide] dispatch error:", dispatchError);
+        console.error("[RequestRide] dispatch-start error:", dispatchError);
         // Don't fail the request — job is created, dispatch can retry
       }
 
