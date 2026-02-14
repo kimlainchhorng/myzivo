@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,10 +14,21 @@ export interface Job {
   customer_id: string;
   pickup_address: string | null;
   dropoff_address: string | null;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  dropoff_lat: number | null;
+  dropoff_lng: number | null;
   assigned_driver_id: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface DriverLocation {
+  lat: number;
+  lng: number;
+  heading: number | null;
+  recorded_at: string;
 }
 
 export interface CreateJobData {

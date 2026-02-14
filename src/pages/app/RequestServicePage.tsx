@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useCreateJob, useJobRealtime, dispatchJob, JobType, JobStatus } from "@/hooks/useJobRequest";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import JobTrackingMap from "@/components/app/JobTrackingMap";
 
 const JOB_TYPES: { value: JobType; label: string; icon: React.ElementType }[] = [
   { value: "ride", label: "Ride", icon: Car },
@@ -274,18 +275,33 @@ const RequestServicePage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center justify-center pt-20 gap-6"
+              className="flex flex-col items-center justify-center gap-5"
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                className="w-20 h-20 rounded-full border-4 border-primary/20 border-t-primary flex items-center justify-center"
-              />
-              <div className="text-center">
-                <h2 className="text-lg font-bold text-foreground">Searching for driver...</h2>
-                <p className="text-sm text-muted-foreground mt-1">Hang tight, we're finding the best match</p>
+              {/* Live Map */}
+              {job && (
+                <JobTrackingMap
+                  jobId={activeJobId}
+                  pickupLat={job.pickup_lat}
+                  pickupLng={job.pickup_lng}
+                  dropoffLat={job.dropoff_lat}
+                  dropoffLng={job.dropoff_lng}
+                  className="h-[220px] w-full"
+                />
+              )}
+
+              <div className="flex items-center gap-3">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  className="w-10 h-10 rounded-full border-3 border-primary/20 border-t-primary"
+                />
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Searching for driver...</h2>
+                  <p className="text-xs text-muted-foreground">Hang tight, we're finding the best match</p>
+                </div>
               </div>
-              <div className="w-full max-w-xs rounded-2xl bg-card border border-border p-4 space-y-2">
+
+              <div className="w-full rounded-2xl bg-card border border-border p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                   <span className="truncate">{job?.pickup_address}</span>
@@ -301,7 +317,7 @@ const RequestServicePage = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full max-w-xs"
+                  className="w-full"
                   onClick={handleRetryDispatch}
                   disabled={isRetrying}
                 >
@@ -326,7 +342,7 @@ const RequestServicePage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="space-y-6"
+              className="space-y-4"
             >
               {/* Driver Assigned Banner */}
               <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4 flex items-center gap-3">
@@ -342,6 +358,16 @@ const RequestServicePage = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Live Map */}
+              <JobTrackingMap
+                jobId={activeJobId}
+                pickupLat={job!.pickup_lat}
+                pickupLng={job!.pickup_lng}
+                dropoffLat={job!.dropoff_lat}
+                dropoffLng={job!.dropoff_lng}
+                className="h-[280px] w-full"
+              />
 
               {/* Trip Info */}
               <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
