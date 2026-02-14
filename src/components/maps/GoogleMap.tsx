@@ -7,7 +7,7 @@
  */
 
 import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
-import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
+import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer, PolylineF } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
 import { useGoogleMaps } from "./GoogleMapProvider";
 import ZivoPickupMarker from "./ZivoPickupMarker";
@@ -256,6 +256,19 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
                 strokeOpacity: 0.9,
                 strokeWeight: 6,
               },
+            }}
+          />
+        )}
+
+        {/* Custom routePath polyline (from edge function) — renders when no DirectionsRenderer */}
+        {routePath && routePath.length > 1 && !directions && (
+          <PolylineF
+            path={routePath}
+            options={{
+              strokeColor: "#10B981",
+              strokeOpacity: 0.9,
+              strokeWeight: 5,
+              geodesic: true,
             }}
           />
         )}

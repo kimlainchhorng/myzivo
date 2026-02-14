@@ -281,6 +281,7 @@ const RequestServicePage = () => {
               {job && (
                 <JobTrackingMap
                   jobId={activeJobId}
+                  jobStatus={job.status}
                   pickupLat={job.pickup_lat}
                   pickupLng={job.pickup_lng}
                   dropoffLat={job.dropoff_lat}
@@ -362,6 +363,7 @@ const RequestServicePage = () => {
               {/* Live Map */}
               <JobTrackingMap
                 jobId={activeJobId}
+                jobStatus={job!.status}
                 pickupLat={job!.pickup_lat}
                 pickupLng={job!.pickup_lng}
                 dropoffLat={job!.dropoff_lat}
