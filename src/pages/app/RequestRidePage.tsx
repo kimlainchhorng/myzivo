@@ -45,19 +45,25 @@ function PaymentForm({
 
     setIsProcessing(true);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: window.location.href, // fallback, we handle inline
+        return_url: window.location.href,
       },
       redirect: "if_required",
     });
 
     if (error) {
-      toast.error(error.message || "Payment failed");
+      toast.error(error.message || "Payment authorization failed");
       setIsProcessing(false);
-    } else {
+    } else if (paymentIntent && paymentIntent.status === "requires_capture") {
+      // Manual capture — authorized successfully
       onSuccess();
+    } else if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
+      onSuccess();
+    } else {
+      toast.error("Unexpected payment status");
+      setIsProcessing(false);
     }
   };
 
@@ -91,7 +97,7 @@ function PaymentForm({
         {isProcessing ? (
           <><Loader2 className="w-5 h-5 animate-spin" />Processing…</>
         ) : (
-          <><Lock className="w-5 h-5" />Pay {formatUSD(totalCents)}</>
+          <><Lock className="w-5 h-5" />Authorize {formatUSD(totalCents)}</>
         )}
       </Button>
     </form>
