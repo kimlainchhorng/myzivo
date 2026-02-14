@@ -233,3 +233,12 @@ verify_jwt = false
 
 [functions.stripe-hold-create]
 verify_jwt = false
+
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.capture-payment]
+verify_jwt = false
+
+[functions.cancel-job-payment]
+verify_jwt = false

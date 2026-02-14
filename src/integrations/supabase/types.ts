@@ -5402,6 +5402,42 @@ export type Database = {
           },
         ]
       }
+      cancel_policies: {
+        Row: {
+          fee_after_accept_cents: number
+          fee_after_pickup_cents: number
+          fee_near_pickup_cents: number
+          id: string
+          is_active: boolean
+          name: string
+          near_pickup_eta_seconds: number
+          near_pickup_miles: number
+          updated_at: string
+        }
+        Insert: {
+          fee_after_accept_cents?: number
+          fee_after_pickup_cents?: number
+          fee_near_pickup_cents?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          near_pickup_eta_seconds?: number
+          near_pickup_miles?: number
+          updated_at?: string
+        }
+        Update: {
+          fee_after_accept_cents?: number
+          fee_after_pickup_cents?: number
+          fee_near_pickup_cents?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          near_pickup_eta_seconds?: number
+          near_pickup_miles?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cancellation_fee_rules: {
         Row: {
           active: boolean
@@ -18952,9 +18988,15 @@ export type Database = {
       }
       jobs: {
         Row: {
+          accepted_at: string | null
           airport_fee: number | null
+          arrived_pickup_at: string | null
           assigned_driver_id: string | null
           base_fare: number | null
+          cancel_fee_cents: number | null
+          cancel_reason: string | null
+          canceled_at: string | null
+          completed_at: string | null
           created_at: string
           customer_id: string
           dispatch_stage: number | null
@@ -18973,8 +19015,10 @@ export type Database = {
           merchant_id: string | null
           merchant_net: number | null
           notes: string | null
+          payment_status: string | null
           per_mile: number | null
           per_minute: number | null
+          picked_up_at: string | null
           pickup_address: string | null
           pickup_lat: number | null
           pickup_lng: number | null
@@ -18985,15 +19029,23 @@ export type Database = {
           pricing_per_minute: number | null
           pricing_surge_multiplier: number | null
           pricing_total_estimate: number | null
+          requested_at: string | null
           status: Database["public"]["Enums"]["job_status"]
+          stripe_payment_intent_id: string | null
           surge_multiplier: number | null
           updated_at: string
           zone_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
           airport_fee?: number | null
+          arrived_pickup_at?: string | null
           assigned_driver_id?: string | null
           base_fare?: number | null
+          cancel_fee_cents?: number | null
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          completed_at?: string | null
           created_at?: string
           customer_id: string
           dispatch_stage?: number | null
@@ -19012,8 +19064,10 @@ export type Database = {
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
+          payment_status?: string | null
           per_mile?: number | null
           per_minute?: number | null
+          picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
@@ -19024,15 +19078,23 @@ export type Database = {
           pricing_per_minute?: number | null
           pricing_surge_multiplier?: number | null
           pricing_total_estimate?: number | null
+          requested_at?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          stripe_payment_intent_id?: string | null
           surge_multiplier?: number | null
           updated_at?: string
           zone_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
           airport_fee?: number | null
+          arrived_pickup_at?: string | null
           assigned_driver_id?: string | null
           base_fare?: number | null
+          cancel_fee_cents?: number | null
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          completed_at?: string | null
           created_at?: string
           customer_id?: string
           dispatch_stage?: number | null
@@ -19051,8 +19113,10 @@ export type Database = {
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
+          payment_status?: string | null
           per_mile?: number | null
           per_minute?: number | null
+          picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
@@ -19063,7 +19127,9 @@ export type Database = {
           pricing_per_minute?: number | null
           pricing_surge_multiplier?: number | null
           pricing_total_estimate?: number | null
+          requested_at?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          stripe_payment_intent_id?: string | null
           surge_multiplier?: number | null
           updated_at?: string
           zone_id?: string | null
@@ -25349,6 +25415,10 @@ export type Database = {
       payment_records: {
         Row: {
           amount_total_cents: number
+          cancel_fee_cents: number | null
+          canceled_at: string | null
+          capture_method: string | null
+          captured_at: string | null
           charge_id: string | null
           created_at: string
           currency: string
@@ -25365,6 +25435,10 @@ export type Database = {
         }
         Insert: {
           amount_total_cents: number
+          cancel_fee_cents?: number | null
+          canceled_at?: string | null
+          capture_method?: string | null
+          captured_at?: string | null
           charge_id?: string | null
           created_at?: string
           currency?: string
@@ -25381,6 +25455,10 @@ export type Database = {
         }
         Update: {
           amount_total_cents?: number
+          cancel_fee_cents?: number | null
+          canceled_at?: string | null
+          capture_method?: string | null
+          captured_at?: string | null
           charge_id?: string | null
           created_at?: string
           currency?: string
@@ -44373,6 +44451,7 @@ export type Database = {
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }
+      compute_cancel_fee: { Args: { p_job_id: string }; Returns: Json }
       compute_est_payout: { Args: { p_job_id: string }; Returns: number }
       compute_zone_surge: { Args: { p_zone_id: string }; Returns: number }
       create_available_test_orders: { Args: never; Returns: number }
