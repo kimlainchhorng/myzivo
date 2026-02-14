@@ -38,6 +38,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
+import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
@@ -144,6 +145,7 @@ const getQuickEstimate = () => {
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  useDeviceIntegrityCheck();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
