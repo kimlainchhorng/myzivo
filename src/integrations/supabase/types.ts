@@ -18594,8 +18594,10 @@ export type Database = {
           expires_at: string
           job_id: string
           max_attempts: number
+          otp_enc: string | null
           otp_hash: string
           otp_last4: string
+          otp_plain: string | null
           verified_at: string | null
         }
         Insert: {
@@ -18604,8 +18606,10 @@ export type Database = {
           expires_at: string
           job_id: string
           max_attempts?: number
+          otp_enc?: string | null
           otp_hash: string
           otp_last4: string
+          otp_plain?: string | null
           verified_at?: string | null
         }
         Update: {
@@ -18614,8 +18618,10 @@ export type Database = {
           expires_at?: string
           job_id?: string
           max_attempts?: number
+          otp_enc?: string | null
           otp_hash?: string
           otp_last4?: string
+          otp_plain?: string | null
           verified_at?: string | null
         }
         Relationships: [
@@ -43296,7 +43302,14 @@ export type Database = {
       }
     }
     Functions: {
-      accept_job_offer: { Args: { p_offer_id: string }; Returns: Json }
+      accept_job_offer: {
+        Args: { p_offer_id: string }
+        Returns: {
+          assigned_driver_id: string
+          job_id: string
+          status: Database["public"]["Enums"]["job_status"]
+        }[]
+      }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {
         Args: { p_accepted: boolean; p_recommendation_id: string }
@@ -43558,6 +43571,18 @@ export type Database = {
         Args: { p_amount_cents: number; p_restaurant_id: string }
         Returns: boolean
       }
+      ensure_job_otp: {
+        Args: {
+          p_digits?: number
+          p_enc_key?: string
+          p_job_id: string
+          p_ttl_minutes?: number
+        }
+        Returns: {
+          expires_at: string
+          job_id: string
+        }[]
+      }
       evaluate_sla_status: {
         Args: never
         Returns: {
@@ -43726,6 +43751,14 @@ export type Database = {
         Returns: {
           attempt_count: number
           ip_address: unknown
+        }[]
+      }
+      get_job_otp_plain: {
+        Args: { p_enc_key: string; p_job_id: string }
+        Returns: {
+          expires_at: string
+          otp: string
+          verified_at: string
         }[]
       }
       get_jwt_role: { Args: never; Returns: string }
