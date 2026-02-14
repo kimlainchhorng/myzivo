@@ -1,36 +1,28 @@
 
+# Add Resend Cooldown Timer to /verify-phone
 
-# Fix: RequestRidePage Stripe Initialization Bug
+## What Changes
 
-## Problem Found
+Add a 60-second countdown timer to the "Resend code" and "Send Code" buttons on the phone verification page. After a code is sent, both buttons are disabled until the timer expires, preventing users from spamming OTP requests (which also protects the 5 SMS/day limit).
 
-`src/pages/app/RequestRidePage.tsx` (line 17) loads Stripe using:
-```
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
-```
+## User Experience
 
-`VITE_*` environment variables are **not supported** in Lovable. This means `stripePromise` resolves with an empty key, causing **all payment authorization to silently fail** in the ride request flow.
+1. User enters phone number and taps "Send Code" -- code is sent, timer starts at 60s
+2. On the OTP step, "Resend code" shows "Resend in 42s" (countdown) and is disabled
+3. If user goes back to "Change number" step, the "Send Code" button also respects the cooldown
+4. After 60 seconds, buttons re-enable normally
 
-The project already has a proper Stripe singleton at `src/lib/stripe.ts` that uses the hardcoded publishable key. `RequestServicePage.tsx` correctly imports from it, but `RequestRidePage.tsx` does not.
+## Technical Details
 
-## Everything Else: Verified Working
+**File:** `src/pages/VerifyPhonePage.tsx` (single file change)
 
-- Phone verification gate (`usePhoneVerificationGate`): correctly wired in both `RequestRidePage` and `RequestServicePage`
-- Verify phone page (`/verify-phone`): complete two-step OTP flow with error handling
-- Device integrity check (`useDeviceIntegrityCheck`): fires on AppHome mount, calls all three RPCs
-- Receipt page (`/receipt/:jobId`): route registered, component fetches from `trip_receipts` + items
-- Upfront pricing pipeline in `RequestServicePage`: draft job, trip-estimate, zone/surge, apply pricing, confirm, dispatch
+**New state:**
+- `cooldown` (number) -- seconds remaining, starts at 0
+- `useEffect` with `setInterval` that decrements `cooldown` every second and clears when it hits 0
 
-## Fix (1 file, 2 lines)
+**Button changes:**
+- "Send Code" button: disabled when `cooldown > 0` (in addition to existing checks), label shows "Resend in Xs" when cooling down
+- "Resend code" button: same cooldown logic
+- After successful `handleSendCode`, set `cooldown = 60`
 
-| File | Change |
-|------|--------|
-| `src/pages/app/RequestRidePage.tsx` | Replace `loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)` with import from `src/lib/stripe.ts` |
-
-Specifically:
-- Remove the `loadStripe` import and `VITE_` line
-- Import `getStripe` from `@/lib/stripe`
-- Use `getStripe()` where `stripePromise` is referenced
-
-This is a small but critical fix -- without it, the ride request payment step produces a blank/broken Stripe Elements form.
-
+No new dependencies, no database changes, no edge function changes.
