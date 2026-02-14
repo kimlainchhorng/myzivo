@@ -426,6 +426,7 @@ const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
 const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 const PhoneCompliancePage = lazy(() => import("./pages/admin/PhoneCompliancePage"));
+const VerifyPhonePage = lazy(() => import("./pages/VerifyPhonePage"));
 const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
 const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
@@ -687,6 +688,7 @@ const App = () => (
                 <Route path="/scheduled" element={<SetupRequiredRoute><ScheduledBookingsPage /></SetupRequiredRoute>} />
                 <Route path="/request-service" element={<SetupRequiredRoute><RequestServicePage /></SetupRequiredRoute>} />
                 <Route path="/request-ride" element={<SetupRequiredRoute><RequestRidePage /></SetupRequiredRoute>} />
+                <Route path="/verify-phone" element={<ProtectedRoute><VerifyPhonePage /></ProtectedRoute>} />
                 <Route path="/trip-status/:jobId" element={<SetupRequiredRoute><TripStatusPage /></SetupRequiredRoute>} />
                 <Route path="/receipt/:jobId" element={<SetupRequiredRoute><ReceiptPage /></SetupRequiredRoute>} />
 

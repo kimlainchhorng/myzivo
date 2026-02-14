@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw, ShieldCheck, Timer, Lock, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -301,6 +302,7 @@ const PaymentHoldForm = ({
 // ─── Main Page ───
 const RequestServicePage = () => {
   const navigate = useNavigate();
+  const { isChecking: phoneChecking } = usePhoneVerificationGate();
   const createJob = useCreateJob();
 
   const [jobType, setJobType] = useState<JobType>("ride");
