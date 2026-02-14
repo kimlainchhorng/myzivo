@@ -12845,6 +12845,7 @@ export type Database = {
           accuracy_m: number | null
           city: string | null
           current_job_id: string | null
+          decline_streak: number | null
           driver_id: string
           driver_state: string
           heading: number | null
@@ -12853,6 +12854,7 @@ export type Database = {
           last_seen: string
           lat: number | null
           lng: number | null
+          paused_until: string | null
           speed_mps: number | null
           updated_at: string
         }
@@ -12860,6 +12862,7 @@ export type Database = {
           accuracy_m?: number | null
           city?: string | null
           current_job_id?: string | null
+          decline_streak?: number | null
           driver_id: string
           driver_state?: string
           heading?: number | null
@@ -12868,6 +12871,7 @@ export type Database = {
           last_seen?: string
           lat?: number | null
           lng?: number | null
+          paused_until?: string | null
           speed_mps?: number | null
           updated_at?: string
         }
@@ -12875,6 +12879,7 @@ export type Database = {
           accuracy_m?: number | null
           city?: string | null
           current_job_id?: string | null
+          decline_streak?: number | null
           driver_id?: string
           driver_state?: string
           heading?: number | null
@@ -12883,6 +12888,7 @@ export type Database = {
           last_seen?: string
           lat?: number | null
           lng?: number | null
+          paused_until?: string | null
           speed_mps?: number | null
           updated_at?: string
         }
@@ -18774,36 +18780,48 @@ export type Database = {
         Row: {
           accepted_at: string | null
           created_at: string
+          decline_reason: string | null
           declined_at: string | null
           driver_id: string
+          est_payout: number | null
+          eta_to_pickup_seconds: number | null
           expired_at: string | null
           expires_at: string
           id: string
           job_id: string
+          miles_to_pickup: number | null
           offer_status: Database["public"]["Enums"]["offer_status"]
           status: string | null
         }
         Insert: {
           accepted_at?: string | null
           created_at?: string
+          decline_reason?: string | null
           declined_at?: string | null
           driver_id: string
+          est_payout?: number | null
+          eta_to_pickup_seconds?: number | null
           expired_at?: string | null
           expires_at: string
           id?: string
           job_id: string
+          miles_to_pickup?: number | null
           offer_status?: Database["public"]["Enums"]["offer_status"]
           status?: string | null
         }
         Update: {
           accepted_at?: string | null
           created_at?: string
+          decline_reason?: string | null
           declined_at?: string | null
           driver_id?: string
+          est_payout?: number | null
+          eta_to_pickup_seconds?: number | null
           expired_at?: string | null
           expires_at?: string
           id?: string
           job_id?: string
+          miles_to_pickup?: number | null
           offer_status?: Database["public"]["Enums"]["offer_status"]
           status?: string | null
         }
@@ -18934,7 +18952,9 @@ export type Database = {
       }
       jobs: {
         Row: {
+          airport_fee: number | null
           assigned_driver_id: string | null
+          base_fare: number | null
           created_at: string
           customer_id: string
           dispatch_stage: number | null
@@ -18943,21 +18963,37 @@ export type Database = {
           dropoff_address: string | null
           dropoff_lat: number | null
           dropoff_lng: number | null
+          estimated_miles: number | null
+          estimated_minutes: number | null
+          final_miles: number | null
+          final_minutes: number | null
+          final_total: number | null
           id: string
           job_type: Database["public"]["Enums"]["job_type"]
           merchant_id: string | null
           merchant_net: number | null
           notes: string | null
+          per_mile: number | null
+          per_minute: number | null
           pickup_address: string | null
           pickup_lat: number | null
           pickup_lng: number | null
           platform_fee: number | null
           price_total: number | null
+          pricing_base_fare: number | null
+          pricing_per_mile: number | null
+          pricing_per_minute: number | null
+          pricing_surge_multiplier: number | null
+          pricing_total_estimate: number | null
           status: Database["public"]["Enums"]["job_status"]
+          surge_multiplier: number | null
           updated_at: string
+          zone_id: string | null
         }
         Insert: {
+          airport_fee?: number | null
           assigned_driver_id?: string | null
+          base_fare?: number | null
           created_at?: string
           customer_id: string
           dispatch_stage?: number | null
@@ -18966,21 +19002,37 @@ export type Database = {
           dropoff_address?: string | null
           dropoff_lat?: number | null
           dropoff_lng?: number | null
+          estimated_miles?: number | null
+          estimated_minutes?: number | null
+          final_miles?: number | null
+          final_minutes?: number | null
+          final_total?: number | null
           id?: string
           job_type: Database["public"]["Enums"]["job_type"]
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
+          per_mile?: number | null
+          per_minute?: number | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           platform_fee?: number | null
           price_total?: number | null
+          pricing_base_fare?: number | null
+          pricing_per_mile?: number | null
+          pricing_per_minute?: number | null
+          pricing_surge_multiplier?: number | null
+          pricing_total_estimate?: number | null
           status?: Database["public"]["Enums"]["job_status"]
+          surge_multiplier?: number | null
           updated_at?: string
+          zone_id?: string | null
         }
         Update: {
+          airport_fee?: number | null
           assigned_driver_id?: string | null
+          base_fare?: number | null
           created_at?: string
           customer_id?: string
           dispatch_stage?: number | null
@@ -18989,20 +19041,42 @@ export type Database = {
           dropoff_address?: string | null
           dropoff_lat?: number | null
           dropoff_lng?: number | null
+          estimated_miles?: number | null
+          estimated_minutes?: number | null
+          final_miles?: number | null
+          final_minutes?: number | null
+          final_total?: number | null
           id?: string
           job_type?: Database["public"]["Enums"]["job_type"]
           merchant_id?: string | null
           merchant_net?: number | null
           notes?: string | null
+          per_mile?: number | null
+          per_minute?: number | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           platform_fee?: number | null
           price_total?: number | null
+          pricing_base_fare?: number | null
+          pricing_per_mile?: number | null
+          pricing_per_minute?: number | null
+          pricing_surge_multiplier?: number | null
+          pricing_total_estimate?: number | null
           status?: Database["public"]["Enums"]["job_status"]
+          surge_multiplier?: number | null
           updated_at?: string
+          zone_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "surge_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       knowledge_base_articles: {
         Row: {
@@ -35242,17 +35316,68 @@ export type Database = {
           },
         ]
       }
+      surge_schedules: {
+        Row: {
+          dow: number
+          end_time: string
+          id: string
+          is_active: boolean
+          multiplier: number
+          priority: number
+          start_time: string
+          updated_at: string
+          zone_id: string
+        }
+        Insert: {
+          dow: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          multiplier?: number
+          priority?: number
+          start_time: string
+          updated_at?: string
+          zone_id: string
+        }
+        Update: {
+          dow?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          multiplier?: number
+          priority?: number
+          start_time?: string
+          updated_at?: string
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_schedules_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "surge_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       surge_zones: {
         Row: {
+          airport_fee: number | null
+          auto_enabled: boolean | null
           base_multiplier: number
           city: string | null
           created_at: string
+          geom: unknown
           id: string
           is_active: boolean
           lat: number
           lng: number
+          manual_multiplier: number | null
           max_multiplier: number
           name: string
+          override_base_fare: number | null
+          override_per_mile: number | null
+          override_per_minute: number | null
           peak_hours_only: boolean
           radius_km: number
           service_type: string | null
@@ -35260,15 +35385,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          airport_fee?: number | null
+          auto_enabled?: boolean | null
           base_multiplier?: number
           city?: string | null
           created_at?: string
+          geom?: unknown
           id?: string
           is_active?: boolean
           lat: number
           lng: number
+          manual_multiplier?: number | null
           max_multiplier?: number
           name: string
+          override_base_fare?: number | null
+          override_per_mile?: number | null
+          override_per_minute?: number | null
           peak_hours_only?: boolean
           radius_km?: number
           service_type?: string | null
@@ -35276,15 +35408,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          airport_fee?: number | null
+          auto_enabled?: boolean | null
           base_multiplier?: number
           city?: string | null
           created_at?: string
+          geom?: unknown
           id?: string
           is_active?: boolean
           lat?: number
           lng?: number
+          manual_multiplier?: number | null
           max_multiplier?: number
           name?: string
+          override_base_fare?: number | null
+          override_per_mile?: number | null
+          override_per_minute?: number | null
           peak_hours_only?: boolean
           radius_km?: number
           service_type?: string | null
@@ -37723,6 +37862,83 @@ export type Database = {
           verified_at?: string | null
         }
         Relationships: []
+      }
+      trip_receipt_items: {
+        Row: {
+          amount: number
+          id: string
+          label: string
+          receipt_id: string
+          sort_order: number
+        }
+        Insert: {
+          amount?: number
+          id?: string
+          label: string
+          receipt_id: string
+          sort_order?: number
+        }
+        Update: {
+          amount?: number
+          id?: string
+          label?: string
+          receipt_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "trip_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_receipts: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          job_id: string
+          subtotal: number
+          surge_multiplier: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          job_id: string
+          subtotal?: number
+          surge_multiplier?: number
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          job_id?: string
+          subtotal?: number
+          surge_multiplier?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_receipts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "admin_active_jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "trip_receipts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_shares: {
         Row: {
@@ -43984,6 +44200,7 @@ export type Database = {
         Returns: Json
       }
       aggregate_demand_snapshot: { Args: never; Returns: number }
+      apply_pricing_to_job: { Args: { p_job_id: string }; Returns: Json }
       apply_wallet_credit: {
         Args: { p_amount_cents: number; p_order_id: string; p_user_id: string }
         Returns: Json
@@ -43994,6 +44211,11 @@ export type Database = {
       }
       assign_batch_to_driver: {
         Args: { p_batch_id: string; p_driver_id: string }
+        Returns: Json
+      }
+      assign_job_zone_and_surge: { Args: { p_job_id: string }; Returns: Json }
+      assign_job_zone_and_surge_postgis: {
+        Args: { p_job_id: string }
         Returns: Json
       }
       auto_assign_order:
@@ -44085,6 +44307,8 @@ export type Database = {
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }
+      compute_est_payout: { Args: { p_job_id: string }; Returns: number }
+      compute_zone_surge: { Args: { p_zone_id: string }; Returns: number }
       create_available_test_orders: { Args: never; Returns: number }
       create_batch_from_orders: {
         Args: { p_notes?: string; p_order_ids: string[]; p_region_id?: string }
@@ -44226,6 +44450,10 @@ export type Database = {
           newly_dispatched_count: number
         }[]
       }
+      driver_decline_offer: {
+        Args: { p_offer_id: string; p_reason: string }
+        Returns: Json
+      }
       dropgeometrycolumn:
         | {
             Args: {
@@ -44287,6 +44515,14 @@ export type Database = {
             }[]
           }
       expire_offers_and_reset: { Args: { p_limit?: number }; Returns: Json }
+      finalize_job_and_receipt: {
+        Args: {
+          p_final_miles: number
+          p_final_minutes: number
+          p_job_id: string
+        }
+        Returns: Json
+      }
       find_nearest_branch: {
         Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
         Returns: string
@@ -44798,6 +45034,10 @@ export type Database = {
         }[]
       }
       get_week_start: { Args: { d: string }; Returns: string }
+      get_zone_schedule_multiplier: {
+        Args: { p_ts?: string; p_zone_id: string }
+        Returns: number
+      }
       get_zone_stats: { Args: { p_region_id: string }; Returns: Json }
       get_zone_surge_multiplier: {
         Args: { p_region_id: string }
@@ -45074,6 +45314,10 @@ export type Database = {
         }[]
       }
       set_order_sla_targets: { Args: { p_order_id: string }; Returns: Json }
+      set_zone_polygon: {
+        Args: { p_geojson: Json; p_zone_id: string }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -45790,6 +46034,7 @@ export type Database = {
         Args: { p_pin: string; p_trip_id: string }
         Returns: Json
       }
+      zone_supply_count: { Args: { p_zone_id: string }; Returns: number }
     }
     Enums: {
       app_role:
