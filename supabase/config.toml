@@ -224,3 +224,6 @@ verify_jwt = false
 
 [functions.redeem-gift-card]
 verify_jwt = false
+
+[functions.otp-generate]
+verify_jwt = false

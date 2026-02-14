@@ -16730,6 +16730,33 @@ export type Database = {
         }
         Relationships: []
       }
+      geofence_settings: {
+        Row: {
+          arrive_radius_m: number
+          complete_radius_m: number
+          enabled: boolean
+          id: string
+          min_seconds_in_zone: number
+          updated_at: string
+        }
+        Insert: {
+          arrive_radius_m?: number
+          complete_radius_m?: number
+          enabled?: boolean
+          id?: string
+          min_seconds_in_zone?: number
+          updated_at?: string
+        }
+        Update: {
+          arrive_radius_m?: number
+          complete_radius_m?: number
+          enabled?: boolean
+          id?: string
+          min_seconds_in_zone?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gift_card_redemptions: {
         Row: {
           amount: number | null
@@ -18555,6 +18582,47 @@ export type Database = {
             foreignKeyName: "job_offers_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_otps: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          job_id: string
+          max_attempts: number
+          otp_hash: string
+          otp_last4: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at: string
+          job_id: string
+          max_attempts?: number
+          otp_hash: string
+          otp_last4: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          job_id?: string
+          max_attempts?: number
+          otp_hash?: string
+          otp_last4?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_otps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -44075,6 +44143,17 @@ export type Database = {
         Args: { p_center_lat: number; p_center_lng: number }
         Returns: undefined
       }
+      set_job_status_safe: {
+        Args: {
+          p_job_id: string
+          p_new_status: Database["public"]["Enums"]["job_status"]
+        }
+        Returns: {
+          assigned_driver_id: string
+          id: string
+          status: Database["public"]["Enums"]["job_status"]
+        }[]
+      }
       set_order_sla_targets: { Args: { p_order_id: string }; Returns: Json }
       start_batch: {
         Args: { p_batch_id: string; p_driver_id: string }
@@ -44187,6 +44266,13 @@ export type Database = {
           attempts_remaining: number
           error_message: string
           success: boolean
+        }[]
+      }
+      verify_job_otp_and_complete: {
+        Args: { p_job_id: string; p_otp: string }
+        Returns: {
+          message: string
+          ok: boolean
         }[]
       }
       verify_trip_pin: {

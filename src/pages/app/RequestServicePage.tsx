@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw, ShieldCheck, Timer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,59 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useCreateJob, useJobRealtime, dispatchJob, JobType, JobStatus } from "@/hooks/useJobRequest";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import JobTrackingMap from "@/components/app/JobTrackingMap";
+
+const SUPABASE_URL = "https://slirphzzwcogdbkeicff.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
+
+interface OtpData {
+  otp: string;
+  expires_at: string;
+}
+
+async function generateJobOtp(jobId: string): Promise<OtpData | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/otp-generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.access_token ?? ""}`,
+        apikey: SUPABASE_ANON,
+      },
+      body: JSON.stringify({ job_id: jobId, digits: 4, ttl_minutes: 120 }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.ok) return null;
+    return { otp: data.otp, expires_at: data.expires_at };
+  } catch {
+    return null;
+  }
+}
+
+// ─── OTP Countdown Hook ───
+function useCountdown(expiresAt: string | null) {
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
+  useEffect(() => {
+    if (!expiresAt) { setSecondsLeft(0); return; }
+    const calc = () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+    setSecondsLeft(calc());
+    const iv = setInterval(() => setSecondsLeft(calc()), 1000);
+    return () => clearInterval(iv);
+  }, [expiresAt]);
+
+  return secondsLeft;
+}
+
+function formatCountdown(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
 
 const JOB_TYPES: { value: JobType; label: string; icon: React.ElementType }[] = [
   { value: "ride", label: "Ride", icon: Car },
@@ -85,7 +136,13 @@ const RequestServicePage = () => {
   const [showRetry, setShowRetry] = useState(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // OTP state — kept in memory only, never localStorage
+  const [otpData, setOtpData] = useState<OtpData | null>(null);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const otpFetchedForStatus = useRef<string | null>(null);
+
   const { job, isLoading: jobLoading, clearJob } = useJobRealtime(activeJobId);
+  const otpSecondsLeft = useCountdown(otpData?.expires_at ?? null);
 
   // Show "Try Again" after 30s if still no driver
   useEffect(() => {
@@ -142,6 +199,37 @@ const RequestServicePage = () => {
     setPickup("");
     setDropoff("");
     setNotes("");
+    setOtpData(null);
+    otpFetchedForStatus.current = null;
+  };
+
+  // Auto-generate OTP when job transitions to assigned/arrived
+  useEffect(() => {
+    if (!activeJobId || !job) return;
+    const s = job.status;
+    if ((s === "assigned" || s === "arrived") && otpFetchedForStatus.current !== s && !otpData) {
+      otpFetchedForStatus.current = s;
+      setIsOtpLoading(true);
+      generateJobOtp(activeJobId)
+        .then((data) => {
+          if (data) setOtpData(data);
+          else toast.error("Failed to generate verification code");
+        })
+        .finally(() => setIsOtpLoading(false));
+    }
+  }, [activeJobId, job?.status, otpData]);
+
+  const handleRegenerateOtp = async () => {
+    if (!activeJobId) return;
+    setIsOtpLoading(true);
+    const data = await generateJobOtp(activeJobId);
+    if (data) {
+      setOtpData(data);
+      toast.success("New code generated");
+    } else {
+      toast.error("Failed to regenerate code");
+    }
+    setIsOtpLoading(false);
   };
 
   const isSearching = job?.status === "requested";
@@ -370,6 +458,70 @@ const RequestServicePage = () => {
                 dropoffLng={job!.dropoff_lng}
                 className="h-[280px] w-full"
               />
+
+              {/* OTP Verification Code — shown for assigned/arrived */}
+              {(job!.status === "assigned" || job!.status === "arrived") && (
+                <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                      Verification Code
+                    </h3>
+                  </div>
+
+                  {isOtpLoading && !otpData ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Generating code...</span>
+                    </div>
+                  ) : otpData ? (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Share this code with your driver to verify pickup
+                      </p>
+                      {/* OTP digits */}
+                      <div className="flex justify-center gap-3">
+                        {otpData.otp.split("").map((digit, i) => (
+                          <div
+                            key={i}
+                            className="w-12 h-14 rounded-xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center"
+                          >
+                            <span className="text-2xl font-bold text-primary">{digit}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Countdown */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Timer className="w-3.5 h-3.5" />
+                          {otpSecondsLeft > 0 ? (
+                            <span>Expires in {formatCountdown(otpSecondsLeft)}</span>
+                          ) : (
+                            <span className="text-destructive">Expired</span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={handleRegenerateOtp}
+                          disabled={isOtpLoading}
+                        >
+                          {isOtpLoading ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>
+                              <RefreshCw className="w-3 h-3 mr-1" /> Regenerate
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-destructive">Could not generate code. Try again.</p>
+                  )}
+                </div>
+              )}
 
               {/* Trip Info */}
               <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
