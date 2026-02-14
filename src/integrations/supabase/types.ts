@@ -19241,48 +19241,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ledger_entries: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string
-          entry_type: string
-          id: string
-          meta_json: Json | null
-          order_id: string | null
-          payee_id: string | null
-          payee_type: string | null
-          payout_item_id: string | null
-          payout_run_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string
-          entry_type: string
-          id?: string
-          meta_json?: Json | null
-          order_id?: string | null
-          payee_id?: string | null
-          payee_type?: string | null
-          payout_item_id?: string | null
-          payout_run_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          entry_type?: string
-          id?: string
-          meta_json?: Json | null
-          order_id?: string | null
-          payee_id?: string | null
-          payee_type?: string | null
-          payout_item_id?: string | null
-          payout_run_id?: string | null
-        }
-        Relationships: []
-      }
       legal_audit_log: {
         Row: {
           action_type: string

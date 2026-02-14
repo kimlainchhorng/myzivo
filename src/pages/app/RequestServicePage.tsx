@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw, ShieldCheck, Timer } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw, ShieldCheck, Timer, Lock, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useCreateJob, useJobRealtime, dispatchJob, JobType, JobStatus } from "@/hooks/useJobRequest";
+import { useCreateJob, useJobRealtime, dispatchJob, cancelJob, JobType, JobStatus } from "@/hooks/useJobRequest";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import JobTrackingMap from "@/components/app/JobTrackingMap";
+import { getStripe, STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 
 interface OtpData {
@@ -181,6 +183,121 @@ const StatusTracker = ({ currentStatus }: { currentStatus: JobStatus }) => {
   );
 };
 
+// ─── Stripe Hold Confirmation Form ───
+const PaymentHoldForm = ({
+  jobId,
+  onSuccess,
+  onCancel,
+}: {
+  jobId: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConfirm = async () => {
+    if (!stripe || !elements) return;
+    setIsConfirming(true);
+    setError(null);
+
+    const { error: submitErr } = await elements.submit();
+    if (submitErr) {
+      setError(submitErr.message ?? "Payment failed");
+      setIsConfirming(false);
+      return;
+    }
+
+    const { error: confirmErr } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href,
+      },
+      redirect: "if_required",
+    });
+
+    if (confirmErr) {
+      setError(confirmErr.message ?? "Payment authorization failed");
+      setIsConfirming(false);
+      return;
+    }
+
+    // Payment authorized successfully
+    setIsConfirming(false);
+    onSuccess();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="space-y-4"
+    >
+      <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+          <Lock className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">Securing Payment</p>
+          <p className="text-xs text-muted-foreground">
+            A hold will be placed on your card. You won't be charged until the trip is completed.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-card border border-border p-4">
+        <PaymentElement
+          options={{
+            layout: "tabs",
+          }}
+        />
+      </div>
+
+      {error && (
+        <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3">
+          <p className="text-xs text-destructive font-medium">{error}</p>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          size="lg"
+          className="flex-1"
+          onClick={onCancel}
+          disabled={isConfirming}
+        >
+          Cancel
+        </Button>
+        <Button
+          size="lg"
+          className="flex-1"
+          onClick={handleConfirm}
+          disabled={!stripe || !elements || isConfirming}
+        >
+          {isConfirming ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Authorizing...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4" /> Authorize
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+        <Lock className="w-3 h-3" />
+        <span>Secured by Stripe · TLS 1.3 encrypted</span>
+      </div>
+    </motion.div>
+  );
+};
+
 // ─── Main Page ───
 const RequestServicePage = () => {
   const navigate = useNavigate();
@@ -195,6 +312,11 @@ const RequestServicePage = () => {
   const [showRetry, setShowRetry] = useState(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Payment hold state
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [isCreatingHold, setIsCreatingHold] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+
   const { job, isLoading: jobLoading, clearJob } = useJobRealtime(activeJobId);
   const { otpData, isLoading: isOtpLoading, clear: clearOtp } = useJobOtp(activeJobId, job?.status);
   const otpSecondsLeft = useCountdown(otpData?.expires_at ?? null);
@@ -207,7 +329,7 @@ const RequestServicePage = () => {
     }
     setShowRetry(false);
 
-    if (activeJobId && job?.status === "requested" && !job.assigned_driver_id) {
+    if (activeJobId && paymentConfirmed && job?.status === "requested" && !job.assigned_driver_id) {
       retryTimerRef.current = setTimeout(() => {
         setShowRetry(true);
       }, 30_000);
@@ -216,11 +338,12 @@ const RequestServicePage = () => {
     return () => {
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
-  }, [activeJobId, job?.status, job?.assigned_driver_id]);
+  }, [activeJobId, paymentConfirmed, job?.status, job?.assigned_driver_id]);
 
   const handleSubmit = async () => {
     if (!pickup.trim() || !dropoff.trim()) return;
 
+    // Step 1: Create job
     const result = await createJob.mutateAsync({
       job_type: jobType,
       pickup_address: pickup.trim(),
@@ -229,6 +352,75 @@ const RequestServicePage = () => {
     });
 
     setActiveJobId(result.id);
+
+    // Step 2: Create Stripe hold
+    setIsCreatingHold(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/stripe-hold-create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token ?? ""}`,
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
+          },
+          body: JSON.stringify({
+            job_id: result.id,
+            amount_total_cents: 2500, // Default estimate; replace with calculated amount
+            currency: "usd",
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to create hold" }));
+        throw new Error(err.error || "Payment hold failed");
+      }
+
+      const holdData = await res.json();
+      if (!holdData.ok || !holdData.client_secret) {
+        throw new Error("Invalid payment response");
+      }
+
+      setPaymentClientSecret(holdData.client_secret);
+    } catch (err: any) {
+      toast.error("Payment setup failed: " + err.message);
+      // Cancel the job
+      try { await cancelJob(result.id); } catch {}
+      setActiveJobId(null);
+      clearJob();
+    } finally {
+      setIsCreatingHold(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setPaymentConfirmed(true);
+    setPaymentClientSecret(null);
+    toast.success("Payment authorized! Finding your driver...");
+
+    // Now dispatch
+    if (activeJobId) {
+      try {
+        await dispatchJob(activeJobId);
+      } catch (e) {
+        console.warn("[RequestService] Dispatch after payment failed, will retry:", e);
+      }
+    }
+  };
+
+  const handlePaymentCancel = async () => {
+    // Cancel the job and reset
+    if (activeJobId) {
+      try { await cancelJob(activeJobId); } catch {}
+    }
+    setActiveJobId(null);
+    setPaymentClientSecret(null);
+    setPaymentConfirmed(false);
+    clearJob();
+    toast.info("Request cancelled");
   };
 
   const handleRetryDispatch = async () => {
@@ -255,9 +447,12 @@ const RequestServicePage = () => {
     setDropoff("");
     setNotes("");
     clearOtp();
+    setPaymentClientSecret(null);
+    setPaymentConfirmed(false);
   };
 
-  const isSearching = job?.status === "requested";
+  const isPaymentPending = activeJobId && paymentClientSecret && !paymentConfirmed;
+  const isSearching = activeJobId && paymentConfirmed && job?.status === "requested";
   const isAssigned = job && job.status !== "requested" && job.status !== "cancelled";
   const isCompleted = job?.status === "completed";
 
@@ -367,18 +562,41 @@ const RequestServicePage = () => {
               <Button
                 size="lg"
                 className="w-full"
-                disabled={!pickup.trim() || !dropoff.trim() || createJob.isPending}
+                disabled={!pickup.trim() || !dropoff.trim() || createJob.isPending || isCreatingHold}
                 onClick={handleSubmit}
               >
-                {createJob.isPending ? (
+                {createJob.isPending || isCreatingHold ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Requesting...
+                    <Loader2 className="w-4 h-4 animate-spin" /> {isCreatingHold ? "Setting up payment..." : "Requesting..."}
                   </>
                 ) : (
                   "Request"
                 )}
               </Button>
             </motion.div>
+          )}
+
+          {/* ─── PAYMENT HOLD STATE ─── */}
+          {isPaymentPending && paymentClientSecret && (
+            <Elements
+              stripe={getStripe()}
+              options={{
+                clientSecret: paymentClientSecret,
+                appearance: {
+                  theme: "night",
+                  variables: {
+                    colorPrimary: "hsl(var(--primary))",
+                    borderRadius: "12px",
+                  },
+                },
+              }}
+            >
+              <PaymentHoldForm
+                jobId={activeJobId!}
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            </Elements>
           )}
 
           {/* ─── SEARCHING STATE ─── */}
