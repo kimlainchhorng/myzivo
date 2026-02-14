@@ -45100,6 +45100,13 @@ export type Database = {
         }[]
       }
       get_week_start: { Args: { d: string }; Returns: string }
+      get_zone_geojsons: {
+        Args: never
+        Returns: {
+          geojson: Json
+          id: string
+        }[]
+      }
       get_zone_schedule_multiplier: {
         Args: { p_ts?: string; p_zone_id: string }
         Returns: number
