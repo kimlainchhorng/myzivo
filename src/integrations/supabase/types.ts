@@ -43108,6 +43108,14 @@ export type Database = {
       }
     }
     Functions: {
+      accept_job_offer: {
+        Args: { p_offer_id: string }
+        Returns: {
+          assigned_driver_id: string
+          job_id: string
+          status: Database["public"]["Enums"]["job_status"]
+        }[]
+      }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {
         Args: { p_accepted: boolean; p_recommendation_id: string }
@@ -43377,6 +43385,7 @@ export type Database = {
           reason: string
         }[]
       }
+      expire_job_offers: { Args: never; Returns: number }
       find_nearest_branch: {
         Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
         Returns: string

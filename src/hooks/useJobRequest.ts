@@ -27,6 +27,41 @@ export interface CreateJobData {
   notes?: string;
 }
 
+export interface DispatchResult {
+  success: boolean;
+  message: string;
+  driver_count?: number;
+}
+
+// Call the auto-dispatch edge function for a job
+export const dispatchJob = async (jobId: string): Promise<DispatchResult> => {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const res = await fetch(
+    `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session?.access_token ?? ""}`,
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
+      },
+      body: JSON.stringify({
+        job_id: jobId,
+        max_drivers: 3,
+        offer_ttl_seconds: 25,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Dispatch failed" }));
+    throw new Error(err.error || "Dispatch failed");
+  }
+
+  return res.json();
+};
+
 export const useCreateJob = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -49,7 +84,17 @@ export const useCreateJob = () => {
         .single();
 
       if (error) throw error;
-      return job as unknown as Job;
+
+      const created = job as unknown as Job;
+
+      // Immediately call auto-dispatch
+      try {
+        await dispatchJob(created.id);
+      } catch (e) {
+        console.warn("[useCreateJob] Auto-dispatch call failed, will retry:", e);
+      }
+
+      return created;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });

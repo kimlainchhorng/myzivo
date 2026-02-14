@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, StickyNote, Car, Package, Utensils, Loader2, Check, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useCreateJob, useJobRealtime, JobType, JobStatus } from "@/hooks/useJobRequest";
+import { useCreateJob, useJobRealtime, dispatchJob, JobType, JobStatus } from "@/hooks/useJobRequest";
+import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 const JOB_TYPES: { value: JobType; label: string; icon: React.ElementType }[] = [
@@ -79,6 +80,7 @@ const RequestServicePage = () => {
   const [dropoff, setDropoff] = useState("");
   const [notes, setNotes] = useState("");
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const { job, isLoading: jobLoading, clearJob } = useJobRealtime(activeJobId);
 
@@ -93,6 +95,23 @@ const RequestServicePage = () => {
     });
 
     setActiveJobId(result.id);
+  };
+
+  const handleRetryDispatch = async () => {
+    if (!activeJobId) return;
+    setIsRetrying(true);
+    try {
+      const result = await dispatchJob(activeJobId);
+      if (result.success) {
+        toast.success("Driver found!");
+      } else {
+        toast.info(result.message || "Still searching...");
+      }
+    } catch (e: any) {
+      toast.error("Retry failed: " + e.message);
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   const handleNewRequest = () => {
@@ -182,7 +201,7 @@ const RequestServicePage = () => {
                   Dropoff Address
                 </Label>
                 <div className="relative">
-                  <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                  <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                   <Input
                     value={dropoff}
                     onChange={(e) => setDropoff(e.target.value)}
@@ -251,10 +270,29 @@ const RequestServicePage = () => {
                   <span className="truncate">{job?.pickup_address}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Navigation className="w-3.5 h-3.5 text-emerald-500" />
+                  <Navigation className="w-3.5 h-3.5 text-primary" />
                   <span className="truncate">{job?.dropoff_address}</span>
                 </div>
               </div>
+
+              {/* Retry button */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full max-w-xs"
+                onClick={handleRetryDispatch}
+                disabled={isRetrying}
+              >
+                {isRetrying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Retrying...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" /> Retry Search
+                  </>
+                )}
+              </Button>
             </motion.div>
           )}
 
@@ -290,7 +328,7 @@ const RequestServicePage = () => {
                 </div>
                 <div className="ml-2 border-l-2 border-dashed border-border h-4" />
                 <div className="flex items-center gap-2 text-sm">
-                  <Navigation className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <Navigation className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-foreground">{job?.dropoff_address}</span>
                 </div>
               </div>
