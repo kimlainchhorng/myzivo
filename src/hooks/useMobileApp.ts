@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOrCreateDeviceId } from '@/lib/deviceId';
 
 interface MobileAppState {
   isStandalone: boolean;
@@ -174,14 +175,4 @@ async function trackAppInstall(userId: string, platform: 'ios' | 'android' | 'we
   }
 }
 
-function getOrCreateDeviceId(): string {
-  const key = 'zivo_device_id';
-  let deviceId = localStorage.getItem(key);
-  
-  if (!deviceId) {
-    deviceId = `DV_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-    localStorage.setItem(key, deviceId);
-  }
-  
-  return deviceId;
-}
+// getOrCreateDeviceId is now imported from @/lib/deviceId
