@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, Dol
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +108,7 @@ function PaymentForm({
 export default function RequestRidePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isChecking: phoneChecking } = usePhoneVerificationGate();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
 
   // Pickup state
