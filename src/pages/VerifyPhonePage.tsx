@@ -3,7 +3,7 @@
  * Customer phone verification using Supabase Auth SMS OTP
  */
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,14 @@ export default function VerifyPhonePage() {
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldown > 0]);
 
   // Validate E.164 format
   const isValidPhone = /^\+[1-9]\d{6,14}$/.test(phoneE164);
@@ -60,6 +68,7 @@ export default function VerifyPhonePage() {
       if (otpError) throw otpError;
 
       toast.success("Verification code sent!");
+      setCooldown(60);
       setStep("otp");
     } catch (err: any) {
       console.error("Send code error:", err);
@@ -170,7 +179,7 @@ export default function VerifyPhonePage() {
 
                 <Button
                   onClick={handleSendCode}
-                  disabled={!isValidPhone || isSending}
+                  disabled={!isValidPhone || isSending || cooldown > 0}
                   className="w-full h-12 text-base font-semibold"
                 >
                   {isSending ? (
@@ -178,6 +187,8 @@ export default function VerifyPhonePage() {
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Sending…
                     </>
+                  ) : cooldown > 0 ? (
+                    `Resend in ${cooldown}s`
                   ) : (
                     "Send Code"
                   )}
@@ -245,9 +256,9 @@ export default function VerifyPhonePage() {
                     variant="ghost"
                     size="sm"
                     onClick={handleSendCode}
-                    disabled={isSending}
+                    disabled={isSending || cooldown > 0}
                   >
-                    {isSending ? "Sending…" : "Resend code"}
+                    {isSending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
                   </Button>
                 </div>
               </motion.div>
