@@ -390,6 +390,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_2fa_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          totp_secret: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          totp_secret: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          totp_secret?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_actions: {
         Row: {
           action_type: string
@@ -1566,6 +1590,13 @@ export type Database = {
             columns: ["airport_id"]
             isOneToOne: false
             referencedRelation: "airports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "airport_fee_rules_airport_id_fkey"
+            columns: ["airport_id"]
+            isOneToOne: false
+            referencedRelation: "public_active_airports"
             referencedColumns: ["id"]
           },
         ]
@@ -6214,6 +6245,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           state: string | null
+          state_id: string | null
           timezone: string | null
         }
         Insert: {
@@ -6226,6 +6258,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           state?: string | null
+          state_id?: string | null
           timezone?: string | null
         }
         Update: {
@@ -6238,9 +6271,25 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           state?: string | null
+          state_id?: string | null
           timezone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cities_state_fk"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "public_active_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cities_state_fk"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       city_health_alerts: {
         Row: {
@@ -6741,6 +6790,13 @@ export type Database = {
           surge_enabled?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "city_settings_city_fk"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "city_settings_city_id_fkey"
             columns: ["city_id"]
@@ -12546,6 +12602,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      drivers_status: {
+        Row: {
+          city: string | null
+          driver_id: string
+          is_online: boolean
+          last_seen: string
+          lat: number | null
+          lng: number | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          driver_id: string
+          is_online?: boolean
+          last_seen?: string
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          driver_id?: string
+          is_online?: boolean
+          last_seen?: string
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       earnings_forecasts: {
         Row: {
@@ -18359,6 +18445,107 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_offers: {
+        Row: {
+          created_at: string
+          driver_id: string
+          expires_at: string
+          id: string
+          job_id: string
+          offer_status: Database["public"]["Enums"]["offer_status"]
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          expires_at: string
+          id?: string
+          job_id: string
+          offer_status?: Database["public"]["Enums"]["offer_status"]
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          job_id?: string
+          offer_status?: Database["public"]["Enums"]["offer_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offers_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          assigned_driver_id: string | null
+          created_at: string
+          customer_id: string
+          driver_earnings: number | null
+          dropoff_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          id: string
+          job_type: Database["public"]["Enums"]["job_type"]
+          merchant_id: string | null
+          merchant_net: number | null
+          notes: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          platform_fee: number | null
+          price_total: number | null
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_driver_id?: string | null
+          created_at?: string
+          customer_id: string
+          driver_earnings?: number | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          id?: string
+          job_type: Database["public"]["Enums"]["job_type"]
+          merchant_id?: string | null
+          merchant_net?: number | null
+          notes?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number | null
+          price_total?: number | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_driver_id?: string | null
+          created_at?: string
+          customer_id?: string
+          driver_earnings?: number | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          id?: string
+          job_type?: Database["public"]["Enums"]["job_type"]
+          merchant_id?: string | null
+          merchant_net?: number | null
+          notes?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number | null
+          price_total?: number | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       knowledge_base_articles: {
         Row: {
@@ -26331,7 +26518,6 @@ export type Database = {
       profiles: {
         Row: {
           admin_2fa_enabled: boolean | null
-          admin_2fa_secret: string | null
           admin_role: string | null
           affiliate_captured_at: string | null
           affiliate_code: string | null
@@ -26369,7 +26555,6 @@ export type Database = {
         }
         Insert: {
           admin_2fa_enabled?: boolean | null
-          admin_2fa_secret?: string | null
           admin_role?: string | null
           affiliate_captured_at?: string | null
           affiliate_code?: string | null
@@ -26407,7 +26592,6 @@ export type Database = {
         }
         Update: {
           admin_2fa_enabled?: boolean | null
-          admin_2fa_secret?: string | null
           admin_role?: string | null
           affiliate_captured_at?: string | null
           affiliate_code?: string | null
@@ -32237,6 +32421,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "service_zones_city_fk"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "service_zones_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -33463,6 +33654,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      states: {
+        Row: {
+          active: boolean
+          country: string
+          created_at: string
+          id: string
+          state_code: string
+          state_name: string
+          timezone_default: string | null
+        }
+        Insert: {
+          active?: boolean
+          country?: string
+          created_at?: string
+          id?: string
+          state_code: string
+          state_name: string
+          timezone_default?: string | null
+        }
+        Update: {
+          active?: boolean
+          country?: string
+          created_at?: string
+          id?: string
+          state_code?: string
+          state_name?: string
+          timezone_default?: string | null
+        }
+        Relationships: []
       }
       strategic_goal_updates: {
         Row: {
@@ -42149,6 +42370,82 @@ export type Database = {
           },
         ]
       }
+      public_active_airports: {
+        Row: {
+          city_id: string | null
+          code: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          code?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          code?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airports_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_active_states: {
+        Row: {
+          id: string | null
+          state_code: string | null
+          state_name: string | null
+          timezone_default: string | null
+        }
+        Insert: {
+          id?: string | null
+          state_code?: string | null
+          state_name?: string | null
+          timezone_default?: string | null
+        }
+        Update: {
+          id?: string | null
+          state_code?: string | null
+          state_name?: string | null
+          timezone_default?: string | null
+        }
+        Relationships: []
+      }
+      public_city_services: {
+        Row: {
+          city: string | null
+          city_id: string | null
+          minimum_driver_supply: number | null
+          services_enabled: Json | null
+          state: string | null
+          surge_enabled: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_settings_city_fk"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_settings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -43192,6 +43489,7 @@ export type Database = {
         Args: { p_policy_type: string }
         Returns: string
       }
+      get_day_of_week: { Args: { ts: string }; Returns: number }
       get_default_pricing_zone_id: { Args: never; Returns: string }
       get_delivered_order_for_rating: {
         Args: { p_tracking_code: string }
@@ -43333,9 +43631,9 @@ export type Database = {
       get_pricing_for_trip: {
         Args: {
           p_city_id: string
-          p_service_type?: string
-          p_timestamp?: string
-          p_zone_id?: string
+          p_request_time: string
+          p_service_type: string
+          p_zone_id: string
         }
         Returns: Json
       }
@@ -43856,6 +44154,15 @@ export type Database = {
         | "discount"
         | "credit"
       invoice_status: "draft" | "issued" | "paid" | "overdue" | "cancelled"
+      job_status:
+        | "requested"
+        | "dispatched"
+        | "assigned"
+        | "arrived"
+        | "in_progress"
+        | "completed"
+        | "canceled"
+      job_type: "ride" | "food_delivery" | "package"
       launch_alert_severity: "info" | "warning" | "critical"
       launch_alert_type:
         | "booking_failure"
@@ -43882,6 +44189,7 @@ export type Database = {
         | "marketing"
       notification_channel: "email" | "in_app" | "sms"
       notification_status: "queued" | "sent" | "failed" | "read"
+      offer_status: "sent" | "accepted" | "rejected" | "expired"
       p2p_booking_status:
         | "pending"
         | "confirmed"
@@ -44209,6 +44517,16 @@ export const Constants = {
         "credit",
       ],
       invoice_status: ["draft", "issued", "paid", "overdue", "cancelled"],
+      job_status: [
+        "requested",
+        "dispatched",
+        "assigned",
+        "arrived",
+        "in_progress",
+        "completed",
+        "canceled",
+      ],
+      job_type: ["ride", "food_delivery", "package"],
       launch_alert_severity: ["info", "warning", "critical"],
       launch_alert_type: [
         "booking_failure",
@@ -44238,6 +44556,7 @@ export const Constants = {
       ],
       notification_channel: ["email", "in_app", "sms"],
       notification_status: ["queued", "sent", "failed", "read"],
+      offer_status: ["sent", "accepted", "rejected", "expired"],
       p2p_booking_status: [
         "pending",
         "confirmed",

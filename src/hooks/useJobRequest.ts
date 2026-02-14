@@ -1,0 +1,116 @@
+import { useState, useEffect, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+export type JobType = "ride" | "food_delivery" | "package";
+export type JobStatus = "requested" | "assigned" | "arrived" | "in_progress" | "completed" | "cancelled";
+
+export interface Job {
+  id: string;
+  job_type: JobType;
+  status: JobStatus;
+  customer_id: string;
+  pickup_address: string | null;
+  dropoff_address: string | null;
+  assigned_driver_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateJobData {
+  job_type: JobType;
+  pickup_address: string;
+  dropoff_address: string;
+  notes?: string;
+}
+
+export const useCreateJob = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateJobData) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      const { data: job, error } = await supabase
+        .from("jobs")
+        .insert({
+          job_type: data.job_type,
+          customer_id: user.id,
+          pickup_address: data.pickup_address,
+          dropoff_address: data.dropoff_address,
+          notes: data.notes || null,
+          status: "requested",
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return job as unknown as Job;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+    onError: (err) => {
+      toast.error("Failed to create job: " + err.message);
+    },
+  });
+};
+
+export const useJobRealtime = (jobId: string | null) => {
+  const [job, setJob] = useState<Job | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initial fetch
+  useEffect(() => {
+    if (!jobId) {
+      setJob(null);
+      return;
+    }
+
+    setIsLoading(true);
+    supabase
+      .from("jobs")
+      .select("*")
+      .eq("id", jobId)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) setJob(data as unknown as Job);
+        setIsLoading(false);
+      });
+  }, [jobId]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!jobId) return;
+
+    const channel = supabase
+      .channel(`job-${jobId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "jobs",
+          filter: `id=eq.${jobId}`,
+        },
+        (payload) => {
+          setJob(payload.new as unknown as Job);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [jobId]);
+
+  const clearJob = useCallback(() => {
+    setJob(null);
+  }, []);
+
+  return { job, isLoading, clearJob };
+};
