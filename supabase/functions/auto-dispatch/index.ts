@@ -6,7 +6,10 @@ const corsHeaders = {
 };
 
 interface AutoDispatchRequest {
-  trip_id: string;
+  trip_id?: string;
+  job_id?: string;
+  max_drivers?: number;
+  offer_ttl_seconds?: number;
 }
 
 interface DriverWithDistance {
@@ -48,11 +51,115 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request
-    const { trip_id }: AutoDispatchRequest = await req.json();
+    const { trip_id, job_id, max_drivers = 3, offer_ttl_seconds = 25 }: AutoDispatchRequest = await req.json();
 
+    // ─── JOB-BASED DISPATCH ───
+    if (job_id) {
+      console.log(`[auto-dispatch] Processing job: ${job_id}, max_drivers=${max_drivers}, ttl=${offer_ttl_seconds}s`);
+
+      const { data: job, error: jobError } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("id", job_id)
+        .single();
+
+      if (jobError || !job) {
+        console.error("[auto-dispatch] Job not found:", jobError);
+        return new Response(
+          JSON.stringify({ error: "Job not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (job.assigned_driver_id) {
+        return new Response(
+          JSON.stringify({ success: false, message: "Job already assigned", status: job.status }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Find online, available drivers
+      const { data: availableDrivers, error: driversError } = await supabase
+        .from("drivers")
+        .select("id, user_id, full_name, current_lat, current_lng, rating, total_trips, vehicle_type, fcm_token, apns_token")
+        .eq("is_online", true)
+        .eq("is_busy", false)
+        .eq("is_suspended", false)
+        .not("current_lat", "is", null)
+        .not("current_lng", "is", null)
+        .limit(max_drivers * 3);
+
+      if (driversError) {
+        console.error("[auto-dispatch] Error fetching drivers:", driversError);
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch available drivers" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`[auto-dispatch] Found ${availableDrivers?.length || 0} online drivers for job`);
+
+      if (!availableDrivers || availableDrivers.length === 0) {
+        return new Response(
+          JSON.stringify({ success: false, message: "No available drivers found", driver_count: 0 }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // If job has pickup coords, sort by distance; otherwise pick first available
+      let selectedDriver = availableDrivers[0];
+      if (job.pickup_lat && job.pickup_lng) {
+        const driversWithDistance = availableDrivers
+          .map((d: any) => ({ ...d, distance_km: calculateDistance(job.pickup_lat, job.pickup_lng, d.current_lat, d.current_lng) }))
+          .sort((a: any, b: any) => a.distance_km - b.distance_km);
+        selectedDriver = driversWithDistance[0];
+      }
+
+      // Assign driver to job atomically
+      const { data: updatedJob, error: updateError } = await supabase
+        .from("jobs")
+        .update({
+          assigned_driver_id: selectedDriver.id,
+          status: "assigned",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job_id)
+        .is("assigned_driver_id", null)
+        .select()
+        .single();
+
+      if (updateError || !updatedJob) {
+        console.error("[auto-dispatch] Failed to assign driver to job:", updateError);
+        return new Response(
+          JSON.stringify({ success: false, message: "Failed to assign driver - job may have been claimed" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Mark driver as busy
+      await supabase.from("drivers").update({ is_busy: true, updated_at: new Date().toISOString() }).eq("id", selectedDriver.id);
+
+      console.log(`[auto-dispatch] Assigned driver ${selectedDriver.id} to job ${job_id}`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Driver assigned successfully",
+          job_id,
+          driver: {
+            id: selectedDriver.id,
+            name: selectedDriver.full_name,
+            vehicle_type: selectedDriver.vehicle_type,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── TRIP-BASED DISPATCH (existing) ───
     if (!trip_id) {
       return new Response(
-        JSON.stringify({ error: "trip_id is required" }),
+        JSON.stringify({ error: "trip_id or job_id is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
