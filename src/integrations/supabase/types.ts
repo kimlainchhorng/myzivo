@@ -44313,6 +44313,10 @@ export type Database = {
         Args: { p_driver_id: string; p_order_id: string; p_tenant_id: string }
         Returns: Json
       }
+      admin_clear_customer_phone: {
+        Args: { _customer_id: string }
+        Returns: undefined
+      }
       admin_issue_order_refund: {
         Args: {
           p_amount: number
