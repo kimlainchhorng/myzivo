@@ -18634,6 +18634,53 @@ export type Database = {
           },
         ]
       }
+      job_payments: {
+        Row: {
+          amount_total_cents: number
+          created_at: string
+          currency: string
+          customer_id: string
+          id: string
+          job_id: string
+          status: string
+          stripe_client_secret: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_total_cents?: number
+          created_at?: string
+          currency?: string
+          customer_id: string
+          id?: string
+          job_id: string
+          status?: string
+          stripe_client_secret?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_total_cents?: number
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          id?: string
+          job_id?: string
+          status?: string
+          stripe_client_secret?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_payments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           assigned_driver_id: string | null
@@ -34004,6 +34051,30 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          received_at: string
+          stripe_event_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          payload: Json
+          received_at?: string
+          stripe_event_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          received_at?: string
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           benefits_json: Json | null
@@ -43758,7 +43829,6 @@ export type Database = {
         Returns: {
           expires_at: string
           otp: string
-          verified_at: string
         }[]
       }
       get_jwt_role: { Args: never; Returns: string }

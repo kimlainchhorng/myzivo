@@ -227,3 +227,6 @@ verify_jwt = false
 
 [functions.otp-generate]
 verify_jwt = false
+
+[functions.otp-get]
+verify_jwt = false
