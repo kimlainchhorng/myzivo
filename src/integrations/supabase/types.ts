@@ -46028,6 +46028,10 @@ export type Database = {
         Returns: string
       }
       get_order_batch_info: { Args: { p_order_id: string }; Returns: Json }
+      get_order_by_tracking_code: {
+        Args: { _tenant_slug?: string; _tracking_code: string }
+        Returns: Json
+      }
       get_order_driver_location: {
         Args: { p_order_id: string }
         Returns: {
