@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
 
     if (!stripeKey) {
@@ -18,6 +19,46 @@ Deno.serve(async (req) => {
         status: 500,
         headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+
+    // Auth: require service role key or admin user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    if (token !== serviceKey) {
+      // Not service role — check if caller is an admin
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check admin role
+      const admin = createClient(supabaseUrl, serviceKey);
+      const { data: roleData } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin role required" }), {
+          status: 403,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { job_id, amount_to_capture_cents } = await req.json();
