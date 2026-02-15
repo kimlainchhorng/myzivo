@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,10 +12,26 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("authorization") ?? "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const client = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await client.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { input, proximity } = await req.json();
-    
-    if (!input || typeof input !== "string" || input.trim().length < 2) {
-      return new Response(JSON.stringify({ error: "Input must be at least 2 characters" }), {
+
+    // Input validation
+    if (!input || typeof input !== "string" || input.trim().length < 2 || input.length > 200) {
+      return new Response(JSON.stringify({ error: "Input must be 2-200 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -34,12 +51,11 @@ Deno.serve(async (req) => {
       `&types=geocode|establishment` +
       `&key=${encodeURIComponent(key)}`;
 
-    // Add proximity bias if provided
     if (proximity?.lat && proximity?.lng) {
       url += `&location=${proximity.lat},${proximity.lng}&radius=50000`;
     }
 
-    console.log(`[maps-autocomplete] Fetching suggestions for: "${input.trim()}"`);
+    console.log(`[maps-autocomplete] Fetching suggestions for: "${input.trim()}" (user: ${user.id})`);
 
     const res = await fetch(url);
     const data = await res.json();

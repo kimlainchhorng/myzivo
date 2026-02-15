@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,10 +12,28 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("authorization") ?? "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const client = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await client.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { lat, lng } = await req.json();
 
-    if (typeof lat !== "number" || typeof lng !== "number") {
-      return new Response(JSON.stringify({ error: "Missing lat/lng" }), {
+    // Input validation with range checks
+    if (typeof lat !== "number" || typeof lng !== "number"
+        || lat < -90 || lat > 90 || lng < -180 || lng > 180
+        || !isFinite(lat) || !isFinite(lng)) {
+      return new Response(JSON.stringify({ error: "Invalid coordinates" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -31,7 +50,7 @@ Deno.serve(async (req) => {
 
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${encodeURIComponent(key)}`;
 
-    console.log(`[maps-reverse-geocode] Reverse geocoding: ${lat}, ${lng}`);
+    console.log(`[maps-reverse-geocode] Reverse geocoding: ${lat}, ${lng} (user: ${user.id})`);
 
     const res = await fetch(url);
     const data = await res.json();
