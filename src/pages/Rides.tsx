@@ -120,7 +120,9 @@ function RidesMapView({
   routeData,
   onPickupClick,
   onDropoffClick,
-  onLocateMe
+  onLocateMe,
+  onMapClick,
+  pinTarget,
 }: {
   userLocation: { lat: number; lng: number } | null;
   pickupCoords?: { lat: number; lng: number } | null;
@@ -132,6 +134,8 @@ function RidesMapView({
   onPickupClick?: () => void;
   onDropoffClick?: () => void;
   onLocateMe?: () => void;
+  onMapClick?: (position: { lat: number; lng: number }) => void;
+  pinTarget?: "pickup" | "dropoff";
 }) {
   const { isLoaded, loadError } = useGoogleMaps();
   const center = pickupCoords || userLocation || DEFAULT_CENTER;
@@ -200,6 +204,7 @@ function RidesMapView({
             fitBounds={!!(pickupCoords && dropoffCoords)}
             showControls={false}
             darkMode={false}
+            onMapClick={onMapClick}
           />
           {/* Subtle light vignette */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.03)_100%)]" />
@@ -243,6 +248,18 @@ function RidesMapView({
           </div>
           <ChevronRight className="w-4 h-4 text-teal-500 flex-shrink-0" />
         </button>
+      )}
+
+      {/* Pin target indicator */}
+      {pinTarget && (
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-3 py-2 border border-emerald-200">
+            <div className={`w-3 h-3 rounded-full ${pinTarget === "pickup" ? "bg-emerald-500" : "bg-orange-500"}`} />
+            <span className="text-xs font-medium text-zinc-700">
+              Tap map to set {pinTarget === "pickup" ? "pickup" : "dropoff"}
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Current location button */}
@@ -562,6 +579,43 @@ function RidesInner() {
     }
   };
 
+  // Map tap-to-pin: set pickup or dropoff by tapping on the map
+  const handleMapTap = useCallback(async (position: { lat: number; lng: number }) => {
+    // Determine which field to set: if pickup is empty, set pickup; otherwise set dropoff
+    const target = !pickupCoords ? "pickup" : "dropoff";
+    
+    try {
+      const address = await reverseGeocode(position.lat, position.lng);
+      if (target === "pickup") {
+        setPickupCoords(position);
+        setPickup(address);
+        toast.success("Pickup set from map");
+      } else {
+        setDropoffCoords(position);
+        setDropoff(address);
+        toast.success("Dropoff set from map");
+      }
+    } catch {
+      // Even if reverse geocode fails, still set coordinates with a fallback label
+      const label = `${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
+      if (target === "pickup") {
+        setPickupCoords(position);
+        setPickup(label);
+      } else {
+        setDropoffCoords(position);
+        setDropoff(label);
+      }
+      toast.success(`${target === "pickup" ? "Pickup" : "Dropoff"} pinned on map`);
+    }
+  }, [pickupCoords, reverseGeocode]);
+
+  // Determine pin target for the visual indicator
+  const mapPinTarget = useMemo((): "pickup" | "dropoff" | undefined => {
+    if (!pickupCoords) return "pickup";
+    if (!dropoffCoords) return "dropoff";
+    return undefined; // Both set — tapping will update dropoff
+  }, [pickupCoords, dropoffCoords]);
+
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
     const reqId = searchParams.get("request_id");
@@ -768,6 +822,8 @@ function RidesInner() {
             setTimeout(() => dropoffInputRef.current?.focus(), 150);
           }}
           onLocateMe={handleUseCurrentLocation}
+          onMapClick={handleMapTap}
+          pinTarget={mapPinTarget}
         />
       </div>
       
