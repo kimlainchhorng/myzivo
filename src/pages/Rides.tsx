@@ -118,6 +118,7 @@ function RidesMapView({
   dropoff,
   etaMinutes,
   routeData,
+  isRouteLoading,
   onPickupClick,
   onDropoffClick,
   onLocateMe,
@@ -133,6 +134,7 @@ function RidesMapView({
   dropoff: string;
   etaMinutes?: number;
   routeData?: ServerRouteData | null;
+  isRouteLoading?: boolean;
   onPickupClick?: () => void;
   onDropoffClick?: () => void;
   onLocateMe?: () => void;
@@ -256,6 +258,16 @@ function RidesMapView({
         </button>
       )}
 
+      {/* Route calculating indicator */}
+      {isRouteLoading && pickup && dropoff && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl rounded-full shadow-lg px-4 py-2 border border-emerald-200">
+            <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+            <span className="text-xs font-medium text-emerald-700">Calculating route…</span>
+          </div>
+        </div>
+      )}
+
       {/* Pin target indicator */}
       {pinTarget && (
         <div className="absolute top-4 left-4 z-10">
@@ -287,7 +299,7 @@ function RidesInner() {
   const [searchParams] = useSearchParams();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const isMobile = useIsMobile();
-  const { routeData, fetchRoute, clearRoute } = useServerRoute();
+  const { routeData, isLoading: isRouteLoading, fetchRoute, clearRoute } = useServerRoute();
   const { suggestions: pickupSuggestions, fetchSuggestions: fetchPickupSuggestions, clearSuggestions: clearPickupSuggestions } = useGoogleMapsGeocode();
   const { suggestions: dropoffSuggestions, fetchSuggestions: fetchDropoffSuggestions, clearSuggestions: clearDropoffSuggestions } = useGoogleMapsGeocode();
   
@@ -844,6 +856,7 @@ function RidesInner() {
           dropoff={dropoff}
           etaMinutes={selectedOption ? getBlendedEta(selectedOption.eta || 5) : (routeData?.duration ? Math.round(routeData.duration) : undefined)}
           routeData={routeData}
+          isRouteLoading={isRouteLoading}
           onPickupClick={() => {
             setIsExpanded(true);
             setTimeout(() => pickupInputRef.current?.focus(), 150);
@@ -1150,7 +1163,12 @@ function RidesInner() {
               </div>
 
               {/* Trip Info - ZIVO styled */}
-              {routeData && dropoff && (
+              {isRouteLoading && dropoff && pickup ? (
+                <div className="flex items-center gap-3 text-sm bg-emerald-50 rounded-xl px-3 py-2 border border-emerald-100">
+                  <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-medium text-emerald-600">Calculating route…</span>
+                </div>
+              ) : routeData && dropoff && (
                 <div className="flex items-center gap-3 text-sm text-zinc-600 bg-emerald-50 rounded-xl px-3 py-2 border border-emerald-100">
                   <span className="font-medium text-emerald-700">{estimatedDistance.toFixed(1)} mi</span>
                   <span className="text-emerald-300">•</span>
