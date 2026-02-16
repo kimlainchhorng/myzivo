@@ -1,94 +1,62 @@
 
-# Fix Remaining Security Warnings
 
-## Summary
-Address the three open agent_security warnings by adding authentication and input validation to vulnerable edge functions, and downgrading the SECURITY DEFINER finding after verification.
+# Fix Map Display + Upgrade Premium Ride Options
 
----
+## Issue 1: Map Not Loading
 
-## 1. Secure Maps API Proxies (edge_unauth_endpoints)
+**Root Cause:** The `VITE_GOOGLE_MAPS_API_KEY` env variable is empty in `.env`. The `GoogleMapProvider` falls back to fetching the key via the `maps-api-key` edge function, but that requires authentication. If the user isn't logged in (or the session hasn't loaded yet), the map shows the dark green placeholder with a pulsing dot instead of an actual Google Map.
 
-**Problem:** `maps-autocomplete`, `maps-place-details`, and `maps-reverse-geocode` are publicly accessible without any authentication, risking Google Maps API quota abuse.
+**Fix:**
+- Update `GoogleMapProvider` to handle the "not yet authenticated" case more gracefully -- show a loading state while checking auth, and retry fetching the API key once auth is ready
+- Add a Supabase auth state listener so the provider re-attempts key fetching when the user signs in
+- Ensure the `GOOGLE_MAPS_API_KEY` secret is properly set in Supabase (already confirmed it exists)
+- Show a clearer fallback message when the map can't load due to auth
 
-**Fix:** Add optional JWT authentication check — require at least an authenticated user for these endpoints. Since these are used in the app by logged-in users and during booking flows, requiring auth is acceptable.
+## Issue 2: Premium Tab - Visual Upgrade
 
-**Files to update:**
-- `supabase/functions/maps-autocomplete/index.ts`
-- `supabase/functions/maps-place-details/index.ts`
-- `supabase/functions/maps-reverse-geocode/index.ts`
+**Current State:** The Premium tab uses the same `ZivoRideRow` component as Economy -- simple rows with inline SVG car icons. This doesn't differentiate the Premium tier visually.
 
-**Changes per file:**
-- Import `createClient` from shared deps
-- Extract auth header and validate user via `getUser()`
-- Return 401 if no valid user session
+**Upgrade Plan -- Make Premium look more luxurious:**
 
----
+1. **Enhanced ZivoRideRow for Premium/Elite tiers:**
+   - Add a subtle gradient background (dark charcoal/gold for Premium, deep purple/gold for Elite)
+   - Show a premium badge/icon (Star icon for Premium, Crown for Elite)
+   - Use a different, more refined car SVG for premium vehicles (sleeker sedan silhouette)
+   - Add a subtle shimmer/glow effect on selected state
 
-## 2. Add Input Validation to Maps Functions (edge_input_validation)
+2. **Premium-specific visual enhancements in Rides.tsx:**
+   - When Premium tab is active, show a subtle gold accent on the category tab
+   - Add a "Premium Experience" header with a star icon
+   - Differentiate card borders (gold for Premium, purple for Elite)
 
-**Problem:** Maps functions accept user input without sanitization or length limits.
-
-**Fix:** Add validation to each endpoint:
-- `maps-autocomplete`: Validate `input` is a string, max 200 chars, sanitize
-- `maps-place-details`: Validate `place_id` is a string, max 300 chars, matches expected format
-- `maps-reverse-geocode`: Validate `lat`/`lng` are numbers within valid ranges (-90 to 90, -180 to 180)
-
----
-
-## 3. Update Security Findings
-
-- **`edge_unauth_endpoints`**: After fixing maps proxies, update to info level with note that all endpoints are now secured
-- **`edge_input_validation`**: Update to info level noting maps functions now have validation; remaining functions already have adequate checks
-- **`security_definer_funcs`**: Update to note that most functions use `search_path = public` correctly and are standard helpers; mark as accepted risk with hard remediation difficulty
+3. **Ride option data improvements:**
+   - Add descriptive subtitles that convey luxury (e.g., "Leather seats, quiet ride")
+   - Show vehicle class indicator (sedan icon vs SUV icon)
 
 ---
 
-## Technical Details
+## Technical Changes
 
-### Auth Pattern for Maps Functions
-```typescript
-import { createClient } from "../_shared/deps.ts";
+### File 1: `src/components/maps/GoogleMapProvider.tsx`
+- Add `onAuthStateChange` listener to re-fetch API key when user signs in
+- Show a proper loading indicator while auth is being checked
+- Add retry logic if the first fetch fails due to auth timing
 
-// Inside handler, after CORS check:
-const authHeader = req.headers.get("authorization") ?? "";
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-const client = createClient(supabaseUrl, anonKey, {
-  global: { headers: { Authorization: authHeader } },
-});
-const { data: { user }, error } = await client.auth.getUser();
-if (error || !user) {
-  return new Response(JSON.stringify({ error: "Authentication required" }), {
-    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
-  });
-}
-```
+### File 2: `src/components/ride/ZivoRideRow.tsx`
+- Accept a new `category` prop ("economy" | "premium" | "elite")
+- Apply tier-specific styling:
+  - Economy: current cream/emerald style (unchanged)
+  - Premium: dark charcoal background with gold accents, refined car SVG
+  - Elite: deep black background with purple/gold gradient, crown badge
+- Add a premium car SVG variant (sleeker silhouette)
+- Add subtle shimmer effect for selected premium cards
 
-### Input Validation Examples
-```typescript
-// maps-autocomplete
-if (!input || typeof input !== "string" || input.trim().length < 2 || input.length > 200) {
-  return new Response(JSON.stringify({ error: "Invalid input" }), { status: 400 });
-}
+### File 3: `src/pages/Rides.tsx`
+- Pass the `category` (activeTab) to each `ZivoRideRow`
+- Add a premium section header when Premium or Elite tabs are active
+- Enhance the tab styling with tier-appropriate colors
 
-// maps-reverse-geocode
-if (typeof lat !== "number" || typeof lng !== "number"
-    || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-  return new Response(JSON.stringify({ error: "Invalid coordinates" }), { status: 400 });
-}
+### File 4: Ride categories data (in `Rides.tsx`)
+- Update Premium/Elite ride subtitles with luxury-focused descriptions
+- Add category-aware descriptions
 
-// maps-place-details
-if (!place_id || typeof place_id !== "string" || place_id.length > 300) {
-  return new Response(JSON.stringify({ error: "Invalid place_id" }), { status: 400 });
-}
-```
-
-### Files Modified
-1. `supabase/functions/maps-autocomplete/index.ts` — Add auth + input validation
-2. `supabase/functions/maps-place-details/index.ts` — Add auth + input validation
-3. `supabase/functions/maps-reverse-geocode/index.ts` — Add auth + coordinate validation
-
-### Security Findings Updated
-- `edge_unauth_endpoints` -> downgrade to info
-- `edge_input_validation` -> downgrade to info
-- `security_definer_funcs` -> mark as accepted risk (hard remediation, standard pattern)
