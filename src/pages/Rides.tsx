@@ -268,6 +268,23 @@ function RidesMapView({
         </div>
       )}
 
+      {/* Floating ETA + Distance card on the map */}
+      {routeData && !isRouteLoading && pickup && dropoff && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 animate-fade-in">
+          <div className="flex items-center gap-3 bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg px-4 py-2.5 border border-emerald-100">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-sm font-bold text-zinc-800 tabular-nums">{Math.round(routeData.duration)} min</span>
+            </div>
+            <div className="w-px h-4 bg-zinc-200" />
+            <div className="flex items-center gap-1.5">
+              <Navigation className="w-3.5 h-3.5 text-teal-600" />
+              <span className="text-sm font-semibold text-zinc-700 tabular-nums">{routeData.distance.toFixed(1)} mi</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pin target indicator */}
       {pinTarget && (
         <div className="absolute top-4 left-4 z-10">
