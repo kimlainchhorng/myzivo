@@ -1,77 +1,64 @@
 
 
-# Upgrade Ride Selection UI -- Premium & Polished Look
+# Upgrade Car Icons to Premium, Detailed SVGs
 
-## What Changes
+## Problem
+The current car icons are identical basic outlines (same shape for all 3 tiers) with only color differences. They look generic and don't convey tier differences.
 
-### 1. Richer Card Design for All Tiers
+## Solution
+Replace all three car SVGs with detailed, visually distinct side-profile car illustrations:
 
-**Economy cards** currently look flat with minimal styling. Upgrade to:
-- Slightly elevated cards with soft inner shadow and a subtle emerald left-side accent bar
-- Better spacing between car icon, text, and price
-- Add a small "Pickup at" time label below price for context
+### Economy Car
+- Compact hatchback/sedan silhouette with filled body
+- Emerald green filled body with lighter roof/window area
+- Visible wheel details with hubcap circles
+- Door line detail and side mirror
+- Friendly, approachable shape
 
-**Premium cards** upgrade:
-- Add a subtle gold shimmer gradient overlay on hover/selected
-- Gold left accent bar instead of border-only approach
-- Show the subtitle (e.g., "Leather seats, quiet ride") more prominently with an italic style
-- Larger, more prominent star badge
+### Premium Car
+- Longer, lower sedan profile (BMW/Mercedes style)
+- Gold/dark filled body with tinted window area
+- More refined wheel details (larger rims)
+- Sleek roofline with a sportier stance
+- Side accent stripe in gold
 
-**Elite cards** upgrade:
-- Rich purple-to-black gradient with a visible purple left accent bar
-- Glowing purple border on selected (brighter than current)
-- Crown icon more prominent with gold fill
-- Subtitle text in a brighter color (white/gold) so it's actually readable
-- Price in bright gold (`text-amber-300`) for strong contrast
+### Elite Car
+- Long, ultra-low luxury sedan (Rolls Royce/Maybach silhouette)
+- Deep purple body with gold accent trim line
+- Detailed large chrome-style wheels
+- Extended wheelbase, prominent hood
+- Gold star/emblem on the side
+- Most detailed of the three
 
-### 2. Better Car Icons
-
-- Make car thumbnails slightly larger with a colored background circle/pill behind them
-- Economy: light emerald circle background
-- Premium: dark charcoal circle with gold ring
-- Elite: dark purple circle with gold ring
-
-### 3. Improved Category Tabs
-
-- Make tabs slightly taller with more padding
-- Add a subtle bottom indicator line for the active tab (like Uber)
-- Economy inactive: lighter, more clickable appearance
-- Premium/Elite inactive tabs: remove the dark `bg-zinc-800/900` -- use a lighter semi-transparent approach so they don't look like holes in the UI
-
-### 4. Section Headers for Premium/Elite
-
-- When Premium tab is active, show a small "Premium Collection" header with a star icon and gold text
-- When Elite tab is active, show "Elite Collection" header with a crown icon and purple text
-- Gives each tier a distinct identity
-
-### 5. Selected State Enhancement
-
-- Add a checkmark icon on the right side of the selected card
-- Slightly scale up the selected card (`scale-[1.01]`) for depth
-- Animate the selection transition with a brief spring
-
----
+### Thumbnail Adjustments
+- Increase icon sizes: Economy 32px, Premium 34px, Elite 36px
+- Adjust circular backgrounds to 56px for non-compact to give more room
 
 ## Technical Details
 
-### Files Modified
-
 | File | Changes |
 |------|---------|
-| `src/components/ride/ZivoRideRow.tsx` | Add colored accent bar on left side of card; wrap car SVG in a themed circular background; improve badge size and colors; add checkmark on selected; brighten Elite text to white/gold; improve spacing and padding |
-| `src/pages/Rides.tsx` | Add tier section headers ("Premium Collection" / "Elite Collection"); restyle category tabs to be lighter and taller; remove dark backgrounds from inactive Premium/Elite tabs; add selected-state animation |
+| `src/components/ride/ZivoRideRow.tsx` | Replace `EconomyCarSvg`, `PremiumCarSvg`, `EliteCarSvg` with detailed filled SVG illustrations; adjust `ZivoCarThumbnail` sizing from 52px to 56px (non-compact) |
 
-### Key Style Changes in ZivoRideRow
+### EconomyCarSvg (new)
+- viewBox `0 0 40 24`, width 32
+- Filled rounded body path in emerald (`#10B981`)
+- Light gray windows (`#D1FAE5`)
+- Two detailed wheels with dark rims and lighter hubcaps
+- Small side mirror and door handle detail
 
-- **Card structure**: Add a 3px left border accent (emerald/gold/purple per tier)
-- **Car thumbnail wrapper**: 44x44px rounded-xl background (emerald-50 / zinc-800 / purple-900/30) behind the SVG
-- **Elite text**: name `text-white`, subtitle `text-purple-100`, price `text-amber-300`, meta `text-purple-200`
-- **Premium text**: name `text-white`, subtitle `text-amber-100/80`, price `text-amber-300`
-- **Selected indicator**: Small emerald/gold/purple checkmark circle on the right
-- **Selected card**: Add `ring-2` with tier color + `scale-[1.01]` transform
+### PremiumCarSvg (new)
+- viewBox `0 0 44 24`, width 34
+- Lower, longer profile body in charcoal (`#292524`) with gold trim line (`#D4AF37`)
+- Tinted dark windows (`#44403C`)
+- Larger sport wheels with gold hubcap accent
+- Side mirror, door handle, front grille detail
 
-### Key Style Changes in Rides.tsx
-
-- **Tabs**: Replace `bg-zinc-800`/`bg-zinc-900` on inactive Premium/Elite tabs with `bg-white border border-amber-200 text-amber-600` and `bg-white border border-purple-200 text-purple-600` respectively -- lighter, matching the cream sheet background
-- **Section headers**: Conditional render above ride list: `"★ Premium Collection"` in gold or `"♛ Elite Collection"` in purple
+### EliteCarSvg (new)
+- viewBox `0 0 48 24`, width 36
+- Longest, lowest body in deep purple (`#581C87`) with gold lower trim (`#D4AF37`)
+- Dark tinted windows with chrome window frame (`#C084FC`)
+- Extra-large wheels with gold/chrome spokes
+- Gold star emblem near rear quarter panel
+- Extended hood proportion for luxury feel
 
