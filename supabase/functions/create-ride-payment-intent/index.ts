@@ -92,6 +92,8 @@ interface RidePaymentRequest {
   promo_id?: string;
   promo_discount?: number;
   price_before_discount?: number;
+  // Wallet credit fields
+  wallet_credit_cents?: number;
 }
 
 interface PricingSettings {
@@ -291,6 +293,8 @@ serve(async (req) => {
       promo_id,
       promo_discount,
       price_before_discount,
+      // Wallet credit
+      wallet_credit_cents = 0,
     } = body;
 
     // Check if rides service is in maintenance
@@ -503,9 +507,12 @@ serve(async (req) => {
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Create PaymentIntent with final (discounted) amount
-    const amountInCents = Math.round(finalTotal * 100);
-    
+    // Apply wallet credit to reduce Stripe charge
+    const walletCreditApplied = Math.min(wallet_credit_cents, Math.round(finalTotal * 100));
+    const amountInCents = Math.max(Math.round(finalTotal * 100) - walletCreditApplied, 50); // Stripe minimum is 50 cents
+
+    console.log("[create-ride-payment-intent] Wallet credit:", { walletCreditApplied, amountInCents });
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: "usd",
@@ -530,6 +537,9 @@ serve(async (req) => {
         ...(validatedPromoId && {
           promo_code: promo_code,
           promo_discount: validatedPromoDiscount.toString(),
+        }),
+        ...(walletCreditApplied > 0 && {
+          wallet_credit_cents: walletCreditApplied.toString(),
         }),
       },
       description: validatedPromoId 

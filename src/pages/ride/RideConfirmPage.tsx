@@ -19,6 +19,8 @@ import { usePromoCode } from "@/hooks/usePromoCode";
 import { incrementPromoCodeUse } from "@/lib/promoCodeService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRideQuote } from "@/hooks/useRideQuote";
+import { useCustomerWallet, useAppliedCredit } from "@/hooks/useCustomerWallet";
+import { CreditSelector } from "@/components/eats/CreditSelector";
 
 // Payments app URL for checkout redirect
 const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
@@ -63,6 +65,7 @@ const RideConfirmPage = () => {
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [showCustomTipModal, setShowCustomTipModal] = useState(false);
   const [customTipInput, setCustomTipInput] = useState("");
+  const [useCredits, setUseCredits] = useState(false);
 
   // Restore pending ride confirmation after login
   useEffect(() => {
@@ -133,6 +136,16 @@ const RideConfirmPage = () => {
     removePromoCode,
   } = usePromoCode(baseDisplayPrice);
 
+  // Wallet credits
+  const { balanceCents, applyCredit } = useCustomerWallet();
+  const orderTotalCents = Math.round(finalPrice * 100);
+  const { creditAppliedCents, creditAppliedDollars } = useAppliedCredit(
+    useCredits,
+    orderTotalCents,
+    balanceCents
+  );
+  const finalPriceAfterCredits = finalPrice - creditAppliedDollars;
+
   const handleConfirm = async () => {
     if (isSubmitting || isCheckingAvailability) return;
     
@@ -194,7 +207,7 @@ const RideConfirmPage = () => {
         rideType: ride.id,
         rideName: ride.name,
         rideImage: ride.image,
-        price: finalPrice,
+        price: finalPriceAfterCredits,
         distance: tripDetails?.distance || 0,
         duration: tripDetails?.duration || 0,
         paymentMethod: selectedPayment,
@@ -214,7 +227,7 @@ const RideConfirmPage = () => {
           pickupCoords,
           dropoffCoords,
           rideType: ride.id,
-          price: finalPrice,
+          price: finalPriceAfterCredits,
           distance: tripDetails?.distance || 0,
           duration: tripDetails?.duration || 0,
           initialStatus: useUnpaidStatus ? "requested_unpaid" : "requested",
@@ -240,6 +253,20 @@ const RideConfirmPage = () => {
         // Success - store tripId
         setTripId(result.tripId);
         console.log("[RideConfirm] Trip created in database:", result.tripId, "attempts:", result.attempts);
+
+        // Apply wallet credit if used
+        if (useCredits && creditAppliedCents > 0) {
+          try {
+            await applyCredit.mutateAsync({
+              amount_cents: creditAppliedCents,
+              order_id: result.tripId,
+            });
+            console.log("[RideConfirm] Wallet credit applied:", creditAppliedCents, "cents");
+          } catch (creditErr) {
+            console.error("[RideConfirm] Wallet credit failed (ride still created):", creditErr);
+            toast.error("Wallet credit could not be applied, full amount will be charged.");
+          }
+        }
         
         // Check if payments app URL is configured
         if (PAYMENTS_APP_URL) {
@@ -253,7 +280,7 @@ const RideConfirmPage = () => {
             rideType: ride.id,
             rideName: ride.name,
             rideImage: ride.image,
-            price: finalPrice,
+            price: finalPriceAfterCredits,
             pickup,
             destination,
             distance: tripDetails?.distance || 0,
@@ -412,16 +439,21 @@ const RideConfirmPage = () => {
                 <span className="text-sm">{ride.eta} min away</span>
               </div>
               <div className="text-right">
-                {promoCode && discountAmount > 0 && (
+                {(promoCode && discountAmount > 0) || creditAppliedCents > 0 ? (
                   <p className="text-sm text-white/40 line-through">
                     ${baseDisplayPrice.toFixed(2)}
+                  </p>
+                ) : null}
+                {creditAppliedCents > 0 && (
+                  <p className="text-xs text-emerald-400">
+                    -${creditAppliedDollars.toFixed(2)} credits
                   </p>
                 )}
                 <p className="text-2xl font-bold text-primary">
                   {isQuoteLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   ) : (
-                    `$${finalPrice.toFixed(2)}`
+                    `$${finalPriceAfterCredits.toFixed(2)}`
                   )}
                 </p>
               </div>
@@ -655,6 +687,23 @@ const RideConfirmPage = () => {
           )}
         </motion.div>
 
+        {/* Wallet Credits Section */}
+        {balanceCents > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.17 }}
+          >
+            <CreditSelector
+              availableBalanceCents={balanceCents}
+              orderTotalCents={orderTotalCents}
+              creditAppliedCents={creditAppliedCents}
+              useCredits={useCredits}
+              onToggle={setUseCredits}
+            />
+          </motion.div>
+        )}
+
         {/* Pre-Ride Tip Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -770,7 +819,7 @@ const RideConfirmPage = () => {
                 REQUESTING...
               </>
             ) : (
-              `PAY $${finalPrice.toFixed(2)} & REQUEST`
+              `PAY $${finalPriceAfterCredits.toFixed(2)} & REQUEST`
             )}
           </motion.button>
         )}
