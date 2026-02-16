@@ -46658,6 +46658,7 @@ export type Database = {
         | "requested"
         | "accepted"
         | "en_route"
+        | "arriving"
         | "arrived"
         | "in_progress"
         | "completed"
@@ -47037,6 +47038,7 @@ export const Constants = {
         "requested",
         "accepted",
         "en_route",
+        "arriving",
         "arrived",
         "in_progress",
         "completed",
