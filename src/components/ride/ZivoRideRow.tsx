@@ -123,16 +123,16 @@ function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: 
     // Premium/Elite get a tier badge instead
     if (category === "premium") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700">
-          <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/20 text-amber-200">
+          <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
           Premium
         </span>
       );
     }
     if (category === "elite") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700">
-          <Crown className="w-2.5 h-2.5 fill-purple-500 text-purple-500" />
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-500/30 text-purple-200">
+          <Crown className="w-2.5 h-2.5 fill-purple-400 text-purple-400" />
           Elite
         </span>
       );
@@ -172,13 +172,13 @@ function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: 
 function getTierStyles(category: RideCategory, selected: boolean) {
   if (category === "elite") {
     return selected
-      ? "bg-gradient-to-r from-zinc-900 to-zinc-800 border-2 border-purple-500 shadow-[0_8px_24px_rgba(147,51,234,0.2)]"
-      : "bg-gradient-to-r from-zinc-900 to-zinc-800 border border-purple-500/30 shadow-[0_4px_12px_rgba(147,51,234,0.08)] hover:border-purple-400/50 hover:shadow-[0_6px_16px_rgba(147,51,234,0.15)]";
+      ? "bg-gradient-to-br from-[#1a1025] to-[#0f0a1a] border-2 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]"
+      : "bg-gradient-to-br from-[#1a1025] to-[#0f0a1a] border border-purple-400/50 shadow-[0_4px_16px_rgba(147,51,234,0.12)] hover:border-purple-400/70 hover:shadow-[0_6px_20px_rgba(168,85,247,0.2)]";
   }
   if (category === "premium") {
     return selected
-      ? "bg-gradient-to-r from-zinc-800 to-stone-800 border-2 border-amber-500 shadow-[0_8px_24px_rgba(212,175,55,0.2)]"
-      : "bg-gradient-to-r from-zinc-800 to-stone-800 border border-amber-500/30 shadow-[0_4px_12px_rgba(212,175,55,0.08)] hover:border-amber-400/50 hover:shadow-[0_6px_16px_rgba(212,175,55,0.15)]";
+      ? "bg-gradient-to-br from-[#1c1a17] to-[#141210] border-2 border-amber-400 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+      : "bg-gradient-to-br from-[#1c1a17] to-[#141210] border border-amber-400/40 shadow-[0_4px_16px_rgba(212,175,55,0.1)] hover:border-amber-400/60 hover:shadow-[0_6px_20px_rgba(212,175,55,0.2)]";
   }
   // Economy
   return selected
@@ -187,8 +187,11 @@ function getTierStyles(category: RideCategory, selected: boolean) {
 }
 
 function getTierTextColors(category: RideCategory) {
-  if (category === "elite" || category === "premium") {
-    return { name: "text-white", meta: "text-zinc-400", price: "text-amber-400", livePrice: "text-amber-400/70", seats: "text-zinc-500" };
+  if (category === "elite") {
+    return { name: "text-white", meta: "text-purple-200", price: "text-amber-300", livePrice: "text-purple-300/70", seats: "text-purple-300/60" };
+  }
+  if (category === "premium") {
+    return { name: "text-white", meta: "text-amber-200/70", price: "text-amber-300", livePrice: "text-amber-300/60", seats: "text-amber-200/50" };
   }
   return { name: "text-zinc-800", meta: "text-zinc-500", price: "text-emerald-600", livePrice: "text-emerald-500", seats: "text-zinc-500" };
 }
