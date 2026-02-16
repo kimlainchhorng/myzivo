@@ -29,44 +29,125 @@ interface ZivoRideRowProps {
   subtitle?: string;
 }
 
-// Economy car icon — clean front-facing car
+// Economy car — compact hatchback, emerald filled
 function EconomyCarSvg() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 10h10" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="17" r="1" fill="#10B981" />
-      <circle cx="16" cy="17" r="1" fill="#10B981" />
+    <svg width="32" height="20" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Body */}
+      <path d="M4 16h32a2 2 0 0 0 2-2v-2a1 1 0 0 0-.3-.7L33 7.5C32.4 6.6 31.4 6 30 6H18c-1.5 0-2.8.7-3.5 1.8L10 13H4a2 2 0 0 0-2 2v0a1 1 0 0 0 1 1Z" fill="#10B981"/>
+      {/* Roof/windows */}
+      <path d="M16 6.5L12.5 12H28L25.5 7C25 6.3 24.2 6 23.5 6H18.5C17.5 6 16.6 6.2 16 6.5Z" fill="#D1FAE5" opacity="0.85"/>
+      {/* Window divider */}
+      <line x1="20" y1="6.5" x2="19" y2="12" stroke="#10B981" strokeWidth="0.7"/>
+      {/* Door handle */}
+      <rect x="22" y="13" width="2.5" height="0.7" rx="0.35" fill="#059669"/>
+      {/* Side mirror */}
+      <ellipse cx="11.5" cy="11" rx="1" ry="0.7" fill="#059669"/>
+      {/* Wheel well shadows */}
+      <path d="M8 16a3.5 3.5 0 0 1 7 0" fill="#064E3B"/>
+      <path d="M25 16a3.5 3.5 0 0 1 7 0" fill="#064E3B"/>
+      {/* Wheels */}
+      <circle cx="11.5" cy="16" r="3" fill="#1C1917"/>
+      <circle cx="11.5" cy="16" r="1.5" fill="#6B7280"/>
+      <circle cx="11.5" cy="16" r="0.5" fill="#9CA3AF"/>
+      <circle cx="28.5" cy="16" r="3" fill="#1C1917"/>
+      <circle cx="28.5" cy="16" r="1.5" fill="#6B7280"/>
+      <circle cx="28.5" cy="16" r="0.5" fill="#9CA3AF"/>
+      {/* Headlight */}
+      <rect x="35" y="11.5" width="1.5" height="2" rx="0.5" fill="#FDE68A"/>
+      {/* Taillight */}
+      <rect x="3" y="12" width="1.2" height="1.8" rx="0.4" fill="#EF4444"/>
     </svg>
   );
 }
 
-// Premium car icon — sleek sedan side view
+// Premium car — longer, sportier sedan, charcoal/gold
 function PremiumCarSvg() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#D4AF37" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 10h10" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="17" r="1" fill="#D4AF37" />
-      <circle cx="16" cy="17" r="1" fill="#D4AF37" />
+    <svg width="34" height="20" viewBox="0 0 44 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Body */}
+      <path d="M3 16h38a2 2 0 0 0 2-2v-3a1 1 0 0 0-.2-.6L37 5.5C36.3 4.6 35.2 4 34 4H19c-1.8 0-3.2.9-4 2L10 12H3a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1Z" fill="#292524"/>
+      {/* Windows - tinted */}
+      <path d="M17 4.5L12 11h22L30 5.2C29.4 4.5 28.5 4 27.5 4H20C18.8 4 17.7 4.2 17 4.5Z" fill="#44403C" opacity="0.9"/>
+      {/* Chrome window frame */}
+      <path d="M17 4.5L12 11h22L30 5.2C29.4 4.5 28.5 4 27.5 4H20C18.8 4 17.7 4.2 17 4.5Z" stroke="#78716C" strokeWidth="0.5" fill="none"/>
+      {/* Window divider */}
+      <line x1="22" y1="4.3" x2="21" y2="11" stroke="#78716C" strokeWidth="0.6"/>
+      {/* Gold trim line */}
+      <line x1="5" y1="13" x2="40" y2="13" stroke="#D4AF37" strokeWidth="1" opacity="0.8"/>
+      {/* Door handle */}
+      <rect x="24" y="10" width="2.5" height="0.6" rx="0.3" fill="#D4AF37" opacity="0.7"/>
+      {/* Side mirror */}
+      <ellipse cx="10.5" cy="9.5" rx="1.2" ry="0.8" fill="#44403C"/>
+      {/* Front grille */}
+      <rect x="40" y="10" width="2" height="3.5" rx="0.5" fill="#78716C"/>
+      <line x1="41" y1="10.5" x2="41" y2="13" stroke="#292524" strokeWidth="0.4"/>
+      {/* Wheel wells */}
+      <path d="M8 16a4 4 0 0 1 8 0" fill="#1C1917"/>
+      <path d="M28 16a4 4 0 0 1 8 0" fill="#1C1917"/>
+      {/* Wheels */}
+      <circle cx="12" cy="16" r="3.5" fill="#1C1917"/>
+      <circle cx="12" cy="16" r="2" fill="#57534E"/>
+      <circle cx="12" cy="16" r="0.7" fill="#D4AF37"/>
+      <circle cx="32" cy="16" r="3.5" fill="#1C1917"/>
+      <circle cx="32" cy="16" r="2" fill="#57534E"/>
+      <circle cx="32" cy="16" r="0.7" fill="#D4AF37"/>
+      {/* Headlight */}
+      <rect x="41" y="9" width="1.5" height="1.5" rx="0.5" fill="#FDE68A"/>
+      {/* Taillight */}
+      <rect x="2" y="11" width="1.2" height="2" rx="0.4" fill="#EF4444"/>
     </svg>
   );
 }
 
-// Elite car icon — luxury with purple/gold
+// Elite car — ultra-long luxury sedan, purple/gold
 function EliteCarSvg() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#A855F7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 10h10" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="17" r="1" fill="#A855F7" />
-      <circle cx="16" cy="17" r="1" fill="#A855F7" />
-      {/* Gold accent line */}
-      <line x1="6" y1="14" x2="18" y2="14" stroke="#D4AF37" strokeWidth="0.8" opacity="0.5" />
+    <svg width="36" height="20" viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Body - long, low */}
+      <path d="M2 16h44a2 2 0 0 0 2-2v-3a1 1 0 0 0-.15-.5L42 4.5C41.2 3.5 40 3 38.5 3H20c-2 0-3.5 1-4.5 2.5L10 12H2a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1Z" fill="#581C87"/>
+      {/* Windows - dark tinted with chrome frame */}
+      <path d="M18 3.5L12 11h26L33 4.5C32.3 3.6 31.2 3 30 3H21.5C20 3 18.8 3.2 18 3.5Z" fill="#2E1065" opacity="0.9"/>
+      <path d="M18 3.5L12 11h26L33 4.5C32.3 3.6 31.2 3 30 3H21.5C20 3 18.8 3.2 18 3.5Z" stroke="#C084FC" strokeWidth="0.6" fill="none"/>
+      {/* Window dividers */}
+      <line x1="23" y1="3.3" x2="22" y2="11" stroke="#C084FC" strokeWidth="0.5"/>
+      <line x1="29" y1="3.5" x2="28.5" y2="11" stroke="#C084FC" strokeWidth="0.5"/>
+      {/* Gold lower trim */}
+      <line x1="4" y1="13.5" x2="44" y2="13.5" stroke="#D4AF37" strokeWidth="1.2" opacity="0.9"/>
+      {/* Door handle */}
+      <rect x="26" y="9.5" width="3" height="0.6" rx="0.3" fill="#D4AF37" opacity="0.8"/>
+      {/* Side mirror */}
+      <ellipse cx="10" cy="9" rx="1.3" ry="0.9" fill="#7C3AED"/>
+      {/* Front grille - prominent */}
+      <rect x="44" y="8.5" width="2.5" height="4.5" rx="0.7" fill="#A78BFA"/>
+      <line x1="45.2" y1="9" x2="45.2" y2="12.5" stroke="#581C87" strokeWidth="0.4"/>
+      <line x1="46" y1="9" x2="46" y2="12.5" stroke="#581C87" strokeWidth="0.4"/>
+      {/* Gold star emblem */}
+      <polygon points="8,8 8.6,9.2 10,9.4 9,10.3 9.2,11.6 8,11 6.8,11.6 7,10.3 6,9.4 7.4,9.2" fill="#D4AF37"/>
+      {/* Wheel wells */}
+      <path d="M9 16a4.5 4.5 0 0 1 9 0" fill="#2E1065"/>
+      <path d="M30 16a4.5 4.5 0 0 1 9 0" fill="#2E1065"/>
+      {/* Wheels - large chrome */}
+      <circle cx="13.5" cy="16" r="4" fill="#1C1917"/>
+      <circle cx="13.5" cy="16" r="2.5" fill="#78716C"/>
+      <circle cx="13.5" cy="16" r="1" fill="#D4AF37"/>
+      {/* Spokes */}
+      <line x1="13.5" y1="13.5" x2="13.5" y2="14.5" stroke="#D4AF37" strokeWidth="0.4"/>
+      <line x1="11.5" y1="15" x2="12.3" y2="15.4" stroke="#D4AF37" strokeWidth="0.4"/>
+      <line x1="15.5" y1="15" x2="14.7" y2="15.4" stroke="#D4AF37" strokeWidth="0.4"/>
+      <circle cx="34.5" cy="16" r="4" fill="#1C1917"/>
+      <circle cx="34.5" cy="16" r="2.5" fill="#78716C"/>
+      <circle cx="34.5" cy="16" r="1" fill="#D4AF37"/>
+      <line x1="34.5" y1="13.5" x2="34.5" y2="14.5" stroke="#D4AF37" strokeWidth="0.4"/>
+      <line x1="32.5" y1="15" x2="33.3" y2="15.4" stroke="#D4AF37" strokeWidth="0.4"/>
+      <line x1="36.5" y1="15" x2="35.7" y2="15.4" stroke="#D4AF37" strokeWidth="0.4"/>
+      {/* Headlight */}
+      <rect x="45.5" y="7.5" width="1.5" height="1.5" rx="0.5" fill="#FDE68A"/>
+      {/* Taillight */}
+      <rect x="1" y="10.5" width="1.5" height="2.5" rx="0.5" fill="#EF4444"/>
     </svg>
   );
 }
-
 // Car thumbnail with themed circular background (like reference)
 function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
   const bgClass = category === "elite"
@@ -78,7 +159,7 @@ function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?:
   return (
     <div className={cn(
       "flex items-center justify-center shrink-0 rounded-full",
-      compact ? "w-[44px] h-[44px]" : "w-[52px] h-[52px]",
+      compact ? "w-[44px] h-[44px]" : "w-[56px] h-[56px]",
       bgClass
     )}>
       {category === "elite" ? (
