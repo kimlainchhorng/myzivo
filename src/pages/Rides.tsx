@@ -659,6 +659,7 @@ function RidesInner() {
   }, [searchParams]);
 
   const handleFindRides = () => {
+    console.log("[Rides] handleFindRides called", { pickupCoords, dropoffCoords, pickup, dropoff, step, selectedOption: selectedOption?.name });
     if (!pickupCoords) {
       toast.error("Please select a valid pickup address from the suggestions");
       return;
@@ -676,6 +677,7 @@ function RidesInner() {
       toast.error("Pickup and destination can't be the same location");
       return;
     }
+    console.log("[Rides] Moving to options step");
     setStep("options");
   };
 
