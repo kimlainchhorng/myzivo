@@ -1,62 +1,30 @@
 
 
-## Fix: Map Route Not Rendering Reliably
+## Add Route Loading Indicator
 
-### Root Cause Analysis
+### Overview
+When a user enters both pickup and dropoff addresses, there's a brief delay while the route is calculated via the server-side edge function. Currently there's no visual feedback during this time. This change adds a loading indicator on the map and in the vehicle options area.
 
-The GoogleMap component has **two competing route-rendering systems** that conflict with each other:
+### What Changes
 
-1. **DirectionsService (client-side)** -- A Google Maps JS API call made directly from the browser. Renders via `DirectionsRenderer`.
-2. **Server-side polyline (edge function)** -- Route fetched via `maps-route` edge function, decoded, and rendered via `PolylineF`. But this **only renders when `!directions`** (i.e., when the client-side call hasn't produced a result).
+**File: `src/pages/Rides.tsx`**
 
-The problem: the `DirectionsService` component fires a client-side Directions API request using the browser-loaded API key. If that key doesn't have the Directions API enabled (common for security-restricted keys), the request fails silently -- `directionsRequested` gets set to `true`, but `directions` stays `null`. Meanwhile, the `PolylineF` fallback checks `!directions`, which IS true, so it should render... but `routePath` may not be available yet because the server-side edge function call is still in flight.
+1. **Destructure `isLoading`** from `useServerRoute()` (it's already returned by the hook, just not used):
+   - Change line 290 from `{ routeData, fetchRoute, clearRoute }` to `{ routeData, isLoading: isRouteLoading, fetchRoute, clearRoute }`
 
-Additionally, there's a **timing race**: the `useEffect` in GoogleMap resets `directionsRequested` to `false` each time coords change, which re-mounts `DirectionsService`, creating redundant API calls that may cancel each other.
+2. **Pass `isRouteLoading` to `RidesMapView`** so the map can show an overlay indicator while calculating.
 
-### Solution: Remove Client-Side DirectionsService, Use Server Polyline Only
+3. **Add a loading state in the trip info area** (around line 1152): When `isRouteLoading` is true and both addresses are set, show a skeleton/spinner pill instead of the distance/duration info, giving the user immediate feedback that the route is being calculated.
 
-Since the `maps-route` edge function already calls Google Directions API server-side and returns an encoded polyline, we should:
+4. **Add a loading overlay on the map**: Show a subtle "Calculating route..." pill floating on the map when `isRouteLoading` is true and both pickup and dropoff are set.
 
-- **Remove the `DirectionsService` and `DirectionsRenderer`** from `GoogleMap.tsx` entirely
-- **Always render the `PolylineF`** from the server-decoded `routePath`
-- **Remove the `directionsRequested`/`directions` state** (no longer needed)
+**File: `src/pages/Rides.tsx` (RidesMapView sub-component)**
 
-This eliminates:
-- Duplicate API calls (saving cost and quota)
-- Client-side API key permission requirements for Directions API
-- Race conditions between two rendering systems
-- The infinite-loop risk from the effect resetting `directionsRequested`
-
-### Files to Change
-
-**`src/components/maps/GoogleMap.tsx`**
-
-1. Remove `DirectionsService` and `DirectionsRenderer` imports
-2. Remove `directions` and `directionsRequested` state variables
-3. Remove the `useEffect` that resets `directionsRequested` (lines 117-133) -- replace with a simpler `fitBounds`-only effect
-4. Remove the `DirectionsService` JSX block (lines 244-258)
-5. Remove the `DirectionsRenderer` JSX block (lines 261-273)
-6. Update the `PolylineF` condition: remove the `&& !directions` guard so it always renders when `routePath` exists
-7. Keep `fitBounds` logic in a simpler `useEffect` that only adjusts viewport
+5. Accept an `isRouteLoading` prop and render a floating indicator (a small pill with a spinner and "Calculating route..." text) centered on the map when loading.
 
 ### Technical Details
 
-```text
-Before (two systems, racing):
-  DirectionsService (client) --> DirectionsRenderer
-  routePath (server)         --> PolylineF (only if !directions)
-
-After (single system, reliable):
-  routePath (server)         --> PolylineF (always when available)
-  fitBounds effect           --> adjusts viewport to show both points
-```
-
-The `fitBounds` effect becomes simpler:
-
-```text
-useEffect:
-  if pickup and dropoff both exist:
-    create LatLngBounds, extend with both, fitBounds(60px padding)
-  deps: [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, fitBounds]
-```
-
+- The `useServerRoute` hook already tracks `isLoading` state -- no backend changes needed
+- The loading indicator appears only when both addresses are entered (not during initial page load)
+- Uses existing `Loader2` icon (already imported) with `animate-spin` for the spinner
+- Styled consistently with existing ZIVO brand (emerald tones, rounded pills, backdrop blur)
