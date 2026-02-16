@@ -1,48 +1,77 @@
 
 
-# Fix Map Loading + Improve Elite/Premium Ride Visuals
+# Upgrade Ride Selection UI -- Premium & Polished Look
 
-## 1. Fix Map Not Loading
+## What Changes
 
-**Problem:** The `GoogleMapProvider` only fetches the API key via edge function when authenticated, but the `VITE_GOOGLE_MAPS_API_KEY` env var (client-side) is also set as a secret. The map shows a dark placeholder because the client env var is empty at build time.
+### 1. Richer Card Design for All Tiers
 
-**Fix:** Update the provider to also try fetching from the `maps-api-key` edge function without requiring auth first (public read of the key), and add a retry mechanism. If the edge function requires auth, show a "Sign in to view map" message instead of a blank dark screen. Also ensure the fallback placeholder looks cleaner.
+**Economy cards** currently look flat with minimal styling. Upgrade to:
+- Slightly elevated cards with soft inner shadow and a subtle emerald left-side accent bar
+- Better spacing between car icon, text, and price
+- Add a small "Pickup at" time label below price for context
 
-## 2. Fix Elite Tier Colors (Hard to See)
+**Premium cards** upgrade:
+- Add a subtle gold shimmer gradient overlay on hover/selected
+- Gold left accent bar instead of border-only approach
+- Show the subtitle (e.g., "Leather seats, quiet ride") more prominently with an italic style
+- Larger, more prominent star badge
 
-**Problem:** Elite uses `from-zinc-900 to-zinc-800` background with `border-purple-500/30` and purple accents — on the cream/light bottom sheet background, the dark cards with low-opacity purple borders look muddy and hard to read.
+**Elite cards** upgrade:
+- Rich purple-to-black gradient with a visible purple left accent bar
+- Glowing purple border on selected (brighter than current)
+- Crown icon more prominent with gold fill
+- Subtitle text in a brighter color (white/gold) so it's actually readable
+- Price in bright gold (`text-amber-300`) for strong contrast
 
-**Changes to `ZivoRideRow.tsx`:**
-- **Elite (unselected):** Change to a richer look — darker card with brighter purple/gold border glow, brighter text contrast. Use `bg-gradient-to-br from-[#1a1025] to-[#0f0a1a]` with `border-purple-400/50` and lighter text
-- **Elite (selected):** More vivid purple glow — `border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]`
-- **Elite text colors:** Use `text-purple-200` for meta info instead of `text-zinc-400` so it stands out
-- **Elite price:** Use `text-purple-300` or bright gold `text-amber-300` for better visibility
-- **Elite badge pill:** Brighter background `bg-purple-500/30 text-purple-200` instead of `bg-purple-100 text-purple-700` (light mode colors on dark cards)
+### 2. Better Car Icons
 
-## 3. Improve Premium Tier Contrast
+- Make car thumbnails slightly larger with a colored background circle/pill behind them
+- Economy: light emerald circle background
+- Premium: dark charcoal circle with gold ring
+- Elite: dark purple circle with gold ring
 
-**Changes to `ZivoRideRow.tsx`:**
-- **Premium badge pill:** Fix to use dark-appropriate colors: `bg-amber-500/20 text-amber-200` instead of `bg-amber-100 text-amber-700`
-- Ensure gold accents pop more against the charcoal background
+### 3. Improved Category Tabs
 
-## 4. Polish Tab Styling in `Rides.tsx`
+- Make tabs slightly taller with more padding
+- Add a subtle bottom indicator line for the active tab (like Uber)
+- Economy inactive: lighter, more clickable appearance
+- Premium/Elite inactive tabs: remove the dark `bg-zinc-800/900` -- use a lighter semi-transparent approach so they don't look like holes in the UI
 
-- Elite inactive tab: Brighten text from `text-purple-300` to `text-purple-200` for better tap target visibility
-- Add subtle icon styling improvements (Crown icon for Elite, Star for Premium)
+### 4. Section Headers for Premium/Elite
 
-## 5. Map Fallback Improvements
+- When Premium tab is active, show a small "Premium Collection" header with a star icon and gold text
+- When Elite tab is active, show "Elite Collection" header with a crown icon and purple text
+- Gives each tier a distinct identity
 
-Update `RidesMapView` in `Rides.tsx`:
-- Show a cleaner fallback with a "Map loading..." label or "Sign in to view map" if auth is needed
-- Add a subtle map-like pattern instead of plain dark green
+### 5. Selected State Enhancement
+
+- Add a checkmark icon on the right side of the selected card
+- Slightly scale up the selected card (`scale-[1.01]`) for depth
+- Animate the selection transition with a brief spring
 
 ---
 
-## Technical Summary
+## Technical Details
+
+### Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/components/ride/ZivoRideRow.tsx` | Fix Elite/Premium color contrast: brighter borders, better text colors on dark backgrounds, fix badge pills for dark cards |
-| `src/pages/Rides.tsx` | Improve Elite tab visibility, cleaner map fallback message |
-| `src/components/maps/GoogleMapProvider.tsx` | Add unauthenticated fallback attempt, better loading/error state communication |
+| `src/components/ride/ZivoRideRow.tsx` | Add colored accent bar on left side of card; wrap car SVG in a themed circular background; improve badge size and colors; add checkmark on selected; brighten Elite text to white/gold; improve spacing and padding |
+| `src/pages/Rides.tsx` | Add tier section headers ("Premium Collection" / "Elite Collection"); restyle category tabs to be lighter and taller; remove dark backgrounds from inactive Premium/Elite tabs; add selected-state animation |
+
+### Key Style Changes in ZivoRideRow
+
+- **Card structure**: Add a 3px left border accent (emerald/gold/purple per tier)
+- **Car thumbnail wrapper**: 44x44px rounded-xl background (emerald-50 / zinc-800 / purple-900/30) behind the SVG
+- **Elite text**: name `text-white`, subtitle `text-purple-100`, price `text-amber-300`, meta `text-purple-200`
+- **Premium text**: name `text-white`, subtitle `text-amber-100/80`, price `text-amber-300`
+- **Selected indicator**: Small emerald/gold/purple checkmark circle on the right
+- **Selected card**: Add `ring-2` with tier color + `scale-[1.01]` transform
+
+### Key Style Changes in Rides.tsx
+
+- **Tabs**: Replace `bg-zinc-800`/`bg-zinc-900` on inactive Premium/Elite tabs with `bg-white border border-amber-200 text-amber-600` and `bg-white border border-purple-200 text-purple-600` respectively -- lighter, matching the cream sheet background
+- **Section headers**: Conditional render above ride list: `"★ Premium Collection"` in gold or `"♛ Elite Collection"` in purple
 
