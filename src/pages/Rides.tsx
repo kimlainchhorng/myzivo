@@ -123,6 +123,8 @@ function RidesMapView({
   onLocateMe,
   onMapClick,
   pinTarget,
+  onPickupDragEnd,
+  onDropoffDragEnd,
 }: {
   userLocation: { lat: number; lng: number } | null;
   pickupCoords?: { lat: number; lng: number } | null;
@@ -136,6 +138,8 @@ function RidesMapView({
   onLocateMe?: () => void;
   onMapClick?: (position: { lat: number; lng: number }) => void;
   pinTarget?: "pickup" | "dropoff";
+  onPickupDragEnd?: (position: { lat: number; lng: number }) => void;
+  onDropoffDragEnd?: (position: { lat: number; lng: number }) => void;
 }) {
   const { isLoaded, loadError } = useGoogleMaps();
   const center = pickupCoords || userLocation || DEFAULT_CENTER;
@@ -205,6 +209,8 @@ function RidesMapView({
             showControls={false}
             darkMode={false}
             onMapClick={onMapClick}
+            onPickupDragEnd={onPickupDragEnd}
+            onDropoffDragEnd={onDropoffDragEnd}
           />
           {/* Subtle light vignette */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.03)_100%)]" />
@@ -609,6 +615,29 @@ function RidesInner() {
     }
   }, [pickupCoords, reverseGeocode]);
 
+  // Drag handlers for repositioning pins
+  const handlePickupDrag = useCallback(async (position: { lat: number; lng: number }) => {
+    setPickupCoords(position);
+    try {
+      const address = await reverseGeocode(position.lat, position.lng);
+      setPickup(address);
+    } catch {
+      setPickup(`${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`);
+    }
+    toast.success("Pickup moved");
+  }, [reverseGeocode]);
+
+  const handleDropoffDrag = useCallback(async (position: { lat: number; lng: number }) => {
+    setDropoffCoords(position);
+    try {
+      const address = await reverseGeocode(position.lat, position.lng);
+      setDropoff(address);
+    } catch {
+      setDropoff(`${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`);
+    }
+    toast.success("Dropoff moved");
+  }, [reverseGeocode]);
+
   // Determine pin target for the visual indicator
   const mapPinTarget = useMemo((): "pickup" | "dropoff" | undefined => {
     if (!pickupCoords) return "pickup";
@@ -824,6 +853,8 @@ function RidesInner() {
           onLocateMe={handleUseCurrentLocation}
           onMapClick={handleMapTap}
           pinTarget={mapPinTarget}
+          onPickupDragEnd={handlePickupDrag}
+          onDropoffDragEnd={handleDropoffDrag}
         />
       </div>
       

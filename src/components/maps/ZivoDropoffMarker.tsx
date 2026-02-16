@@ -2,7 +2,6 @@
  * ZivoDropoffMarker Component
  * 
  * ZIVO Brand teal destination pin marker.
- * Uses OverlayViewF from @react-google-maps/api for precise positioning.
  */
 
 import { OverlayViewF, OverlayView } from "@react-google-maps/api";
