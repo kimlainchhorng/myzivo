@@ -9,8 +9,11 @@ import { motion } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
 import fleetEconomy from "@/assets/fleet-economy.png";
+import fleetCompact from "@/assets/fleet-compact.png";
+import fleetLuxury from "@/assets/fleet-luxury.png";
 import ridePremium from "@/assets/ride-premium.png";
 import rideXl from "@/assets/ride-xl.png";
+import rideGreen from "@/assets/ride-green.png";
 
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
 type RideCategory = "economy" | "premium" | "elite";
@@ -233,18 +236,30 @@ function EliteCarSvg() {
 }
 
 // Car thumbnail with themed circular background using PNG illustrations
-function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
+function ZivoCarThumbnail({ compact = false, category = "economy", rideName }: { compact?: boolean; category?: RideCategory; rideName?: string }) {
   const bgClass = category === "elite"
     ? "bg-purple-500/10 ring-2 ring-purple-400/40"
     : category === "premium"
     ? "bg-amber-500/10 ring-2 ring-amber-400/40"
     : "bg-emerald-500/10 ring-2 ring-emerald-400/40";
 
-  const imageSrc = category === "elite"
-    ? rideXl
-    : category === "premium"
-    ? ridePremium
-    : fleetEconomy;
+  const lowerName = (rideName || "").toLowerCase();
+  let imageSrc = fleetEconomy;
+  if (lowerName.includes("green") || lowerName.includes("eco")) {
+    imageSrc = rideGreen;
+  } else if (lowerName.includes("standard") || lowerName.includes("priority")) {
+    imageSrc = fleetCompact;
+  } else if (lowerName.includes("comfort")) {
+    imageSrc = ridePremium;
+  } else if (lowerName.includes("premium") || lowerName.includes("elite")) {
+    imageSrc = fleetLuxury;
+  } else if (lowerName.includes("xl")) {
+    imageSrc = rideXl;
+  } else if (category === "elite") {
+    imageSrc = rideXl;
+  } else if (category === "premium") {
+    imageSrc = ridePremium;
+  }
 
   return (
     <div className={cn(
@@ -396,7 +411,7 @@ export function ZivoRideRow({
         <div className={cn("w-[3px] rounded-full self-stretch ml-1 shrink-0", getAccentColor(category))} />
         
         <div className={cn("flex items-center flex-1 min-w-0", compact ? "gap-2 px-2" : "gap-3 px-3")}>
-          <ZivoCarThumbnail compact={compact} category={category} />
+          <ZivoCarThumbnail compact={compact} category={category} rideName={name} />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 min-w-0">
