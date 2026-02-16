@@ -2,10 +2,10 @@ import { RideOption } from "./RideCard";
 
 import fleetEconomy from "@/assets/fleet-economy.png";
 import fleetCompact from "@/assets/fleet-compact.png";
-import fleetElectric from "@/assets/fleet-electric.png";
 import fleetLuxury from "@/assets/fleet-luxury.png";
 import ridePremium from "@/assets/ride-premium.png";
 import rideXl from "@/assets/ride-xl.png";
+import rideGreen from "@/assets/ride-green.png";
 
 export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> = {
   economy: [
@@ -35,7 +35,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       subtitle: "Eco-friendly rides.",
       price: 21.50,
       eta: 6,
-      image: fleetElectric,
+      image: rideGreen,
       category: "economy",
       multiplier: 1.05,
     },
