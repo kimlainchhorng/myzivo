@@ -3,6 +3,17 @@ import { Car, Users, Fuel, Gauge, Star, ChevronLeft, ChevronRight, Sparkles } fr
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useImageLoaded } from "@/hooks/useImageLoaded";
+
+function FleetImage({ src, alt }: { src: string; alt: string }) {
+  const { loaded, onLoad } = useImageLoaded(src);
+  return (
+    <div className="relative flex justify-center mb-4">
+      {!loaded && <div className="absolute inset-0 animate-pulse bg-muted/50 rounded-xl" />}
+      <img src={src} alt={alt} onLoad={onLoad} className={cn("w-24 h-24 object-contain transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")} />
+    </div>
+  );
+}
 
 import fleetEconomy from "@/assets/fleet-economy.png";
 import fleetCompact from "@/assets/fleet-compact.png";
@@ -93,13 +104,7 @@ const CarFleetShowcase = () => {
                 </Badge>
               )}
 
-              <div className="flex justify-center mb-4">
-                <img 
-                  src={categoryImages[vehicle.category]} 
-                  alt={vehicle.name} 
-                  className="w-24 h-24 object-contain"
-                />
-              </div>
+              <FleetImage src={categoryImages[vehicle.category]} alt={vehicle.name} />
 
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold">{vehicle.name}</h3>
