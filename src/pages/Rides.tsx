@@ -4,7 +4,7 @@
  * Mobile-first, no scroll required
  */
 
-import { useState, useEffect, useCallback, useMemo, useLayoutEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useLayoutEffect, useRef } from "react";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
@@ -12,7 +12,7 @@ import {
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
   Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X, Receipt,
-  ChevronUp, ChevronDown, CalendarDays
+  ChevronUp, ChevronDown, CalendarDays, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -295,6 +295,10 @@ function RidesInner() {
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showScheduleSheet, setShowScheduleSheet] = useState(false);
   
+  // Refs for programmatic focus from map chip clicks
+  const pickupInputRef = useRef<HTMLInputElement>(null);
+  const dropoffInputRef = useRef<HTMLInputElement>(null);
+  
   const createScheduledBooking = useCreateScheduledBooking();
   
   // Zone-based pricing using pickup coordinates
@@ -571,7 +575,15 @@ function RidesInner() {
   }, [searchParams]);
 
   const handleFindRides = () => {
-    if (pickup && dropoff) setStep("options");
+    if (!pickupCoords) {
+      toast.error("Please select a valid pickup address from the suggestions");
+      return;
+    }
+    if (!dropoffCoords) {
+      toast.error("Please select a valid destination from the suggestions");
+      return;
+    }
+    setStep("options");
   };
 
   const handleSelectOption = (option: RideOption) => {
@@ -737,6 +749,14 @@ function RidesInner() {
           dropoff={dropoff}
           etaMinutes={selectedOption ? getBlendedEta(selectedOption.eta || 5) : (routeData?.duration ? Math.round(routeData.duration) : undefined)}
           routeData={routeData}
+          onPickupClick={() => {
+            setIsExpanded(true);
+            setTimeout(() => pickupInputRef.current?.focus(), 150);
+          }}
+          onDropoffClick={() => {
+            setIsExpanded(true);
+            setTimeout(() => dropoffInputRef.current?.focus(), 150);
+          }}
           onLocateMe={handleUseCurrentLocation}
         />
       </div>
@@ -781,9 +801,11 @@ function RidesInner() {
                       <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                     </div>
                     <input
+                      ref={pickupInputRef}
                       value={pickup}
                       onChange={(e) => {
                         setPickup(e.target.value);
+                        setPickupCoords(null); // Clear coords when user types
                         setShowPickupSuggestions(true);
                         fetchPickupSuggestions(e.target.value, userLocation || undefined);
                       }}
@@ -798,6 +820,9 @@ function RidesInner() {
                       className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
                       style={{ fontSize: '16px' }}
                     />
+                    {pickup && !pickupCoords && !isAutoDetecting && (
+                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    )}
                     {isAutoDetecting && <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />}
                   </div>
                   
@@ -931,9 +956,11 @@ function RidesInner() {
                       <div className="w-2 h-2 bg-white rounded-sm" />
                     </div>
                     <input
+                      ref={dropoffInputRef}
                       value={dropoff}
                       onChange={(e) => {
                         setDropoff(e.target.value);
+                        setDropoffCoords(null); // Clear coords when user types
                         setShowDropoffSuggestions(true);
                         fetchDropoffSuggestions(e.target.value, userLocation || undefined);
                       }}
@@ -949,7 +976,10 @@ function RidesInner() {
                       className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
                       style={{ fontSize: '16px' }}
                     />
-                    <Search className="w-5 h-5 text-zinc-400" />
+                    {dropoff && !dropoffCoords && (
+                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    )}
+                    {(!dropoff || dropoffCoords) && <Search className="w-5 h-5 text-zinc-400" />}
                   </div>
                   
                   {/* Dropoff Dropdown */}
@@ -1284,7 +1314,8 @@ function RidesInner() {
             <div className="flex gap-2">
               <Button
                 onClick={handleFindRides}
-                className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25"
+                disabled={!pickupCoords || !dropoffCoords}
+                className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25 disabled:from-zinc-300 disabled:to-zinc-400 disabled:shadow-none"
               >
                 Choose {selectedOption.name}
               </Button>
