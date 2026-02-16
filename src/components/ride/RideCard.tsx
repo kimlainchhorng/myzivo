@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock, Loader2, Flame, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useImageLoaded } from "@/hooks/useImageLoaded";
 import { SurgeLevel } from "@/lib/surge";
 import { RideQuoteResult } from "@/lib/quoteRidePrice";
 
@@ -41,6 +42,7 @@ const RideCard = ({
   isLoading = false,
 }: RideCardProps) => {
   const displayPrice = calculatedPrice ?? ride.price;
+  const { loaded: rideImageLoaded, onLoad: onRideImageLoad } = useImageLoaded(ride.image);
   
   return (
     <motion.button
@@ -56,10 +58,12 @@ const RideCard = ({
     >
       {/* Vehicle Image */}
       <div className="relative h-24 overflow-hidden bg-gradient-to-b from-muted/30 to-transparent flex items-center justify-center">
+        {!rideImageLoaded && <div className="absolute inset-0 animate-pulse bg-muted/50" />}
         <img
           src={ride.image}
           alt={ride.name}
-          className="w-20 h-20 object-contain"
+          onLoad={onRideImageLoad}
+          className={cn("w-20 h-20 object-contain transition-opacity duration-300", rideImageLoaded ? "opacity-100" : "opacity-0")}
         />
         
         {/* Surge Badge */}

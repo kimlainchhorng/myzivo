@@ -4,6 +4,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { useImageLoaded } from "@/hooks/useImageLoaded";
 import { Zap, Star, Crown, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
@@ -261,18 +262,23 @@ function ZivoCarThumbnail({ compact = false, category = "economy", rideName }: {
     imageSrc = ridePremium;
   }
 
+  const { loaded, onLoad } = useImageLoaded(imageSrc);
+
   return (
     <div className={cn(
-      "flex items-center justify-center shrink-0 rounded-full overflow-hidden",
+      "relative flex items-center justify-center shrink-0 rounded-full overflow-hidden",
       compact ? "w-[44px] h-[44px]" : "w-[56px] h-[56px]",
       bgClass
     )}>
+      {!loaded && <div className="absolute inset-0 animate-pulse bg-muted/50 rounded-full" />}
       <img
         src={imageSrc}
         alt={`${category} vehicle`}
+        onLoad={onLoad}
         className={cn(
-          "object-contain",
-          compact ? "w-[38px] h-[38px]" : "w-[48px] h-[48px]"
+          "object-contain transition-opacity duration-300",
+          compact ? "w-[38px] h-[38px]" : "w-[48px] h-[48px]",
+          loaded ? "opacity-100" : "opacity-0"
         )}
       />
     </div>
