@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import fleetEconomy from "@/assets/fleet-economy.png";
+import fleetCompact from "@/assets/fleet-compact.png";
+import fleetSuv from "@/assets/fleet-suv.png";
+import fleetLuxury from "@/assets/fleet-luxury.png";
+import fleetElectric from "@/assets/fleet-electric.png";
+
 const fleetCategories = [
   { id: "all", name: "All" },
   { id: "economy", name: "Economy" },
@@ -13,15 +19,23 @@ const fleetCategories = [
   { id: "electric", name: "Electric" },
 ];
 
+const categoryImages: Record<string, string> = {
+  economy: fleetEconomy,
+  compact: fleetCompact,
+  suv: fleetSuv,
+  luxury: fleetLuxury,
+  electric: fleetElectric,
+};
+
 const vehicles = [
-  { id: 1, name: "Hyundai i10", category: "economy", seats: 4, transmission: "Auto", fuel: "Petrol", price: 25, rating: 4.6, image: "🚗", available: true },
-  { id: 2, name: "Ford Focus", category: "compact", seats: 5, transmission: "Auto", fuel: "Petrol", price: 35, rating: 4.7, image: "🚙", available: true },
-  { id: 3, name: "Toyota RAV4", category: "suv", seats: 5, transmission: "Auto", fuel: "Hybrid", price: 55, rating: 4.8, image: "🚙", available: true },
-  { id: 4, name: "BMW 3 Series", category: "luxury", seats: 5, transmission: "Auto", fuel: "Diesel", price: 85, rating: 4.9, image: "🚘", available: false },
-  { id: 5, name: "Tesla Model 3", category: "electric", seats: 5, transmission: "Auto", fuel: "Electric", price: 95, rating: 4.9, image: "🚗", available: true },
-  { id: 6, name: "VW Golf", category: "compact", seats: 5, transmission: "Auto", fuel: "Petrol", price: 40, rating: 4.7, image: "🚗", available: true },
-  { id: 7, name: "Mercedes E-Class", category: "luxury", seats: 5, transmission: "Auto", fuel: "Diesel", price: 120, rating: 4.9, image: "🚘", available: true },
-  { id: 8, name: "Nissan Leaf", category: "electric", seats: 5, transmission: "Auto", fuel: "Electric", price: 65, rating: 4.6, image: "🚗", available: true },
+  { id: 1, name: "Hyundai i10", category: "economy", seats: 4, transmission: "Auto", fuel: "Petrol", price: 25, rating: 4.6, available: true },
+  { id: 2, name: "Ford Focus", category: "compact", seats: 5, transmission: "Auto", fuel: "Petrol", price: 35, rating: 4.7, available: true },
+  { id: 3, name: "Toyota RAV4", category: "suv", seats: 5, transmission: "Auto", fuel: "Hybrid", price: 55, rating: 4.8, available: true },
+  { id: 4, name: "BMW 3 Series", category: "luxury", seats: 5, transmission: "Auto", fuel: "Diesel", price: 85, rating: 4.9, available: false },
+  { id: 5, name: "Tesla Model 3", category: "electric", seats: 5, transmission: "Auto", fuel: "Electric", price: 95, rating: 4.9, available: true },
+  { id: 6, name: "VW Golf", category: "compact", seats: 5, transmission: "Auto", fuel: "Petrol", price: 40, rating: 4.7, available: true },
+  { id: 7, name: "Mercedes E-Class", category: "luxury", seats: 5, transmission: "Auto", fuel: "Diesel", price: 120, rating: 4.9, available: true },
+  { id: 8, name: "Nissan Leaf", category: "electric", seats: 5, transmission: "Auto", fuel: "Electric", price: 65, rating: 4.6, available: true },
 ];
 
 const CarFleetShowcase = () => {
@@ -79,7 +93,13 @@ const CarFleetShowcase = () => {
                 </Badge>
               )}
 
-              <div className="text-5xl text-center mb-4">{vehicle.image}</div>
+              <div className="flex justify-center mb-4">
+                <img 
+                  src={categoryImages[vehicle.category]} 
+                  alt={vehicle.name} 
+                  className="w-24 h-24 object-contain"
+                />
+              </div>
 
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold">{vehicle.name}</h3>
