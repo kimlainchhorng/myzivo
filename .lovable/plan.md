@@ -1,80 +1,55 @@
 
-# Add Smooth Loading Transitions for Car Illustrations
+
+# Add Accepted Vehicles List to the Drive Page
 
 ## Overview
-Add a reusable image loading hook and apply fade-in skeleton transitions to all car/vehicle illustrations across three components: `ZivoRideRow`, `RideCard`, and `CarFleetShowcase`. Images will show a pulsing skeleton placeholder, then smoothly fade in once loaded.
+Add a comprehensive "Accepted Vehicles" accordion section to the `/drive` page, inspired by the Lyft reference screenshots. This will show prospective drivers exactly which car makes and models qualify for each ZIVO service tier (Standard, Extra Comfort, Black, XL).
 
-## Approach
-Create a small custom hook (`useImageLoaded`) that tracks the `onLoad` event of an `<img>` tag, then apply it consistently across all vehicle image locations.
+## New Component: `src/components/drive/AcceptedVehiclesList.tsx`
 
-## Changes
+A standalone component containing:
 
-### 1. New Hook: `src/hooks/useImageLoaded.ts`
-A tiny hook returning `{ loaded, onLoad, ref }`:
-- `loaded` starts as `false`, flips to `true` on the image's `onLoad` event
-- Resets when the `src` changes
-- Used to toggle between skeleton placeholder and the actual image with a CSS fade transition
+### Data Structure
+A static data file (`src/data/acceptedVehicles.ts`) with the full vehicle list organized by make, each model entry including:
+- Model name
+- Minimum year
+- Eligible tiers (array of tier tags like "Extra Comfort", "Black", "XL")
 
-### 2. Update `src/components/ride/ZivoRideRow.tsx` (ZivoCarThumbnail)
-**Lines ~264-278** -- the circular thumbnail in ride rows:
-- Import and use `useImageLoaded`
-- Show an `animate-pulse` circular skeleton when `!loaded`
-- Apply `opacity-0 -> opacity-100` transition on the `<img>` with `transition-opacity duration-300`
+Covers all makes from the reference images: Acura, Audi, Bentley, BMW, Cadillac, Chevrolet, Dodge, Ford, Genesis, GMC, Honda, Hyundai, Infiniti, Jaguar, Jeep, Kia, Land Rover, Lexus, Lincoln, Lucid, Maserati, Mazda, Mercedes-Benz, Mitsubishi, Porsche, Rivian, Rolls-Royce, Tesla, Toyota, Volkswagen, Volvo.
 
-### 3. Update `src/components/ride/RideCard.tsx` (Vehicle Image)
-**Lines ~58-63** -- the card image area:
-- Import and use `useImageLoaded`
-- Show a pulsing skeleton rectangle behind the image
-- Fade the `<img>` in once loaded using `transition-opacity duration-300`
+### UI Design
+- Section header with a Car icon badge and "Accepted Vehicles" title
+- Search/filter bar at the top to quickly find a make or model
+- Tier filter chips (All, Standard, Extra Comfort, Black, XL) to narrow by service level
+- Radix Accordion with one item per make (alphabetically sorted)
+  - Make name as the trigger (bold, dark text)
+  - Collapsed by default; multiple can be open
+  - Each model shown as: **MODEL NAME** - Year (Tier tags as small colored badges)
+- Tier badge colors:
+  - Standard: emerald/green
+  - Extra Comfort: blue
+  - Black: dark/slate
+  - XL: purple
+- Footnotes explaining tier eligibility criteria
+- Matches ZIVO spatial design system (rounded-2xl cards, glassmorphism, Inter font)
 
-### 4. Update `src/components/car/CarFleetShowcase.tsx` (Fleet Grid)
-**Lines ~96-102** -- the fleet category thumbnail:
-- Import and use `useImageLoaded`
-- Show a circular skeleton placeholder while loading
-- Fade the image in smoothly
+### Integration
+- Add the component to `src/pages/Drive.tsx` between the "Requirements" section and the "Benefits" section
+- Wrapped in a framer-motion fade-in animation matching the existing page pattern
 
-### 5. Update `src/components/car-search/CarInventoryCard.tsx` (Search Results)
-**Lines ~66-77** -- the vehicle search result image:
-- Import and use `useImageLoaded`
-- Show a pulsing skeleton behind the image
-- Fade in on load; keeps existing hover scale effect
+## Files
 
-## Technical Detail
+| File | Type | Description |
+|------|------|-------------|
+| `src/data/acceptedVehicles.ts` | New | Static data: all makes, models, years, and tier eligibility |
+| `src/components/drive/AcceptedVehiclesList.tsx` | New | Accordion UI component with search and tier filters |
+| `src/pages/Drive.tsx` | Edit | Import and render AcceptedVehiclesList between Requirements and Benefits |
 
-The hook:
-```typescript
-// src/hooks/useImageLoaded.ts
-import { useState, useCallback, useEffect } from "react";
+## Technical Notes
 
-export function useImageLoaded(src?: string) {
-  const [loaded, setLoaded] = useState(false);
-  
-  useEffect(() => { setLoaded(false); }, [src]);
-  
-  const onLoad = useCallback(() => setLoaded(true), []);
-  
-  return { loaded, onLoad };
-}
-```
-
-Image pattern applied everywhere:
-```
-<div className="relative ...">
-  {!loaded && <div className="absolute inset-0 animate-pulse bg-muted/50 rounded-..." />}
-  <img
-    src={imageSrc}
-    onLoad={onLoad}
-    className={cn("transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")}
-  />
-</div>
-```
-
-## Files Changed
-
-| File | Change |
-|------|--------|
-| `src/hooks/useImageLoaded.ts` | New -- tiny loading state hook |
-| `src/components/ride/ZivoRideRow.tsx` | Add skeleton + fade to ZivoCarThumbnail |
-| `src/components/ride/RideCard.tsx` | Add skeleton + fade to vehicle image |
-| `src/components/car/CarFleetShowcase.tsx` | Add skeleton + fade to fleet thumbnails |
-| `src/components/car-search/CarInventoryCard.tsx` | Add skeleton + fade to search result images |
+- Uses Radix `Accordion` (already installed) for the collapsible make sections
+- No database or API calls needed -- this is static reference data
+- The search input filters both make names and model names in real time
+- Tier filter chips use `useState` to toggle which tiers are shown
+- Total vehicle count displayed in the section subtitle (e.g., "300+ accepted vehicles across 31 makes")
+- Mobile-responsive: single column layout, full-width accordion items
