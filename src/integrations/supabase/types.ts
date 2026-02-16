@@ -7815,6 +7815,63 @@ export type Database = {
           },
         ]
       }
+      corp_expenses: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          category: string
+          created_at: string
+          department: string
+          description: string
+          employee_initials: string
+          employee_name: string
+          expense_date: string
+          has_receipt: boolean
+          id: string
+          note: string | null
+          receipt_url: string | null
+          reimbursed_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          category?: string
+          created_at?: string
+          department?: string
+          description: string
+          employee_initials?: string
+          employee_name: string
+          expense_date?: string
+          has_receipt?: boolean
+          id?: string
+          note?: string | null
+          receipt_url?: string | null
+          reimbursed_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          category?: string
+          created_at?: string
+          department?: string
+          description?: string
+          employee_initials?: string
+          employee_name?: string
+          expense_date?: string
+          has_receipt?: boolean
+          id?: string
+          note?: string | null
+          receipt_url?: string | null
+          reimbursed_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cost_optimization_alerts: {
         Row: {
           alert_type: string
