@@ -1,30 +1,43 @@
 
 
-## Add Route Loading Indicator
+## Animate Route Polyline Drawing
 
 ### Overview
-When a user enters both pickup and dropoff addresses, there's a brief delay while the route is calculated via the server-side edge function. Currently there's no visual feedback during this time. This change adds a loading indicator on the map and in the vehicle options area.
+Instead of the route polyline appearing all at once, it will animate from the pickup point toward the dropoff, progressively revealing segments over ~1 second. This creates a polished "drawing" effect consistent with premium ride-hailing apps.
 
-### What Changes
+### Approach
+Create a new `AnimatedPolyline` component that uses `requestAnimationFrame` to progressively increase the number of rendered path points from 1 to the full `routePath.length` over a configurable duration (~800ms).
 
-**File: `src/pages/Rides.tsx`**
+### File Changes
 
-1. **Destructure `isLoading`** from `useServerRoute()` (it's already returned by the hook, just not used):
-   - Change line 290 from `{ routeData, fetchRoute, clearRoute }` to `{ routeData, isLoading: isRouteLoading, fetchRoute, clearRoute }`
+**New file: `src/components/maps/AnimatedPolyline.tsx`**
 
-2. **Pass `isRouteLoading` to `RidesMapView`** so the map can show an overlay indicator while calculating.
+- Accepts `path` (array of LatLngLiteral), `duration` (default 800ms), and polyline style options
+- Uses a `useEffect` + `requestAnimationFrame` loop that interpolates the visible point count from 1 to `path.length` over the duration using easeOutCubic easing
+- Renders a `PolylineF` with `path.slice(0, visibleCount)`
+- Optionally renders a faint "shadow" polyline of the full path at low opacity for a subtle trail effect
+- Resets and re-animates whenever the `path` reference changes (new route)
 
-3. **Add a loading state in the trip info area** (around line 1152): When `isRouteLoading` is true and both addresses are set, show a skeleton/spinner pill instead of the distance/duration info, giving the user immediate feedback that the route is being calculated.
+**Modified: `src/components/maps/GoogleMap.tsx`**
 
-4. **Add a loading overlay on the map**: Show a subtle "Calculating route..." pill floating on the map when `isRouteLoading` is true and both pickup and dropoff are set.
-
-**File: `src/pages/Rides.tsx` (RidesMapView sub-component)**
-
-5. Accept an `isRouteLoading` prop and render a floating indicator (a small pill with a spinner and "Calculating route..." text) centered on the map when loading.
+- Replace the static `PolylineF` block (lines 231-241) with the new `AnimatedPolyline` component
+- Pass the same styling props (emerald color, weight 5, geodesic)
 
 ### Technical Details
 
-- The `useServerRoute` hook already tracks `isLoading` state -- no backend changes needed
-- The loading indicator appears only when both addresses are entered (not during initial page load)
-- Uses existing `Loader2` icon (already imported) with `animate-spin` for the spinner
-- Styled consistently with existing ZIVO brand (emerald tones, rounded pills, backdrop blur)
+```text
+AnimatedPolyline logic:
+  - state: visibleCount (number of points to show)
+  - on mount / path change:
+    - startTime = performance.now()
+    - rAF loop:
+      - elapsed = now - startTime
+      - progress = min(elapsed / duration, 1)
+      - eased = 1 - (1 - progress)^3  (easeOutCubic)
+      - visibleCount = max(2, floor(eased * path.length))
+      - if progress < 1: continue rAF
+  - render: <PolylineF path={path.slice(0, visibleCount)} ... />
+```
+
+The easeOutCubic easing makes the animation start fast and decelerate, which feels natural -- like the route is "snapping" into place. The minimum of 2 points ensures a valid polyline is always rendered.
+
