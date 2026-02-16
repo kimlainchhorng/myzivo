@@ -354,6 +354,30 @@ function RidesInner() {
   
   const createScheduledBooking = useCreateScheduledBooking();
   
+  // Auto-fill contact info from customer profile
+  useEffect(() => {
+    const prefill = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        setContactInfo(prev => ({
+          ...prev,
+          name: profile?.full_name || prev.name,
+          phone: profile?.phone || prev.phone,
+          email: user.email || prev.email,
+        }));
+      } catch {
+        // silent – user can still fill manually
+      }
+    };
+    prefill();
+  }, []);
+  
   // Zone-based pricing using pickup coordinates
   const { zone: pricingZone } = usePricingZone(pickupCoords?.lat, pickupCoords?.lng);
   // Fetch ALL ride-type rates for the zone (for per-card pricing)
