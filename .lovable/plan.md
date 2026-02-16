@@ -1,54 +1,57 @@
 
 
-# Update Car Illustrations to Premium Style
+# Fix Broken Car Illustrations with User-Provided Images
 
-## What Changes
+## Problem
+The current car illustration PNGs (`fleet-economy.png`, `ride-premium.png`, `ride-xl.png`, etc.) are broken/corrupted, showing a "no image" icon as seen in your screenshot. These files were AI-generated and are not valid images.
 
-Replace the current basic green car icons with premium, detailed car illustrations matching the reference style: **white/silver car bodies with ZIVO brand-colored accents** (emerald green instead of purple, matching the ZIVO brand).
+## Solution
+Replace all broken PNG assets with the 3 high-quality car illustrations you provided, and create inline SVG fallbacks for the remaining categories.
 
-## Components to Update
+## Steps
 
-### 1. ZivoRideRow SVG Car Illustrations
-The inline SVG cars in `ZivoRideRow.tsx` will be completely redrawn with the reference style:
+### 1. Copy Your Uploaded Images into the Project
+Use your 3 uploaded illustrations as the primary car assets:
 
-- **EconomyCarSvg**: Compact sedan silhouette -- white/silver body, emerald-tinted windows, clean lines
-- **PremiumCarSvg**: Sleek sport sedan -- white body with gold window tint, subtle gold accents, sportier proportions  
-- **EliteCarSvg**: Long luxury sedan -- white body with purple/magenta window tint, chrome details, sparkle effects (matching the reference's sparkle icon for premium tiers)
+| Your Upload | Saved As | Used For |
+|-------------|----------|----------|
+| Economy hatchback (green circle) | `src/assets/fleet-economy.png` | Economy, Compact, Standard, Wait & Save, Priority rides |
+| Premium sedan (gold circle) | `src/assets/ride-premium.png` | Premium, Comfort rides |
+| XL SUV (purple/pink bg) | `src/assets/ride-xl.png` | Elite, XL rides |
 
-Each car will feature:
-- White/light silver body panels with subtle shading
-- Colored window tints per tier (emerald / gold / purple)
-- Dark wheels with realistic spoke details
-- Proper proportions to differentiate vehicle types
+### 2. Map Remaining Fleet Categories
+Since we have 3 distinct illustrations but 5 fleet categories, map them logically:
 
-### 2. Fleet Showcase PNG Assets
-Regenerate the 5 fleet category images (`fleet-economy.png`, `fleet-compact.png`, `fleet-suv.png`, `fleet-luxury.png`, `fleet-electric.png`) used in `CarFleetShowcase.tsx` and `rideData.ts` with matching white-body style illustrations on soft circular backgrounds.
+| Fleet Category | Image Source |
+|----------------|-------------|
+| Economy | Economy hatchback (green) |
+| Compact | Economy hatchback (green) |
+| SUV | XL SUV (purple) |
+| Luxury | Premium sedan (gold) |
+| Electric | Economy hatchback (green) |
 
-### 3. Ride Card PNG Assets
-Update `ride-premium.png` and `ride-xl.png` to match the new style (white body cars with appropriate accents).
+Copy the appropriate uploaded file to each asset path: `fleet-compact.png`, `fleet-suv.png`, `fleet-luxury.png`, `fleet-electric.png`.
 
-## Files Modified
+### 3. Components Fixed (no code changes needed)
+Since all components already import from these asset paths, replacing the files fixes everything:
+- **ZivoRideRow.tsx** -- ride selection thumbnails
+- **CarFleetShowcase.tsx** -- fleet category grid
+- **RideCard.tsx** via **rideData.ts** -- ride option cards
+- **CarElectricVehicles.tsx** -- EV showcase section
+
+### 4. Restore SVG Fallbacks in ZivoRideRow
+Keep the inline SVG car functions (`EconomyCarSvg`, `PremiumCarSvg`, `EliteCarSvg`) as fallbacks in case PNG loading fails, by adding an `onError` handler on the `<img>` tag that swaps to the SVG.
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/ride/ZivoRideRow.tsx` | Redraw all 3 SVG car functions with white-body + colored-accent style |
-| `src/assets/fleet-economy.png` | Regenerate -- white compact car, emerald accent |
-| `src/assets/fleet-compact.png` | Regenerate -- white compact sedan |
-| `src/assets/fleet-suv.png` | Regenerate -- white SUV silhouette |
-| `src/assets/fleet-luxury.png` | Regenerate -- white luxury sedan |
-| `src/assets/fleet-electric.png` | Regenerate -- white EV with green leaf accent |
-| `src/assets/ride-premium.png` | Regenerate -- white sport sedan |
-| `src/assets/ride-xl.png` | Regenerate -- white large SUV |
+| `src/assets/fleet-economy.png` | Replace with uploaded economy hatchback |
+| `src/assets/fleet-compact.png` | Replace with uploaded economy hatchback |
+| `src/assets/fleet-suv.png` | Replace with uploaded XL SUV |
+| `src/assets/fleet-luxury.png` | Replace with uploaded premium sedan |
+| `src/assets/fleet-electric.png` | Replace with uploaded economy hatchback |
+| `src/assets/ride-premium.png` | Replace with uploaded premium sedan |
+| `src/assets/ride-xl.png` | Replace with uploaded XL SUV |
 
-## Visual Style Summary
-
-```text
-Current:  Green body cars on green circles (monotone, hard to distinguish)
-Updated:  White/silver body cars with tier-specific colored windows/accents
-          Economy  = white + emerald windows
-          Premium  = white + gold windows  
-          Elite    = white + purple windows + sparkle effects
-```
-
-No logic, routing, or data changes -- purely visual asset and SVG updates.
-
+No code logic changes -- purely asset file replacements using the real images you provided.
