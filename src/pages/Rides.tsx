@@ -789,7 +789,7 @@ function RidesInner() {
         </div>
 
         {/* Content - scrollable when expanded */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className={`flex-1 overscroll-contain ${(showPickupSuggestions || showDropoffSuggestions || showStopSuggestions) ? 'overflow-visible' : 'overflow-y-auto'}`}>
           <div className="px-4 pb-4">
           {/* Request Step */}
           {step === "request" && (
@@ -801,7 +801,7 @@ function RidesInner() {
               </div>
               
               {/* Pickup & Dropoff Inputs */}
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-1 border border-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.08)]">
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-1 border border-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.08)]" style={{ overflow: 'visible' }}>
                 {/* Pickup Input */}
                 <div className="relative">
                     <div className="flex items-center gap-2 px-3 py-2">
@@ -842,7 +842,8 @@ function RidesInner() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-zinc-200 overflow-hidden"
+                        style={{ zIndex: 9999 }}
                       >
                         {/* Current location option */}
                         <button
@@ -937,7 +938,8 @@ function RidesInner() {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                            className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-zinc-200 overflow-hidden"
+                            style={{ zIndex: 9999 }}
                           >
                             {stopSuggestions.map((suggestion) => (
                               <button
@@ -998,7 +1000,8 @@ function RidesInner() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-zinc-200 overflow-hidden"
+                        style={{ zIndex: 9999 }}
                       >
                         {dropoffSuggestions.map((suggestion) => (
                           <button
