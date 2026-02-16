@@ -16612,6 +16612,7 @@ export type Database = {
           review_status: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          ride_type: string | null
           risk_level: string | null
           risk_score: number | null
           risk_signals: string[] | null
@@ -16785,6 +16786,7 @@ export type Database = {
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          ride_type?: string | null
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
@@ -16958,6 +16960,7 @@ export type Database = {
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          ride_type?: string | null
           risk_level?: string | null
           risk_score?: number | null
           risk_signals?: string[] | null
@@ -46283,6 +46286,7 @@ export type Database = {
         Args: { p_alert_id: string; p_notes?: string }
         Returns: Json
       }
+      safe_parse_timestamptz: { Args: { input: string }; Returns: string }
       score_driver_for_assignment: {
         Args: {
           p_driver_id: string
