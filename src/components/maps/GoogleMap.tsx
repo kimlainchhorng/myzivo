@@ -115,6 +115,12 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
 
   // Reset directions when pickup/dropoff change
   useEffect(() => {
+    console.log("[GoogleMap] pickup/dropoff changed", { 
+      pickup: pickup ? `${pickup.lat.toFixed(4)},${pickup.lng.toFixed(4)}` : null, 
+      dropoff: dropoff ? `${dropoff.lat.toFixed(4)},${dropoff.lng.toFixed(4)}` : null,
+      hasMap: !!mapRef.current,
+      fitBounds
+    });
     if (!pickup || !dropoff) {
       setDirections(null);
       setDirectionsRequested(false);
@@ -128,6 +134,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         bounds.extend(pickup);
         bounds.extend(dropoff);
         markers.forEach(m => bounds.extend(m.position));
+        console.log("[GoogleMap] Fitting bounds to show both markers");
         mapRef.current.fitBounds(bounds, 60);
       }
     }
