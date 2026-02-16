@@ -10715,6 +10715,7 @@ export type Database = {
       }
       driver_earnings: {
         Row: {
+          amount: number | null
           base_amount: number
           bonus_amount: number | null
           created_at: string
@@ -10730,6 +10731,7 @@ export type Database = {
           trip_id: string | null
         }
         Insert: {
+          amount?: number | null
           base_amount?: number
           bonus_amount?: number | null
           created_at?: string
@@ -10745,6 +10747,7 @@ export type Database = {
           trip_id?: string | null
         }
         Update: {
+          amount?: number | null
           base_amount?: number
           bonus_amount?: number | null
           created_at?: string
@@ -16641,6 +16644,7 @@ export type Database = {
           total_distance_miles: number | null
           tracking_code: string | null
           updated_at: string | null
+          user_id: string | null
           wallet_transaction_id: string | null
           was_reassigned: boolean | null
           zone_code: string | null
@@ -16813,6 +16817,7 @@ export type Database = {
           total_distance_miles?: number | null
           tracking_code?: string | null
           updated_at?: string | null
+          user_id?: string | null
           wallet_transaction_id?: string | null
           was_reassigned?: boolean | null
           zone_code?: string | null
@@ -16985,6 +16990,7 @@ export type Database = {
           total_distance_miles?: number | null
           tracking_code?: string | null
           updated_at?: string | null
+          user_id?: string | null
           wallet_transaction_id?: string | null
           was_reassigned?: boolean | null
           zone_code?: string | null
@@ -27804,6 +27810,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_active: boolean
           service_type: string
           setting_key: string
           setting_value: number
@@ -27813,6 +27820,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           service_type: string
           setting_key: string
           setting_value: number
@@ -27822,6 +27830,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           service_type?: string
           setting_key?: string
           setting_value?: number
@@ -28135,6 +28144,7 @@ export type Database = {
           min_fare: number | null
           segment_id: string | null
           start_at: string | null
+          usage_count: number | null
           uses: number | null
         }
         Insert: {
@@ -28153,6 +28163,7 @@ export type Database = {
           min_fare?: number | null
           segment_id?: string | null
           start_at?: string | null
+          usage_count?: number | null
           uses?: number | null
         }
         Update: {
@@ -28171,6 +28182,7 @@ export type Database = {
           min_fare?: number | null
           segment_id?: string | null
           start_at?: string | null
+          usage_count?: number | null
           uses?: number | null
         }
         Relationships: [
@@ -31753,6 +31765,7 @@ export type Database = {
           order_id: string | null
           rating: number
           reviewer_user_id: string
+          service_type: string | null
           target_id: string
           target_type: string
         }
@@ -31763,6 +31776,7 @@ export type Database = {
           order_id?: string | null
           rating: number
           reviewer_user_id: string
+          service_type?: string | null
           target_id: string
           target_type: string
         }
@@ -31773,6 +31787,7 @@ export type Database = {
           order_id?: string | null
           rating?: number
           reviewer_user_id?: string
+          service_type?: string | null
           target_id?: string
           target_type?: string
         }
