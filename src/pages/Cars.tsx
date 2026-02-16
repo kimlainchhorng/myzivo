@@ -7,6 +7,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CarElectricVehicles from "@/components/car/CarElectricVehicles";
 import SEOHead from "@/components/SEOHead";
 import { useState, useMemo } from "react";
 import { 
@@ -454,6 +455,8 @@ export default function Cars() {
             </div>
           )}
         </div>
+        {/* EV Section */}
+        <CarElectricVehicles />
       </main>
 
       <Footer />
