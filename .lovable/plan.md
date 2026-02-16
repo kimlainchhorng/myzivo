@@ -1,69 +1,80 @@
 
+# Add Smooth Loading Transitions for Car Illustrations
 
-# Generate Unique Car Illustrations for Each Fleet Category
+## Overview
+Add a reusable image loading hook and apply fade-in skeleton transitions to all car/vehicle illustrations across three components: `ZivoRideRow`, `RideCard`, and `CarFleetShowcase`. Images will show a pulsing skeleton placeholder, then smoothly fade in once loaded.
 
-## Current Problem
-Right now there are only 3 unique car images being reused across 7+ asset files:
-- The same green hatchback is used for Economy, Compact, Electric, Standard, Wait & Save, and Priority rides
-- The same gold sedan is used for Premium, Comfort, and Luxury
-- The same purple SUV is used for Elite, XL, and SUV
+## Approach
+Create a small custom hook (`useImageLoaded`) that tracks the `onLoad` event of an `<img>` tag, then apply it consistently across all vehicle image locations.
 
-This makes it hard for users to distinguish between ride types visually.
+## Changes
 
-## Solution
-Use AI image generation (Gemini Flash Image model) to create 5 new unique car illustrations that match the existing ZIVO style (clean vehicle on a subtle colored circular background). Combined with the 3 existing images, each ride type and fleet category will have its own distinct visual.
+### 1. New Hook: `src/hooks/useImageLoaded.ts`
+A tiny hook returning `{ loaded, onLoad, ref }`:
+- `loaded` starts as `false`, flips to `true` on the image's `onLoad` event
+- Resets when the `src` changes
+- Used to toggle between skeleton placeholder and the actual image with a CSS fade transition
 
-## New Images to Generate
+### 2. Update `src/components/ride/ZivoRideRow.tsx` (ZivoCarThumbnail)
+**Lines ~264-278** -- the circular thumbnail in ride rows:
+- Import and use `useImageLoaded`
+- Show an `animate-pulse` circular skeleton when `!loaded`
+- Apply `opacity-0 -> opacity-100` transition on the `<img>` with `transition-opacity duration-300`
 
-| Asset File | Vehicle Type | Style Description |
-|------------|-------------|-------------------|
-| `fleet-compact.png` | Compact sedan (e.g., VW Golf shape) | Clean white/silver compact car on a soft blue circular background |
-| `fleet-electric.png` | Modern EV hatchback (e.g., Nissan Leaf shape) | Sleek white/silver EV with green leaf accent on a teal circular background |
-| `fleet-luxury.png` | Executive sedan (e.g., Mercedes E-Class shape) | Elegant dark sedan on a warm gold circular background |
-| `fleet-suv.png` | Crossover SUV (e.g., Toyota RAV4 shape) | Rugged white/silver SUV on an orange circular background |
-| `ride-green.png` (new) | Eco/hybrid compact (e.g., Toyota Prius shape) | White hybrid car with green eco badge on a mint green background |
+### 3. Update `src/components/ride/RideCard.tsx` (Vehicle Image)
+**Lines ~58-63** -- the card image area:
+- Import and use `useImageLoaded`
+- Show a pulsing skeleton rectangle behind the image
+- Fade the `<img>` in once loaded using `transition-opacity duration-300`
 
-## Existing Images (Keep As-Is)
-- `fleet-economy.png` -- green hatchback (for Wait & Save + Standard)
-- `ride-premium.png` -- gold sedan (for Comfort + Premium rides)
-- `ride-xl.png` -- purple SUV (for Elite + XL rides)
+### 4. Update `src/components/car/CarFleetShowcase.tsx` (Fleet Grid)
+**Lines ~96-102** -- the fleet category thumbnail:
+- Import and use `useImageLoaded`
+- Show a circular skeleton placeholder while loading
+- Fade the image in smoothly
 
-## Updated Ride-to-Image Mapping
+### 5. Update `src/components/car-search/CarInventoryCard.tsx` (Search Results)
+**Lines ~66-77** -- the vehicle search result image:
+- Import and use `useImageLoaded`
+- Show a pulsing skeleton behind the image
+- Fade in on load; keeps existing hover scale effect
 
-After generation, update `rideData.ts` to assign unique images:
+## Technical Detail
 
-| Ride Type | Image Asset |
-|-----------|------------|
-| Wait & Save | `fleet-economy.png` (existing green hatchback) |
-| Standard | `fleet-compact.png` (new compact sedan) |
-| Green | `ride-green.png` (new eco/hybrid) |
-| Priority | `fleet-compact.png` (new compact sedan) |
-| Comfort | `ride-premium.png` (existing gold sedan) |
-| Premium | `fleet-luxury.png` (new executive sedan) |
-| Elite | `fleet-luxury.png` (new executive sedan) |
-| XL | `ride-xl.png` (existing purple SUV) |
+The hook:
+```typescript
+// src/hooks/useImageLoaded.ts
+import { useState, useCallback, useEffect } from "react";
 
-## Updated Fleet Showcase Mapping
+export function useImageLoaded(src?: string) {
+  const [loaded, setLoaded] = useState(false);
+  
+  useEffect(() => { setLoaded(false); }, [src]);
+  
+  const onLoad = useCallback(() => setLoaded(true), []);
+  
+  return { loaded, onLoad };
+}
+```
 
-| Fleet Category | Image Asset |
-|---------------|------------|
-| Economy | `fleet-economy.png` (existing) |
-| Compact | `fleet-compact.png` (new) |
-| SUV | `fleet-suv.png` (new) |
-| Luxury | `fleet-luxury.png` (new) |
-| Electric | `fleet-electric.png` (new) |
+Image pattern applied everywhere:
+```
+<div className="relative ...">
+  {!loaded && <div className="absolute inset-0 animate-pulse bg-muted/50 rounded-..." />}
+  <img
+    src={imageSrc}
+    onLoad={onLoad}
+    className={cn("transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")}
+  />
+</div>
+```
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/assets/fleet-compact.png` | Replace with AI-generated compact sedan |
-| `src/assets/fleet-electric.png` | Replace with AI-generated EV |
-| `src/assets/fleet-luxury.png` | Replace with AI-generated executive sedan |
-| `src/assets/fleet-suv.png` | Replace with AI-generated crossover SUV |
-| `src/assets/ride-green.png` | New file -- eco/hybrid illustration |
-| `src/components/ride/rideData.ts` | Update image imports to use new unique assets per ride type |
-| `src/components/ride/ZivoRideRow.tsx` | Add `ride-green.png` import and map "green" ride type to its own illustration |
-
-## Generation Style Prompt
-Each image will be generated with a consistent prompt style to match the existing ZIVO aesthetic: "Clean side-profile illustration of a [vehicle type], white/silver body, on a soft [color] circular gradient background, minimal flat design, no text, high quality product shot style, transparent or clean background"
+| `src/hooks/useImageLoaded.ts` | New -- tiny loading state hook |
+| `src/components/ride/ZivoRideRow.tsx` | Add skeleton + fade to ZivoCarThumbnail |
+| `src/components/ride/RideCard.tsx` | Add skeleton + fade to vehicle image |
+| `src/components/car/CarFleetShowcase.tsx` | Add skeleton + fade to fleet thumbnails |
+| `src/components/car-search/CarInventoryCard.tsx` | Add skeleton + fade to search result images |
