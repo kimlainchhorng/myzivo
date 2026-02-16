@@ -1,62 +1,48 @@
 
 
-# Fix Map Display + Upgrade Premium Ride Options
+# Fix Map Loading + Improve Elite/Premium Ride Visuals
 
-## Issue 1: Map Not Loading
+## 1. Fix Map Not Loading
 
-**Root Cause:** The `VITE_GOOGLE_MAPS_API_KEY` env variable is empty in `.env`. The `GoogleMapProvider` falls back to fetching the key via the `maps-api-key` edge function, but that requires authentication. If the user isn't logged in (or the session hasn't loaded yet), the map shows the dark green placeholder with a pulsing dot instead of an actual Google Map.
+**Problem:** The `GoogleMapProvider` only fetches the API key via edge function when authenticated, but the `VITE_GOOGLE_MAPS_API_KEY` env var (client-side) is also set as a secret. The map shows a dark placeholder because the client env var is empty at build time.
 
-**Fix:**
-- Update `GoogleMapProvider` to handle the "not yet authenticated" case more gracefully -- show a loading state while checking auth, and retry fetching the API key once auth is ready
-- Add a Supabase auth state listener so the provider re-attempts key fetching when the user signs in
-- Ensure the `GOOGLE_MAPS_API_KEY` secret is properly set in Supabase (already confirmed it exists)
-- Show a clearer fallback message when the map can't load due to auth
+**Fix:** Update the provider to also try fetching from the `maps-api-key` edge function without requiring auth first (public read of the key), and add a retry mechanism. If the edge function requires auth, show a "Sign in to view map" message instead of a blank dark screen. Also ensure the fallback placeholder looks cleaner.
 
-## Issue 2: Premium Tab - Visual Upgrade
+## 2. Fix Elite Tier Colors (Hard to See)
 
-**Current State:** The Premium tab uses the same `ZivoRideRow` component as Economy -- simple rows with inline SVG car icons. This doesn't differentiate the Premium tier visually.
+**Problem:** Elite uses `from-zinc-900 to-zinc-800` background with `border-purple-500/30` and purple accents — on the cream/light bottom sheet background, the dark cards with low-opacity purple borders look muddy and hard to read.
 
-**Upgrade Plan -- Make Premium look more luxurious:**
+**Changes to `ZivoRideRow.tsx`:**
+- **Elite (unselected):** Change to a richer look — darker card with brighter purple/gold border glow, brighter text contrast. Use `bg-gradient-to-br from-[#1a1025] to-[#0f0a1a]` with `border-purple-400/50` and lighter text
+- **Elite (selected):** More vivid purple glow — `border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]`
+- **Elite text colors:** Use `text-purple-200` for meta info instead of `text-zinc-400` so it stands out
+- **Elite price:** Use `text-purple-300` or bright gold `text-amber-300` for better visibility
+- **Elite badge pill:** Brighter background `bg-purple-500/30 text-purple-200` instead of `bg-purple-100 text-purple-700` (light mode colors on dark cards)
 
-1. **Enhanced ZivoRideRow for Premium/Elite tiers:**
-   - Add a subtle gradient background (dark charcoal/gold for Premium, deep purple/gold for Elite)
-   - Show a premium badge/icon (Star icon for Premium, Crown for Elite)
-   - Use a different, more refined car SVG for premium vehicles (sleeker sedan silhouette)
-   - Add a subtle shimmer/glow effect on selected state
+## 3. Improve Premium Tier Contrast
 
-2. **Premium-specific visual enhancements in Rides.tsx:**
-   - When Premium tab is active, show a subtle gold accent on the category tab
-   - Add a "Premium Experience" header with a star icon
-   - Differentiate card borders (gold for Premium, purple for Elite)
+**Changes to `ZivoRideRow.tsx`:**
+- **Premium badge pill:** Fix to use dark-appropriate colors: `bg-amber-500/20 text-amber-200` instead of `bg-amber-100 text-amber-700`
+- Ensure gold accents pop more against the charcoal background
 
-3. **Ride option data improvements:**
-   - Add descriptive subtitles that convey luxury (e.g., "Leather seats, quiet ride")
-   - Show vehicle class indicator (sedan icon vs SUV icon)
+## 4. Polish Tab Styling in `Rides.tsx`
+
+- Elite inactive tab: Brighten text from `text-purple-300` to `text-purple-200` for better tap target visibility
+- Add subtle icon styling improvements (Crown icon for Elite, Star for Premium)
+
+## 5. Map Fallback Improvements
+
+Update `RidesMapView` in `Rides.tsx`:
+- Show a cleaner fallback with a "Map loading..." label or "Sign in to view map" if auth is needed
+- Add a subtle map-like pattern instead of plain dark green
 
 ---
 
-## Technical Changes
+## Technical Summary
 
-### File 1: `src/components/maps/GoogleMapProvider.tsx`
-- Add `onAuthStateChange` listener to re-fetch API key when user signs in
-- Show a proper loading indicator while auth is being checked
-- Add retry logic if the first fetch fails due to auth timing
-
-### File 2: `src/components/ride/ZivoRideRow.tsx`
-- Accept a new `category` prop ("economy" | "premium" | "elite")
-- Apply tier-specific styling:
-  - Economy: current cream/emerald style (unchanged)
-  - Premium: dark charcoal background with gold accents, refined car SVG
-  - Elite: deep black background with purple/gold gradient, crown badge
-- Add a premium car SVG variant (sleeker silhouette)
-- Add subtle shimmer effect for selected premium cards
-
-### File 3: `src/pages/Rides.tsx`
-- Pass the `category` (activeTab) to each `ZivoRideRow`
-- Add a premium section header when Premium or Elite tabs are active
-- Enhance the tab styling with tier-appropriate colors
-
-### File 4: Ride categories data (in `Rides.tsx`)
-- Update Premium/Elite ride subtitles with luxury-focused descriptions
-- Add category-aware descriptions
+| File | Changes |
+|------|---------|
+| `src/components/ride/ZivoRideRow.tsx` | Fix Elite/Premium color contrast: brighter borders, better text colors on dark backgrounds, fix badge pills for dark cards |
+| `src/pages/Rides.tsx` | Improve Elite tab visibility, cleaner map fallback message |
+| `src/components/maps/GoogleMapProvider.tsx` | Add unauthenticated fallback attempt, better loading/error state communication |
 
