@@ -1,65 +1,69 @@
 
 
-# Add Floating Card Navigation + Address Validation
+# Generate Unique Car Illustrations for Each Fleet Category
 
-## Problem
-1. The `>` arrow on the floating pickup/dropoff cards on the map does nothing when tapped -- the click handlers (`onPickupClick`, `onDropoffClick`) are never connected.
-2. There is no address validation -- users can type partial text like "7475" and proceed to ride selection without a valid, geocoded address.
+## Current Problem
+Right now there are only 3 unique car images being reused across 7+ asset files:
+- The same green hatchback is used for Economy, Compact, Electric, Standard, Wait & Save, and Priority rides
+- The same gold sedan is used for Premium, Comfort, and Luxury
+- The same purple SUV is used for Elite, XL, and SUV
 
-## Changes
+This makes it hard for users to distinguish between ride types visually.
 
-### 1. Wire Up Floating Card Click Handlers (Rides.tsx)
+## Solution
+Use AI image generation (Gemini Flash Image model) to create 5 new unique car illustrations that match the existing ZIVO style (clean vehicle on a subtle colored circular background). Combined with the 3 existing images, each ride type and fleet category will have its own distinct visual.
 
-When the user taps the `>` on the floating pickup or dropoff card, scroll the bottom sheet to the corresponding input field and focus it for editing.
+## New Images to Generate
 
-- Pass `onPickupClick` and `onDropoffClick` props to `RidesMapView` from `RidesInner`
-- `onPickupClick`: expand the bottom sheet and focus the pickup input
-- `onDropoffClick`: expand the bottom sheet and focus the dropoff input
-- Add `ref` attributes to the pickup and dropoff input elements so they can be focused programmatically
+| Asset File | Vehicle Type | Style Description |
+|------------|-------------|-------------------|
+| `fleet-compact.png` | Compact sedan (e.g., VW Golf shape) | Clean white/silver compact car on a soft blue circular background |
+| `fleet-electric.png` | Modern EV hatchback (e.g., Nissan Leaf shape) | Sleek white/silver EV with green leaf accent on a teal circular background |
+| `fleet-luxury.png` | Executive sedan (e.g., Mercedes E-Class shape) | Elegant dark sedan on a warm gold circular background |
+| `fleet-suv.png` | Crossover SUV (e.g., Toyota RAV4 shape) | Rugged white/silver SUV on an orange circular background |
+| `ride-green.png` (new) | Eco/hybrid compact (e.g., Toyota Prius shape) | White hybrid car with green eco badge on a mint green background |
 
-### 2. Address Validation Before Proceeding (Rides.tsx)
+## Existing Images (Keep As-Is)
+- `fleet-economy.png` -- green hatchback (for Wait & Save + Standard)
+- `ride-premium.png` -- gold sedan (for Comfort + Premium rides)
+- `ride-xl.png` -- purple SUV (for Elite + XL rides)
 
-Add validation to ensure both pickup and dropoff are properly geocoded addresses (have coordinates) before allowing the user to proceed:
+## Updated Ride-to-Image Mapping
 
-- Update `handleFindRides` to check that both `pickupCoords` and `dropoffCoords` exist (not just non-empty strings)
-- Show a toast error if the user tries to proceed with an incomplete address (e.g., "Please select a valid pickup address from the suggestions")
-- Disable the "Choose [Ride]" CTA button when coordinates are missing
-- Add a subtle warning indicator on the address input when text is entered but no coordinates are set (indicating the address hasn't been validated via autocomplete)
+After generation, update `rideData.ts` to assign unique images:
 
-### 3. Visual Feedback for Unvalidated Addresses
+| Ride Type | Image Asset |
+|-----------|------------|
+| Wait & Save | `fleet-economy.png` (existing green hatchback) |
+| Standard | `fleet-compact.png` (new compact sedan) |
+| Green | `ride-green.png` (new eco/hybrid) |
+| Priority | `fleet-compact.png` (new compact sedan) |
+| Comfort | `ride-premium.png` (existing gold sedan) |
+| Premium | `fleet-luxury.png` (new executive sedan) |
+| Elite | `fleet-luxury.png` (new executive sedan) |
+| XL | `ride-xl.png` (existing purple SUV) |
 
-Add a small warning icon or red border on the input field when:
-- The user has typed text but hasn't selected from autocomplete suggestions
-- The address string exists but coordinates are null
+## Updated Fleet Showcase Mapping
 
-This helps the user understand they need to pick a suggestion, not just type freeform text.
+| Fleet Category | Image Asset |
+|---------------|------------|
+| Economy | `fleet-economy.png` (existing) |
+| Compact | `fleet-compact.png` (new) |
+| SUV | `fleet-suv.png` (new) |
+| Luxury | `fleet-luxury.png` (new) |
+| Electric | `fleet-electric.png` (new) |
 
-## Technical Details
+## Files Changed
 
-### File: `src/pages/Rides.tsx`
+| File | Change |
+|------|--------|
+| `src/assets/fleet-compact.png` | Replace with AI-generated compact sedan |
+| `src/assets/fleet-electric.png` | Replace with AI-generated EV |
+| `src/assets/fleet-luxury.png` | Replace with AI-generated executive sedan |
+| `src/assets/fleet-suv.png` | Replace with AI-generated crossover SUV |
+| `src/assets/ride-green.png` | New file -- eco/hybrid illustration |
+| `src/components/ride/rideData.ts` | Update image imports to use new unique assets per ride type |
+| `src/components/ride/ZivoRideRow.tsx` | Add `ride-green.png` import and map "green" ride type to its own illustration |
 
-**RidesMapView call (around line 732):**
-- Add `onPickupClick` and `onDropoffClick` handlers that expand the sheet and focus the respective inputs
-
-**Input refs:**
-- Add `useRef<HTMLInputElement>` for pickup and dropoff inputs
-- Attach refs to the `<input>` elements (lines 783 and 933)
-
-**handleFindRides (line 573):**
-```
-Before:  if (pickup && dropoff) setStep("options");
-After:   if (!pickupCoords) { toast.error("Please select a valid pickup address"); return; }
-         if (!dropoffCoords) { toast.error("Please select a valid destination"); return; }
-         setStep("options");
-```
-
-**CTA button (line 1282):**
-- Add visual disabled state when `!pickupCoords || !dropoffCoords`
-
-**Address warning indicators:**
-- Show a small `AlertCircle` icon next to inputs where text exists but coords are null
-- Orange/amber color to indicate "needs selection from suggestions"
-
-## No New Files
-All changes are in `src/pages/Rides.tsx` only.
-
+## Generation Style Prompt
+Each image will be generated with a consistent prompt style to match the existing ZIVO aesthetic: "Clean side-profile illustration of a [vehicle type], white/silver body, on a soft [color] circular gradient background, minimal flat design, no text, high quality product shot style, transparent or clean background"
