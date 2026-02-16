@@ -583,6 +583,15 @@ function RidesInner() {
       toast.error("Please select a valid destination from the suggestions");
       return;
     }
+    // Prevent same pickup and dropoff
+    if (
+      pickupCoords && dropoffCoords &&
+      Math.abs(pickupCoords.lat - dropoffCoords.lat) < 0.0005 &&
+      Math.abs(pickupCoords.lng - dropoffCoords.lng) < 0.0005
+    ) {
+      toast.error("Pickup and destination can't be the same location");
+      return;
+    }
     setStep("options");
   };
 
