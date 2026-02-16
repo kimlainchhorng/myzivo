@@ -121,8 +121,17 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
     } else {
       // Allow new request when coordinates change
       setDirectionsRequested(false);
+      
+      // Re-fit bounds to show both pickup and dropoff
+      if (mapRef.current && window.google && fitBounds) {
+        const bounds = new window.google.maps.LatLngBounds();
+        bounds.extend(pickup);
+        bounds.extend(dropoff);
+        markers.forEach(m => bounds.extend(m.position));
+        mapRef.current.fitBounds(bounds, 60);
+      }
     }
-  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
+  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, fitBounds, markers]);
 
   // Map options
   const options = useMemo(() => ({
