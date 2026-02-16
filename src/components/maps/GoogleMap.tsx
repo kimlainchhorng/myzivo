@@ -7,7 +7,7 @@
  */
 
 import { useMemo, useCallback, forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
-import { GoogleMap as GMap, MarkerF, DirectionsService, DirectionsRenderer, PolylineF } from "@react-google-maps/api";
+import { GoogleMap as GMap, MarkerF, PolylineF } from "@react-google-maps/api";
 import { cn } from "@/lib/utils";
 import { useGoogleMaps } from "./GoogleMapProvider";
 import ZivoPickupMarker from "./ZivoPickupMarker";
@@ -106,29 +106,16 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   const { isLoaded } = useGoogleMaps();
   const mapRef = useRef<google.maps.Map | null>(null);
   
-  // Directions state for route rendering
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [directionsRequested, setDirectionsRequested] = useState(false);
-  
   // Track map bounds for driver filtering
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
 
-  // Reset directions when pickup/dropoff change
+  // Fit bounds when pickup/dropoff change
   useEffect(() => {
-    if (!pickup || !dropoff) {
-      setDirections(null);
-      setDirectionsRequested(false);
-    } else {
-      // Allow new request when coordinates change
-      setDirectionsRequested(false);
-      
-      // Re-fit bounds to show both pickup and dropoff
-      if (mapRef.current && window.google && fitBounds) {
-        const bounds = new window.google.maps.LatLngBounds();
-        bounds.extend(pickup);
-        bounds.extend(dropoff);
-        mapRef.current.fitBounds(bounds, 60);
-      }
+    if (pickup && dropoff && mapRef.current && window.google && fitBounds) {
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(pickup);
+      bounds.extend(dropoff);
+      mapRef.current.fitBounds(bounds, 60);
     }
   }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, fitBounds]);
 
@@ -240,40 +227,8 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         onClick={handleMapClick}
         onBoundsChanged={handleBoundsChanged}
       >
-        {/* Google Directions Service for route */}
-        {pickup && dropoff && !directionsRequested && (
-          <DirectionsService
-            options={{
-              origin: pickup,
-              destination: dropoff,
-              travelMode: window.google?.maps?.TravelMode?.DRIVING ?? ("DRIVING" as any),
-            }}
-            callback={(result, status) => {
-              setDirectionsRequested(true);
-              if (status === "OK" && result) {
-                setDirections(result);
-              }
-            }}
-          />
-        )}
-
-        {/* Render route with ZIVO emerald polyline */}
-        {directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: true, // We use custom markers
-              polylineOptions: {
-                strokeColor: "#10B981", // ZIVO emerald
-                strokeOpacity: 0.9,
-                strokeWeight: 6,
-              },
-            }}
-          />
-        )}
-
-        {/* Custom routePath polyline (from edge function) — renders when no DirectionsRenderer */}
-        {routePath && routePath.length > 1 && !directions && (
+        {/* Server-side route polyline */}
+        {routePath && routePath.length > 1 && (
           <PolylineF
             path={routePath}
             options={{
