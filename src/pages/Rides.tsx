@@ -87,15 +87,15 @@ const rideCategories: Record<CategoryKey, RideOption[]> = {
     { id: "pet", name: "Pet", desc: "Pet-friendly rides.", price: "", time: "8 min", eta: 8, icon: Dog, image: "", seats: 4 }
   ],
   Premium: [
-    { id: "comfort", name: "Extra Comfort", desc: "Newer cars, more legroom.", price: "", time: "5 min", eta: 5, icon: Star, image: "", seats: 4 },
-    { id: "black", name: "ZIVO Black", desc: "Premium leather sedans.", price: "", time: "8 min", eta: 8, icon: Briefcase, image: "", seats: 4 },
-    { id: "black_suv", name: "Black SUV", desc: "Luxury for 6.", price: "", time: "10 min", eta: 10, icon: Shield, image: "", seats: 6 },
-    { id: "xxl", name: "XXL", desc: "Max luggage space.", price: "", time: "12 min", eta: 12, icon: Anchor, image: "", seats: 6 }
+    { id: "comfort", name: "Extra Comfort", desc: "Newer cars, more legroom.", subtitle: "Leather seats, quiet ride", price: "", time: "5 min", eta: 5, icon: Star, image: "", seats: 4 },
+    { id: "black", name: "ZIVO Black", desc: "Premium leather sedans.", subtitle: "Professional chauffeur", price: "", time: "8 min", eta: 8, icon: Briefcase, image: "", seats: 4 },
+    { id: "black_suv", name: "Black SUV", desc: "Luxury for 6.", subtitle: "Spacious, premium SUV", price: "", time: "10 min", eta: 10, icon: Shield, image: "", seats: 6 },
+    { id: "xxl", name: "XXL", desc: "Max luggage space.", subtitle: "Extra cargo capacity", price: "", time: "12 min", eta: 12, icon: Anchor, image: "", seats: 6 }
   ],
   Elite: [
-    { id: "lux", name: "ZIVO Lux", desc: "Rolls-Royce / Bentley.", price: "", time: "20 min", eta: 20, icon: Crown, image: "", seats: 4, tag: "lux" },
-    { id: "sprinter", name: "Executive Sprinter", desc: "Jet van for 12.", price: "", time: "45 min", eta: 45, icon: Briefcase, image: "", seats: 12 },
-    { id: "secure", name: "Secure Transit", desc: "Armored transport.", price: "", time: "60 min", eta: 60, icon: Shield, image: "", seats: 4 }
+    { id: "lux", name: "ZIVO Lux", desc: "Rolls-Royce / Bentley.", subtitle: "Ultra-luxury, white-glove service", price: "", time: "20 min", eta: 20, icon: Crown, image: "", seats: 4, tag: "lux" },
+    { id: "sprinter", name: "Executive Sprinter", desc: "Jet van for 12.", subtitle: "Private jet-style van", price: "", time: "45 min", eta: 45, icon: Briefcase, image: "", seats: 12 },
+    { id: "secure", name: "Secure Transit", desc: "Armored transport.", subtitle: "Armored, discreet travel", price: "", time: "60 min", eta: 60, icon: Shield, image: "", seats: 4 }
   ]
 };
 
@@ -983,21 +983,31 @@ function RidesInner() {
                 </button>
               )}
 
-              {/* Category Tabs - ZIVO Brand */}
+              {/* Category Tabs - Tier-specific styling */}
               <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
-                {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveTab(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                      activeTab === cat 
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25" 
-                        : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => {
+                  const isActive = activeTab === cat;
+                  const tabStyle = cat === "Elite"
+                    ? isActive
+                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/25"
+                      : "bg-zinc-900 border border-purple-500/30 text-purple-300 hover:border-purple-400/50"
+                    : cat === "Premium"
+                    ? isActive
+                      ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-500/25"
+                      : "bg-zinc-800 border border-amber-500/30 text-amber-300 hover:border-amber-400/50"
+                    : isActive
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25"
+                      : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50";
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveTab(cat)}
+                      className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${tabStyle}`}
+                    >
+                      {cat === "Premium" && "★ "}{cat === "Elite" && "♛ "}{cat}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Trip Info - ZIVO styled */}
@@ -1034,6 +1044,8 @@ function RidesInner() {
                     surgeMultiplier={surge.multiplier}
                     surgeLevel={surge.level}
                     surgeActive={surge.isActive}
+                    category={activeTab.toLowerCase() as "economy" | "premium" | "elite"}
+                    subtitle={ride.subtitle}
                   />
                 ))}
               </div>

@@ -3,12 +3,12 @@
  * 
  * Central Google Maps context provider using @react-google-maps/api.
  * Uses useJsApiLoader hook for proper React integration.
+ * Listens to auth state changes to re-fetch API key when user signs in.
  */
 
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import { createContext, useContext, ReactNode, useEffect, useState, useRef } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 
 const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
 
@@ -41,7 +41,6 @@ function GoogleMapProviderInner({
     libraries: LIBRARIES,
   });
 
-  // Always render children — map components check isLoaded themselves
   return (
     <GoogleMapsContext.Provider value={{ isLoaded, loadError }}>
       {children}
@@ -54,42 +53,47 @@ export function GoogleMapProvider({ children }: GoogleMapProviderProps) {
     import.meta.env.VITE_GOOGLE_MAPS_API_KEY || null
   );
   const [loading, setLoading] = useState(!apiKey);
-  const [error, setError] = useState<string | null>(null);
+  const fetchAttemptedRef = useRef(false);
 
+  // Fetch the API key from edge function (requires auth)
+  const fetchApiKey = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return; // Not authenticated yet — wait for auth change
+
+      const { data, error: fnError } = await supabase.functions.invoke("maps-api-key");
+      if (fnError) {
+        console.error("[GoogleMapProvider] Edge function error:", fnError);
+      } else if (data?.ok && data?.apiKey) {
+        setApiKey(data.apiKey);
+        fetchAttemptedRef.current = true;
+      }
+    } catch (e) {
+      console.error("[GoogleMapProvider] Failed to fetch API key:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch + listen for auth state changes to retry
   useEffect(() => {
-    // If we already have a key from env, don't fetch
     if (apiKey) {
       setLoading(false);
       return;
     }
 
-    const fetchApiKey = async () => {
-      try {
-        // Check if user is authenticated before calling protected edge function
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setError("Authentication required for maps");
-          return;
-        }
-        const { data, error: fnError } = await supabase.functions.invoke("maps-api-key");
-        if (fnError) {
-          console.error("[GoogleMapProvider] Edge function error:", fnError);
-          setError("Failed to load Google Maps configuration");
-        } else if (data?.ok && data?.apiKey) {
-          setApiKey(data.apiKey);
-        } else {
-          setError("Google Maps API key not configured");
-        }
-      } catch (e) {
-        console.error("[GoogleMapProvider] Failed to fetch API key:", e);
-        setError("Failed to load Google Maps");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Try fetching immediately
     fetchApiKey();
-  }, [apiKey]);
+
+    // Listen for sign-in events to re-attempt
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && !fetchAttemptedRef.current) {
+        fetchApiKey();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!apiKey) {
     return (

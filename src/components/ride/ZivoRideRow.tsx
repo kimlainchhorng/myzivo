@@ -1,13 +1,14 @@
 /**
  * ZivoRideRow - ZIVO Brand Premium Ride Selection Row
- * Emerald/Teal palette with cream backgrounds and gradient accents
+ * Tier-aware: Economy (cream/emerald), Premium (charcoal/gold), Elite (black/purple-gold)
  */
 
 import { cn } from "@/lib/utils";
-import { Zap } from "lucide-react";
+import { Zap, Star, Crown } from "lucide-react";
 import type { SurgeLevel } from "@/lib/surge";
 
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
+type RideCategory = "economy" | "premium" | "elite";
 
 interface ZivoRideRowProps {
   selected?: boolean;
@@ -23,57 +24,121 @@ interface ZivoRideRowProps {
   surgeLevel?: SurgeLevel;
   surgeActive?: boolean;
   showRealTimeIndicator?: boolean;
+  category?: RideCategory;
+  subtitle?: string;
 }
 
-// ZIVO-branded inline SVG car thumbnail
-function ZivoCarThumbnail({ compact = false }: { compact?: boolean }) {
+// Economy car SVG
+function EconomyCarSvg({ compact = false }: { compact?: boolean }) {
+  return (
+    <svg
+      width={compact ? "48" : "60"}
+      height={compact ? "28" : "36"}
+      viewBox="0 0 120 72"
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-sm"
+    >
+      <ellipse cx="60" cy="64" rx="40" ry="6" fill="rgba(16,185,129,0.15)" />
+      <rect x="18" y="30" width="84" height="22" rx="8" fill="#FFFBF5" stroke="#10B981" strokeWidth="2" />
+      <path d="M36 30 L46 18 H74 L84 30 Z" fill="#FFFBF5" stroke="#10B981" strokeWidth="2" strokeLinejoin="round" />
+      <rect x="48" y="20" width="24" height="8" rx="2" fill="#14B8A6" opacity="0.3" />
+      <circle cx="38" cy="52" r="7" fill="#065F46" />
+      <circle cx="82" cy="52" r="7" fill="#065F46" />
+      <circle cx="38" cy="52" r="3" fill="#10B981" />
+      <circle cx="82" cy="52" r="3" fill="#10B981" />
+      <rect x="96" y="36" width="6" height="4" rx="1" fill="#FCD34D" />
+      <rect x="18" y="36" width="6" height="4" rx="1" fill="#F87171" />
+    </svg>
+  );
+}
+
+// Premium car SVG — sleek sedan with gold accents
+function PremiumCarSvg({ compact = false }: { compact?: boolean }) {
+  return (
+    <svg
+      width={compact ? "48" : "60"}
+      height={compact ? "28" : "36"}
+      viewBox="0 0 120 72"
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-md"
+    >
+      <ellipse cx="60" cy="64" rx="42" ry="5" fill="rgba(212,175,55,0.15)" />
+      <rect x="14" y="32" width="92" height="20" rx="10" fill="#1C1917" stroke="#D4AF37" strokeWidth="1.5" />
+      <path d="M34 32 L44 18 H76 L86 32 Z" fill="#1C1917" stroke="#D4AF37" strokeWidth="1.5" strokeLinejoin="round" />
+      <rect x="46" y="20" width="28" height="9" rx="3" fill="#D4AF37" opacity="0.25" />
+      <circle cx="36" cy="52" r="7" fill="#292524" />
+      <circle cx="84" cy="52" r="7" fill="#292524" />
+      <circle cx="36" cy="52" r="3" fill="#D4AF37" />
+      <circle cx="84" cy="52" r="3" fill="#D4AF37" />
+      <rect x="100" y="37" width="6" height="3" rx="1" fill="#D4AF37" />
+      <rect x="14" y="37" width="6" height="3" rx="1" fill="#EF4444" />
+    </svg>
+  );
+}
+
+// Elite car SVG — luxury with purple/gold
+function EliteCarSvg({ compact = false }: { compact?: boolean }) {
+  return (
+    <svg
+      width={compact ? "48" : "60"}
+      height={compact ? "28" : "36"}
+      viewBox="0 0 120 72"
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-lg"
+    >
+      <ellipse cx="60" cy="64" rx="44" ry="5" fill="rgba(147,51,234,0.12)" />
+      <rect x="12" y="32" width="96" height="20" rx="10" fill="#0C0A09" stroke="#9333EA" strokeWidth="1.5" />
+      <path d="M32 32 L42 16 H78 L88 32 Z" fill="#0C0A09" stroke="#9333EA" strokeWidth="1.5" strokeLinejoin="round" />
+      <rect x="44" y="18" width="32" height="10" rx="3" fill="#9333EA" opacity="0.2" />
+      <circle cx="34" cy="52" r="7" fill="#1C1917" />
+      <circle cx="86" cy="52" r="7" fill="#1C1917" />
+      <circle cx="34" cy="52" r="3" fill="#D4AF37" />
+      <circle cx="86" cy="52" r="3" fill="#D4AF37" />
+      <rect x="102" y="37" width="6" height="3" rx="1" fill="#D4AF37" />
+      <rect x="12" y="37" width="6" height="3" rx="1" fill="#EF4444" />
+    </svg>
+  );
+}
+
+function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
   return (
     <div className={cn(
       "flex items-center justify-center shrink-0",
       compact ? "w-12 h-8" : "w-16 h-10"
     )}>
-      <svg
-        width={compact ? "48" : "60"}
-        height={compact ? "28" : "36"}
-        viewBox="0 0 120 72"
-        xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-sm"
-      >
-        {/* Shadow ellipse */}
-        <ellipse cx="60" cy="64" rx="40" ry="6" fill="rgba(16,185,129,0.15)" />
-        
-        {/* Car body - cream with emerald accent */}
-        <rect x="18" y="30" width="84" height="22" rx="8" fill="#FFFBF5" stroke="#10B981" strokeWidth="2" />
-        
-        {/* Roof/cabin */}
-        <path
-          d="M36 30 L46 18 H74 L84 30 Z"
-          fill="#FFFBF5"
-          stroke="#10B981"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        
-        {/* Windows - teal tint */}
-        <rect x="48" y="20" width="24" height="8" rx="2" fill="#14B8A6" opacity="0.3" />
-        
-        {/* Wheels */}
-        <circle cx="38" cy="52" r="7" fill="#065F46" />
-        <circle cx="82" cy="52" r="7" fill="#065F46" />
-        <circle cx="38" cy="52" r="3" fill="#10B981" />
-        <circle cx="82" cy="52" r="3" fill="#10B981" />
-        
-        {/* Headlights - warm glow */}
-        <rect x="96" y="36" width="6" height="4" rx="1" fill="#FCD34D" />
-        <rect x="18" y="36" width="6" height="4" rx="1" fill="#F87171" />
-      </svg>
+      {category === "elite" ? (
+        <EliteCarSvg compact={compact} />
+      ) : category === "premium" ? (
+        <PremiumCarSvg compact={compact} />
+      ) : (
+        <EconomyCarSvg compact={compact} />
+      )}
     </div>
   );
 }
 
-// ZIVO-branded tag pills with emerald/teal theme
-function ZivoTagPill({ tag }: { tag?: RideTag }) {
-  if (!tag) return null;
+// Tag pills
+function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: RideCategory }) {
+  if (!tag) {
+    // Premium/Elite get a tier badge instead
+    if (category === "premium") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700">
+          <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+          Premium
+        </span>
+      );
+    }
+    if (category === "elite") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700">
+          <Crown className="w-2.5 h-2.5 fill-purple-500 text-purple-500" />
+          Elite
+        </span>
+      );
+    }
+    return null;
+  }
   
   const tagMap: Record<RideTag, { dotClass: string; label: string; bgClass: string }> = {
     wait_save: { dotClass: "bg-teal-400", label: "Save", bgClass: "bg-teal-50 text-teal-700" },
@@ -84,8 +149,6 @@ function ZivoTagPill({ tag }: { tag?: RideTag }) {
   };
   
   const item = tagMap[tag];
-  
-  // Standard shows only the dot indicator
   if (!item.label) {
     return (
       <span className="inline-flex items-center">
@@ -105,6 +168,31 @@ function ZivoTagPill({ tag }: { tag?: RideTag }) {
   );
 }
 
+// Tier-specific style config
+function getTierStyles(category: RideCategory, selected: boolean) {
+  if (category === "elite") {
+    return selected
+      ? "bg-gradient-to-r from-zinc-900 to-zinc-800 border-2 border-purple-500 shadow-[0_8px_24px_rgba(147,51,234,0.2)]"
+      : "bg-gradient-to-r from-zinc-900 to-zinc-800 border border-purple-500/30 shadow-[0_4px_12px_rgba(147,51,234,0.08)] hover:border-purple-400/50 hover:shadow-[0_6px_16px_rgba(147,51,234,0.15)]";
+  }
+  if (category === "premium") {
+    return selected
+      ? "bg-gradient-to-r from-zinc-800 to-stone-800 border-2 border-amber-500 shadow-[0_8px_24px_rgba(212,175,55,0.2)]"
+      : "bg-gradient-to-r from-zinc-800 to-stone-800 border border-amber-500/30 shadow-[0_4px_12px_rgba(212,175,55,0.08)] hover:border-amber-400/50 hover:shadow-[0_6px_16px_rgba(212,175,55,0.15)]";
+  }
+  // Economy
+  return selected
+    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-500 shadow-[0_8px_24px_rgba(16,185,129,0.15)]"
+    : "bg-[#FFFBF5] border border-emerald-100 shadow-[0_4px_12px_rgba(16,185,129,0.06)] hover:border-emerald-200 hover:shadow-[0_6px_16px_rgba(16,185,129,0.1)]";
+}
+
+function getTierTextColors(category: RideCategory) {
+  if (category === "elite" || category === "premium") {
+    return { name: "text-white", meta: "text-zinc-400", price: "text-amber-400", livePrice: "text-amber-400/70", seats: "text-zinc-500" };
+  }
+  return { name: "text-zinc-800", meta: "text-zinc-500", price: "text-emerald-600", livePrice: "text-emerald-500", seats: "text-zinc-500" };
+}
+
 export function ZivoRideRow({
   selected = false,
   name,
@@ -119,53 +207,55 @@ export function ZivoRideRow({
   surgeLevel,
   surgeActive = false,
   showRealTimeIndicator = false,
+  category = "economy",
+  subtitle,
 }: ZivoRideRowProps) {
   const showSurge = surgeActive && surgeMultiplier && surgeMultiplier > 1.0;
   const isHighSurge = surgeLevel === "High";
+  const colors = getTierTextColors(category);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full text-left",
-        "rounded-2xl",
-        "transition-all active:scale-[0.99]",
+        "w-full text-left rounded-2xl transition-all active:scale-[0.99]",
         compact ? "px-3 py-2" : "px-4 py-3",
-        // ZIVO brand: cream background with emerald accents
-        selected
-          ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-500 shadow-[0_8px_24px_rgba(16,185,129,0.15)]"
-          : "bg-[#FFFBF5] border border-emerald-100 shadow-[0_4px_12px_rgba(16,185,129,0.06)] hover:border-emerald-200 hover:shadow-[0_6px_16px_rgba(16,185,129,0.1)]"
+        getTierStyles(category, selected)
       )}
     >
       <div className={cn("flex items-center", compact ? "gap-2" : "gap-3")}>
-        {/* ZIVO Car thumbnail */}
-        <ZivoCarThumbnail compact={compact} />
+        <ZivoCarThumbnail compact={compact} category={category} />
 
-        {/* Text content */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
             <span className={cn(
-              "truncate font-semibold text-zinc-800",
-              compact ? "text-[14px]" : "text-[15px]"
+              "truncate font-semibold",
+              compact ? "text-[14px]" : "text-[15px]",
+              colors.name
             )}>
               {name}
             </span>
-            <ZivoTagPill tag={tag} />
+            <ZivoTagPill tag={tag} category={category} />
             <span className={cn(
-              "ml-auto inline-flex items-center gap-0.5 font-medium text-zinc-500 shrink-0",
-              compact ? "text-[11px]" : "text-[12px]"
+              "ml-auto inline-flex items-center gap-0.5 font-medium shrink-0",
+              compact ? "text-[11px]" : "text-[12px]",
+              colors.seats
             )}>
               <span aria-hidden className={compact ? "text-[10px]" : "text-[11px]"}>👤</span> {seats}
             </span>
           </div>
 
+          {/* Subtitle for premium/elite */}
+          {subtitle && (category === "premium" || category === "elite") && (
+            <div className={cn("text-[11px] mt-0.5", colors.meta)}>{subtitle}</div>
+          )}
+
           <div className={cn(
             "mt-0.5 flex items-center gap-1.5",
             compact ? "text-[12px]" : "text-[13px]"
           )}>
-            <span className="text-zinc-500">{time} · {eta}</span>
-            {/* Surge indicator with coral/rose theme */}
+            <span className={colors.meta}>{time} · {eta}</span>
             {showSurge && (
               <span className={cn(
                 "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold",
@@ -180,19 +270,18 @@ export function ZivoRideRow({
           </div>
         </div>
 
-        {/* Price with ZIVO emerald styling */}
         <div className="flex flex-col items-end shrink-0">
           <span className={cn(
             "font-bold tabular-nums",
             compact ? "text-[15px]" : "text-[17px]",
             showSurge 
               ? (isHighSurge ? "text-rose-600" : "text-orange-600") 
-              : "text-emerald-600"
+              : colors.price
           )}>
             {price}
           </span>
           {showRealTimeIndicator && (
-            <span className="text-[10px] text-emerald-500 mt-0.5">
+            <span className={cn("text-[10px] mt-0.5", colors.livePrice)}>
               Live prices
             </span>
           )}
