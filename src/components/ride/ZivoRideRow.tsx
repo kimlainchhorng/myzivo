@@ -8,6 +8,10 @@ import { Zap, Star, Crown, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
+import fleetEconomy from "@/assets/fleet-economy.png";
+import ridePremium from "@/assets/ride-premium.png";
+import rideXl from "@/assets/ride-xl.png";
+
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
 type RideCategory = "economy" | "premium" | "elite";
 
@@ -228,7 +232,7 @@ function EliteCarSvg() {
   );
 }
 
-// Car thumbnail with themed circular background (like reference)
+// Car thumbnail with themed circular background using PNG illustrations
 function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
   const bgClass = category === "elite"
     ? "bg-purple-500/10 ring-2 ring-purple-400/40"
@@ -236,19 +240,26 @@ function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?:
     ? "bg-amber-500/10 ring-2 ring-amber-400/40"
     : "bg-emerald-500/10 ring-2 ring-emerald-400/40";
 
+  const imageSrc = category === "elite"
+    ? rideXl
+    : category === "premium"
+    ? ridePremium
+    : fleetEconomy;
+
   return (
     <div className={cn(
-      "flex items-center justify-center shrink-0 rounded-full",
+      "flex items-center justify-center shrink-0 rounded-full overflow-hidden",
       compact ? "w-[44px] h-[44px]" : "w-[56px] h-[56px]",
       bgClass
     )}>
-      {category === "elite" ? (
-        <EliteCarSvg />
-      ) : category === "premium" ? (
-        <PremiumCarSvg />
-      ) : (
-        <EconomyCarSvg />
-      )}
+      <img
+        src={imageSrc}
+        alt={`${category} vehicle`}
+        className={cn(
+          "object-contain",
+          compact ? "w-[38px] h-[38px]" : "w-[48px] h-[48px]"
+        )}
+      />
     </div>
   );
 }
