@@ -19,7 +19,10 @@ export function ZivoPickupMarker({ position }: ZivoPickupMarkerProps) {
     >
       <div 
         className="relative flex items-center justify-center w-16 h-16 -translate-x-1/2 -translate-y-1/2"
-        style={{ zIndex: 100 }}
+        style={{ 
+          zIndex: 100,
+          animation: "markerDropIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        }}
       >
         {/* Outer ping ring - ZIVO emerald */}
         <div className="absolute w-16 h-16 rounded-full bg-emerald-400/40 animate-ping" />
