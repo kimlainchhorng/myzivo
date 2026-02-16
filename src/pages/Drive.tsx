@@ -27,6 +27,7 @@ import {
   Wallet,
   ArrowRight,
 } from "lucide-react";
+import AcceptedVehiclesList from "@/components/drive/AcceptedVehiclesList";
 
 const fadeIn = {
   initial: { opacity: 0, y: 30 },
@@ -147,6 +148,11 @@ const Drive = () => {
               </ul>
             </CardContent>
           </Card>
+        </motion.section>
+
+        {/* Accepted Vehicles */}
+        <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-4xl">
+          <AcceptedVehiclesList />
         </motion.section>
 
         {/* Benefits */}
