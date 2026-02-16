@@ -57,6 +57,7 @@ export function normalizeCityName(city: string | null): string | null {
     'hollywood': 'Los Angeles',
     'beverly hills': 'Los Angeles',
     'burbank': 'Los Angeles',
+    'long beach': 'Los Angeles',
     // Chicago
     'chicago': 'Chicago',
     'evanston': 'Chicago',
@@ -83,6 +84,61 @@ export function normalizeCityName(city: string | null): string | null {
     'gretna': 'New Orleans',
     // Honolulu
     'honolulu': 'Honolulu',
+    // Atlanta
+    'atlanta': 'Atlanta',
+    'decatur': 'Atlanta',
+    'marietta': 'Atlanta',
+    'sandy springs': 'Atlanta',
+    'roswell': 'Atlanta',
+    // Austin
+    'austin': 'Austin',
+    'round rock': 'Austin',
+    'cedar park': 'Austin',
+    // Houston
+    'houston': 'Houston',
+    'pasadena': 'Houston',
+    'sugar land': 'Houston',
+    'the woodlands': 'Houston',
+    // Dallas
+    'dallas': 'Dallas',
+    'fort worth': 'Dallas',
+    'plano': 'Dallas',
+    'irving': 'Dallas',
+    'arlington tx': 'Dallas',
+    // San Antonio
+    'san antonio': 'San Antonio',
+    // Philadelphia
+    'philadelphia': 'Philadelphia',
+    'camden': 'Philadelphia',
+    // Baltimore
+    'baltimore': 'Baltimore',
+    'towson': 'Baltimore',
+    // St. Louis
+    'st. louis': 'St. Louis',
+    'st louis': 'St. Louis',
+    'saint louis': 'St. Louis',
+    // Denver
+    'denver': 'Denver',
+    'aurora': 'Denver',
+    'lakewood': 'Denver',
+    // Seattle
+    'seattle': 'Seattle',
+    'bellevue': 'Seattle',
+    'tacoma': 'Seattle',
+    'redmond': 'Seattle',
+    // Phoenix
+    'phoenix': 'Phoenix',
+    'scottsdale': 'Phoenix',
+    'tempe': 'Phoenix',
+    'mesa': 'Phoenix',
+    // Las Vegas
+    'las vegas': 'Las Vegas',
+    'henderson': 'Las Vegas',
+    'north las vegas': 'Las Vegas',
+    // Tampa
+    'tampa': 'Tampa',
+    'st. petersburg': 'Tampa',
+    'clearwater': 'Tampa',
     // Legacy
     'baton rouge': 'Baton Rouge',
     'denham springs': 'Baton Rouge',
