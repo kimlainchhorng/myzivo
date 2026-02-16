@@ -1,64 +1,54 @@
 
 
-# Upgrade Car Icons to Premium, Detailed SVGs
+# Update Car Illustrations to Premium Style
 
-## Problem
-The current car icons are identical basic outlines (same shape for all 3 tiers) with only color differences. They look generic and don't convey tier differences.
+## What Changes
 
-## Solution
-Replace all three car SVGs with detailed, visually distinct side-profile car illustrations:
+Replace the current basic green car icons with premium, detailed car illustrations matching the reference style: **white/silver car bodies with ZIVO brand-colored accents** (emerald green instead of purple, matching the ZIVO brand).
 
-### Economy Car
-- Compact hatchback/sedan silhouette with filled body
-- Emerald green filled body with lighter roof/window area
-- Visible wheel details with hubcap circles
-- Door line detail and side mirror
-- Friendly, approachable shape
+## Components to Update
 
-### Premium Car
-- Longer, lower sedan profile (BMW/Mercedes style)
-- Gold/dark filled body with tinted window area
-- More refined wheel details (larger rims)
-- Sleek roofline with a sportier stance
-- Side accent stripe in gold
+### 1. ZivoRideRow SVG Car Illustrations
+The inline SVG cars in `ZivoRideRow.tsx` will be completely redrawn with the reference style:
 
-### Elite Car
-- Long, ultra-low luxury sedan (Rolls Royce/Maybach silhouette)
-- Deep purple body with gold accent trim line
-- Detailed large chrome-style wheels
-- Extended wheelbase, prominent hood
-- Gold star/emblem on the side
-- Most detailed of the three
+- **EconomyCarSvg**: Compact sedan silhouette -- white/silver body, emerald-tinted windows, clean lines
+- **PremiumCarSvg**: Sleek sport sedan -- white body with gold window tint, subtle gold accents, sportier proportions  
+- **EliteCarSvg**: Long luxury sedan -- white body with purple/magenta window tint, chrome details, sparkle effects (matching the reference's sparkle icon for premium tiers)
 
-### Thumbnail Adjustments
-- Increase icon sizes: Economy 32px, Premium 34px, Elite 36px
-- Adjust circular backgrounds to 56px for non-compact to give more room
+Each car will feature:
+- White/light silver body panels with subtle shading
+- Colored window tints per tier (emerald / gold / purple)
+- Dark wheels with realistic spoke details
+- Proper proportions to differentiate vehicle types
 
-## Technical Details
+### 2. Fleet Showcase PNG Assets
+Regenerate the 5 fleet category images (`fleet-economy.png`, `fleet-compact.png`, `fleet-suv.png`, `fleet-luxury.png`, `fleet-electric.png`) used in `CarFleetShowcase.tsx` and `rideData.ts` with matching white-body style illustrations on soft circular backgrounds.
 
-| File | Changes |
-|------|---------|
-| `src/components/ride/ZivoRideRow.tsx` | Replace `EconomyCarSvg`, `PremiumCarSvg`, `EliteCarSvg` with detailed filled SVG illustrations; adjust `ZivoCarThumbnail` sizing from 52px to 56px (non-compact) |
+### 3. Ride Card PNG Assets
+Update `ride-premium.png` and `ride-xl.png` to match the new style (white body cars with appropriate accents).
 
-### EconomyCarSvg (new)
-- viewBox `0 0 40 24`, width 32
-- Filled rounded body path in emerald (`#10B981`)
-- Light gray windows (`#D1FAE5`)
-- Two detailed wheels with dark rims and lighter hubcaps
-- Small side mirror and door handle detail
+## Files Modified
 
-### PremiumCarSvg (new)
-- viewBox `0 0 44 24`, width 34
-- Lower, longer profile body in charcoal (`#292524`) with gold trim line (`#D4AF37`)
-- Tinted dark windows (`#44403C`)
-- Larger sport wheels with gold hubcap accent
-- Side mirror, door handle, front grille detail
+| File | Change |
+|------|--------|
+| `src/components/ride/ZivoRideRow.tsx` | Redraw all 3 SVG car functions with white-body + colored-accent style |
+| `src/assets/fleet-economy.png` | Regenerate -- white compact car, emerald accent |
+| `src/assets/fleet-compact.png` | Regenerate -- white compact sedan |
+| `src/assets/fleet-suv.png` | Regenerate -- white SUV silhouette |
+| `src/assets/fleet-luxury.png` | Regenerate -- white luxury sedan |
+| `src/assets/fleet-electric.png` | Regenerate -- white EV with green leaf accent |
+| `src/assets/ride-premium.png` | Regenerate -- white sport sedan |
+| `src/assets/ride-xl.png` | Regenerate -- white large SUV |
 
-### EliteCarSvg (new)
-- viewBox `0 0 48 24`, width 36
-- Longest, lowest body in deep purple (`#581C87`) with gold lower trim (`#D4AF37`)
-- Dark tinted windows with chrome window frame (`#C084FC`)
-- Extra-large wheels with gold/chrome spokes
-- Gold star emblem near rear quarter panel
-- Extended hood proportion for luxury feel
+## Visual Style Summary
+
+```text
+Current:  Green body cars on green circles (monotone, hard to distinguish)
+Updated:  White/silver body cars with tier-specific colored windows/accents
+          Economy  = white + emerald windows
+          Premium  = white + gold windows  
+          Elite    = white + purple windows + sparkle effects
+```
+
+No logic, routing, or data changes -- purely visual asset and SVG updates.
 
