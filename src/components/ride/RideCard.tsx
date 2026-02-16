@@ -55,30 +55,29 @@ const RideCard = ({
       )}
     >
       {/* Vehicle Image */}
-      <div className="relative h-24 overflow-hidden">
+      <div className="relative h-24 overflow-hidden bg-gradient-to-b from-muted/30 to-transparent flex items-center justify-center">
         <img
           src={ride.image}
           alt={ride.name}
-          className="w-full h-full object-cover"
+          className="w-20 h-20 object-contain"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        {/* Surge Badge - "Busy time pricing" */}
+        {/* Surge Badge */}
         {quote?.multipliers?.surge && quote.multipliers.surge > 1.0 && (
           <div className="absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-amber-500/90 flex items-center gap-1">
             <Flame className="w-2.5 h-2.5 text-white" />
-            <span className="text-[10px] font-bold text-white">Busy time pricing ×{quote.multipliers.surge.toFixed(1)}</span>
+            <span className="text-[10px] font-bold text-white">Busy ×{quote.multipliers.surge.toFixed(1)}</span>
           </div>
         )}
         
-        {/* Event Badge - "Event pricing" */}
+        {/* Event Badge */}
         {quote?.multipliers?.event && quote.multipliers.event > 1.0 && (
           <div className={cn(
             "absolute left-2 backdrop-blur-sm px-2 py-1 rounded-full bg-violet-500/90 flex items-center gap-1",
             quote?.multipliers?.surge && quote.multipliers.surge > 1.0 ? "top-8" : "top-2"
           )}>
             <Ticket className="w-2.5 h-2.5 text-white" />
-            <span className="text-[10px] font-bold text-white">Event pricing</span>
+            <span className="text-[10px] font-bold text-white">Event</span>
           </div>
         )}
         
