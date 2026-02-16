@@ -14,6 +14,7 @@ import ZivoPickupMarker from "./ZivoPickupMarker";
 import ZivoDropoffMarker from "./ZivoDropoffMarker";
 import RealDriverMarkers from "./RealDriverMarkers";
 import AnimatedDriverMarker from "./AnimatedDriverMarker";
+import AnimatedPolyline from "./AnimatedPolyline";
 
 // ZIVO Dark map theme - premium, removes "Google look"
 // NOTE: Types cast to any[] to avoid referencing google.maps at module scope (crashes before API loads)
@@ -227,16 +228,14 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         onClick={handleMapClick}
         onBoundsChanged={handleBoundsChanged}
       >
-        {/* Server-side route polyline */}
+        {/* Animated server-side route polyline */}
         {routePath && routePath.length > 1 && (
-          <PolylineF
+          <AnimatedPolyline
             path={routePath}
-            options={{
-              strokeColor: "#10B981",
-              strokeOpacity: 0.9,
-              strokeWeight: 5,
-              geodesic: true,
-            }}
+            strokeColor="#10B981"
+            strokeOpacity={0.9}
+            strokeWeight={5}
+            geodesic
           />
         )}
 
