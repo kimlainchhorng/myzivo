@@ -8346,21 +8346,30 @@ export type Database = {
         Row: {
           code: string | null
           exchange_rate: number | null
+          flag: string
           id: string
+          is_enabled: boolean
+          name: string
           symbol: string | null
           updated_at: string | null
         }
         Insert: {
           code?: string | null
           exchange_rate?: number | null
+          flag?: string
           id?: string
+          is_enabled?: boolean
+          name?: string
           symbol?: string | null
           updated_at?: string | null
         }
         Update: {
           code?: string | null
           exchange_rate?: number | null
+          flag?: string
           id?: string
+          is_enabled?: boolean
+          name?: string
           symbol?: string | null
           updated_at?: string | null
         }
