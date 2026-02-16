@@ -49,8 +49,8 @@ export function useGoogleMapsRoute(): UseGoogleMapsRouteReturn {
         distance: mockTrip.distance,
         duration: mockTrip.duration,
         coordinates: [],
-        pickupCoords: { lat: 30.4515, lng: -91.1871 },
-        dropoffCoords: { lat: 30.4315, lng: -91.1671 },
+        pickupCoords: { lat: 40.7484, lng: -73.9857 },
+        dropoffCoords: { lat: 40.7127, lng: -74.0134 },
       };
       setRouteData(fallbackData);
       setIsLoading(false);
@@ -72,8 +72,8 @@ export function useGoogleMapsRoute(): UseGoogleMapsRouteReturn {
           distance: mockTrip.distance,
           duration: mockTrip.duration,
           coordinates: [],
-          pickupCoords: { lat: 30.4515, lng: -91.1871 },
-          dropoffCoords: { lat: 30.4315, lng: -91.1671 },
+        pickupCoords: { lat: 40.7484, lng: -73.9857 },
+        dropoffCoords: { lat: 40.7127, lng: -74.0134 },
         };
         setRouteData(fallbackData);
         setIsLoading(false);
@@ -123,8 +123,8 @@ export function useGoogleMapsRoute(): UseGoogleMapsRouteReturn {
         distance: mockTrip.distance,
         duration: mockTrip.duration,
         coordinates: [],
-        pickupCoords: { lat: 30.4515, lng: -91.1871 },
-        dropoffCoords: { lat: 30.4315, lng: -91.1671 },
+        pickupCoords: { lat: 40.7484, lng: -73.9857 },
+        dropoffCoords: { lat: 40.7127, lng: -74.0134 },
       };
       setRouteData(fallbackData);
       setIsLoading(false);

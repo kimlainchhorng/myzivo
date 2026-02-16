@@ -54,6 +54,7 @@ import { useRidePromoValidation, ValidatedRidePromo } from "@/hooks/useRidePromo
 import { useDriverAvailability } from "@/hooks/useLiveDriverTracking";
 import { ScheduleRideSheet } from "@/components/schedule/ScheduleRideSheet";
 import { useCreateScheduledBooking } from "@/hooks/useScheduledBookings";
+import { DEFAULT_CENTER } from "@/data/mockLocations";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -133,7 +134,7 @@ function RidesMapView({
   onLocateMe?: () => void;
 }) {
   const { isLoaded, loadError } = useGoogleMaps();
-  const center = pickupCoords || userLocation || { lat: 30.4515, lng: -91.1871 };
+  const center = pickupCoords || userLocation || DEFAULT_CENTER;
   
   // Decode route polyline for map display
   const routePath = useMemo(() => {
@@ -538,7 +539,7 @@ function RidesInner() {
         setPickup(address);
         toast.success("Location detected");
       } catch {
-        setUserLocation({ lat: 30.4515, lng: -91.1871 });
+        setUserLocation({ lat: 40.7128, lng: -73.9857 });
       } finally {
         setIsAutoDetecting(false);
       }

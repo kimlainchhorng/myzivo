@@ -18,9 +18,10 @@ import { updateRideStatusInDb } from "@/lib/supabaseRide";
 import { haversineMiles } from "@/services/mapsApi";
 import { toast } from "sonner";
 
-// Default coordinates for Baton Rouge
-const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
-const DEFAULT_DESTINATION = { lat: 30.4315, lng: -91.1671 };
+import { DEFAULT_PICKUP_COORDS, DEFAULT_DROPOFF_COORDS } from "@/data/mockLocations";
+
+const DEFAULT_PICKUP = DEFAULT_PICKUP_COORDS;
+const DEFAULT_DESTINATION = DEFAULT_DROPOFF_COORDS;
 
 // 100 meters = 0.0621 miles
 const ARRIVAL_THRESHOLD_MILES = 0.0621;

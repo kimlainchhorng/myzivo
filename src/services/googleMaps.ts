@@ -334,7 +334,7 @@ export function interpolateRoutePosition(
   progress: number
 ): { lat: number; lng: number } {
   if (!coordinates || coordinates.length === 0) {
-    return { lat: 30.4515, lng: -91.1871 }; // Default Baton Rouge
+    return { lat: 40.7128, lng: -73.9857 }; // Default NYC
   }
 
   if (coordinates.length === 1) {

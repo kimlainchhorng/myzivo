@@ -31,8 +31,8 @@ const AVG_SPEED_MPM = 0.5; // 30 mph
 
 export default function RestaurantDriverMap({
   restaurantId,
-  restaurantLat = 30.4515,
-  restaurantLng = -91.1871,
+  restaurantLat = 40.7128,
+  restaurantLng = -73.9857,
 }: RestaurantDriverMapProps) {
   const [drivers, setDrivers] = useState<DriverApproaching[]>([]);
 

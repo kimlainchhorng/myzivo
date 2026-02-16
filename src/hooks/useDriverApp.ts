@@ -300,9 +300,9 @@ export const useDriverLocationTracking = (
         },
         (error) => {
           console.warn("Geolocation error, using simulation:", error);
-          // Fallback to simulation - Baton Rouge area
+          // Fallback to simulation - NYC area
           const interval = setInterval(() => {
-            simulateLocation(30.4515, -91.1871);
+            simulateLocation(40.7128, -73.9857);
           }, UPDATE_INTERVAL_MS);
           return () => clearInterval(interval);
         },
@@ -316,7 +316,7 @@ export const useDriverLocationTracking = (
     } else {
       // No geolocation support, use simulation
       const interval = setInterval(() => {
-        simulateLocation(30.4515, -91.1871);
+        simulateLocation(40.7128, -73.9857);
       }, UPDATE_INTERVAL_MS);
       return () => clearInterval(interval);
     }

@@ -20,8 +20,8 @@ const RidesMapBackground = ({
   dropoffCoords,
   routeCoordinates,
 }: RidesMapBackgroundProps) => {
-  // Default to Baton Rouge if no user location
-  const defaultCenter = { lat: 30.4515, lng: -91.1871 };
+  // Default to NYC if no user location
+  const defaultCenter = { lat: 40.7128, lng: -73.9857 };
   
   // Determine center and pickup
   const center = pickupCoords || userLocation || defaultCenter;

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { hasMapboxToken } from "@/services/mapbox";
+import { DEFAULT_CENTER } from "@/data/mockLocations";
 
 export interface MapMarker {
   id: string;
@@ -42,7 +43,7 @@ const MARKER_COLORS = {
 
 const MapboxMap = ({
   className = "",
-  center = { lat: 30.4515, lng: -91.1871 },
+  center = DEFAULT_CENTER,
   zoom = 14,
   markers = [],
   routeCoordinates,
