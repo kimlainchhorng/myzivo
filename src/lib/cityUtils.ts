@@ -42,15 +42,50 @@ export function extractCityFromAddress(address: string): string | null {
 export function normalizeCityName(city: string | null): string | null {
   if (!city) return null;
   
-  // Common city name variations
+  // Common city name variations and suburb mappings
   const variations: Record<string, string> = {
-    'baton rouge': 'Baton Rouge',
+    // New York
+    'new york': 'New York',
+    'manhattan': 'New York',
+    'brooklyn': 'New York',
+    'queens': 'New York',
+    'bronx': 'New York',
+    'staten island': 'New York',
+    // Los Angeles
+    'los angeles': 'Los Angeles',
+    'santa monica': 'Los Angeles',
+    'hollywood': 'Los Angeles',
+    'beverly hills': 'Los Angeles',
+    'burbank': 'Los Angeles',
+    // Chicago
+    'chicago': 'Chicago',
+    'evanston': 'Chicago',
+    'oak park': 'Chicago',
+    // Miami
+    'miami': 'Miami',
+    'miami beach': 'Miami',
+    'coral gables': 'Miami',
+    'hialeah': 'Miami',
+    // Washington DC
+    'washington': 'Washington',
+    'arlington': 'Washington',
+    'alexandria': 'Washington',
+    // San Francisco Bay Area
+    'san francisco': 'San Francisco',
+    'cupertino': 'San Francisco',
+    'san jose': 'San Francisco',
+    'palo alto': 'San Francisco',
+    // New Orleans
     'new orleans': 'New Orleans',
-    'metairie': 'New Orleans', // Suburb treated as New Orleans
+    'metairie': 'New Orleans',
     'kenner': 'New Orleans',
     'harvey': 'New Orleans',
     'gretna': 'New Orleans',
-    'denham springs': 'Baton Rouge', // Suburb treated as Baton Rouge
+    // Honolulu
+    'honolulu': 'Honolulu',
+    // Legacy
+    'baton rouge': 'Baton Rouge',
+    'denham springs': 'Baton Rouge',
     'gonzales': 'Baton Rouge',
     'prairieville': 'Baton Rouge',
     'zachary': 'Baton Rouge',

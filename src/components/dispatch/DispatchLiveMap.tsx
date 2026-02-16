@@ -38,8 +38,7 @@ interface DispatchLiveMapProps {
   className?: string;
 }
 
-// Default center: Baton Rouge, LA
-const DEFAULT_CENTER = { lat: 30.4515, lng: -91.1871 };
+import { DEFAULT_CENTER } from "@/data/mockLocations";
 const DEFAULT_ZOOM = 12;
 
 // Dark mode map styles

@@ -99,7 +99,7 @@ export function OrderTrackingPage() {
     if (!mapsLoaded || !mapContainerRef.current || mapRef.current) return;
 
     mapRef.current = new google.maps.Map(mapContainerRef.current, {
-      center: { lat: 30.4515, lng: -91.1871 },
+      center: { lat: 40.7128, lng: -73.9857 },
       zoom: 13,
       styles: DARK_MAP_STYLES,
       disableDefaultUI: true,

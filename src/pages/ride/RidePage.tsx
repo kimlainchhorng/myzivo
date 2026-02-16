@@ -23,7 +23,7 @@ interface LocationCoords {
 
 const RidePage = () => {
   const navigate = useNavigate();
-  const [pickup, setPickup] = useState("109 Hickory Street, Denha…");
+  const [pickup, setPickup] = useState("350 Fifth Avenue, New Yor…");
   const [destination, setDestination] = useState("");
   const [pickupCoords, setPickupCoords] = useState<LocationCoords | undefined>();
   const [dropoffCoords, setDropoffCoords] = useState<LocationCoords | undefined>();

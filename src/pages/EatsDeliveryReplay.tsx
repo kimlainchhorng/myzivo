@@ -109,7 +109,7 @@ export default function EatsDeliveryReplay() {
   const defaultCenter =
     pickupLat != null && pickupLng != null
       ? { lat: pickupLat, lng: pickupLng }
-      : { lat: 30.4515, lng: -91.1871 };
+      : { lat: 40.7128, lng: -73.9857 };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative">

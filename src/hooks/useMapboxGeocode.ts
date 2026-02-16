@@ -7,19 +7,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getAddressSuggestions, hasMapboxToken } from "@/services/mapbox";
 
-// Louisiana mock address suggestions as fallback
-const MOCK_SUGGESTIONS = [
-  "109 Hickory Street, Denham Springs, LA",
-  "875 Florida Blvd, Baton Rouge, LA",
-  "6401 Bluebonnet Blvd, Baton Rouge, LA",
-  "660 Arlington Creek Centre, Baton Rouge, LA",
-  "1 Airport Rd, Baton Rouge, LA",
-  "3900 N I-10 Service Rd, Metairie, LA",
-  "10000 Perkins Rowe, Baton Rouge, LA",
-  "2142 O'Neal Lane, Baton Rouge, LA",
-  "7707 Bluebonnet Blvd, Baton Rouge, LA",
-  "3535 S Sherwood Forest Blvd, Baton Rouge, LA",
-];
+import { MOCK_ADDRESS_STRINGS } from "@/data/mockLocations";
+
+const MOCK_SUGGESTIONS = MOCK_ADDRESS_STRINGS;
 
 export interface Suggestion {
   id: string;

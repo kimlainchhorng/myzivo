@@ -62,7 +62,7 @@ const DeliveryHeatmap = ({ dateRange, className = "" }: DeliveryHeatmapProps) =>
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: DARK_STYLE,
-      center: [-91.1871, 30.4515], // Baton Rouge default
+      center: [-73.9857, 40.7128], // NYC default
       zoom: 10,
       attributionControl: false,
     });

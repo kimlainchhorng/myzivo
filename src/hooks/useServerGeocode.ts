@@ -8,15 +8,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getAutocompleteSuggestions, getPlaceDetails, PlaceSuggestion, PlaceDetails } from "@/services/mapsApi";
 
-// Fallback mock suggestions for offline/demo mode
-const MOCK_SUGGESTIONS: PlaceSuggestion[] = [
-  { description: "109 Hickory Street, Denham Springs, LA", place_id: "mock-1", main_text: "109 Hickory Street" },
-  { description: "875 Florida Blvd, Baton Rouge, LA", place_id: "mock-2", main_text: "875 Florida Blvd" },
-  { description: "6401 Bluebonnet Blvd, Baton Rouge, LA", place_id: "mock-3", main_text: "6401 Bluebonnet Blvd" },
-  { description: "660 Arlington Creek Centre, Baton Rouge, LA", place_id: "mock-4", main_text: "660 Arlington Creek Centre" },
-  { description: "1 Airport Rd, Baton Rouge, LA", place_id: "mock-5", main_text: "Baton Rouge Airport" },
-  { description: "3900 N I-10 Service Rd, Metairie, LA", place_id: "mock-6", main_text: "3900 N I-10 Service Rd" },
-];
+import { MOCK_PLACE_SUGGESTIONS, MOCK_COORDS } from "@/data/mockLocations";
+
+const MOCK_SUGGESTIONS: PlaceSuggestion[] = MOCK_PLACE_SUGGESTIONS;
 
 export interface ServerSuggestion extends PlaceSuggestion {
   coords?: { lat: number; lng: number };
@@ -106,17 +100,7 @@ export function useServerGeocode(): UseServerGeocodeReturn {
   const getCoordinates = useCallback(async (placeId: string): Promise<PlaceDetails | null> => {
     // Handle mock place IDs
     if (placeId.startsWith("mock-")) {
-      // Return Baton Rouge area coordinates for mock places
-      const mockCoords: Record<string, { lat: number; lng: number }> = {
-        "mock-1": { lat: 30.4515, lng: -91.1871 },
-        "mock-2": { lat: 30.4568, lng: -91.1421 },
-        "mock-3": { lat: 30.3987, lng: -91.0873 },
-        "mock-4": { lat: 30.3654, lng: -91.0567 },
-        "mock-5": { lat: 30.5339, lng: -91.1490 },
-        "mock-6": { lat: 30.0087, lng: -90.1632 },
-      };
-      
-      const coords = mockCoords[placeId] || { lat: 30.4515, lng: -91.1871 };
+      const coords = MOCK_COORDS[placeId] || { lat: 40.7484, lng: -73.9857 };
       const suggestion = MOCK_SUGGESTIONS.find(s => s.place_id === placeId);
       
       return {

@@ -18,9 +18,10 @@ import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import PassengerTrustBadge from "@/components/driver/PassengerTrustBadge";
 import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 
-// Default coordinates for Baton Rouge
-const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
-const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
+import { DEFAULT_PICKUP_COORDS, DEFAULT_DRIVER_START_COORDS } from "@/data/mockLocations";
+
+const DEFAULT_PICKUP = DEFAULT_PICKUP_COORDS;
+const DEFAULT_DRIVER_START = DEFAULT_DRIVER_START_COORDS;
 
 const RideDriverPage = () => {
   const navigate = useNavigate();

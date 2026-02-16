@@ -49,8 +49,8 @@ const RideLocationCard = ({
           });
         },
         () => {
-          // Fallback to Baton Rouge
-          setUserLocation({ lat: 30.4515, lng: -91.1871 });
+          // Fallback to NYC
+          setUserLocation({ lat: 40.7128, lng: -73.9857 });
         }
       );
     }
