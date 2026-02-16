@@ -1,57 +1,65 @@
 
 
-# Fix Broken Car Illustrations with User-Provided Images
+# Add Floating Card Navigation + Address Validation
 
 ## Problem
-The current car illustration PNGs (`fleet-economy.png`, `ride-premium.png`, `ride-xl.png`, etc.) are broken/corrupted, showing a "no image" icon as seen in your screenshot. These files were AI-generated and are not valid images.
+1. The `>` arrow on the floating pickup/dropoff cards on the map does nothing when tapped -- the click handlers (`onPickupClick`, `onDropoffClick`) are never connected.
+2. There is no address validation -- users can type partial text like "7475" and proceed to ride selection without a valid, geocoded address.
 
-## Solution
-Replace all broken PNG assets with the 3 high-quality car illustrations you provided, and create inline SVG fallbacks for the remaining categories.
+## Changes
 
-## Steps
+### 1. Wire Up Floating Card Click Handlers (Rides.tsx)
 
-### 1. Copy Your Uploaded Images into the Project
-Use your 3 uploaded illustrations as the primary car assets:
+When the user taps the `>` on the floating pickup or dropoff card, scroll the bottom sheet to the corresponding input field and focus it for editing.
 
-| Your Upload | Saved As | Used For |
-|-------------|----------|----------|
-| Economy hatchback (green circle) | `src/assets/fleet-economy.png` | Economy, Compact, Standard, Wait & Save, Priority rides |
-| Premium sedan (gold circle) | `src/assets/ride-premium.png` | Premium, Comfort rides |
-| XL SUV (purple/pink bg) | `src/assets/ride-xl.png` | Elite, XL rides |
+- Pass `onPickupClick` and `onDropoffClick` props to `RidesMapView` from `RidesInner`
+- `onPickupClick`: expand the bottom sheet and focus the pickup input
+- `onDropoffClick`: expand the bottom sheet and focus the dropoff input
+- Add `ref` attributes to the pickup and dropoff input elements so they can be focused programmatically
 
-### 2. Map Remaining Fleet Categories
-Since we have 3 distinct illustrations but 5 fleet categories, map them logically:
+### 2. Address Validation Before Proceeding (Rides.tsx)
 
-| Fleet Category | Image Source |
-|----------------|-------------|
-| Economy | Economy hatchback (green) |
-| Compact | Economy hatchback (green) |
-| SUV | XL SUV (purple) |
-| Luxury | Premium sedan (gold) |
-| Electric | Economy hatchback (green) |
+Add validation to ensure both pickup and dropoff are properly geocoded addresses (have coordinates) before allowing the user to proceed:
 
-Copy the appropriate uploaded file to each asset path: `fleet-compact.png`, `fleet-suv.png`, `fleet-luxury.png`, `fleet-electric.png`.
+- Update `handleFindRides` to check that both `pickupCoords` and `dropoffCoords` exist (not just non-empty strings)
+- Show a toast error if the user tries to proceed with an incomplete address (e.g., "Please select a valid pickup address from the suggestions")
+- Disable the "Choose [Ride]" CTA button when coordinates are missing
+- Add a subtle warning indicator on the address input when text is entered but no coordinates are set (indicating the address hasn't been validated via autocomplete)
 
-### 3. Components Fixed (no code changes needed)
-Since all components already import from these asset paths, replacing the files fixes everything:
-- **ZivoRideRow.tsx** -- ride selection thumbnails
-- **CarFleetShowcase.tsx** -- fleet category grid
-- **RideCard.tsx** via **rideData.ts** -- ride option cards
-- **CarElectricVehicles.tsx** -- EV showcase section
+### 3. Visual Feedback for Unvalidated Addresses
 
-### 4. Restore SVG Fallbacks in ZivoRideRow
-Keep the inline SVG car functions (`EconomyCarSvg`, `PremiumCarSvg`, `EliteCarSvg`) as fallbacks in case PNG loading fails, by adding an `onError` handler on the `<img>` tag that swaps to the SVG.
+Add a small warning icon or red border on the input field when:
+- The user has typed text but hasn't selected from autocomplete suggestions
+- The address string exists but coordinates are null
 
-## Files Changed
+This helps the user understand they need to pick a suggestion, not just type freeform text.
 
-| File | Change |
-|------|--------|
-| `src/assets/fleet-economy.png` | Replace with uploaded economy hatchback |
-| `src/assets/fleet-compact.png` | Replace with uploaded economy hatchback |
-| `src/assets/fleet-suv.png` | Replace with uploaded XL SUV |
-| `src/assets/fleet-luxury.png` | Replace with uploaded premium sedan |
-| `src/assets/fleet-electric.png` | Replace with uploaded economy hatchback |
-| `src/assets/ride-premium.png` | Replace with uploaded premium sedan |
-| `src/assets/ride-xl.png` | Replace with uploaded XL SUV |
+## Technical Details
 
-No code logic changes -- purely asset file replacements using the real images you provided.
+### File: `src/pages/Rides.tsx`
+
+**RidesMapView call (around line 732):**
+- Add `onPickupClick` and `onDropoffClick` handlers that expand the sheet and focus the respective inputs
+
+**Input refs:**
+- Add `useRef<HTMLInputElement>` for pickup and dropoff inputs
+- Attach refs to the `<input>` elements (lines 783 and 933)
+
+**handleFindRides (line 573):**
+```
+Before:  if (pickup && dropoff) setStep("options");
+After:   if (!pickupCoords) { toast.error("Please select a valid pickup address"); return; }
+         if (!dropoffCoords) { toast.error("Please select a valid destination"); return; }
+         setStep("options");
+```
+
+**CTA button (line 1282):**
+- Add visual disabled state when `!pickupCoords || !dropoffCoords`
+
+**Address warning indicators:**
+- Show a small `AlertCircle` icon next to inputs where text exists but coords are null
+- Orange/amber color to indicate "needs selection from suggestions"
+
+## No New Files
+All changes are in `src/pages/Rides.tsx` only.
+
