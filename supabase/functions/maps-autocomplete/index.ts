@@ -49,10 +49,11 @@ Deno.serve(async (req) => {
     let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
       `?input=${encodeURIComponent(input.trim())}` +
       `&types=geocode|establishment` +
+      `&components=country:us` +
       `&key=${encodeURIComponent(key)}`;
 
     if (proximity?.lat && proximity?.lng) {
-      url += `&location=${proximity.lat},${proximity.lng}&radius=50000`;
+      url += `&location=${proximity.lat},${proximity.lng}&radius=80000`;
     }
 
     console.log(`[maps-autocomplete] Fetching suggestions for: "${input.trim()}" (user: ${user.id})`);
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const suggestions = (data.predictions ?? []).slice(0, 6).map((p: any) => ({
+    const suggestions = (data.predictions ?? []).slice(0, 10).map((p: any) => ({
       description: p.description,
       place_id: p.place_id,
       main_text: p.structured_formatting?.main_text ?? p.description.split(",")[0],
