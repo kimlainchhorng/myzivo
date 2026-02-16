@@ -72,6 +72,8 @@ export interface GoogleMapProps {
   darkMode?: boolean;
   onMapClick?: (position: { lat: number; lng: number }) => void;
   onMarkerClick?: (markerId: string) => void;
+  onPickupDragEnd?: (position: { lat: number; lng: number }) => void;
+  onDropoffDragEnd?: (position: { lat: number; lng: number }) => void;
   fitBounds?: boolean;
   // New simplified props
   pickup?: google.maps.LatLngLiteral;
@@ -95,6 +97,8 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   darkMode = true,
   onMapClick,
   onMarkerClick,
+  onPickupDragEnd,
+  onDropoffDragEnd,
   fitBounds = true,
   pickup,
   dropoff,
@@ -284,8 +288,46 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
         {/* Pickup marker with premium pulsing effect */}
         <ZivoPickupMarker position={pickup ?? center} />
 
+        {/* Draggable pickup handle (invisible, sits on top) */}
+        {onPickupDragEnd && (
+          <MarkerF
+            position={pickup ?? center}
+            draggable
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 18,
+              fillColor: "transparent",
+              fillOpacity: 0,
+              strokeWeight: 0,
+            }}
+            onDragEnd={(e) => {
+              if (e.latLng) onPickupDragEnd({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+            }}
+            zIndex={200}
+          />
+        )}
+
         {/* Uber-style dropoff marker */}
         {dropoff && <ZivoDropoffMarker position={dropoff} />}
+
+        {/* Draggable dropoff handle (invisible, sits on top) */}
+        {dropoff && onDropoffDragEnd && (
+          <MarkerF
+            position={dropoff}
+            draggable
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 18,
+              fillColor: "transparent",
+              fillOpacity: 0,
+              strokeWeight: 0,
+            }}
+            onDragEnd={(e) => {
+              if (e.latLng) onDropoffDragEnd({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+            }}
+            zIndex={190}
+          />
+        )}
 
         {/* Legacy markers support - skip pickup/dropoff types as they're rendered above */}
         {markers.map(marker => {

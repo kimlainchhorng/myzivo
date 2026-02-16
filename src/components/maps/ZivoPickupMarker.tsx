@@ -17,7 +17,6 @@ export function ZivoPickupMarker({ position }: ZivoPickupMarkerProps) {
       position={position}
       mapPaneName={OverlayView.OVERLAY_LAYER}
     >
-      {/* Direct DOM child for ref safety */}
       <div 
         className="relative flex items-center justify-center w-16 h-16 -translate-x-1/2 -translate-y-1/2"
         style={{ zIndex: 100 }}
