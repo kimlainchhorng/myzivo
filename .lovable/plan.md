@@ -1,55 +1,64 @@
 
 
-# Add Accepted Vehicles List to the Drive Page
+# Update All Mock/Fallback Addresses to Real US Locations
 
 ## Overview
-Add a comprehensive "Accepted Vehicles" accordion section to the `/drive` page, inspired by the Lyft reference screenshots. This will show prospective drivers exactly which car makes and models qualify for each ZIVO service tier (Standard, Extra Comfort, Black, XL).
+Replace all hardcoded Baton Rouge, Louisiana mock addresses and coordinates with real, recognizable addresses from major US cities. This affects fallback suggestions, default map centers, and demo mode data across ~17 files.
 
-## New Component: `src/components/drive/AcceptedVehiclesList.tsx`
+## What Changes
 
-A standalone component containing:
+### 1. New Centralized Mock Data (`src/data/mockLocations.ts`) -- New File
+A single source of truth for all fallback/demo addresses and coordinates, covering major US cities:
 
-### Data Structure
-A static data file (`src/data/acceptedVehicles.ts`) with the full vehicle list organized by make, each model entry including:
-- Model name
-- Minimum year
-- Eligible tiers (array of tier tags like "Extra Comfort", "Black", "XL")
+| Address | City | Coordinates |
+|---------|------|-------------|
+| 350 Fifth Avenue, New York, NY | NYC (Empire State Bldg) | 40.7484, -73.9857 |
+| 1 World Trade Center, New York, NY | NYC | 40.7127, -74.0134 |
+| 200 Santa Monica Pier, Santa Monica, CA | LA | 34.0094, -118.4973 |
+| 6801 Hollywood Blvd, Los Angeles, CA | LA | 34.1015, -118.3391 |
+| 1600 Pennsylvania Ave NW, Washington, DC | DC | 38.8977, -77.0365 |
+| 233 S Wacker Dr, Chicago, IL | Chicago (Willis Tower) | 41.8789, -87.6359 |
+| 1 Infinite Loop, Cupertino, CA | SF Bay Area | 37.3318, -122.0312 |
+| 401 Biscayne Blvd, Miami, FL | Miami | 25.7751, -80.1868 |
+| 600 Bourbon St, New Orleans, LA | New Orleans | 29.9584, -90.0654 |
+| 1000 Ala Moana Blvd, Honolulu, HI | Honolulu | 21.2907, -157.8440 |
 
-Covers all makes from the reference images: Acura, Audi, Bentley, BMW, Cadillac, Chevrolet, Dodge, Ford, Genesis, GMC, Honda, Hyundai, Infiniti, Jaguar, Jeep, Kia, Land Rover, Lexus, Lincoln, Lucid, Maserati, Mazda, Mercedes-Benz, Mitsubishi, Porsche, Rivian, Rolls-Royce, Tesla, Toyota, Volkswagen, Volvo.
+Default center changes from Baton Rouge (30.45, -91.19) to **New York City** (40.7128, -73.9857) as the national default.
 
-### UI Design
-- Section header with a Car icon badge and "Accepted Vehicles" title
-- Search/filter bar at the top to quickly find a make or model
-- Tier filter chips (All, Standard, Extra Comfort, Black, XL) to narrow by service level
-- Radix Accordion with one item per make (alphabetically sorted)
-  - Make name as the trigger (bold, dark text)
-  - Collapsed by default; multiple can be open
-  - Each model shown as: **MODEL NAME** - Year (Tier tags as small colored badges)
-- Tier badge colors:
-  - Standard: emerald/green
-  - Extra Comfort: blue
-  - Black: dark/slate
-  - XL: purple
-- Footnotes explaining tier eligibility criteria
-- Matches ZIVO spatial design system (rounded-2xl cards, glassmorphism, Inter font)
+### 2. Files to Update
 
-### Integration
-- Add the component to `src/pages/Drive.tsx` between the "Requirements" section and the "Benefits" section
-- Wrapped in a framer-motion fade-in animation matching the existing page pattern
+| File | Change |
+|------|--------|
+| `src/data/mockLocations.ts` | **New** -- centralized mock addresses, coords, and default center |
+| `src/hooks/useGoogleMapsGeocode.ts` | Import and use new mock suggestions |
+| `src/hooks/useMapboxGeocode.ts` | Import and use new mock suggestions |
+| `src/hooks/useServerGeocode.ts` | Import and use new mock suggestions + coords |
+| `src/pages/ride/RidePage.tsx` | Update default pickup text |
+| `src/pages/ride/RideTripPage.tsx` | Update DEFAULT_PICKUP / DEFAULT_DESTINATION coords |
+| `src/pages/ride/RideDriverPage.tsx` | Update DEFAULT_PICKUP / DEFAULT_DRIVER_START coords |
+| `src/pages/Rides.tsx` | Update fallback center and fallback location coords |
+| `src/components/maps/MapboxMap.tsx` | Update default center |
+| `src/components/ride/RideLocationCard.tsx` | Update fallback geolocation coords |
+| `src/components/ride/RidesMapBackground.tsx` | Update default center |
+| `src/components/dispatch/DispatchLiveMap.tsx` | Update DEFAULT_CENTER |
+| `src/components/analytics/DeliveryHeatmap.tsx` | Update default center |
+| `src/pages/track/OrderTrackingPage.tsx` | Update default center |
+| `src/pages/EatsDeliveryReplay.tsx` | Update fallback coords |
+| `src/hooks/useGoogleMapsRoute.ts` | Update mock fallback coords |
+| `src/hooks/useMapboxRoute.ts` | Update mock fallback coords |
+| `src/hooks/useDriverApp.ts` | Update simulation fallback coords |
+| `src/services/googleMaps.ts` | Update default center |
+| `src/services/mapbox.ts` | Update default center |
+| `src/lib/cityUtils.ts` | Expand suburb mapping to include major US cities |
 
-## Files
-
-| File | Type | Description |
-|------|------|-------------|
-| `src/data/acceptedVehicles.ts` | New | Static data: all makes, models, years, and tier eligibility |
-| `src/components/drive/AcceptedVehiclesList.tsx` | New | Accordion UI component with search and tier filters |
-| `src/pages/Drive.tsx` | Edit | Import and render AcceptedVehiclesList between Requirements and Benefits |
+### 3. Approach
+- Create `src/data/mockLocations.ts` with exported constants: `MOCK_ADDRESSES`, `MOCK_COORDS`, `DEFAULT_CENTER`, `DEFAULT_PICKUP_COORDS`, `DEFAULT_DROPOFF_COORDS`
+- All 17+ files will import from this single source instead of having inline duplicates
+- This makes future address updates a single-file change
 
 ## Technical Notes
+- No API changes -- these are only offline/demo fallbacks
+- Real geocoding via Google Places API continues to work as before
+- The live app experience is unchanged for users with location services enabled
+- Default map center moves to NYC as a nationally recognizable default
 
-- Uses Radix `Accordion` (already installed) for the collapsible make sections
-- No database or API calls needed -- this is static reference data
-- The search input filters both make names and model names in real time
-- Tier filter chips use `useState` to toggle which tiers are shown
-- Total vehicle count displayed in the section subtitle (e.g., "300+ accepted vehicles across 31 makes")
-- Mobile-responsive: single column layout, full-width accordion items
