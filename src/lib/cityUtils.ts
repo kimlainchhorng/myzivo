@@ -5,44 +5,29 @@
 
 /**
  * Extract city name from a formatted address
- * Handles formats like:
- * - "123 Main St, Baton Rouge, LA 70801"
- * - "875 Florida Blvd, Baton Rouge, LA"
- * - "New Orleans International Airport, New Orleans, LA"
  */
 export function extractCityFromAddress(address: string): string | null {
   if (!address) return null;
-  
-  // Split by comma and look for city pattern
   const parts = address.split(',').map(p => p.trim());
-  
-  // Usually: [street, city, state+zip] or [place, street, city, state+zip]
-  // City is typically the second-to-last segment before state
   if (parts.length >= 2) {
-    // Check second-to-last part (before state/zip)
     const potentialCity = parts[parts.length - 2];
-    // Remove any numbers (zip codes that may be attached) and state abbreviations
     const cleaned = potentialCity
-      .replace(/\d+/g, '') // Remove numbers
-      .replace(/\b[A-Z]{2}\b/g, '') // Remove 2-letter state codes
+      .replace(/\d+/g, '')
+      .replace(/\b[A-Z]{2}\b/g, '')
       .trim();
-    
     if (cleaned && cleaned.length > 1) {
       return cleaned;
     }
   }
-  
   return null;
 }
 
 /**
  * Normalize city name for database lookup
- * Handles common variations and case differences
  */
 export function normalizeCityName(city: string | null): string | null {
   if (!city) return null;
-  
-  // Common city name variations and suburb mappings
+
   const variations: Record<string, string> = {
     // New York
     'new york': 'New York',
@@ -139,14 +124,85 @@ export function normalizeCityName(city: string | null): string | null {
     'tampa': 'Tampa',
     'st. petersburg': 'Tampa',
     'clearwater': 'Tampa',
-    // Legacy
+    // Baton Rouge
     'baton rouge': 'Baton Rouge',
     'denham springs': 'Baton Rouge',
     'gonzales': 'Baton Rouge',
     'prairieville': 'Baton Rouge',
     'zachary': 'Baton Rouge',
+
+    // ── Phase 2: New metro areas ──
+
+    // Boston
+    'boston': 'Boston',
+    'cambridge': 'Boston',
+    'somerville': 'Boston',
+    'brookline': 'Boston',
+    'quincy': 'Boston',
+    // Detroit
+    'detroit': 'Detroit',
+    'dearborn': 'Detroit',
+    'warren': 'Detroit',
+    'livonia': 'Detroit',
+    // Minneapolis
+    'minneapolis': 'Minneapolis',
+    'st. paul': 'Minneapolis',
+    'saint paul': 'Minneapolis',
+    'bloomington mn': 'Minneapolis',
+    // Nashville
+    'nashville': 'Nashville',
+    'franklin tn': 'Nashville',
+    'murfreesboro': 'Nashville',
+    // Charlotte
+    'charlotte': 'Charlotte',
+    'concord nc': 'Charlotte',
+    'gastonia': 'Charlotte',
+    // Portland
+    'portland': 'Portland',
+    'beaverton': 'Portland',
+    'hillsboro': 'Portland',
+    // San Diego
+    'san diego': 'San Diego',
+    'chula vista': 'San Diego',
+    'oceanside': 'San Diego',
+    'carlsbad': 'San Diego',
+    // Orlando
+    'orlando': 'Orlando',
+    'kissimmee': 'Orlando',
+    'lake buena vista': 'Orlando',
+    'winter park': 'Orlando',
+    // Indianapolis
+    'indianapolis': 'Indianapolis',
+    'carmel in': 'Indianapolis',
+    'fishers': 'Indianapolis',
+    // Columbus
+    'columbus': 'Columbus',
+    'dublin oh': 'Columbus',
+    'westerville': 'Columbus',
+    // Kansas City
+    'kansas city': 'Kansas City',
+    'overland park': 'Kansas City',
+    'olathe': 'Kansas City',
+    // Milwaukee
+    'milwaukee': 'Milwaukee',
+    'wauwatosa': 'Milwaukee',
+    'waukesha': 'Milwaukee',
+    // Sacramento
+    'sacramento': 'Sacramento',
+    'elk grove': 'Sacramento',
+    'folsom': 'Sacramento',
+    // Raleigh
+    'raleigh': 'Raleigh',
+    'durham': 'Raleigh',
+    'cary': 'Raleigh',
+    'chapel hill': 'Raleigh',
+    // Salt Lake City
+    'salt lake city': 'Salt Lake City',
+    'west valley city': 'Salt Lake City',
+    'provo': 'Salt Lake City',
+    'sandy ut': 'Salt Lake City',
   };
-  
+
   const lowerCity = city.toLowerCase().trim();
   return variations[lowerCity] || city;
 }
