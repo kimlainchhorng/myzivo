@@ -29,113 +29,64 @@ interface ZivoRideRowProps {
   subtitle?: string;
 }
 
-// Economy car SVG — clean modern sedan
-function EconomyCarSvg({ compact = false }: { compact?: boolean }) {
+// Economy car icon — clean front-facing car
+function EconomyCarSvg() {
   return (
-    <svg
-      width={compact ? "52" : "64"}
-      height={compact ? "28" : "34"}
-      viewBox="0 0 128 64"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-sm"
-    >
-      <ellipse cx="64" cy="58" rx="48" ry="4" fill="rgba(16,185,129,0.10)" />
-      <path d="M16 38 C16 34 18 30 22 30 L38 30 L48 16 L88 16 L98 30 L106 30 C110 30 112 34 112 38 L112 42 C112 44 110 46 108 46 L20 46 C18 46 16 44 16 42 Z" fill="#FFFDF8" stroke="#10B981" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M50 18 L42 30 L62 30 L62 18 Z" fill="#D1FAE5" stroke="#10B981" strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
-      <path d="M66 18 L66 30 L92 30 L84 18 Z" fill="#D1FAE5" stroke="#10B981" strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
-      <rect x="108" y="34" width="6" height="4" rx="2" fill="#FCD34D" />
-      <rect x="14" y="34" width="5" height="4" rx="2" fill="#F87171" />
-      <circle cx="36" cy="48" r="8" fill="#064E3B" />
-      <circle cx="36" cy="48" r="4" fill="#10B981" />
-      <circle cx="36" cy="48" r="1.5" fill="#064E3B" />
-      <circle cx="92" cy="48" r="8" fill="#064E3B" />
-      <circle cx="92" cy="48" r="4" fill="#10B981" />
-      <circle cx="92" cy="48" r="1.5" fill="#064E3B" />
-      <rect x="58" y="34" width="10" height="1.5" rx="0.75" fill="#10B981" opacity="0.5" />
-      <rect x="100" y="26" width="4" height="3" rx="1.5" fill="#10B981" opacity="0.6" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10h10" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="17" r="1" fill="#10B981" />
+      <circle cx="16" cy="17" r="1" fill="#10B981" />
     </svg>
   );
 }
 
-// Premium car SVG — sleek sedan with gold accents
-function PremiumCarSvg({ compact = false }: { compact?: boolean }) {
+// Premium car icon — sleek sedan side view
+function PremiumCarSvg() {
   return (
-    <svg
-      width={compact ? "52" : "64"}
-      height={compact ? "28" : "34"}
-      viewBox="0 0 128 64"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-md"
-    >
-      <ellipse cx="64" cy="58" rx="50" ry="4" fill="rgba(212,175,55,0.12)" />
-      <path d="M12 38 C12 34 14 30 18 30 L36 30 L48 14 L92 14 L102 30 L110 30 C114 30 116 34 116 38 L116 42 C116 44 114 46 112 46 L16 46 C14 46 12 44 12 42 Z" fill="#1C1917" stroke="#D4AF37" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M50 16 L40 30 L64 30 L64 16 Z" fill="#D4AF37" opacity="0.15" stroke="#D4AF37" strokeWidth="0.8" strokeLinejoin="round" />
-      <path d="M68 16 L68 30 L96 30 L88 16 Z" fill="#D4AF37" opacity="0.15" stroke="#D4AF37" strokeWidth="0.8" strokeLinejoin="round" />
-      <line x1="18" y1="38" x2="110" y2="38" stroke="#D4AF37" strokeWidth="0.8" opacity="0.6" />
-      <rect x="112" y="33" width="6" height="5" rx="2.5" fill="#D4AF37" />
-      <rect x="10" y="33" width="5" height="5" rx="2.5" fill="#EF4444" />
-      <circle cx="34" cy="48" r="8" fill="#292524" />
-      <circle cx="34" cy="48" r="4.5" fill="#D4AF37" opacity="0.8" />
-      <circle cx="34" cy="48" r="1.5" fill="#292524" />
-      <circle cx="94" cy="48" r="8" fill="#292524" />
-      <circle cx="94" cy="48" r="4.5" fill="#D4AF37" opacity="0.8" />
-      <circle cx="94" cy="48" r="1.5" fill="#292524" />
-      <rect x="56" y="33" width="12" height="1.5" rx="0.75" fill="#D4AF37" opacity="0.5" />
-      <rect x="104" y="24" width="5" height="3" rx="1.5" fill="#D4AF37" opacity="0.5" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#D4AF37" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10h10" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="17" r="1" fill="#D4AF37" />
+      <circle cx="16" cy="17" r="1" fill="#D4AF37" />
     </svg>
   );
 }
 
-// Elite car SVG — luxury with purple/gold
-function EliteCarSvg({ compact = false }: { compact?: boolean }) {
+// Elite car icon — luxury with purple/gold
+function EliteCarSvg() {
   return (
-    <svg
-      width={compact ? "52" : "64"}
-      height={compact ? "28" : "34"}
-      viewBox="0 0 128 64"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-lg"
-    >
-      <ellipse cx="64" cy="58" rx="52" ry="4" fill="rgba(147,51,234,0.10)" />
-      <path d="M8 38 C8 33 10 29 14 29 L34 29 L48 12 L94 12 L106 29 L114 29 C118 29 120 33 120 38 L120 42 C120 44 118 46 116 46 L12 46 C10 46 8 44 8 42 Z" fill="#0C0A12" stroke="#9333EA" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M50 14 L38 29 L66 29 L66 14 Z" fill="#9333EA" opacity="0.12" stroke="#9333EA" strokeWidth="0.8" strokeLinejoin="round" />
-      <path d="M70 14 L70 29 L100 29 L90 14 Z" fill="#9333EA" opacity="0.12" stroke="#9333EA" strokeWidth="0.8" strokeLinejoin="round" />
-      <line x1="14" y1="37" x2="114" y2="37" stroke="#D4AF37" strokeWidth="1" opacity="0.5" />
-      <rect x="116" y="32" width="6" height="5" rx="2.5" fill="#D4AF37" />
-      <rect x="6" y="32" width="5" height="5" rx="2.5" fill="#9333EA" />
-      <circle cx="32" cy="48" r="9" fill="#1C1917" />
-      <circle cx="32" cy="48" r="5" fill="#D4AF37" opacity="0.7" />
-      <circle cx="32" cy="48" r="1.5" fill="#1C1917" />
-      <circle cx="96" cy="48" r="9" fill="#1C1917" />
-      <circle cx="96" cy="48" r="5" fill="#D4AF37" opacity="0.7" />
-      <circle cx="96" cy="48" r="1.5" fill="#1C1917" />
-      <rect x="54" y="32" width="14" height="1.5" rx="0.75" fill="#D4AF37" opacity="0.4" />
-      <rect x="108" y="22" width="5" height="3" rx="1.5" fill="#9333EA" opacity="0.5" />
-      <circle cx="64" cy="37" r="2" fill="#D4AF37" opacity="0.6" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 17h1a2 2 0 0 0 4 0h4a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-.2-.6l-2.3-3.1A2 2 0 0 0 16 7H8a2 2 0 0 0-1.5.7L4.2 10.8A1 1 0 0 0 4 11.4V16a1 1 0 0 0 1 1Z" stroke="#A855F7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10h10" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="17" r="1" fill="#A855F7" />
+      <circle cx="16" cy="17" r="1" fill="#A855F7" />
+      {/* Gold accent line */}
+      <line x1="6" y1="14" x2="18" y2="14" stroke="#D4AF37" strokeWidth="0.8" opacity="0.5" />
     </svg>
   );
 }
 
-// Car thumbnail with themed circular background
+// Car thumbnail with themed circular background (like reference)
 function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
   const bgClass = category === "elite"
-    ? "bg-purple-900/30 ring-1 ring-purple-500/30"
+    ? "bg-purple-500/10 ring-2 ring-purple-400/40"
     : category === "premium"
-    ? "bg-zinc-800 ring-1 ring-amber-500/30"
-    : "bg-emerald-50 ring-1 ring-emerald-200/60";
+    ? "bg-amber-500/10 ring-2 ring-amber-400/40"
+    : "bg-emerald-500/10 ring-2 ring-emerald-400/40";
 
   return (
     <div className={cn(
-      "flex items-center justify-center shrink-0 rounded-xl",
+      "flex items-center justify-center shrink-0 rounded-full",
       compact ? "w-[44px] h-[44px]" : "w-[52px] h-[52px]",
       bgClass
     )}>
       {category === "elite" ? (
-        <EliteCarSvg compact={compact} />
+        <EliteCarSvg />
       ) : category === "premium" ? (
-        <PremiumCarSvg compact={compact} />
+        <PremiumCarSvg />
       ) : (
-        <EconomyCarSvg compact={compact} />
+        <EconomyCarSvg />
       )}
     </div>
   );
