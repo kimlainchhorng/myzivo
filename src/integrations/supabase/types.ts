@@ -40998,12 +40998,14 @@ export type Database = {
       vehicles: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"]
+          capacity: number | null
           color: string | null
           created_at: string
           driver_id: string
           fuel_type: string | null
           health_score: number | null
           id: string
+          insurance_expiry: string | null
           is_primary: boolean | null
           last_oil_change: string | null
           last_tire_rotation: string | null
@@ -41015,17 +41017,20 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           updated_at: string
+          vehicle_type: string | null
           vin: string | null
           year: number
         }
         Insert: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          capacity?: number | null
           color?: string | null
           created_at?: string
           driver_id: string
           fuel_type?: string | null
           health_score?: number | null
           id?: string
+          insurance_expiry?: string | null
           is_primary?: boolean | null
           last_oil_change?: string | null
           last_tire_rotation?: string | null
@@ -41037,17 +41042,20 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           updated_at?: string
+          vehicle_type?: string | null
           vin?: string | null
           year: number
         }
         Update: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          capacity?: number | null
           color?: string | null
           created_at?: string
           driver_id?: string
           fuel_type?: string | null
           health_score?: number | null
           id?: string
+          insurance_expiry?: string | null
           is_primary?: boolean | null
           last_oil_change?: string | null
           last_tire_rotation?: string | null
@@ -41059,6 +41067,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           updated_at?: string
+          vehicle_type?: string | null
           vin?: string | null
           year?: number
         }

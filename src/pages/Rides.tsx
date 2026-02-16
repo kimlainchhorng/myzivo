@@ -159,9 +159,13 @@ function RidesMapView({
   return (
     <div className="relative w-full h-full bg-[#e5e3df]">
       {showLoading || showFallback ? (
-        // Clean branded placeholder — no grid, no spinner
         <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-emerald-950 to-zinc-900">
-          {/* Subtle radial glow */}
+          {/* Subtle map-like pattern */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px),
+              repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px)`
+          }} />
+          {/* Radial glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl" />
           
           {/* Pulsing location dot */}
@@ -173,11 +177,12 @@ function RidesMapView({
             </div>
           </div>
 
-          {showFallback && (
-            <div className="absolute bottom-4 inset-x-0 flex justify-center">
-              <span className="text-xs text-white/40">Map unavailable</span>
-            </div>
-          )}
+          <div className="absolute bottom-4 inset-x-0 flex flex-col items-center gap-1">
+            {showLoading && <Loader2 className="w-4 h-4 text-white/30 animate-spin" />}
+            <span className="text-xs text-white/40">
+              {showFallback ? "Map unavailable" : showLoading ? "Loading map…" : ""}
+            </span>
+          </div>
         </div>
       ) : (
         // Google Map with ZIVO light theme (Uber-inspired)
