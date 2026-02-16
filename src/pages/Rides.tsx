@@ -988,28 +988,30 @@ function RidesInner() {
                 </button>
               )}
 
-              {/* Category Tabs - Tier-specific styling */}
-              <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
+              {/* Category Tabs - Lighter, taller, Uber-style */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
                 {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => {
                   const isActive = activeTab === cat;
                   const tabStyle = cat === "Elite"
                     ? isActive
-                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/25"
-                      : "bg-zinc-900 border border-purple-500/30 text-purple-300 hover:border-purple-400/50"
+                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/25 border-b-2 border-purple-300"
+                      : "bg-white border border-purple-200 text-purple-600 hover:bg-purple-50/50"
                     : cat === "Premium"
                     ? isActive
-                      ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-500/25"
-                      : "bg-zinc-800 border border-amber-500/30 text-amber-300 hover:border-amber-400/50"
+                      ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-500/25 border-b-2 border-amber-300"
+                      : "bg-white border border-amber-200 text-amber-600 hover:bg-amber-50/50"
                     : isActive
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25 border-b-2 border-emerald-300"
                       : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50";
                   return (
                     <button
                       key={cat}
                       onClick={() => setActiveTab(cat)}
-                      className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${tabStyle}`}
+                      className={`px-5 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${tabStyle}`}
                     >
-                      {cat === "Premium" && "★ "}{cat === "Elite" && "♛ "}{cat}
+                      {cat === "Premium" && <Star className="w-3 h-3 inline mr-1 -mt-0.5" />}
+                      {cat === "Elite" && <Crown className="w-3 h-3 inline mr-1 -mt-0.5" />}
+                      {cat}
                     </button>
                   );
                 })}
@@ -1031,6 +1033,20 @@ function RidesInner() {
                 level={surge.level}
                 zoneName={surge.zoneName}
               />
+
+              {/* Section Header for Premium/Elite */}
+              {activeTab === "Premium" && (
+                <div className="flex items-center gap-2 px-1">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span className="text-sm font-semibold text-amber-600">Premium Collection</span>
+                </div>
+              )}
+              {activeTab === "Elite" && (
+                <div className="flex items-center gap-2 px-1">
+                  <Crown className="w-4 h-4 text-purple-500 fill-purple-500" />
+                  <span className="text-sm font-semibold text-purple-600">Elite Collection</span>
+                </div>
+              )}
 
               {/* Ride Options List - using ZivoRideRow */}
               <div className="space-y-2">

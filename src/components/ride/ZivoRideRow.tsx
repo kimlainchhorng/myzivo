@@ -4,7 +4,8 @@
  */
 
 import { cn } from "@/lib/utils";
-import { Zap, Star, Crown } from "lucide-react";
+import { Zap, Star, Crown, Check } from "lucide-react";
+import { motion } from "framer-motion";
 import type { SurgeLevel } from "@/lib/surge";
 
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
@@ -115,11 +116,19 @@ function EliteCarSvg({ compact = false }: { compact?: boolean }) {
   );
 }
 
+// Car thumbnail with themed circular background
 function ZivoCarThumbnail({ compact = false, category = "economy" }: { compact?: boolean; category?: RideCategory }) {
+  const bgClass = category === "elite"
+    ? "bg-purple-900/30 ring-1 ring-purple-500/30"
+    : category === "premium"
+    ? "bg-zinc-800 ring-1 ring-amber-500/30"
+    : "bg-emerald-50 ring-1 ring-emerald-200/60";
+
   return (
     <div className={cn(
-      "flex items-center justify-center shrink-0",
-      compact ? "w-12 h-8" : "w-16 h-10"
+      "flex items-center justify-center shrink-0 rounded-xl",
+      compact ? "w-[44px] h-[44px]" : "w-[52px] h-[52px]",
+      bgClass
     )}>
       {category === "elite" ? (
         <EliteCarSvg compact={compact} />
@@ -139,7 +148,7 @@ function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: 
     if (category === "premium") {
       return (
         <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/20 text-amber-200">
-          <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
           Premium
         </span>
       );
@@ -147,7 +156,7 @@ function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: 
     if (category === "elite") {
       return (
         <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-500/30 text-purple-200">
-          <Crown className="w-2.5 h-2.5 fill-purple-400 text-purple-400" />
+          <Crown className="w-3 h-3 fill-amber-400 text-amber-400" />
           Elite
         </span>
       );
@@ -183,32 +192,46 @@ function ZivoTagPill({ tag, category = "economy" }: { tag?: RideTag; category?: 
   );
 }
 
+// Left accent bar color per tier
+function getAccentColor(category: RideCategory) {
+  if (category === "elite") return "bg-purple-500";
+  if (category === "premium") return "bg-amber-500";
+  return "bg-emerald-500";
+}
+
+// Selected checkmark color per tier
+function getCheckColor(category: RideCategory) {
+  if (category === "elite") return "bg-purple-500 text-white";
+  if (category === "premium") return "bg-amber-500 text-white";
+  return "bg-emerald-500 text-white";
+}
+
 // Tier-specific style config
 function getTierStyles(category: RideCategory, selected: boolean) {
   if (category === "elite") {
     return selected
-      ? "bg-gradient-to-br from-[#1a1025] to-[#0f0a1a] border-2 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]"
+      ? "bg-gradient-to-br from-[#1a1025] to-[#0f0a1a] border-2 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.35)] ring-2 ring-purple-400/30 scale-[1.01]"
       : "bg-gradient-to-br from-[#1a1025] to-[#0f0a1a] border border-purple-400/50 shadow-[0_4px_16px_rgba(147,51,234,0.12)] hover:border-purple-400/70 hover:shadow-[0_6px_20px_rgba(168,85,247,0.2)]";
   }
   if (category === "premium") {
     return selected
-      ? "bg-gradient-to-br from-[#1c1a17] to-[#141210] border-2 border-amber-400 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+      ? "bg-gradient-to-br from-[#1c1a17] to-[#141210] border-2 border-amber-400 shadow-[0_0_20px_rgba(212,175,55,0.3)] ring-2 ring-amber-400/30 scale-[1.01]"
       : "bg-gradient-to-br from-[#1c1a17] to-[#141210] border border-amber-400/40 shadow-[0_4px_16px_rgba(212,175,55,0.1)] hover:border-amber-400/60 hover:shadow-[0_6px_20px_rgba(212,175,55,0.2)]";
   }
   // Economy
   return selected
-    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-500 shadow-[0_8px_24px_rgba(16,185,129,0.15)]"
+    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-500 shadow-[0_8px_24px_rgba(16,185,129,0.15)] ring-2 ring-emerald-400/30 scale-[1.01]"
     : "bg-[#FFFBF5] border border-emerald-100 shadow-[0_4px_12px_rgba(16,185,129,0.06)] hover:border-emerald-200 hover:shadow-[0_6px_16px_rgba(16,185,129,0.1)]";
 }
 
 function getTierTextColors(category: RideCategory) {
   if (category === "elite") {
-    return { name: "text-white", meta: "text-purple-200", price: "text-amber-300", livePrice: "text-purple-300/70", seats: "text-purple-300/60" };
+    return { name: "text-white", meta: "text-purple-200", price: "text-amber-300", livePrice: "text-purple-300/70", seats: "text-purple-300/60", subtitle: "text-purple-100 italic" };
   }
   if (category === "premium") {
-    return { name: "text-white", meta: "text-amber-200/70", price: "text-amber-300", livePrice: "text-amber-300/60", seats: "text-amber-200/50" };
+    return { name: "text-white", meta: "text-amber-200/70", price: "text-amber-300", livePrice: "text-amber-300/60", seats: "text-amber-200/50", subtitle: "text-amber-100/80 italic" };
   }
-  return { name: "text-zinc-800", meta: "text-zinc-500", price: "text-emerald-600", livePrice: "text-emerald-500", seats: "text-zinc-500" };
+  return { name: "text-zinc-800", meta: "text-zinc-500", price: "text-emerald-600", livePrice: "text-emerald-500", seats: "text-zinc-500", subtitle: "text-zinc-500" };
 }
 
 export function ZivoRideRow({
@@ -233,78 +256,97 @@ export function ZivoRideRow({
   const colors = getTierTextColors(category);
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
+      layout
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
       className={cn(
-        "w-full text-left rounded-2xl transition-all active:scale-[0.99]",
-        compact ? "px-3 py-2" : "px-4 py-3",
+        "w-full text-left rounded-2xl transition-all overflow-hidden",
+        compact ? "py-2" : "py-3",
         getTierStyles(category, selected)
       )}
     >
-      <div className={cn("flex items-center", compact ? "gap-2" : "gap-3")}>
-        <ZivoCarThumbnail compact={compact} category={category} />
+      <div className="flex">
+        {/* Left accent bar */}
+        <div className={cn("w-[3px] rounded-full self-stretch ml-1 shrink-0", getAccentColor(category))} />
+        
+        <div className={cn("flex items-center flex-1 min-w-0", compact ? "gap-2 px-2" : "gap-3 px-3")}>
+          <ZivoCarThumbnail compact={compact} category={category} />
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className={cn(
-              "truncate font-semibold",
-              compact ? "text-[14px]" : "text-[15px]",
-              colors.name
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={cn(
+                "truncate font-semibold",
+                compact ? "text-[14px]" : "text-[15px]",
+                colors.name
+              )}>
+                {name}
+              </span>
+              <ZivoTagPill tag={tag} category={category} />
+              <span className={cn(
+                "ml-auto inline-flex items-center gap-0.5 font-medium shrink-0",
+                compact ? "text-[11px]" : "text-[12px]",
+                colors.seats
+              )}>
+                <span aria-hidden className={compact ? "text-[10px]" : "text-[11px]"}>👤</span> {seats}
+              </span>
+            </div>
+
+            {/* Subtitle for premium/elite */}
+            {subtitle && (category === "premium" || category === "elite") && (
+              <div className={cn("text-[11px] mt-0.5", colors.subtitle)}>{subtitle}</div>
+            )}
+
+            <div className={cn(
+              "mt-0.5 flex items-center gap-1.5",
+              compact ? "text-[12px]" : "text-[13px]"
             )}>
-              {name}
-            </span>
-            <ZivoTagPill tag={tag} category={category} />
-            <span className={cn(
-              "ml-auto inline-flex items-center gap-0.5 font-medium shrink-0",
-              compact ? "text-[11px]" : "text-[12px]",
-              colors.seats
-            )}>
-              <span aria-hidden className={compact ? "text-[10px]" : "text-[11px]"}>👤</span> {seats}
-            </span>
+              <span className={colors.meta}>{time} · {eta}</span>
+              {showSurge && (
+                <span className={cn(
+                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold",
+                  isHighSurge
+                    ? "bg-rose-100 text-rose-700"
+                    : "bg-orange-100 text-orange-700"
+                )}>
+                  <Zap className="w-2.5 h-2.5 fill-current" />
+                  {surgeMultiplier.toFixed(1)}×
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Subtitle for premium/elite */}
-          {subtitle && (category === "premium" || category === "elite") && (
-            <div className={cn("text-[11px] mt-0.5", colors.meta)}>{subtitle}</div>
-          )}
-
-          <div className={cn(
-            "mt-0.5 flex items-center gap-1.5",
-            compact ? "text-[12px]" : "text-[13px]"
-          )}>
-            <span className={colors.meta}>{time} · {eta}</span>
-            {showSurge && (
-              <span className={cn(
-                "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold",
-                isHighSurge
-                  ? "bg-rose-100 text-rose-700"
-                  : "bg-orange-100 text-orange-700"
-              )}>
-                <Zap className="w-2.5 h-2.5 fill-current" />
-                {surgeMultiplier.toFixed(1)}×
+          <div className="flex flex-col items-end shrink-0 gap-1">
+            <span className={cn(
+              "font-bold tabular-nums",
+              compact ? "text-[15px]" : "text-[17px]",
+              showSurge 
+                ? (isHighSurge ? "text-rose-600" : "text-orange-600") 
+                : colors.price
+            )}>
+              {price}
+            </span>
+            {showRealTimeIndicator && (
+              <span className={cn("text-[10px]", colors.livePrice)}>
+                Live prices
               </span>
+            )}
+            {/* Selected checkmark */}
+            {selected && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                className={cn("w-5 h-5 rounded-full flex items-center justify-center", getCheckColor(category))}
+              >
+                <Check className="w-3 h-3" strokeWidth={3} />
+              </motion.div>
             )}
           </div>
         </div>
-
-        <div className="flex flex-col items-end shrink-0">
-          <span className={cn(
-            "font-bold tabular-nums",
-            compact ? "text-[15px]" : "text-[17px]",
-            showSurge 
-              ? (isHighSurge ? "text-rose-600" : "text-orange-600") 
-              : colors.price
-          )}>
-            {price}
-          </span>
-          {showRealTimeIndicator && (
-            <span className={cn("text-[10px] mt-0.5", colors.livePrice)}>
-              Live prices
-            </span>
-          )}
-        </div>
       </div>
-    </button>
+    </motion.button>
   );
 }
