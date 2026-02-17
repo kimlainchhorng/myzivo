@@ -13706,6 +13706,7 @@ export type Database = {
           center_lng: number | null
           city_id: string | null
           city_name: string
+          county: string | null
           created_at: string
           delivery_fee_base: number
           delivery_fee_per_mile: number
@@ -13723,8 +13724,10 @@ export type Database = {
           sla_prep_minutes: number | null
           small_order_fee: number
           small_order_threshold: number
+          state: string | null
           tax_rate: number
           updated_at: string
+          zip_code: string | null
           zone_code: string
         }
         Insert: {
@@ -13733,6 +13736,7 @@ export type Database = {
           center_lng?: number | null
           city_id?: string | null
           city_name: string
+          county?: string | null
           created_at?: string
           delivery_fee_base?: number
           delivery_fee_per_mile?: number
@@ -13750,8 +13754,10 @@ export type Database = {
           sla_prep_minutes?: number | null
           small_order_fee?: number
           small_order_threshold?: number
+          state?: string | null
           tax_rate?: number
           updated_at?: string
+          zip_code?: string | null
           zone_code: string
         }
         Update: {
@@ -13760,6 +13766,7 @@ export type Database = {
           center_lng?: number | null
           city_id?: string | null
           city_name?: string
+          county?: string | null
           created_at?: string
           delivery_fee_base?: number
           delivery_fee_per_mile?: number
@@ -13777,8 +13784,10 @@ export type Database = {
           sla_prep_minutes?: number | null
           small_order_fee?: number
           small_order_threshold?: number
+          state?: string | null
           tax_rate?: number
           updated_at?: string
+          zip_code?: string | null
           zone_code?: string
         }
         Relationships: [
