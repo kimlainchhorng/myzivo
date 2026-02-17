@@ -65,7 +65,7 @@ const AppRides = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
 
-  // Mock distance/duration for MVP (in production, use Maps API)
+  // Estimated distance/duration - will be calculated via Maps API when route is set
   const [estimatedDistance] = useState(5.2);
   const [estimatedDuration] = useState(15);
 

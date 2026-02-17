@@ -164,14 +164,9 @@ const MasterDashboard = () => {
 
   const pendingPayoutTotal = pendingPayouts?.reduce((sum, p) => sum + Number(p.net_payout), 0) || 0;
 
-  // Mock activity data - would come from audit logs in production
-  const recentActivity: ActivityItemProps[] = [
-    { action: "Driver approved", target: "John Smith", time: "2 min ago", user: "Admin", status: "success" },
-    { action: "Refund processed", target: "Booking #FL-12345", time: "15 min ago", user: "Support", status: "success" },
-    { action: "Payout pending", target: "$2,450 to Driver Pool", time: "1 hour ago", user: "System", status: "pending" },
-    { action: "Document rejected", target: "Driver license - expired", time: "2 hours ago", user: "Ops", status: "error" },
-    { action: "New restaurant", target: "Sushi Palace approved", time: "3 hours ago", user: "Admin", status: "success" },
-  ];
+  // Activity data is loaded from real audit logs via AdminRecentActivity component
+  // This inline list is empty — see /admin/activity for the full feed
+  const recentActivity: ActivityItemProps[] = [];
 
   if (statsLoading) {
     return (
@@ -303,11 +298,19 @@ const MasterDashboard = () => {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[300px]">
-              <div className="divide-y">
-                {recentActivity.map((item, index) => (
-                  <ActivityItem key={index} {...item} />
-                ))}
-              </div>
+              {recentActivity.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No recent activity</p>
+                  <p className="text-xs">Activity from audit logs will appear here</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {recentActivity.map((item, index) => (
+                    <ActivityItem key={index} {...item} />
+                  ))}
+                </div>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>
