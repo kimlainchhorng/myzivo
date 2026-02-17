@@ -1,7 +1,6 @@
 /**
  * Hotel Search Hook (Legacy compatibility wrapper)
- * Generates mock hotel results for demo
- * Ready for real API integration
+ * Returns empty results — ready for real API integration
  */
 
 import { useState, useCallback } from "react";
@@ -15,60 +14,6 @@ export interface LegacyHotelSearchParams {
   checkOut: Date;
   guests: number;
   rooms: number;
-}
-
-// Mock hotel data generator
-function generateMockHotels(destination: string, count: number = 10): HotelResult[] {
-  const hotelNames = [
-    "Grand Plaza Hotel",
-    "The Metropolitan",
-    "Sunset Resort & Spa",
-    "City Center Inn",
-    "Harbor View Suites",
-    "Royal Gardens Hotel",
-    "The Lexington",
-    "Skyline Tower Hotel",
-    "Boutique Park Hotel",
-    "Ocean Breeze Resort",
-    "Downtown Marriott",
-    "Hilton Garden Inn",
-  ];
-
-  const areas = [
-    "Downtown",
-    "City Center",
-    "Waterfront",
-    "Business District",
-    "Arts District",
-    "Old Town",
-    "Near Airport",
-    "Beach Area",
-  ];
-
-  const hotelImages = [
-    "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop&q=75&fm=webp",
-    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop&q=75&fm=webp",
-  ];
-
-  return Array.from({ length: count }, (_, i) => ({
-    id: `hotel-${destination.toLowerCase().replace(/\s+/g, '-')}-${i}`,
-    name: hotelNames[i % hotelNames.length],
-    area: `${areas[i % areas.length]}, ${destination}`,
-    imageUrl: hotelImages[i % hotelImages.length],
-    starRating: Math.floor(Math.random() * 2) + 3, // 3-5 stars
-    guestRating: 7 + Math.random() * 2.5, // 7.0-9.5
-    reviewCount: Math.floor(Math.random() * 2000) + 200,
-    pricePerNight: Math.floor(Math.random() * 300) + 80, // $80-$380
-    amenities: ["wifi", "parking", "breakfast"].filter(() => Math.random() > 0.4),
-    freeCancellation: Math.random() > 0.3,
-    distanceFromCenter: Math.round((Math.random() * 5 + 0.5) * 10) / 10,
-  }));
 }
 
 function filterHotels(hotels: HotelResult[], filters: HotelFilters): HotelResult[] {
@@ -115,12 +60,10 @@ export function useHotelSearch() {
     setIsLoading(true);
     setSearchParams(params);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // TODO: Replace with real hotel API call
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Generate mock results
-    const mockHotels = generateMockHotels(params.destination, 12);
-    const filteredHotels = filterHotels(mockHotels, filters);
+    const filteredHotels = filterHotels([], filters);
     
     // Sort by rating
     filteredHotels.sort((a, b) => b.guestRating - a.guestRating);
@@ -134,8 +77,7 @@ export function useHotelSearch() {
   const applyFilters = useCallback((filters: HotelFilters) => {
     if (!searchParams) return;
     
-    const mockHotels = generateMockHotels(searchParams.destination, 12);
-    const filteredHotels = filterHotels(mockHotels, filters);
+    const filteredHotels = filterHotels([], filters);
     filteredHotels.sort((a, b) => b.guestRating - a.guestRating);
     setResults(filteredHotels);
   }, [searchParams]);

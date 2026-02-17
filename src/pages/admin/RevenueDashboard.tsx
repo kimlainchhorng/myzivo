@@ -41,39 +41,6 @@ import {
   MonthlyReport,
 } from "@/lib/revenueAnalytics";
 
-// Generate demo data for visualization
-function generateDemoData() {
-  const now = new Date();
-  const demoClicks = [];
-  
-  const services = ['flights', 'hotels', 'car_rental', 'transfers', 'activities', 'esim', 'luggage', 'compensation'];
-  const ctaTypes = ['result_card', 'sticky_cta', 'top_cta', 'compare_prices', 'cross_sell'];
-  const devices = ['mobile', 'desktop', 'tablet'];
-  
-  // Generate 150 demo clicks for the current month
-  for (let i = 0; i < 150; i++) {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date(now);
-    date.setDate(date.getDate() - daysAgo);
-    
-    demoClicks.push({
-      id: `demo_${i}`,
-      timestamp: date.toISOString(),
-      serviceType: services[Math.floor(Math.random() * services.length)],
-      ctaType: ctaTypes[Math.floor(Math.random() * ctaTypes.length)],
-      device: devices[Math.floor(Math.random() * devices.length)],
-      price: 50 + Math.floor(Math.random() * 500),
-      source: `zivo_${services[Math.floor(Math.random() * services.length)]}`,
-      affiliatePartner: 'travelpayouts',
-    });
-  }
-  
-  // Store in localStorage for analytics to pick up
-  localStorage.setItem("affiliate_clicks", JSON.stringify(demoClicks));
-  
-  return demoClicks;
-}
-
 export default function RevenueDashboard() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -86,13 +53,7 @@ export default function RevenueDashboard() {
     return [y, m - 1];
   }, [selectedMonth]);
   
-  // Generate demo data on first load
-  useMemo(() => {
-    const existing = localStorage.getItem("affiliate_clicks");
-    if (!existing || JSON.parse(existing).length < 10) {
-      generateDemoData();
-    }
-  }, []);
+  // Revenue data loaded from real analytics — no demo seeding
   
   // Get report data
   const report = useMemo(() => generateMonthlyReport(year, month), [year, month]);

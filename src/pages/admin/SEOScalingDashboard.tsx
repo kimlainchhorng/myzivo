@@ -91,34 +91,8 @@ interface DailyMetrics {
   sessions: number;
 }
 
-// ============================================
-// MOCK DATA (Replace with real API calls)
-// ============================================
-
-const generateMockDailyData = (days: number): DailyMetrics[] => {
-  return Array.from({ length: days }, (_, i) => {
-    const date = subDays(new Date(), days - 1 - i);
-    const baseClicks = Math.floor(Math.random() * 500) + 100;
-    const conversionRate = 0.02 + Math.random() * 0.03;
-    return {
-      date: format(date, 'MMM dd'),
-      clicks: baseClicks,
-      bookings: Math.floor(baseClicks * conversionRate),
-      revenue: Math.floor(baseClicks * conversionRate * (Math.random() * 50 + 20)),
-      sessions: Math.floor(baseClicks * 1.8),
-    };
-  });
-};
-
-const mockPagePerformance: PagePerformance[] = [
-  { path: '/flights/new-york-to-london', pageType: 'route', views: 2340, clicks: 187, conversions: 12, bounceRate: 42, avgTimeOnPage: 125 },
-  { path: '/flights/los-angeles-to-tokyo', pageType: 'route', views: 1890, clicks: 156, conversions: 9, bounceRate: 38, avgTimeOnPage: 142 },
-  { path: '/flights/to-paris', pageType: 'city', views: 1560, clicks: 98, conversions: 6, bounceRate: 51, avgTimeOnPage: 98 },
-  { path: '/hotels/miami', pageType: 'hotel', views: 1230, clicks: 89, conversions: 8, bounceRate: 44, avgTimeOnPage: 156 },
-  { path: '/car-rentals/orlando', pageType: 'car', views: 980, clicks: 67, conversions: 5, bounceRate: 48, avgTimeOnPage: 112 },
-  { path: '/deals', pageType: 'deals', views: 890, clicks: 123, conversions: 7, bounceRate: 35, avgTimeOnPage: 87 },
-  { path: '/lp/flights', pageType: 'landing', views: 750, clicks: 89, conversions: 11, bounceRate: 55, avgTimeOnPage: 67 },
-];
+// Data loaded from real analytics — no hardcoded data
+const pagePerformance: PagePerformance[] = [];
 
 const COLORS = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#f43f5e', '#6366f1'];
 
@@ -140,7 +114,7 @@ export default function SEOScalingDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   
   const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-  const dailyData = useMemo(() => generateMockDailyData(days), [days]);
+  const dailyData: DailyMetrics[] = [];
   
   // Aggregate metrics
   const totalClicks = dailyData.reduce((sum, d) => sum + d.clicks, 0);
@@ -150,12 +124,12 @@ export default function SEOScalingDashboard() {
   
   const conversionRate = totalClicks > 0 ? (totalBookings / totalClicks) * 100 : 0;
   const revenuePerUser = totalSessions > 0 ? totalRevenue / totalSessions : 0;
-  const avgBounceRate = mockPagePerformance.reduce((sum, p) => sum + p.bounceRate, 0) / mockPagePerformance.length;
+  const avgBounceRate = pagePerformance.length > 0 ? pagePerformance.reduce((sum, p) => sum + p.bounceRate, 0) / pagePerformance.length : 0;
   
   // Page type breakdown
   const pageTypeBreakdown = useMemo(() => {
     const grouped: Record<string, { views: number; clicks: number; conversions: number }> = {};
-    mockPagePerformance.forEach(p => {
+    pagePerformance.forEach(p => {
       if (!grouped[p.pageType]) {
         grouped[p.pageType] = { views: 0, clicks: 0, conversions: 0 };
       }
@@ -482,7 +456,7 @@ export default function SEOScalingDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {mockPagePerformance
+                        {pagePerformance
                           .sort((a, b) => (b.conversions / b.clicks) - (a.conversions / a.clicks))
                           .map((page) => {
                             const cvr = page.clicks > 0 ? (page.conversions / page.clicks) * 100 : 0;

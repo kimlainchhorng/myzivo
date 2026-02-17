@@ -43,70 +43,8 @@ const activityIcons = {
   role_change: { icon: Shield, color: "text-rose-500", bg: "bg-rose-500/10" },
 };
 
-// Mock data - in production this would come from the database
-const mockActivities: ActivityItem[] = [
-  {
-    id: "1",
-    type: "ride",
-    user: { name: "Sarah Johnson", email: "sarah@example.com" },
-    description: "Completed a ride from Downtown to Airport",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    metadata: { fare: 24.50, distance: "7.6 mi" },
-  },
-  {
-    id: "2",
-    type: "order",
-    user: { name: "Mike Chen", email: "mike@example.com" },
-    description: "Placed a food order from Bella Italia",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    metadata: { total: 42.80, items: 4 },
-  },
-  {
-    id: "3",
-    type: "signup",
-    user: { name: "Emma Wilson", email: "emma@example.com" },
-    description: "Created a new account",
-    timestamp: new Date(Date.now() - 32 * 60 * 1000),
-  },
-  {
-    id: "4",
-    type: "payment",
-    user: { name: "James Brown", email: "james@example.com" },
-    description: "Added a new payment method",
-    timestamp: new Date(Date.now() - 45 * 60 * 1000),
-    metadata: { type: "Visa ending 4242" },
-  },
-  {
-    id: "5",
-    type: "review",
-    user: { name: "Lisa Park", email: "lisa@example.com" },
-    description: "Left a 5-star review for driver",
-    timestamp: new Date(Date.now() - 1.2 * 60 * 60 * 1000),
-    metadata: { rating: 5 },
-  },
-  {
-    id: "6",
-    type: "role_change",
-    user: { name: "Admin User", email: "admin@zivo.com" },
-    description: "Assigned moderator role to Alex Turner",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: "7",
-    type: "support",
-    user: { name: "David Kim", email: "david@example.com" },
-    description: "Opened a support ticket: Payment issue",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-  },
-  {
-    id: "8",
-    type: "login",
-    user: { name: "Rachel Green", email: "rachel@example.com" },
-    description: "Logged in from new device",
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    metadata: { device: "iPhone 15", location: "New York" },
-  },
-];
+// Activity loaded from database — no hardcoded data
+const activities: ActivityItem[] = [];
 
 const AdminUserActivityTimeline = () => {
   return (
@@ -120,7 +58,12 @@ const AdminUserActivityTimeline = () => {
       <CardContent className="p-0">
         <ScrollArea className="h-[400px] px-6 pb-6">
           <div className="space-y-1">
-            {mockActivities.map((activity, index) => {
+            {activities.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Activity className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No recent activity</p>
+              </div>
+            ) : activities.map((activity, index) => {
               const config = activityIcons[activity.type];
               const Icon = config.icon;
               
@@ -133,7 +76,7 @@ const AdminUserActivityTimeline = () => {
                   className="relative pl-8 pb-4 last:pb-0"
                 >
                   {/* Timeline line */}
-                  {index < mockActivities.length - 1 && (
+                  {index < activities.length - 1 && (
                     <div className="absolute left-3 top-8 bottom-0 w-px bg-border/50" />
                   )}
                   
@@ -186,6 +129,7 @@ const AdminUserActivityTimeline = () => {
               );
             })}
           </div>
+          
         </ScrollArea>
       </CardContent>
     </Card>

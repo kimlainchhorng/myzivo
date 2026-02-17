@@ -25,42 +25,8 @@
    amenities: React.ComponentType<{ className?: string }>[];
  }
  
- // Premium Hotel Data (Mock for UI display)
- const mockHotels: MobileHotel[] = [
-   {
-     id: "1",
-     name: "The Aman Tokyo",
-     location: "Otemachi Tower, Tokyo",
-     price: 1200,
-     rating: "4.9",
-     match: "98% Match",
-     tag: "Luxe",
-     image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wifi, Waves, Coffee]
-   },
-   {
-     id: "2",
-     name: "1 Hotel Brooklyn",
-     location: "Brooklyn Bridge, NYC",
-     price: 650,
-     rating: "4.7",
-     match: "94% Match",
-     tag: "Eco",
-     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wind, Wifi, Coffee]
-   },
-   {
-     id: "3",
-     name: "Soho House Berlin",
-     location: "Torstraße 1, Berlin",
-     price: 450,
-     rating: "4.8",
-     match: "88% Match",
-     tag: "Creative",
-     image: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wifi, Coffee, Waves]
-   }
- ];
+ // Hotels loaded from search — no hardcoded data
+ const hotels: MobileHotel[] = [];
  
  const moods = ['Luxe', 'Eco', 'Creative', 'Zen', 'Cyber', 'Party'];
  
@@ -92,8 +58,8 @@
  
    // Filter hotels by mood
    const filteredHotels = activeMood === 'All' 
-     ? mockHotels 
-     : mockHotels.filter(h => h.tag === activeMood || activeMood === 'Luxe');
+     ? hotels 
+     : hotels.filter(h => h.tag === activeMood || activeMood === 'Luxe');
  
    return (
      <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-hidden selection:bg-emerald-500/30 pb-24">

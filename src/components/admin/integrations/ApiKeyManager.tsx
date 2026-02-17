@@ -23,56 +23,7 @@ interface ApiKey {
   rateLimit: number;
 }
 
-const mockApiKeys: ApiKey[] = [
-  {
-    id: "1",
-    name: "Production API Key",
-    prefix: "zivo_prod_",
-    permissions: ["rides:read", "rides:write", "users:read"],
-    createdAt: "2024-01-15",
-    lastUsed: "2024-01-27T14:30:00",
-    expiresAt: "2025-01-15",
-    isActive: true,
-    usageCount: 45320,
-    rateLimit: 1000
-  },
-  {
-    id: "2",
-    name: "Mobile App Key",
-    prefix: "zivo_mobile_",
-    permissions: ["rides:read", "rides:write", "food:read", "food:write"],
-    createdAt: "2024-01-10",
-    lastUsed: "2024-01-27T12:15:00",
-    expiresAt: null,
-    isActive: true,
-    usageCount: 128450,
-    rateLimit: 5000
-  },
-  {
-    id: "3",
-    name: "Analytics Dashboard",
-    prefix: "zivo_analytics_",
-    permissions: ["analytics:read"],
-    createdAt: "2023-12-01",
-    lastUsed: "2024-01-26T09:00:00",
-    expiresAt: "2024-06-01",
-    isActive: true,
-    usageCount: 8920,
-    rateLimit: 500
-  },
-  {
-    id: "4",
-    name: "Legacy Integration",
-    prefix: "zivo_legacy_",
-    permissions: ["rides:read"],
-    createdAt: "2023-06-15",
-    lastUsed: "2023-11-20T18:45:00",
-    expiresAt: "2024-01-01",
-    isActive: false,
-    usageCount: 2340,
-    rateLimit: 100
-  }
-];
+// API keys loaded from database — no hardcoded data
 
 const availablePermissions = [
   { value: "rides:read", label: "Rides (Read)" },
@@ -87,7 +38,7 @@ const availablePermissions = [
 ];
 
 export default function ApiKeyManager() {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [showKey, setShowKey] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");

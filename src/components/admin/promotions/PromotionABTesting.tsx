@@ -40,44 +40,8 @@ interface ABTest {
   trafficSplit: number;
 }
 
-const mockTests: ABTest[] = [
-  {
-    id: "1",
-    name: "Summer Sale Discount Test",
-    status: "running",
-    variantA: { code: "SUMMER20", discount: 20, conversions: 234, impressions: 1250 },
-    variantB: { code: "SUMMER25", discount: 25, conversions: 312, impressions: 1248 },
-    winner: null,
-    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    endDate: null,
-    trafficSplit: 50,
-  },
-  {
-    id: "2",
-    name: "Free Delivery vs Fixed Discount",
-    status: "completed",
-    variantA: { code: "FREESHIP", discount: 0, conversions: 456, impressions: 2100 },
-    variantB: { code: "SAVE5", discount: 5, conversions: 389, impressions: 2098 },
-    winner: "A",
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    endDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    trafficSplit: 50,
-  },
-  {
-    id: "3",
-    name: "New User Discount Test",
-    status: "paused",
-    variantA: { code: "WELCOME10", discount: 10, conversions: 89, impressions: 450 },
-    variantB: { code: "WELCOME15", discount: 15, conversions: 112, impressions: 448 },
-    winner: null,
-    startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    endDate: null,
-    trafficSplit: 50,
-  },
-];
-
 const PromotionABTesting = () => {
-  const [tests, setTests] = useState<ABTest[]>(mockTests);
+  const [tests, setTests] = useState<ABTest[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTest, setNewTest] = useState({
     name: "",
