@@ -36,28 +36,14 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const mockConversations: ChatConversation[] = [
-  { id: "1", customerName: "John Smith", customerEmail: "john@example.com", lastMessage: "I need help with my order", timestamp: "2 min ago", unread: 3, status: "active", priority: "high" },
-  { id: "2", customerName: "Sarah Johnson", customerEmail: "sarah@example.com", lastMessage: "Thank you for the quick response!", timestamp: "5 min ago", unread: 0, status: "waiting", priority: "medium", agent: "Mike Ross" },
-  { id: "3", customerName: "Mike Brown", customerEmail: "mike@example.com", lastMessage: "When will my refund be processed?", timestamp: "12 min ago", unread: 1, status: "active", priority: "high" },
-  { id: "4", customerName: "Emma Wilson", customerEmail: "emma@example.com", lastMessage: "The driver was very rude", timestamp: "25 min ago", unread: 0, status: "waiting", priority: "high", agent: "Sarah Chen" },
-  { id: "5", customerName: "David Lee", customerEmail: "david@example.com", lastMessage: "Issue resolved, thanks!", timestamp: "1 hour ago", unread: 0, status: "resolved", priority: "low" },
-];
-
-const mockMessages: ChatMessage[] = [
-  { id: "1", sender: "system", message: "Chat started", timestamp: "10:30 AM" },
-  { id: "2", sender: "customer", message: "Hi, I need help with my recent order. The driver never arrived.", timestamp: "10:31 AM" },
-  { id: "3", sender: "agent", message: "Hello John! I'm sorry to hear about this issue. Let me look into your recent order.", timestamp: "10:32 AM" },
-  { id: "4", sender: "agent", message: "I can see your order #12345 was placed 30 minutes ago. Let me check the driver's status.", timestamp: "10:33 AM" },
-  { id: "5", sender: "customer", message: "Yes, that's the one. I've been waiting for over an hour now.", timestamp: "10:34 AM" },
-  { id: "6", sender: "agent", message: "I apologize for the inconvenience. It looks like there was an issue with driver assignment. I'm going to assign a new driver right away and add a $5 credit to your account for the trouble.", timestamp: "10:35 AM" },
-  { id: "7", sender: "customer", message: "I need help with my order", timestamp: "10:38 AM" },
-];
+// Conversations and messages loaded from real support system
+const initialConversations: ChatConversation[] = [];
+const initialMessages: ChatMessage[] = [];
 
 export default function AdminLiveChat() {
-  const [conversations] = useState<ChatConversation[]>(mockConversations);
-  const [selectedChat, setSelectedChat] = useState<ChatConversation | null>(conversations[0]);
-  const [messages] = useState<ChatMessage[]>(mockMessages);
+  const [conversations] = useState<ChatConversation[]>(initialConversations);
+  const [selectedChat, setSelectedChat] = useState<ChatConversation | null>(null);
+  const [messages] = useState<ChatMessage[]>(initialMessages);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 

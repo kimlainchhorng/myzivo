@@ -38,24 +38,18 @@ interface AdminEnhancedUserProfileProps {
   onActivate?: () => void;
 }
 
-// Mock activity data
-const mockBookings = [
-  { id: "1", type: "ride", title: "Downtown → Airport", date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), amount: 24.50, status: "completed" },
-  { id: "2", type: "food", title: "Bella Italia", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), amount: 42.80, status: "completed" },
-  { id: "3", type: "ride", title: "Home → Office", date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), amount: 12.30, status: "completed" },
-  { id: "4", type: "hotel", title: "Grand Plaza Hotel", date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), amount: 245.00, status: "completed" },
-  { id: "5", type: "flight", title: "NYC → LAX", date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), amount: 389.00, status: "completed" },
-];
+// User activity and stats will be loaded from real database queries
+const emptyBookings: { id: string; type: string; title: string; date: Date; amount: number; status: string }[] = [];
 
-const mockStats = {
-  totalRides: 47,
-  totalOrders: 23,
-  totalSpent: 1245.80,
-  avgRating: 4.8,
-  memberSince: "Jan 2024",
-  lastActive: "2 hours ago",
-  preferredPayment: "Visa •••• 4242",
-  favoriteRestaurant: "Bella Italia",
+const defaultStats = {
+  totalRides: 0,
+  totalOrders: 0,
+  totalSpent: 0,
+  avgRating: 0,
+  memberSince: "—",
+  lastActive: "—",
+  preferredPayment: "—",
+  favoriteRestaurant: "—",
 };
 
 const bookingIcons: Record<string, React.ElementType> = {
@@ -200,14 +194,14 @@ const AdminEnhancedUserProfile = ({
                     <CreditCard className="h-3.5 w-3.5" />
                     <span className="text-xs">Payment Method</span>
                   </div>
-                  <p className="font-medium">{mockStats.preferredPayment}</p>
+                  <p className="font-medium">{defaultStats.preferredPayment}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/30">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Clock className="h-3.5 w-3.5" />
                     <span className="text-xs">Last Active</span>
                   </div>
-                  <p className="font-medium">{mockStats.lastActive}</p>
+                  <p className="font-medium">{defaultStats.lastActive}</p>
                 </div>
               </div>
               
@@ -215,22 +209,22 @@ const AdminEnhancedUserProfile = ({
               <div className="grid grid-cols-4 gap-3 mt-4">
                 <div className="p-3 rounded-xl bg-primary/5 text-center">
                   <Car className="h-5 w-5 mx-auto text-primary mb-1" />
-                  <p className="text-lg font-bold">{mockStats.totalRides}</p>
+                  <p className="text-lg font-bold">{defaultStats.totalRides}</p>
                   <p className="text-[10px] text-muted-foreground">Rides</p>
                 </div>
                 <div className="p-3 rounded-xl bg-eats/5 text-center">
                   <Utensils className="h-5 w-5 mx-auto text-eats mb-1" />
-                  <p className="text-lg font-bold">{mockStats.totalOrders}</p>
+                  <p className="text-lg font-bold">{defaultStats.totalOrders}</p>
                   <p className="text-[10px] text-muted-foreground">Orders</p>
                 </div>
                 <div className="p-3 rounded-xl bg-green-500/5 text-center">
                   <TrendingUp className="h-5 w-5 mx-auto text-green-500 mb-1" />
-                  <p className="text-lg font-bold">${mockStats.totalSpent.toFixed(0)}</p>
+                  <p className="text-lg font-bold">${defaultStats.totalSpent.toFixed(0)}</p>
                   <p className="text-[10px] text-muted-foreground">Spent</p>
                 </div>
                 <div className="p-3 rounded-xl bg-amber-500/5 text-center">
                   <Star className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-                  <p className="text-lg font-bold">{mockStats.avgRating}</p>
+                  <p className="text-lg font-bold">{defaultStats.avgRating}</p>
                   <p className="text-[10px] text-muted-foreground">Rating</p>
                 </div>
               </div>
@@ -274,7 +268,7 @@ const AdminEnhancedUserProfile = ({
             <TabsContent value="history" className="mt-4">
               <ScrollArea className="h-[220px] pr-4">
                 <div className="space-y-2">
-                  {mockBookings.map((booking) => {
+                  {emptyBookings.map((booking) => {
                     const Icon = bookingIcons[booking.type];
                     const colorClass = bookingColors[booking.type];
                     

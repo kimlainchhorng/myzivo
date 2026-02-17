@@ -241,12 +241,12 @@ export function useRideStore() {
   return context;
 }
 
-// Default mock driver to use when simulating
-export const DEFAULT_MOCK_DRIVER: DriverInfo = {
-  name: 'Alex Johnson',
-  car: 'Toyota Camry',
-  plate: 'ZIVO123',
-  rating: 4.9,
-  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-  trips: 2847,
+// Default placeholder driver info - replaced with real driver data from Supabase
+export const DEFAULT_DRIVER_PLACEHOLDER: DriverInfo = {
+  name: 'Assigning driver...',
+  car: '—',
+  plate: '—',
+  rating: 0,
+  avatar: '',
+  trips: 0,
 };

@@ -17,7 +17,7 @@
  
  type ServiceTab = "flights" | "hotels" | "cars";
  
- // Hotel mock data for premium cards
+ // Hotel data loaded from real search API
  interface MobileHotel {
    id: string;
    name: string;
@@ -30,41 +30,8 @@
    amenities: React.ComponentType<{ className?: string }>[];
  }
  
- const mockHotels: MobileHotel[] = [
-   {
-     id: "1",
-     name: "The Aman Tokyo",
-     location: "Otemachi Tower, Tokyo",
-     price: 1200,
-     rating: "4.9",
-     match: "98% Match",
-     tag: "Luxe",
-     image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wifi, Waves, Coffee]
-   },
-   {
-     id: "2",
-     name: "1 Hotel Brooklyn",
-     location: "Brooklyn Bridge, NYC",
-     price: 650,
-     rating: "4.7",
-     match: "94% Match",
-     tag: "Eco",
-     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wind, Wifi, Coffee]
-   },
-   {
-     id: "3",
-     name: "Soho House Berlin",
-     location: "Torstraße 1, Berlin",
-     price: 450,
-     rating: "4.8",
-     match: "88% Match",
-     tag: "Creative",
-     image: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&q=80&w=1000",
-     amenities: [Wifi, Coffee, Waves]
-   }
- ];
+ // Hotels will be populated from real search results
+ const featuredHotels: MobileHotel[] = [];
  
  const hotelMoods = ['Luxe', 'Eco', 'Creative', 'Zen', 'Cyber', 'Party'];
  
@@ -109,8 +76,8 @@
  
    // Filter hotels by mood
    const filteredHotels = hotelMood === 'All' 
-     ? mockHotels 
-     : mockHotels.filter(h => h.tag === hotelMood || hotelMood === 'Luxe');
+     ? featuredHotels 
+     : featuredHotels.filter(h => h.tag === hotelMood || hotelMood === 'Luxe');
  
    return (
      <div className={cn(

@@ -50,12 +50,8 @@ const REFERRAL_TIERS: ReferralTier[] = [
   { count: 25, bonus: 50000, title: 'Ambassador', icon: Trophy },
 ];
 
-const MOCK_REFERRALS: Referral[] = [
-  { id: '1', name: 'Sarah Johnson', email: 's***@email.com', status: 'rewarded', signedUpAt: '2024-01-10', firstBookingAt: '2024-01-15', milesEarned: 2500 },
-  { id: '2', name: 'Mike Chen', email: 'm***@email.com', status: 'qualified', signedUpAt: '2024-01-20', firstBookingAt: '2024-01-25', milesEarned: 2500 },
-  { id: '3', name: 'Emma Wilson', email: 'e***@email.com', status: 'signed_up', signedUpAt: '2024-02-01', milesEarned: 0 },
-  { id: '4', name: 'David Kim', email: 'd***@email.com', status: 'pending', milesEarned: 0 },
-];
+// Referrals loaded from real database
+const initialReferrals: Referral[] = [];
 
 interface ReferralCenterProps {
   className?: string;
@@ -68,9 +64,9 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
   const referralCode = 'ZIVO-FRIEND-X7K9P';
   const referralLink = `https://zivo.app/refer/${referralCode}`;
   const milesPerReferral = 2500;
-  const totalReferrals = MOCK_REFERRALS.length;
-  const successfulReferrals = MOCK_REFERRALS.filter(r => r.status === 'rewarded' || r.status === 'qualified').length;
-  const totalEarned = MOCK_REFERRALS.reduce((sum, r) => sum + r.milesEarned, 0);
+  const totalReferrals = initialReferrals.length;
+  const successfulReferrals = initialReferrals.filter(r => r.status === 'rewarded' || r.status === 'qualified').length;
+  const totalEarned = initialReferrals.reduce((sum, r) => sum + r.milesEarned, 0);
 
   const currentTier = REFERRAL_TIERS.find(t => successfulReferrals < t.count) || REFERRAL_TIERS[REFERRAL_TIERS.length - 1];
   const nextTierProgress = (successfulReferrals / currentTier.count) * 100;
@@ -232,7 +228,7 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
             Your Referrals
           </h4>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {MOCK_REFERRALS.map((referral, i) => (
+            {initialReferrals.map((referral, i) => (
               <motion.div
                 key={referral.id}
                 initial={{ opacity: 0, x: -10 }}

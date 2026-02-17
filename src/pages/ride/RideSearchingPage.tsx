@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Car, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
+import { useRideStore, DEFAULT_DRIVER_PLACEHOLDER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
@@ -180,7 +180,7 @@ const RideSearchingPage = () => {
     
     if (progress >= 100 && state.status === 'searching') {
       // Assign the mock driver
-      assignDriver(DEFAULT_MOCK_DRIVER);
+      assignDriver(DEFAULT_DRIVER_PLACEHOLDER);
       
       // Brief delay then navigate - status is already 'assigned' from assignDriver
       const timeout = setTimeout(() => {
