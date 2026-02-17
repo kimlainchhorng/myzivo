@@ -32,54 +32,6 @@ interface SystemAlert {
   actionUrl?: string;
 }
 
-const mockAlerts: SystemAlert[] = [
-  {
-    id: "1",
-    type: "critical",
-    category: "security",
-    title: "Unusual Login Activity Detected",
-    message: "Multiple failed login attempts from IP 192.168.1.45",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    isRead: false,
-  },
-  {
-    id: "2",
-    type: "warning",
-    category: "performance",
-    title: "High API Response Time",
-    message: "Average response time exceeded 500ms threshold",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    isRead: false,
-  },
-  {
-    id: "3",
-    type: "info",
-    category: "system",
-    title: "Scheduled Maintenance",
-    message: "System maintenance scheduled for tonight 2:00 AM",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    isRead: true,
-  },
-  {
-    id: "4",
-    type: "success",
-    category: "database",
-    title: "Database Backup Complete",
-    message: "Daily backup completed successfully (2.4 GB)",
-    timestamp: new Date(Date.now() - 60 * 60 * 1000),
-    isRead: true,
-  },
-  {
-    id: "5",
-    type: "warning",
-    category: "network",
-    title: "CDN Latency Spike",
-    message: "Elevated latency detected in EU-West region",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isRead: true,
-  },
-];
-
 const alertTypeConfig = {
   critical: {
     icon: AlertCircle,
@@ -120,7 +72,7 @@ const categoryIcons = {
 };
 
 const AdminAlertCenter = () => {
-  const [alerts, setAlerts] = useState<SystemAlert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
   const [filter, setFilter] = useState<string>("all");
 
   const unreadCount = alerts.filter(a => !a.isRead).length;

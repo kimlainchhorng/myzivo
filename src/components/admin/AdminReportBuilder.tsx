@@ -44,13 +44,7 @@ interface Report {
   createdAt: string;
 }
 
-const mockReports: Report[] = [
-  { id: "1", name: "Weekly Revenue Summary", description: "Comprehensive revenue breakdown by service", type: "chart", metrics: ["Revenue", "Trips", "Avg Fare"], lastRun: "2024-01-15", schedule: "Weekly", createdBy: "Admin", createdAt: "2023-12-01" },
-  { id: "2", name: "Driver Performance Matrix", description: "Driver ratings and completion rates", type: "table", metrics: ["Rating", "Trips", "Earnings"], lastRun: "2024-01-14", schedule: "Daily", createdBy: "Admin", createdAt: "2023-11-15" },
-  { id: "3", name: "Customer Acquisition Report", description: "New customer signups and sources", type: "chart", metrics: ["Signups", "Source", "Conversion"], lastRun: "2024-01-12", createdBy: "Marketing", createdAt: "2024-01-01" },
-  { id: "4", name: "Service Comparison Dashboard", description: "Compare metrics across all services", type: "dashboard", metrics: ["Revenue", "Orders", "Growth"], lastRun: "2024-01-10", schedule: "Monthly", createdBy: "Admin", createdAt: "2023-10-20" },
-  { id: "5", name: "Geographic Performance", description: "Performance by region and zone", type: "chart", metrics: ["Trips", "Revenue", "Drivers"], lastRun: "2024-01-08", createdBy: "Operations", createdAt: "2023-09-15" },
-];
+// Reports loaded from database — no hardcoded data
 
 const availableMetrics = [
   { id: "revenue", label: "Revenue", category: "Financial" },
@@ -68,7 +62,7 @@ const availableMetrics = [
 ];
 
 export default function AdminReportBuilder() {
-  const [reports] = useState<Report[]>(mockReports);
+  const [reports] = useState<Report[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
 

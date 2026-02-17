@@ -38,18 +38,11 @@ interface AdminNotification {
   action_url?: string;
 }
 
-const mockNotifications: AdminNotification[] = [
-  { id: "1", type: "warning", category: "driver", title: "Document Expiring", message: "Driver John D.'s license expires in 7 days", is_read: false, created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
-  { id: "2", type: "success", category: "payment", title: "Payout Completed", message: "Batch payout of $12,450 processed successfully", is_read: false, created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
-  { id: "3", type: "alert", category: "system", title: "High Server Load", message: "API response time exceeding threshold", is_read: false, created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString() },
-  { id: "4", type: "info", category: "user", title: "New User Spike", message: "50+ new signups in the last hour", is_read: true, created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
-  { id: "5", type: "warning", category: "support", title: "Unresolved Tickets", message: "12 support tickets pending for 24+ hours", is_read: true, created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString() },
-  { id: "6", type: "success", category: "driver", title: "Driver Verified", message: "Maria S. completed verification process", is_read: true, created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString() },
-];
+// Notifications loaded from database — no hardcoded data
 
 const AdminNotificationsPanel = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const queryClient = useQueryClient();
 
   const unreadCount = notifications.filter(n => !n.is_read).length;

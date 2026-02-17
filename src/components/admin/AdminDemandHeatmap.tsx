@@ -26,24 +26,16 @@ interface HotZone {
   coordinates: { lat: number; lng: number };
 }
 
-const mockZones: HotZone[] = [
-  { id: "1", name: "Downtown", demand: "high", trips: 245, avgFare: 18.50, trend: "up", coordinates: { lat: 40.7128, lng: -74.0060 } },
-  { id: "2", name: "Airport Terminal", demand: "high", trips: 189, avgFare: 45.00, trend: "up", coordinates: { lat: 40.6413, lng: -73.7781 } },
-  { id: "3", name: "Business District", demand: "medium", trips: 156, avgFare: 22.00, trend: "stable", coordinates: { lat: 40.7580, lng: -73.9855 } },
-  { id: "4", name: "University Area", demand: "medium", trips: 134, avgFare: 12.50, trend: "up", coordinates: { lat: 40.7295, lng: -73.9965 } },
-  { id: "5", name: "Shopping Mall", demand: "low", trips: 89, avgFare: 15.00, trend: "down", coordinates: { lat: 40.7484, lng: -73.9857 } },
-  { id: "6", name: "Entertainment Hub", demand: "high", trips: 201, avgFare: 16.75, trend: "up", coordinates: { lat: 40.7589, lng: -73.9851 } },
-];
+// Zones loaded from database — no hardcoded data
 
 const AdminDemandHeatmap = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: zones, isLoading, refetch } = useQuery({
     queryKey: ["admin-demand-zones"],
-    queryFn: async () => {
-      // In production, this would fetch real data based on trip locations
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockZones;
+    queryFn: async (): Promise<HotZone[]> => {
+      // TODO: fetch real zone data from database
+      return [];
     },
     refetchInterval: 120000,
   });

@@ -32,23 +32,10 @@ interface SearchResult {
   timestamp: Date;
 }
 
-const mockResults: SearchResult[] = [
-  { id: "1", type: "user", title: "Sarah Johnson", subtitle: "sarah.j@email.com", metadata: "Customer since 2023", timestamp: new Date() },
-  { id: "2", type: "driver", title: "Michael Chen", subtitle: "Driver ID: DRV-4521", metadata: "4.9★ • 2,340 trips", timestamp: new Date() },
-  { id: "3", type: "trip", title: "Trip #TRP-20260128-0892", subtitle: "Downtown → Airport", metadata: "$34.50", status: "completed", timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) },
-  { id: "4", type: "order", title: "Order #ORD-20260128-1234", subtitle: "Bella Italia → 123 Main St", metadata: "$42.80", status: "delivered", timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000) },
-  { id: "5", type: "transaction", title: "Payment #PAY-892741", subtitle: "Visa ending 4242", metadata: "$78.50", status: "success", timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) },
-  { id: "6", type: "user", title: "James Wilson", subtitle: "james.w@email.com", metadata: "Customer since 2024", timestamp: new Date() },
-  { id: "7", type: "driver", title: "Emma Davis", subtitle: "Driver ID: DRV-2156", metadata: "4.8★ • 1,890 trips", timestamp: new Date() },
-];
+// Search results fetched from database — no hardcoded data
+const searchResults: SearchResult[] = [];
 
-const recentSearches = [
-  "John Smith",
-  "TRP-20260125",
-  "ORD-20260127",
-  "driver 4521",
-  "refund request",
-];
+const recentSearches: string[] = [];
 
 const typeConfig = {
   user: { icon: User, color: "text-blue-500", bg: "bg-blue-500/10", label: "Customer" },
@@ -64,7 +51,7 @@ const AdminGlobalSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   const filteredResults = query.length > 0
-    ? mockResults.filter(r => 
+    ? searchResults.filter(r => 
         (activeTab === "all" || r.type === activeTab) &&
         (r.title.toLowerCase().includes(query.toLowerCase()) || 
          r.subtitle.toLowerCase().includes(query.toLowerCase()))

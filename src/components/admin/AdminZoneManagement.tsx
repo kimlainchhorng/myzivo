@@ -53,17 +53,10 @@ interface Zone {
   updatedAt: string;
 }
 
-const mockZones: Zone[] = [
-  { id: "1", name: "Downtown Core", type: "service", status: "active", coverage: "15 sq km", drivers: 89, createdAt: "2023-06-15", updatedAt: "2024-01-10" },
-  { id: "2", name: "Airport Zone", type: "airport", status: "active", coverage: "5 sq km", drivers: 24, surgeMultiplier: 1.5, createdAt: "2023-06-15", updatedAt: "2024-01-12" },
-  { id: "3", name: "Stadium Area", type: "event", status: "scheduled", coverage: "2 sq km", drivers: 0, surgeMultiplier: 2.0, createdAt: "2024-01-05", updatedAt: "2024-01-14" },
-  { id: "4", name: "Restricted Industrial", type: "restricted", status: "active", coverage: "8 sq km", drivers: 0, restrictions: ["No pickups", "Delivery only"], createdAt: "2023-09-20", updatedAt: "2023-12-01" },
-  { id: "5", name: "Suburban North", type: "service", status: "active", coverage: "25 sq km", drivers: 45, createdAt: "2023-08-10", updatedAt: "2024-01-08" },
-  { id: "6", name: "Beach Zone", type: "surge", status: "inactive", coverage: "10 sq km", drivers: 12, surgeMultiplier: 1.3, createdAt: "2023-07-01", updatedAt: "2023-11-15" },
-];
+// Zones loaded from database — no hardcoded data
 
 export default function AdminZoneManagement() {
-  const [zones] = useState<Zone[]>(mockZones);
+  const [zones] = useState<Zone[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 

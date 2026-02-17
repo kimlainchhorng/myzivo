@@ -25,50 +25,7 @@ interface WebhookConfig {
   retryOnFailure: boolean;
 }
 
-const mockWebhooks: WebhookConfig[] = [
-  {
-    id: "1",
-    name: "Order Notifications",
-    url: "https://api.partner.com/webhooks/orders",
-    events: ["order.created", "order.completed", "order.cancelled"],
-    secret: "whsec_xxxxxxxxxxxx",
-    isActive: true,
-    createdAt: "2024-01-10",
-    lastTriggered: "2024-01-27T14:25:00",
-    successRate: 99.8,
-    totalDeliveries: 15420,
-    failedDeliveries: 31,
-    retryOnFailure: true
-  },
-  {
-    id: "2",
-    name: "Driver Events",
-    url: "https://analytics.internal.com/hooks/drivers",
-    events: ["driver.online", "driver.offline", "trip.started", "trip.completed"],
-    secret: "whsec_yyyyyyyyyyyy",
-    isActive: true,
-    createdAt: "2024-01-05",
-    lastTriggered: "2024-01-27T14:30:00",
-    successRate: 100,
-    totalDeliveries: 8920,
-    failedDeliveries: 0,
-    retryOnFailure: true
-  },
-  {
-    id: "3",
-    name: "Payment Sync",
-    url: "https://payments.thirdparty.io/sync",
-    events: ["payment.succeeded", "payment.failed", "refund.created"],
-    secret: "whsec_zzzzzzzzzzzz",
-    isActive: false,
-    createdAt: "2023-12-15",
-    lastTriggered: "2024-01-20T10:00:00",
-    successRate: 95.2,
-    totalDeliveries: 3240,
-    failedDeliveries: 156,
-    retryOnFailure: false
-  }
-];
+// Webhooks loaded from database — no hardcoded data
 
 const availableEvents = [
   { category: "Orders", events: ["order.created", "order.completed", "order.cancelled", "order.updated"] },
@@ -79,7 +36,7 @@ const availableEvents = [
 ];
 
 export default function WebhookManager() {
-  const [webhooks, setWebhooks] = useState<WebhookConfig[]>(mockWebhooks);
+  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookConfig | null>(null);
