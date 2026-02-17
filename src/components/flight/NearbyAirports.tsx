@@ -40,68 +40,8 @@ interface NearbyAirportsProps {
   mainPrice?: number;
 }
 
-const MOCK_NEARBY_AIRPORTS: NearbyAirport[] = [
-  { 
-    id: '1', 
-    code: 'EWR', 
-    name: 'Newark Liberty', 
-    city: 'Newark, NJ',
-    distance: 18,
-    driveTime: 35,
-    priceToDestination: 385,
-    priceDiff: -65,
-    airlines: ['United', 'Delta', 'JetBlue'],
-    hasDirectFlight: true
-  },
-  { 
-    id: '2', 
-    code: 'LGA', 
-    name: 'LaGuardia', 
-    city: 'Queens, NY',
-    distance: 8,
-    driveTime: 25,
-    priceToDestination: 420,
-    priceDiff: -30,
-    airlines: ['American', 'Delta', 'Southwest'],
-    hasDirectFlight: true
-  },
-  { 
-    id: '3', 
-    code: 'HPN', 
-    name: 'Westchester County', 
-    city: 'White Plains, NY',
-    distance: 33,
-    driveTime: 50,
-    priceToDestination: 510,
-    priceDiff: 60,
-    airlines: ['JetBlue', 'United'],
-    hasDirectFlight: false
-  },
-  { 
-    id: '4', 
-    code: 'SWF', 
-    name: 'Stewart Intl', 
-    city: 'New Windsor, NY',
-    distance: 60,
-    driveTime: 75,
-    priceToDestination: 295,
-    priceDiff: -155,
-    airlines: ['Allegiant', 'Frontier'],
-    hasDirectFlight: true
-  },
-  { 
-    id: '5', 
-    code: 'PHL', 
-    name: 'Philadelphia Intl', 
-    city: 'Philadelphia, PA',
-    distance: 95,
-    driveTime: 110,
-    priceToDestination: 320,
-    priceDiff: -130,
-    airlines: ['American', 'Spirit', 'Frontier'],
-    hasDirectFlight: true
-  },
-];
+// TODO: Fetch real nearby airport data from API
+const nearbyAirports: NearbyAirport[] = [];
 
 export const NearbyAirports = ({ 
   className, 
@@ -116,7 +56,7 @@ export const NearbyAirports = ({
   const [selectedAirport, setSelectedAirport] = useState<string | null>(null);
 
   const filteredAirports = useMemo(() => {
-    const filtered = MOCK_NEARBY_AIRPORTS.filter(a => a.distance <= maxDistance);
+    const filtered = nearbyAirports.filter(a => a.distance <= maxDistance);
     
     return [...filtered].sort((a, b) => {
       if (sortBy === 'price') return a.priceToDestination - b.priceToDestination;
@@ -125,8 +65,8 @@ export const NearbyAirports = ({
     });
   }, [maxDistance, sortBy]);
 
-  const bestSavings = Math.min(...MOCK_NEARBY_AIRPORTS.map(a => a.priceDiff));
-  const cheapestAirport = MOCK_NEARBY_AIRPORTS.find(a => a.priceDiff === bestSavings);
+  const bestSavings = nearbyAirports.length > 0 ? Math.min(...nearbyAirports.map(a => a.priceDiff)) : 0;
+  const cheapestAirport = nearbyAirports.find(a => a.priceDiff === bestSavings);
 
   return (
     <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>

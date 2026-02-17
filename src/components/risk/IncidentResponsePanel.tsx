@@ -55,26 +55,22 @@ interface IncidentResponsePanelProps {
   className?: string;
 }
 
-const MOCK_INCIDENT: Incident = {
-  id: "INC-001",
-  type: "fraud_spike",
-  severity: "high",
-  title: "Unusual Fraud Pattern Detected",
-  description: "Multiple failed payment attempts from same IP range",
-  detectedAt: new Date(Date.now() - 30 * 60000),
-  status: "investigating",
-  currentStep: 3,
-  notes: [
-    "Initial investigation started at 10:45 AM",
-    "Identified IP range: 192.168.x.x",
-    "Blocked 15 suspicious accounts",
-  ],
+const DEFAULT_INCIDENT: Incident = {
+  id: "",
+  type: "",
+  severity: "low",
+  title: "No Active Incident",
+  description: "",
+  detectedAt: new Date(),
+  status: "new",
+  currentStep: 0,
+  notes: [],
   trafficPaused: false,
   partnerNotified: false,
 };
 
 export function IncidentResponsePanel({
-  incident = MOCK_INCIDENT,
+  incident = DEFAULT_INCIDENT,
   onStatusChange,
   onPauseTraffic,
   onResumeTraffic,

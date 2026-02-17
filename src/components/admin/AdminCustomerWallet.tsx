@@ -45,24 +45,18 @@ interface WalletTransaction {
   createdAt: string;
 }
 
-const mockTransactions: WalletTransaction[] = [
-  { id: "1", customerId: "c1", customerName: "John Smith", type: "credit", amount: 50.00, balance: 150.00, description: "Promotional credit", status: "completed", createdAt: "2024-01-15T10:30:00Z" },
-  { id: "2", customerId: "c2", customerName: "Sarah Johnson", type: "refund", amount: 25.50, balance: 75.50, description: "Ride cancellation refund", status: "completed", createdAt: "2024-01-15T09:15:00Z" },
-  { id: "3", customerId: "c3", customerName: "Mike Brown", type: "debit", amount: 30.00, balance: 20.00, description: "Wallet payment for order", status: "completed", createdAt: "2024-01-14T18:45:00Z" },
-  { id: "4", customerId: "c4", customerName: "Emma Wilson", type: "gift_card", amount: 100.00, balance: 100.00, description: "Gift card redemption", status: "pending", createdAt: "2024-01-14T14:20:00Z" },
-  { id: "5", customerId: "c5", customerName: "David Lee", type: "credit", amount: 15.00, balance: 65.00, description: "Referral bonus", status: "completed", createdAt: "2024-01-14T11:00:00Z" },
-];
+// TODO: Fetch real wallet transactions from database
 
 export default function AdminCustomerWallet() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [transactions] = useState<WalletTransaction[]>(mockTransactions);
+  const [transactions] = useState<WalletTransaction[]>([]);
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState<"add" | "deduct">("add");
 
-  const totalWalletBalance = 12500.00;
-  const totalCreditsIssued = 8500.00;
-  const pendingRefunds = 450.00;
-  const activeGiftCards = 32;
+  const totalWalletBalance = 0;
+  const totalCreditsIssued = 0;
+  const pendingRefunds = 0;
+  const activeGiftCards = 0;
 
   const filteredTransactions = transactions.filter(t =>
     t.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
