@@ -37,36 +37,7 @@ interface BehaviorSuggestionsProps {
   className?: string;
 }
 
-// Mock data generator based on route
-function generateMockSuggestions(
-  origin?: string,
-  destination?: string
-): {
-  similar: SuggestedDestination[];
-  seasonal: SuggestedDestination[];
-  budget: SuggestedDestination[];
-  alsoViewed: SuggestedDestination[];
-} {
-  // This would come from actual AI/ML in production
-  return {
-    similar: [
-      { code: "PVR", name: "Puerto Vallarta", reason: "Similar beach destination", avgPrice: 312 },
-      { code: "SJD", name: "Los Cabos", reason: "Similar vibe & weather", avgPrice: 345 },
-    ],
-    seasonal: [
-      { code: "DEN", name: "Denver", reason: "Great for winter sports", avgPrice: 189 },
-      { code: "MIA", name: "Miami", reason: "Perfect beach weather now", avgPrice: 225 },
-    ],
-    budget: [
-      { code: "TIJ", name: "Tijuana", reason: "Budget-friendly option", avgPrice: 89 },
-      { code: "GDL", name: "Guadalajara", reason: "Great value destination", avgPrice: 199 },
-    ],
-    alsoViewed: [
-      { code: "CUN", name: "Cancun", reason: "Popular alternative", avgPrice: 289 },
-      { code: "MEX", name: "Mexico City", reason: "Cultural experience", avgPrice: 245 },
-    ],
-  };
-}
+// TODO: Replace with real AI/ML suggestions from API
 
 export function BehaviorSuggestions({
   currentRoute,
@@ -78,15 +49,11 @@ export function BehaviorSuggestions({
 }: BehaviorSuggestionsProps) {
   const { profile } = useUserBehavior();
 
-  // Generate suggestions if not provided
-  const suggestions = currentRoute
-    ? generateMockSuggestions(currentRoute.origin, currentRoute.destination)
-    : { similar: [], seasonal: [], budget: [], alsoViewed: [] };
-
-  const similar = similarDestinations || suggestions.similar;
-  const seasonal = seasonalPicks || suggestions.seasonal;
-  const budget = budgetFriendly || suggestions.budget;
-  const viewed = alsoViewed || suggestions.alsoViewed;
+  // Use provided suggestions or empty defaults
+  const similar = similarDestinations || [];
+  const seasonal = seasonalPicks || [];
+  const budget = budgetFriendly || [];
+  const viewed = alsoViewed || [];
 
   const hasAnySuggestions =
     similar.length > 0 || seasonal.length > 0 || budget.length > 0 || viewed.length > 0;

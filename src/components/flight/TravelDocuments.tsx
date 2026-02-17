@@ -54,42 +54,7 @@ interface TravelDocumentsProps {
   destinationCode?: string;
 }
 
-const MOCK_DOCUMENTS: Document[] = [
-  {
-    id: '1',
-    type: 'passport',
-    name: 'United States Passport',
-    number: 'P12345678',
-    issueCountry: 'United States',
-    issueDate: new Date('2020-03-15'),
-    expiryDate: new Date('2030-03-14'),
-    status: 'valid'
-  },
-  {
-    id: '2',
-    type: 'visa',
-    name: 'UK Tourist Visa',
-    number: 'VIS-987654',
-    issueCountry: 'United Kingdom',
-    issueDate: new Date('2025-01-10'),
-    expiryDate: addMonths(new Date(), 2),
-    status: 'expiring'
-  },
-  {
-    id: '3',
-    type: 'insurance',
-    name: 'World Nomads Travel Insurance',
-    number: 'INS-2025-001',
-    expiryDate: addMonths(new Date(), 6),
-    status: 'valid'
-  },
-  {
-    id: '4',
-    type: 'vaccination',
-    name: 'COVID-19 Vaccination Card',
-    status: 'valid'
-  },
-];
+// TODO: Fetch user documents from database
 
 const VISA_REQUIREMENTS: VisaRequirement[] = [
   { country: 'United Kingdom', type: 'visa-free', maxDays: 180, notes: 'Electronic Travel Authorization (ETA) required' },
@@ -169,7 +134,7 @@ const getVisaStatusColor = (type: VisaRequirement['type']) => {
 };
 
 export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsProps) => {
-  const [documents, setDocuments] = useState<Document[]>(MOCK_DOCUMENTS);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);

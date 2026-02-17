@@ -48,49 +48,7 @@ interface TravelAlertsProps {
   className?: string;
 }
 
-const MOCK_ALERTS: TravelAlert[] = [
-  {
-    id: '1',
-    type: 'advisory',
-    severity: 'warning',
-    title: 'Exercise Increased Caution',
-    description: 'Due to civil unrest in certain areas. Avoid large gatherings and demonstrations.',
-    country: 'France',
-    validUntil: 'Feb 28, 2026',
-    source: 'US State Department',
-    updatedAt: '2 hours ago'
-  },
-  {
-    id: '2',
-    type: 'weather',
-    severity: 'info',
-    title: 'Seasonal Weather Alert',
-    description: 'Expect temperatures between 5-12°C with occasional rain. Pack layers and waterproof gear.',
-    country: 'France',
-    source: 'National Weather Service',
-    updatedAt: '1 hour ago'
-  },
-  {
-    id: '3',
-    type: 'visa',
-    severity: 'info',
-    title: 'No Visa Required',
-    description: 'US citizens can stay up to 90 days within a 180-day period without a visa.',
-    country: 'France',
-    source: 'Embassy of France',
-    updatedAt: '1 day ago'
-  },
-  {
-    id: '4',
-    type: 'health',
-    severity: 'info',
-    title: 'Health Recommendations',
-    description: 'Routine vaccinations up to date. No special vaccinations required for entry.',
-    country: 'France',
-    source: 'CDC',
-    updatedAt: '1 week ago'
-  },
-];
+// TODO: Fetch real travel alerts from API based on destination
 
 const getAlertIcon = (type: string) => {
   switch (type) {
@@ -134,7 +92,7 @@ export const TravelAlerts = ({
   destinationCode = "CDG",
   className
 }: TravelAlertsProps) => {
-  const [alerts, setAlerts] = useState<TravelAlert[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<TravelAlert[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);

@@ -40,109 +40,7 @@ interface Deal {
   isRoundTrip: boolean;
 }
 
-const MOCK_DEALS: Deal[] = [
-  {
-    id: '1',
-    type: 'error',
-    origin: 'JFK',
-    destination: 'FCO',
-    originCity: 'New York',
-    destinationCity: 'Rome',
-    price: 189,
-    originalPrice: 890,
-    savings: 701,
-    savingsPercent: 79,
-    airline: 'United',
-    departDate: 'Mar 15',
-    returnDate: 'Mar 22',
-    expiresIn: '2h 15m',
-    isRoundTrip: true
-  },
-  {
-    id: '2',
-    type: 'flash',
-    origin: 'LAX',
-    destination: 'HND',
-    originCity: 'Los Angeles',
-    destinationCity: 'Tokyo',
-    price: 449,
-    originalPrice: 1200,
-    savings: 751,
-    savingsPercent: 63,
-    airline: 'Japan Airlines',
-    departDate: 'Apr 5',
-    returnDate: 'Apr 12',
-    expiresIn: '5h 30m',
-    seatsLeft: 4,
-    isRoundTrip: true
-  },
-  {
-    id: '3',
-    type: 'lastminute',
-    origin: 'MIA',
-    destination: 'CUN',
-    originCity: 'Miami',
-    destinationCity: 'Cancun',
-    price: 89,
-    originalPrice: 250,
-    savings: 161,
-    savingsPercent: 64,
-    airline: 'American',
-    departDate: 'Tomorrow',
-    seatsLeft: 2,
-    isRoundTrip: false
-  },
-  {
-    id: '4',
-    type: 'deal',
-    origin: 'SFO',
-    destination: 'CDG',
-    originCity: 'San Francisco',
-    destinationCity: 'Paris',
-    price: 399,
-    originalPrice: 750,
-    savings: 351,
-    savingsPercent: 47,
-    airline: 'Air France',
-    departDate: 'May 10',
-    returnDate: 'May 20',
-    isRoundTrip: true
-  },
-  {
-    id: '5',
-    type: 'error',
-    origin: 'ORD',
-    destination: 'LHR',
-    originCity: 'Chicago',
-    destinationCity: 'London',
-    price: 245,
-    originalPrice: 950,
-    savings: 705,
-    savingsPercent: 74,
-    airline: 'British Airways',
-    departDate: 'Mar 28',
-    returnDate: 'Apr 4',
-    expiresIn: '45m',
-    isRoundTrip: true
-  },
-  {
-    id: '6',
-    type: 'flash',
-    origin: 'BOS',
-    destination: 'DXB',
-    originCity: 'Boston',
-    destinationCity: 'Dubai',
-    price: 499,
-    originalPrice: 1100,
-    savings: 601,
-    savingsPercent: 55,
-    airline: 'Emirates',
-    departDate: 'Apr 15',
-    returnDate: 'Apr 25',
-    expiresIn: '8h',
-    isRoundTrip: true
-  },
-];
+// TODO: Fetch real deals from API
 
 interface DealFinderProps {
   className?: string;
@@ -179,9 +77,10 @@ export const DealFinder = ({ className }: DealFinderProps) => {
     }
   };
 
+  const deals: Deal[] = []; // TODO: Fetch from API
   const filteredDeals = activeTab === 'all' 
-    ? MOCK_DEALS 
-    : MOCK_DEALS.filter(d => d.type === activeTab);
+    ? deals 
+    : deals.filter(d => d.type === activeTab);
 
   const sortedDeals = [...filteredDeals].sort((a, b) => {
     if (sortBy === 'savings') return b.savings - a.savings;
