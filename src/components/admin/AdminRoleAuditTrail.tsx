@@ -71,68 +71,13 @@ const roleColors: Record<string, string> = {
   user: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
-// Mock audit data
-const mockAuditEntries: RoleAuditEntry[] = [
-  {
-    id: "1",
-    action: "assigned",
-    targetUser: { name: "Alex Turner", email: "alex@example.com" },
-    performedBy: { name: "System Admin", email: "admin@zivo.com" },
-    newRole: "moderator",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    reason: "Promoted due to excellent support contributions",
-  },
-  {
-    id: "2",
-    action: "upgraded",
-    targetUser: { name: "Jennifer Lee", email: "jennifer@example.com" },
-    performedBy: { name: "System Admin", email: "admin@zivo.com" },
-    oldRole: "moderator",
-    newRole: "admin",
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    reason: "Taking over regional operations",
-  },
-  {
-    id: "3",
-    action: "removed",
-    targetUser: { name: "Mark Stevens", email: "mark@example.com" },
-    performedBy: { name: "Jennifer Lee", email: "jennifer@example.com" },
-    oldRole: "moderator",
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    reason: "Employee resignation",
-  },
-  {
-    id: "4",
-    action: "assigned",
-    targetUser: { name: "Sarah Connor", email: "sarah@example.com" },
-    performedBy: { name: "System Admin", email: "admin@zivo.com" },
-    newRole: "admin",
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "5",
-    action: "downgraded",
-    targetUser: { name: "Tom Wilson", email: "tom@example.com" },
-    performedBy: { name: "Jennifer Lee", email: "jennifer@example.com" },
-    oldRole: "admin",
-    newRole: "moderator",
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    reason: "Reduced responsibilities per request",
-  },
-  {
-    id: "6",
-    action: "assigned",
-    targetUser: { name: "Emily Chen", email: "emily@example.com" },
-    performedBy: { name: "System Admin", email: "admin@zivo.com" },
-    newRole: "moderator",
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-];
+// Audit entries loaded from database — no hardcoded data
+const auditEntries: RoleAuditEntry[] = [];
 
 const AdminRoleAuditTrail = () => {
   const [actionFilter, setActionFilter] = useState<string>("all");
 
-  const filteredEntries = mockAuditEntries.filter(entry => 
+  const filteredEntries = auditEntries.filter(entry => 
     actionFilter === "all" || entry.action === actionFilter
   );
 

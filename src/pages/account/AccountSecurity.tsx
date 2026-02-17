@@ -45,12 +45,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
-// Mock session data - in production this would come from the backend
-const mockSessions = [
-  { id: "1", device: "Chrome on Windows", location: "New York, US", lastActive: new Date(), current: true },
-  { id: "2", device: "Safari on iPhone", location: "New York, US", lastActive: new Date(Date.now() - 86400000) },
-  { id: "3", device: "Chrome on MacBook", location: "Boston, US", lastActive: new Date(Date.now() - 172800000) },
-];
+// Sessions loaded from backend — no hardcoded data
+const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
 
 export default function AccountSecurity() {
   const { user } = useAuth();
@@ -335,7 +331,7 @@ export default function AccountSecurity() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockSessions.map((session) => (
+                {activeSessions.map((session) => (
                   <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center">

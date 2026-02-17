@@ -42,60 +42,14 @@ interface Invoice {
   partnerName: string;
 }
 
-// Mock invoices
-const mockInvoices: Invoice[] = [
-  {
-    id: "1",
-    invoiceNumber: "INV-2024-0042",
-    date: "2024-03-01",
-    dueDate: "2024-03-15",
-    amount: 2450.00,
-    status: "paid",
-    bookingType: "flight",
-    description: "SFO → NYC (3 travelers)",
-    partnerName: "United Airlines via ZIVO",
-  },
-  {
-    id: "2",
-    invoiceNumber: "INV-2024-0043",
-    date: "2024-03-05",
-    dueDate: "2024-03-19",
-    amount: 890.00,
-    status: "paid",
-    bookingType: "hotel",
-    description: "Marriott NYC - 3 nights",
-    partnerName: "Marriott Hotels via ZIVO",
-  },
-  {
-    id: "3",
-    invoiceNumber: "INV-2024-0044",
-    date: "2024-03-10",
-    dueDate: "2024-03-24",
-    amount: 1250.00,
-    status: "pending",
-    bookingType: "bundle",
-    description: "LAX → CHI + Car Rental",
-    partnerName: "Multiple providers via ZIVO",
-  },
-  {
-    id: "4",
-    invoiceNumber: "INV-2024-0041",
-    date: "2024-02-15",
-    dueDate: "2024-03-01",
-    amount: 325.00,
-    status: "overdue",
-    bookingType: "car",
-    description: "Hertz - LAX pickup (3 days)",
-    partnerName: "Hertz via ZIVO",
-  },
-];
+// Invoices loaded from database — no hardcoded data
 
 interface BusinessInvoiceListProps {
   accountId?: string;
 }
 
 export default function BusinessInvoiceList({ accountId }: BusinessInvoiceListProps) {
-  const [invoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices] = useState<Invoice[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 

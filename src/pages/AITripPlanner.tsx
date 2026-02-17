@@ -93,77 +93,11 @@ const AITripPlanner = () => {
   const handleGenerateSuggestions = async () => {
     setIsLoading(true);
     
-    // Simulate AI processing with mock data
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    // TODO: Replace with real AI API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    const mockSuggestions: TripSuggestion[] = [
-      {
-        id: "1",
-        city: "Barcelona",
-        country: "Spain",
-        airportCode: "BCN",
-        price: 589,
-        rating: 4.8,
-        matchScore: 95,
-        tags: ["Beach", "Culture", "Food"],
-        weather: "24°C Sunny",
-        flightTime: "8h 30m",
-        description: "Perfect blend of beach, culture, and incredible food scene",
-        hotelArea: "Gothic Quarter or Barceloneta",
-        estimatedTotal: 2450,
-        tips: ["Visit La Sagrada Familia early morning", "Try tapas at La Boqueria market"],
-      },
-      {
-        id: "2",
-        city: "Lisbon",
-        country: "Portugal",
-        airportCode: "LIS",
-        price: 459,
-        rating: 4.7,
-        matchScore: 89,
-        tags: ["Culture", "Beach", "Nightlife"],
-        weather: "22°C Partly Cloudy",
-        flightTime: "7h 15m",
-        description: "Historic charm with modern vibes and stunning coastal views",
-        hotelArea: "Baixa or Alfama",
-        estimatedTotal: 1890,
-        tips: ["Ride Tram 28 through historic neighborhoods", "Day trip to Sintra"],
-      },
-      {
-        id: "3",
-        city: "Tokyo",
-        country: "Japan",
-        airportCode: "NRT",
-        price: 849,
-        rating: 4.9,
-        matchScore: 87,
-        tags: ["Culture", "Food", "Shopping"],
-        weather: "18°C Clear",
-        flightTime: "14h 20m",
-        description: "Unique blend of ancient traditions and cutting-edge technology",
-        hotelArea: "Shinjuku or Shibuya",
-        estimatedTotal: 3200,
-        tips: ["Get a JR Pass for transportation", "Visit Tsukiji Outer Market early"],
-      },
-      {
-        id: "4",
-        city: "Bali",
-        country: "Indonesia",
-        airportCode: "DPS",
-        price: 699,
-        rating: 4.6,
-        matchScore: 82,
-        tags: ["Beach", "Nature", "Romantic"],
-        weather: "28°C Tropical",
-        flightTime: "20h",
-        description: "Tropical paradise with stunning temples and rice terraces",
-        hotelArea: "Seminyak or Ubud",
-        estimatedTotal: 2100,
-        tips: ["Watch sunrise at Mount Batur", "Visit Tegallalang Rice Terraces"],
-      },
-    ];
-    
-    setSuggestions(mockSuggestions);
+    // No hardcoded suggestions — will be populated by AI API
+    setSuggestions([]);
     setIsLoading(false);
     setStep(5);
   };

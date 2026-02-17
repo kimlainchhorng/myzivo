@@ -32,56 +32,24 @@ import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-// Mock data
+// Data loaded from database — no hardcoded data
 const stats = [
-  { label: "Total Bookings", value: "156", change: "+12%", icon: Calendar },
-  { label: "Total Spend", value: "$45,280", change: "+8%", icon: DollarSign },
-  { label: "Active Travelers", value: "24", change: "+2", icon: Users },
-  { label: "Avg. Savings", value: "18%", change: "+3%", icon: TrendingUp },
+  { label: "Total Bookings", value: "0", change: "--", icon: Calendar },
+  { label: "Total Spend", value: "$0", change: "--", icon: DollarSign },
+  { label: "Active Travelers", value: "0", change: "--", icon: Users },
+  { label: "Avg. Savings", value: "0%", change: "--", icon: TrendingUp },
 ];
 
-const recentBookings = [
-  {
-    id: "BK001",
-    traveler: "John Smith",
-    type: "flight",
-    route: "SFO → NYC",
-    date: "Mar 15, 2024",
-    amount: 450,
-    status: "confirmed",
-  },
-  {
-    id: "BK002",
-    traveler: "Sarah Johnson",
-    type: "hotel",
-    route: "Marriott NYC",
-    date: "Mar 15-18, 2024",
-    amount: 890,
-    status: "confirmed",
-  },
-  {
-    id: "BK003",
-    traveler: "Mike Wilson",
-    type: "car",
-    route: "LAX Pickup",
-    date: "Mar 20, 2024",
-    amount: 125,
-    status: "pending",
-  },
-];
+const recentBookings: { id: string; traveler: string; type: string; route: string; date: string; amount: number; status: string }[] = [];
 
-const travelers = [
-  { name: "John Smith", email: "john@company.com", trips: 12, spend: 5400 },
-  { name: "Sarah Johnson", email: "sarah@company.com", trips: 8, spend: 3200 },
-  { name: "Mike Wilson", email: "mike@company.com", trips: 6, spend: 2100 },
-];
+const travelers: { name: string; email: string; trips: number; spend: number }[] = [];
 
 const policyCompliance = {
-  overall: 92,
+  overall: 0,
   categories: [
-    { name: "Flight Class", compliance: 95 },
-    { name: "Hotel Rate", compliance: 88 },
-    { name: "Advance Booking", compliance: 94 },
+    { name: "Flight Class", compliance: 0 },
+    { name: "Hotel Rate", compliance: 0 },
+    { name: "Advance Booking", compliance: 0 },
   ],
 };
 

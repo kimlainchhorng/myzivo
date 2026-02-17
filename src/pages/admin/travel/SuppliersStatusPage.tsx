@@ -50,78 +50,16 @@ const statusConfig = {
   not_configured: { label: "Not Configured", color: "bg-muted text-muted-foreground border-border", icon: Key },
 };
 
-// Mock supplier data - in production would come from health check endpoint
-const mockSuppliers: SupplierStatus[] = [
-  {
-    id: "duffel",
-    name: "Duffel",
-    type: "flights",
-    status: "operational",
-    lastCheck: new Date().toISOString(),
-    lastSuccess: new Date().toISOString(),
-    errorCount24h: 2,
-    responseTimeMs: 245,
-    apiKeyConfigured: true,
-    docsUrl: "https://duffel.com/docs",
-  },
-  {
-    id: "travelpayouts",
-    name: "TravelPayouts / Aviasales",
-    type: "flights",
-    status: "operational",
-    lastCheck: new Date().toISOString(),
-    lastSuccess: new Date().toISOString(),
-    errorCount24h: 0,
-    responseTimeMs: 180,
-    apiKeyConfigured: true,
-    docsUrl: "https://www.travelpayouts.com/developers",
-  },
-  {
-    id: "hotelbeds",
-    name: "Hotelbeds",
-    type: "hotels",
-    status: "not_configured",
-    lastCheck: new Date().toISOString(),
-    lastSuccess: null,
-    errorCount24h: 0,
-    responseTimeMs: null,
-    apiKeyConfigured: false,
-    docsUrl: "https://developer.hotelbeds.com/",
-  },
-  {
-    id: "ratehawk",
-    name: "RateHawk",
-    type: "hotels",
-    status: "not_configured",
-    lastCheck: new Date().toISOString(),
-    lastSuccess: null,
-    errorCount24h: 0,
-    responseTimeMs: null,
-    apiKeyConfigured: false,
-    docsUrl: "https://www.ratehawk.com/",
-  },
-  {
-    id: "discovercars",
-    name: "DiscoverCars",
-    type: "cars",
-    status: "not_configured",
-    lastCheck: new Date().toISOString(),
-    lastSuccess: null,
-    errorCount24h: 0,
-    responseTimeMs: null,
-    apiKeyConfigured: false,
-    docsUrl: "https://www.discovercars.com/",
-  },
-];
+// Supplier data loaded from health check endpoint — no hardcoded data
 
 const SuppliersStatusPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: suppliers = mockSuppliers, refetch } = useQuery({
+  const { data: suppliers = [], refetch } = useQuery({
     queryKey: ["supplier-status"],
-    queryFn: async () => {
-      // In production, this would call a health check endpoint
-      return mockSuppliers;
+    queryFn: async (): Promise<SupplierStatus[]> => {
+      // TODO: call real health check endpoint
+      return [];
     },
     refetchInterval: 60000, // Refresh every minute
   });
