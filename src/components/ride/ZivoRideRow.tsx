@@ -11,6 +11,7 @@ import type { SurgeLevel } from "@/lib/surge";
 
 import fleetEconomy from "@/assets/fleet-economy.png";
 import fleetCompact from "@/assets/fleet-compact.png";
+import fleetSuv from "@/assets/fleet-suv.png";
 import fleetLuxury from "@/assets/fleet-luxury.png";
 import ridePremium from "@/assets/ride-premium.png";
 import rideXl from "@/assets/ride-xl.png";
@@ -252,7 +253,9 @@ function ZivoCarThumbnail({ compact = false, category = "economy", rideName }: {
     imageSrc = fleetCompact;
   } else if (lowerName.includes("comfort")) {
     imageSrc = ridePremium;
-  } else if (lowerName.includes("premium") || lowerName.includes("elite")) {
+  } else if (lowerName.includes("suv")) {
+    imageSrc = fleetSuv;
+  } else if (lowerName.includes("premium") || lowerName.includes("elite") || lowerName.includes("black")) {
     imageSrc = fleetLuxury;
   } else if (lowerName.includes("xl")) {
     imageSrc = rideXl;
