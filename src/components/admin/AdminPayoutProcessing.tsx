@@ -44,74 +44,8 @@ interface PendingPayout {
   holdReason?: string;
 }
 
-const mockPendingPayouts: PendingPayout[] = [
-  {
-    id: "1",
-    recipientName: "Michael Chen",
-    recipientType: "driver",
-    amount: 1245.80,
-    pendingSince: format(subDays(new Date(), 2), "yyyy-MM-dd"),
-    tripsCount: 48,
-    payoutMethod: "bank_transfer",
-    bankLast4: "4521",
-    status: "ready",
-  },
-  {
-    id: "2",
-    recipientName: "Sarah's Kitchen",
-    recipientType: "restaurant",
-    amount: 3890.50,
-    pendingSince: format(subDays(new Date(), 3), "yyyy-MM-dd"),
-    tripsCount: 156,
-    payoutMethod: "bank_transfer",
-    bankLast4: "8823",
-    status: "ready",
-  },
-  {
-    id: "3",
-    recipientName: "James Rodriguez",
-    recipientType: "driver",
-    amount: 892.30,
-    pendingSince: format(subDays(new Date(), 1), "yyyy-MM-dd"),
-    tripsCount: 32,
-    payoutMethod: "instant",
-    status: "needs_review",
-    holdReason: "Large variance from weekly average",
-  },
-  {
-    id: "4",
-    recipientName: "Emily Davis",
-    recipientType: "driver",
-    amount: 1567.20,
-    pendingSince: format(subDays(new Date(), 4), "yyyy-MM-dd"),
-    tripsCount: 61,
-    payoutMethod: "bank_transfer",
-    bankLast4: "3345",
-    status: "ready",
-  },
-  {
-    id: "5",
-    recipientName: "Pizza Palace",
-    recipientType: "restaurant",
-    amount: 2234.90,
-    pendingSince: format(subDays(new Date(), 2), "yyyy-MM-dd"),
-    tripsCount: 89,
-    payoutMethod: "bank_transfer",
-    bankLast4: "9912",
-    status: "on_hold",
-    holdReason: "Pending dispute resolution",
-  },
-  {
-    id: "6",
-    recipientName: "Robert Kim",
-    recipientType: "driver",
-    amount: 756.40,
-    pendingSince: format(subDays(new Date(), 1), "yyyy-MM-dd"),
-    tripsCount: 28,
-    payoutMethod: "instant",
-    status: "ready",
-  },
-];
+// Payouts loaded from database — no hardcoded data
+const pendingPayouts: PendingPayout[] = [];
 
 const statusConfig = {
   ready: { color: "text-green-500", bg: "bg-green-500/10", icon: CheckCircle, label: "Ready" },
@@ -126,7 +60,7 @@ const AdminPayoutProcessing = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const filteredPayouts = mockPendingPayouts.filter(payout => {
+  const filteredPayouts = pendingPayouts.filter(payout => {
     const matchesSearch = payout.recipientName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || payout.status === statusFilter;
     const matchesType = typeFilter === "all" || payout.recipientType === typeFilter;
@@ -136,7 +70,7 @@ const AdminPayoutProcessing = () => {
   const readyPayouts = filteredPayouts.filter(p => p.status === "ready");
   const totalReadyAmount = readyPayouts.reduce((sum, p) => sum + p.amount, 0);
   const selectedAmount = selectedPayouts.reduce((sum, id) => {
-    const payout = mockPendingPayouts.find(p => p.id === id);
+    const payout = pendingPayouts.find(p => p.id === id);
     return sum + (payout?.amount || 0);
   }, 0);
 
@@ -168,7 +102,7 @@ const AdminPayoutProcessing = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Pending Payouts</p>
-                <p className="text-xl font-bold">{mockPendingPayouts.length}</p>
+                <p className="text-xl font-bold">{pendingPayouts.length}</p>
               </div>
               <div className="p-2 rounded-lg bg-amber-500/10">
                 <Clock className="h-5 w-5 text-amber-500" />
@@ -196,7 +130,7 @@ const AdminPayoutProcessing = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Drivers Pending</p>
-                <p className="text-xl font-bold">{mockPendingPayouts.filter(p => p.recipientType === "driver").length}</p>
+                <p className="text-xl font-bold">{pendingPayouts.filter(p => p.recipientType === "driver").length}</p>
               </div>
               <div className="p-2 rounded-lg bg-blue-500/10">
                 <Users className="h-5 w-5 text-blue-500" />
@@ -210,7 +144,7 @@ const AdminPayoutProcessing = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Needs Review</p>
-                <p className="text-xl font-bold text-amber-500">{mockPendingPayouts.filter(p => p.status === "needs_review").length}</p>
+                <p className="text-xl font-bold text-amber-500">{pendingPayouts.filter(p => p.status === "needs_review").length}</p>
               </div>
               <div className="p-2 rounded-lg bg-violet-500/10">
                 <AlertTriangle className="h-5 w-5 text-violet-500" />

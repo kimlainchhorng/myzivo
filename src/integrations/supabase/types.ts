@@ -31713,8 +31713,10 @@ export type Database = {
           redirect_message: string | null
           restaurant_allowed: boolean
           ride_allowed: boolean
+          state: string | null
           updated_at: string
           warning_message: string | null
+          zip_code: string | null
           zone_type: string
         }
         Insert: {
@@ -31731,8 +31733,10 @@ export type Database = {
           redirect_message?: string | null
           restaurant_allowed?: boolean
           ride_allowed?: boolean
+          state?: string | null
           updated_at?: string
           warning_message?: string | null
+          zip_code?: string | null
           zone_type: string
         }
         Update: {
@@ -31749,8 +31753,10 @@ export type Database = {
           redirect_message?: string | null
           restaurant_allowed?: boolean
           ride_allowed?: boolean
+          state?: string | null
           updated_at?: string
           warning_message?: string | null
+          zip_code?: string | null
           zone_type?: string
         }
         Relationships: []

@@ -90,11 +90,11 @@ interface StatusTiersDashboardProps {
 export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) => {
   const [selectedTier, setSelectedTier] = useState<'silver' | 'gold' | 'platinum'>('gold');
   
-  // Mock user data
-  const currentTier = 'gold';
-  const currentMiles = 82500;
-  const currentFlights = 35;
-  const qualifyingPeriodEnd = 'Dec 31, 2025';
+  // User tier data — defaults shown until real data loads
+  const [currentTier] = useState<'silver' | 'gold' | 'platinum'>('silver');
+  const currentMiles = 0;
+  const currentFlights = 0;
+  const qualifyingPeriodEnd = 'Dec 31, 2026';
 
   const nextTier = TIERS.find(t => t.id === 'platinum')!;
   const milesToNext = nextTier.milesRequired - currentMiles;

@@ -42,10 +42,7 @@ interface SharedUser {
   status: 'pending' | 'accepted';
 }
 
-const MOCK_SHARED_USERS: SharedUser[] = [
-  { id: '1', email: 'john@example.com', name: 'John Smith', permission: 'edit', status: 'accepted' },
-  { id: '2', email: 'sarah@example.com', name: 'Sarah Johnson', permission: 'view', status: 'pending' },
-];
+// Shared users loaded from real data — no hardcoded entries
 
 export const TripSharing = ({
   tripId = "ZIVO-XYZ789",
@@ -56,7 +53,7 @@ export const TripSharing = ({
   const [linkCopied, setLinkCopied] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'link' | 'public'>('private');
   const [inviteEmail, setInviteEmail] = useState("");
-  const [sharedUsers, setSharedUsers] = useState<SharedUser[]>(MOCK_SHARED_USERS);
+  const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
   const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
 
   const copyLink = () => {

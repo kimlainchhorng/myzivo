@@ -50,33 +50,9 @@
      queryFn: async () => {
        // In production, this would query from api_logs or similar
        // For now, return simulated data based on real patterns
-       const suppliers: SupplierLatency[] = [
-         {
-           name: "Duffel",
-           avgMs: 245 + Math.floor(Math.random() * 50),
-           p95Ms: 892,
-           p99Ms: 1200,
-           requestCount: 1234,
-           status: "healthy",
-         },
-         {
-           name: "Hotelbeds",
-           avgMs: 389 + Math.floor(Math.random() * 80),
-           p95Ms: 1100,
-           p99Ms: 1800,
-           requestCount: 567,
-           status: "healthy",
-         },
-         {
-           name: "RateHawk",
-           avgMs: 312 + Math.floor(Math.random() * 60),
-           p95Ms: 980,
-           p99Ms: 1500,
-           requestCount: 321,
-           status: "healthy",
-         },
-       ];
-       return suppliers;
+      // TODO: Query real API latency metrics
+      const suppliers: SupplierLatency[] = [];
+      return suppliers;
      },
      staleTime: 30 * 1000, // 30 seconds
    });
@@ -110,13 +86,13 @@
          .eq("event_name", "checkout_start")
          .gte("created_at", todayStart);
  
-       // Calculate conversion rates (with fallback mock data)
-       const searchCount = 1000; // Placeholder
-       const resultCount = 950;
-       const detailCount = 400;
-       const checkoutCount = 280;
-       const paymentCount = 180;
-       const confirmCount = 160;
+      // TODO: Use actual event counts from analytics_events queries
+      const searchCount = 0;
+      const resultCount = 0;
+      const detailCount = 0;
+      const checkoutCount = 0;
+      const paymentCount = 0;
+      const confirmCount = 0;
  
        const steps: FunnelStep[] = [
          {
@@ -174,30 +150,8 @@
        const total = bookings?.length || 0;
        const issued = bookings?.filter((b) => b.ticketing_status === "issued").length || 0;
  
-       // Simulated breakdown by supplier
-       const suppliers: SupplierSuccess[] = [
-         {
-           name: "Duffel",
-           successRate: 98.2,
-           successCount: 892,
-           totalCount: 908,
-           status: "good",
-         },
-         {
-           name: "Hotelbeds",
-           successRate: 96.8,
-           successCount: 241,
-           totalCount: 249,
-           status: "good",
-         },
-         {
-           name: "RateHawk",
-           successRate: 94.1,
-           successCount: 112,
-           totalCount: 119,
-           status: "warning",
-         },
-       ];
+      // TODO: Calculate real supplier success rates from bookings
+      const suppliers: SupplierSuccess[] = [];
  
        return suppliers;
      },

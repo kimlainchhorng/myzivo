@@ -5,26 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
-// Mock analytics data
+// Analytics data loaded from database — no hardcoded data
 const OVERVIEW_STATS = [
-  { label: "Total Searches", value: "124,532", change: "+12.4%", icon: Users, positive: true },
-  { label: "Outbound Clicks", value: "45,678", change: "+8.2%", icon: MousePointerClick, positive: true },
-  { label: "Bookings", value: "3,421", change: "+15.7%", icon: ShoppingCart, positive: true },
-  { label: "Est. Revenue", value: "$48,290", change: "+22.3%", icon: DollarSign, positive: true },
+  { label: "Total Searches", value: "0", change: "--", icon: Users, positive: true },
+  { label: "Outbound Clicks", value: "0", change: "--", icon: MousePointerClick, positive: true },
+  { label: "Bookings", value: "0", change: "--", icon: ShoppingCart, positive: true },
+  { label: "Est. Revenue", value: "$0", change: "--", icon: DollarSign, positive: true },
 ];
 
-const SERVICE_BREAKDOWN = [
-  { service: "Flights", searches: 68420, clicks: 28340, bookings: 1842, revenue: 28500, icon: Plane, color: "sky" },
-  { service: "Hotels", searches: 42100, clicks: 12890, bookings: 1120, revenue: 14200, icon: Hotel, color: "amber" },
-  { service: "Cars", searches: 14012, clicks: 4448, bookings: 459, revenue: 5590, icon: Car, color: "violet" },
-];
+const SERVICE_BREAKDOWN: { service: string; searches: number; clicks: number; bookings: number; revenue: number; icon: typeof Plane; color: string }[] = [];
 
-const CONVERSION_FUNNEL = [
-  { stage: "Searches", count: 124532, percent: 100 },
-  { stage: "Results Viewed", count: 98200, percent: 78.8 },
-  { stage: "Clicks to Partner", count: 45678, percent: 36.7 },
-  { stage: "Bookings", count: 3421, percent: 2.7 },
-];
+const CONVERSION_FUNNEL: { stage: string; count: number; percent: number }[] = [];
 
 export default function AnalyticsDashboard() {
   const navigate = useNavigate();

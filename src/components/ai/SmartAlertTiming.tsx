@@ -45,34 +45,10 @@ interface SmartAlertTimingProps {
   className?: string;
 }
 
-// Mock alerts
-const mockAlerts: PriceAlert[] = [
-  {
-    id: "1",
-    route: "LAX-CUN",
-    origin: "LAX",
-    destination: "CUN",
-    currentPrice: 289,
-    alertPrice: 350,
-    type: "drop",
-    changePercent: -17,
-    createdAt: new Date().toISOString(),
-    isActive: true,
-  },
-  {
-    id: "2",
-    route: "JFK-CDG",
-    origin: "JFK",
-    destination: "CDG",
-    currentPrice: 549,
-    type: "low_stock",
-    createdAt: new Date().toISOString(),
-    isActive: true,
-  },
-];
+// Alerts loaded from user preferences — no hardcoded data
 
 export function SmartAlertTiming({
-  alerts = mockAlerts,
+  alerts = [],
   onToggleAlert,
   onDismissAlert,
   className,

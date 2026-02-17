@@ -27,19 +27,13 @@ import {
 import { WalletBalance, WalletTransaction } from "@/types/behaviorAnalytics";
 import { cn } from "@/lib/utils";
 
-// Mock wallet data
-const mockWallet: WalletBalance = {
-  bookingCredits: 50.00,
-  promoCredits: 25.00,
-  pendingRefunds: 149.00,
-  zivoMiles: 2450,
-  transactions: [
-    { id: '1', type: 'promo', amount: 25, description: 'Welcome bonus', createdAt: new Date().toISOString(), status: 'completed' },
-    { id: '2', type: 'refund', amount: 149, description: 'Flight cancellation refund', createdAt: new Date(Date.now() - 86400000).toISOString(), status: 'pending', expiresAt: new Date(Date.now() + 7 * 86400000).toISOString() },
-    { id: '3', type: 'credit', amount: 50, description: 'Booking credit from promo', createdAt: new Date(Date.now() - 172800000).toISOString(), status: 'completed', expiresAt: new Date(Date.now() + 90 * 86400000).toISOString() },
-    { id: '4', type: 'miles', amount: 500, description: 'Earned from flight booking', createdAt: new Date(Date.now() - 259200000).toISOString(), status: 'completed' },
-    { id: '5', type: 'debit', amount: -25, description: 'Applied to booking', createdAt: new Date(Date.now() - 345600000).toISOString(), status: 'completed' },
-  ],
+// Wallet data loaded from database — no hardcoded data
+const emptyWallet: WalletBalance = {
+  bookingCredits: 0,
+  promoCredits: 0,
+  pendingRefunds: 0,
+  zivoMiles: 0,
+  transactions: [],
 };
 
 const transactionIcons = {
@@ -60,7 +54,7 @@ const transactionColors = {
 
 export default function TravelWallet() {
   const [activeTab, setActiveTab] = useState('all');
-  const wallet = mockWallet;
+  const wallet = emptyWallet;
 
   const totalBalance = wallet.bookingCredits + wallet.promoCredits;
 

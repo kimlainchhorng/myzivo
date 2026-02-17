@@ -27,29 +27,7 @@ interface AirportSavingsAlertProps {
   className?: string;
 }
 
-// Mock nearby airports data
-const getMockNearbyAirports = (currentCode: string, currentPrice: number): NearbyAirport[] => {
-  const airportGroups: Record<string, NearbyAirport[]> = {
-    JFK: [
-      { code: "EWR", name: "Newark Liberty", city: "Newark", price: currentPrice - 120, savings: 120, distance: "28 mi" },
-      { code: "LGA", name: "LaGuardia", city: "Queens", price: currentPrice - 45, savings: 45, distance: "12 mi" },
-    ],
-    LAX: [
-      { code: "BUR", name: "Hollywood Burbank", city: "Burbank", price: currentPrice - 85, savings: 85, distance: "16 mi" },
-      { code: "SNA", name: "John Wayne", city: "Orange County", price: currentPrice - 60, savings: 60, distance: "35 mi" },
-      { code: "ONT", name: "Ontario Intl", city: "Ontario", price: currentPrice - 95, savings: 95, distance: "42 mi" },
-    ],
-    ORD: [
-      { code: "MDW", name: "Midway", city: "Chicago", price: currentPrice - 75, savings: 75, distance: "15 mi" },
-    ],
-    SFO: [
-      { code: "OAK", name: "Oakland Intl", city: "Oakland", price: currentPrice - 110, savings: 110, distance: "18 mi" },
-      { code: "SJC", name: "San Jose", city: "San Jose", price: currentPrice - 70, savings: 70, distance: "32 mi" },
-    ],
-  };
-
-  return airportGroups[currentCode] || [];
-};
+// Nearby airports will come from real API — no hardcoded data
 
 export function AirportSavingsAlert({
   currentAirport,
@@ -62,7 +40,7 @@ export function AirportSavingsAlert({
   const [isDismissed, setIsDismissed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const nearbyAirports = providedAirports || getMockNearbyAirports(currentAirport, currentPrice);
+  const nearbyAirports = providedAirports || [];
   const significantSavings = nearbyAirports.filter(a => a.savings >= minSavingsThreshold);
   
   if (isDismissed || significantSavings.length === 0) return null;
