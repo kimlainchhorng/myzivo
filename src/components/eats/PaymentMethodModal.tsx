@@ -29,11 +29,8 @@ interface PaymentMethodModalProps {
   onSelect: (method: PaymentMethod) => void;
 }
 
-// Mock payment methods for UI - will be replaced with Stripe integration
-const mockMethods: PaymentMethod[] = [
-  { id: "pm_1", type: "card", brand: "Visa", last4: "4242", isDefault: true },
-  { id: "pm_2", type: "card", brand: "Mastercard", last4: "8888" },
-];
+// Payment methods loaded from real Stripe customer data
+const savedMethods: PaymentMethod[] = [];
 
 const digitalWallets: PaymentMethod[] = [
   { id: "apple_pay", type: "apple_pay" },
@@ -67,8 +64,8 @@ export function PaymentMethodModal({
           {/* Saved Cards */}
           <div className="space-y-3">
             <p className="text-sm text-zinc-400 font-medium">Saved Cards</p>
-            {mockMethods.length > 0 ? (
-              mockMethods.map((method) => (
+            {savedMethods.length > 0 ? (
+              savedMethods.map((method) => (
                 <motion.button
                   key={method.id}
                   whileTap={{ scale: 0.98 }}

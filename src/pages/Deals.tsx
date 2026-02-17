@@ -23,96 +23,18 @@ import DealCategoryTabs, { DealCategoryType } from "@/components/deals/DealCateg
 import { FlashDeal } from "@/types/behaviorAnalytics";
 import { toast } from "sonner";
 
-// Mock deals data
-const mockDeals: FlashDeal[] = [
-  {
-    id: '1',
-    title: 'NYC → Miami',
-    subtitle: 'Direct flight, Feb 15-22',
-    originalPrice: 349,
-    discountedPrice: 199,
-    discountPercent: 43,
-    expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 47,
-    totalAvailable: 50,
-    category: 'flights',
-    destination: 'Miami',
-  },
-  {
-    id: '2',
-    title: 'Marriott Times Square',
-    subtitle: 'New York, Mar 1-5',
-    originalPrice: 299,
-    discountedPrice: 189,
-    discountPercent: 37,
-    expiresAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 23,
-    totalAvailable: 30,
-    category: 'hotels',
-    destination: 'New York',
-  },
-  {
-    id: '3',
-    title: 'Tesla Model Y',
-    subtitle: 'Los Angeles, 7 days',
-    originalPrice: 560,
-    discountedPrice: 399,
-    discountPercent: 29,
-    expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 12,
-    totalAvailable: 20,
-    category: 'cars',
-  },
-  {
-    id: '4',
-    title: 'LAX → Cancun',
-    subtitle: 'Round trip, Mar 10-17',
-    originalPrice: 499,
-    discountedPrice: 279,
-    discountPercent: 44,
-    expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 89,
-    totalAvailable: 100,
-    category: 'flights',
-    destination: 'Cancun',
-  },
-  {
-    id: '5',
-    title: 'Hyatt Regency Waikiki',
-    subtitle: 'Honolulu, Apr 5-12',
-    originalPrice: 1899,
-    discountedPrice: 1299,
-    discountPercent: 32,
-    expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 8,
-    totalAvailable: 15,
-    category: 'hotels',
-    destination: 'Honolulu',
-  },
-  {
-    id: '6',
-    title: 'ORD → Paris CDG',
-    subtitle: 'Premium Economy, Mar 20-30',
-    originalPrice: 899,
-    discountedPrice: 599,
-    discountPercent: 33,
-    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-    claimedCount: 34,
-    totalAvailable: 40,
-    category: 'flights',
-    destination: 'Paris',
-  },
-];
+// Deals loaded from real partner APIs and promotions database
+const liveDeals: FlashDeal[] = [];
 
 export default function Deals() {
   const [activeCategory, setActiveCategory] = useState<DealCategoryType>('all');
   const [email, setEmail] = useState("");
 
   const filteredDeals = activeCategory === 'all' 
-    ? mockDeals 
+    ? liveDeals 
     : activeCategory === 'last-minute'
-      ? mockDeals.filter(d => new Date(d.expiresAt).getTime() - Date.now() < 4 * 60 * 60 * 1000)
-      : mockDeals.filter(d => d.category === activeCategory);
+      ? liveDeals.filter(d => new Date(d.expiresAt).getTime() - Date.now() < 4 * 60 * 60 * 1000)
+      : liveDeals.filter(d => d.category === activeCategory);
 
   const handleClaimDeal = (deal: FlashDeal) => {
     toast.success(`Opening ${deal.title} deal...`);

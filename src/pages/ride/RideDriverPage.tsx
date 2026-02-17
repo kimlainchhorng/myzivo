@@ -10,7 +10,7 @@ import RideStatusBanner from "@/components/ride/RideStatusBanner";
 import { toast } from "sonner";
 import DriverMapView from "@/components/ride/DriverMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
-import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
+import { useRideStore, DEFAULT_DRIVER_PLACEHOLDER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import { useLiveDriverTracking } from "@/hooks/useLiveDriverTracking";
@@ -38,7 +38,7 @@ const RideDriverPage = () => {
   const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
 
   // Get driver info from store or fallback
-  const driver = state.driver || DEFAULT_MOCK_DRIVER;
+  const driver = state.driver || DEFAULT_DRIVER_PLACEHOLDER;
   const driverId = driver.id;
   
   // Get coordinates from state or use defaults

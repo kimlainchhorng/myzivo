@@ -27,24 +27,16 @@ interface ActiveBookingsBarProps {
   className?: string;
 }
 
-const mockActiveBookings: ActiveBooking[] = [
-  {
-    id: "1",
-    type: "flight",
-    title: "NYC → Paris",
-    subtitle: "Selecting flight",
-    status: "in-progress",
-    href: "/book-flight",
-  },
-  {
-    id: "2",
-    type: "hotel",
-    title: "Paris Hotels",
-    subtitle: "Not started",
-    status: "pending",
-    href: "/book-hotel",
-  },
-];
+// Active bookings loaded from real user session/localStorage
+function getActiveBookings(): ActiveBooking[] {
+  try {
+    const raw = localStorage.getItem("zivo_active_bookings");
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
 
 const typeConfig = {
   flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10" },
@@ -61,11 +53,12 @@ const statusConfig = {
 const ActiveBookingsBar = ({ className }: ActiveBookingsBarProps) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  const activeBookings = getActiveBookings();
 
-  const inProgressBooking = mockActiveBookings.find(b => b.status === "in-progress");
-  const otherBookings = mockActiveBookings.filter(b => b.status !== "in-progress");
+  const inProgressBooking = activeBookings.find(b => b.status === "in-progress");
+  const otherBookings = activeBookings.filter(b => b.status !== "in-progress");
 
-  if (mockActiveBookings.length === 0) return null;
+  if (activeBookings.length === 0) return null;
 
   return (
     <div className={cn(

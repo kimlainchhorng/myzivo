@@ -38,38 +38,16 @@ interface SavedTripsManagerProps {
   className?: string;
 }
 
-const mockSavedTrips: SavedTrip[] = [
-  {
-    id: "1",
-    destination: "Paris",
-    iconGradient: "from-rose-500/20 to-pink-500/20",
-    services: ["flight", "hotel"],
-    savedAt: "2 hours ago",
-    expiresIn: "22 hours",
-    totalPrice: 1245,
-    progress: 60,
-  },
-  {
-    id: "2",
-    destination: "Tokyo",
-    iconGradient: "from-pink-500/20 to-red-500/20",
-    services: ["flight", "hotel", "car"],
-    savedAt: "Yesterday",
-    expiresIn: "2 days",
-    totalPrice: 2890,
-    progress: 30,
-  },
-  {
-    id: "3",
-    destination: "Bali",
-    iconGradient: "from-teal-500/20 to-emerald-500/20",
-    services: ["flight"],
-    savedAt: "3 days ago",
-    expiresIn: "4 days",
-    totalPrice: 890,
-    progress: 80,
-  },
-];
+// Saved trips loaded from real localStorage/database
+function loadSavedTrips(): SavedTrip[] {
+  try {
+    const raw = localStorage.getItem("zivo_saved_trips");
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
 
 const serviceIcons = {
   flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10" },
@@ -79,7 +57,7 @@ const serviceIcons = {
 
 const SavedTripsManager = ({ className }: SavedTripsManagerProps) => {
   const navigate = useNavigate();
-  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>(mockSavedTrips);
+  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>(loadSavedTrips());
 
   const handleDeleteTrip = (tripId: string) => {
     setSavedTrips(prev => prev.filter(t => t.id !== tripId));

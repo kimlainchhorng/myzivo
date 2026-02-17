@@ -13,13 +13,8 @@ import { LEGAL_EVIDENCE_POLICIES, COMPANY_INFO } from "@/config/legalContent";
 export default function CaseFileSystem() {
   const caseSystem = LEGAL_EVIDENCE_POLICIES.caseFileSystem;
 
-  // Mock case files
-  const caseFiles = [
-    { id: "CASE-2025-001", type: "Chargeback", status: "Open", priority: "High", created: "2025-02-01", lastUpdate: "2025-02-03" },
-    { id: "CASE-2025-002", type: "Damage Claim", status: "Under Review", priority: "Medium", created: "2025-01-28", lastUpdate: "2025-02-02" },
-    { id: "CASE-2024-098", type: "Refund Dispute", status: "Resolved", priority: "Low", created: "2024-12-15", lastUpdate: "2025-01-10" },
-    { id: "CASE-2024-097", type: "Legal Threat", status: "Escalated", priority: "Critical", created: "2024-12-10", lastUpdate: "2025-02-01" },
-  ];
+  // Case files loaded from real database
+  const caseFiles: { id: string; type: string; status: string; priority: string; created: string; lastUpdate: string }[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

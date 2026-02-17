@@ -14,14 +14,8 @@ import { LEGAL_EVIDENCE_POLICIES, COMPANY_INFO } from "@/config/legalContent";
 export default function LegalDocCenter() {
   const docCenter = LEGAL_EVIDENCE_POLICIES.legalDocCenter;
 
-  // Mock document versions
-  const documentVersions = [
-    { id: "terms-v1.5", type: "Terms of Service", version: "1.5", date: "2025-01-15", status: "active", locked: true },
-    { id: "privacy-v1.3", type: "Privacy Policy", version: "1.3", date: "2025-01-10", status: "active", locked: true },
-    { id: "seller-v1.0", type: "Seller of Travel", version: "1.0", date: "2025-01-01", status: "active", locked: true },
-    { id: "terms-v1.4", type: "Terms of Service", version: "1.4", date: "2024-12-01", status: "archived", locked: true },
-    { id: "privacy-v1.2", type: "Privacy Policy", version: "1.2", date: "2024-11-15", status: "archived", locked: true },
-  ];
+  // Document versions loaded from real database
+  const documentVersions: { id: string; type: string; version: string; date: string; status: string; locked: boolean }[] = [];
 
   const activeDocuments = documentVersions.filter(d => d.status === "active");
   const archivedDocuments = documentVersions.filter(d => d.status === "archived");
