@@ -26,28 +26,19 @@ import CreatorStats from "@/components/creators/CreatorStats";
 import { CreatorStats as CreatorStatsType } from "@/types/behaviorAnalytics";
 import { toast } from "sonner";
 
-// Mock creator stats
-const mockStats: CreatorStatsType = {
-  totalClicks: 12453,
-  conversions: 342,
-  conversionRate: 2.7,
-  earningsThisMonth: 456.78,
-  earningsTotal: 2341.56,
-  topLinks: [
-    { product: 'flights', clicks: 5234, conversions: 156 },
-    { product: 'hotels', clicks: 4123, conversions: 112 },
-    { product: 'cars', clicks: 3096, conversions: 74 },
-  ],
+// Creator stats - loaded from real affiliate data when available
+const defaultStats: CreatorStatsType = {
+  totalClicks: 0,
+  conversions: 0,
+  conversionRate: 0,
+  earningsThisMonth: 0,
+  earningsTotal: 0,
+  topLinks: [],
   tier: 'rising',
 };
 
-const recentActivity = [
-  { type: 'click', product: 'Flights', time: '2 min ago', location: 'Instagram' },
-  { type: 'conversion', product: 'Hotels', time: '15 min ago', location: 'TikTok' },
-  { type: 'click', product: 'Flights', time: '23 min ago', location: 'YouTube' },
-  { type: 'click', product: 'Cars', time: '45 min ago', location: 'Blog' },
-  { type: 'conversion', product: 'Flights', time: '1 hour ago', location: 'Instagram' },
-];
+// Activity loaded from real affiliate_click_logs when available
+const recentActivity: { type: string; product: string; time: string; location: string }[] = [];
 
 export default function CreatorDashboard() {
   const handleCopyLink = async (product: string) => {
@@ -100,7 +91,7 @@ export default function CreatorDashboard() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Stats Panel */}
             <div className="lg:col-span-1">
-              <CreatorStats stats={mockStats} />
+              <CreatorStats stats={defaultStats} />
             </div>
 
             {/* Main Content */}

@@ -1,5 +1,6 @@
 /**
  * ResumeBookingBanner - Continue incomplete bookings across devices
+ * Only shows when real saved bookings exist in localStorage
  */
 
 import { useState, useEffect } from "react";
@@ -36,22 +37,23 @@ interface ResumeBookingBannerProps {
   className?: string;
 }
 
-// Mock saved bookings for demo
-const getMockSavedBookings = (): SavedBooking[] => {
-  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-  return [
-    {
-      id: "1",
-      type: "flight",
-      origin: "JFK",
-      destination: "LAX",
-      date: "Jan 15, 2025",
-      savedAt: twoHoursAgo,
-      checkoutUrl: "/flights/checkout?saved=1",
-      price: 349,
-    },
-  ];
-};
+/**
+ * Load real saved bookings from localStorage
+ */
+function loadSavedBookings(): SavedBooking[] {
+  try {
+    const raw = localStorage.getItem("zivo_saved_bookings");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((b: any) => ({
+      ...b,
+      savedAt: new Date(b.savedAt),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 export function ResumeBookingBanner({
   savedBookings: providedBookings,
@@ -61,8 +63,7 @@ export function ResumeBookingBanner({
   const [savedBookings, setSavedBookings] = useState<SavedBooking[]>([]);
 
   useEffect(() => {
-    // Check localStorage or use provided bookings
-    const bookings = providedBookings || getMockSavedBookings();
+    const bookings = providedBookings || loadSavedBookings();
     // Filter to only show recent (last 24 hours) incomplete bookings
     const recentBookings = bookings.filter(b => {
       const hoursSinceSaved = (Date.now() - b.savedAt.getTime()) / (1000 * 60 * 60);
@@ -161,7 +162,6 @@ export function ResumeBookingBanner({
             </div>
           </div>
 
-          {/* Multiple saved bookings indicator */}
           {savedBookings.length > 1 && (
             <p className="text-xs text-muted-foreground mt-2 pl-13">
               +{savedBookings.length - 1} more saved {savedBookings.length === 2 ? "booking" : "bookings"}
