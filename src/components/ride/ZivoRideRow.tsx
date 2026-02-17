@@ -18,6 +18,7 @@ import rideXl from "@/assets/ride-xl.png";
 import rideGreen from "@/assets/ride-green.png";
 import rideSprinter from "@/assets/ride-sprinter.png";
 import rideSecure from "@/assets/ride-secure.png";
+import ridePet from "@/assets/ride-pet.png";
 
 type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
 type RideCategory = "economy" | "premium" | "elite";
@@ -249,7 +250,9 @@ function ZivoCarThumbnail({ compact = false, category = "economy", rideName }: {
 
   const lowerName = (rideName || "").toLowerCase();
   let imageSrc = fleetEconomy;
-  if (lowerName.includes("green") || lowerName.includes("eco")) {
+  if (lowerName.includes("pet")) {
+    imageSrc = ridePet;
+  } else if (lowerName.includes("green") || lowerName.includes("eco")) {
     imageSrc = rideGreen;
   } else if (lowerName.includes("standard") || lowerName.includes("priority")) {
     imageSrc = fleetCompact;
