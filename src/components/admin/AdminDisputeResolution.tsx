@@ -56,17 +56,10 @@ interface Dispute {
   description: string;
 }
 
-const mockDisputes: Dispute[] = [
-  { id: "1", caseNumber: "DSP-2024-001", customerId: "c1", customerName: "John Smith", type: "chargeback", amount: 125.50, orderId: "ORD-12345", status: "open", priority: "critical", createdAt: "2024-01-15", deadline: "2024-01-22", description: "Customer claims they never received the order" },
-  { id: "2", caseNumber: "DSP-2024-002", customerId: "c2", customerName: "Sarah Johnson", type: "refund", amount: 45.00, orderId: "ORD-12346", status: "investigating", priority: "medium", createdAt: "2024-01-14", deadline: "2024-01-21", assignee: "Mike Ross", description: "Requested refund for cancelled ride" },
-  { id: "3", caseNumber: "DSP-2024-003", customerId: "c3", customerName: "Mike Brown", type: "complaint", amount: 0, orderId: "ORD-12347", status: "escalated", priority: "high", createdAt: "2024-01-14", deadline: "2024-01-18", assignee: "Sarah Chen", description: "Poor service quality complaint" },
-  { id: "4", caseNumber: "DSP-2024-004", customerId: "c4", customerName: "Emma Wilson", type: "fraud", amount: 250.00, orderId: "ORD-12348", status: "investigating", priority: "critical", createdAt: "2024-01-13", deadline: "2024-01-17", assignee: "John Doe", description: "Suspected fraudulent transaction" },
-  { id: "5", caseNumber: "DSP-2024-005", customerId: "c5", customerName: "David Lee", type: "refund", amount: 35.00, orderId: "ORD-12349", status: "resolved", priority: "low", createdAt: "2024-01-12", deadline: "2024-01-19", assignee: "Mike Ross", description: "Duplicate charge refund request" },
-];
-
 export default function AdminDisputeResolution() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [disputes] = useState<Dispute[]>(mockDisputes);
+  // TODO: Fetch disputes from database
+  const [disputes] = useState<Dispute[]>([]);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [isResolutionOpen, setIsResolutionOpen] = useState(false);
 

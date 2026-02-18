@@ -25,45 +25,13 @@ interface RealtimeAlert {
   timestamp: Date;
 }
 
-const generateAlert = (): RealtimeAlert => {
-  const types: RealtimeAlert["type"][] = ["critical", "warning", "info", "success"];
-  const alerts = [
-    { type: "critical", title: "Payment Failed", message: "Transaction #TX-4521 declined" },
-    { type: "warning", title: "High Demand", message: "Downtown surge zone activated" },
-    { type: "info", title: "New Driver", message: "Driver #D-789 completed onboarding" },
-    { type: "success", title: "Goal Achieved", message: "Daily revenue target reached" },
-    { type: "warning", title: "Low Supply", message: "Only 5 drivers in Marina area" },
-    { type: "critical", title: "API Error", message: "Maps service timeout detected" },
-    { type: "info", title: "Order Placed", message: "New food order from Restaurant ABC" },
-    { type: "success", title: "Review Posted", message: "5-star rating from customer" },
-  ];
-  
-  const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    type: randomAlert.type as RealtimeAlert["type"],
-    title: randomAlert.title,
-    message: randomAlert.message,
-    timestamp: new Date(),
-  };
-};
+// TODO: Subscribe to real-time alerts from database/websocket
 
 const AdminRealtimeAlerts = () => {
   const [alerts, setAlerts] = useState<RealtimeAlert[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-
-  useEffect(() => {
-    if (isPaused) return;
-    
-    const interval = setInterval(() => {
-      const newAlert = generateAlert();
-      setAlerts(prev => [newAlert, ...prev].slice(0, 20));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isPaused]);
 
   const getTypeConfig = (type: string) => {
     switch (type) {

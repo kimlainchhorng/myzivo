@@ -13,21 +13,8 @@ interface FlightPriceCalendarProps {
 export default function FlightPriceCalendar({ className, onSelectDate }: FlightPriceCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Generate mock price data for the calendar
-  const generatePriceData = () => {
-    const prices: { [key: number]: { price: number; trend: 'low' | 'medium' | 'high' } } = {};
-    const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const basePrice = 150 + Math.random() * 200;
-      const price = Math.round(basePrice);
-      const trend = price < 200 ? 'low' : price < 280 ? 'medium' : 'high';
-      prices[day] = { price, trend };
-    }
-    return prices;
-  };
-
-  const [priceData] = useState(generatePriceData);
+  // TODO: Fetch real price data from API
+  const [priceData] = useState<{ [key: number]: { price: number; trend: 'low' | 'medium' | 'high' } }>({});
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                       'July', 'August', 'September', 'October', 'November', 'December'];

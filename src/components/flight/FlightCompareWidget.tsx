@@ -15,14 +15,9 @@ interface CompareFlight {
   amenities: string[];
 }
 
-const sampleFlights: CompareFlight[] = [
-  { id: "1", airline: "Delta", route: "LAX → JFK", price: 299, duration: "5h 15m", stops: 0, departure: "6:00 AM", arrival: "2:15 PM", amenities: ["wifi", "meals", "entertainment"] },
-  { id: "2", airline: "United", route: "LAX → JFK", price: 279, duration: "5h 45m", stops: 0, departure: "8:30 AM", arrival: "5:15 PM", amenities: ["wifi", "snacks"] },
-  { id: "3", airline: "American", route: "LAX → JFK", price: 249, duration: "7h 20m", stops: 1, departure: "7:00 AM", arrival: "5:20 PM", amenities: ["wifi", "meals", "power"] },
-];
-
 const FlightCompareWidget = () => {
-  const [compareList, setCompareList] = useState<CompareFlight[]>(sampleFlights.slice(0, 2));
+  // TODO: Populate from user's selected flights
+  const [compareList, setCompareList] = useState<CompareFlight[]>([]);
 
   const removeFromCompare = (id: string) => {
     setCompareList(compareList.filter(f => f.id !== id));
@@ -98,9 +93,9 @@ const FlightCompareWidget = () => {
             </div>
           ))}
 
-          {compareList.length < 3 && (
+          {compareList.length < 3 && compareList.length > 0 && (
             <button
-              onClick={() => addToCompare(sampleFlights[2])}
+              onClick={() => {}}
               className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
             >
               <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">

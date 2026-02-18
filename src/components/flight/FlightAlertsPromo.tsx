@@ -38,11 +38,8 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
     },
   ];
 
-  const sampleAlerts = [
-    { route: "LAX → Tokyo", drop: "-$127", percent: "-15%", time: "2h ago" },
-    { route: "NYC → Paris", drop: "-$89", percent: "-12%", time: "4h ago" },
-    { route: "SFO → London", drop: "-$156", percent: "-18%", time: "6h ago" },
-  ];
+  // TODO: Fetch real price drop alerts
+  const sampleAlerts: { route: string; drop: string; percent: string; time: string }[] = [];
 
   return (
     <section className={cn("py-10 sm:py-16", className)}>

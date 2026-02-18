@@ -66,43 +66,8 @@ interface HeatPoint {
   weight: number;
 }
 
-const mockZones: Zone[] = [
-  { id: "1", name: "Downtown Core", type: "demand", demand_level: "high", coordinates: { lat: 40.7128, lng: -74.0060 }, radius_km: 2, active_drivers: 45, pending_requests: 12, avg_wait_time: 3, surge_multiplier: 1.8, revenue_today: 8500, trend: 18.5 },
-  { id: "2", name: "JFK Airport", type: "service", demand_level: "high", coordinates: { lat: 40.6413, lng: -73.7781 }, radius_km: 3, active_drivers: 28, pending_requests: 8, avg_wait_time: 5, surge_multiplier: 1.5, revenue_today: 12000, trend: 12.3 },
-  { id: "3", name: "Midtown Manhattan", type: "surge", demand_level: "high", coordinates: { lat: 40.7549, lng: -73.9840 }, radius_km: 1.5, active_drivers: 62, pending_requests: 25, avg_wait_time: 2, surge_multiplier: 2.2, revenue_today: 15000, trend: 25.1 },
-  { id: "4", name: "Brooklyn Heights", type: "demand", demand_level: "medium", coordinates: { lat: 40.6960, lng: -73.9936 }, radius_km: 2, active_drivers: 18, pending_requests: 4, avg_wait_time: 6, surge_multiplier: 1.2, revenue_today: 3200, trend: 8.7 },
-  { id: "5", name: "Financial District", type: "service", demand_level: "medium", coordinates: { lat: 40.7074, lng: -74.0113 }, radius_km: 1, active_drivers: 22, pending_requests: 6, avg_wait_time: 4, surge_multiplier: 1.4, revenue_today: 5800, trend: -2.4 },
-  { id: "6", name: "Times Square", type: "surge", demand_level: "high", coordinates: { lat: 40.7580, lng: -73.9855 }, radius_km: 0.8, active_drivers: 35, pending_requests: 18, avg_wait_time: 3, surge_multiplier: 2.5, revenue_today: 9200, trend: 32.1 },
-  { id: "7", name: "East Village", type: "demand", demand_level: "low", coordinates: { lat: 40.7265, lng: -73.9815 }, radius_km: 1.2, active_drivers: 12, pending_requests: 2, avg_wait_time: 8, surge_multiplier: 1.0, revenue_today: 1800, trend: -5.2 },
-  { id: "8", name: "Upper East Side", type: "service", demand_level: "medium", coordinates: { lat: 40.7736, lng: -73.9566 }, radius_km: 2, active_drivers: 20, pending_requests: 5, avg_wait_time: 5, surge_multiplier: 1.3, revenue_today: 4100, trend: 6.8 },
-];
-
-const mockHeatPoints: HeatPoint[] = [
-  // Downtown cluster
-  ...Array(50).fill(null).map(() => ({
-    lat: 40.7128 + (Math.random() - 0.5) * 0.02,
-    lng: -74.0060 + (Math.random() - 0.5) * 0.02,
-    weight: Math.random() * 0.8 + 0.2,
-  })),
-  // Midtown cluster
-  ...Array(80).fill(null).map(() => ({
-    lat: 40.7549 + (Math.random() - 0.5) * 0.015,
-    lng: -73.9840 + (Math.random() - 0.5) * 0.015,
-    weight: Math.random() * 0.9 + 0.1,
-  })),
-  // Times Square cluster
-  ...Array(60).fill(null).map(() => ({
-    lat: 40.7580 + (Math.random() - 0.5) * 0.01,
-    lng: -73.9855 + (Math.random() - 0.5) * 0.01,
-    weight: Math.random() * 1.0,
-  })),
-  // Airport cluster
-  ...Array(40).fill(null).map(() => ({
-    lat: 40.6413 + (Math.random() - 0.5) * 0.03,
-    lng: -73.7781 + (Math.random() - 0.5) * 0.03,
-    weight: Math.random() * 0.7 + 0.3,
-  })),
-];
+// TODO: Fetch zones and heat points from database
+const emptyHeatPoints: HeatPoint[] = [];
 
 const container = {
   hidden: { opacity: 0 },
@@ -128,8 +93,8 @@ const AdminHeatmapView = () => {
   const { data: zones, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin-zones", timeRange],
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return mockZones;
+      // TODO: Query real zone data from database
+      return [] as Zone[];
     },
     refetchInterval: 30000,
   });
@@ -179,7 +144,7 @@ const AdminHeatmapView = () => {
           type: "geojson",
           data: {
             type: "FeatureCollection",
-            features: mockHeatPoints.map((point) => ({
+            features: emptyHeatPoints.map((point) => ({
               type: "Feature" as const,
               properties: { weight: point.weight },
               geometry: {

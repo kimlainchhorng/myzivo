@@ -38,64 +38,8 @@ interface EscalatedTicket {
   attempts: number;
 }
 
-const mockEscalations: EscalatedTicket[] = [
-  {
-    id: "1",
-    ticketNumber: "TKT-20260128-0001",
-    subject: "Refund request for cancelled ride - $150",
-    escalationLevel: 3,
-    escalatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    reason: "High-value refund requiring manager approval",
-    originalAgent: "Sarah M.",
-    currentHandler: "John Director",
-    customerName: "Robert Johnson",
-    customerEmail: "robert.j@email.com",
-    status: "pending",
-    attempts: 3,
-  },
-  {
-    id: "2",
-    ticketNumber: "TKT-20260127-0045",
-    subject: "Driver behavior complaint - Safety concern",
-    escalationLevel: 2,
-    escalatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    reason: "Safety-related issue requiring senior review",
-    originalAgent: "Mike T.",
-    currentHandler: "Lisa Supervisor",
-    customerName: "Amanda White",
-    customerEmail: "amanda.w@email.com",
-    status: "in_progress",
-    attempts: 2,
-  },
-  {
-    id: "3",
-    ticketNumber: "TKT-20260127-0038",
-    subject: "Account compromised - Unauthorized charges",
-    escalationLevel: 3,
-    escalatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    reason: "Security breach requiring immediate attention",
-    originalAgent: "Emily R.",
-    currentHandler: "Security Team",
-    customerName: "David Chen",
-    customerEmail: "d.chen@email.com",
-    status: "in_progress",
-    attempts: 1,
-  },
-  {
-    id: "4",
-    ticketNumber: "TKT-20260126-0112",
-    subject: "Restaurant partner dispute over payment",
-    escalationLevel: 2,
-    escalatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    reason: "Partner relationship issue",
-    originalAgent: "Chris P.",
-    currentHandler: "Partner Relations",
-    customerName: "Thai Cuisine LLC",
-    customerEmail: "contact@thaicuisine.com",
-    status: "resolved",
-    attempts: 4,
-  },
-];
+// TODO: Fetch escalations from database
+const escalations: EscalatedTicket[] = [];
 
 const escalationLevels = {
   1: { label: "Level 1", color: "text-amber-500", bg: "bg-amber-500/10", description: "Senior Agent" },
@@ -113,12 +57,12 @@ const statusConfig = {
 const AdminEscalationManager = () => {
   const [activeTab, setActiveTab] = useState("active");
   
-  const activeEscalations = mockEscalations.filter(e => e.status === "pending" || e.status === "in_progress");
-  const resolvedEscalations = mockEscalations.filter(e => e.status === "resolved" || e.status === "rejected");
+  const activeEscalations = escalations.filter(e => e.status === "pending" || e.status === "in_progress");
+  const resolvedEscalations = escalations.filter(e => e.status === "resolved" || e.status === "rejected");
   
   const stats = {
-    total: mockEscalations.length,
-    level3: mockEscalations.filter(e => e.escalationLevel === 3 && e.status !== "resolved").length,
+    total: escalations.length,
+    level3: escalations.filter(e => e.escalationLevel === 3 && e.status !== "resolved").length,
     avgResolutionTime: "4.2h",
     resolutionRate: "94%",
   };

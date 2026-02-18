@@ -115,11 +115,12 @@ const statusConfig = {
   'gate-change': { color: 'bg-red-500 animate-pulse', text: 'Gate Change!', icon: BellRing },
 };
 
-const mockWeather: WeatherInfo = {
-  temp: '24°C',
-  condition: 'Partly Cloudy',
-  humidity: '65%',
-  wind: '12 km/h',
+// TODO: Fetch real weather data for destination
+const defaultWeather: WeatherInfo = {
+  temp: '--',
+  condition: '--',
+  humidity: '--',
+  wind: '--',
   icon: CloudSun,
 };
 
@@ -645,25 +646,25 @@ export default function BoardingPass({
             {/* Destination Weather */}
             <div className="p-4 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/5 border border-sky-500/30">
               <div className="flex items-center gap-2 mb-3">
-                <mockWeather.icon className="w-5 h-5 text-sky-400" />
+                <defaultWeather.icon className="w-5 h-5 text-sky-400" />
                 <span className="text-sky-400 font-medium">Weather at {flight.arrival.city}</span>
               </div>
               <div className="grid grid-cols-4 gap-3 text-center">
                 <div>
                   <ThermometerSun className="w-4 h-4 mx-auto text-amber-400 mb-1" />
-                  <p className="text-white font-medium">{mockWeather.temp}</p>
+                  <p className="text-white font-medium">{defaultWeather.temp}</p>
                 </div>
                 <div>
                   <CloudSun className="w-4 h-4 mx-auto text-slate-400 mb-1" />
-                  <p className="text-white text-sm">{mockWeather.condition}</p>
+                  <p className="text-white text-sm">{defaultWeather.condition}</p>
                 </div>
                 <div>
                   <Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" />
-                  <p className="text-white font-medium">{mockWeather.humidity}</p>
+                  <p className="text-white font-medium">{defaultWeather.humidity}</p>
                 </div>
                 <div>
                   <Wind className="w-4 h-4 mx-auto text-slate-400 mb-1" />
-                  <p className="text-white font-medium">{mockWeather.wind}</p>
+                  <p className="text-white font-medium">{defaultWeather.wind}</p>
                 </div>
               </div>
             </div>

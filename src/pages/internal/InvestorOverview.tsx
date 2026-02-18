@@ -33,15 +33,15 @@ import {
 } from "@/config/acquisitionReadiness";
 import { cn } from "@/lib/utils";
 
-// Mock metrics for demonstration
-const MOCK_METRICS = {
-  mau: 250000,
-  arr: 1200000,
-  revenueGrowth: 45,
-  bookingsPerMonth: 15000,
-  organicShare: 65,
-  conversionRate: 3.2,
-  complianceScore: 98,
+// TODO: Fetch real platform metrics from database
+const PLATFORM_METRICS = {
+  mau: 0,
+  arr: 0,
+  revenueGrowth: 0,
+  bookingsPerMonth: 0,
+  organicShare: 0,
+  conversionRate: 0,
+  complianceScore: 0,
 };
 
 export default function InvestorOverview() {
@@ -90,22 +90,22 @@ export default function InvestorOverview() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
             <StatCard
               icon={Users}
-              value={`${(MOCK_METRICS.mau / 1000).toFixed(0)}K`}
+              value={`${(PLATFORM_METRICS.mau / 1000).toFixed(0)}K`}
               label="Monthly Users"
             />
             <StatCard
               icon={DollarSign}
-              value={`$${(MOCK_METRICS.arr / 1000000).toFixed(1)}M`}
+              value={`$${(PLATFORM_METRICS.arr / 1000000).toFixed(1)}M`}
               label="Annual Revenue"
             />
             <StatCard
               icon={TrendingUp}
-              value={`${MOCK_METRICS.revenueGrowth}%`}
+              value={`${PLATFORM_METRICS.revenueGrowth}%`}
               label="Growth Rate"
             />
             <StatCard
               icon={Shield}
-              value={`${MOCK_METRICS.complianceScore}%`}
+              value={`${PLATFORM_METRICS.complianceScore}%`}
               label="Compliance Score"
             />
           </div>

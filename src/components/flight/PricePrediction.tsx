@@ -169,7 +169,8 @@ export const PricePrediction = ({
     ? 'wait' 
     : 'neutral';
 
-  const confidenceScore = Math.round(72 + Math.random() * 18);
+  // TODO: Get real confidence score from prediction model
+  const confidenceScore = 0;
   
   const priceVsAverage = ((currentPrice - avgPrice) / avgPrice) * 100;
 
