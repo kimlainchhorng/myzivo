@@ -16,14 +16,9 @@ interface CompareHotel {
   amenities: string[];
 }
 
-const sampleHotels: CompareHotel[] = [
-  { id: "1", name: "Grand Plaza Hotel", hotelIcon: Building2, iconGradient: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-500", rating: 4.8, price: 299, location: "Downtown", amenities: ["wifi", "pool", "spa", "gym"] },
-  { id: "2", name: "Seaside Resort", hotelIcon: Umbrella, iconGradient: "from-sky-500/20 to-blue-500/20", iconColor: "text-sky-400", rating: 4.6, price: 249, location: "Beachfront", amenities: ["wifi", "pool", "restaurant", "bar"] },
-  { id: "3", name: "Mountain Lodge", hotelIcon: Mountain, iconGradient: "from-emerald-500/20 to-green-500/20", iconColor: "text-emerald-400", rating: 4.7, price: 189, location: "Mountain View", amenities: ["wifi", "fireplace", "hiking", "restaurant"] },
-];
-
 const HotelCompareWidget = () => {
-  const [compareList, setCompareList] = useState<CompareHotel[]>(sampleHotels.slice(0, 2));
+  // TODO: Populate from user's selected hotels
+  const [compareList, setCompareList] = useState<CompareHotel[]>([]);
 
   const addToCompare = (hotel: CompareHotel) => {
     if (compareList.length < 3 && !compareList.find(h => h.id === hotel.id)) {
@@ -96,9 +91,9 @@ const HotelCompareWidget = () => {
             </div>
           ))}
 
-          {compareList.length < 3 && (
+          {compareList.length < 3 && compareList.length > 0 && (
             <button
-              onClick={() => addToCompare(sampleHotels[2])}
+              onClick={() => {}}
               className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all"
             >
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">

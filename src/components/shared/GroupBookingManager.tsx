@@ -36,41 +36,6 @@ interface GroupBookingManagerProps {
   className?: string;
 }
 
-const mockMembers: GroupMember[] = [
-  { 
-    id: "1", 
-    name: "You (Organizer)", 
-    email: "you@email.com", 
-    status: "confirmed", 
-    paid: true,
-    services: ["flight", "hotel", "car"]
-  },
-  { 
-    id: "2", 
-    name: "Sarah M.", 
-    email: "sarah@email.com", 
-    status: "confirmed", 
-    paid: true,
-    services: ["flight", "hotel"]
-  },
-  { 
-    id: "3", 
-    name: "John D.", 
-    email: "john@email.com", 
-    status: "pending", 
-    paid: false,
-    services: ["flight", "hotel", "car"]
-  },
-  { 
-    id: "4", 
-    name: "Mike R.", 
-    email: "mike@email.com", 
-    status: "pending", 
-    paid: false,
-    services: ["flight"]
-  },
-];
-
 const serviceIcons = {
   flight: Plane,
   hotel: Hotel,
@@ -82,7 +47,8 @@ const GroupBookingManager = ({
   totalCost = 4500,
   className 
 }: GroupBookingManagerProps) => {
-  const [members, setMembers] = useState<GroupMember[]>(mockMembers);
+  // TODO: Load group members from database
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [showInvite, setShowInvite] = useState(false);
 

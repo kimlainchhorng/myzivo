@@ -59,48 +59,14 @@ interface TeamMember {
   addedAt: string;
 }
 
-// Mock data
-const mockTeamMembers: TeamMember[] = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john@company.com",
-    phone: "+1 555-0101",
-    role: "admin",
-    status: "active",
-    trips: 12,
-    totalSpend: 15400,
-    addedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah@company.com",
-    role: "traveler",
-    status: "active",
-    trips: 8,
-    totalSpend: 8200,
-    addedAt: "2024-02-01",
-  },
-  {
-    id: "3",
-    name: "Mike Wilson",
-    email: "mike@company.com",
-    role: "traveler",
-    status: "pending",
-    trips: 0,
-    totalSpend: 0,
-    addedAt: "2024-03-01",
-  },
-];
-
 interface TeamMemberManagerProps {
   accountId?: string;
   isAdmin?: boolean;
 }
 
 export default function TeamMemberManager({ accountId, isAdmin = true }: TeamMemberManagerProps) {
-  const [members, setMembers] = useState<TeamMember[]>(mockTeamMembers);
+  // TODO: Fetch team members from database
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newMember, setNewMember] = useState({
