@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.zivo.travel',
+  appId: 'com.hizovo.app',
   appName: 'ZIVO',
   webDir: 'dist',
   plugins: {
