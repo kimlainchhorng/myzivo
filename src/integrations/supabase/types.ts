@@ -12989,6 +12989,76 @@ export type Database = {
           },
         ]
       }
+      driver_vehicles: {
+        Row: {
+          approval_status: string
+          color: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          is_primary: boolean | null
+          license_plate: string
+          make: string | null
+          model: string | null
+          photo_url: string | null
+          updated_at: string
+          vehicle_type: string
+          year: number | null
+        }
+        Insert: {
+          approval_status?: string
+          color?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_primary?: boolean | null
+          license_plate?: string
+          make?: string | null
+          model?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          vehicle_type?: string
+          year?: number | null
+        }
+        Update: {
+          approval_status?: string
+          color?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_primary?: boolean | null
+          license_plate?: string
+          make?: string | null
+          model?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          vehicle_type?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+        ]
+      }
       driver_wallets: {
         Row: {
           balance_cents: number
@@ -13226,7 +13296,7 @@ export type Database = {
           last_performance_calc: string | null
           last_speed: number | null
           level: string | null
-          license_number: string
+          license_number: string | null
           location_suspicious: boolean | null
           longest_streak: number | null
           move_enabled: boolean | null
@@ -13236,6 +13306,7 @@ export type Database = {
           onboarding_step: number | null
           performance_score: number | null
           phone: string
+          phone_verified: boolean | null
           prev_lat: number | null
           prev_lng: number | null
           prev_location_at: string | null
@@ -13269,9 +13340,11 @@ export type Database = {
           total_trips: number | null
           updated_at: string
           user_id: string
+          vehicle_color: string | null
           vehicle_model: string | null
-          vehicle_plate: string
+          vehicle_plate: string | null
           vehicle_type: string
+          vehicle_year: number | null
           verification_status: string | null
           zip_code: string | null
           zone_code: string | null
@@ -13323,7 +13396,7 @@ export type Database = {
           last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
-          license_number: string
+          license_number?: string | null
           location_suspicious?: boolean | null
           longest_streak?: number | null
           move_enabled?: boolean | null
@@ -13333,6 +13406,7 @@ export type Database = {
           onboarding_step?: number | null
           performance_score?: number | null
           phone: string
+          phone_verified?: boolean | null
           prev_lat?: number | null
           prev_lng?: number | null
           prev_location_at?: string | null
@@ -13366,9 +13440,11 @@ export type Database = {
           total_trips?: number | null
           updated_at?: string
           user_id: string
+          vehicle_color?: string | null
           vehicle_model?: string | null
-          vehicle_plate: string
+          vehicle_plate?: string | null
           vehicle_type: string
+          vehicle_year?: number | null
           verification_status?: string | null
           zip_code?: string | null
           zone_code?: string | null
@@ -13420,7 +13496,7 @@ export type Database = {
           last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
-          license_number?: string
+          license_number?: string | null
           location_suspicious?: boolean | null
           longest_streak?: number | null
           move_enabled?: boolean | null
@@ -13430,6 +13506,7 @@ export type Database = {
           onboarding_step?: number | null
           performance_score?: number | null
           phone?: string
+          phone_verified?: boolean | null
           prev_lat?: number | null
           prev_lng?: number | null
           prev_location_at?: string | null
@@ -13463,9 +13540,11 @@ export type Database = {
           total_trips?: number | null
           updated_at?: string
           user_id?: string
+          vehicle_color?: string | null
           vehicle_model?: string | null
-          vehicle_plate?: string
+          vehicle_plate?: string | null
           vehicle_type?: string
+          vehicle_year?: number | null
           verification_status?: string | null
           zip_code?: string | null
           zone_code?: string | null
@@ -20809,6 +20888,90 @@ export type Database = {
         }
         Relationships: []
       }
+      lost_item_requests: {
+        Row: {
+          accepted_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          customer_phone: string | null
+          distance_miles: number | null
+          driver_id: string
+          driver_notes: string | null
+          driver_payout_cents: number
+          dropoff_address: string | null
+          dropoff_city: string | null
+          fee_cents: number
+          fee_type: string
+          id: string
+          item_description: string
+          payment_intent_id: string | null
+          payment_status: string
+          pickup_address: string | null
+          pickup_city: string | null
+          status: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id: string
+          customer_notes?: string | null
+          customer_phone?: string | null
+          distance_miles?: number | null
+          driver_id: string
+          driver_notes?: string | null
+          driver_payout_cents?: number
+          dropoff_address?: string | null
+          dropoff_city?: string | null
+          fee_cents?: number
+          fee_type?: string
+          id?: string
+          item_description: string
+          payment_intent_id?: string | null
+          payment_status?: string
+          pickup_address?: string | null
+          pickup_city?: string | null
+          status?: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_notes?: string | null
+          customer_phone?: string | null
+          distance_miles?: number | null
+          driver_id?: string
+          driver_notes?: string | null
+          driver_payout_cents?: number
+          dropoff_address?: string | null
+          dropoff_city?: string | null
+          fee_cents?: number
+          fee_type?: string
+          id?: string
+          item_description?: string
+          payment_intent_id?: string | null
+          payment_status?: string
+          pickup_address?: string | null
+          pickup_city?: string | null
+          status?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loyalty_members: {
         Row: {
           birthday: string | null
@@ -24227,31 +24390,40 @@ export type Database = {
       otp_codes: {
         Row: {
           attempts: number
+          channel: string | null
           code: string
           created_at: string
           email: string
           expires_at: string
           id: string
+          phone: string | null
+          signup_data: Json | null
           user_id: string | null
           verified_at: string | null
         }
         Insert: {
           attempts?: number
+          channel?: string | null
           code: string
           created_at?: string
           email: string
           expires_at: string
           id?: string
+          phone?: string | null
+          signup_data?: Json | null
           user_id?: string | null
           verified_at?: string | null
         }
         Update: {
           attempts?: number
+          channel?: string | null
           code?: string
           created_at?: string
           email?: string
           expires_at?: string
           id?: string
+          phone?: string | null
+          signup_data?: Json | null
           user_id?: string | null
           verified_at?: string | null
         }
@@ -31703,6 +31875,7 @@ export type Database = {
           center_lat: number | null
           center_lng: number | null
           city: string | null
+          county: string | null
           created_at: string
           created_by: string | null
           delivery_allowed: boolean
@@ -31723,6 +31896,7 @@ export type Database = {
           center_lat?: number | null
           center_lng?: number | null
           city?: string | null
+          county?: string | null
           created_at?: string
           created_by?: string | null
           delivery_allowed?: boolean
@@ -31743,6 +31917,7 @@ export type Database = {
           center_lat?: number | null
           center_lng?: number | null
           city?: string | null
+          county?: string | null
           created_at?: string
           created_by?: string | null
           delivery_allowed?: boolean
@@ -35889,7 +36064,7 @@ export type Database = {
           booking_ref: string | null
           category: string | null
           created_at: string | null
-          description: string
+          description: string | null
           driver_id: string | null
           escalated_at: string | null
           escalation_reason: string | null
@@ -35929,7 +36104,7 @@ export type Database = {
           booking_ref?: string | null
           category?: string | null
           created_at?: string | null
-          description: string
+          description?: string | null
           driver_id?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
@@ -35969,7 +36144,7 @@ export type Database = {
           booking_ref?: string | null
           category?: string | null
           created_at?: string | null
-          description?: string
+          description?: string | null
           driver_id?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
@@ -41113,6 +41288,7 @@ export type Database = {
           mileage: number | null
           model: string
           next_service_miles: number | null
+          plate_state: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           updated_at: string
@@ -41138,6 +41314,7 @@ export type Database = {
           mileage?: number | null
           model: string
           next_service_miles?: number | null
+          plate_state?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           updated_at?: string
@@ -41163,6 +41340,7 @@ export type Database = {
           mileage?: number | null
           model?: string
           next_service_miles?: number | null
+          plate_state?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           updated_at?: string
@@ -43234,6 +43412,8 @@ export type Database = {
           reference_type: string | null
           resolution_notes: string | null
           resolved_at: string | null
+          satisfaction_feedback: string | null
+          satisfaction_rating: number | null
           service_type: string
           status: string
           subject: string
@@ -43254,6 +43434,8 @@ export type Database = {
           reference_type?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          satisfaction_feedback?: string | null
+          satisfaction_rating?: number | null
           service_type: string
           status?: string
           subject: string
@@ -43274,6 +43456,8 @@ export type Database = {
           reference_type?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          satisfaction_feedback?: string | null
+          satisfaction_rating?: number | null
           service_type?: string
           status?: string
           subject?: string
@@ -46219,6 +46403,7 @@ export type Database = {
         Returns: boolean
       }
       is_business_user: { Args: { p_user_id?: string }; Returns: boolean }
+      is_chat_member: { Args: { p_chat_id: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
