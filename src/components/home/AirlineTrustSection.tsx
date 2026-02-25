@@ -86,7 +86,7 @@ export default function AirlineTrustSection() {
                   iataCode={airline.code}
                   airlineName={airline.name}
                   size={40}
-                  className="rounded-lg bg-white"
+                  className="rounded-xl bg-white"
                 />
               </div>
               

@@ -325,7 +325,7 @@ const PackageDelivery = () => {
                   <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-bold text-base sm:text-lg mb-2 flex items-center gap-2 sm:gap-3">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center flex-shrink-0">
                           <span className="text-eats font-bold text-xs sm:text-sm">Q</span>
                         </div>
                         {faq.q}

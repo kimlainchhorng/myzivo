@@ -112,7 +112,7 @@ export function SponsoredDisclosure({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg",
+        "flex items-start gap-2 p-3 rounded-xl",
         "bg-amber-500/5 border border-amber-500/10",
         className
       )}
@@ -151,7 +151,7 @@ export function PageSponsoredNotice({ className }: { className?: string }) {
     <div
       className={cn(
         "flex items-center justify-between gap-4 py-2 px-4",
-        "rounded-lg bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
+        "rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
         className
       )}
     >

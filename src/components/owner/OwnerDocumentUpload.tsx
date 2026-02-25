@@ -108,7 +108,7 @@ export default function OwnerDocumentUpload({
                   <label 
                     htmlFor={`file-${config.type}`}
                     className={`
-                      w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center
+                      w-20 h-20 rounded-xl border-2 border-dashed flex items-center justify-center
                       cursor-pointer transition-colors overflow-hidden
                       ${status === "approved" ? "border-emerald-500/30 bg-emerald-500/5" : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50"}
                     `}

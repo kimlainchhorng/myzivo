@@ -77,7 +77,7 @@ const TripModificationWidget = ({
       </div>
 
       {/* Current Booking Summary */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Confirmation</span>
           <span className="font-mono font-bold">{confirmationCode}</span>
@@ -111,7 +111,7 @@ const TripModificationWidget = ({
               )}
             >
               <div className={cn(
-                "p-2 rounded-lg",
+                "p-2 rounded-xl",
                 isSelected ? "bg-primary/10" : "bg-muted/30"
               )}>
                 <Icon className={cn(
@@ -139,7 +139,7 @@ const TripModificationWidget = ({
       </div>
 
       {/* Warning */}
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 text-xs mb-4">
+      <div className="flex items-start gap-2 p-2 rounded-xl bg-amber-500/10 text-xs mb-4">
         <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
           Changes within {freeModificationWindow} of departure may incur additional fees

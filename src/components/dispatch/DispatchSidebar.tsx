@@ -176,7 +176,7 @@ const DispatchSidebar = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed md:relative inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transition-transform duration-300",
+          "fixed md:relative inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transition-transform duration-200",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
