@@ -51,7 +51,7 @@ export default function DownloadAppSection() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: i * 0.08 }}
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-3 p-2 -ml-2 rounded-xl hover:bg-muted/40 transition-colors duration-200"
                 >
                   <div className={`w-9 h-9 rounded-xl ${feat.bg} flex items-center justify-center shrink-0`}>
                     <feat.icon className={`w-[18px] h-[18px] ${feat.color}`} />

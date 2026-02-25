@@ -78,7 +78,7 @@ export default function StatsSection() {
               className="text-center"
             >
               <div className={cn(
-                "p-6 sm:p-8 card-premium border-t-[3px]",
+                "p-6 sm:p-8 card-premium border-t-[3px] hover:shadow-lg hover:-translate-y-1 transition-all duration-300",
                 stat.borderColor
               )}>
                 <div className={cn(

@@ -115,17 +115,20 @@ export default function TestimonialsSection() {
           </div>
 
           <div className="flex justify-center gap-2.5 mt-8">
-            {testimonials.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={cn(
-                  "rounded-full transition-all duration-300",
-                  i === current ? "bg-primary w-7 h-2.5" : "bg-muted-foreground/20 w-2.5 h-2.5 hover:bg-muted-foreground/40"
-                )}
-                aria-label={`Go to testimonial ${i + 1}`}
-              />
-            ))}
+            {testimonials.map((tItem, i) => {
+              const dotColor = serviceColors[tItem.service] || "bg-primary";
+              return (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={cn(
+                    "rounded-full transition-all duration-300",
+                    i === current ? `${dotColor} w-7 h-2.5` : "bg-muted-foreground/20 w-2.5 h-2.5 hover:bg-muted-foreground/40"
+                  )}
+                  aria-label={`Go to testimonial ${i + 1}`}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
