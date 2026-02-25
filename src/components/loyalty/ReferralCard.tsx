@@ -79,7 +79,7 @@ export default function ReferralCard({
   );
 
   return (
-    <Card className={className}>
+    <Card className={cn("transition-all duration-200", className)}>
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="w-5 h-5 text-primary" />
@@ -133,7 +133,7 @@ export default function ReferralCard({
           <Button 
             variant="outline" 
             size="sm" 
-            className="gap-2"
+            className="gap-2 rounded-xl touch-manipulation active:scale-[0.95] min-h-[40px]"
             onClick={() => handleShare('email')}
           >
             <Mail className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function ReferralCard({
           <Button 
             variant="outline" 
             size="sm"
-            className="gap-2"
+            className="gap-2 rounded-xl touch-manipulation active:scale-[0.95] min-h-[40px]"
             onClick={() => handleShare('whatsapp')}
           >
             <MessageCircle className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function ReferralCard({
           <Button 
             variant="outline" 
             size="sm"
-            className="gap-2"
+            className="gap-2 rounded-xl touch-manipulation active:scale-[0.95] min-h-[40px]"
             onClick={() => handleShare('native')}
           >
             <Share2 className="w-4 h-4" />
@@ -160,7 +160,7 @@ export default function ReferralCard({
         </div>
 
         {/* Referral Stats */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border transition-all duration-200">
           <div>
             <p className="text-sm text-muted-foreground">Friends referred</p>
             <p className="text-2xl font-bold">{referralCount}</p>

@@ -45,7 +45,7 @@ const MobilePromoBanner = () => {
             key={promo.id}
             onClick={() => navigate(promo.href)}
             className={cn(
-              "flex-shrink-0 w-[280px] p-4 rounded-2xl text-left touch-manipulation active:scale-[0.98] transition-transform relative overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300",
+              "flex-shrink-0 w-[280px] p-4 rounded-2xl text-left touch-manipulation active:scale-[0.97] hover:shadow-lg transition-all duration-200 relative overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300",
               promo.gradient
             )}
             style={{ animationDelay: `${index * 100}ms` }}

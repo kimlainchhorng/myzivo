@@ -54,7 +54,7 @@ export function RewardSelector({ rewards, selectedReward, onSelect }: RewardSele
   return (
     <div className="space-y-2">
       {selectedReward ? (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-primary/10 border border-primary/20 transition-all duration-200">
           <div className="flex items-center gap-2">
             <Gift className="w-4 h-4 text-primary" />
             <div>
@@ -89,7 +89,7 @@ export function RewardSelector({ rewards, selectedReward, onSelect }: RewardSele
             <button
               type="button"
               onClick={() => onSelect(null)}
-              className="p-1 rounded-full hover:bg-muted transition-colors"
+              className="p-1.5 rounded-full hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>

@@ -55,10 +55,10 @@
      <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-hidden selection:bg-blue-500/30">
        
        {/* Back Button */}
-       <Link 
-         to="/" 
-         className="fixed top-6 left-6 z-50 bg-black/50 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 backdrop-blur-md flex items-center gap-2"
-       >
+        <Link 
+          to="/" 
+          className="fixed top-6 left-6 z-50 bg-black/50 text-white px-4 py-2 rounded-full text-xs font-bold border border-white/20 backdrop-blur-md flex items-center gap-2 touch-manipulation active:scale-90 transition-all duration-200 min-h-[36px]"
+        >
          <ArrowLeft className="w-4 h-4" /> Back
        </Link>
  
@@ -71,7 +71,7 @@
              </div>
              <h1 className="text-4xl font-black tracking-tighter">NYC <span className="text-zinc-600">→</span> LHR</h1>
            </div>
-           <button className="w-10 h-10 bg-zinc-900 rounded-full border border-white/10 flex items-center justify-center">
+           <button className="w-11 h-11 bg-zinc-900 rounded-full border border-white/10 flex items-center justify-center touch-manipulation active:scale-90 transition-all duration-200 min-w-[44px] min-h-[44px] hover:bg-zinc-800">
               <MoreVertical className="w-5 h-5" />
            </button>
          </div>
@@ -148,7 +148,7 @@
                 </div>
              </div>
  
-             <button className="w-full mt-4 bg-white text-black py-3 rounded-xl font-bold text-xs hover:scale-[1.02] transition-transform">
+             <button className="w-full mt-4 bg-white text-black py-3 rounded-2xl font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 touch-manipulation min-h-[44px] shadow-lg">
                View Boarding Pass
              </button>
            </div>
@@ -162,7 +162,7 @@
            subtitle="ZIVO Black • Mercedes S-Class"
            status="Confirmed"
          >
-           <div className="bg-zinc-900 border border-white/5 rounded-3xl p-5 flex items-center gap-4 hover:border-white/20 transition-colors">
+           <div className="bg-zinc-900 border border-white/5 rounded-3xl p-5 flex items-center gap-4 hover:border-white/20 hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-[0.99]">
               <img 
                 src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=200" 
                 className="w-16 h-16 rounded-xl object-cover"
@@ -175,7 +175,7 @@
                 </div>
                 <div className="text-xs text-zinc-400">License: 8XJ-292</div>
               </div>
-              <button className="w-10 h-10 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center">
+              <button className="w-11 h-11 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center touch-manipulation active:scale-90 transition-all duration-200 min-w-[44px] min-h-[44px]">
                 <Phone className="w-4 h-4" />
               </button>
            </div>
@@ -206,7 +206,7 @@
                         <span className="text-[10px] font-bold">Rainy, 12°C</span>
                      </div>
                   </div>
-                  <button className="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/10">
+                  <button className="bg-white/10 backdrop-blur-md p-2.5 rounded-full border border-white/10 touch-manipulation active:scale-90 transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20">
                      <ChevronRight className="w-5 h-5" />
                   </button>
                </div>

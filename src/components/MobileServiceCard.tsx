@@ -29,7 +29,7 @@ const MobileServiceCard = ({
   return (
     <button
       onClick={() => navigate(href)}
-      className="w-full p-4 rounded-2xl bg-card/80 border border-border/50 flex items-center gap-4 touch-manipulation active:scale-[0.98] active:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300"
+      className="w-full p-4 rounded-2xl bg-card/80 border border-border/50 flex items-center gap-4 touch-manipulation active:scale-[0.97] active:bg-muted/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[72px]"
       style={{ animationDelay: `${delay * 1000}ms` }}
     >
       <div className={cn(

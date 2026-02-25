@@ -42,7 +42,7 @@ export default function SecureCheckoutButton({
         onClick={onClick}
         disabled={disabled || isLoading}
         className={cn(
-          "w-full h-12 md:h-14 text-base font-bold gap-2 text-white rounded-xl",
+          "w-full h-12 md:h-14 text-base font-bold gap-2 text-white rounded-2xl touch-manipulation active:scale-[0.98] transition-all duration-200 shadow-lg min-h-[48px]",
           variantColors[variant]
         )}
         size="lg"

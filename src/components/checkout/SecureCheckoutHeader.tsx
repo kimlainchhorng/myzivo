@@ -39,7 +39,7 @@ export default function SecureCheckoutHeader({
   };
 
   return (
-    <div className={cn("rounded-xl p-4 md:p-6", variantStyles[variant], className)}>
+    <div className={cn("rounded-2xl p-4 md:p-6 transition-all duration-200", variantStyles[variant], className)}>
       <div className="flex items-start gap-4">
         <div className={cn(
           "w-12 h-12 rounded-full flex items-center justify-center shrink-0",

@@ -71,7 +71,7 @@ function FlightCard({ origin, destination, departureTime, flightNumber, terminal
         <Plane className="w-8 h-8 text-white" />
       </div>
       
-      <div className="bg-zinc-900 border border-white/10 rounded-3xl p-6 hover:border-blue-500/50 transition-colors">
+      <div className="bg-zinc-900 border border-white/10 rounded-3xl p-6 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200">
         <div className="flex justify-between items-start mb-4">
           <div>
             <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">{departureLabel}</div>
@@ -139,7 +139,7 @@ function HotelCard({ name, roomType, checkInDate, city }: HotelCardProps) {
           <h3 className="text-xl font-bold text-white mb-2">{name}</h3>
           <p className="text-sm text-zinc-400">{roomType}</p>
           
-          <button className="mt-4 text-xs font-bold text-white bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="mt-4 text-xs font-bold text-white bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20 active:scale-[0.95] transition-all duration-200 flex items-center gap-2 touch-manipulation min-h-[36px]">
             Get Directions <ArrowRight className="w-3 h-3" />
           </button>
         </div>
@@ -213,7 +213,7 @@ export function TripTimeline() {
           </p>
           <Link 
             to="/hotels"
-            className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-sm hover:scale-105 transition-transform"
+            className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation min-h-[44px] shadow-lg"
           >
             <Plane className="w-4 h-4" />
             Browse Destinations

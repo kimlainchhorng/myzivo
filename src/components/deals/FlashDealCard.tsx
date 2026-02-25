@@ -72,7 +72,7 @@ const FlashDealCard = ({ deal, onClaim, className }: FlashDealCardProps) => {
   return (
     <Card
       className={cn(
-        "overflow-hidden transition-all hover:shadow-lg",
+        "overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5",
         isExpired && "opacity-60",
         className
       )}
@@ -130,7 +130,7 @@ const FlashDealCard = ({ deal, onClaim, className }: FlashDealCardProps) => {
 
         {/* CTA */}
         <Button
-          className="w-full gap-2"
+          className="w-full gap-2 rounded-xl touch-manipulation active:scale-[0.98] min-h-[44px] transition-all duration-200"
           disabled={isExpired || remaining === 0}
           onClick={() => onClaim?.(deal)}
         >
