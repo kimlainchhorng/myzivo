@@ -76,7 +76,7 @@ const GlobalReachSection = () => {
               )}
               style={{ animationDelay: `${index * 75}ms` }}
             >
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-200" />
               <div className="relative text-white">
                 <p className="font-bold text-sm mb-1">{region.name}</p>
                 <p className="text-xs opacity-80">{region.cities} cities</p>

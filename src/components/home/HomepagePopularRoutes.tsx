@@ -59,7 +59,7 @@ export default function HomepagePopularRoutes() {
           </div>
           <Link
             to="/flights"
-            className="hidden sm:flex items-center gap-2 text-sky-400 hover:text-sky-300 font-semibold transition-colors"
+            className="hidden sm:flex items-center gap-2 text-sky-400 hover:text-sky-300 font-semibold transition-all duration-200"
           >
             View all routes
             <ArrowRight className="w-4 h-4" />
@@ -141,7 +141,7 @@ export default function HomepagePopularRoutes() {
                 <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
                   {dest.image}
                 </div>
-                <h4 className="font-bold text-sm truncate group-hover:text-amber-400 transition-colors">
+                <h4 className="font-bold text-sm truncate group-hover:text-amber-400 transition-all duration-200">
                   {dest.city}
                 </h4>
                 <p className="text-xs text-muted-foreground">{dest.country}</p>

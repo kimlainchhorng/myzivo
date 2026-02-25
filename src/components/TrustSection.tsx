@@ -149,7 +149,7 @@ const TrustSection = () => {
                   <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white relative z-10" />
                   <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h3 className="font-display text-lg sm:text-xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-display text-lg sm:text-xl font-bold mb-2 text-foreground group-hover:text-primary transition-all duration-200">
                   {feature.title}
                 </h3>
                 <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">

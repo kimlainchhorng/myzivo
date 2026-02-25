@@ -114,7 +114,7 @@ export const BookingStepIndicator = ({
               </div>
               <div className="flex-1 pt-1">
                 <p className={cn(
-                  "font-semibold text-sm transition-colors",
+                  "font-semibold text-sm transition-all duration-200",
                   (isActive || isCompleted) ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {step.label}

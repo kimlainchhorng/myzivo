@@ -25,7 +25,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
           <TabsTrigger 
             value="flights" 
             className={cn(
-              "flex items-center gap-2 h-12 rounded-lg font-semibold transition-all",
+              "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
               "data-[state=active]:bg-flights data-[state=active]:text-white data-[state=active]:shadow-lg"
             )}
           >
@@ -35,7 +35,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
           <TabsTrigger 
             value="hotels" 
             className={cn(
-              "flex items-center gap-2 h-12 rounded-lg font-semibold transition-all",
+              "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
               "data-[state=active]:bg-hotels data-[state=active]:text-white data-[state=active]:shadow-lg"
             )}
           >
@@ -45,7 +45,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
           <TabsTrigger 
             value="cars" 
             className={cn(
-              "flex items-center gap-2 h-12 rounded-lg font-semibold transition-all",
+              "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
               "data-[state=active]:bg-cars data-[state=active]:text-white data-[state=active]:shadow-lg"
             )}
           >

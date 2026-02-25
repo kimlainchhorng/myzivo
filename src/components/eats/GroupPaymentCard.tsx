@@ -35,7 +35,7 @@ export default function GroupPaymentCard({
 
   return (
     <div className={cn(
-      "rounded-xl border p-4 transition-colors",
+      "rounded-xl border p-4 transition-all duration-200",
       isPaid ? "border-emerald-500/30 bg-emerald-500/5" : "border-border"
     )}>
       <div className="flex items-center justify-between mb-2">

@@ -123,7 +123,7 @@ const ServiceQuickNav = () => {
               key={service.id}
               onClick={() => navigate(service.href)}
               className={cn(
-                "group relative flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-lg transition-all duration-200",
+                "group relative flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl transition-all duration-200 touch-manipulation",
                 active 
                   ? "bg-primary/15 shadow-sm" 
                   : "hover:bg-muted/60 active:scale-95"
@@ -143,7 +143,7 @@ const ServiceQuickNav = () => {
 
               {/* Icon */}
               <div className={cn(
-                "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
                 active 
                   ? `bg-gradient-to-br ${service.color} shadow-md` 
                   : service.bgColor

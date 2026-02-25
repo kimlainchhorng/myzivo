@@ -63,7 +63,7 @@ export default function PointsEarningList({
             <div 
               key={rule.id}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-lg border transition-colors",
+                "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200",
                 isCompleted && rule.oneTime 
                   ? "bg-muted/30 border-muted" 
                   : "hover:border-primary/30"

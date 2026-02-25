@@ -40,7 +40,7 @@ const PartnerLogosSection = () => {
               {[...partners, ...partners].map((partner, index) => (
                 <div
                   key={index}
-                  className="flex-shrink-0 px-6 py-3 rounded-xl bg-card/50 border border-border/30 text-muted-foreground font-medium text-sm whitespace-nowrap hover:text-foreground hover:border-primary/30 transition-colors"
+                  className="flex-shrink-0 px-6 py-3 rounded-xl bg-card/50 border border-border/30 text-muted-foreground font-medium text-sm whitespace-nowrap hover:text-foreground hover:border-primary/30 transition-all duration-200"
                 >
                   {partner.name}
                 </div>

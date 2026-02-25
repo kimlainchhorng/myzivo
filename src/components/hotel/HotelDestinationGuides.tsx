@@ -119,7 +119,7 @@ const HotelDestinationGuides = () => {
                   <Building2 className={`w-8 h-8 ${dest.iconColor}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg group-hover:text-amber-400 transition-colors">
+                  <h3 className="font-bold text-lg group-hover:text-amber-400 transition-all duration-200">
                     {dest.city}
                   </h3>
                   <p className="text-sm text-muted-foreground">{dest.country}</p>

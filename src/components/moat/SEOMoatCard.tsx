@@ -30,7 +30,7 @@ export default function SEOMoatCard({ className }: SEOMoatCardProps) {
           {SEO_MOAT.assets.map((asset) => (
             <div
               key={asset.type}
-              className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
+              className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">{asset.label}</p>

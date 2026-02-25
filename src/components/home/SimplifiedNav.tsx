@@ -162,7 +162,7 @@ export default function SimplifiedNav() {
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all duration-200 active:scale-[0.98] touch-manipulation"
                 >
                   <link.icon className="w-5 h-5 text-primary" />
                   {link.label}

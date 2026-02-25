@@ -40,7 +40,7 @@ const PeakHoursGrid = ({ data, className }: PeakHoursGridProps) => {
           <div
             key={hourData.hour}
             className={cn(
-              "aspect-square rounded-lg flex flex-col items-center justify-center transition-all hover:scale-105 cursor-default",
+              "aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 cursor-default",
               getIntensityClass(hourData.orders)
             )}
             title={`${hourData.label}: ${hourData.orders} orders, $${hourData.revenue.toLocaleString()}`}

@@ -77,7 +77,7 @@ export function AIConciergeTrigger() {
           <ChatIcon className="w-6 h-6" />
           
           {/* Tooltip */}
-          <span className="absolute right-16 bg-zinc-900 text-white text-xs font-bold px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10">
+          <span className="absolute right-16 bg-zinc-900 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10">
             {alertCount > 0 ? "Flight delay alert (1)" : "Need help?"}
           </span>
         </motion.button>

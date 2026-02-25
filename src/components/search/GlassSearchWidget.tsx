@@ -174,7 +174,7 @@
          {/* Search Inputs Grid */}
          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 relative">
            {/* Location Inputs (Merged Visual) - 5 cols */}
-           <div className="md:col-span-5 flex flex-col md:flex-row gap-2 md:gap-0 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 relative group hover:border-primary/30 transition-colors">
+           <div className="md:col-span-5 flex flex-col md:flex-row gap-2 md:gap-0 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 relative group hover:border-primary/30 transition-all duration-200">
              {/* From */}
              <div className={cn(
                "flex-1 relative transition-all rounded-xl",
@@ -253,7 +253,7 @@
            </Button>
  
            {/* Dates - 3 cols */}
-           <div className="md:col-span-3 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 flex relative hover:border-primary/30 transition-colors">
+           <div className="md:col-span-3 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 flex relative hover:border-primary/30 transition-all duration-200">
              <div className="flex-1 relative">
                <div className="absolute top-3 left-4 text-muted-foreground">
                  <Calendar className="w-4 h-4" />
@@ -325,7 +325,7 @@
            </div>
  
            {/* Passengers - 2 cols */}
-           <div className="md:col-span-2 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 flex relative hover:border-primary/30 transition-colors">
+           <div className="md:col-span-2 bg-muted/50 dark:bg-white/5 rounded-2xl border border-border/50 dark:border-white/10 p-1 flex relative hover:border-primary/30 transition-all duration-200">
              <div className="flex-1 relative flex items-center">
                <div className="absolute left-4 text-muted-foreground">
                  <Users className="w-4 h-4" />
@@ -420,7 +420,7 @@
                "shadow-lg shadow-primary/25",
                "flex items-center justify-center gap-2",
                "disabled:opacity-50 disabled:cursor-not-allowed",
-               "transition-colors"
+               "transition-all duration-200 active:scale-[0.98] touch-manipulation"
              )}
            >
              <span>Search</span>

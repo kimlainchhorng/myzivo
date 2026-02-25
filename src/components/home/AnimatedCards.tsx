@@ -90,7 +90,7 @@ export const ServiceCard = ({
         <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
       </div>
       
-      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
+      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-all duration-200">
         {title}
       </h3>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
@@ -150,7 +150,7 @@ export const FeatureCard = ({
         <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
       </div>
       
-      <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
+      <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-all duration-200">
         {title}
       </h3>
       <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">

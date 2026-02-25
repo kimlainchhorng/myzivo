@@ -102,7 +102,7 @@ const BatchStopsList = ({
             onDragOver={(e) => handleDragOver(e, idx)}
             onDragEnd={handleDragEnd}
             className={cn(
-              "flex items-start gap-3 p-4 rounded-lg border transition-all",
+              "flex items-start gap-3 p-4 rounded-xl border transition-all duration-200",
               isNext && "ring-2 ring-primary bg-primary/5",
               isCompleted && "opacity-60",
               draggedIdx === idx && "opacity-50",

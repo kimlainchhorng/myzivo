@@ -144,7 +144,7 @@ const MultiCityPlanner = ({ className }: MultiCityPlannerProps) => {
                 {cities.length > 2 && index > 0 && index < cities.length - 1 && (
                   <button
                     onClick={() => removeCity(city.id)}
-                    className="p-1 rounded hover:bg-destructive/10 transition-colors"
+                    className="p-1 rounded-xl hover:bg-destructive/10 transition-all duration-200 active:scale-[0.90] touch-manipulation"
                   >
                     <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                   </button>

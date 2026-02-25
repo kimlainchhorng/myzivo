@@ -50,9 +50,9 @@ function GuestContent() {
               to={`/flights?destination=${dest.code}`}
               className="group"
             >
-              <Card className="hover:border-primary/50 transition-colors">
+              <Card className="hover:border-primary/50 transition-all duration-200">
                 <CardContent className="p-3 text-center">
-                  <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-200">
                     <Plane className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-medium text-sm">{dest.name}</p>

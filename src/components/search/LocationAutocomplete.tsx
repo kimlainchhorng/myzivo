@@ -202,7 +202,7 @@ export default function LocationAutocomplete({
       
       <div className="relative group">
         <div className={cn(
-          "absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors",
+          "absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all duration-200",
           `bg-${accentColor}-500/10 group-focus-within:bg-${accentColor}-500/20`
         )}>
           <IconComponent className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", colors.icon)} />

@@ -131,7 +131,7 @@ const HotelDashboardSidebar = ({
                 )}
               >
                 <item.icon className={cn(
-                  "h-4 w-4 transition-colors",
+                  "h-4 w-4 transition-all duration-200",
                   isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
                 )} />
               </motion.div>

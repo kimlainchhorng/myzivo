@@ -62,7 +62,7 @@ const PersonalizedHomeSection = () => {
                       <Link
                         key={route}
                         to={`/flights?from=${origin}&to=${destination}`}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all duration-200 group active:scale-[0.98] touch-manipulation"
                       >
                         <Plane className="w-4 h-4 text-sky-500" />
                         <span className="flex-1 font-medium">
@@ -123,7 +123,7 @@ const PersonalizedHomeSection = () => {
                     to={`/flights?to=${destination}`}
                     className={cn(
                       "px-3 py-1.5 rounded-full text-sm font-medium",
-                      "bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      "bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200"
                     )}
                   >
                     {destination}

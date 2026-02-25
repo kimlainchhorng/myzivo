@@ -176,7 +176,7 @@ export default function CarExtrasSelector({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-lg active:scale-[0.90] transition-all duration-200 touch-manipulation"
+                    className="h-8 w-8 rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
                     onClick={(e) => { e.stopPropagation(); updateQuantity(extra.id, -1); }}
                   >
                     <Minus className="w-3 h-3" />
@@ -185,7 +185,7 @@ export default function CarExtrasSelector({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-lg active:scale-[0.90] transition-all duration-200 touch-manipulation"
+                    className="h-8 w-8 rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
                     onClick={(e) => { e.stopPropagation(); updateQuantity(extra.id, 1); }}
                   >
                     <Plus className="w-3 h-3" />
