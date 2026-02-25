@@ -133,10 +133,10 @@ export default function Feedback() {
                 key={type.id}
                 onClick={() => setSelectedType(type.id)}
                 className={cn(
-                  "p-4 rounded-xl border text-left transition-all",
+                  "p-4 rounded-xl border text-left transition-all duration-300",
                   selectedType === type.id
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                    : "border-border hover:border-primary/50"
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
+                    : "border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5"
                 )}
               >
                 <type.icon
@@ -248,7 +248,7 @@ export default function Feedback() {
 
                   <Button
                     type="submit"
-                    className="w-full gap-2"
+                    className="w-full gap-2 shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-shadow"
                     disabled={isSubmitting || (selectedType === "rating" && rating === 0)}
                   >
                     <Send className="w-4 h-4" />

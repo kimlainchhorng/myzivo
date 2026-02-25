@@ -100,7 +100,7 @@ export default function Reliability() {
         {/* Uptime Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {uptimeStats.map((stat) => (
-            <Card key={stat.label} className="text-center">
+            <Card key={stat.label} className="text-center hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
               <CardContent className="pt-6">
                 <p className="text-3xl font-bold text-primary mb-1">{stat.value}</p>
                 <p className="font-medium text-sm">{stat.label}</p>
@@ -132,7 +132,7 @@ export default function Reliability() {
         {/* Reliability Features */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           {reliabilityFeatures.map((feature) => (
-            <Card key={feature.title} className="hover:shadow-lg transition-shadow">
+            <Card key={feature.title} className="hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />

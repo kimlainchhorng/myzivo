@@ -316,28 +316,28 @@ export default function Status() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-2">
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Flight Partners (Duffel)</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Hotel Partners</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Car Rental Partners</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Payment Processing (Stripe)</span>
@@ -401,7 +401,7 @@ export default function Status() {
         </Card>
 
         {/* Trust Preservation Statement */}
-        <div className="text-center p-6 bg-muted/50 rounded-xl space-y-3">
+        <div className="text-center p-6 bg-muted/50 rounded-xl space-y-3 border border-border/50 hover:border-primary/20 transition-colors">
           <p className="text-sm font-medium">
             ZIVO is committed to transparency and reliability.
           </p>
