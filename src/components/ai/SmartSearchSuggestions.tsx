@@ -178,7 +178,7 @@ export function SmartSearchSuggestions({
 
           {/* Date Suggestions */}
           {dateSuggestions.length > 0 && !dismissed.includes("dates") && (
-            <div className="p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-4 h-4 text-violet-500" />
                 <span className="text-sm font-medium">Flexible Dates</span>
@@ -204,7 +204,7 @@ export function SmartSearchSuggestions({
 
           {/* Nearby Airports */}
           {nearbyAirports.length > 0 && !dismissed.includes("airports") && (
-            <div className="p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4 text-violet-500" />
                 <span className="text-sm font-medium">Nearby Airports</span>
@@ -238,7 +238,7 @@ export function SmartSearchSuggestions({
 
           {/* Alternative Routes */}
           {alternativeRoutes.length > 0 && !dismissed.includes("routes") && (
-            <div className="p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingDown className="w-4 h-4 text-violet-500" />
                 <span className="text-sm font-medium">Alternative Routes</span>

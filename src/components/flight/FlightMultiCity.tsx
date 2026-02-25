@@ -343,7 +343,7 @@ export const FlightMultiCity = ({
       </Card>
 
       {/* Tips */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/30 border border-border/50">
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <Sparkles className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
         <div className="text-sm">
           <p className="font-medium mb-1">Pro Tips for Multi-City Trips</p>

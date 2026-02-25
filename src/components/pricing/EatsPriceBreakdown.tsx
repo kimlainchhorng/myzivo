@@ -26,7 +26,7 @@ export function EatsPriceBreakdown({
   return (
     <div className={cn("space-y-3", className)}>
       {/* Price Breakdown */}
-      <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/50">
+      <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="flex items-center gap-2 pb-2 border-b border-border/50">
           <Receipt className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Order Summary</span>

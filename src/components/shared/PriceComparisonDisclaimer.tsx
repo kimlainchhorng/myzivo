@@ -56,7 +56,7 @@ export function PriceComparisonDisclaimer({
 
   return (
     <div className={cn(
-      "flex items-start gap-3 p-4 rounded-xl bg-muted/30 border border-border/50",
+      "flex items-start gap-3 p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
       className
     )}>
       <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">

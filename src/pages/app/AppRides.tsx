@@ -230,7 +230,7 @@ const AppRides = () => {
         {/* Step: Options */}
         {step === "options" && (
           <div className="space-y-4 animate-in fade-in slide-in-from-right duration-200">
-            <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+            <div className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 bg-rides rounded-full" />
                 <span className="flex-1 truncate">{pickup}</span>

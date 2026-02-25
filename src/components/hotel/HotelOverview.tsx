@@ -394,7 +394,7 @@ const HotelOverview = () => {
               {roomsLoading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                    <div key={i} className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center justify-between">
                         <div className="space-y-2">
                           <Skeleton className="h-4 w-24" />

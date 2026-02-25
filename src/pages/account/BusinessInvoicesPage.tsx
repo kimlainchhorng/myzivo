@@ -293,7 +293,7 @@ export default function BusinessInvoicesPage() {
         )}
 
         {/* Info Note */}
-        <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+        <div className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
           <div className="flex items-start gap-2">
             <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
