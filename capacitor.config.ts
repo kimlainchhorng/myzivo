@@ -8,12 +8,6 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
     },
-    Geolocation: {
-      requestPermissions: true
-    },
-    Camera: {
-      presentationStyle: 'fullscreen'
-    },
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 2000,
