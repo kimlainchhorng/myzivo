@@ -378,18 +378,6 @@ export default function HotelResultsPage() {
                     {hotelCards.map((hotel, index) => (
                       <React.Fragment key={hotel.id}>
                         <HotelResultCard hotel={hotel} onViewDeal={handleViewDeal} />
-                        {(index + 1) % 5 === 0 && index < hotelCards.length - 1 && (
-                          <SponsoredResultCard
-                            type="hotel"
-                            title="Car Rental Deal"
-                            subtitle={`Explore ${cityName} with a rental car`}
-                            price={35}
-                            currency="USD"
-                            partnerName="ZIVO Cars"
-                            ctaText="View Cars"
-                            onCtaClick={() => window.open("/cars", "_blank")}
-                          />
-                        )}
                       </React.Fragment>
                     ))}
                   </div>

@@ -574,18 +574,6 @@ const FlightResults = () => {
                         flight={flight} 
                         onViewDeal={handleViewDeal}
                       />
-                      {false && (index + 1) % 5 === 0 && index < flightCards.length - 1 && (
-                        <SponsoredResultCard
-                          type="flight"
-                          title="Airport Transfer Deal"
-                          subtitle={`Pre-book your ride from ${destinationAirport?.city || destinationIata}`}
-                          price={29}
-                          currency="USD"
-                          partnerName="ZIVO Rides"
-                          ctaText="View Transfers"
-                          onCtaClick={() => navigate("/rides")}
-                        />
-                      )}
                     </React.Fragment>
                   ))}
                 </div>
