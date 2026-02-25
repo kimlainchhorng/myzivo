@@ -108,7 +108,7 @@ export default function CarStatsBar({ className }: CarStatsBarProps) {
             {trustBadges.map((badge, index) => (
               <div
                 key={badge.label}
-                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 hover:border-violet-500/30 transition-all duration-300 animate-in fade-in"
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 hover:border-violet-500/30 transition-all duration-200 animate-in fade-in"
                 style={{ animationDelay: `${(index + 4) * 100}ms` }}
               >
                 <badge.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", badge.color)} />

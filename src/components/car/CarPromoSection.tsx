@@ -163,7 +163,7 @@ export default function CarPromoSection({ className, onPromoClick }: CarPromoSec
 
                 {/* Discount Badge */}
                 <div className={cn(
-                  "inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r text-white font-bold text-xs sm:text-sm md:text-lg mb-2 sm:mb-3 md:mb-4",
+                  "inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-xl bg-gradient-to-r text-white font-bold text-xs sm:text-sm md:text-lg mb-2 sm:mb-3 md:mb-4",
                   promo.bgGradient
                 )}>
                   <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />

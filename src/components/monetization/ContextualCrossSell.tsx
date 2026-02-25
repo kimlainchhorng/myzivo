@@ -133,7 +133,7 @@ export default function ContextualCrossSell({
               <div
                 key={option.type}
                 className={cn(
-                  "p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:border-opacity-80 active:scale-[0.99] touch-manipulation cursor-pointer",
+                  "p-4 rounded-2xl border flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:border-opacity-80 active:scale-[0.99] touch-manipulation cursor-pointer",
                   option.bgColor,
                   option.borderColor
                 )}

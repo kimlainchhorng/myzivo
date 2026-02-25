@@ -130,7 +130,7 @@ export default function LocalizedFlightRoutePage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-sky-500/10">
+                      <div className="p-2 rounded-xl bg-sky-500/10">
                         <Plane className="w-5 h-5 text-sky-500" />
                       </div>
                       <h3 className="font-semibold">Direct Flights</h3>
@@ -144,7 +144,7 @@ export default function LocalizedFlightRoutePage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-amber-500/10">
+                      <div className="p-2 rounded-xl bg-amber-500/10">
                         <Calendar className="w-5 h-5 text-amber-500" />
                       </div>
                       <h3 className="font-semibold">Flexible Dates</h3>
@@ -158,7 +158,7 @@ export default function LocalizedFlightRoutePage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-emerald-500/10">
+                      <div className="p-2 rounded-xl bg-emerald-500/10">
                         <Shield className="w-5 h-5 text-emerald-500" />
                       </div>
                       <h3 className="font-semibold">Trusted Partners</h3>

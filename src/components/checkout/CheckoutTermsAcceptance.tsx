@@ -147,7 +147,7 @@ export function CheckoutTermsAcceptance({
       </div>
 
       {/* Marketing (optional) */}
-      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/30 bg-transparent">
+      <div className="flex items-start gap-3 p-3 rounded-xl border border-border/30 bg-transparent">
         <Checkbox
           id="marketing"
           checked={state.marketing}
@@ -165,7 +165,7 @@ export function CheckoutTermsAcceptance({
 
       {/* Error message */}
       {showError && !isValid && (
-        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-xl">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{CHECKOUT_TERMS.errorMessage}</span>
         </div>

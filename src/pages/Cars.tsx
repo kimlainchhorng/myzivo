@@ -389,7 +389,7 @@ export default function Cars() {
                 return (
                   <Card 
                     key={vehicle.id} 
-                    className="overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
+                    className="overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group cursor-pointer"
                     onClick={() => handleVehicleClick(vehicle.id)}
                   >
                     <div className="relative aspect-[4/3] overflow-hidden">

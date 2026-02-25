@@ -126,7 +126,7 @@ export default function PaymentVaultCheckout({
                         <span className="text-sm font-medium">Payment Details</span>
                       </div>
                       {/* Placeholder for Stripe PaymentElement */}
-                      <div className="h-32 rounded-lg bg-muted/50 dark:bg-white/5 border border-dashed border-border flex items-center justify-center">
+                      <div className="h-32 rounded-xl bg-muted/50 dark:bg-white/5 border border-dashed border-border flex items-center justify-center">
                         <p className="text-sm text-muted-foreground">
                           Stripe PaymentElement will render here
                         </p>

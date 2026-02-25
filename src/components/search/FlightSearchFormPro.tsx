@@ -571,7 +571,7 @@ export default function FlightSearchFormPro({
                           key={opt.value}
                           onClick={() => setCabin(opt.value)}
                           className={cn(
-                            "w-full px-3 py-2 text-left text-sm rounded-lg transition-colors",
+                            "w-full px-3 py-2 text-left text-sm rounded-xl transition-colors",
                             cabin === opt.value
                               ? "bg-sky-500/15 text-sky-500 font-medium"
                               : "hover:bg-muted"
@@ -598,7 +598,7 @@ export default function FlightSearchFormPro({
           "w-full h-12 sm:h-14 mt-5 font-bold text-base sm:text-lg rounded-xl",
           "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600",
           "text-white shadow-xl shadow-sky-500/30 hover:shadow-sky-500/40",
-          "transition-all duration-300 active:scale-[0.98]",
+          "transition-all duration-200 active:scale-[0.98]",
           "disabled:opacity-50 disabled:cursor-not-allowed"
         )}
       >

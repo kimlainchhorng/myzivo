@@ -58,7 +58,7 @@ export function UpsellItem({
       />
       
       <div className={cn(
-        "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
         isSelected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
       )}>
         <IconComponent className="w-5 h-5" />

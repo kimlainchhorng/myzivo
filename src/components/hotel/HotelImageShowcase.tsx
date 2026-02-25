@@ -212,7 +212,7 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
               </div>
               
               {/* Hover Border Effect */}
-              <div className="absolute inset-0 rounded-2xl sm:rounded-3xl ring-2 ring-transparent group-hover:ring-amber-500/50 transition-all duration-300" />
+              <div className="absolute inset-0 rounded-2xl sm:rounded-3xl ring-2 ring-transparent group-hover:ring-amber-500/50 transition-all duration-200" />
             </div>
           ))}
         </div>

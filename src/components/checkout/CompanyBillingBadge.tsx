@@ -13,7 +13,7 @@ interface CompanyBillingBadgeProps {
 export function CompanyBillingBadge({ companyName, className }: CompanyBillingBadgeProps) {
   return (
     <div className={cn(
-      "flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20",
+      "flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/20",
       className
     )}>
       <Building2 className="w-4 h-4 text-primary flex-shrink-0" />

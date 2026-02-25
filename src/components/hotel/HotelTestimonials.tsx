@@ -131,7 +131,7 @@ const HotelTestimonials = () => {
                   key={index}
                   onClick={() => setCurrentIndex(index)}
                   className={cn(
-                    "w-2.5 h-2.5 rounded-full transition-all duration-300 touch-manipulation",
+                    "w-2.5 h-2.5 rounded-full transition-all duration-200 touch-manipulation",
                     index === currentIndex 
                       ? "w-8 bg-amber-500" 
                       : "bg-muted-foreground/30 hover:bg-muted-foreground/50"

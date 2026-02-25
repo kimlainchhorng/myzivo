@@ -93,7 +93,7 @@ export default function ExitIntentPrompt({
     <div 
       className={cn(
         "fixed inset-0 z-50 flex items-start justify-center pt-20 px-4",
-        "bg-background/80 backdrop-blur-sm animate-in fade-in duration-300",
+        "bg-background/80 backdrop-blur-sm animate-in fade-in duration-200",
         className
       )}
       onClick={handleDismiss}

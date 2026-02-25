@@ -117,7 +117,7 @@ export function RefundPolicyNotice({ productType, className }: RefundPolicyNotic
   };
 
   return (
-    <div className={cn("text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg", className)}>
+    <div className={cn("text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl", className)}>
       <p className="font-medium mb-1">Refund Policy</p>
       <p>{getRefundText()}</p>
     </div>

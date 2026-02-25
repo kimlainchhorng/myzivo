@@ -193,7 +193,7 @@ const TravelPartnersPage = () => {
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className={`p-2 rounded-lg ${getTypeBgColor(partner.type)}`}>
+            <div className={`p-2 rounded-xl ${getTypeBgColor(partner.type)}`}>
               {getTypeIcon(partner.type)}
             </div>
             <div className="flex-1 min-w-0">

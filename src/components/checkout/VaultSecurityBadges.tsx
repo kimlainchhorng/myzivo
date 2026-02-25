@@ -64,7 +64,7 @@ export default function VaultSecurityBadges({
         return (
           <div
             key={badge.id}
-            className="trust-badge flex items-center gap-2 px-3 py-2 rounded-lg"
+            className="trust-badge flex items-center gap-2 px-3 py-2 rounded-xl"
           >
             <Icon className="w-4 h-4" />
             <div className="text-left">

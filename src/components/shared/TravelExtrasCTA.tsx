@@ -109,7 +109,7 @@ export default function TravelExtrasCTA({
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {extras.map((extra) => (
             <Link key={extra.title} to={extra.link}>
-              <Card className="h-full group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/30 overflow-hidden relative">
+              <Card className="h-full group cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/30 overflow-hidden relative">
                 <CardContent className="p-5 relative z-10">
                   {/* Shimmer overlay */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden">

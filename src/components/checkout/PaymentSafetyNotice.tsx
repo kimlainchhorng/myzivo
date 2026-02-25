@@ -44,7 +44,7 @@ const PaymentSafetyNotice = ({
       {/* Header */}
       <div className="p-4 bg-emerald-500/5 border-b border-emerald-500/20">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
             <Lock className="w-4 h-4 text-emerald-500" />
           </div>
           <h3 className="font-bold text-emerald-600 dark:text-emerald-400">

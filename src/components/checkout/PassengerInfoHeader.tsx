@@ -31,7 +31,7 @@ export default function PassengerInfoHeader({
 
       {/* Name Change Warning */}
       {showWarning && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <p className="text-xs text-amber-700 dark:text-amber-400">
             {CHECKOUT_PASSENGER.warning}

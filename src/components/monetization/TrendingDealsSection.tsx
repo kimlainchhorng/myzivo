@@ -85,7 +85,7 @@ export default function TrendingDealsSection({
           <Card
             key={deal.id}
             className={cn(
-              "group hover:shadow-xl hover:scale-[1.02] hover:border-sky-500/50 transition-all duration-300 cursor-pointer overflow-hidden rounded-2xl touch-manipulation active:scale-[0.98]",
+              "group hover:shadow-xl hover:scale-[1.02] hover:border-sky-500/50 transition-all duration-200 cursor-pointer overflow-hidden rounded-2xl touch-manipulation active:scale-[0.98]",
               variant === "carousel" && "min-w-[280px] snap-start"
             )}
             onClick={() => handleDealClick(deal)}

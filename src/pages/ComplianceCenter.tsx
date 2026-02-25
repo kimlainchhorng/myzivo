@@ -197,7 +197,7 @@ export default function ComplianceCenter() {
                     <li key={link.href}>
                       <Link
                         to={link.href}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                        className="flex items-center justify-between p-2 rounded-xl hover:bg-muted/50 transition-colors group"
                       >
                         <span className="text-sm font-medium group-hover:text-primary transition-colors">
                           {link.name}

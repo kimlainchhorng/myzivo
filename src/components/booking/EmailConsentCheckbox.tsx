@@ -67,7 +67,7 @@ export default function EmailConsentCheckbox({
         </div>
       </div>
       
-      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-lg p-2">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-xl p-2">
         <Shield className="w-3.5 h-3.5 text-emerald-500" />
         <span>Your email is never sold or used for unrelated marketing</span>
       </div>

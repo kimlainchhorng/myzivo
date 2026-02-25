@@ -62,7 +62,7 @@ const DuplicateBookingWarning = ({
           <p className="text-sm text-muted-foreground mb-3">
             It looks like you may have already booked a similar trip:
           </p>
-          <div className="p-3 rounded-lg bg-background/50 border border-amber-500/20 mb-4">
+          <div className="p-3 rounded-xl bg-background/50 border border-amber-500/20 mb-4">
             <p className="text-sm font-medium">{routeInfo}</p>
             <p className="text-xs text-muted-foreground">{dateInfo}</p>
           </div>
