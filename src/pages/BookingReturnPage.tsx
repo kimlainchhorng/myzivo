@@ -204,7 +204,7 @@ export default function BookingReturnPage() {
 
                   {/* Trip Summary (Read-Only) */}
                   {tripSummary && (tripSummary.origin || tripSummary.destination) && (
-                    <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <p className="text-xs text-muted-foreground mb-3 font-medium">Trip Summary</p>
                       <div className="space-y-3 text-sm">
                         {/* Route */}
@@ -377,7 +377,7 @@ export default function BookingReturnPage() {
 
                 <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
                   {/* Status Message */}
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border/50 text-center">
+                  <div className="p-3 rounded-lg bg-muted/50 border border-border/50 text-center hover:border-primary/20 transition-all duration-200">
                     <p className="text-xs text-muted-foreground">
                       Booking status will be confirmed by the airline partner. Please check your email for confirmation details.
                     </p>
