@@ -1,1 +1,2 @@
-export default function FlightStickyHeader(_props: any) { return null; }
+const FlightStickyHeader = (_props: any) => null;
+export default FlightStickyHeader;

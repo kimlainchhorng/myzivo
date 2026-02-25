@@ -6,7 +6,7 @@
  * Strict validation enforced, no sandbox UI
  */
 
-import { DUFFEL_MODE } from './environment';
+const DUFFEL_MODE = 'live' as const;
 
 // Sandbox test routes (disabled in production)
 export const DUFFEL_SANDBOX_ROUTES = [

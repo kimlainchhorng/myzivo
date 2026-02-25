@@ -2,5 +2,3 @@
 export { default as AppBottomNav } from './AppBottomNav';
 export { default as AppHeader } from './AppHeader';
 export { default as AppLayout } from './AppLayout';
-export { default as ZivoSuperAppLayout } from './ZivoSuperAppLayout';
-export { default as ZivoSuperAppNav } from './ZivoSuperAppNav';

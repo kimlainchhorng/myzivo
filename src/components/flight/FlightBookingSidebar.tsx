@@ -1,1 +1,2 @@
-export default function FlightBookingSidebar(_props: any) { return null; }
+const FlightBookingSidebar = (_props: any) => null;
+export default FlightBookingSidebar;
