@@ -354,7 +354,7 @@ export const CalendarHeatmap = ({
             )}
 
             {/* Year-over-year comparison */}
-            <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+            <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-sm text-muted-foreground mb-2">vs. Last Year</p>
               <div className="flex items-center gap-4">
                 <div>

@@ -151,7 +151,7 @@ export function PageSponsoredNotice({ className }: { className?: string }) {
     <div
       className={cn(
         "flex items-center justify-between gap-4 py-2 px-4",
-        "rounded-lg bg-muted/50 border border-border/50",
+        "rounded-lg bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
         className
       )}
     >

@@ -58,12 +58,12 @@ const FlightCurrencyConverter = () => {
           </div>
 
           {/* Converter Card */}
-          <div className="p-6 rounded-2xl bg-card/50 border border-border/50">
+          <div className="p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end mb-6">
               {/* From */}
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">From</label>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <span className="text-2xl">{fromCurrencyData?.flag}</span>
                   <select
                     value={fromCurrency}
@@ -94,7 +94,7 @@ const FlightCurrencyConverter = () => {
               {/* To */}
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">To</label>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <span className="text-2xl">{toCurrencyData?.flag}</span>
                   <select
                     value={toCurrency}

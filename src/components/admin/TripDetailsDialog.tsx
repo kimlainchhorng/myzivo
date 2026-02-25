@@ -82,7 +82,7 @@ export const TripDetailsDialog = ({
 
         <div className="space-y-5 py-2">
           {/* Status & Payment Badges */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-center gap-2">
               <Badge className={cn("border", status.class)}>{status.label}</Badge>
               <Badge className={cn("border", payment.class)}>{payment.label}</Badge>

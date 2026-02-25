@@ -159,7 +159,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
           </div>
 
           {/* Progress to Next Tier */}
-          <div className="space-y-4 p-4 rounded-xl bg-card/50 border border-border/50">
+          <div className="space-y-4 p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Progress to {nextTier.name}</span>
               <Badge variant="outline">{Math.round(Math.max(milesProgress, flightsProgress))}%</Badge>

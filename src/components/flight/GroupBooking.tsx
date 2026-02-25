@@ -222,7 +222,7 @@ export const GroupBooking = ({
         </div>
 
         {/* Seat Together Toggle */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
           <div className="flex items-center gap-2">
             <Armchair className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm">Seat group together</span>

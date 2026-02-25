@@ -121,7 +121,7 @@ export default function CarCategoryTiles({
         </div>
 
         {/* Mobile view all */}
-        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 rounded-xl bg-card border border-border">
+        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm">
           View all car types <ArrowRight className="w-4 h-4" />
         </button>
       </div>

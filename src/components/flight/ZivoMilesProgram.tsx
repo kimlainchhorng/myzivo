@@ -236,14 +236,14 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
         <div className="p-6 bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <motion.div 
-              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               whileHover={{ scale: 1.02 }}
             >
               <p className="text-3xl font-bold text-amber-400">{currentMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Available Miles</p>
             </motion.div>
             <motion.div 
-              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               whileHover={{ scale: 1.02 }}
             >
               <p className="text-2xl font-semibold text-emerald-400">+{pendingMiles.toLocaleString()}</p>
@@ -260,7 +260,7 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
               <p className="text-xs text-muted-foreground mt-1">Expiring {expiryDate}</p>
             </motion.div>
             <motion.div 
-              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               whileHover={{ scale: 1.02 }}
             >
               <p className="text-2xl font-semibold">{lifetimeMiles.toLocaleString()}</p>

@@ -105,7 +105,7 @@ const HotelCancellationPolicies = () => {
           </div>
 
           {/* Additional Info */}
-          <div className="mt-10 p-6 rounded-2xl bg-muted/30 border border-border/50">
+          <div className="mt-10 p-6 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="grid md:grid-cols-3 gap-6">
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-primary flex-shrink-0" />

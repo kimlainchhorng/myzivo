@@ -75,7 +75,7 @@ export function TrustBadges({
         {badges.map((badge) => (
           <div
             key={badge.text}
-            className="flex items-center gap-2 p-3 rounded-xl bg-card/50 border border-border/50"
+            className="flex items-center gap-2 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
           >
             <badge.icon className={cn("w-5 h-5 shrink-0", badge.color)} />
             <span className="text-sm text-foreground">{badge.text}</span>

@@ -70,7 +70,7 @@ export default function BookingSupportPanel({
 
         <div className="space-y-4">
           {/* Partner support */}
-          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-3">
               <ExternalLink className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
@@ -84,7 +84,7 @@ export default function BookingSupportPanel({
           </div>
 
           {/* Hizivo support */}
-          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-3">
               <MessageSquare className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>

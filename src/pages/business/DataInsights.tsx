@@ -144,7 +144,7 @@ export default function DataInsights() {
                 return (
                   <div
                     key={useCase.title}
-                    className="flex items-start gap-4 p-6 rounded-2xl bg-card border border-border/50"
+                    className="flex items-start gap-4 p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
                       <Icon className="w-5 h-5 text-sky-500" />

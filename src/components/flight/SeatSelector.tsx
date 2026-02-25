@@ -270,7 +270,7 @@ export default function SeatSelector({
     <TooltipProvider>
       <div className="space-y-6">
         {/* Aircraft Info */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
           <div className="flex items-center gap-3">
             <Plane className="w-5 h-5 text-primary" />
             <div>

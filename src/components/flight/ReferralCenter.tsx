@@ -132,15 +132,15 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
         {/* Stats Summary */}
         <div className="p-4 bg-gradient-to-br from-pink-500/10 via-transparent to-rose-500/5">
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-2xl font-bold text-pink-400">{totalReferrals}</p>
               <p className="text-xs text-muted-foreground">Total Invites</p>
             </div>
-            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-2xl font-bold text-emerald-400">{successfulReferrals}</p>
               <p className="text-xs text-muted-foreground">Successful</p>
             </div>
-            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50">
+            <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Miles Earned</p>
             </div>

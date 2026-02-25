@@ -284,7 +284,7 @@ const TravelAdminDashboard = () => {
               {recentLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${

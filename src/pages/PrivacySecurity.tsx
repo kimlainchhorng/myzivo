@@ -252,7 +252,7 @@ export default function PrivacySecurity() {
           </Card>
 
           {/* Contact */}
-          <div className="text-center p-8 rounded-xl bg-muted/50 border border-border">
+          <div className="text-center p-8 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <h3 className="text-lg font-semibold mb-2">Have Questions About Your Data?</h3>
             <p className="text-muted-foreground mb-4">
               Contact our privacy team for data requests or questions.

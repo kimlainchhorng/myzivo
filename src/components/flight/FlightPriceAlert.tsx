@@ -208,7 +208,7 @@ export const FlightPriceAlert = ({
           animate={{ opacity: 1, height: "auto" }}
           className="px-5 pb-4"
         >
-          <div className="flex flex-wrap items-center gap-4 p-3 rounded-xl bg-background/50 border border-border/50">
+          <div className="flex flex-wrap items-center gap-4 p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-emerald-500" />
               <span className="text-sm">Target: <strong>${existingAlert.targetPrice}</strong></span>
@@ -249,7 +249,7 @@ export const FlightPriceAlert = ({
           >
             <div className="px-5 pb-5 space-y-5">
               {/* Price Context */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-xs text-muted-foreground">Current Price</p>
@@ -373,7 +373,7 @@ export const FlightPriceAlert = ({
               </div>
 
               {/* Flexible Dates Toggle */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-sky-500" />
                   <div>

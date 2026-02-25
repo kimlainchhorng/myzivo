@@ -35,7 +35,7 @@ export default function DataMoatCard({ className, showApplications = true }: Dat
             {DATA_MOAT.dataAssets.map((asset) => (
               <div
                 key={asset.type}
-                className="p-3 rounded-lg bg-muted/30 border border-border/50"
+                className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <p className="font-medium text-sm mb-1">{asset.label}</p>
                 <p className="text-xs text-muted-foreground mb-2">

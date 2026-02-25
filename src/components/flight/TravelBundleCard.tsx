@@ -196,7 +196,7 @@ export const TravelBundleCard = ({
             .map((bundle) => (
               <div 
                 key={bundle.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <bundle.icon className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">

@@ -360,7 +360,7 @@ export default function TechArchitecture() {
 
 function ArchBlock({ icon, label }: { icon: string; label: string }) {
   return (
-    <div className="p-3 rounded-lg bg-card border border-border/50">
+    <div className="p-3 rounded-lg bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <span className="text-xl">{icon}</span>
       <p className="text-xs font-medium mt-1">{label}</p>
     </div>
@@ -369,7 +369,7 @@ function ArchBlock({ icon, label }: { icon: string; label: string }) {
 
 function SecurityCard({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+    <div className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <p className="font-medium text-sm mb-3">{title}</p>
       <ul className="space-y-1">
         {items.map((item, i) => (

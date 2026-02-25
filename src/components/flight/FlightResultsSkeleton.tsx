@@ -88,7 +88,7 @@ export function FlightResultsSkeleton() {
 
 export function FlightResultsHeaderSkeleton() {
   return (
-    <div className="mb-6 p-4 rounded-2xl bg-muted/30 border border-border/50">
+    <div className="mb-6 p-4 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Skeleton className="w-10 h-10 rounded-lg" />

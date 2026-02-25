@@ -205,7 +205,7 @@ export default function TrustCertification() {
             <CardContent>
               <div className="space-y-4">
                 {certifiedPartners.map((partner) => (
-                  <div key={partner.name} className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                  <div key={partner.name} className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <partner.icon className="w-5 h-5 text-primary" />
                     </div>

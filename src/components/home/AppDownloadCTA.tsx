@@ -109,12 +109,12 @@ const AppDownloadCTA = () => {
                       </div>
                       
                       {/* Search Bar */}
-                      <div className="h-10 rounded-xl bg-card/50 border border-border/50" />
+                      <div className="h-10 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 transition-all duration-200" />
                       
                       {/* Service Icons */}
                       <div className="grid grid-cols-4 gap-3">
                         {[...Array(4)].map((_, i) => (
-                          <div key={i} className="aspect-square rounded-xl bg-card/50 border border-border/30" />
+                          <div key={i} className="aspect-square rounded-xl bg-card/50 border border-border/30 hover:border-primary/20 transition-all duration-200" />
                         ))}
                       </div>
                       

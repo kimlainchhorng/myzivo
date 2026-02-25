@@ -201,7 +201,7 @@ export default function BestTimeToBook() {
                   "Consider nearby airports",
                   "Book early for peak seasons",
                 ].map((tip, i) => (
-                  <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border">
+                  <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <TrendingDown className="w-5 h-5 text-emerald-500 shrink-0" />
                     <span className="text-sm">{tip}</span>
                   </div>

@@ -62,7 +62,7 @@ const CarMembershipBenefits = () => {
               return (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Icon className="w-6 h-6 text-primary" />
@@ -119,7 +119,7 @@ const CarMembershipBenefits = () => {
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-10 p-6 rounded-2xl bg-card/50 border border-border/50">
+          <div className="mt-10 p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-semibold">Your Progress</h3>

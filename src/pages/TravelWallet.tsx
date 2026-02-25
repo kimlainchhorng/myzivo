@@ -230,7 +230,7 @@ export default function TravelWallet() {
           </Card>
 
           {/* Compliance Notice */}
-          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border">
+          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
               <div className="text-xs text-muted-foreground space-y-1">

@@ -32,7 +32,7 @@ const CarMileageCalculator = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Calculator Inputs */}
-            <div className="p-6 rounded-2xl bg-card/50 border border-border/50">
+            <div className="p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <h3 className="text-lg font-semibold mb-6">Adjust Your Trip Details</h3>
 
               {/* Distance Slider */}
@@ -114,7 +114,7 @@ const CarMileageCalculator = () => {
 
               {/* Comparison Cards */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <div className="p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-5 h-5 text-emerald-400" />
                     <span className="text-sm font-medium">EV Savings</span>
@@ -125,7 +125,7 @@ const CarMileageCalculator = () => {
                   <p className="text-xs text-muted-foreground">vs gasoline vehicle</p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <div className="p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="flex items-center gap-2 mb-2">
                     <Car className="w-5 h-5 text-sky-400" />
                     <span className="text-sm font-medium">CO₂ Footprint</span>
