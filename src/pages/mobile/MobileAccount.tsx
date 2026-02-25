@@ -107,7 +107,7 @@ export default function MobileAccount() {
           }
         }}
         className={cn(
-          "flex items-center justify-between w-full py-3 px-1 rounded-lg transition-colors touch-manipulation",
+          "flex items-center justify-between w-full py-3.5 px-2 rounded-xl transition-all touch-manipulation active:scale-[0.98]",
           shouldHighlight 
             ? "bg-amber-500/10 hover:bg-amber-500/15" 
             : "hover:bg-muted/50"
@@ -148,11 +148,11 @@ export default function MobileAccount() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95"
+            className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -162,8 +162,8 @@ export default function MobileAccount() {
 
       {/* Profile Card */}
       <div className="px-4 py-4">
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-all active:scale-[0.98] touch-manipulation"
           onClick={() => navigate("/profile")}
         >
           <CardContent className="p-4">
@@ -270,7 +270,7 @@ export default function MobileAccount() {
       <div className="px-4 mt-6">
         <Button
           variant="outline"
-          className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/5"
+          className="w-full h-12 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/5 touch-manipulation"
           onClick={handleSignOut}
         >
           <LogOut className="w-5 h-5 mr-2" />

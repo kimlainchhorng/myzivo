@@ -52,12 +52,12 @@ export default function MobileAlerts() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b safe-area-top">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95"
+              className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -142,7 +142,7 @@ export default function MobileAlerts() {
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                            <button className="p-2.5 text-muted-foreground hover:text-destructive transition-colors touch-manipulation active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </AlertDialogTrigger>
@@ -163,7 +163,7 @@ export default function MobileAlerts() {
                         </AlertDialog>
                       </div>
 
-                      <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                      <div className="mt-4 p-3 bg-muted/50 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-muted-foreground">Target price</span>
                           <span className="font-semibold text-green-600">${alert.targetPrice} or less</span>
@@ -276,7 +276,7 @@ export default function MobileAlerts() {
         <div className="fixed bottom-24 right-4 z-40">
           <Button
             size="lg"
-            className="rounded-full w-14 h-14 shadow-lg"
+            className="rounded-full w-14 h-14 shadow-xl touch-manipulation active:scale-90"
             onClick={() => navigate("/search")}
           >
             <Plus className="w-6 h-6" />

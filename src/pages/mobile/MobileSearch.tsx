@@ -131,9 +131,9 @@
          <button 
            onClick={() => navigate("/app/profile")}
            className={cn(
-             "w-11 h-11 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all",
-             activeTab === "hotels" ? "bg-white/5 hover:bg-white/10" : "bg-white/10 hover:bg-white/20"
-           )}
+            "w-11 h-11 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all touch-manipulation active:scale-90 min-w-[44px] min-h-[44px]",
+            activeTab === "hotels" ? "bg-white/5 hover:bg-white/10" : "bg-white/10 hover:bg-white/20"
+          )}
          >
            {activeTab === "hotels" ? <Filter className="w-4 h-4" /> : <User className="w-5 h-5" />}
          </button>
@@ -149,7 +149,7 @@
                  key={tab.id}
                  onClick={() => setActiveTab(tab.id)}
                  className={cn(
-                   "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition-all touch-manipulation",
+                   "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition-all touch-manipulation active:scale-[0.97]",
                    isActive
                      ? "bg-white text-zinc-900 shadow-lg"
                      : "text-zinc-400 hover:text-white"
@@ -248,7 +248,7 @@
              {/* Search Button */}
              <button 
                onClick={handleFlightSearch}
-               className="w-full mt-5 bg-white text-zinc-900 h-14 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+               className="w-full mt-5 bg-white text-zinc-900 h-14 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 touch-manipulation min-h-[56px]"
              >
                <Search className="w-5 h-5" /> Search Flights
              </button>

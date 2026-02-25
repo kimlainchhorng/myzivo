@@ -25,7 +25,7 @@ export function LiveChatMessage({
   if (senderType === "system") {
     return (
       <div className="flex justify-center py-2">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs select-none">
           <Info className="w-3 h-3" />
           <span>{message}</span>
         </div>
@@ -88,7 +88,7 @@ export function LiveChatMessage({
               <img
                 src={imageUrl}
                 alt="Chat attachment"
-                className="max-w-full max-h-48 rounded-lg"
+                className="max-w-full max-h-48 rounded-xl active:scale-[0.98] transition-transform touch-manipulation"
               />
             </a>
           )}

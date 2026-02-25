@@ -48,7 +48,7 @@ export default function FlightMobileResultsBar({
       "border-t border-border/50 shadow-2xl shadow-black/10",
       className
     )}
-    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
     >
       <div className="container mx-auto px-4 py-3">
         <div className="flex gap-3">
@@ -56,7 +56,7 @@ export default function FlightMobileResultsBar({
           <Button
             variant="outline"
             onClick={onOpenFilters}
-            className="flex-1 h-12 min-h-[48px] rounded-xl gap-2 font-semibold relative touch-manipulation active:scale-[0.98]"
+            className="flex-1 h-12 min-h-[48px] rounded-2xl gap-2 font-semibold relative touch-manipulation active:scale-[0.98]"
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filter
@@ -72,7 +72,7 @@ export default function FlightMobileResultsBar({
             <SheetTrigger asChild>
               <Button
                 variant="outline"
-                className="flex-1 h-12 min-h-[48px] rounded-xl gap-2 font-semibold touch-manipulation active:scale-[0.98]"
+                className="flex-1 h-12 min-h-[48px] rounded-2xl gap-2 font-semibold touch-manipulation active:scale-[0.98]"
               >
                 <ArrowUpDown className="w-4 h-4" />
                 Sort
@@ -88,7 +88,7 @@ export default function FlightMobileResultsBar({
                   <button
                     key={option.value}
                     className={cn(
-                      "w-full flex items-center justify-between p-4 rounded-xl border transition-all touch-manipulation active:scale-[0.98]",
+                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all touch-manipulation active:scale-[0.98] min-h-[56px]",
                       currentSort === option.value
                         ? "border-sky-500 bg-sky-500/10"
                         : "border-border/50 hover:border-border"

@@ -55,7 +55,7 @@ export function PaymentMethodModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-md">
+      <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-md rounded-3xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Payment Method</DialogTitle>
         </DialogHeader>
@@ -71,7 +71,7 @@ export function PaymentMethodModal({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelect(method)}
                   className={cn(
-                    "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                    "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all touch-manipulation",
                     selectedMethodId === method.id
                       ? "bg-orange-500/10 border-orange-500/50"
                       : "bg-zinc-800/50 border-white/5 hover:border-white/10"
@@ -113,7 +113,7 @@ export function PaymentMethodModal({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelect(wallet)}
                   className={cn(
-                    "flex items-center justify-center gap-2 p-4 rounded-xl border transition-all",
+                    "flex items-center justify-center gap-2 p-4 rounded-2xl border transition-all touch-manipulation",
                     selectedMethodId === wallet.id
                       ? "bg-orange-500/10 border-orange-500/50"
                       : "bg-zinc-800/50 border-white/5 hover:border-white/10"
@@ -138,7 +138,7 @@ export function PaymentMethodModal({
           {/* Add New Card */}
           <Button
             variant="outline"
-            className="w-full h-12 rounded-xl border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-600"
+            className="w-full h-12 rounded-2xl border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-600 touch-manipulation"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add New Card
@@ -164,7 +164,7 @@ export function PaymentMethodDisplay({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="w-full bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-4 flex items-center gap-4 active:scale-[0.98] transition-transform text-left"
+      className="w-full bg-zinc-900/80 backdrop-blur border border-white/5 rounded-2xl p-4 flex items-center gap-4 active:scale-[0.98] transition-all text-left touch-manipulation"
     >
       <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
         <CreditCard className="w-5 h-5 text-orange-500" />

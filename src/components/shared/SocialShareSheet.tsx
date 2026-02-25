@@ -136,7 +136,7 @@ export function SocialShareSheet({
           </Button>
         )}
       </DrawerTrigger>
-      <DrawerContent className="max-h-[85vh]">
+      <DrawerContent className="max-h-[85vh]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
         <DrawerHeader className="text-left">
           <DrawerTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5 text-primary" />
@@ -152,7 +152,7 @@ export function SocialShareSheet({
                 key={option.id}
                 variant="outline"
                 onClick={() => handleShare(option.id)}
-                className={`h-14 flex-col gap-1 border ${option.className}`}
+                className={`h-14 flex-col gap-1 border rounded-2xl touch-manipulation active:scale-[0.97] ${option.className}`}
               >
                 <option.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{option.label}</span>

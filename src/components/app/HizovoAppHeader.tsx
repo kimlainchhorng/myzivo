@@ -46,7 +46,7 @@ const HizovoAppHeader = ({
           {showBack ? (
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95"
+              className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -70,7 +70,7 @@ const HizovoAppHeader = ({
           {rightAction || (
             <button
               onClick={() => navigate('/app/notifications')}
-              className="p-2 -mr-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 relative"
+              className="p-2.5 -mr-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 relative min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
