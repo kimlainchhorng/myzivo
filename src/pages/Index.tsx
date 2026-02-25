@@ -21,6 +21,8 @@ import DestinationShowcase from "@/components/home/DestinationShowcase";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import DownloadAppSection from "@/components/home/DownloadAppSection";
 import NewsletterSection from "@/components/home/NewsletterSection";
+import HowItWorksSection from "@/components/home/HowItWorksSection";
+import PartnerLogosShowcase from "@/components/home/PartnerLogosShowcase";
 
 // Mobile app home - lazy load
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -66,30 +68,38 @@ const DesktopHomePage = () => {
         {/* 2. Stats Counter */}
         <StatsSection />
 
-        {/* 3. Popular Destinations */}
+        {/* 3. Partner Logos */}
+        <PartnerLogosShowcase />
+
+        {/* 4. Popular Destinations */}
         <FadeInSection>
           <DestinationShowcase />
         </FadeInSection>
 
-        {/* 4. Best Deals / Smart Offers */}
+        {/* 5. How It Works */}
+        <FadeInSection>
+          <HowItWorksSection />
+        </FadeInSection>
+
+        {/* 6. Best Deals / Smart Offers */}
         <FadeInSection>
           {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
         </FadeInSection>
 
-        {/* 5. Why ZIVO */}
+        {/* 7. Why ZIVO */}
         <FadeInSection>
           <WhyBookWithZivo />
         </FadeInSection>
 
-        {/* 6. Testimonials */}
+        {/* 8. Testimonials */}
         <TestimonialsSection />
 
-        {/* 7. Download App */}
+        {/* 9. Download App */}
         <FadeInSection>
           <DownloadAppSection />
         </FadeInSection>
 
-        {/* 8. Newsletter */}
+        {/* 10. Newsletter */}
         <FadeInSection>
           <NewsletterSection />
         </FadeInSection>
