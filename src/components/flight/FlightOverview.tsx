@@ -298,7 +298,7 @@ const FlightOverview = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + index * 0.08 }}
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-all duration-200 cursor-pointer group"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -317,7 +317,7 @@ const FlightOverview = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">${booking.total_amount?.toFixed(2) || "0.00"}</span>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-sky-500 transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-sky-500 transition-all duration-200" />
                         </div>
                       </motion.div>
                     );

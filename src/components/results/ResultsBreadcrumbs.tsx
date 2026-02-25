@@ -66,7 +66,7 @@ export function ResultsBreadcrumbs({ service, className }: ResultsBreadcrumbsPro
                 <BreadcrumbLink asChild>
                   <Link
                     to="/"
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200"
                   >
                     <Home className="w-3.5 h-3.5" />
                     <span>Home</span>
@@ -80,7 +80,7 @@ export function ResultsBreadcrumbs({ service, className }: ResultsBreadcrumbsPro
                 <BreadcrumbLink asChild>
                   <Link
                     to={config.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-all duration-200"
                   >
                     {config.label}
                   </Link>

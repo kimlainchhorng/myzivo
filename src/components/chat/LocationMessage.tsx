@@ -111,7 +111,7 @@ const LocationMessage = ({ lat, lng, address, isMe, isRead = false, timestamp }:
           <img
             src={staticMapUrl}
             alt="Shared location"
-            className="w-full h-[130px] object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-[130px] object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
           />
           

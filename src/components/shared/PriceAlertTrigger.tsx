@@ -113,7 +113,7 @@ export function PriceAlertTrigger({
           onClick={handleSetAlert}
           disabled={isLoading || isAlertSet}
           className={cn(
-            "p-2 rounded-lg transition-all",
+            "p-2 rounded-xl transition-all",
             isAlertSet
               ? "bg-emerald-500/10 text-emerald-500"
               : "hover:bg-muted text-muted-foreground hover:text-primary",

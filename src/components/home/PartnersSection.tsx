@@ -88,7 +88,7 @@ const PartnersSection = () => {
             {[...partners, ...partners, ...partners].map((partner, index) => (
               <div
                 key={`row1-${index}`}
-                className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-105 hover:-translate-y-1"
+                className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-[1.03] hover:-translate-y-1"
               >
                 <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", partner.gradient)}>
                   <partner.icon className="w-5 h-5 text-foreground/70" />
@@ -108,7 +108,7 @@ const PartnersSection = () => {
             {[...partners.slice().reverse(), ...partners.slice().reverse(), ...partners.slice().reverse()].map((partner, index) => (
               <div
                 key={`row2-${index}`}
-                className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-105 hover:-translate-y-1"
+                className="flex-shrink-0 flex items-center gap-4 px-6 py-4 rounded-2xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all cursor-default group hover:scale-[1.03] hover:-translate-y-1"
               >
                 <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", partner.gradient)}>
                   <partner.icon className="w-5 h-5 text-foreground/70" />

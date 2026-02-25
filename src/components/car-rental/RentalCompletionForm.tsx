@@ -151,7 +151,7 @@ export default function RentalCompletionForm({
             value={completionType}
             onValueChange={(v) => setCompletionType(v as CompletionType)}
           >
-            <div className="flex items-start space-x-3 p-4 rounded-lg border-2 border-transparent hover:bg-muted/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
+            <div className="flex items-start space-x-3 p-4 rounded-xl border-2 border-transparent hover:bg-muted/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
               <RadioGroupItem value="no_issues" id="no_issues" className="mt-1" />
               <div className="flex-1">
                 <Label htmlFor="no_issues" className="flex items-center gap-2 font-medium cursor-pointer">
@@ -164,7 +164,7 @@ export default function RentalCompletionForm({
               </div>
             </div>
 
-            <div className="flex items-start space-x-3 p-4 rounded-lg border-2 border-transparent hover:bg-muted/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
+            <div className="flex items-start space-x-3 p-4 rounded-xl border-2 border-transparent hover:bg-muted/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
               <RadioGroupItem value="report_damage" id="report_damage" className="mt-1" />
               <div className="flex-1">
                 <Label htmlFor="report_damage" className="flex items-center gap-2 font-medium cursor-pointer">
@@ -209,7 +209,7 @@ export default function RentalCompletionForm({
                   onChange={(e) => setEstimatedCost(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-xl">
                 <Camera className="w-4 h-4" />
                 <p>You can upload photos after submitting this report.</p>
               </div>

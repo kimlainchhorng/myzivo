@@ -55,7 +55,7 @@ const CustomerDashboard = () => {
       {/* Header */}
       <div className="p-5 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="hover:scale-105 transition-transform">
+          <div className="hover:scale-110 transition-transform duration-200">
             <ZivoLogo size="sm" />
           </div>
           <div>

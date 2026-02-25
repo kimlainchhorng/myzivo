@@ -89,7 +89,7 @@ export default function AdminDataPrivacy() {
         <Card className="border-amber-500/20 bg-amber-500/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/20">
+              <div className="p-2 rounded-xl bg-amber-500/20">
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -102,7 +102,7 @@ export default function AdminDataPrivacy() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -115,7 +115,7 @@ export default function AdminDataPrivacy() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Clock className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -128,7 +128,7 @@ export default function AdminDataPrivacy() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <Shield className="h-5 w-5 text-primary" />
               </div>
               <div>

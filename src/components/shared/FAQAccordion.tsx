@@ -103,7 +103,7 @@ const FAQAccordion = ({
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-all duration-200"
               >
                 <div className="flex items-center gap-3">
                   <Badge variant="secondary" className="text-[10px]">

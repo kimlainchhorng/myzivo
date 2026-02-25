@@ -161,7 +161,7 @@ export default function TrustSection({ service, className = '' }: TrustSectionPr
               className={cn(
                 "p-5 sm:p-6 rounded-2xl bg-card border",
                 accentClasses.borderColor,
-                "transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                "transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
               )}
             >
               <div className={cn(

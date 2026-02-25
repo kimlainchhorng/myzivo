@@ -27,7 +27,7 @@ const MenuItem = ({ icon: Icon, label, sub, onClick }: {
 }) => (
   <button 
     onClick={onClick}
-    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left"
+    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-all duration-200 text-left"
   >
     <div className="flex items-center gap-4">
       <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center">
@@ -90,7 +90,7 @@ export function ZivoProfileReal() {
         <h1 className="text-2xl font-black tracking-tight">ZIVO ID</h1>
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-2 text-xs text-zinc-400 hover:text-red-400 transition-colors"
+          className="flex items-center gap-2 text-xs text-zinc-400 hover:text-red-400 transition-all duration-200"
         >
           <LogOut className="w-4 h-4" /> LOG OUT
         </button>

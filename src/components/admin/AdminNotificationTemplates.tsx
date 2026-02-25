@@ -132,7 +132,7 @@ const AdminNotificationTemplates = () => {
         <Card className="border-0 bg-gradient-to-br from-primary/10 to-teal-500/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Bell className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -145,7 +145,7 @@ const AdminNotificationTemplates = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                 <Smartphone className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -158,7 +158,7 @@ const AdminNotificationTemplates = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                 <Mail className="h-5 w-5 text-purple-500" />
               </div>
               <div>
@@ -171,7 +171,7 @@ const AdminNotificationTemplates = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
                 <Check className="h-5 w-5 text-green-500" />
               </div>
               <div>

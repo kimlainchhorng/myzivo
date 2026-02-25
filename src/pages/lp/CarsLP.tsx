@@ -97,7 +97,7 @@ export default function CarsLP() {
                 "h-14 px-10 text-lg font-semibold gap-3",
                 "bg-white text-violet-900 hover:bg-white/90",
                 "shadow-2xl shadow-black/30",
-                "transition-all duration-300 hover:scale-105"
+                "transition-all duration-200 hover:scale-110"
               )}
             >
               <Search className="w-5 h-5" />
