@@ -135,7 +135,7 @@ export const MobileFlightSearch = ({
       </div>
 
       {/* Route Selection - Compact Card */}
-      <div className="relative rounded-2xl border border-border/50 bg-card/50 overflow-hidden">
+      <div className="relative rounded-2xl border border-border/50 bg-card/50 overflow-hidden hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         {/* From */}
         <Sheet open={activeSheet === 'from'} onOpenChange={(open) => setActiveSheet(open ? 'from' : null)}>
           <SheetTrigger asChild>
@@ -224,7 +224,7 @@ export const MobileFlightSearch = ({
         {/* Dates */}
         <Sheet open={activeSheet === 'dates'} onOpenChange={(open) => setActiveSheet(open ? 'dates' : null)}>
           <SheetTrigger asChild>
-            <button className="p-4 rounded-xl border border-border/50 bg-card/50 text-left active:bg-muted/50 transition-colors touch-manipulation">
+            <button className="p-4 rounded-xl border border-border/50 bg-card/50 text-left active:bg-muted/50 hover:border-primary/20 transition-all duration-200 touch-manipulation">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-sky-500 shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -284,7 +284,7 @@ export const MobileFlightSearch = ({
         {/* Passengers */}
         <Sheet open={activeSheet === 'passengers'} onOpenChange={(open) => setActiveSheet(open ? 'passengers' : null)}>
           <SheetTrigger asChild>
-            <button className="p-4 rounded-xl border border-border/50 bg-card/50 text-left active:bg-muted/50 transition-colors touch-manipulation">
+            <button className="p-4 rounded-xl border border-border/50 bg-card/50 text-left active:bg-muted/50 hover:border-primary/20 transition-all duration-200 touch-manipulation">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-sky-500 shrink-0" />
                 <div className="flex-1 min-w-0">

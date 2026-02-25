@@ -82,7 +82,7 @@ const RevenueBreakdown = ({ multiplier }: { multiplier: number }) => {
         return (
           <div
             key={example.service}
-            className="p-4 rounded-xl border border-border/50 bg-muted/20"
+            className="p-4 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
           >
             <div className="flex items-start gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>

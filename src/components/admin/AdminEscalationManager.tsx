@@ -198,7 +198,7 @@ const AdminEscalationManager = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="group p-3 rounded-xl border border-border/50 bg-background/30 opacity-75"
+                      className="group p-3 rounded-xl border border-border/50 bg-background/30 opacity-75 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <div className="flex items-center gap-3">
                         <div className={cn("p-2 rounded-lg shrink-0", levelConfig.bg)}>

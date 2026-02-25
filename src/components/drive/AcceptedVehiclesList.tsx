@@ -52,7 +52,7 @@ export default function AcceptedVehiclesList() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl shadow-lg p-5 sm:p-8 space-y-5">
+      <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl shadow-lg p-5 sm:p-8 space-y-5 hover:border-primary/20 hover:shadow-xl transition-all duration-200">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

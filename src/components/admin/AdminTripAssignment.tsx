@@ -567,7 +567,7 @@ const AdminTripAssignment = () => {
               {assignmentHistory.map((assignment) => (
                 <div 
                   key={assignment.id}
-                  className="flex-shrink-0 p-3 rounded-xl border border-border/50 bg-muted/20 min-w-[250px]"
+                  className="flex-shrink-0 p-3 rounded-xl border border-border/50 bg-muted/20 min-w-[250px] hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-medium text-sm">{assignment.driver_name}</p>

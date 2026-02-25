@@ -51,7 +51,7 @@ const ActivityTimeline = ({
           return (
             <div
               key={item.id}
-              className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card shadow-sm card-interactive animate-in fade-in slide-in-from-left-3"
+              className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card shadow-sm card-interactive hover:border-primary/20 hover:shadow-md transition-all duration-200 animate-in fade-in slide-in-from-left-3"
               style={{ animationDelay: `${index * 40}ms`, animationFillMode: "both" }}
             >
               {/* Icon */}
