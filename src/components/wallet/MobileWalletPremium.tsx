@@ -106,9 +106,9 @@
                  {cards.map((_, i) => (
                    <div 
                      key={i} 
-                     className={`w-2 h-2 rounded-full transition-colors ${
-                       activeCard === i ? "bg-white" : "bg-white/30"
-                     }`}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        activeCard === i ? "bg-white scale-125" : "bg-white/30"
+                      }`}
                    />
                  ))}
                </div>
@@ -144,7 +144,7 @@
                   className="flex items-center justify-between group cursor-pointer touch-manipulation active:scale-[0.98] transition-all duration-200 rounded-2xl p-2 -mx-2 hover:bg-white/5"
                 >
                  <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-purple-500/50 transition-colors">
+                   <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-purple-500/50 transition-all duration-200 group-hover:scale-105">
                      <Icon className="w-5 h-5 text-zinc-400" />
                    </div>
                    <div>

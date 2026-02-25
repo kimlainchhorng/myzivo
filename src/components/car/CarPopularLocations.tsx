@@ -52,7 +52,7 @@ const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
               Rent a car at top destinations across the US
             </p>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-violet-400 hover:text-violet-300 transition-colors text-sm font-medium">
+          <button className="hidden sm:flex items-center gap-2 text-violet-400 hover:text-violet-300 transition-all duration-200 text-sm font-medium hover:translate-x-0.5">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>

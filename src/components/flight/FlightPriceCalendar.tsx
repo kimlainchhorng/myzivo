@@ -102,8 +102,8 @@ export default function FlightPriceCalendar({ className, onSelectDate }: FlightP
                         `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
                       )}
                       className={cn(
-                        "aspect-square p-1 rounded-lg border transition-all duration-200 touch-manipulation",
-                        "hover:scale-105 hover:shadow-lg active:scale-95",
+                        "aspect-square p-1 rounded-xl border transition-all duration-200 touch-manipulation",
+                        "hover:scale-110 hover:shadow-lg active:scale-95",
                         getTrendColor(trend),
                         isLowest && "ring-2 ring-emerald-500 ring-offset-2 ring-offset-background"
                       )}

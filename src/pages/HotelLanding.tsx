@@ -178,10 +178,11 @@ export default function HotelLanding() {
                       <img
                         src={photo?.src || `https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=400&h=400&fit=crop&q=75&fm=webp`}
                         alt={photo?.alt || `Hotels in ${dest.city}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute bottom-3 left-3 right-3">
                         <h3 className="font-bold text-white group-hover:text-amber-300 transition-colors">{dest.city}</h3>
                         <p className="text-xs text-white/70">{dest.country}</p>

@@ -70,7 +70,7 @@ export default function TravelOfferSummary({ serviceType, offerData, className }
   return (
     <Card className={cn("overflow-hidden", className)}>
       <div className={cn("px-4 py-3 flex items-center gap-3", config.bgColor)}>
-        <div className={cn("p-2 rounded-lg bg-background/80", config.color)}><Icon className="w-5 h-5" /></div>
+        <div className={cn("p-2 rounded-xl bg-background/80", config.color)}><Icon className="w-5 h-5" /></div>
         <div>
           <p className="font-semibold">{config.label} Booking</p>
           {offerData.partnerName && <p className="text-xs text-muted-foreground">via {offerData.partnerName}</p>}

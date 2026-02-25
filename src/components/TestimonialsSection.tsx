@@ -199,7 +199,7 @@ const TestimonialsSection = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className={cn(
-                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg transition-transform hover:scale-105",
+                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl",
                       serviceConfig.gradient
                     )}>
                       {currentTestimonial.avatar}
@@ -225,13 +225,13 @@ const TestimonialsSection = () => {
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:-mx-6">
               <button
                 onClick={goPrev}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all hover:scale-105 active:scale-95"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={goNext}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all hover:scale-105 active:scale-95"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>

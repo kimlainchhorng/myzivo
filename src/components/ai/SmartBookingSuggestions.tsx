@@ -185,7 +185,7 @@ export function SmartBookingSuggestions({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.1 }}
-                    className="relative p-3 rounded-xl bg-card/50 border border-border/50 hover:border-violet-500/30 transition-colors group"
+                    className="relative p-3 rounded-xl bg-card/50 border border-border/50 hover:border-violet-500/30 transition-all duration-200 hover:shadow-md hover:shadow-violet-500/5 group"
                   >
                     <Button
                       variant="ghost"
@@ -197,7 +197,7 @@ export function SmartBookingSuggestions({
                     </Button>
 
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <Icon className="w-4 h-4 text-violet-500" />
                       </div>
                       <div className="flex-1 min-w-0">

@@ -83,7 +83,7 @@ export default function DeliveryOptionsCard({
         <RadioGroup value={selectedOption} onValueChange={handleOptionChange as (v: string) => void}>
           {/* Self Pickup */}
           <div className={cn(
-            "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors",
+            "flex items-start space-x-3 p-3 rounded-xl border cursor-pointer transition-all duration-200",
             selectedOption === "self_pickup" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
           )}>
             <RadioGroupItem value="self_pickup" id="self_pickup" className="mt-1" />
@@ -101,7 +101,7 @@ export default function DeliveryOptionsCard({
           {/* Delivery Only */}
           {deliveryAvailable && (
             <div className={cn(
-              "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors",
+              "flex items-start space-x-3 p-3 rounded-xl border cursor-pointer transition-all duration-200",
               selectedOption === "delivery" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
             )}>
               <RadioGroupItem value="delivery" id="delivery" className="mt-1" />
@@ -122,7 +122,7 @@ export default function DeliveryOptionsCard({
           {/* Delivery & Pickup */}
           {deliveryAvailable && pickupAvailable && (
             <div className={cn(
-              "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors",
+              "flex items-start space-x-3 p-3 rounded-xl border cursor-pointer transition-all duration-200",
               selectedOption === "delivery_and_pickup" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
             )}>
               <RadioGroupItem value="delivery_and_pickup" id="delivery_and_pickup" className="mt-1" />
@@ -181,7 +181,7 @@ export default function DeliveryOptionsCard({
 
         {/* Fee breakdown */}
         {fees && selectedOption !== "self_pickup" && (
-          <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+          <div className="p-3 bg-muted/50 rounded-xl space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Delivery fee</span>
               <span>${fees.deliveryFee.toFixed(2)}</span>
@@ -200,7 +200,7 @@ export default function DeliveryOptionsCard({
         )}
 
         {/* Legal disclosure */}
-        <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-xl text-xs text-muted-foreground">
           <Info className="w-4 h-4 shrink-0 mt-0.5" />
           <p>
             Vehicle delivery and pickup are facilitated by ZIVO Driver partners.

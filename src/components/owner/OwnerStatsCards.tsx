@@ -65,7 +65,7 @@ export default function OwnerStatsCards({ stats, isLoading }: OwnerStatsCardsPro
         {cards.map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4">
-              <Skeleton className="h-10 w-10 rounded-lg mb-3" />
+              <Skeleton className="h-10 w-10 rounded-xl mb-3" />
               <Skeleton className="h-7 w-16 mb-1" />
               <Skeleton className="h-4 w-24" />
             </CardContent>
@@ -78,9 +78,9 @@ export default function OwnerStatsCards({ stats, isLoading }: OwnerStatsCardsPro
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {cards.map((card) => (
-        <Card key={card.label} className="hover:shadow-md transition-shadow">
+        <Card key={card.label} className="hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
           <CardContent className="p-4">
-            <div className={`w-10 h-10 rounded-lg ${card.bgColor} flex items-center justify-center mb-3`}>
+            <div className={`w-10 h-10 rounded-xl ${card.bgColor} flex items-center justify-center mb-3`}>
               <card.icon className={`h-5 w-5 ${card.color}`} />
             </div>
             <div className="text-2xl font-bold">{card.value}</div>

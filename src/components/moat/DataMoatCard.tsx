@@ -35,7 +35,7 @@ export default function DataMoatCard({ className, showApplications = true }: Dat
             {DATA_MOAT.dataAssets.map((asset) => (
               <div
                 key={asset.type}
-                className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
+                className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200 hover:-translate-y-0.5"
               >
                 <p className="font-medium text-sm mb-1">{asset.label}</p>
                 <p className="text-xs text-muted-foreground mb-2">
@@ -71,7 +71,7 @@ export default function DataMoatCard({ className, showApplications = true }: Dat
         )}
 
         {/* Disclosure */}
-        <div className="p-3 rounded-lg bg-muted/20 flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-muted/20 flex items-center gap-2">
           <Lock className="w-4 h-4 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">{DATA_MOAT.disclosure}</p>
         </div>

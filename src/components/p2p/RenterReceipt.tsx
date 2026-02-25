@@ -67,7 +67,7 @@ export default function RenterReceipt({ booking, showActions = true }: RenterRec
           <img
             src={primaryImage}
             alt={`${booking.vehicle?.make} ${booking.vehicle?.model}`}
-            className="w-24 h-16 object-cover rounded-lg"
+            className="w-24 h-16 object-cover rounded-xl"
           />
           <div className="flex-1">
             <h3 className="font-semibold">
@@ -148,7 +148,7 @@ export default function RenterReceipt({ booking, showActions = true }: RenterRec
         </div>
 
         {/* Payment Status */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm">Payment Status</span>
@@ -182,7 +182,7 @@ export default function RenterReceipt({ booking, showActions = true }: RenterRec
         )}
 
         {/* Important Info */}
-        <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <h4 className="font-medium text-amber-600 mb-2">Important Information</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Bring a valid driver's license and ID</li>

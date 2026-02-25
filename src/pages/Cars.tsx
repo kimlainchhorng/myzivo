@@ -232,7 +232,7 @@ export default function Cars() {
                 <button
                   key={make}
                   onClick={() => updateFilter("make", make.toLowerCase())}
-                  className="shrink-0 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+                  className="shrink-0 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-all duration-200 whitespace-nowrap touch-manipulation active:scale-[0.95] hover:border-primary/30"
                 >
                   {make}
                 </button>
@@ -389,14 +389,14 @@ export default function Cars() {
                 return (
                   <Card 
                     key={vehicle.id} 
-                    className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                    className="overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
                     onClick={() => handleVehicleClick(vehicle.id)}
                   >
                     <div className="relative aspect-[4/3] overflow-hidden">
                       <img
                         src={primaryImage}
                         alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                       {vehicle.instant_book && (
                         <Badge className="absolute top-3 left-3 bg-emerald-500 text-white gap-1">

@@ -105,7 +105,7 @@ export default function TravelHeroActions() {
               </div>
 
               {/* Content */}
-              <h3 className="font-display font-bold text-xl mb-1 group-hover:text-foreground transition-colors">
+              <h3 className="font-display font-bold text-xl mb-1 group-hover:text-foreground transition-all duration-200">
                 {action.title}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -114,7 +114,7 @@ export default function TravelHeroActions() {
 
               {/* CTA */}
               <div className={cn(
-                "flex items-center gap-2 text-sm font-semibold transition-colors",
+                "flex items-center gap-2 text-sm font-semibold transition-all duration-200",
                 action.iconColor
               )}>
                 <span>Book now</span>
@@ -128,7 +128,7 @@ export default function TravelHeroActions() {
         <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
           {trustPoints.map((point) => (
             <div key={point.text} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                 <point.icon className="w-4 h-4 text-primary" />
               </div>
               <span>{point.text}</span>
