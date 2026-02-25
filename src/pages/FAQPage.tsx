@@ -130,7 +130,7 @@ export default function FAQPage() {
           {/* FAQ Sections */}
           <div className="max-w-4xl mx-auto space-y-8">
             {faqSections.map((section, sectionIndex) => (
-              <Card key={sectionIndex} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+              <Card key={sectionIndex} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/20 hover:shadow-md transition-all duration-300">
                 <div className="bg-muted/30 px-6 py-4 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/10">
@@ -186,7 +186,7 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 to="/contact" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-all"
               >
                 <Mail className="w-4 h-4" />
                 Contact Support
