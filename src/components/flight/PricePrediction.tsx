@@ -249,7 +249,7 @@ export const PricePrediction = ({
             <TabsContent value="overview" className="m-0 space-y-6">
               {/* Current Price & Recommendation */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-center">
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-xs text-muted-foreground mb-1">Current Price</p>
                   <p className="text-2xl font-bold">${currentPrice}</p>
                   <p className={cn(
@@ -291,7 +291,7 @@ export const PricePrediction = ({
                   <p className="text-xs text-muted-foreground mt-1">{confidenceScore}% confidence</p>
                 </div>
                 
-                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-center">
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-xs text-muted-foreground mb-1">21-Day Forecast</p>
                   <div className="flex items-center justify-center gap-1">
                     {predictedTrend > 0 ? (

@@ -264,7 +264,7 @@ export const NearbyAirports = ({
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">Total Cost Comparison</span>
                       </div>

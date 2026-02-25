@@ -87,7 +87,7 @@ export default function FlightConsentGate({
         <div className="space-y-4 py-4">
           {/* Flight Summary */}
           {flightInfo && (
-            <div className="p-4 rounded-xl bg-muted/50 border border-border">
+            <div className="p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">{flightInfo.airline}</span>
                 <Badge variant="secondary" className="text-sky-500">

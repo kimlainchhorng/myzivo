@@ -176,7 +176,7 @@ export default function TrustCertification() {
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-4">
                 {complianceFrameworks.map((framework) => (
-                  <div key={framework.name} className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <div key={framework.name} className="p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold">{framework.name}</h4>
                       <Badge variant={framework.status === "Compliant" ? "default" : "secondary"}>

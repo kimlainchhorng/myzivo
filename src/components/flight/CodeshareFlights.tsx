@@ -68,7 +68,7 @@ const CodeshareFlights = ({ codeshares, showDetails = false }: CodeshareFlightsP
       {codeshares.map((codeshare, index) => (
         <div
           key={index}
-          className="p-4 rounded-xl bg-muted/30 border border-border/50"
+          className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
         >
           {/* Operating carrier */}
           <div className="flex items-center gap-3 mb-3 pb-3 border-b border-border/30">

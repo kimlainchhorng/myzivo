@@ -191,7 +191,7 @@ const AppTravel = () => {
               {activeTab === "flights" && flightResults.map((flight) => (
                 <div 
                   key={flight.id}
-                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ const AppTravel = () => {
               {activeTab === "hotels" && hotelResults.map((hotel) => (
                 <div 
                   key={hotel.id}
-                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex gap-3">
                     <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${hotel.iconBg} flex items-center justify-center flex-shrink-0`}>
@@ -265,7 +265,7 @@ const AppTravel = () => {
               {activeTab === "cars" && carResults.map((car) => (
                 <div 
                   key={car.id}
-                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex gap-3">
                     <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${car.iconBg} flex items-center justify-center flex-shrink-0`}>

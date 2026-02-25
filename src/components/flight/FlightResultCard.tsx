@@ -321,7 +321,7 @@ export default function FlightResultCard({
           <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-border/30 bg-muted/20 animate-in slide-in-from-top-2 duration-300">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Baggage */}
-              <div className="p-3 rounded-xl bg-background/50 border border-border/30">
+              <div className="p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Luggage className="w-4 h-4" />
                   <span className="text-sm font-medium">Baggage</span>
@@ -333,7 +333,7 @@ export default function FlightResultCard({
               </div>
 
               {/* Refund Policy */}
-              <div className="p-3 rounded-xl bg-background/50 border border-border/30">
+              <div className="p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Shield className="w-4 h-4" />
                   <span className="text-sm font-medium">Flexibility</span>
@@ -351,7 +351,7 @@ export default function FlightResultCard({
               </div>
 
               {/* Aircraft */}
-              <div className="p-3 rounded-xl bg-background/50 border border-border/30">
+              <div className="p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Plane className="w-4 h-4" />
                   <span className="text-sm font-medium">Aircraft</span>
@@ -361,7 +361,7 @@ export default function FlightResultCard({
               </div>
 
               {/* Alliance */}
-              <div className="p-3 rounded-xl bg-background/50 border border-border/30">
+              <div className="p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Users className="w-4 h-4" />
                   <span className="text-sm font-medium">Alliance</span>
