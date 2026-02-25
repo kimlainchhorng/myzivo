@@ -12,15 +12,16 @@ const services = [
     title: "Flights",
     description: "Compare hundreds of airlines and find the best fares for your next trip.",
     href: "/flights",
-    iconBg: "bg-[hsl(var(--flights-light))]",
+    iconBg: "bg-gradient-to-br from-[hsl(var(--flights-light))] to-[hsl(var(--flights)/0.15)]",
     iconColor: "text-[hsl(var(--flights))]",
+    badge: "Popular",
   },
   {
     icon: Hotel,
     title: "Hotels",
     description: "Book rooms at the best hotels worldwide with instant confirmation.",
     href: "/hotels",
-    iconBg: "bg-[hsl(var(--hotels-light))]",
+    iconBg: "bg-gradient-to-br from-[hsl(var(--hotels-light))] to-[hsl(var(--hotels)/0.15)]",
     iconColor: "text-[hsl(var(--hotels))]",
   },
   {
@@ -28,7 +29,7 @@ const services = [
     title: "Car Rentals",
     description: "Rent cars from top providers with flexible pickup and return options.",
     href: "/rent-car",
-    iconBg: "bg-[hsl(var(--cars-light))]",
+    iconBg: "bg-gradient-to-br from-[hsl(var(--cars-light))] to-[hsl(var(--cars)/0.15)]",
     iconColor: "text-[hsl(var(--cars))]",
   },
   {
@@ -36,7 +37,7 @@ const services = [
     title: "Rides",
     description: "Get a ride anywhere, anytime. Fast pickups and upfront pricing.",
     href: "/rides",
-    iconBg: "bg-[hsl(var(--rides-light))]",
+    iconBg: "bg-gradient-to-br from-[hsl(var(--rides-light))] to-[hsl(var(--rides)/0.15)]",
     iconColor: "text-[hsl(var(--rides))]",
   },
   {
@@ -44,15 +45,18 @@ const services = [
     title: "Eats",
     description: "Order food from your favorite restaurants delivered to your door.",
     href: "/eats",
-    iconBg: "bg-[hsl(var(--eats-light))]",
+    iconBg: "bg-gradient-to-br from-[hsl(var(--eats-light))] to-[hsl(var(--eats)/0.15)]",
     iconColor: "text-[hsl(var(--eats))]",
   },
 ];
 
 export default function ServicesShowcase() {
   return (
-    <section className="py-16 sm:py-20">
-      <div className="container mx-auto px-4">
+    <section className="section-padding relative">
+      {/* Subtle dot pattern bg */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+
+      <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -79,8 +83,15 @@ export default function ServicesShowcase() {
             >
               <Link
                 to={service.href}
-                className="group block p-6 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center h-full"
+                className="group block p-6 sm:p-7 card-premium text-center h-full relative"
               >
+                {/* Badge */}
+                {'badge' in service && service.badge && (
+                  <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    {service.badge}
+                  </span>
+                )}
+
                 <div className={cn(
                   "w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4",
                   service.iconBg,

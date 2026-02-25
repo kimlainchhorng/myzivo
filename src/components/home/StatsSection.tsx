@@ -21,19 +21,21 @@ function AnimatedCounter({ value, suffix, prefix, decimals = 0 }: { value: numbe
   useEffect(() => {
     if (!inView) return;
     const duration = 2000;
-    const steps = 60;
-    const increment = value / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= value) {
-        setCount(value);
-        clearInterval(timer);
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOut cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(eased * value);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
       } else {
-        setCount(current);
+        setCount(value);
       }
-    }, duration / steps);
-    return () => clearInterval(timer);
+    };
+    requestAnimationFrame(animate);
   }, [inView, value]);
 
   const formatted = decimals > 0
@@ -51,8 +53,20 @@ function AnimatedCounter({ value, suffix, prefix, decimals = 0 }: { value: numbe
 
 export default function StatsSection() {
   return (
-    <section className="py-14 sm:py-20">
-      <div className="container mx-auto px-4">
+    <section className="py-14 sm:py-20 relative">
+      {/* Subtle gradient band */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-transparent to-muted/20 pointer-events-none" />
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center text-sm font-medium text-muted-foreground mb-8"
+        >
+          Trusted by travelers worldwide
+        </motion.p>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
           {stats.map((stat, index) => (
             <motion.div
@@ -64,7 +78,7 @@ export default function StatsSection() {
               className="text-center"
             >
               <div className={cn(
-                "p-6 sm:p-8 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-t-[3px]",
+                "p-6 sm:p-8 card-premium border-t-[3px]",
                 stat.borderColor
               )}>
                 <div className={cn(
@@ -73,7 +87,7 @@ export default function StatsSection() {
                 )}>
                   <stat.icon className={cn("w-6 h-6", stat.iconColor)} />
                 </div>
-                <p className="text-3xl sm:text-4xl font-bold text-foreground mb-1.5">
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-1.5">
                   <AnimatedCounter
                     value={stat.value}
                     suffix={stat.suffix}
