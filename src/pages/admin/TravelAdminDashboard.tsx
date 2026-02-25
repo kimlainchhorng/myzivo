@@ -141,7 +141,7 @@ const TravelAdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <div className="p-2 rounded-lg bg-sky-500/10">
+            <div className="p-2 rounded-xl bg-sky-500/10">
               <Plane className="h-5 w-5 text-sky-500" />
             </div>
             <div>
@@ -160,7 +160,7 @@ const TravelAdminDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <Building2 className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -179,7 +179,7 @@ const TravelAdminDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <div className="p-2 rounded-lg bg-emerald-500/10">
+            <div className="p-2 rounded-xl bg-emerald-500/10">
               <Car className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
@@ -284,10 +284,10 @@ const TravelAdminDashboard = () => {
               {recentLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200"
+                  className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
+                    <div className={`p-2 rounded-xl ${
                       log.search_type === 'flights' ? 'bg-sky-500/10' :
                       log.search_type === 'hotels' ? 'bg-purple-500/10' :
                       'bg-emerald-500/10'

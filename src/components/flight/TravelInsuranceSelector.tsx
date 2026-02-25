@@ -289,7 +289,7 @@ const TravelInsuranceSelector = ({
               whileTap={{ scale: 0.98 }}
             >
               <Card
-                className={`relative cursor-pointer transition-all duration-300 overflow-hidden ${
+                className={`relative cursor-pointer transition-all duration-200 overflow-hidden ${
                   isSelected
                     ? "ring-2 ring-primary shadow-lg"
                     : "hover:shadow-md border-muted"

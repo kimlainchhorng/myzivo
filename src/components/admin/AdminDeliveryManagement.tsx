@@ -308,7 +308,7 @@ const AdminDeliveryManagement = () => {
                       filteredOrders.filter(o => ["in_progress", "confirmed"].includes(o.status || "")).map((order, index) => (
                         <TableRow
                           key={order.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell className="font-mono font-medium text-sm">{order.id.slice(0, 8)}...</TableCell>

@@ -343,7 +343,7 @@ export const CalendarHeatmap = ({
             </div>
 
             {selectedMonth.events && (
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 mb-4">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-4">
                 <div className="flex items-center gap-2">
                   <Info className="w-4 h-4 text-amber-400" />
                   <span className="text-sm">
@@ -354,7 +354,7 @@ export const CalendarHeatmap = ({
             )}
 
             {/* Year-over-year comparison */}
-            <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+            <div className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-sm text-muted-foreground mb-2">vs. Last Year</p>
               <div className="flex items-center gap-4">
                 <div>

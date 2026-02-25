@@ -74,7 +74,7 @@ export function AffiliateDisclosure({
   // Default inline variant
   return (
     <div className={cn(
-      "flex items-start gap-2 p-3 rounded-lg",
+      "flex items-start gap-2 p-3 rounded-xl",
       "bg-muted/30 border border-border/50",
       className
     )}>

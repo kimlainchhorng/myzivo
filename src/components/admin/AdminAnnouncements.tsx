@@ -222,7 +222,7 @@ const AdminAnnouncements = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-rose-500/10">
+            <div className="p-2 rounded-xl bg-rose-500/10">
               <Megaphone className="h-5 w-5 text-rose-500" />
             </div>
             <div>
@@ -233,7 +233,7 @@ const AdminAnnouncements = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <Send className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -244,7 +244,7 @@ const AdminAnnouncements = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <Clock className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -255,7 +255,7 @@ const AdminAnnouncements = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <Zap className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -542,7 +542,7 @@ const AdminAnnouncements = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
               <div>
                 <p className="font-medium">Active</p>
                 <p className="text-sm text-muted-foreground">Show this announcement to users</p>

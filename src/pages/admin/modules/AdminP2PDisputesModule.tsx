@@ -270,7 +270,7 @@ export default function AdminP2PDisputesModule() {
 
           {selectedDispute && (
             <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+              <div className="p-4 rounded-xl bg-muted/50 space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Type</p>
                   <p className="font-medium">

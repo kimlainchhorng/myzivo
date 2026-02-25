@@ -199,7 +199,7 @@ export const CorporateTravel = ({
               
               <div className="grid grid-cols-2 gap-3">
                 {EXPENSE_CATEGORIES.map((cat, i) => (
-                  <div key={cat.name} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                  <div key={cat.name} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
                     <cat.icon className="w-5 h-5 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-sm">

@@ -182,7 +182,7 @@ export function PriceAlertsDashboard({ className, onBookNow }: PriceAlertsDashbo
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    "w-8 h-8 rounded-xl flex items-center justify-center",
                     alert.triggered ? "bg-emerald-500/20" : "bg-primary/20"
                   )}>
                     <Plane className={cn(

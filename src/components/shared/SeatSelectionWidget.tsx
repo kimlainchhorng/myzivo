@@ -212,7 +212,7 @@ const SeatSelectionWidget = ({
 
       {/* Selection Summary */}
       {selectedSeat && (
-        <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+        <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />

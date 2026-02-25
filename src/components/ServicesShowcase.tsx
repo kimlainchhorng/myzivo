@@ -159,7 +159,7 @@ const ServicesShowcase = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-14 sm:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in fade-in zoom-in-95 duration-300">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in fade-in zoom-in-95 duration-200">
             <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '4s' }} />
             <span className="text-muted-foreground">All-in-One Platform</span>
           </div>
@@ -183,7 +183,7 @@ const ServicesShowcase = () => {
               style={{ animationDelay: `${index * 60}ms` }}
             >
               <Link to={service.href}>
-                <div className="relative p-5 sm:p-6 h-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden hover:-translate-y-2 hover:scale-[1.01] active:scale-[0.98]">
+                <div className="relative p-5 sm:p-6 h-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-200 overflow-hidden hover:-translate-y-2 hover:scale-[1.01] active:scale-[0.98]">
                   {/* Decorative corner glow */}
                   <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${service.gradient} opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity`} />
                   

@@ -95,7 +95,7 @@ export default function TrustBadgesSection({
               className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-card border border-border/50 text-center hover:border-primary/20 hover:shadow-sm transition-all duration-200"
             >
               <div className={cn(
-                "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl mx-auto mb-2 sm:mb-3 flex items-center justify-center",
+                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl mx-auto mb-2 sm:mb-3 flex items-center justify-center",
                 badge.bgColor
               )}>
                 <badge.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", badge.color)} />
