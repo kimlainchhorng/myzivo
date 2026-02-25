@@ -257,7 +257,7 @@ const AdminCommissionAnalytics = () => {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-3 rounded-xl border border-border/50 bg-background/50"
+                  className="p-3 rounded-xl border border-border/50 bg-background/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
@@ -307,7 +307,7 @@ const AdminCommissionAnalytics = () => {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/50"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/20">
                     <span className="text-xs font-bold text-primary">{index + 1}</span>

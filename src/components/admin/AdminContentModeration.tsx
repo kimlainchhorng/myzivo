@@ -285,7 +285,7 @@ const AdminContentModeration = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className={cn(
-                        "p-4 rounded-xl border border-border/50 bg-background/50",
+                        "p-4 rounded-xl border border-border/50 bg-background/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
                         item.severity === "critical" && "border-red-500/30 bg-red-500/5"
                       )}
                     >

@@ -291,7 +291,7 @@ export default function Move() {
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-primary/20 transition-all duration-200"
                 />
                 <Button type="submit" className="rounded-xl font-semibold">
                   Notify Me

@@ -53,7 +53,7 @@ export function ServiceFeeNotice({
   if (variant === "card") {
     return (
       <div className={cn(
-        "p-4 rounded-xl border border-border/50 bg-muted/20",
+        "p-4 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
         className
       )}>
         <div className="flex items-start gap-3">

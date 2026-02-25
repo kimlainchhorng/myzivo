@@ -33,14 +33,14 @@ export default function UptimeChart({ logs, isLoading }: UptimeChartProps) {
 
   if (!chartData.length) {
     return (
-      <div className="h-64 flex items-center justify-center text-muted-foreground text-sm rounded-xl border border-border/50 bg-card/50">
+      <div className="h-64 flex items-center justify-center text-muted-foreground text-sm rounded-xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         No status changes recorded yet
       </div>
     );
   }
 
   return (
-    <div className="h-64 rounded-xl border border-border/50 bg-card/50 p-4">
+    <div className="h-64 rounded-xl border border-border/50 bg-card/50 p-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />

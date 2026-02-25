@@ -290,7 +290,7 @@ export const GiftCardsCredits = ({
                       setAppliedGiftCards([...appliedGiftCards, gc]);
                       toast.success(`Gift card applied! Balance: $${gc.balance}`);
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30 hover:border-border transition-all text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200 text-left"
                   >
                     <Gift className="w-5 h-5 text-muted-foreground" />
                     <div className="flex-1">
