@@ -148,10 +148,10 @@ export function ReportIncidentModal({
                     setCategory(cat.value);
                     setStep("details");
                   }}
-                  className={`w-full p-4 rounded-xl border text-left transition-all ${
+                  className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 touch-manipulation active:scale-[0.98] ${
                     category === cat.value
                       ? "border-orange-500 bg-orange-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600 hover:bg-zinc-800"
                   }`}
                 >
                   <p className="font-medium text-white">{cat.label}</p>

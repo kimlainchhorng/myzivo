@@ -54,7 +54,7 @@ export default function CheckoutTrustFooter({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Trust Signals */}
-      <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap py-4 border-t border-b border-border/50">
+      <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap py-4 border-t border-b border-border/50 rounded-xl">
         {CHECKOUT_FOOTER.trust.map((item, i) => {
           const Icon = trustIcons[item as keyof typeof trustIcons] || Shield;
           return (

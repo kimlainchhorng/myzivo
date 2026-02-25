@@ -32,7 +32,7 @@ export default function TierProgressCard({
   const tierIndex = TIER_ORDER.indexOf(tier);
 
   return (
-    <Card className={className}>
+    <Card className={cn("transition-all duration-200", className)}>
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="w-5 h-5 text-primary" />
@@ -115,7 +115,7 @@ export default function TierProgressCard({
 
         {/* Next Tier Preview */}
         {tierIndex < TIER_ORDER.length - 1 && (
-          <div className="p-4 rounded-xl border border-dashed bg-muted/20">
+          <div className="p-4 rounded-2xl border border-dashed bg-muted/20 transition-all duration-200 hover:bg-muted/30">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{ZIVO_TIERS[TIER_ORDER[tierIndex + 1]].icon}</span>

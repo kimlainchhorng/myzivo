@@ -44,11 +44,11 @@ const MobileQuickActions = () => {
           <button
             key={action.id}
             onClick={() => navigate(action.href)}
-            className="flex flex-col items-center gap-2 touch-manipulation active:scale-90 transition-transform animate-in fade-in zoom-in-95 duration-300"
+            className="flex flex-col items-center gap-2 touch-manipulation active:scale-[0.88] transition-all duration-200 animate-in fade-in zoom-in-95 duration-300 min-w-[60px] min-h-[72px]"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform",
+              "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-sm",
               action.bgColor
             )}>
               <action.icon className={cn("w-6 h-6", action.color)} />

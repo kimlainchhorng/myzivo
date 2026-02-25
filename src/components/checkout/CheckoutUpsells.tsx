@@ -40,7 +40,7 @@ export function CheckoutUpsells({
   const hasInsuranceDisclaimer = products.some((p) => p.disclaimer?.includes("insurer"));
 
   return (
-    <div className={cn("rounded-2xl border border-border bg-card p-5", className)}>
+    <div className={cn("rounded-2xl border border-border bg-card p-5 transition-all duration-200", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

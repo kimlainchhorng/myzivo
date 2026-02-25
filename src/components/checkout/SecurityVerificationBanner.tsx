@@ -56,7 +56,7 @@ export function SecurityVerificationBanner({
 
   return (
     <div className={cn(
-      "rounded-2xl border overflow-hidden",
+      "rounded-2xl border overflow-hidden transition-all duration-200",
       "bg-amber-500/10 border-amber-500/30",
       className
     )}>
@@ -87,7 +87,7 @@ export function SecurityVerificationBanner({
           <Button
             onClick={onVerify}
             disabled={isVerifying}
-            className="bg-amber-500 hover:bg-amber-600 text-white gap-2"
+            className="bg-amber-500 hover:bg-amber-600 text-white gap-2 rounded-xl touch-manipulation active:scale-[0.98] min-h-[44px] transition-all duration-200 shadow-md shadow-amber-500/20"
           >
             {isVerifying ? (
               <>

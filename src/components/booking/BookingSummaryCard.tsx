@@ -233,7 +233,7 @@ export const BookingSummaryCard = ({
           {/* CTA Button */}
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
-              className={cn("w-full h-14 rounded-2xl font-bold text-base text-white", colors.button)}
+              className={cn("w-full h-14 rounded-2xl font-bold text-base text-white touch-manipulation min-h-[56px] transition-all duration-200", colors.button)}
               onClick={onConfirm}
               disabled={disabled || isLoading}
             >

@@ -125,9 +125,9 @@ export function TravelerPassport() {
 
           {/* Action Button */}
           <div className="hidden md:block">
-            <Link 
+              <Link 
               to="/profile"
-              className="bg-white text-black px-6 py-3 rounded-xl font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
+              className="bg-white text-black px-6 py-3 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 touch-manipulation min-h-[44px] shadow-lg"
             >
               <SettingsIcon className="w-4 h-4" /> Edit Profile
             </Link>

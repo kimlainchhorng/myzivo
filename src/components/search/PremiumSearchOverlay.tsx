@@ -288,7 +288,7 @@ export default function PremiumSearchOverlay({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="rounded-full hover:bg-muted/80 transition-colors"
+                className="rounded-full hover:bg-muted/80 active:scale-90 transition-all duration-200 touch-manipulation min-w-[44px] min-h-[44px]"
                 aria-label="Close search"
               >
                 <X className="w-5 h-5" />
@@ -305,7 +305,7 @@ export default function PremiumSearchOverlay({
                     variants={tabVariants}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all duration-200",
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all duration-200 touch-manipulation active:scale-[0.97] min-h-[44px]",
                       activeTab === tab.id
                         ? `${tab.bgColor} text-white shadow-lg`
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -421,7 +421,7 @@ export default function PremiumSearchOverlay({
                     <button
                       key={city}
                       onClick={() => setDestination(city)}
-                      className="px-4 py-2 rounded-full bg-muted/40 hover:bg-muted/60 text-sm font-medium transition-colors"
+                      className="px-4 py-2 rounded-full bg-muted/40 hover:bg-muted/60 text-sm font-medium transition-all duration-200 touch-manipulation active:scale-[0.95] min-h-[36px]"
                     >
                       {city}
                     </button>

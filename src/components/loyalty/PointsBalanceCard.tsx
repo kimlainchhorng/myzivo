@@ -51,7 +51,7 @@ export default function PointsBalanceCard({
     return (
       <Link to="/rewards" className="block">
         <div className={cn(
-          "flex items-center gap-3 p-3 rounded-xl border bg-gradient-to-r from-primary/5 to-amber-500/5 hover:border-primary/50 transition-all",
+          "flex items-center gap-3 p-3 rounded-2xl border bg-gradient-to-r from-primary/5 to-amber-500/5 hover:border-primary/50 hover:shadow-sm transition-all duration-200 touch-manipulation active:scale-[0.98]",
           className
         )}>
           <div className={cn("p-2 rounded-lg", tierConfig.bgColor)}>
@@ -146,10 +146,10 @@ export default function PointsBalanceCard({
         {/* Actions */}
         {showActions && (
           <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm" className="flex-1">
+            <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl touch-manipulation active:scale-[0.98] min-h-[40px]">
               <Link to="/rewards">View Rewards</Link>
             </Button>
-            <Button asChild size="sm" className="flex-1 bg-gradient-to-r from-primary to-amber-500">
+            <Button asChild size="sm" className="flex-1 bg-gradient-to-r from-primary to-amber-500 rounded-xl touch-manipulation active:scale-[0.98] min-h-[40px]">
               <Link to="/rewards/redeem">Redeem</Link>
             </Button>
           </div>

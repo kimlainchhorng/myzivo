@@ -87,7 +87,7 @@ export function ZivoPlusPromo({ variant = "card", className, onDismiss }: ZivoPl
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 w-6 h-6 p-0 text-muted-foreground hover:text-foreground"
+          className="absolute top-2 right-2 w-8 h-8 p-0 rounded-full text-muted-foreground hover:text-foreground active:scale-90 transition-all duration-200 touch-manipulation"
           onClick={handleDismiss}
         >
           <X className="w-4 h-4" />
@@ -115,7 +115,7 @@ export function ZivoPlusPromo({ variant = "card", className, onDismiss }: ZivoPl
         </div>
 
         <Link to="/zivo-plus">
-          <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2">
+          <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 rounded-xl touch-manipulation active:scale-[0.98] min-h-[44px] shadow-lg shadow-amber-500/20 transition-all duration-200">
             Upgrade Now
             <ArrowRight className="w-4 h-4" />
           </Button>

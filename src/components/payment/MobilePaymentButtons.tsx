@@ -86,7 +86,7 @@ const MobilePaymentButtons = ({
         <Button
           onClick={() => handlePaymentClick(onApplePayClick)}
           disabled={disabled || isProcessing}
-          className="w-full h-12 bg-black hover:bg-black/90 text-white rounded-xl font-medium"
+          className="w-full h-12 bg-black hover:bg-black/90 text-white rounded-2xl font-medium touch-manipulation active:scale-[0.98] transition-all duration-200 min-h-[48px] shadow-lg"
         >
           {isProcessing ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -104,7 +104,7 @@ const MobilePaymentButtons = ({
         <Button
           onClick={() => handlePaymentClick(onGooglePayClick)}
           disabled={disabled || isProcessing}
-          className="w-full h-12 bg-white hover:bg-gray-50 text-black border border-gray-300 rounded-xl font-medium"
+          className="w-full h-12 bg-white hover:bg-gray-50 text-black border border-gray-300 rounded-2xl font-medium touch-manipulation active:scale-[0.98] transition-all duration-200 min-h-[48px] shadow-sm"
         >
           {isProcessing ? (
             <Loader2 className="w-5 h-5 animate-spin" />

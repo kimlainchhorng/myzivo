@@ -70,7 +70,7 @@ export function TripCard({ order }: TripCardProps) {
 
   return (
     <Link to={`/my-trips/${order.order_number}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <Card className="hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer touch-manipulation active:scale-[0.99]">
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">

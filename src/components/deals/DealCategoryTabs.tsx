@@ -34,7 +34,7 @@ const DealCategoryTabs = ({
       onValueChange={(value) => onCategoryChange(value as DealCategoryType)}
       className={className}
     >
-      <TabsList className="h-auto p-1 bg-muted/50 rounded-xl flex-wrap">
+      <TabsList className="h-auto p-1.5 bg-muted/50 rounded-2xl flex-wrap">
         {categories.map((category) => {
           const Icon = category.icon;
           return (
@@ -42,7 +42,7 @@ const DealCategoryTabs = ({
               key={category.value}
               value={category.value}
               className={cn(
-                "gap-1.5 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                "gap-1.5 px-4 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[40px]"
               )}
             >
               <Icon className="w-4 h-4" />

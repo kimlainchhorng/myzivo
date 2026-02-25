@@ -118,7 +118,7 @@ export function NotificationPermissionBanner() {
                 {/* Close button */}
                 <button
                   onClick={handleDismiss}
-                  className="p-1 rounded-lg hover:bg-muted transition-colors"
+                  className="p-2 rounded-full hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                   aria-label="Dismiss"
                 >
                   <X className="w-4 h-4 text-muted-foreground" />

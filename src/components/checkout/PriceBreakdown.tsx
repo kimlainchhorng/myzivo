@@ -66,11 +66,11 @@ export function PriceBreakdown({
   };
 
   return (
-    <div className={cn("rounded-xl border border-border bg-card/50", className)}>
+    <div className={cn("rounded-2xl border border-border bg-card/50 transition-all duration-200", className)}>
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-all duration-200 touch-manipulation active:scale-[0.99] rounded-2xl min-h-[48px]"
       >
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4 text-muted-foreground" />

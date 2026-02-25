@@ -84,7 +84,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
   return (
     <Card
       className={cn(
-        "p-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99]",
+        "p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/20 active:scale-[0.98] touch-manipulation",
         !notification.is_read && "border-l-4 border-l-primary bg-primary/5"
       )}
       onClick={onClick}

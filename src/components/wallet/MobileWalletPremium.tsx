@@ -67,7 +67,7 @@
              My <span className="text-purple-500">Wallet</span>
            </h1>
          </div>
-         <button className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors touch-manipulation active:scale-95">
+         <button className="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center border border-white/10 hover:bg-white/20 transition-all duration-200 touch-manipulation active:scale-90 min-w-[44px] min-h-[44px]">
            <Plus className="w-5 h-5" />
          </button>
        </div>
@@ -120,10 +120,10 @@
        {/* 3. QUICK ACTIONS */}
        <div className="grid grid-cols-3 gap-4 px-6 mb-10">
          {quickActions.map((action, i) => (
-           <button 
-             key={i} 
-             className="bg-zinc-900 border border-white/5 rounded-2xl py-4 flex flex-col items-center gap-2 hover:bg-zinc-800 transition-colors touch-manipulation active:scale-95"
-           >
+            <button 
+              key={i} 
+              className="bg-zinc-900 border border-white/5 rounded-2xl py-4 flex flex-col items-center gap-2 hover:bg-zinc-800 hover:border-white/10 transition-all duration-200 touch-manipulation active:scale-[0.93] min-h-[80px]"
+            >
              <div className="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400">
                <action.icon className="w-5 h-5" />
              </div>
@@ -139,10 +139,10 @@
            {transactions.map((tx) => {
              const Icon = tx.icon;
              return (
-               <div 
-                 key={tx.id} 
-                 className="flex items-center justify-between group cursor-pointer touch-manipulation"
-               >
+                <div 
+                  key={tx.id} 
+                  className="flex items-center justify-between group cursor-pointer touch-manipulation active:scale-[0.98] transition-all duration-200 rounded-2xl p-2 -mx-2 hover:bg-white/5"
+                >
                  <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-purple-500/50 transition-colors">
                      <Icon className="w-5 h-5 text-zinc-400" />
