@@ -173,15 +173,15 @@ export default function GiftCardsPage() {
         {/* Tabs */}
         <Tabs defaultValue="buy" className="space-y-4">
           <TabsList className="w-full bg-zinc-900 border border-white/5 rounded-xl h-12 p-1">
-            <TabsTrigger value="buy" className="flex-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
+            <TabsTrigger value="buy" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <CreditCard className="w-4 h-4" />
               Buy
             </TabsTrigger>
-            <TabsTrigger value="send" className="flex-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
+            <TabsTrigger value="send" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <Send className="w-4 h-4" />
               Send
             </TabsTrigger>
-            <TabsTrigger value="redeem" className="flex-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
+            <TabsTrigger value="redeem" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <Ticket className="w-4 h-4" />
               Redeem
             </TabsTrigger>
@@ -223,7 +223,7 @@ export default function GiftCardsPage() {
               {(recipientName || recipientEmail) && (
                 <div className="bg-zinc-800/50 border border-white/5 rounded-xl p-4">
                   <p className="text-xs text-zinc-500 mb-2">Preview</p>
-                  <div className="bg-gradient-to-br from-primary/10 to-teal-500/10 rounded-lg p-4 border border-primary/20">
+                  <div className="bg-gradient-to-br from-primary/10 to-teal-500/10 rounded-xl p-4 border border-primary/20">
                     <Gift className="w-6 h-6 text-primary mb-2" />
                     <p className="font-bold">${(selectedAmount / 100).toFixed(0)} ZIVO Gift Card</p>
                     {recipientName && <p className="text-sm text-zinc-300">To: {recipientName}</p>}

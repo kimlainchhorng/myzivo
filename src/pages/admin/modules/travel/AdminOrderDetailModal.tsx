@@ -148,7 +148,7 @@ const AdminOrderDetailModal = ({ orderId, open, onClose }: AdminOrderDetailModal
 
               <TabsContent value="details" className="space-y-4">
                 {/* Customer Info */}
-                <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="p-4 bg-muted/50 rounded-xl">
                   <h3 className="font-medium mb-3">Customer Information</h3>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ const AdminOrderDetailModal = ({ orderId, open, onClose }: AdminOrderDetailModal
 
                 {/* Cancellation Info */}
                 {order.cancellation_status && order.cancellation_status !== "none" && (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
                     <h3 className="font-medium text-amber-600 dark:text-amber-400 mb-2">
                       Cancellation Status: {order.cancellation_status}
                     </h3>
@@ -231,10 +231,10 @@ const AdminOrderDetailModal = ({ orderId, open, onClose }: AdminOrderDetailModal
 
               <TabsContent value="items" className="space-y-4">
                 {order.travel_order_items?.map((item) => (
-                  <div key={item.id} className="p-4 border rounded-lg">
+                  <div key={item.id} className="p-4 border rounded-xl">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-muted rounded-lg">
+                        <div className="p-2 bg-muted rounded-xl">
                           {getTypeIcon(item.type)}
                         </div>
                         <div>
@@ -270,7 +270,7 @@ const AdminOrderDetailModal = ({ orderId, open, onClose }: AdminOrderDetailModal
 
               <TabsContent value="payment" className="space-y-4">
                 {order.travel_payments?.map((payment) => (
-                  <div key={payment.id} className="p-4 border rounded-lg">
+                  <div key={payment.id} className="p-4 border rounded-xl">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5" />

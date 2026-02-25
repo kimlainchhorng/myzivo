@@ -64,7 +64,7 @@ const DispatchSafety = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
+              <div className="p-2 rounded-xl bg-warning/10">
                 <AlertTriangle className="h-5 w-5 text-warning" />
               </div>
               <div>
@@ -78,7 +78,7 @@ const DispatchSafety = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
+              <div className="p-2 rounded-xl bg-destructive/10">
                 <ShieldAlert className="h-5 w-5 text-destructive" />
               </div>
               <div>
@@ -92,7 +92,7 @@ const DispatchSafety = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
+              <div className="p-2 rounded-xl bg-destructive/10">
                 <ShieldX className="h-5 w-5 text-destructive" />
               </div>
               <div>
@@ -106,7 +106,7 @@ const DispatchSafety = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <ShieldCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -204,7 +204,7 @@ const DispatchSafety = () => {
             ) : (
               <div className="space-y-3">
                 {riskEvents.slice(0, 10).map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div key={event.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                     <div>
                       <p className="font-medium text-sm">{event.event_type.replace(/_/g, " ")}</p>
                       <p className="text-xs text-muted-foreground">
@@ -243,7 +243,7 @@ const DispatchSafety = () => {
             ) : (
               <div className="space-y-3">
                 {blockedEntities.slice(0, 10).map((entity) => (
-                  <div key={entity.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div key={entity.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                     <div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{entity.entity_type}</Badge>

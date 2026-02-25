@@ -117,7 +117,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <div className={cn("relative", className)}>
       <motion.div 
         className={cn(
-          "flex items-center gap-3 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300",
+          "flex items-center gap-3 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-200",
           "focus-within:ring-2 focus-within:bg-card",
           colors.ring,
           sizes.container,
@@ -296,7 +296,7 @@ export const FilterChip: React.FC<FilterChipProps> = ({
     <motion.button
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap",
+        "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap",
         active 
           ? activeColors[color] 
           : "bg-card/80 border border-border/50 hover:border-border hover:bg-card text-foreground"

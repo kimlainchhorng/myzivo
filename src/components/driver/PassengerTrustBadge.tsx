@@ -61,7 +61,7 @@ export default function PassengerTrustBadge({ riderId, tripId }: PassengerTrustB
 
   return (
     <div className={cn("flex items-center gap-3 p-3 rounded-xl border", colors.bg, colors.border)}>
-      <div className={cn("p-1.5 rounded-lg", colors.bg)}>
+      <div className={cn("p-1.5 rounded-xl", colors.bg)}>
         <Icon className={cn("w-4 h-4", colors.text)} />
       </div>
       <div className="flex-1 min-w-0">

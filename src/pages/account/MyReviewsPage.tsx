@@ -152,7 +152,7 @@ function ReviewsList({
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
                   <Utensils className="w-4 h-4 text-orange-500" />
                 </div>
                 <Badge variant="secondary" className="text-xs">

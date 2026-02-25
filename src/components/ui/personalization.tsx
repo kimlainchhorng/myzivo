@@ -543,7 +543,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
                   </motion.div>
                 )}
                 {expiresAt && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl">
                     <Clock className="w-3.5 h-3.5" />
                     Expires {expiresAt}
                   </div>
@@ -774,7 +774,7 @@ export const QuickRepeatOrders: React.FC<QuickRepeatProps> = ({
                 </p>
               )}
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-sm font-bold text-eats bg-eats/10 px-2.5 py-1 rounded-lg">{order.price}</span>
+                <span className="text-sm font-bold text-eats bg-eats/10 px-2.5 py-1 rounded-xl">{order.price}</span>
                 {order.lastOrdered && (
                   <span className="text-xs text-muted-foreground">• {order.lastOrdered}</span>
                 )}
@@ -901,7 +901,7 @@ export const FeatureTour: React.FC<FeatureTourProps> = ({
               animate={{ scale: 1 }}
               transition={{ delay: i * 0.05 }}
               className={cn(
-                "w-2.5 h-2.5 rounded-full transition-all duration-300",
+                "w-2.5 h-2.5 rounded-full transition-all duration-200",
                 i < step ? "bg-primary shadow-lg shadow-primary/30" : "bg-muted"
               )}
             />

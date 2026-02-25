@@ -131,7 +131,7 @@ export default function GiftCardSuccessPage() {
                 <span className="font-mono text-lg tracking-wider">{giftCard.code}</span>
                 <button
                   onClick={copyCode}
-                  className="p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="p-2 rounded-xl hover:bg-zinc-800 transition-colors"
                 >
                   {copied ? (
                     <Check className="w-5 h-5 text-emerald-400" />

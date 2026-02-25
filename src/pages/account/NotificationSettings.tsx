@@ -406,7 +406,7 @@ export default function NotificationSettings() {
               )}
 
               {!isConfigured && isSupported && (
-                <div className="flex items-start gap-2 mt-3 p-3 bg-amber-500/10 rounded-lg text-sm">
+                <div className="flex items-start gap-2 mt-3 p-3 bg-amber-500/10 rounded-xl text-sm">
                   <Info className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-amber-700 dark:text-amber-400">
                     Push notifications are being set up. This feature will be

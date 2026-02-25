@@ -392,7 +392,7 @@ const AdminDriverMessaging = () => {
                           <div 
                             key={driver.id}
                             className={cn(
-                              "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
+                              "flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors",
                               selectedDrivers.includes(driver.id) && "bg-primary/10"
                             )}
                             onClick={() => toggleDriverSelection(driver.id)}

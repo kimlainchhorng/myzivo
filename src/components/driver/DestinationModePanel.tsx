@@ -77,7 +77,7 @@ const DestinationModePanel = ({ driverId, isOnline, className }: DestinationMode
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                       <Navigation className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>

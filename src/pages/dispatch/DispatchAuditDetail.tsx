@@ -145,7 +145,7 @@ export default function DispatchAuditDetail() {
             <CardTitle className="text-base">Additional Metadata</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="text-sm bg-muted p-4 rounded-lg overflow-auto">
+            <pre className="text-sm bg-muted p-4 rounded-xl overflow-auto">
               {JSON.stringify(log.metadata, null, 2)}
             </pre>
           </CardContent>

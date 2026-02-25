@@ -307,14 +307,14 @@ export default function RecoveryDashboard() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-muted/50 rounded-xl">
                     <p className="text-sm text-muted-foreground">Recovery Time (RTO)</p>
                     <p className="text-2xl font-bold text-primary">
                       {summary?.rtoMinutes ? `${Math.floor(summary.rtoMinutes / 60)}h ${summary.rtoMinutes % 60}m` : "4h"}
                     </p>
                     <p className="text-xs text-muted-foreground">Max downtime allowed</p>
                   </div>
-                  <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-muted/50 rounded-xl">
                     <p className="text-sm text-muted-foreground">Recovery Point (RPO)</p>
                     <p className="text-2xl font-bold text-primary">
                       {summary?.rpoMinutes ? `${summary.rpoMinutes}m` : "1h"}
@@ -368,7 +368,7 @@ export default function RecoveryDashboard() {
                   {services?.map((service) => (
                     <div
                       key={service.service_name}
-                      className={`p-3 rounded-lg border ${
+                      className={`p-3 rounded-xl border ${
                         service.is_paused
                           ? "bg-amber-500/5 border-amber-500/30"
                           : service.status === "operational"
@@ -561,7 +561,7 @@ export default function RecoveryDashboard() {
               </Table>
 
               {/* User-Safe Message Preview */}
-              <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
                 <h4 className="font-medium flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                   User-Safe Message (when services are paused)

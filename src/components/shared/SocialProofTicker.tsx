@@ -56,7 +56,7 @@ const SocialProofTicker = () => {
       <div
         className={cn(
           "flex items-center gap-3 p-3 rounded-2xl bg-card/90 border border-border/50 backdrop-blur-xl shadow-lg",
-          "transition-all duration-300",
+          "transition-all duration-200",
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}
       >

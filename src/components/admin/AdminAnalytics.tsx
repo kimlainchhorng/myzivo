@@ -93,7 +93,7 @@ const StatCard = ({
   isLoading?: boolean;
   subtitle?: string;
 }) => (
-  <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-xl group hover:shadow-lg transition-all animate-in fade-in duration-300">
+  <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-xl group hover:shadow-lg transition-all animate-in fade-in duration-200">
     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-50`} />
     <CardContent className="relative p-6">
       <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ const AdminAnalytics = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -264,7 +264,7 @@ const AdminAnalytics = () => {
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <Zap className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -275,7 +275,7 @@ const AdminAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Star className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -286,7 +286,7 @@ const AdminAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <Clock className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -297,7 +297,7 @@ const AdminAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-rose-500/10">
+            <div className="p-2 rounded-xl bg-rose-500/10">
               <Utensils className="h-5 w-5 text-rose-500" />
             </div>
             <div>
@@ -308,7 +308,7 @@ const AdminAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-sky-500/10">
+            <div className="p-2 rounded-xl bg-sky-500/10">
               <Plane className="h-5 w-5 text-sky-500" />
             </div>
             <div>
@@ -319,7 +319,7 @@ const AdminAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl hover:shadow-lg transition-all">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <Building2 className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -337,7 +337,7 @@ const AdminAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10">
+                  <div className="p-1.5 rounded-xl bg-primary/10">
                     <TrendingUp className="h-4 w-4 text-primary" />
                   </div>
                   Revenue Overview
@@ -382,7 +382,7 @@ const AdminAnalytics = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-purple-500/10">
+              <div className="p-1.5 rounded-xl bg-purple-500/10">
                 <Car className="h-4 w-4 text-purple-500" />
               </div>
               Trips by Vehicle Type
@@ -436,7 +436,7 @@ const AdminAnalytics = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-green-500/10">
+              <div className="p-1.5 rounded-xl bg-green-500/10">
                 <BarChart className="h-4 w-4 text-green-500" />
               </div>
               Daily Trip Volume
@@ -469,7 +469,7 @@ const AdminAnalytics = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-500/10">
+              <div className="p-1.5 rounded-xl bg-amber-500/10">
                 <Activity className="h-4 w-4 text-amber-500" />
               </div>
               Driver Activity

@@ -610,7 +610,7 @@ export function VehicleForm({
               control={form.control}
               name="instant_book"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                <FormItem className="flex items-center justify-between rounded-xl border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Instant Book</FormLabel>
                     <FormDescription>

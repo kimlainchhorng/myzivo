@@ -100,7 +100,7 @@ const DispatchSettings = () => {
 
             {lastResult && (
               <div
-                className={`p-4 rounded-lg ${
+                className={`p-4 rounded-xl ${
                   lastResult.success
                     ? "bg-emerald-500/10 border border-emerald-500/20"
                     : "bg-destructive/10 border border-destructive/20"
@@ -150,25 +150,25 @@ const DispatchSettings = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                 <span className="text-sm font-medium">RESEND_API_KEY</span>
                 <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                   Configured
                 </Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                 <span className="text-sm font-medium">TWILIO_ACCOUNT_SID</span>
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
                   Optional
                 </Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                 <span className="text-sm font-medium">TWILIO_AUTH_TOKEN</span>
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
                   Optional
                 </Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                 <span className="text-sm font-medium">TWILIO_FROM_NUMBER</span>
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
                   Optional

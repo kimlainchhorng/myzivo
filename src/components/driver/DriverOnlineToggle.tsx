@@ -16,7 +16,7 @@ const DriverOnlineToggle = ({ isOnline, onToggle, isLoading, className }: Driver
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex items-center justify-between p-5 rounded-2xl border transition-all duration-300",
+        "flex items-center justify-between p-5 rounded-2xl border transition-all duration-200",
         isOnline 
           ? "bg-green-500/10 border-green-500/30" 
           : "bg-white/5 border-white/10",

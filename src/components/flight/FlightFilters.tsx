@@ -195,7 +195,7 @@ const FlightFiltersPanel = ({
 
         {/* Stops */}
         <FilterSection id="stops" title="Stops">
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
             <span className="text-sm">Direct flights only</span>
             <Switch
               checked={filters.directOnly}
@@ -242,7 +242,7 @@ const FlightFiltersPanel = ({
                 key={cat.id}
                 onClick={() => toggleArrayFilter('categories', cat.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-lg border transition-all",
+                  "w-full flex items-center gap-3 p-3 rounded-xl border transition-all",
                   filters.categories.includes(cat.id)
                     ? "bg-sky-500/10 border-sky-500/50"
                     : "bg-muted/30 border-border/50 hover:border-sky-500/30"
@@ -286,13 +286,13 @@ const FlightFiltersPanel = ({
                 key={airline.code}
                 onClick={() => toggleArrayFilter('airlines', airline.code)}
                 className={cn(
-                  "w-full flex items-center gap-3 p-2 rounded-lg border transition-all",
+                  "w-full flex items-center gap-3 p-2 rounded-xl border transition-all",
                   filters.airlines.includes(airline.code)
                     ? "bg-sky-500/10 border-sky-500/50"
                     : "bg-transparent border-transparent hover:bg-muted/50"
                 )}
               >
-                <div className="w-8 h-8 rounded-lg bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden">
+                <div className="w-8 h-8 rounded-xl bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden">
                   <img
                     src={getAirlineLogo(airline.code, 50)}
                     alt={airline.name}
@@ -316,7 +316,7 @@ const FlightFiltersPanel = ({
                 key={amenity.id}
                 onClick={() => toggleArrayFilter('amenities', amenity.id)}
                 className={cn(
-                  "flex items-center gap-2 p-2.5 rounded-lg border transition-all text-sm",
+                  "flex items-center gap-2 p-2.5 rounded-xl border transition-all text-sm",
                   filters.amenities.includes(amenity.id)
                     ? "bg-sky-500/10 border-sky-500/50"
                     : "bg-muted/30 border-border/50 hover:border-sky-500/30"
@@ -331,7 +331,7 @@ const FlightFiltersPanel = ({
 
         {/* Refundable */}
         <div className="pt-4">
-          <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-emerald-500" />
               <span className="text-sm">Refundable only</span>
