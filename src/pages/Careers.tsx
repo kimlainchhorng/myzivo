@@ -139,7 +139,7 @@ const Careers = () => {
             <h2 className="text-2xl font-bold mb-8 text-center">Our Culture</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {cultureValues.map((value) => (
-                <Card key={value.title} className="border-border/50">
+                <Card key={value.title} className="border-border/50 hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-6 text-center">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <value.icon className="w-6 h-6 text-primary" />
@@ -157,7 +157,7 @@ const Careers = () => {
             <h2 className="text-2xl font-bold mb-8 text-center">Benefits & Perks</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit) => (
-                <div key={benefit.title} className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center">
+                <div key={benefit.title} className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   <benefit.icon className="w-8 h-8 text-primary mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground">{benefit.description}</p>
@@ -171,7 +171,7 @@ const Careers = () => {
             <h2 className="text-2xl font-bold mb-8 text-center">Teams</h2>
             <div className="grid sm:grid-cols-2 gap-6">
               {departments.map((dept) => (
-                <Card key={dept.name} className="border-border/50">
+                <Card key={dept.name} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
                   <CardHeader>
                     <CardTitle>{dept.name}</CardTitle>
                     <p className="text-sm text-muted-foreground">{dept.description}</p>

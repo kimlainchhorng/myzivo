@@ -91,7 +91,7 @@ export default function Deals() {
                     required
                   />
                 </div>
-                <Button type="submit" size="lg" className="h-12 px-6 rounded-xl">
+                <Button type="submit" size="lg" className="h-12 px-6 rounded-xl shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-shadow">
                   <Bell className="w-4 h-4 mr-2" />
                   Notify Me
                 </Button>
@@ -165,7 +165,7 @@ export default function Deals() {
               ZIVO Plus members get 24-hour early access to flash deals, 
               priority price alerts, and exclusive member discounts.
             </p>
-            <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow">
               <Gift className="w-5 h-5" />
               Learn About ZIVO Plus
             </Button>
