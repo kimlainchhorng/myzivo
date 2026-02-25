@@ -63,7 +63,7 @@ const PartnersSection = () => {
           {trustBadges.map((badge, index) => (
             <div
               key={badge.label}
-              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl animate-in fade-in zoom-in duration-300 transition-transform hover:-translate-y-1 hover:scale-[1.02]"
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl animate-in fade-in zoom-in duration-200 transition-transform hover:-translate-y-1 hover:scale-[1.02]"
               style={{ animationDelay: `${200 + index * 100}ms`, animationFillMode: 'both' }}
             >
               <div className={cn(

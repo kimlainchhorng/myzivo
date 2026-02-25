@@ -344,7 +344,7 @@ const TripChatModal = ({
                 key={reply}
                 variant="outline"
                 size="sm"
-                className="whitespace-nowrap text-xs h-8 flex-shrink-0 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation"
+                className="whitespace-nowrap text-xs h-8 flex-shrink-0 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation"
                 onClick={() => handleQuickReply(reply)}
                 disabled={sendMessage.isPending}
               >

@@ -201,7 +201,7 @@ export function SmartAlertTiming({
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                  "relative p-3 rounded-xl border transition-colors group",
+                  "relative p-3 rounded-xl border transition-all duration-200 group",
                   alert.type === "drop" && "border-emerald-500/20 bg-emerald-500/5",
                   alert.type === "low_stock" && "border-red-500/20 bg-red-500/5",
                   alert.type === "rise" && "border-amber-500/20 bg-amber-500/5"

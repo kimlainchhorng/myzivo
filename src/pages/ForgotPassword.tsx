@@ -162,7 +162,7 @@ const ForgotPassword = () => {
                 <div className="space-y-3 pt-2">
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-gradient-to-r from-primary to-rides hover:from-primary/90 hover:to-rides/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 touch-manipulation active:scale-[0.98]" 
+                    className="w-full h-12 bg-gradient-to-r from-primary to-rides hover:from-primary/90 hover:to-rides/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all duration-200 touch-manipulation active:scale-[0.98]" 
                     disabled={isLoading}
                   >
                     {isLoading ? (

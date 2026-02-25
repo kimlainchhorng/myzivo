@@ -93,7 +93,7 @@ export default function AdminTrustDistribution() {
             <Card key={tier.key}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={cn("p-2 rounded-lg", tier.bg)}>
+                  <div className={cn("p-2 rounded-xl", tier.bg)}>
                     <Icon className={cn("w-4 h-4", tier.color)} />
                   </div>
                   <span className="text-sm font-medium">{tier.label}</span>

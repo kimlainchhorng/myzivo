@@ -70,7 +70,7 @@ export default function AirlineTrustSection() {
                 "flex-shrink-0 mx-2 sm:mx-3",
                 "flex flex-col items-center gap-2 px-4 py-3 rounded-xl",
                 "bg-card/80 backdrop-blur-sm border border-border/50",
-                "hover:border-primary/40 hover:shadow-md transition-all duration-300",
+                "hover:border-primary/40 hover:shadow-md transition-all duration-200",
                 "min-w-[100px] sm:min-w-[120px]",
                 airline.category === 'premium' && "ring-1 ring-amber-500/20"
               )}

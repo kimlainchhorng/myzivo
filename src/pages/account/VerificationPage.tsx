@@ -123,7 +123,7 @@ function DocumentUploadCard({
       <p className="text-xs text-muted-foreground">{description}</p>
       <div
         className={cn(
-          "relative border-2 border-dashed rounded-xl p-6 transition-colors",
+          "relative border-2 border-dashed rounded-xl p-6 transition-all duration-200",
           isUploaded ? "border-emerald-500/50 bg-emerald-500/5" : "border-border hover:border-primary/50",
           (isUploading || disabled) && "opacity-50 pointer-events-none"
         )}

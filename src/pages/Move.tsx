@@ -237,7 +237,7 @@ export default function Move() {
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -319,7 +319,7 @@ export default function Move() {
               <Button
                 onClick={handleOpenZivoDriver}
                 size="lg"
-                className="h-14 px-10 text-lg rounded-2xl font-bold gap-3 shadow-lg hover:scale-105 transition-transform"
+                className="h-14 px-10 text-lg rounded-2xl font-bold gap-3 shadow-lg hover:scale-110 transition-transform duration-200"
               >
                 Open ZIVO Driver
                 <ExternalLink className="w-5 h-5" />

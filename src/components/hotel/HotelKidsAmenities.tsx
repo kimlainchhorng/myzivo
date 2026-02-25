@@ -90,7 +90,7 @@ export default function HotelKidsAmenities() {
               className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/50 hover:border-border hover:shadow-sm transition-all duration-200"
             >
               <div className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center",
+                "w-10 h-10 rounded-xl flex items-center justify-center",
                 "bg-gradient-to-br from-current/10 to-current/5",
                 amenity.color
               )}>

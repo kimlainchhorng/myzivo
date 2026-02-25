@@ -146,7 +146,7 @@ const AITravelAssistantWidget = ({
             <button
               key={suggestion.id}
               onClick={() => handleSend(suggestion.text)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-muted/30 border border-border/30 text-xs hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-muted/30 border border-border/30 text-xs hover:bg-muted/50 transition-all duration-200"
             >
               <Icon className="w-3 h-3 text-primary" />
               {suggestion.text}

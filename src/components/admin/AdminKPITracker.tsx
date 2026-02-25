@@ -140,11 +140,11 @@ const AdminKPITracker = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={cn("p-2 rounded-lg bg-muted/50", kpi.color.replace("text-", "bg-") + "/10")}>
+                    <div className={cn("p-2 rounded-xl bg-muted/50", kpi.color.replace("text-", "bg-") + "/10")}>
                       <Icon className={cn("h-4 w-4", kpi.color)} />
                     </div>
                     <div>

@@ -86,7 +86,7 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
       className={cn(
         "bg-card rounded-2xl border border-border/60",
         "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]",
-        "transition-all duration-300 ease-out",
+        "transition-all duration-200 ease-out",
         "overflow-hidden group",
         className
       )}
@@ -106,7 +106,7 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
             <img
               src={brandedCar.src}
               alt={`${car.category} rental car`}
-              className="w-full h-full object-contain max-h-32 group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain max-h-32 group-hover:scale-110 transition-transform duration-200"
               loading="lazy"
             />
           ) : (
