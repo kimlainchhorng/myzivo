@@ -44,7 +44,7 @@ export function AuditNotice({ variant = "inline", className }: AuditNoticeProps)
         className
       )}>
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Shield className="w-4 h-4 text-primary" />
           </div>
           <div>
@@ -61,7 +61,7 @@ export function AuditNotice({ variant = "inline", className }: AuditNoticeProps)
   // inline variant (default)
   return (
     <div className={cn(
-      "flex items-center gap-2 p-3 rounded-lg bg-muted/50 border",
+      "flex items-center gap-2 p-3 rounded-xl bg-muted/50 border",
       className
     )}>
       <Info className="w-4 h-4 text-muted-foreground shrink-0" />

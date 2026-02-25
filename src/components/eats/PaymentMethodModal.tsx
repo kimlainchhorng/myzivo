@@ -77,7 +77,7 @@ export function PaymentMethodModal({
                       : "bg-zinc-800/50 border-white/5 hover:border-white/10"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-700 flex items-center justify-center">
                     {getCardIcon(method.brand)}
                   </div>
                   <div className="flex-1 text-left">

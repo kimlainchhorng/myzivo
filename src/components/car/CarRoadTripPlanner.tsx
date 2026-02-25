@@ -117,7 +117,7 @@ const CarRoadTripPlanner = () => {
                   {trip.highlights.map((highlight) => (
                     <span
                       key={highlight}
-                      className="px-2 py-1 text-xs rounded-lg bg-muted/50 text-muted-foreground"
+                      className="px-2 py-1 text-xs rounded-xl bg-muted/50 text-muted-foreground"
                     >
                       {highlight}
                     </span>

@@ -87,7 +87,7 @@ function ServiceSection({
           to={service === 'flights' ? '/flights' : service === 'hotels' ? '/hotels' : '/rent-car'}
           className="flex items-center gap-2 mb-3 group"
         >
-          <div className={cn("p-2 rounded-lg", data.bgColor)}>
+          <div className={cn("p-2 rounded-xl", data.bgColor)}>
             <Icon className={cn("w-4 h-4", data.color)} />
           </div>
           <h3 className="font-semibold capitalize group-hover:text-primary transition-colors">

@@ -53,7 +53,7 @@ const HotelNeighborhood = () => {
                     className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center ${place.color}`}>
+                      <div className={`w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center ${place.color}`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>

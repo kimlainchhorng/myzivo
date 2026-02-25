@@ -67,7 +67,7 @@ const HotelSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-violet-500/10">
+                <div className="p-2 rounded-xl bg-violet-500/10">
                   <User className="h-5 w-5 text-violet-500" />
                 </div>
                 <div>
@@ -106,7 +106,7 @@ const HotelSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
+                <div className="p-2 rounded-xl bg-blue-500/10">
                   <BedDouble className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ const HotelSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
+                <div className="p-2 rounded-xl bg-amber-500/10">
                   <Bell className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>

@@ -182,7 +182,7 @@ export const TravelBundleCard = ({
 
         {/* Selected bundles */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-sky-500/10 border border-sky-500/30">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
             <Plane className="w-5 h-5 text-sky-400" />
             <div className="flex-1">
               <p className="font-medium text-sm">Flight</p>

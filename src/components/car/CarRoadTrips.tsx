@@ -143,7 +143,7 @@ export default function CarRoadTrips() {
 
         <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
           <h4 className="font-medium mb-2 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
               <Car className="w-4 h-4 text-emerald-400" />
             </div>
             Road Trip Package

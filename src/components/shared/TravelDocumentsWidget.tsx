@@ -91,7 +91,7 @@ const TravelDocumentsWidget = ({
               key={doc.id}
               className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/20 transition-all duration-200"
             >
-              <div className={cn("p-1.5 rounded-lg", config.color.split(" ")[1])}>
+              <div className={cn("p-1.5 rounded-xl", config.color.split(" ")[1])}>
                 <StatusIcon className={cn("w-4 h-4", config.color.split(" ")[0])} />
               </div>
               <div className="flex-1 min-w-0">
@@ -130,7 +130,7 @@ const TravelDocumentsWidget = ({
       </div>
 
       {/* Security Note */}
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 text-xs">
+      <div className="flex items-start gap-2 p-2 rounded-xl bg-primary/5 text-xs">
         <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
           Documents are encrypted and stored securely. Only you can access them.

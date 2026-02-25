@@ -76,7 +76,7 @@ export default function AdminQualityAssurance() {
         <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/20">
+              <div className="p-2 rounded-xl bg-green-500/20">
                 <Star className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -89,7 +89,7 @@ export default function AdminQualityAssurance() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <CheckCircle2 className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -102,7 +102,7 @@ export default function AdminQualityAssurance() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -115,7 +115,7 @@ export default function AdminQualityAssurance() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <Target className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -173,7 +173,7 @@ export default function AdminQualityAssurance() {
         <CardContent>
           <div className="space-y-4">
             {qualityIssues.map((issue) => (
-              <div key={issue.category} className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
+              <div key={issue.category} className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
                 <div className="flex items-center gap-4">
                   {issue.severity === "critical" ? (
                     <XCircle className="h-5 w-5 text-red-500" />

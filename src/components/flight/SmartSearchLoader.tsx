@@ -100,7 +100,7 @@
            <div
              key={i}
              className={cn(
-               "w-2 h-2 rounded-full transition-all duration-300",
+               "w-2 h-2 rounded-full transition-all duration-200",
                i === messageIndex 
                  ? "bg-primary scale-125" 
                  : i < messageIndex 

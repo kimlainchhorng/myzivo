@@ -247,7 +247,7 @@ export default function FlightResultsSection({
 
         {/* Advanced Filters - Collapsible */}
         {showFilters && (
-          <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-200">
             <FlightFilters
               filters={{
                 priceRange: filters.priceRange,
@@ -319,7 +319,7 @@ export default function FlightResultsSection({
           {sortedResults.map((flight, index) => (
             <div
               key={flight.id}
-              className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+              className="animate-in fade-in slide-in-from-bottom-4 duration-200"
               style={{ animationDelay: `${index * 75}ms` }}
             >
               <div className="relative">

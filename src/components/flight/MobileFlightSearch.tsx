@@ -113,7 +113,7 @@ export const MobileFlightSearch = ({
         <button
           onClick={() => onTripTypeChange("roundtrip")}
           className={cn(
-            "flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation active:scale-95",
+            "flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition-all touch-manipulation active:scale-95",
             tripType === "roundtrip"
               ? "bg-sky-500 text-white shadow-md"
               : "text-muted-foreground"
@@ -124,7 +124,7 @@ export const MobileFlightSearch = ({
         <button
           onClick={() => onTripTypeChange("oneway")}
           className={cn(
-            "flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation active:scale-95",
+            "flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition-all touch-manipulation active:scale-95",
             tripType === "oneway"
               ? "bg-sky-500 text-white shadow-md"
               : "text-muted-foreground"

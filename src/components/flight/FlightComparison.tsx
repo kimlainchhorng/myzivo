@@ -353,7 +353,7 @@ export default function FlightComparison({
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden border border-border/30">
+                            <div className="w-10 h-10 rounded-xl bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden border border-border/30">
                               <img 
                                 src={flight.logo} 
                                 alt={flight.airline}
@@ -483,7 +483,7 @@ export default function FlightComparison({
                                     >
                                       {bestId === flight.id && (
                                         <motion.div 
-                                          className="absolute inset-0 bg-emerald-500/10 rounded-lg -m-1"
+                                          className="absolute inset-0 bg-emerald-500/10 rounded-xl -m-1"
                                           initial={{ scale: 0 }}
                                           animate={{ scale: 1 }}
                                         />

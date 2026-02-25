@@ -94,7 +94,7 @@ const PackingList = () => {
                       <button
                         key={item}
                         onClick={() => toggleItem(item)}
-                        className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all ${
+                        className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all duration-200 ${
                           isChecked 
                             ? "bg-green-500/10 text-green-400" 
                             : "hover:bg-muted/50"

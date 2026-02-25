@@ -10,7 +10,8 @@ import {
   ChevronUp,
   CheckCircle2,
   Circle,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -155,7 +156,7 @@ const BookingTimeline = ({ events = defaultEvents, className }: BookingTimelineP
           <div key={dateKey} className="relative">
             {/* Date Header */}
             <div className="flex items-center gap-3 mb-3">
-              <div className="px-3 py-1.5 rounded-lg bg-muted text-sm font-semibold">
+              <div className="px-3 py-1.5 rounded-xl bg-muted text-sm font-semibold">
                 {format(new Date(dateKey), "EEE, MMM d")}
               </div>
               <div className="flex-1 h-px bg-border" />
@@ -230,8 +231,8 @@ const BookingTimeline = ({ events = defaultEvents, className }: BookingTimelineP
                             </div>
                           )}
                           {event.details.notes && (
-                            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
-                              💡 {event.details.notes}
+                            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-xl flex items-start gap-1.5">
+                              <Sparkles className="w-3 h-3 shrink-0 mt-0.5" /> {event.details.notes}
                             </p>
                           )}
                         </div>

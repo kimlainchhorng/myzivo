@@ -153,7 +153,7 @@ const UnifiedSearchHub = ({ className }: UnifiedSearchHubProps) => {
                         onClick={() => setSearchQuery(search.query)}
                         className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left"
                       >
-                        <div className={cn("p-2 rounded-lg", mode?.bgColor)}>
+                        <div className={cn("p-2 rounded-xl", mode?.bgColor)}>
                           {mode && <mode.icon className={cn("w-4 h-4", mode.color)} />}
                         </div>
                         <div className="flex-1 min-w-0">

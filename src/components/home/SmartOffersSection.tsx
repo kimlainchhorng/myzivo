@@ -134,7 +134,7 @@ function SmartDealCard({ deal, compact }: { deal: SmartOffer; compact?: boolean 
           )}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded-lg bg-white/5"
+            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded-xl bg-white/5"
           >
             <Copy className="w-3 h-3" />
             {deal.code}
@@ -171,7 +171,7 @@ const SmartOffersSection = ({ className }: SmartOffersSectionProps) => {
     return (
       <section className={cn('py-12 px-4 md:px-8', className)}>
         <div className="max-w-6xl mx-auto">
-          <div className="h-8 w-48 bg-zinc-800 rounded-lg animate-pulse mb-6" />
+          <div className="h-8 w-48 bg-zinc-800 rounded-xl animate-pulse mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map(i => (
               <div key={i} className="h-48 bg-zinc-900/80 rounded-2xl animate-pulse border border-white/5" />

@@ -141,7 +141,7 @@ const AppDownloadCTA = () => {
                     <QrCode className="w-5 h-5 text-primary" />
                     <span className="text-sm font-medium">Scan to Download</span>
                   </div>
-                  <div className="w-24 h-24 bg-white rounded-lg p-2">
+                  <div className="w-24 h-24 bg-white rounded-xl p-2">
                     <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iYmxhY2siLz48cmVjdCB4PSIxMjAiIHk9IjIwIiB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9ImJsYWNrIi8+PHJlY3QgeD0iMjAiIHk9IjEyMCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJibGFjayIvPjwvc3ZnPg==')] bg-cover" />
                   </div>
                 </div>

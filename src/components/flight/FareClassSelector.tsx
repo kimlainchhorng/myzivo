@@ -175,7 +175,7 @@ const FareClassSelector = ({
               )}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className={cn("p-1 rounded-lg", isSelected ? colors.text : 'text-muted-foreground')}>
+                <span className={cn("p-1 rounded-xl", isSelected ? colors.text : 'text-muted-foreground')}>
                   {fare.icon}
                 </span>
                 <span className="font-semibold text-sm">{fare.name}</span>

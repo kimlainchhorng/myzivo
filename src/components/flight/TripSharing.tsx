@@ -128,7 +128,7 @@ export const TripSharing = ({
           </div>
 
           {/* Visibility Toggle */}
-          <div className="flex items-center gap-2 p-1 rounded-lg bg-muted/50">
+          <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/50">
             {[
               { value: 'private', icon: Lock, label: 'Private' },
               { value: 'link', icon: Link2, label: 'Link' },
@@ -187,8 +187,8 @@ export const TripSharing = ({
           </div>
           
           {/* QR Code Display */}
-          <div className="flex items-center justify-center p-4 rounded-lg bg-white">
-            <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg flex items-center justify-center">
+          <div className="flex items-center justify-center p-4 rounded-xl bg-white">
+            <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center">
               <QrCode className="w-16 h-16 text-white" />
             </div>
           </div>
@@ -235,7 +235,7 @@ export const TripSharing = ({
                 onKeyDown={(e) => e.key === 'Enter' && sendInvite()}
               />
             </div>
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50">
               <button
                 onClick={() => setInvitePermission('view')}
                 className={cn(
@@ -303,7 +303,7 @@ export const TripSharing = ({
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50">
                       <button
                         onClick={() => updatePermission(user.id, 'view')}
                         className={cn(

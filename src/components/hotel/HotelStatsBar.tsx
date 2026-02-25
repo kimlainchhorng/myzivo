@@ -73,11 +73,11 @@ export default function HotelStatsBar({ className }: HotelStatsBarProps) {
           {stats.map((stat, index) => (
             <div
               key={stat.label}
-              className="flex flex-col items-center p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-amber-500/30 transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4 touch-manipulation"
+              className="flex flex-col items-center p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-amber-500/30 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-4 touch-manipulation"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={cn(
-                "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 transition-transform group-hover:scale-110",
+                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-2 sm:mb-3 transition-transform group-hover:scale-110",
                 stat.bgColor
               )}>
                 <stat.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", stat.color)} />

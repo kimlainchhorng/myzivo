@@ -163,7 +163,7 @@ export default function PrivacySecurity() {
             </h2>
             <Accordion type="single" collapsible className="space-y-4">
               {securityMeasures.map((measure) => (
-                <AccordionItem key={measure.title} value={measure.title} className="border rounded-lg px-4">
+                <AccordionItem key={measure.title} value={measure.title} className="border rounded-xl px-4">
                   <AccordionTrigger className="hover:no-underline font-semibold">
                     {measure.title}
                   </AccordionTrigger>
@@ -192,7 +192,7 @@ export default function PrivacySecurity() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                       <Download className="w-5 h-5 text-blue-500" />
                     </div>
                     <h3 className="font-semibold">Export Your Data</h3>
@@ -205,7 +205,7 @@ export default function PrivacySecurity() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                       <Trash2 className="w-5 h-5 text-red-500" />
                     </div>
                     <h3 className="font-semibold">Delete Your Data</h3>

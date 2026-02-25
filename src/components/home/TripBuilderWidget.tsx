@@ -141,7 +141,7 @@ const TripBuilderWidget = ({ destination = "Paris", className }: TripBuilderWidg
                 </div>
                 
                 {/* Icon */}
-                <div className={cn("p-2 rounded-lg shrink-0", config.bgColor)}>
+                <div className={cn("p-2 rounded-xl shrink-0", config.bgColor)}>
                   <Icon className={cn("w-5 h-5", config.color)} />
                 </div>
                 
