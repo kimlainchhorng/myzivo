@@ -317,9 +317,9 @@ export const FlightPriceAlert = ({
                       setNotifications((prev) => ({ ...prev, email: !prev.email }))
                     }
                     className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all",
+                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 active:scale-[0.95] touch-manipulation",
                       notifications.email
-                        ? "bg-sky-500/10 border-sky-500/40"
+                        ? "bg-sky-500/10 border-sky-500/40 shadow-sm"
                         : "bg-muted/30 border-border/50 hover:border-border"
                     )}
                   >
@@ -336,9 +336,9 @@ export const FlightPriceAlert = ({
                       setNotifications((prev) => ({ ...prev, push: !prev.push }))
                     }
                     className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all",
+                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 active:scale-[0.95] touch-manipulation",
                       notifications.push
-                        ? "bg-sky-500/10 border-sky-500/40"
+                        ? "bg-sky-500/10 border-sky-500/40 shadow-sm"
                         : "bg-muted/30 border-border/50 hover:border-border"
                     )}
                   >
@@ -355,9 +355,9 @@ export const FlightPriceAlert = ({
                       setNotifications((prev) => ({ ...prev, sms: !prev.sms }))
                     }
                     className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all",
+                      "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 active:scale-[0.95] touch-manipulation",
                       notifications.sms
-                        ? "bg-sky-500/10 border-sky-500/40"
+                        ? "bg-sky-500/10 border-sky-500/40 shadow-sm"
                         : "bg-muted/30 border-border/50 hover:border-border"
                     )}
                   >
@@ -390,7 +390,7 @@ export const FlightPriceAlert = ({
               {/* Create Alert Button */}
               <Button
                 onClick={handleCreateAlert}
-                className="w-full h-12 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30"
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 active:scale-[0.97] transition-all duration-200 touch-manipulation"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create Price Alert

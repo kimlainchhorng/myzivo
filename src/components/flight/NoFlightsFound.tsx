@@ -73,12 +73,12 @@ export default function NoFlightsFound({
 
       <div className="flex flex-col sm:flex-row justify-center gap-3 mb-8">
         {onClearFilters && (
-          <Button variant="outline" onClick={onClearFilters} className="gap-2">
+          <Button variant="outline" onClick={onClearFilters} className="gap-2 rounded-xl min-h-[44px] active:scale-[0.97] transition-all duration-200 touch-manipulation">
             Clear Filters
           </Button>
         )}
         {onModifySearch && (
-          <Button variant="outline" onClick={onModifySearch} className="gap-2">
+          <Button variant="outline" onClick={onModifySearch} className="gap-2 rounded-xl min-h-[44px] active:scale-[0.97] transition-all duration-200 touch-manipulation">
             <Search className="w-4 h-4" />
             Modify Search
           </Button>
@@ -92,21 +92,21 @@ export default function NoFlightsFound({
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => handleCrossSellClick('hotel')}
-              className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-all"
+              className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-all duration-200 active:scale-[0.95] touch-manipulation"
             >
               <Hotel className="w-6 h-6 text-amber-500 mx-auto mb-2" />
               <p className="text-sm font-medium">Hotels</p>
             </button>
             <button
               onClick={() => handleCrossSellClick('car')}
-              className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
+              className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all duration-200 active:scale-[0.95] touch-manipulation"
             >
               <Car className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
               <p className="text-sm font-medium">Cars</p>
             </button>
             <button
               onClick={() => handleCrossSellClick('activities')}
-              className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 transition-all"
+              className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 transition-all duration-200 active:scale-[0.95] touch-manipulation"
             >
               <Ticket className="w-6 h-6 text-purple-500 mx-auto mb-2" />
               <p className="text-sm font-medium">Activities</p>

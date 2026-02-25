@@ -51,7 +51,7 @@ export default function NoCarsFound({
 
       <div className="flex flex-col sm:flex-row justify-center gap-3 mb-6">
         {onModifySearch && (
-          <Button variant="outline" onClick={onModifySearch} className="gap-2">
+          <Button variant="outline" onClick={onModifySearch} className="gap-2 rounded-xl min-h-[44px] active:scale-[0.97] transition-all duration-200 touch-manipulation">
             <Search className="w-4 h-4" />
             Modify Search
           </Button>
@@ -66,7 +66,7 @@ export default function NoCarsFound({
           </p>
           <Button
             size="lg"
-            className="w-full gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-lg shadow-violet-500/30"
+            className="w-full gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 min-h-[48px] rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
             onClick={handleSearchPartner}
           >
             <Car className="w-5 h-5" />

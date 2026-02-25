@@ -92,9 +92,9 @@ export default function BundleBuilder({
               <div
                 key={bundle.type}
                 className={cn(
-                  "relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer",
+                  "relative flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation",
                   selectedBundle === bundle.type
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
                     : "border-border hover:border-primary/30"
                 )}
                 onClick={() => handleBundleChange(bundle.type)}

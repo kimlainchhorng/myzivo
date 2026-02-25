@@ -182,7 +182,7 @@ export function PhoneVerificationDialog({
             <Button
               onClick={() => handleVerify(code.join(""))}
               disabled={code.some((d) => !d) || verifyOTP.isPending}
-              className="w-full"
+              className="w-full h-12 rounded-xl font-semibold shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation"
             >
               {verifyOTP.isPending ? (
                 <>

@@ -140,7 +140,7 @@ export default function ExitIntentModal({
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1"
               />
-              <Button onClick={handleSetPriceAlert} className="gap-2">
+              <Button onClick={handleSetPriceAlert} className="gap-2 rounded-xl min-h-[44px] shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation">
                 <Bell className="w-4 h-4" />
                 {EXIT_INTENT_CONFIG.copy.priceAlertCTA}
               </Button>
@@ -160,7 +160,7 @@ export default function ExitIntentModal({
           {/* Save Search Option */}
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 rounded-xl min-h-[44px] active:scale-[0.97] transition-all duration-200 touch-manipulation"
             onClick={handleSaveSearch}
           >
             <Bookmark className="w-4 h-4" />

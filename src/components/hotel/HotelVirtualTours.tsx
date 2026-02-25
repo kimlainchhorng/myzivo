@@ -90,7 +90,7 @@ const HotelVirtualTours = () => {
                     <Button
                       size="icon"
                       variant="secondary"
-                      className="rounded-full w-12 h-12 bg-white/20 backdrop-blur hover:bg-white/30"
+                      className="rounded-full w-12 h-12 bg-white/20 backdrop-blur hover:bg-white/30 active:scale-[0.90] transition-all duration-200 touch-manipulation"
                       onClick={() => setIsPlaying(!isPlaying)}
                     >
                       {isPlaying ? (
@@ -146,7 +146,7 @@ const HotelVirtualTours = () => {
                     <h3 className="text-xl font-semibold">{tours[activeTour].hotel}</h3>
                     <p className="text-muted-foreground">{tours[activeTour].location}</p>
                   </div>
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button className="bg-primary hover:bg-primary/90 rounded-xl shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation">
                     Book This Hotel
                   </Button>
                 </div>
@@ -169,12 +169,12 @@ const HotelVirtualTours = () => {
                 Available Tours
               </h3>
               {tours.map((tour, index) => (
-                <button
+                  <button
                   key={tour.id}
                   onClick={() => setActiveTour(index)}
-                  className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation ${
                     activeTour === index
-                      ? "bg-primary/10 border border-primary"
+                      ? "bg-primary/10 border border-primary shadow-sm"
                       : "bg-card/50 border border-border/50 hover:border-primary/30"
                   }`}
                 >

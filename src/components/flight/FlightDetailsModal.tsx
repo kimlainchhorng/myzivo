@@ -370,13 +370,13 @@ export default function FlightDetailsModal({
           </p>
           
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" className="flex-1 rounded-xl h-12 active:scale-[0.97] transition-all duration-200 touch-manipulation" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             
             <Button 
               onClick={handleSelectFlight}
-              className="flex-1 gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
+              className="flex-1 gap-2 h-12 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/20 active:scale-[0.97] transition-all duration-200 touch-manipulation"
             >
               <ArrowRight className="w-4 h-4" />
               Select Flight

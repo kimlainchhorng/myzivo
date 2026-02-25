@@ -21,7 +21,7 @@ export function OrderReceiptCard({ order }: OrderReceiptCardProps) {
   const Icon = config.icon;
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-card/80 border border-border/50 hover:border-border transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card/80 border border-border/50 hover:border-border hover:shadow-sm transition-all duration-200">
       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", config.bg)}>
         <Icon className={cn("w-5 h-5", config.color)} />
       </div>
@@ -41,7 +41,7 @@ export function OrderReceiptCard({ order }: OrderReceiptCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-9 w-9 shrink-0 rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
           onClick={() => downloadReceipt(order)}
           aria-label={`Download receipt for ${order.title}`}
         >

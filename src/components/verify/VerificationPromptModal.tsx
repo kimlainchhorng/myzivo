@@ -46,7 +46,7 @@ export default function VerificationPromptModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+        <div className="bg-muted/50 rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-3 text-sm">
             <UserCheck className="w-4 h-4 text-emerald-500" />
             <span>Quick 2-minute verification process</span>
@@ -58,10 +58,10 @@ export default function VerificationPromptModal({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button onClick={onStartVerification} className="w-full">
+          <Button onClick={onStartVerification} className="w-full h-12 rounded-xl font-semibold shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation">
             Start Verification
           </Button>
-          <Button variant="ghost" onClick={onClose} className="w-full">
+          <Button variant="ghost" onClick={onClose} className="w-full h-11 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation">
             Cancel
           </Button>
         </DialogFooter>

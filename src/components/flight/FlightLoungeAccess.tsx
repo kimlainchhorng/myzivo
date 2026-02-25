@@ -126,7 +126,7 @@ export default function FlightLoungeAccess() {
           </div>
         ))}
 
-        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center hover:bg-primary/15 transition-all duration-200">
+        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center hover:bg-primary/15 transition-all duration-200">
           <p className="text-sm text-muted-foreground">
             <Crown className="w-4 h-4 inline mr-1 text-primary" />
             ZIVO Miles members get <span className="text-primary font-medium">20% off</span> all lounge bookings

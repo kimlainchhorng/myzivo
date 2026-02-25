@@ -77,9 +77,9 @@ const CarFleetShowcase = () => {
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
               className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-[0.95] touch-manipulation",
                 activeCategory === category.id
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-md"
                   : "bg-muted/50 hover:bg-muted text-muted-foreground"
               )}
             >
@@ -134,7 +134,10 @@ const CarFleetShowcase = () => {
                 <Button 
                   size="sm" 
                   disabled={!vehicle.available}
-                  className={vehicle.available ? "bg-gradient-to-r from-emerald-500 to-teal-500" : ""}
+                  className={cn(
+                    "rounded-xl active:scale-[0.95] transition-all duration-200 touch-manipulation",
+                    vehicle.available ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20" : ""
+                  )}
                 >
                   Select
                 </Button>
@@ -145,7 +148,7 @@ const CarFleetShowcase = () => {
 
         {/* View All CTA */}
         <div className="mt-8 text-center">
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" className="rounded-xl min-h-[48px] active:scale-[0.97] transition-all duration-200 touch-manipulation">
             <Sparkles className="w-4 h-4 mr-2" />
             View All {vehicles.length}+ Vehicles
           </Button>

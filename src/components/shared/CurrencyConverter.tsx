@@ -115,7 +115,7 @@ export default function CurrencyConverter() {
             variant="outline"
             size="icon"
             onClick={handleSwap}
-            className="rounded-full h-10 w-10"
+            className="rounded-full h-10 w-10 active:scale-[0.90] transition-all duration-200 touch-manipulation"
           >
             <ArrowRightLeft className="w-4 h-4" />
           </Button>
