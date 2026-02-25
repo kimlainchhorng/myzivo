@@ -406,7 +406,7 @@ function MessageBubble({
               <img
                 src={message.attachment_url}
                 alt="Attachment"
-                className="rounded-lg max-w-[200px] max-h-[200px] object-cover"
+                className="rounded-xl max-w-[200px] max-h-[200px] object-cover"
               />
             </a>
           )}

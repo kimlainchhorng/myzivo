@@ -196,18 +196,18 @@ export function DeliveryMap({
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 justify-between">
-        <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-xl">
           <div className="w-3 h-3 rounded-full bg-emerald-500" />
           <span className="text-xs text-white">Delivery</span>
         </div>
         {hasRestaurantLocation && (
-          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
+          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-xl">
             <div className="w-3 h-3 rounded-full bg-orange-500" />
             <span className="text-xs text-white">Restaurant</span>
           </div>
         )}
         {hasDriverLocation && (
-          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-lg">
+          <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur px-3 py-2 rounded-xl">
             <Navigation className="w-3 h-3 text-orange-500" />
             <span className="text-xs text-white">Driver</span>
           </div>
@@ -217,7 +217,7 @@ export function DeliveryMap({
       {/* Stale Location Warning */}
       {isLocationStale && hasDriverLocation && (
         <div className="absolute top-3 left-3 right-3">
-          <div className="bg-yellow-500/20 border border-yellow-500/30 backdrop-blur px-3 py-2 rounded-lg flex items-center gap-2">
+          <div className="bg-yellow-500/20 border border-yellow-500/30 backdrop-blur px-3 py-2 rounded-xl flex items-center gap-2">
             <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
             <span className="text-xs text-yellow-400">Updating driver location...</span>
           </div>

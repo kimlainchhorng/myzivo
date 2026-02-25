@@ -104,7 +104,7 @@ const AdminPayoutProcessing = () => {
                 <p className="text-xs text-muted-foreground">Pending Payouts</p>
                 <p className="text-xl font-bold">{pendingPayouts.length}</p>
               </div>
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
             </div>
@@ -118,7 +118,7 @@ const AdminPayoutProcessing = () => {
                 <p className="text-xs text-muted-foreground">Ready to Process</p>
                 <p className="text-xl font-bold">${totalReadyAmount.toLocaleString()}</p>
               </div>
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
             </div>
@@ -132,7 +132,7 @@ const AdminPayoutProcessing = () => {
                 <p className="text-xs text-muted-foreground">Drivers Pending</p>
                 <p className="text-xl font-bold">{pendingPayouts.filter(p => p.recipientType === "driver").length}</p>
               </div>
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Users className="h-5 w-5 text-blue-500" />
               </div>
             </div>

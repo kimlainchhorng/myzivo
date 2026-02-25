@@ -255,7 +255,7 @@ const AdminAffiliateRevenueReport = () => {
                 ].map((product) => (
                   <div key={product.name} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                     <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", product.bgColor)}>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", product.bgColor)}>
                         <product.icon className={cn("w-5 h-5", product.color)} />
                       </div>
                       <div>
@@ -358,7 +358,7 @@ const AdminAffiliateRevenueReport = () => {
               { label: "Car Rentals", subId: "zivo_cars" },
               { label: "Activities", subId: "zivo_activities" },
             ].map((item) => (
-              <div key={item.subId} className="flex items-center justify-between p-2 rounded-lg bg-card border">
+              <div key={item.subId} className="flex items-center justify-between p-2 rounded-xl bg-card border">
                 <span className="text-sm font-medium">{item.label}</span>
                 <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{item.subId}</code>
               </div>

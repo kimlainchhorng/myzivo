@@ -113,28 +113,28 @@ const FlightIncidentLog = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-lg border bg-muted/30">
+                  <div className="p-4 rounded-xl border bg-muted/30">
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                       <p className="text-sm text-muted-foreground">Total Incidents</p>
                     </div>
                     <p className="text-2xl font-bold">{stats.totalIncidents}</p>
                   </div>
-                  <div className="p-4 rounded-lg border bg-muted/30">
+                  <div className="p-4 rounded-xl border bg-muted/30">
                     <div className="flex items-center gap-2 mb-1">
                       <CheckCircle className="w-4 h-4 text-emerald-500" />
                       <p className="text-sm text-muted-foreground">Resolved</p>
                     </div>
                     <p className="text-2xl font-bold">{stats.resolvedIncidents}</p>
                   </div>
-                  <div className="p-4 rounded-lg border bg-muted/30">
+                  <div className="p-4 rounded-xl border bg-muted/30">
                     <div className="flex items-center gap-2 mb-1">
                       <Clock className="w-4 h-4 text-blue-500" />
                       <p className="text-sm text-muted-foreground">Avg Resolution</p>
                     </div>
                     <p className="text-2xl font-bold">{stats.avgResolutionMinutes}m</p>
                   </div>
-                  <div className="p-4 rounded-lg border bg-muted/30">
+                  <div className="p-4 rounded-xl border bg-muted/30">
                     <div className="flex items-center gap-2 mb-1">
                       <Users className="w-4 h-4 text-primary" />
                       <p className="text-sm text-muted-foreground">Customers Notified</p>

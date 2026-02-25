@@ -21,7 +21,7 @@ export function ItemAvailabilityBadge({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 bg-red-500/90 text-white font-semibold rounded-lg",
+        "inline-flex items-center gap-1 bg-red-500/90 text-white font-semibold rounded-xl",
         size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs",
         className
       )}

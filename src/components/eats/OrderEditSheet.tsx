@@ -186,7 +186,7 @@ export function OrderEditSheet({
                         <button
                           onClick={() => handleRemoveItem(index)}
                           disabled={isUpdating}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm hover:bg-red-500/20 disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm hover:bg-red-500/20 disabled:opacity-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           {pendingAction === `remove-${index}` ? "..." : "Remove"}

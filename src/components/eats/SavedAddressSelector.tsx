@@ -86,7 +86,7 @@ export function SavedAddressSelector({
             >
               <div
                 className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                   isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}
               >
@@ -120,7 +120,7 @@ export function SavedAddressSelector({
               : "border-dashed border-border hover:border-primary/50"
           )}
         >
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
             <Plus className="w-5 h-5" />
           </div>
           <div className="flex-1">

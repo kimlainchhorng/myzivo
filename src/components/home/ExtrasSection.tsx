@@ -76,7 +76,7 @@ export default function ExtrasSection() {
               className="group"
             >
               <Card className={cn(
-                "h-full border overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300",
+                "h-full border overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-200",
                 extra.highlight 
                   ? "hover:border-primary/50 ring-1 ring-primary/20" 
                   : "hover:border-primary/30"

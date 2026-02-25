@@ -80,7 +80,7 @@ export default function TravelHeroActions() {
               key={action.id}
               to={action.href}
               className={cn(
-                "group relative p-6 rounded-2xl border backdrop-blur-sm transition-all duration-300",
+                "group relative p-6 rounded-2xl border backdrop-blur-sm transition-all duration-200",
                 "hover:-translate-y-2 hover:shadow-2xl",
                 `bg-gradient-to-br ${action.bgGradient}`,
                 action.borderColor,

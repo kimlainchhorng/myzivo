@@ -49,22 +49,22 @@
            </div>
  
            {/* NDC Flights - Wide Card */}
-           <div className="md:col-span-2 bg-gradient-to-br from-sky-500 to-blue-600 rounded-[2rem] lg:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 flex items-center justify-between group cursor-pointer overflow-hidden relative min-h-[140px] md:min-h-0 hover:from-sky-600 hover:to-blue-700 transition-all duration-300">
+           <div className="md:col-span-2 bg-gradient-to-br from-sky-500 to-blue-600 rounded-[2rem] lg:rounded-[2.5rem] p-6 sm:p-8 lg:p-10 flex items-center justify-between group cursor-pointer overflow-hidden relative min-h-[140px] md:min-h-0 hover:from-sky-600 hover:to-blue-700 transition-all duration-200">
              <div className="z-10">
                <h3 className="text-2xl sm:text-3xl font-black italic uppercase text-white">NDC Flights</h3>
                <p className="text-sky-100 opacity-90 text-sm sm:text-base">300+ Airlines via Duffel</p>
              </div>
-             <Plane className="absolute -right-4 -bottom-4 w-24 h-24 sm:w-32 sm:h-32 text-white opacity-20 group-hover:scale-110 transition-transform duration-300" />
+             <Plane className="absolute -right-4 -bottom-4 w-24 h-24 sm:w-32 sm:h-32 text-white opacity-20 group-hover:scale-110 transition-transform duration-200" />
            </div>
  
            {/* Zero-Latency - Small Card */}
-           <div className="bg-zinc-800 rounded-[2rem] lg:rounded-[2.5rem] p-5 sm:p-6 border border-white/5 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-0 hover:border-primary/30 transition-colors duration-300">
+           <div className="bg-zinc-800 rounded-[2rem] lg:rounded-[2.5rem] p-5 sm:p-6 border border-white/5 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-0 hover:border-primary/30 transition-colors duration-200">
              <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 mb-2" />
              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-zinc-400 font-bold">Zero-Latency</p>
            </div>
  
            {/* PCI Level 1 - Small Card */}
-           <div className="bg-zinc-800 rounded-[2rem] lg:rounded-[2.5rem] p-5 sm:p-6 border border-white/5 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-0 hover:border-primary/30 transition-colors duration-300">
+           <div className="bg-zinc-800 rounded-[2rem] lg:rounded-[2.5rem] p-5 sm:p-6 border border-white/5 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-0 hover:border-primary/30 transition-colors duration-200">
              <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400 mb-2" />
              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-zinc-400 font-bold">PCI-Level 1</p>
            </div>

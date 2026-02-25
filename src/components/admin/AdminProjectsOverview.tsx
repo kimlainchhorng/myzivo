@@ -216,7 +216,7 @@ const AdminProjectsOverview = () => {
           return (
             <Card 
               key={project.id}
-              className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300"
+              className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-4 sm:p-6">

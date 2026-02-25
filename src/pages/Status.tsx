@@ -100,7 +100,7 @@ function ServiceStatusRow({ service }: { service: ServiceHealth }) {
   const Icon = config.icon;
 
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-muted/50 rounded-lg transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-muted/50 rounded-xl transition-colors">
       <div className="flex items-center gap-3">
         <Icon className={cn("h-5 w-5", config.color)} />
         <span className="font-medium">{service.name}</span>
@@ -316,28 +316,28 @@ export default function Status() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-2">
-               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
+               <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Flight Partners (Duffel)</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
+               <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Hotel Partners</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-               <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
+               <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Car Rental Partners</span>
                 </div>
                 <span className="text-xs text-emerald-500 font-medium">Operational</span>
               </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors">
+              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Payment Processing (Stripe)</span>
