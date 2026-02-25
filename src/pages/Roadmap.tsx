@@ -300,9 +300,9 @@ export default function Roadmap() {
               </div>
               <div className="flex flex-wrap gap-3">
                 {completedItems.map((item) => (
-                  <div
+                   <div
                     key={item.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     <span className="text-sm font-medium">{item.title}</span>
@@ -321,7 +321,7 @@ export default function Roadmap() {
               We build ZIVO based on your feedback. Let us know what features would make
               your travel experience better.
             </p>
-            <Button asChild className="gap-2">
+            <Button asChild className="gap-2 shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-shadow">
               <Link to="/feedback">
                 <Lightbulb className="w-4 h-4" />
                 Submit Feedback
@@ -349,7 +349,7 @@ function RoadmapCard({
 
   if (compact) {
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className="hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
@@ -374,7 +374,7 @@ function RoadmapCard({
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md hover:border-primary/20 hover:-translate-y-1 transition-all duration-300">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
