@@ -100,7 +100,7 @@ const FlightSchedules = () => {
           <CardHeader className="border-b border-border/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-sky-500/10">
+                <div className="p-2 rounded-xl bg-sky-500/10">
                   <Plane className="h-5 w-5 text-sky-500" />
                 </div>
                 <div>

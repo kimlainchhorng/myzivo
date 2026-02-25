@@ -185,16 +185,16 @@ const CarRentalOverview = () => {
         {stats.map((stat, index) => (
           <div 
             key={stat.label} 
-            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            className="animate-in fade-in slide-in-from-bottom-4 duration-200"
             style={{ animationDelay: `${index * 80}ms` }}
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-1 hover:scale-[1.02]">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 group cursor-pointer hover:-translate-y-1 hover:scale-[1.02]">
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-3">
                   <div 
-                    className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                    className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}
                   >
                     <stat.icon className="h-4 w-4 text-white" />
                   </div>
@@ -264,7 +264,7 @@ const CarRentalOverview = () => {
                     return (
                       <div 
                         key={booking.id}
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group animate-in fade-in slide-in-from-left-2 duration-300"
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group animate-in fade-in slide-in-from-left-2 duration-200"
                         style={{ animationDelay: `${400 + index * 80}ms` }}
                       >
                         <div className="flex items-center gap-4">
@@ -347,7 +347,7 @@ const CarRentalOverview = () => {
                   {availableCars.map((car: any, index: number) => (
                     <div 
                       key={car.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer animate-in fade-in slide-in-from-right-2 duration-300"
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer animate-in fade-in slide-in-from-right-2 duration-200"
                       style={{ animationDelay: `${400 + index * 80}ms` }}
                     >
                       <div className="flex items-center gap-3">

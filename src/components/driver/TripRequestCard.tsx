@@ -85,7 +85,7 @@ const TripRequestCard = ({ trip, onAccept, isAccepting, acceptError, onRetry }: 
 
           {/* Customer info if available */}
           {trip.customer_name && (
-            <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+            <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl">
               <User className="w-4 h-4 text-white/40" />
               <span className="text-sm text-white/60">{trip.customer_name}</span>
             </div>
@@ -102,7 +102,7 @@ const TripRequestCard = ({ trip, onAccept, isAccepting, acceptError, onRetry }: 
 
           {/* Error message with retry */}
           {acceptError && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl">
               <p className="text-sm text-destructive">{acceptError}</p>
             </div>
           )}

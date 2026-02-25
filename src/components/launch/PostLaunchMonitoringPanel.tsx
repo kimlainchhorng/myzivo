@@ -293,7 +293,7 @@ export function PostLaunchMonitoringPanel() {
             ].map((service) => (
               <div
                 key={service.name}
-                className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5"
+                className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5"
               >
                 <span className="text-sm">{service.name}</span>
                 <CheckCircle2 className="h-4 w-4 text-green-500" />

@@ -81,7 +81,7 @@ export default function HomepagePopularRoutes() {
               className={cn(
                 "group p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden relative",
                 "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10",
-                "transition-all duration-300 hover:-translate-y-1 text-left touch-manipulation active:scale-[0.98]",
+                "transition-all duration-200 hover:-translate-y-1 text-left touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 50}ms` }}
@@ -143,7 +143,7 @@ export default function HomepagePopularRoutes() {
                 className={cn(
                   "group p-4 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm",
                   "hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10",
-                  "transition-all duration-300 hover:-translate-y-1 text-center",
+                  "transition-all duration-200 hover:-translate-y-1 text-center",
                   "animate-in fade-in zoom-in-95"
                 )}
                 style={{ animationDelay: `${index * 30}ms` }}

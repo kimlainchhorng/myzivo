@@ -159,7 +159,7 @@ const AdminAIInsights = () => {
             <Card className="border-0 bg-card/50 backdrop-blur-xl">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className={cn("p-2 rounded-lg", stat.bg)}>
+                  <div className={cn("p-2 rounded-xl", stat.bg)}>
                     <stat.icon className={cn("h-5 w-5", stat.color)} />
                   </div>
                   <div>

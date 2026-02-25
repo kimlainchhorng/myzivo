@@ -149,7 +149,7 @@ function DocumentUploadCard({
           </div>
         ) : preview ? (
           <div className="relative">
-            <img src={preview} alt={label} className="w-full h-32 object-cover rounded-lg" />
+            <img src={preview} alt={label} className="w-full h-32 object-cover rounded-xl" />
             {isUploaded && (
               <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />

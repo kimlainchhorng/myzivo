@@ -151,7 +151,7 @@ export default function FlightSearchHero({
 
       {/* Floating Decorative Elements - Desktop only */}
       <div className="absolute top-20 right-10 hidden lg:block animate-float">
-        <div className="w-10 h-10 rounded-lg bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/20">
+        <div className="w-10 h-10 rounded-xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/20">
           <Plane className="w-4 h-4 text-sky-400" />
         </div>
       </div>
@@ -213,7 +213,7 @@ export default function FlightSearchHero({
             <div className="absolute -inset-1 sm:-inset-1.5 bg-gradient-to-r from-sky-500/20 via-blue-600/10 to-cyan-500/20 rounded-xl sm:rounded-2xl blur-lg sm:blur-xl opacity-40 sm:opacity-50" />
             
             {/* Card content wrapper */}
-            <div className="relative bg-gradient-to-br from-card via-card to-card/95 rounded-lg sm:rounded-xl overflow-hidden border border-border/40 shadow-xl sm:shadow-2xl shadow-black/40 ring-1 ring-white/5">
+            <div className="relative bg-gradient-to-br from-card via-card to-card/95 rounded-xl sm:rounded-2xl overflow-hidden border border-border/40 shadow-xl sm:shadow-2xl shadow-black/40 ring-1 ring-white/5">
               {/* Top accent line */}
               <div className="h-0.5 sm:h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-shimmer" />
@@ -230,7 +230,7 @@ export default function FlightSearchHero({
                       key={item.type}
                       onClick={() => setTripType(item.type)}
                       className={cn(
-                        "px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-[11px] sm:text-xs transition-all duration-200 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 touch-manipulation active:scale-95",
+                        "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs transition-all duration-200 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 touch-manipulation active:scale-95",
                         tripType === item.type
                           ? "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-600 text-white shadow-md shadow-sky-500/30"
                           : "bg-muted/80 text-foreground/70 border border-border/60"
@@ -241,7 +241,7 @@ export default function FlightSearchHero({
                       <span className="hidden sm:inline">{item.fullLabel}</span>
                     </button>
                   ))}
-                  <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-[11px] sm:text-xs bg-muted/80 text-foreground/70 flex items-center gap-1.5 sm:gap-2 border border-border/60 flex-shrink-0 touch-manipulation active:scale-95">
+                  <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs bg-muted/80 text-foreground/70 flex items-center gap-1.5 sm:gap-2 border border-border/60 flex-shrink-0 touch-manipulation active:scale-95">
                     <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     Multi
                   </button>
@@ -253,7 +253,7 @@ export default function FlightSearchHero({
                   <div className="space-y-2 sm:space-y-3">
                     {/* From Field */}
                     <div className="relative">
-                      <div className="bg-muted/50 rounded-lg border border-border/40 focus-within:border-sky-500/50 transition-colors">
+                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-sky-500/50 transition-colors">
                         <AirportAutocomplete
                           value={fromCity}
                           onChange={setFromCity}
@@ -278,11 +278,11 @@ export default function FlightSearchHero({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full h-10 sm:h-11 justify-start bg-muted/60 hover:bg-muted border border-border/50 transition-all rounded-lg text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]",
+                              "w-full h-10 sm:h-11 justify-start bg-muted/60 hover:bg-muted border border-border/50 transition-all rounded-xl text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]",
                               !departDate && "text-muted-foreground"
                             )}
                           >
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-sky-500/20">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-sky-500/20">
                               <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-sky-500" />
                             </div>
                             <div className="text-left flex-1">
@@ -294,7 +294,7 @@ export default function FlightSearchHero({
                             </div>
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-card border border-border/50 shadow-2xl rounded-lg" align="start">
+                        <PopoverContent className="w-auto p-0 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
                           <Calendar
                             mode="single"
                             selected={departDate}
@@ -311,7 +311,7 @@ export default function FlightSearchHero({
                   {/* Swap Button - Mobile inline, Desktop center */}
                   <button
                     onClick={swapCities}
-                    className="flex md:hidden w-full h-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground border border-border/50 my-1 touch-manipulation active:scale-95 gap-1.5"
+                    className="flex md:hidden w-full h-8 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground border border-border/50 my-1 touch-manipulation active:scale-95 gap-1.5"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-medium">Swap</span>
@@ -327,7 +327,7 @@ export default function FlightSearchHero({
                   <div className="space-y-2 sm:space-y-3">
                     {/* To Field */}
                     <div className="relative">
-                      <div className="bg-muted/50 rounded-lg border border-border/40 focus-within:border-cyan-500/50 transition-colors">
+                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-cyan-500/50 transition-colors">
                         <AirportAutocomplete
                           value={toCity}
                           onChange={setToCity}
@@ -353,11 +353,11 @@ export default function FlightSearchHero({
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full h-10 sm:h-11 justify-start bg-muted/60 hover:bg-muted border border-border/50 transition-all rounded-lg text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]",
+                                "w-full h-10 sm:h-11 justify-start bg-muted/60 hover:bg-muted border border-border/50 transition-all rounded-xl text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]",
                                 !returnDate && "text-muted-foreground"
                               )}
                             >
-                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-cyan-500/20">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-cyan-500/20">
                                 <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-cyan-500" />
                               </div>
                               <div className="text-left flex-1">
@@ -407,7 +407,7 @@ export default function FlightSearchHero({
                           className="w-full h-10 sm:h-11 justify-between bg-muted/60 border border-border/50 rounded-lg text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center border border-sky-500/20">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center border border-sky-500/20">
                               <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
                             </div>
                             <span className="font-bold text-foreground">{totalPassengers}</span>
@@ -415,7 +415,7 @@ export default function FlightSearchHero({
                           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-64 sm:w-72 p-3 sm:p-4 bg-card border border-border/50 shadow-2xl rounded-lg" align="start">
+                      <PopoverContent className="w-64 sm:w-72 p-3 sm:p-4 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
                         <div className="space-y-2 sm:space-y-3">
                           <h4 className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-2 mb-2 sm:mb-3">
                             <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />
@@ -433,11 +433,11 @@ export default function FlightSearchHero({
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}>
+                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}>
                                 <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                               <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm">{adults}</span>
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setAdults(Math.min(9, adults + 1))} disabled={adults >= 9}>
+                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.min(9, adults + 1))} disabled={adults >= 9}>
                                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                             </div>
@@ -504,10 +504,10 @@ export default function FlightSearchHero({
                       Class
                     </label>
                     <Select value={cabinClass} onValueChange={setCabinClass}>
-                      <SelectTrigger className="h-10 sm:h-11 bg-muted/60 border border-border/50 rounded-lg text-xs sm:text-sm font-medium">
+                      <SelectTrigger className="h-10 sm:h-11 bg-muted/60 border border-border/50 rounded-xl text-xs sm:text-sm font-medium">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border border-border/50 shadow-2xl rounded-lg">
+                      <SelectContent className="bg-card border border-border/50 shadow-2xl rounded-xl">
                         <SelectItem value="economy" className="py-2 rounded-md text-xs sm:text-sm">Economy</SelectItem>
                         <SelectItem value="premium" className="py-2 rounded-md text-xs sm:text-sm">Premium</SelectItem>
                         <SelectItem value="business" className="py-2 rounded-md text-xs sm:text-sm">Business</SelectItem>
@@ -595,7 +595,7 @@ export default function FlightSearchHero({
                         key={dest.code}
                         onClick={() => setToCity(`${dest.city} (${dest.code})`)}
                         className={cn(
-                          "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-all flex-shrink-0 touch-manipulation active:scale-95 relative",
+                          "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border transition-all flex-shrink-0 touch-manipulation active:scale-95 relative",
                           toCity.includes(dest.code)
                             ? "border-sky-500 bg-gradient-to-r from-sky-500/15 to-blue-500/10 text-sky-400"
                             : "border-border/50 bg-muted/40"
@@ -646,7 +646,7 @@ export default function FlightSearchHero({
 
           {/* Price Calendar */}
           {showPriceCalendar && toCity && (
-            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-200">
               <PriceCalendar
                 basePrice={299}
                 selectedDate={departDate}

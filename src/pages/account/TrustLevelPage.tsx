@@ -117,7 +117,7 @@ export default function TrustLevelPage() {
                     disabled={!imp.path}
                     className={cn(
                       "flex items-center justify-between w-full py-2.5 text-left",
-                      imp.path && "hover:bg-muted/50 rounded-lg px-1 -mx-1 transition-colors"
+                      imp.path && "hover:bg-muted/50 rounded-xl px-1 -mx-1 transition-colors"
                     )}
                   >
                     <span className="text-sm">{imp.label}</span>

@@ -85,7 +85,7 @@ const RideOptionsSection = () => {
           {/* Left Content */}
           <div className="animate-in fade-in slide-in-from-left-6 duration-500">
             <div 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-teal-400 text-white text-sm font-semibold mb-6 shadow-lg shadow-primary/30 animate-in zoom-in-95 duration-300"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-teal-400 text-white text-sm font-semibold mb-6 shadow-lg shadow-primary/30 animate-in zoom-in-95 duration-200"
               style={{ animationDelay: '100ms', animationFillMode: 'both' }}
             >
               <Car className="w-4 h-4" />
@@ -110,7 +110,7 @@ const RideOptionsSection = () => {
                   className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${300 + index * 100}ms`, animationFillMode: 'both' }}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
                     <feature.icon className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -138,7 +138,7 @@ const RideOptionsSection = () => {
               <div
                 key={option.id}
                 onClick={() => navigate("/ride")}
-                className="relative p-5 lg:p-6 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden hover:translate-x-2 hover:scale-[1.01] active:scale-[0.99] animate-in fade-in slide-in-from-right-4"
+                className="relative p-5 lg:p-6 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 cursor-pointer group overflow-hidden hover:translate-x-2 hover:scale-[1.01] active:scale-[0.99] animate-in fade-in slide-in-from-right-4"
                 style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
               >
                 {/* Corner glow on hover */}

@@ -159,7 +159,7 @@ const DispatchTeam = () => {
             <p className="text-muted-foreground text-center py-4">No members found</p>
           ) : (
             filteredMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+              <div key={member.id} className="flex items-center justify-between p-3 rounded-xl border bg-card hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarImage src={member.avatarUrl || undefined} />

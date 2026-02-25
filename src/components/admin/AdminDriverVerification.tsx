@@ -515,7 +515,7 @@ const AdminDriverVerification = () => {
                       filteredDrivers.map((driver, index) => (
                         <TableRow
                           key={driver.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in duration-300"
+                          className="group hover:bg-muted/30 transition-colors animate-in fade-in duration-200"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell>
@@ -633,11 +633,11 @@ const AdminDriverVerification = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg bg-muted/30">
+                  <div className="p-3 rounded-xl bg-muted/30">
                     <p className="text-xs text-muted-foreground mb-1">Phone</p>
                     <p className="font-medium">{selectedDriver.phone}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/30">
+                  <div className="p-3 rounded-xl bg-muted/30">
                     <p className="text-xs text-muted-foreground mb-1">License Number</p>
                     <p className="font-medium">{selectedDriver.license_number}</p>
                   </div>
@@ -712,7 +712,7 @@ const AdminDriverVerification = () => {
                         <div 
                           key={item.type}
                           className={cn(
-                            "p-3 rounded-lg border",
+                            "p-3 rounded-xl border",
                             item.uploaded 
                               ? item.status === "approved" 
                                 ? "bg-green-500/5 border-green-500/20"

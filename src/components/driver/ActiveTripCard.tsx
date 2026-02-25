@@ -193,7 +193,7 @@ const ActiveTripCard = ({
 
           {/* Error message with retry */}
           {updateError && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl">
               <p className="text-sm text-destructive">{updateError}</p>
             </div>
           )}

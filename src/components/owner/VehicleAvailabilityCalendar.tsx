@@ -159,7 +159,7 @@ export function VehicleAvailabilityCalendar({ vehicleId }: VehicleAvailabilityCa
                   disabled={isPast}
                   onClick={() => handleDateClick(date)}
                   className={cn(
-                    "aspect-square rounded-lg text-sm font-medium transition-colors relative",
+                    "aspect-square rounded-xl text-sm font-medium transition-colors relative",
                     "hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                     isPast && "opacity-40 cursor-not-allowed",
                     !isPast && !blocked && !selected && "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200",

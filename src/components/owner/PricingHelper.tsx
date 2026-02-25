@@ -92,7 +92,7 @@ export function PricingHelper({ category, currentPrice, city, onSuggestedClick }
         )}
 
         {/* Earnings Preview */}
-        <div className="p-3 rounded-lg bg-background border">
+        <div className="p-3 rounded-xl bg-background border">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
