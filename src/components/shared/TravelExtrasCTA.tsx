@@ -86,8 +86,10 @@ export default function TravelExtrasCTA({
   const extras = getExtras(currentService);
 
   return (
-    <section className={cn("py-12 border-t border-border/50", className)}>
-      <div className="container mx-auto px-4">
+    <section className={cn("py-12 border-t border-border/50 relative overflow-hidden", className)}>
+      {/* Shimmer background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 animate-parallax-float" />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
           <Badge className="mb-3 bg-primary/20 text-primary border-primary/30">
             <Sparkles className="w-3 h-3 mr-1" />
@@ -107,8 +109,12 @@ export default function TravelExtrasCTA({
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {extras.map((extra) => (
             <Link key={extra.title} to={extra.link}>
-              <Card className="h-full group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
-                <CardContent className="p-5">
+              <Card className="h-full group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/30 overflow-hidden relative">
+                <CardContent className="p-5 relative z-10">
+                  {/* Shimmer overlay */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-slide-left" style={{ animationDuration: '3s' }} />
+                  </div>
                   <div className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110",
                     `bg-gradient-to-br ${extra.gradient}`

@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Plane, ArrowRight, TrendingUp, MapPin, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Generated destination images
+import destBeach from "@/assets/destination-tropical-beach.jpg";
+import destCity from "@/assets/destination-city-night.jpg";
+import destMountains from "@/assets/destination-mountains.jpg";
+import destEurope from "@/assets/destination-europe-street.jpg";
+
 const popularRoutes = [
   { from: "New York", fromCode: "JFK", to: "London", toCode: "LHR", price: 349, trending: true },
   { from: "Los Angeles", fromCode: "LAX", to: "New York", toCode: "JFK", price: 129, trending: true },
@@ -14,12 +20,12 @@ const popularRoutes = [
 ];
 
 const popularDestinations = [
-  { city: "New York", country: "USA", image: "🗽", flights: 2450 },
-  { city: "London", country: "UK", image: "🎡", flights: 1890 },
-  { city: "Tokyo", country: "Japan", image: "🏯", flights: 1250 },
-  { city: "Paris", country: "France", image: "🗼", flights: 1680 },
-  { city: "Dubai", country: "UAE", image: "🌴", flights: 980 },
-  { city: "Miami", country: "USA", image: "🏖️", flights: 1120 },
+  { city: "New York", country: "USA", image: destCity, flights: 2450 },
+  { city: "London", country: "UK", image: destEurope, flights: 1890 },
+  { city: "Tokyo", country: "Japan", image: destMountains, flights: 1250 },
+  { city: "Paris", country: "France", image: destEurope, flights: 1680 },
+  { city: "Dubai", country: "UAE", image: destBeach, flights: 980 },
+  { city: "Miami", country: "USA", image: destBeach, flights: 1120 },
 ];
 
 export default function HomepagePopularRoutes() {
@@ -73,14 +79,18 @@ export default function HomepagePopularRoutes() {
               key={`${route.fromCode}-${route.toCode}`}
               onClick={() => handleRouteClick(route.from, route.to)}
               className={cn(
-                "group p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm",
+                "group p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden relative",
                 "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10",
-                "transition-all duration-300 hover:-translate-y-1 text-left",
+                "transition-all duration-300 hover:-translate-y-1 text-left touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex items-start justify-between mb-3">
+              {/* Hover shimmer */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-sky-500/5 to-transparent animate-slide-left" style={{ animationDuration: '2.5s' }} />
+              </div>
+              <div className="flex items-start justify-between mb-3 relative z-10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 flex items-center justify-center">
                     <Plane className="w-5 h-5 text-sky-400 rotate-45" />
@@ -138,8 +148,14 @@ export default function HomepagePopularRoutes() {
                 )}
                 style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
-                  {dest.image}
+                <div className="relative h-20 rounded-xl overflow-hidden mb-2">
+                  <img 
+                    src={dest.image} 
+                    alt={dest.city} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
                 <h4 className="font-bold text-sm truncate group-hover:text-amber-400 transition-all duration-200">
                   {dest.city}

@@ -104,8 +104,12 @@ const TrendingNowSection = () => {
               className="group relative rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
             >
               {/* Image Area */}
-              <div className="relative h-48 bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-teal-500/30 flex items-center justify-center">
+              <div className="relative h-48 bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center overflow-hidden group/area">
+                {/* Animated background shimmer */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-slide-left" style={{ animationDuration: '3s' }} />
+                </div>
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-teal-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
                   <item.icon className="w-8 h-8 text-primary/80" />
                 </div>
                 

@@ -175,11 +175,11 @@ export default function Eats() {
                   <motion.div key={cuisine.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
                     <Card className="overflow-hidden border-2 hover:border-eats/30 transition-all duration-300 group cursor-pointer glow-border-hover" onClick={() => navigate("/eats/restaurants")}>
                       <div className="relative aspect-[4/3] overflow-hidden">
-                        <img src={cuisine.image} alt={cuisine.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        {/* Glass overlay on hover */}
-                        <div className="absolute inset-0 bg-eats/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-medium opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">Explore →</span>
+                        <img src={cuisine.image} alt={cuisine.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        {/* Eats brand overlay on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-eats/20 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                          <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-bold opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">Explore →</span>
                         </div>
                         <div className="absolute bottom-4 left-4 text-white">
                           <h3 className="font-bold text-xl">{cuisine.name}</h3>
@@ -233,9 +233,10 @@ export default function Eats() {
                 {howItWorks.map((item, i) => (
                   <motion.div key={item.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.15 }} className="group">
                     <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 border border-border shadow-lg">
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                      <div className="absolute bottom-4 left-4 w-12 h-12 rounded-full bg-eats flex items-center justify-center text-white font-bold text-lg">{item.step}</div>
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-eats/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute bottom-4 left-4 w-12 h-12 rounded-full bg-eats flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-eats/30">{item.step}</div>
                     </div>
                     <h3 className="text-xl font-bold mb-2">{item.title}</h3>
                     <p className="text-muted-foreground">{item.description}</p>

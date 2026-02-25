@@ -40,14 +40,15 @@ export default function PopularHotelDestinations() {
                 <img
                   src={photo?.src || `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=400&fit=crop&q=75&fm=webp`}
                   alt={`Hotels in ${city}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-700"
                   loading="lazy"
                   width={400}
                   height={400}
                 />
                 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                {/* Multi-layer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">

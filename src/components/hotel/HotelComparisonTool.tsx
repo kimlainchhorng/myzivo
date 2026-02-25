@@ -66,12 +66,13 @@ const HotelComparisonTool = () => {
                 key={hotel.id}
                 className="w-[280px] flex-shrink-0 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden"
               >
-                <div className="relative h-40">
+                <div className="relative h-40 overflow-hidden group/img">
                   <img
                     src={hotel.image}
                     alt={hotel.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   <Badge className="absolute top-3 right-3 bg-black/60 text-white border-0">
                     <Star className="w-3 h-3 mr-1 text-yellow-400" />
                     {hotel.rating}

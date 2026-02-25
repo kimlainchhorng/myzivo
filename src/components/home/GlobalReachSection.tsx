@@ -49,12 +49,13 @@ const GlobalReachSection = () => {
               <div
                 key={stat.label}
                 className={cn(
-                  "p-4 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm text-center",
-                  "animate-in fade-in zoom-in-95 duration-300"
+                  "group/stat p-4 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm text-center",
+                  "hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10",
+                  "transition-all duration-300 animate-in fade-in zoom-in-95 duration-300"
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover/stat:scale-110 transition-transform duration-300">
                   <Icon className="w-5 h-5 text-primary" />
                 </div>
                 <p className="font-display text-2xl font-bold text-primary">{stat.value}</p>
