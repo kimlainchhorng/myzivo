@@ -64,7 +64,7 @@ const FlightBaggageGuide = () => {
               <div
                 key={bag.type}
                 className={cn(
-                  "p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
+                  "p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm hover:border-sky-500/20 hover:shadow-sm transition-all duration-200",
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}

@@ -51,7 +51,7 @@ const CarElectricVehicles = () => {
               {evCars.map((car) => (
                 <div
                   key={car.id}
-                  className="p-4 bg-card/60 backdrop-blur-xl border border-green-500/20 rounded-xl flex items-center gap-4"
+                  className="p-4 bg-card/60 backdrop-blur-xl border border-green-500/20 rounded-xl flex items-center gap-4 hover:border-green-500/40 hover:shadow-sm transition-all duration-200"
                 >
                   <img
                     src={car.src}

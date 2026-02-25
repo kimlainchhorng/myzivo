@@ -31,7 +31,7 @@ const ConnectionErrorBanner = ({
           <button
             onClick={onRetry}
             disabled={isRetrying}
-            className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-[0.95] rounded-full text-xs font-medium transition-all duration-150 flex items-center gap-1 disabled:opacity-50 touch-manipulation"
           >
             {isRetrying ? (
               <>

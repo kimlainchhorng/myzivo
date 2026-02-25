@@ -13,7 +13,7 @@ export function NoDriversAvailable({ onRetry, onCancel, isRetrying }: NoDriversA
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center"
+      className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center hover:border-amber-500/50 hover:shadow-md transition-all duration-200"
     >
       <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
         <Car className="w-8 h-8 text-amber-500" />

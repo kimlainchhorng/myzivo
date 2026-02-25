@@ -132,7 +132,7 @@ export function UberLikeRideRow({
       className={cn(
         "w-full text-left",
         "rounded-2xl bg-white",
-        "transition-all active:scale-[0.99]",
+        "transition-all duration-150 active:scale-[0.99] touch-manipulation",
         compact ? "px-3 py-2" : "px-4 py-3",
         selected
           ? "border-2 border-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"

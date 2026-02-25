@@ -64,7 +64,7 @@ const FlightVisaInfo = () => {
             {popularDestinations.map((dest, index) => (
               <div
                 key={index}
-                className="p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/30 transition-colors"
+                className="p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">

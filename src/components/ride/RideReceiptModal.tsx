@@ -261,7 +261,7 @@ const RideReceiptModal = ({
               <p className="text-xs text-white/40 text-center">Rate specific areas (optional)</p>
               <div className="grid grid-cols-2 gap-2">
                 {CATEGORY_LABELS.map(({ key, label }) => (
-                  <div key={key} className="p-2 bg-white/5 rounded-xl">
+                  <div key={key} className="p-2 bg-white/5 rounded-xl hover:bg-white/10 transition-all duration-150">
                     <p className="text-xs text-white/60 mb-1">{label}</p>
                     <div className="flex gap-0.5">
                       {[1, 2, 3, 4, 5].map((s) => (
@@ -293,7 +293,7 @@ const RideReceiptModal = ({
                     key={tag.id}
                     onClick={() => toggleFeedbackTag(tag.id)}
                     className={cn(
-                      "px-2.5 py-1 rounded-full text-xs font-medium transition-all border",
+                      "px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 border touch-manipulation active:scale-[0.95]",
                       selectedTags.includes(tag.id)
                         ? tag.positive
                           ? "bg-green-600 border-green-600 text-white"
@@ -409,7 +409,7 @@ const RideReceiptModal = ({
                     disabled={isSavingTip}
                     onClick={() => setSelectedTip(selectedTip === amount ? null : amount)}
                     className={cn(
-                      "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                      "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 border touch-manipulation active:scale-[0.97]",
                       selectedTip === amount
                         ? "bg-emerald-500 text-white border-emerald-500"
                         : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
@@ -426,7 +426,7 @@ const RideReceiptModal = ({
                     setShowCustomTip(true);
                   }}
                   className={cn(
-                    "px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                    "px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 border touch-manipulation active:scale-[0.97]",
                     selectedTip && ![1, 3, 5].includes(selectedTip)
                       ? "bg-emerald-500 text-white border-emerald-500"
                       : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
@@ -440,7 +440,7 @@ const RideReceiptModal = ({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   onClick={() => setSelectedTip(null)}
-                  className="block mx-auto mt-2 text-xs text-white/40 hover:text-white/60"
+                  className="block mx-auto mt-2 text-xs text-white/40 hover:text-white/60 transition-colors duration-150 touch-manipulation"
                 >
                   No tip
                 </motion.button>

@@ -29,7 +29,7 @@ const HotelEventSpaces = () => {
           {eventTypes.map((event) => (
             <div
               key={event.title}
-              className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-pink-500/50 transition-all text-center group cursor-pointer"
+              className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-pink-500/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-center group cursor-pointer"
             >
               <div className={`w-14 h-14 ${event.bgColor} rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform`}>
                 <event.icon className={`w-7 h-7 ${event.color}`} />
@@ -46,7 +46,7 @@ const HotelEventSpaces = () => {
             { name: "Garden Terrace", size: "3,000 sq ft", capacity: "200 guests", rating: 4.8, price: "from $1,500" },
             { name: "Executive Suite", size: "1,000 sq ft", capacity: "50 guests", rating: 4.9, price: "from $800" },
           ].map((space) => (
-            <div key={space.name} className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-amber-500/50 transition-all">
+            <div key={space.name} className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-amber-500/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold">{space.name}</h3>
                 <div className="flex items-center gap-1">

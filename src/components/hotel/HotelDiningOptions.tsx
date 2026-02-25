@@ -29,7 +29,7 @@ const HotelDiningOptions = () => {
           {diningOptions.map((option) => (
             <div
               key={option.title}
-              className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-orange-500/50 transition-all group"
+              className="p-5 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-orange-500/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">

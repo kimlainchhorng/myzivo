@@ -22,7 +22,7 @@ const RideSegmentTabs = ({ activeTab, onTabChange }: RideSegmentTabsProps) => {
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={cn(
-            "relative flex-1 py-2 px-4 text-xs font-semibold tracking-wide transition-colors rounded-full",
+            "relative flex-1 py-2 px-4 text-xs font-semibold tracking-wide transition-all duration-200 rounded-full touch-manipulation active:scale-[0.97]",
             activeTab === tab.id ? "text-white" : "text-white/50"
           )}
         >

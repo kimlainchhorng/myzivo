@@ -37,7 +37,7 @@ const FlightCarbonOffset = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-green-500/10 rounded-xl mb-6">
+              <div className="p-4 bg-green-500/10 rounded-xl mb-6 hover:bg-green-500/15 transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <TreePine className="w-8 h-8 text-green-400" />
@@ -60,17 +60,17 @@ const FlightCarbonOffset = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20">
+              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20 hover:border-green-500/40 hover:shadow-sm transition-all duration-200">
                 <TreePine className="w-8 h-8 text-green-400 mb-3" />
                 <p className="text-3xl font-bold">2.5M</p>
                 <p className="text-sm text-muted-foreground">Trees planted</p>
               </div>
-              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20">
+              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20 hover:border-green-500/40 hover:shadow-sm transition-all duration-200">
                 <Recycle className="w-8 h-8 text-emerald-400 mb-3" />
                 <p className="text-3xl font-bold">50K</p>
                 <p className="text-sm text-muted-foreground">Tons offset</p>
               </div>
-              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20 col-span-2">
+              <div className="p-5 bg-card/60 backdrop-blur-xl rounded-xl border border-green-500/20 hover:border-green-500/40 hover:shadow-sm transition-all duration-200 col-span-2 cursor-pointer group">
                 <div className="flex items-center gap-3">
                   <Calculator className="w-8 h-8 text-green-400" />
                   <div>

@@ -460,7 +460,7 @@ export default function BoardingPass({
 
             {/* QR Code Section */}
             <div className="p-6 pt-0">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200">
                 <div className="p-2 bg-white rounded-lg">
                   <QRCodeSVG 
                     value={qrData} 

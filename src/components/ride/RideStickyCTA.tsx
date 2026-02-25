@@ -50,7 +50,7 @@ const RideStickyCTA = ({
         onClick={onConfirm}
         disabled={isDisabled}
         className={cn(
-          "w-full py-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all",
+          "w-full py-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 touch-manipulation",
           "bg-white/10 backdrop-blur-xl border border-white/10",
           isDisabled
             ? "text-white/40 cursor-not-allowed"

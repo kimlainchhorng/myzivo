@@ -55,7 +55,7 @@ const HotelParking = () => {
           {parkingOptions.map((option) => (
             <div
               key={option.type}
-              className="group bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 hover:border-violet-500/50 transition-all"
+              className="group bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 hover:border-violet-500/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-12 h-12 ${option.bgColor} rounded-xl flex items-center justify-center`}>
@@ -93,7 +93,7 @@ const HotelParking = () => {
         {/* Additional Info */}
         <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-2xl p-6">
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
               <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
                 <Clock className="w-5 h-5 text-violet-400" />
               </div>
@@ -102,7 +102,7 @@ const HotelParking = () => {
                 <p className="text-xs text-muted-foreground">Come and go anytime</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
               <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-violet-400" />
               </div>
@@ -111,7 +111,7 @@ const HotelParking = () => {
                 <p className="text-xs text-muted-foreground">Security patrol & CCTV</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
               <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-violet-400" />
               </div>

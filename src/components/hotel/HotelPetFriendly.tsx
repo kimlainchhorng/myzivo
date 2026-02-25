@@ -53,7 +53,7 @@ const HotelPetFriendly = () => {
 
           {/* Policies & Fees */}
           <div className="space-y-4">
-            <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 p-5">
+            <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 p-5 hover:border-pink-500/30 hover:shadow-sm transition-all duration-200">
               <h3 className="font-bold mb-4">Pet Policy</h3>
               <div className="space-y-2">
                 {petPolicies.map((policy, index) => (
@@ -69,7 +69,7 @@ const HotelPetFriendly = () => {
               </div>
             </div>
 
-            <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 p-5">
+            <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 p-5 hover:border-pink-500/30 hover:shadow-sm transition-all duration-200">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-primary" /> Pet Fees
               </h3>

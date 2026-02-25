@@ -87,7 +87,7 @@ export default function HotelKidsAmenities() {
           {amenities.map((amenity) => (
             <div
               key={amenity.id}
-              className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/50 hover:border-border transition-colors"
+              className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/50 hover:border-border hover:shadow-sm transition-all duration-200"
             >
               <div className={cn(
                 "w-10 h-10 rounded-lg flex items-center justify-center",

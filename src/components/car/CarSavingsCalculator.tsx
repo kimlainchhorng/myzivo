@@ -71,7 +71,7 @@ export default function CarSavingsCalculator({ className }: CarSavingsCalculator
                     />
                   </div>
 
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border/30">
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                       <Percent className="w-4 h-4" />
                       Average ZIVO Discount
@@ -82,12 +82,12 @@ export default function CarSavingsCalculator({ className }: CarSavingsCalculator
 
                 {/* Results */}
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border/30 hover:border-border/50 transition-all duration-200">
                     <p className="text-sm text-muted-foreground mb-1">Regular Price</p>
                     <p className="text-2xl font-bold line-through text-muted-foreground">${regularTotal.toFixed(0)}</p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-teal-500/10 border border-primary/20">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-teal-500/10 border border-primary/20 hover:border-primary/40 hover:shadow-sm transition-all duration-200">
                     <p className="text-sm text-primary mb-1">ZIVO Price</p>
                     <p className="text-3xl font-bold text-primary">${zivoTotal.toFixed(0)}</p>
                   </div>

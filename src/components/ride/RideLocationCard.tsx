@@ -136,7 +136,7 @@ const RideLocationCard = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 p-4 overflow-hidden"
+        className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 p-4 overflow-hidden hover:border-white/20 hover:shadow-lg transition-all duration-200"
       >
         {/* Location Rows */}
         <div className="flex gap-3">
@@ -173,7 +173,7 @@ const RideLocationCard = ({
                 {pickup && (
                   <button
                     onClick={() => handleClear("pickup")}
-                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-full hover:bg-white/10 active:scale-90 transition-all duration-150 touch-manipulation"
                     aria-label="Clear pickup"
                   >
                     <X className="w-3.5 h-3.5 text-white/60" />
@@ -181,7 +181,7 @@ const RideLocationCard = ({
                 )}
                 <button
                   onClick={handleUseCurrentLocation}
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all duration-150 touch-manipulation"
                   aria-label="Use current location"
                 >
                   <Crosshair className="w-4 h-4 text-white/60" />
@@ -212,7 +212,7 @@ const RideLocationCard = ({
                 {destination && (
                   <button
                     onClick={() => handleClear("destination")}
-                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-full hover:bg-white/10 active:scale-90 transition-all duration-150 touch-manipulation"
                     aria-label="Clear destination"
                   >
                     <X className="w-3.5 h-3.5 text-white/60" />
@@ -220,7 +220,7 @@ const RideLocationCard = ({
                 )}
                 <button
                   onClick={handleUseCurrentLocation}
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all duration-150 touch-manipulation"
                   aria-label="Use current location"
                 >
                   <Crosshair className="w-4 h-4 text-white/60" />
@@ -250,7 +250,7 @@ const RideLocationCard = ({
               <button
                 key={suggestion.place_id || index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 active:bg-white/15 transition-all duration-150 border-b border-white/5 last:border-b-0 touch-manipulation"
               >
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">

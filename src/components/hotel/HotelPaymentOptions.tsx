@@ -69,10 +69,10 @@ const HotelPaymentOptions = () => {
                 <button
                   key={option.id}
                   onClick={() => setSelectedOption(option.id)}
-                  className={`relative text-left p-5 rounded-2xl border transition-all ${
+                  className={`relative text-left p-5 rounded-2xl border transition-all duration-200 touch-manipulation active:scale-[0.98] ${
                     isSelected
-                      ? "bg-primary/10 border-primary"
-                      : "bg-card/50 border-border/50 hover:border-primary/30"
+                      ? "bg-primary/10 border-primary shadow-md"
+                      : "bg-card/50 border-border/50 hover:border-primary/30 hover:shadow-sm"
                   }`}
                 >
                   {option.recommended && (
@@ -117,7 +117,7 @@ const HotelPaymentOptions = () => {
               {installmentPlans.map((plan, index) => (
                 <div
                   key={index}
-                  className="p-4 rounded-xl bg-card/80 border border-border/50 text-center"
+                  className="p-4 rounded-xl bg-card/80 border border-border/50 text-center hover:border-primary/30 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="text-3xl font-bold mb-1">{plan.months}</div>
                   <div className="text-sm text-muted-foreground mb-3">Monthly Payments</div>
