@@ -36,7 +36,7 @@ interface MealOption {
   price: number;
   category: string;
   dietary: string[];
-  image: string;
+  image?: string;
   popular?: boolean;
 }
 
@@ -79,7 +79,6 @@ const mealOptions: MealOption[] = [
     price: 18,
     category: "main",
     dietary: [],
-    image: "🍗",
     popular: true,
   },
   {
@@ -89,7 +88,6 @@ const mealOptions: MealOption[] = [
     price: 24,
     category: "main",
     dietary: [],
-    image: "🥩",
   },
   {
     id: "meal_salmon",
@@ -98,7 +96,6 @@ const mealOptions: MealOption[] = [
     price: 22,
     category: "main",
     dietary: ["pescatarian"],
-    image: "🐟",
   },
   {
     id: "meal_vegan",
@@ -107,7 +104,6 @@ const mealOptions: MealOption[] = [
     price: 16,
     category: "main",
     dietary: ["vegan", "vegetarian"],
-    image: "🥗",
     popular: true,
   },
   {
@@ -117,7 +113,6 @@ const mealOptions: MealOption[] = [
     price: 20,
     category: "main",
     dietary: ["vegetarian"],
-    image: "🍝",
   },
   {
     id: "meal_kids",
@@ -126,7 +121,6 @@ const mealOptions: MealOption[] = [
     price: 12,
     category: "kids",
     dietary: [],
-    image: "🍱",
   },
   {
     id: "snack_cheese",
@@ -135,7 +129,6 @@ const mealOptions: MealOption[] = [
     price: 14,
     category: "snack",
     dietary: ["vegetarian"],
-    image: "🧀",
   },
   {
     id: "snack_fruit",
@@ -144,7 +137,6 @@ const mealOptions: MealOption[] = [
     price: 10,
     category: "snack",
     dietary: ["vegan", "vegetarian"],
-    image: "🍓",
   },
 ];
 
@@ -408,7 +400,7 @@ const InFlightServices = ({
                     >
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          <div className="text-4xl">{meal.image}</div>
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center"><UtensilsCrossed className="w-6 h-6 text-primary/60" /></div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               <div>

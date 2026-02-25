@@ -62,7 +62,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 {/* Icon */}
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <span className="text-4xl">🧳</span>
+                  <Luggage className="w-10 h-10 text-purple-500" />
                 </div>
                 
                 <div className="flex-1 text-center sm:text-left">

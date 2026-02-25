@@ -218,8 +218,8 @@ export default function CarsLP() {
       {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
       <section className="py-4 bg-violet-500/10 border-y border-violet-500/20">
         <div className="container mx-auto px-4">
-          <p className="text-center text-sm text-muted-foreground font-medium">
-            ⚠️ {CAR_DISCLAIMERS.partnerBooking}
+          <p className="text-center text-sm text-muted-foreground font-medium flex items-center justify-center gap-1.5">
+            <Shield className="w-4 h-4 text-violet-500" /> {CAR_DISCLAIMERS.partnerBooking}
           </p>
         </div>
       </section>

@@ -65,7 +65,7 @@ const MobileAppBanner = () => {
               <div className="relative w-64 h-[500px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-[3rem] p-3 shadow-2xl">
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card to-cyan-500/20 rounded-[2.5rem] flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-6xl mb-4">✈️</div>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-8 h-8 text-primary" /></div>
                     <p className="font-bold text-lg">ZIVO</p>
                     <p className="text-xs text-muted-foreground">Travel Made Easy</p>
                   </div>

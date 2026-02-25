@@ -48,16 +48,16 @@ const RestaurantSettings = () => {
       <motion.div
         animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+        className="absolute top-0 right-12 pointer-events-none opacity-20 hidden lg:block"
       >
-        ⚙️
+        <Settings className="w-8 h-8 text-muted-foreground" />
       </motion.div>
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-        className="absolute top-24 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+        className="absolute top-24 right-0 pointer-events-none opacity-15 hidden lg:block"
       >
-        🔧
+        <Settings className="w-6 h-6 text-muted-foreground rotate-45" />
       </motion.div>
 
       {/* Header */}

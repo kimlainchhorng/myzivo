@@ -1,4 +1,4 @@
-import { MapPin, Star, TrendingUp, ArrowRight, Plane, Calendar } from "lucide-react";
+import { MapPin, Star, TrendingUp, ArrowRight, Plane, Calendar, Landmark, Palmtree, Building2, Sun, Waves } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -7,7 +7,8 @@ const destinations = [
     id: 1,
     name: "Tokyo, Japan",
     tagline: "Where tradition meets future",
-    image: "🗼",
+    icon: Landmark,
+    iconColor: "text-rose-500",
     rating: 4.9,
     priceFrom: 450,
     bestTime: "Mar-May, Sep-Nov",
@@ -18,7 +19,8 @@ const destinations = [
     id: 2,
     name: "Paris, France",
     tagline: "City of light and love",
-    image: "🗼",
+    icon: Landmark,
+    iconColor: "text-sky-500",
     rating: 4.8,
     priceFrom: 380,
     bestTime: "Apr-Jun, Sep-Oct",
@@ -28,7 +30,8 @@ const destinations = [
     id: 3,
     name: "Bali, Indonesia",
     tagline: "Island of the gods",
-    image: "🏝️",
+    icon: Palmtree,
+    iconColor: "text-emerald-500",
     rating: 4.7,
     priceFrom: 320,
     bestTime: "Apr-Oct",
@@ -38,7 +41,8 @@ const destinations = [
     id: 4,
     name: "New York, USA",
     tagline: "The city that never sleeps",
-    image: "🗽",
+    icon: Building2,
+    iconColor: "text-amber-500",
     rating: 4.8,
     priceFrom: 420,
     bestTime: "Apr-Jun, Sep-Nov",
@@ -49,7 +53,8 @@ const destinations = [
     id: 5,
     name: "Dubai, UAE",
     tagline: "Luxury in the desert",
-    image: "🏙️",
+    icon: Sun,
+    iconColor: "text-orange-500",
     rating: 4.7,
     priceFrom: 350,
     bestTime: "Nov-Mar",
@@ -59,7 +64,8 @@ const destinations = [
     id: 6,
     name: "Sydney, Australia",
     tagline: "Harbour city paradise",
-    image: "🌉",
+    icon: Waves,
+    iconColor: "text-cyan-500",
     rating: 4.8,
     priceFrom: 550,
     bestTime: "Sep-Nov, Mar-May",
@@ -89,7 +95,7 @@ const DestinationGuides = () => {
             >
               {/* Image Header */}
               <div className="relative h-32 bg-gradient-to-br from-teal-500/20 to-emerald-500/20 flex items-center justify-center">
-                <span className="text-6xl">{dest.image}</span>
+                <dest.icon className={`w-12 h-12 ${dest.iconColor}`} />
                 
                 {dest.trending && (
                   <Badge className="absolute top-3 left-3 bg-teal-500 text-white border-0">

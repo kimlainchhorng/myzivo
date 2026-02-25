@@ -77,7 +77,7 @@ const BirthdayOffer = ({
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500/20 to-pink-500/20 mb-4">
             <Gift className="w-8 h-8 text-violet-500" />
           </div>
-          <h3 className="text-xl font-bold mb-1">Happy Birthday! 🎂</h3>
+          <h3 className="text-xl font-bold mb-1">Happy Birthday!</h3>
           <p className="text-sm text-muted-foreground">
             Here's a special gift just for you
           </p>

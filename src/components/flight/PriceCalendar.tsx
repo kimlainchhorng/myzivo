@@ -237,8 +237,8 @@ const PriceCalendar = ({
           </div>
         </div>
         
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          💡 {priceData?.prices?.length ? 'Prices updated in real-time from airlines' : 'Tip: Fly on Tuesdays & Wednesdays for the best deals'}
+        <p className="text-xs text-muted-foreground text-center mt-4 flex items-center justify-center gap-1">
+          <Sparkles className="w-3 h-3" /> {priceData?.prices?.length ? 'Prices updated in real-time from airlines' : 'Tip: Fly on Tuesdays & Wednesdays for the best deals'}
         </p>
       </div>
     </div>

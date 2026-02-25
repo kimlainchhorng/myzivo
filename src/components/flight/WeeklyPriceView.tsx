@@ -188,8 +188,8 @@ export function WeeklyPriceView({
       )}
 
       {/* Disclaimer */}
-      <p className="text-xs text-muted-foreground text-center">
-        💡 Prices change frequently. Shown averages are estimates based on recent trends.
+      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+        <Sparkles className="w-3 h-3" /> Prices change frequently. Shown averages are estimates based on recent trends.
       </p>
     </div>
   );
