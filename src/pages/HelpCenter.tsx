@@ -201,7 +201,7 @@ const HelpCenter = () => {
                 </h3>
                 <Accordion type="single" collapsible className="space-y-2">
                   {ridesFAQ.map((item, i) => (
-                    <AccordionItem key={i} value={`rides-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg">
+                    <AccordionItem key={i} value={`rides-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-primary/30 hover:shadow-xl transition-all duration-200">
                       <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
                         {item.q}
                       </AccordionTrigger>
@@ -223,7 +223,7 @@ const HelpCenter = () => {
                 </h3>
                 <Accordion type="single" collapsible className="space-y-2">
                   {eatsFAQ.map((item, i) => (
-                    <AccordionItem key={i} value={`eats-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg">
+                    <AccordionItem key={i} value={`eats-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-primary/30 hover:shadow-xl transition-all duration-200">
                       <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
                         {item.q}
                       </AccordionTrigger>
@@ -245,7 +245,7 @@ const HelpCenter = () => {
                 </h3>
                 <Accordion type="single" collapsible className="space-y-2">
                   {accountFAQ.map((item, i) => (
-                    <AccordionItem key={i} value={`account-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg">
+                    <AccordionItem key={i} value={`account-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-primary/30 hover:shadow-xl transition-all duration-200">
                       <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
                         {item.q}
                       </AccordionTrigger>
@@ -267,7 +267,7 @@ const HelpCenter = () => {
                 </h3>
                 <Accordion type="single" collapsible className="space-y-2">
                   {travelFAQ.map((item, i) => (
-                    <AccordionItem key={i} value={`travel-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg">
+                    <AccordionItem key={i} value={`travel-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-sky-500/30 hover:shadow-xl transition-all duration-200">
                       <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
                         {item.q}
                       </AccordionTrigger>

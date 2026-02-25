@@ -163,7 +163,7 @@ export default function FAQPage() {
 
           {/* Disclaimer */}
           <div className="max-w-4xl mx-auto mt-12">
-            <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/50">
+            <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/50 hover:shadow-md transition-all duration-200">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
@@ -193,7 +193,7 @@ export default function FAQPage() {
               </Link>
               <Link 
                 to="/partner-disclosure" 
-                className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-xl font-medium hover:bg-muted/50 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-xl font-medium hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
               >
                 <Shield className="w-4 h-4" />
                 Partner Disclosure
