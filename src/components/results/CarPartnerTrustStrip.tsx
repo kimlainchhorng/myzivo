@@ -39,7 +39,7 @@ export function CarPartnerTrustStrip({ className }: CarPartnerTrustStripProps) {
                 key={partner.id}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5",
-                  "bg-muted/50 rounded-lg border border-border/40",
+                  "bg-muted/50 rounded-xl border border-border/40",
                   "text-xs font-medium text-muted-foreground",
                   "grayscale hover:grayscale-0 transition-all"
                 )}

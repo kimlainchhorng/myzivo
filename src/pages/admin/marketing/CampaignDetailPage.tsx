@@ -80,7 +80,7 @@ function StatCard({
               <p className="text-xs text-white/40 mt-1">{description}</p>
             )}
           </div>
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>

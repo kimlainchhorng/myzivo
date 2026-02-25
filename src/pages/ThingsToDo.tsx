@@ -379,7 +379,7 @@ const ThingsToDo = () => {
                     <TabsTrigger 
                       key={cat.id} 
                       value={cat.id} 
-                      className="gap-1.5 rounded-lg px-2.5 sm:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white touch-manipulation"
+                      className="gap-1.5 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white touch-manipulation"
                     >
                       <cat.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">{cat.label}</span>

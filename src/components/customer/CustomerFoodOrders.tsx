@@ -135,7 +135,7 @@ const CustomerFoodOrders = () => {
         <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl">
           <CardHeader className="border-b border-border/50">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-eats/10">
+              <div className="p-2 rounded-xl bg-eats/10">
                 <UtensilsCrossed className="h-5 w-5 text-eats" />
               </div>
               <div>

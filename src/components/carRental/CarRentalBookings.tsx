@@ -151,13 +151,13 @@ const CarRentalBookings = () => {
                             {car?.year} • {car?.category} • {booking.total_days} days @ ${booking.daily_rate}/day
                           </p>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">
                                 {booking.pickup_date ? format(new Date(booking.pickup_date), "MMM d") : "TBD"} - {booking.return_date ? format(new Date(booking.return_date), "MMM d, yyyy") : "TBD"}
                               </span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{booking.pickup_location || "N/A"}</span>
                             </span>

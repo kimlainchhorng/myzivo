@@ -53,7 +53,7 @@ function SkeletonCard() {
             <div className="h-8 w-28 bg-muted rounded ml-auto" />
             <div className="h-4 w-24 bg-muted/60 rounded ml-auto" />
           </div>
-          <div className="h-10 w-full bg-muted rounded-lg mt-4" />
+          <div className="h-10 w-full bg-muted rounded-xl mt-4" />
         </div>
       </div>
 

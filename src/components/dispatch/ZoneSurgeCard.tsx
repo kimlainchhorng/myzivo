@@ -83,7 +83,7 @@ export function ZoneSurgeCard({
           </div>
           <div
             className={cn(
-              "flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-lg",
+              "flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-lg",
               isSurging
                 ? isHighSurge
                   ? "bg-red-500 text-white"

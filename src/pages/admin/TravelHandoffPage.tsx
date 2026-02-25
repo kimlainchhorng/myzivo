@@ -95,7 +95,7 @@ const TravelHandoffPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <ArrowRightLeft className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -149,7 +149,7 @@ const TravelHandoffPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
+                <div className="p-2 rounded-xl bg-amber-500/10">
                   <MessageSquare className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
@@ -174,7 +174,7 @@ const TravelHandoffPage = () => {
                   onCheckedChange={(checked) => updateField('show_disclosure_modal', checked)}
                 />
               </div>
-              <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+              <div className="mt-4 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <p className="text-sm text-muted-foreground italic">
                   "You will be redirected to our partner to complete your booking. 
                   ZIVO does not process payments or issue tickets."
@@ -187,7 +187,7 @@ const TravelHandoffPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
+                <div className="p-2 rounded-xl bg-emerald-500/10">
                   <CheckSquare className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div>
@@ -219,7 +219,7 @@ const TravelHandoffPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-sky-500/10">
+                <div className="p-2 rounded-xl bg-sky-500/10">
                   <Clock className="h-5 w-5 text-sky-500" />
                 </div>
                 <div>

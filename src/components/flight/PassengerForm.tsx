@@ -113,7 +113,7 @@ export default function PassengerForm({
   return (
     <div className="space-y-4">
       {/* Progress indicator */}
-      <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+      <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-xl">
         <div className="flex-1">
           <div className="flex items-center justify-between text-sm mb-1">
             <span className="text-muted-foreground">Passenger details</span>
@@ -123,7 +123,7 @@ export default function PassengerForm({
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-primary transition-all duration-300"
+              className="h-full bg-primary transition-all duration-200"
               style={{ 
                 width: `${(passengers.filter(p => p.isComplete).length / passengers.length) * 100}%` 
               }}
@@ -325,7 +325,7 @@ export default function PassengerForm({
 
       {/* Validation message */}
       {passengers.some(p => !p.isComplete) && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
           <p className="text-sm text-amber-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             Please complete all passenger details to continue

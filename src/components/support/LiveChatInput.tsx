@@ -97,10 +97,10 @@ export function LiveChatInput({
           <img
             src={imagePreview}
             alt="Attachment preview"
-            className="max-h-24 rounded-lg border border-border"
+            className="max-h-24 rounded-xl border border-border"
           />
           {uploadingImage && (
-            <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-xl">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
           )}

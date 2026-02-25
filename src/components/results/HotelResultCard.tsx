@@ -118,7 +118,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
 
                 {/* Guest Rating */}
                 <div className="text-right shrink-0">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
                     <span className="font-bold text-amber-500 text-lg">{hotel.guestRating.toFixed(1)}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">{ratingLabel}</p>

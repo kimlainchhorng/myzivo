@@ -267,7 +267,7 @@ export default function CampaignBuilder({ campaignId, onClose }: CampaignBuilder
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            <div className={`h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center ${type.color}`}>
+                            <div className={`h-10 w-10 rounded-xl bg-zinc-800 flex items-center justify-center ${type.color}`}>
                               <Icon className="h-5 w-5" />
                             </div>
                             <div>
@@ -339,7 +339,7 @@ export default function CampaignBuilder({ campaignId, onClose }: CampaignBuilder
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/60 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/60 border border-white/10">
                   <div>
                     <Label>Push Notification</Label>
                     <p className="text-sm text-white/60">Send as push notification</p>
@@ -356,7 +356,7 @@ export default function CampaignBuilder({ campaignId, onClose }: CampaignBuilder
                     <CardTitle className="text-sm text-white/60">Preview</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-zinc-900 rounded-lg p-4 border border-white/10">
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-white/10">
                       <div className="flex items-start gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                           <Bell className="h-5 w-5 text-primary" />
@@ -392,7 +392,7 @@ export default function CampaignBuilder({ campaignId, onClose }: CampaignBuilder
                 onValueChange={(value) => setScheduleType(value as "now" | "scheduled")}
                 className="space-y-3"
               >
-                <div className="flex items-center space-x-3 p-4 rounded-lg bg-zinc-900/60 border border-white/10">
+                <div className="flex items-center space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-white/10">
                   <RadioGroupItem value="now" id="now" />
                   <Label htmlFor="now" className="flex-1 cursor-pointer">
                     <span className="font-medium">Send Immediately</span>
@@ -400,7 +400,7 @@ export default function CampaignBuilder({ campaignId, onClose }: CampaignBuilder
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-4 rounded-lg bg-zinc-900/60 border border-white/10">
+                <div className="flex items-center space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-white/10">
                   <RadioGroupItem value="scheduled" id="scheduled" />
                   <Label htmlFor="scheduled" className="flex-1 cursor-pointer">
                     <span className="font-medium">Schedule for Later</span>

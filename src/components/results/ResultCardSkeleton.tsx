@@ -26,7 +26,7 @@ export function ResultCardSkeleton({ variant = "flight" }: ResultCardSkeletonPro
                   <Skeleton className="h-5 w-40" />
                   <Skeleton className="h-4 w-32" />
                 </div>
-                <Skeleton className="h-8 w-12 rounded-lg" />
+                <Skeleton className="h-8 w-12 rounded-xl" />
               </div>
               <div className="flex gap-2">
                 <Skeleton className="h-6 w-16 rounded" />
@@ -38,7 +38,7 @@ export function ResultCardSkeleton({ variant = "flight" }: ResultCardSkeletonPro
                   <Skeleton className="h-3 w-12" />
                   <Skeleton className="h-8 w-20" />
                 </div>
-                <Skeleton className="h-10 w-28 rounded-lg" />
+                <Skeleton className="h-10 w-28 rounded-xl" />
               </div>
             </div>
           </div>
@@ -81,7 +81,7 @@ export function ResultCardSkeleton({ variant = "flight" }: ResultCardSkeletonPro
                 <Skeleton className="h-8 w-20 mx-auto" />
                 <Skeleton className="h-3 w-24 mx-auto" />
               </div>
-              <Skeleton className="h-10 w-full mt-3 rounded-lg" />
+              <Skeleton className="h-10 w-full mt-3 rounded-xl" />
             </div>
           </div>
         </CardContent>
@@ -131,7 +131,7 @@ export function ResultCardSkeleton({ variant = "flight" }: ResultCardSkeletonPro
               <Skeleton className="h-8 w-20 mx-auto" />
               <Skeleton className="h-3 w-16 mx-auto" />
             </div>
-            <Skeleton className="h-10 w-24 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-xl" />
           </div>
         </div>
       </CardContent>

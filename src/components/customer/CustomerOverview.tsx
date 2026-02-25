@@ -341,7 +341,7 @@ const CustomerOverview = () => {
                     to="/rent-car"
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                       <Car className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium">Rent Car</span>
@@ -350,7 +350,7 @@ const CustomerOverview = () => {
                     to="/promotions"
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
                       <Gift className="h-4 w-4 text-amber-500" />
                     </div>
                     <span className="text-sm font-medium">Promos</span>
