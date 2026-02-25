@@ -28,7 +28,7 @@ import {
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
-import PressKitAssets from "@/components/press/PressKitAssets";
+// PressKitAssets removed
 
 const companyFacts = [
   { label: "Founded", value: "2024" },
@@ -261,7 +261,7 @@ const Press = () => {
 
             {/* Press Kit Tab */}
             <TabsContent value="assets">
-              <PressKitAssets />
+              <p className="text-muted-foreground text-center py-8">Press kit assets coming soon.</p>
             </TabsContent>
           </Tabs>
         </div>

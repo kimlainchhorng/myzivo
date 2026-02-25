@@ -29,7 +29,7 @@ import { useOrderActions } from "@/hooks/useOrderActions";
 import { OrderItemCard } from "@/components/travel/OrderItemCard";
 import { CancelRequestModal } from "@/components/travel/CancelRequestModal";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
-import { ReportProblemDialog } from "@/components/orders/ReportProblemDialog";
+// ReportProblemDialog removed
 
 const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
   draft: { icon: Clock, label: "Draft", color: "text-muted-foreground" },
@@ -263,12 +263,7 @@ export default function TravelOrderDetailPage() {
         currency={order.currency}
       />
 
-      {/* Report Problem Dialog */}
-      <ReportProblemDialog
-        open={showReportDialog}
-        onOpenChange={setShowReportDialog}
-        orderId={order.id}
-      />
+      {/* ReportProblemDialog removed */}
 
       <MobileBottomNav />
     </div>

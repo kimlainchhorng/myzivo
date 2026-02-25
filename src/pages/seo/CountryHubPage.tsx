@@ -18,7 +18,7 @@ import {
   INTERNATIONAL_COMPLIANCE,
   type CountryConfig 
 } from "@/config/internationalExpansion";
-import { GlobalDisclaimer, CountryNotice } from "@/components/localization/InternationalCompliance";
+// InternationalCompliance removed
 import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 
 export default function CountryHubPage() {
@@ -74,7 +74,7 @@ export default function CountryHubPage() {
               
               {/* Trust Badge */}
               <div className="mt-6">
-                <CountryNotice countryCode={country.code} />
+                <p className="text-xs text-muted-foreground">Prices shown in local currency where available.</p>
               </div>
             </div>
           </section>
@@ -220,7 +220,7 @@ export default function CountryHubPage() {
           {/* Compliance Footer */}
           <section className="py-8 border-t border-border">
             <div className="container mx-auto px-4">
-              <GlobalDisclaimer />
+              <p className="text-xs text-muted-foreground">Prices are estimates and may vary. Final prices confirmed at checkout.</p>
             </div>
           </section>
         </main>

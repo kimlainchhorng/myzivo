@@ -5,7 +5,7 @@
 import { useNavigate } from "react-router-dom";
 import { Bell, ChevronLeft } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import CitySelector from "@/components/city/CitySelector";
+// CitySelector removed
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +69,7 @@ const AppHeader = ({
             {title}
           </h1>
         ) : !hideLocation && (
-          <CitySelector />
+          <span className="text-sm text-muted-foreground">ZIVO</span>
         )}
 
         {/* Right - Notifications Bell */}
