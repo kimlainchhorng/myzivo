@@ -23,7 +23,7 @@ import RestaurantOrders from "@/components/restaurant/RestaurantOrders";
 import RestaurantMenu from "@/components/restaurant/RestaurantMenu";
 import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
-import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+
 import RestaurantActivityFeed from "@/components/restaurant/RestaurantActivityFeed";
 import RestaurantDriverMap from "@/components/restaurant/RestaurantDriverMap";
 import MerchantNotificationBell from "@/components/merchant/MerchantNotificationBell";
@@ -286,7 +286,7 @@ const RestaurantDashboard = () => {
           </Tabs>
         </main>
       </div>
-      <AdminFloatingButton />
+      
     </div>
   );
 };
