@@ -69,10 +69,10 @@ const NotFound = () => {
           </p>
           <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
             {[
-              { label: "Book a Ride", href: "/ride" },
-              { label: "Order Food", href: "/food" },
-              { label: "Find Flights", href: "/book-flight" },
-              { label: "Hotels", href: "/book-hotel" },
+              { label: "Book a Ride", href: "/rides" },
+              { label: "Order Food", href: "/eats" },
+              { label: "Find Flights", href: "/flights" },
+              { label: "Hotels", href: "/hotels" },
             ].map((link) => (
               <Link
                 key={link.href}

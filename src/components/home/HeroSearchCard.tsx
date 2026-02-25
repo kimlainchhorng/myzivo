@@ -11,11 +11,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const tabs = [
-  { id: "flights", label: "Flights", icon: Plane, color: "text-[hsl(var(--flights))]" },
-  { id: "hotels", label: "Hotels", icon: Hotel, color: "text-[hsl(var(--hotels))]" },
-  { id: "cars", label: "Cars", icon: CarFront, color: "text-[hsl(var(--cars))]" },
-  { id: "rides", label: "Rides", icon: Car, color: "text-[hsl(var(--rides))]" },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]" },
+  { id: "flights", label: "Flights", icon: Plane, color: "text-[hsl(var(--flights))]", border: "border-[hsl(var(--flights))]", bg: "bg-[hsl(var(--flights)/0.05)]" },
+  { id: "hotels", label: "Hotels", icon: Hotel, color: "text-[hsl(var(--hotels))]", border: "border-[hsl(var(--hotels))]", bg: "bg-[hsl(var(--hotels)/0.05)]" },
+  { id: "cars", label: "Cars", icon: CarFront, color: "text-[hsl(var(--cars))]", border: "border-[hsl(var(--cars))]", bg: "bg-[hsl(var(--cars)/0.05)]" },
+  { id: "rides", label: "Rides", icon: Car, color: "text-[hsl(var(--rides))]", border: "border-[hsl(var(--rides))]", bg: "bg-[hsl(var(--rides)/0.05)]" },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]", border: "border-[hsl(var(--eats))]", bg: "bg-[hsl(var(--eats)/0.05)]" },
 ];
 
 export default function HeroSearchCard() {
@@ -53,11 +53,11 @@ export default function HeroSearchCard() {
                 className={cn(
                   "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative",
                   activeTab === tab.id
-                    ? "border-primary text-primary bg-primary/5"
+                    ? `${tab.border} ${tab.color} ${tab.bg}`
                     : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
-                <tab.icon className={cn("w-4 h-4 shrink-0", activeTab === tab.id ? "text-primary" : "")} />
+                <tab.icon className={cn("w-4 h-4 shrink-0", activeTab === tab.id ? tab.color : "")} />
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}

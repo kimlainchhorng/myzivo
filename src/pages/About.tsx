@@ -74,19 +74,19 @@ const About = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-sky-500/30 hover:shadow-lg hover:shadow-sky-500/5 hover:-translate-y-1 transition-all duration-300">
                     <Plane className="w-8 h-8 text-sky-500 mx-auto mb-3" />
                     <p className="font-semibold">Flights</p>
                   </div>
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 transition-all duration-300">
                     <Hotel className="w-8 h-8 text-amber-500 mx-auto mb-3" />
                     <p className="font-semibold">Hotels</p>
                   </div>
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5 hover:-translate-y-1 transition-all duration-300">
                     <Car className="w-8 h-8 text-violet-500 mx-auto mb-3" />
                     <p className="font-semibold">Car Rentals</p>
                   </div>
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-300">
                     <Ticket className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
                     <p className="font-semibold">Activities</p>
                   </div>
@@ -139,7 +139,7 @@ const About = () => {
                   bgColor: "bg-amber-500/10"
                 }
               ].map((item) => (
-                <Card key={item.title} className="text-center border-border/50">
+                <Card key={item.title} className="text-center border-border/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-6">
                     <div className={`w-14 h-14 rounded-2xl ${item.bgColor} flex items-center justify-center mx-auto mb-4`}>
                       <item.icon className={`w-7 h-7 ${item.color}`} />
@@ -166,7 +166,7 @@ const About = () => {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <Card className="border-border/50">
+               <Card className="border-border/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
                 <CardContent className="p-6 text-center">
                   <Globe className="w-10 h-10 text-primary mx-auto mb-4" />
                   <h3 className="font-bold text-xl mb-2">Global Coverage</h3>
@@ -175,7 +175,7 @@ const About = () => {
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border-border/50">
+               <Card className="border-border/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
                 <CardContent className="p-6 text-center">
                   <Building2 className="w-10 h-10 text-primary mx-auto mb-4" />
                   <h3 className="font-bold text-xl mb-2">Multiple Partners</h3>
@@ -184,7 +184,7 @@ const About = () => {
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border-border/50">
+              <Card className="border-border/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
                 <CardContent className="p-6 text-center">
                   <Smartphone className="w-10 h-10 text-primary mx-auto mb-4" />
                   <h3 className="font-bold text-xl mb-2">Mobile-First</h3>
