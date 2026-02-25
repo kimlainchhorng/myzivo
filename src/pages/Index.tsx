@@ -45,7 +45,7 @@ const DesktopHomePage = () => {
       <OGImageMeta pageType="homepage" />
       <NavBar />
 
-      <main className="pt-16">
+      <main id="main-content" className="pt-16">
         {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
 
         {/* Above-fold: Eager loaded */}

@@ -15,6 +15,8 @@ import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
+import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
+import { SkipToContent } from "./components/shared/SkipToContent";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
@@ -263,6 +265,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
   <BrandProvider>
     <TooltipProvider>
+      <SkipToContent />
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -494,6 +497,7 @@ const App = () => (
           <CookieConsent />
           <PWAUpdatePrompt />
           <PWAInstallBanner />
+          <ScrollToTopButton />
           <SpatialCursor />
           <BrandThemeApplicator />
         </AuthProvider>
