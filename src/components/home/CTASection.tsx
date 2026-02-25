@@ -112,7 +112,7 @@ const CTASection = () => {
 
               {/* App Store Badges */}
               <div className="flex justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-                <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-105 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+                <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity" />
                   <div className="relative z-10"><Apple className="w-5 h-5 sm:w-6 sm:h-6" /></div>
                   <div className="text-left relative z-10">
@@ -120,7 +120,7 @@ const CTASection = () => {
                     <p className="font-semibold text-xs sm:text-sm">App Store</p>
                   </div>
                 </div>
-                <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-105 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+                <div className="relative px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-xl bg-foreground text-background flex items-center gap-2 sm:gap-3 cursor-pointer overflow-hidden group/badge transition-transform duration-200 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity" />
                   <div className="relative z-10"><Play className="w-5 h-5 sm:w-6 sm:h-6" /></div>
                   <div className="text-left relative z-10">

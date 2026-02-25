@@ -26,6 +26,8 @@ import {
   Sparkles,
   Crown,
   Plane,
+  Building2,
+  Dumbbell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
@@ -95,7 +97,7 @@ const mockLounges: Lounge[] = [
     capacity: 120,
     currentOccupancy: 45,
     amenities: ["Free WiFi", "Hot Meals", "Premium Bar", "Shower Suites", "Business Center"],
-    image: "🏢",
+    image: "executive",
     description: "Panoramic runway views with exceptional dining and spa services.",
     nearGates: ["B1-B15", "C1-C10"],
   },
@@ -113,7 +115,7 @@ const mockLounges: Lounge[] = [
     capacity: 50,
     currentOccupancy: 18,
     amenities: ["Free WiFi", "Hot Meals", "Premium Bar", "Shower Suites", "Spa Services", "Quiet Zone"],
-    image: "👑",
+    image: "luxury",
     description: "Ultra-exclusive sanctuary with private suites and à la carte dining.",
     nearGates: ["A1-A20"],
   },
@@ -131,7 +133,7 @@ const mockLounges: Lounge[] = [
     capacity: 200,
     currentOccupancy: 132,
     amenities: ["Free WiFi", "Hot Meals", "Barista Coffee", "Wheelchair Access"],
-    image: "✈️",
+    image: "standard",
     description: "Comfortable space with essential amenities for the modern traveler.",
     nearGates: ["B20-B35", "D1-D15"],
   },
@@ -149,7 +151,7 @@ const mockLounges: Lounge[] = [
     capacity: 80,
     currentOccupancy: 28,
     amenities: ["Free WiFi", "Hot Meals", "Shower Suites", "Spa Services", "Quiet Zone", "Kids Area"],
-    image: "🧘",
+    image: "wellness",
     description: "Focus on wellness with meditation rooms, yoga mats, and healthy cuisine.",
     nearGates: ["C15-C30"],
   },
@@ -292,7 +294,9 @@ const AirportLoungeAccess = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl">{lounge.image}</span>
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                          {lounge.image === "luxury" ? <Crown className="w-5 h-5 text-amber-400" /> : lounge.image === "wellness" ? <Dumbbell className="w-5 h-5 text-emerald-400" /> : lounge.image === "executive" ? <Building2 className="w-5 h-5 text-purple-400" /> : <Plane className="w-5 h-5 text-sky-400" />}
+                        </div>
                         <div>
                           <h3 className="font-semibold">{lounge.name}</h3>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">

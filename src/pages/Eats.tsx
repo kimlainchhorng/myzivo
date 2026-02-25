@@ -146,7 +146,7 @@ export default function Eats() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
                 {features.map((feature, i) => (
                   <motion.div key={feature.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
-                    <Card className="border-2 hover:border-eats/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg glow-border-hover h-full">
+                    <Card className="border-2 hover:border-eats/30 transition-all duration-200 hover:-translate-y-1.5 hover:shadow-lg glow-border-hover h-full">
                       <CardContent className="p-6 text-center">
                         <div className="w-14 h-14 mx-auto rounded-2xl bg-eats/10 flex items-center justify-center mb-4 float-gentle" style={{ animationDelay: `${i * 200}ms` }}>
                           <feature.icon className="w-7 h-7 text-eats" />
@@ -173,13 +173,13 @@ export default function Eats() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
                 {cuisineTypes.map((cuisine, i) => (
                   <motion.div key={cuisine.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
-                    <Card className="overflow-hidden border-2 hover:border-eats/30 transition-all duration-300 group cursor-pointer glow-border-hover" onClick={() => navigate("/eats/restaurants")}>
+                    <Card className="overflow-hidden border-2 hover:border-eats/30 transition-all duration-200 group cursor-pointer glow-border-hover" onClick={() => navigate("/eats/restaurants")}>
                       <div className="relative aspect-[4/3] overflow-hidden">
                         <img src={cuisine.image} alt={cuisine.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         {/* Eats brand overlay on hover */}
                         <div className="absolute inset-0 bg-gradient-to-br from-eats/20 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                          <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-bold opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">Explore →</span>
+                          <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-bold opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-200">Explore →</span>
                         </div>
                         <div className="absolute bottom-4 left-4 text-white">
                           <h3 className="font-bold text-xl">{cuisine.name}</h3>

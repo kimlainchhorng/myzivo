@@ -27,7 +27,9 @@ import {
   AlertCircle,
   Zap,
   TrendingUp,
-  Calculator
+  Calculator,
+  Truck,
+  Crown
 } from "lucide-react";
 import { usePricing, useUpdatePricing, useApplyGlobalSurge, Pricing } from "@/hooks/usePricing";
 
@@ -44,11 +46,11 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-const vehicleIcons: Record<string, string> = {
-  economy: "🚗",
-  comfort: "🚙",
-  premium: "🏎️",
-  xl: "🚐",
+const vehicleIconComponents: Record<string, typeof Car> = {
+  economy: Car,
+  comfort: Car,
+  premium: Crown,
+  xl: Truck,
 };
 
 const vehicleDescriptions: Record<string, string> = {
@@ -295,7 +297,7 @@ const AdminPricingControls = () => {
                 <CardHeader className="relative pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl">{vehicleIcons[pricing.vehicle_type] || "🚗"}</span>
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">{(() => { const VIcon = vehicleIconComponents[pricing.vehicle_type] || Car; return <VIcon className="w-5 h-5 text-primary" />; })()}</div>
                       <div>
                         <CardTitle className="capitalize">{pricing.vehicle_type}</CardTitle>
                         <CardDescription>{vehicleDescriptions[pricing.vehicle_type] || "Vehicle type"}</CardDescription>

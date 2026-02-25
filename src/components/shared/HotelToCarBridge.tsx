@@ -24,9 +24,9 @@ interface HotelToCarBridgeProps {
 }
 
 const suggestedCars = [
-  { id: "1", name: "Economy", type: "Toyota Corolla", price: 45, image: "🚗", feature: "Best Value" },
-  { id: "2", name: "SUV", type: "Honda CR-V", price: 75, image: "🚙", feature: "Family Pick" },
-  { id: "3", name: "Luxury", type: "BMW 5 Series", price: 120, image: "🏎️", feature: "Premium" },
+  { id: "1", name: "Economy", type: "Toyota Corolla", price: 45, feature: "Best Value" },
+  { id: "2", name: "SUV", type: "Honda CR-V", price: 75, feature: "Family Pick" },
+  { id: "3", name: "Luxury", type: "BMW 5 Series", price: 120, feature: "Premium" },
 ];
 
 const HotelToCarBridge = ({ 
@@ -98,7 +98,7 @@ const HotelToCarBridge = ({
                     : "border-border hover:border-emerald-500/30"
                 )}
               >
-                <span className="text-3xl">{car.image}</span>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center"><Car className="w-6 h-6 text-emerald-500" /></div>
                 <div className="text-center">
                   <p className="font-medium text-sm">{car.name}</p>
                   <p className="text-xs text-muted-foreground">{car.type}</p>

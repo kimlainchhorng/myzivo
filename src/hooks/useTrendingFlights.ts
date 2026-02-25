@@ -29,18 +29,18 @@ interface TrendingDestination {
 
 // Popular routes with indicative pricing
 const TRENDING_ROUTES: TrendingRoute[] = [
-  { origin: 'JFK', destination: 'LAX', city: 'Los Angeles', country: 'USA', image: '🌴' },
-  { origin: 'JFK', destination: 'LHR', city: 'London', country: 'UK', image: '🇬🇧' },
-  { origin: 'LAX', destination: 'NRT', city: 'Tokyo', country: 'Japan', image: '🗼' },
-  { origin: 'JFK', destination: 'CDG', city: 'Paris', country: 'France', image: '🗼' },
-  { origin: 'LAX', destination: 'DXB', city: 'Dubai', country: 'UAE', image: '🏙️' },
-  { origin: 'SFO', destination: 'SIN', city: 'Singapore', country: 'Singapore', image: '🏛️' },
-  { origin: 'MIA', destination: 'CUN', city: 'Cancun', country: 'Mexico', image: '🏝️' },
-  { origin: 'ORD', destination: 'BCN', city: 'Barcelona', country: 'Spain', image: '⛪' },
-  { origin: 'SEA', destination: 'HNL', city: 'Honolulu', country: 'USA', image: '🌺' },
-  { origin: 'BOS', destination: 'DUB', city: 'Dublin', country: 'Ireland', image: '🍀' },
-  { origin: 'DFW', destination: 'LAS', city: 'Las Vegas', country: 'USA', image: '🎰' },
-  { origin: 'ATL', destination: 'MBJ', city: 'Montego Bay', country: 'Jamaica', image: '🌴' },
+  { origin: 'JFK', destination: 'LAX', city: 'Los Angeles', country: 'USA', image: 'LAX' },
+  { origin: 'JFK', destination: 'LHR', city: 'London', country: 'UK', image: 'LHR' },
+  { origin: 'LAX', destination: 'NRT', city: 'Tokyo', country: 'Japan', image: 'NRT' },
+  { origin: 'JFK', destination: 'CDG', city: 'Paris', country: 'France', image: 'CDG' },
+  { origin: 'LAX', destination: 'DXB', city: 'Dubai', country: 'UAE', image: 'DXB' },
+  { origin: 'SFO', destination: 'SIN', city: 'Singapore', country: 'Singapore', image: 'SIN' },
+  { origin: 'MIA', destination: 'CUN', city: 'Cancun', country: 'Mexico', image: 'CUN' },
+  { origin: 'ORD', destination: 'BCN', city: 'Barcelona', country: 'Spain', image: 'BCN' },
+  { origin: 'SEA', destination: 'HNL', city: 'Honolulu', country: 'USA', image: 'HNL' },
+  { origin: 'BOS', destination: 'DUB', city: 'Dublin', country: 'Ireland', image: 'DUB' },
+  { origin: 'DFW', destination: 'LAS', city: 'Las Vegas', country: 'USA', image: 'LAS' },
+  { origin: 'ATL', destination: 'MBJ', city: 'Montego Bay', country: 'Jamaica', image: 'MBJ' },
 ];
 
 // Indicative prices (display estimates only)
