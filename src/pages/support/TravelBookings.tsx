@@ -132,7 +132,7 @@ export default function TravelBookingsSupport() {
           {/* Responsibility Split */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Partner Handles */}
-            <Card className="border-sky-500/30">
+            <Card className="border-sky-500/30 hover:shadow-md transition-all duration-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sky-500">
                   <ExternalLink className="w-5 h-5" />
@@ -153,7 +153,7 @@ export default function TravelBookingsSupport() {
             </Card>
 
             {/* Hizovo Handles */}
-            <Card className="border-primary/30">
+            <Card className="border-primary/30 hover:shadow-md transition-all duration-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <Shield className="w-5 h-5" />
@@ -190,7 +190,7 @@ export default function TravelBookingsSupport() {
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                <div className="p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-sky-500/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
                   <div className="flex items-center gap-3 mb-3">
                     <Plane className="w-5 h-5 text-sky-500" />
                     <span className="font-semibold">Flights</span>
@@ -199,7 +199,7 @@ export default function TravelBookingsSupport() {
                     Contact the airline or travel agency listed on your confirmation.
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                <div className="p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-violet-500/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
                   <div className="flex items-center gap-3 mb-3">
                     <Hotel className="w-5 h-5 text-violet-500" />
                     <span className="font-semibold">Hotels</span>
@@ -208,7 +208,7 @@ export default function TravelBookingsSupport() {
                     Contact the booking platform (e.g., Booking.com) or hotel directly.
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                <div className="p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-emerald-500/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
                   <div className="flex items-center gap-3 mb-3">
                     <Car className="w-5 h-5 text-emerald-500" />
                     <span className="font-semibold">Car Rentals</span>
@@ -255,7 +255,7 @@ export default function TravelBookingsSupport() {
           </Card>
 
           {/* Still Need Help */}
-          <div className="text-center p-8 rounded-2xl bg-primary/5 border border-primary/20">
+          <div className="text-center p-8 rounded-2xl bg-primary/5 border border-primary/20 hover:border-primary/40 hover:shadow-md transition-all duration-200">
             <h2 className="text-xl font-bold mb-2">Having trouble with our website?</h2>
             <p className="text-muted-foreground mb-6">
               If you're experiencing issues with the Hizovo website itself, we're here to help.
