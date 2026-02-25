@@ -392,25 +392,25 @@ const AdminPricingControls = () => {
                   ) : (
                     <>
                       <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="flex items-center gap-2 text-muted-foreground mb-1">
                             <DollarSign className="h-3 w-3" />
                             <span className="text-xs">Base Fare</span>
                           </div>
                           <p className="text-lg font-semibold">${pricing.base_fare.toFixed(2)}</p>
                         </div>
-                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="flex items-center gap-2 text-muted-foreground mb-1">
                             <Car className="h-3 w-3" />
                             <span className="text-xs">Per Mile</span>
                           </div>
                           <p className="text-lg font-semibold">${pricing.per_km_rate.toFixed(2)}</p>
                         </div>
-                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="text-xs text-muted-foreground mb-1">⏱️ Per Minute</div>
                           <p className="text-lg font-semibold">${pricing.per_minute_rate.toFixed(2)}</p>
                         </div>
-                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="text-xs text-muted-foreground mb-1">📍 Minimum</div>
                           <p className="text-lg font-semibold">${pricing.minimum_fare.toFixed(2)}</p>
                         </div>

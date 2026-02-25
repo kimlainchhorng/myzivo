@@ -124,7 +124,7 @@ export function SmartAlertTiming({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mb-4 p-4 rounded-xl bg-muted/50 border border-border/50"
+              className="mb-4 p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

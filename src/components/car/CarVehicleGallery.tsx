@@ -157,7 +157,7 @@ const CarVehicleGallery = () => {
               </div>
 
               {/* Info Card */}
-              <div className="flex-1 p-6 rounded-2xl bg-card/50 border border-border/50">
+              <div className="flex-1 p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold">{vehicle.name}</h3>

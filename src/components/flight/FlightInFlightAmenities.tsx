@@ -111,7 +111,7 @@ const FlightInFlightAmenities = () => {
               {premiumFeatures.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
-                  <div key={index} className="text-center p-4 rounded-xl bg-card/50 border border-border/30">
+                  <div key={index} className="text-center p-4 rounded-xl bg-card/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <Icon className="w-8 h-8 text-primary mx-auto mb-2" />
                     <h4 className="font-medium text-sm mb-1">{feature.label}</h4>
                     <p className="text-xs text-muted-foreground">{feature.description}</p>

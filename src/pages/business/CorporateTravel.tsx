@@ -177,7 +177,7 @@ export default function CorporateTravel() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-2xl bg-card border border-border">
+              <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>

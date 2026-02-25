@@ -442,7 +442,7 @@ export default function InvestorOverview() {
 // Helper Components
 function StatCard({ icon: Icon, value, label }: { icon: any; value: string; label: string }) {
   return (
-    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+    <div className="p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <Icon className="w-5 h-5 text-primary mb-2" />
       <p className="text-2xl font-bold">{value}</p>
       <p className="text-xs text-muted-foreground">{label}</p>

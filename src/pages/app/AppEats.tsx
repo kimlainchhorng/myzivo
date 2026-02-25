@@ -350,7 +350,7 @@ const AppEats = () => {
                     return (
                       <div 
                         key={item.id}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                       >
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm">{item.name}</h4>
@@ -422,7 +422,7 @@ const AppEats = () => {
                 {cart.map((item) => (
                   <div 
                     key={item.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm">{item.name}</h4>

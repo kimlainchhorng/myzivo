@@ -120,13 +120,13 @@ const CarFuelPolicies = () => {
           </div>
 
           {/* Current Fuel Prices */}
-          <div className="p-6 rounded-2xl bg-muted/30 border border-border/50">
+          <div className="p-6 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <h3 className="text-lg font-semibold mb-4">Current Fuel Prices (Avg)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {fuelTypes.map((fuel, index) => {
                 const Icon = fuel.icon;
                 return (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/30">
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <Icon className={`w-5 h-5 ${fuel.color}`} />
                     <div>
                       <div className="font-medium text-sm">{fuel.type}</div>

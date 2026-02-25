@@ -40,7 +40,7 @@ export function GlobalDisclaimer({ className, variant = "full" }: GlobalDisclaim
   }
   
   return (
-    <div className={cn("p-4 rounded-lg bg-muted/50 border border-border", className)}>
+    <div className={cn("p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200", className)}>
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
           <Globe className="w-4 h-4 text-primary" />

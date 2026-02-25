@@ -128,7 +128,7 @@ export default function Partners() {
                 Email notifications (opt-in only)
               </li>
             </ul>
-            <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+            <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-sm text-muted-foreground font-medium mb-2">We do NOT use:</p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>❌ Incentivized traffic</li>

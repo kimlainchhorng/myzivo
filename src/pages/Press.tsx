@@ -250,7 +250,7 @@ const Press = () => {
               {/* Recent Coverage Placeholder */}
               <section className="mt-12">
                 <h2 className="text-2xl font-bold mb-6 text-center">Recent Coverage</h2>
-                <div className="text-center p-12 rounded-2xl bg-muted/30 border border-border/50">
+                <div className="text-center p-12 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">
                     Press coverage will be featured here as it becomes available.

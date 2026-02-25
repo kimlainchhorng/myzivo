@@ -150,7 +150,7 @@ export function FlightChangeRequest({
           )}
 
           {/* Support Contact */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <p className="text-sm font-medium mb-2">Need help?</p>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <a href="tel:+1-800-ZIVO" className="flex items-center gap-1 hover:text-foreground">

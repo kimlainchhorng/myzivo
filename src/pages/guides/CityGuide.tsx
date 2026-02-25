@@ -210,7 +210,7 @@ export default function CityGuide() {
             <h2 className="text-2xl font-bold mb-6">Top Attractions</h2>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
               {city.topAttractions.map((attraction, i) => (
-                <div key={attraction} className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+                <div key={attraction} className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                     {i + 1}
                   </div>

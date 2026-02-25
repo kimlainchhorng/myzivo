@@ -405,7 +405,7 @@ export const PricePrediction = ({
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-card/50 border border-border/30"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-card/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <div className={cn(
                         "w-10 h-10 rounded-lg flex items-center justify-center",

@@ -202,7 +202,7 @@ const RestaurantSettings = () => {
               <CardDescription>Set your opening and closing times</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                   <div>
@@ -292,7 +292,7 @@ const RestaurantSettings = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div>
                   <p className="font-medium">Accept Online Orders</p>
                   <p className="text-sm text-muted-foreground">Allow customers to order online</p>
@@ -300,7 +300,7 @@ const RestaurantSettings = () => {
                 <Switch defaultChecked />
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div>
                   <p className="font-medium">Self-Pickup Available</p>
                   <p className="text-sm text-muted-foreground">Allow customers to pick up orders</p>
@@ -355,7 +355,7 @@ const RestaurantSettings = () => {
               <CardDescription>Manage payment methods and payouts</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/10">
                     <CreditCard className="h-5 w-5 text-blue-500" />
@@ -368,7 +368,7 @@ const RestaurantSettings = () => {
                 <Switch defaultChecked />
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-green-500/10">
                     <Shield className="h-5 w-5 text-green-500" />
@@ -381,7 +381,7 @@ const RestaurantSettings = () => {
                 <Switch defaultChecked />
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-purple-500/10">
                     <Palette className="h-5 w-5 text-purple-500" />

@@ -72,7 +72,7 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="p-4 rounded-xl bg-card border border-border">
+      <div className="p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="flex items-center gap-2 pb-3 border-b border-border mb-4">
           <CreditCard className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Payment Details</span>
@@ -462,7 +462,7 @@ export default function RequestRidePage() {
               className="space-y-5"
             >
               {/* Route summary */}
-              <div className="space-y-2 p-4 rounded-xl bg-muted/50 border border-border">
+              <div className="space-y-2 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center gap-1 pt-1">
                     <div className="w-2.5 h-2.5 rounded-full bg-primary" />
@@ -484,7 +484,7 @@ export default function RequestRidePage() {
 
               {/* Price breakdown */}
               {pricing && (
-                <div className="space-y-2 p-4 rounded-xl bg-card border border-border">
+                <div className="space-y-2 p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="flex items-center gap-2 pb-2 border-b border-border">
                     <Receipt className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-foreground">Fare Breakdown</span>

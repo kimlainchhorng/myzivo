@@ -310,7 +310,7 @@ const BookingManagement = () => {
           </div>
 
           {/* Important Notice */}
-          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border">
+          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div className="space-y-2 text-sm">

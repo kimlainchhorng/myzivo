@@ -96,7 +96,7 @@
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              transition={{ delay: 0.5 }}
-             className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50"
+             className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
            >
              <div className="flex items-start gap-2">
                <Lightbulb className="w-4 h-4 text-warning mt-0.5" />

@@ -66,7 +66,7 @@ const FlightSeatSelection = () => {
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Seat Map */}
-            <div className="p-6 rounded-2xl bg-card/50 border border-border/50">
+            <div className="p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               {/* Class Selector */}
               <div className="flex gap-2 mb-6">
                 {(["economy", "premium", "business"] as const).map((cls) => (
@@ -185,7 +185,7 @@ const FlightSeatSelection = () => {
               </div>
 
               {/* Selection Summary */}
-              <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+              <div className="p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Selected Seats</span>
                   <span className="font-medium">

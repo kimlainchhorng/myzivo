@@ -411,7 +411,7 @@ export default function DataProtection() {
                     </table>
                   </div>
 
-                  <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border">
+                  <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-start gap-3">
                       <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                       <div>

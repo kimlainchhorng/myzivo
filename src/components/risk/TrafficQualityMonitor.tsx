@@ -248,7 +248,7 @@ function MetricCard({ icon: Icon, label, value, status = "ok" }: MetricCardProps
   };
 
   return (
-    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+    <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <div className="flex items-center gap-2 mb-1">
         <Icon className="w-4 h-4 text-muted-foreground" />
         <span className="text-xs text-muted-foreground">{label}</span>

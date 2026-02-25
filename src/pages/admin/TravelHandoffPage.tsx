@@ -174,7 +174,7 @@ const TravelHandoffPage = () => {
                   onCheckedChange={(checked) => updateField('show_disclosure_modal', checked)}
                 />
               </div>
-              <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border">
+              <div className="mt-4 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <p className="text-sm text-muted-foreground italic">
                   "You will be redirected to our partner to complete your booking. 
                   ZIVO does not process payments or issue tickets."

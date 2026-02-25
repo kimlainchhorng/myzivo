@@ -78,7 +78,7 @@ export default function Security() {
               { label: "PCI DSS", sublabel: "Payment Security" },
               { label: "24/7", sublabel: "Monitoring" },
             ].map((item) => (
-              <div key={item.label} className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
+              <div key={item.label} className="text-center p-4 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <p className="text-2xl font-bold text-primary">{item.label}</p>
                 <p className="text-sm text-muted-foreground">{item.sublabel}</p>
               </div>

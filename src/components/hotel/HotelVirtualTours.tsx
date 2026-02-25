@@ -140,7 +140,7 @@ const HotelVirtualTours = () => {
               </div>
 
               {/* Tour Info */}
-              <div className="mt-4 p-4 rounded-xl bg-card/50 border border-border/50">
+              <div className="mt-4 p-4 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-semibold">{tours[activeTour].hotel}</h3>

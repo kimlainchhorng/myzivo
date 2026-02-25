@@ -123,7 +123,7 @@ const CookiePolicy = () => {
             {cookieCategories.map((category) => (
               <div
                 key={category.id}
-                className="flex items-start justify-between p-4 rounded-lg bg-muted/50 border border-border"
+                className="flex items-start justify-between p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <div className="space-y-1 flex-1 mr-4">
                   <div className="flex items-center gap-2">

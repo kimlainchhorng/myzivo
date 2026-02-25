@@ -122,7 +122,7 @@ export function FlightTrustBadges({ className }: { className?: string }) {
 export function FlightPaymentDisclaimer({ className }: { className?: string }) {
   return (
     <div className={cn(
-      "p-3 rounded-lg bg-muted/50 border border-border",
+      "p-3 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200",
       "text-xs text-muted-foreground",
       className
     )}>
