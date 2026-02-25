@@ -119,7 +119,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const FoodOrdering = lazy(() => import("./pages/NotFound")); // Removed: was duplicate of Eats
+// FoodOrdering removed — was duplicate of Eats
 const FlightBooking = lazy(() => import("./pages/FlightBooking"));
 const FlightLanding = lazy(() => import("./pages/FlightLanding"));
 const FlightResults = lazy(() => import("./pages/FlightResults"));
@@ -148,7 +148,7 @@ const CarSearch = lazy(() => import("./pages/CarSearch"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
 const GroundTransport = lazy(() => import("./pages/GroundTransport"));
-const Events = lazy(() => import("./pages/NotFound")); // Removed: no events system
+// Events removed — no events system
 const ThingsToDo = lazy(() => import("./pages/ThingsToDo"));
 const TravelInsurance = lazy(() => import("./pages/TravelInsurance"));
 const TravelExtras = lazy(() => import("./pages/TravelExtras"));
@@ -214,64 +214,9 @@ const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const CancellationPolicy = lazy(() => import("./pages/legal/CancellationPolicy"));
 const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
-// Removed legal micro-pages — all redirect to NotFound
-const CommunityGuidelines = lazy(() => import("./pages/NotFound"));
-const AcceptableUsePolicy = lazy(() => import("./pages/NotFound"));
-const CommunityStandards = lazy(() => import("./pages/NotFound"));
-const LegalFAQ = lazy(() => import("./pages/NotFound"));
-const VerificationPolicy = lazy(() => import("./pages/NotFound"));
-const AccountSecurityPolicy = lazy(() => import("./pages/NotFound"));
-const LocationDisclosure = lazy(() => import("./pages/NotFound"));
-const CommunicationsPolicy = lazy(() => import("./pages/NotFound"));
-const PlatformAvailability = lazy(() => import("./pages/NotFound"));
-const ThirdPartyServices = lazy(() => import("./pages/NotFound"));
-const SanctionsPolicy = lazy(() => import("./pages/NotFound"));
-const AgePolicy = lazy(() => import("./pages/NotFound"));
-const ConsumerDisclosures = lazy(() => import("./pages/NotFound"));
-const PaymentProcessors = lazy(() => import("./pages/NotFound"));
-const AIDisclosure = lazy(() => import("./pages/NotFound"));
-const InternationalPolicy = lazy(() => import("./pages/NotFound"));
-const FraudPolicy = lazy(() => import("./pages/NotFound"));
-const ContractorStatus = lazy(() => import("./pages/NotFound"));
-const PlatformNeutrality = lazy(() => import("./pages/NotFound"));
-const DataPolicies = lazy(() => import("./pages/NotFound"));
-const AIBiasPolicy = lazy(() => import("./pages/NotFound"));
-const DisputeProcess = lazy(() => import("./pages/NotFound"));
-const PlatformGovernance = lazy(() => import("./pages/NotFound"));
-const GovernmentOrders = lazy(() => import("./pages/NotFound"));
-const EmergencyShutdown = lazy(() => import("./pages/NotFound"));
-const ContentPolicy = lazy(() => import("./pages/NotFound"));
-const SafetyDisclaimer = lazy(() => import("./pages/NotFound"));
-const MarketplaceDisclaimer = lazy(() => import("./pages/NotFound"));
-const EnforcementRights = lazy(() => import("./pages/NotFound"));
-const BrandPolicy = lazy(() => import("./pages/NotFound"));
-const DMCAPolicy = lazy(() => import("./pages/NotFound"));
-const LegalProcess = lazy(() => import("./pages/NotFound"));
-const RecordsPolicy = lazy(() => import("./pages/NotFound"));
-const WhistleblowerPolicy = lazy(() => import("./pages/NotFound"));
-const CorporateProtection = lazy(() => import("./pages/NotFound"));
-const PaymentFinality = lazy(() => import("./pages/NotFound"));
-const DataResidency = lazy(() => import("./pages/NotFound"));
-const TravelRules = lazy(() => import("./pages/NotFound"));
-const RentalCompliance = lazy(() => import("./pages/NotFound"));
-const PlatformReliancePolicy = lazy(() => import("./pages/NotFound"));
-const TermsPrecedence = lazy(() => import("./pages/NotFound"));
-const CommunicationsConsent = lazy(() => import("./pages/NotFound"));
-const DataBreachPolicy = lazy(() => import("./pages/NotFound"));
+// Legal micro-pages removed — catch-all handles them
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
-const ChildrenPrivacy = lazy(() => import("./pages/NotFound"));
 const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
-const LegalNoticesPolicy = lazy(() => import("./pages/NotFound"));
-const ComplianceOperations = lazy(() => import("./pages/NotFound"));
-const RegulatoryResponse = lazy(() => import("./pages/NotFound"));
-const ComplianceRecords = lazy(() => import("./pages/NotFound"));
-const KYCPolicy = lazy(() => import("./pages/NotFound"));
-const AMLPolicy = lazy(() => import("./pages/NotFound"));
-const ComplaintsPolicy = lazy(() => import("./pages/NotFound"));
-const FinancialRecords = lazy(() => import("./pages/NotFound"));
-const Governance = lazy(() => import("./pages/NotFound"));
-const EthicsPolicy = lazy(() => import("./pages/NotFound"));
-const RegulatorCommunications = lazy(() => import("./pages/NotFound"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -329,15 +274,14 @@ const Vision = lazy(() => import("./pages/Vision"));
 // Corporate & Brand pages
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
-const InvestorRelations = lazy(() => import("./pages/NotFound"));
-const StrategicPartnerships = lazy(() => import("./pages/NotFound"));
-const FinancialTransparency = lazy(() => import("./pages/NotFound"));
+// InvestorRelations, StrategicPartnerships, FinancialTransparency, EcosystemMap, StrategicRoadmap removed — use catch-all
 const Careers = lazy(() => import("./pages/Careers"));
 const ForCustomers = lazy(() => import("./pages/ForCustomers"));
 const Drive = lazy(() => import("./pages/Drive"));
 const ForRestaurants = lazy(() => import("./pages/ForRestaurants"));
-const EcosystemMap = lazy(() => import("./pages/NotFound"));
-const StrategicRoadmap = lazy(() => import("./pages/NotFound"));
+const Reliability = lazy(() => import("./pages/Reliability"));
+const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
+const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
 
 // Support pages
@@ -367,7 +311,7 @@ const OrderTrackingPage = lazy(() => import("./pages/track/OrderTrackingPage"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
-const TrackingTest = lazy(() => import("./pages/NotFound"));
+// TrackingTest removed
 const Offline = lazy(() => import("./pages/Offline"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -401,7 +345,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
 // Operations & Launch pages
 const BookingManagement = lazy(() => import("./pages/BookingManagement"));
-const HowZivoMakesMoney = lazy(() => import("./pages/NotFound"));
+// HowZivoMakesMoney removed
 const Press = lazy(() => import("./pages/Press"));
 
 // Internal investor/acquisition pages
@@ -420,7 +364,7 @@ const TransfersAdLanding = lazy(() => import("./pages/ads/TransfersAdLanding"));
 const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding"));
 
 // Creator pages - lazy load
-const Creators = lazy(() => import("./pages/NotFound"));
+// Creators index removed
 const CreatorDashboard = lazy(() => import("./pages/creators/CreatorDashboard"));
 const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
 const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
@@ -435,11 +379,7 @@ const DataInsights = lazy(() => import("./pages/business/DataInsights"));
 // Compliance & Enterprise Trust pages - lazy load
 const ComplianceCenter = lazy(() => import("./pages/ComplianceCenter"));
 const EnterpriseTrust = lazy(() => import("./pages/security/EnterpriseTrust"));
-const PaymentTransparency = lazy(() => import("./pages/NotFound"));
-const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
-const Reliability = lazy(() => import("./pages/Reliability"));
-const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
-const RegulatoryStatus = lazy(() => import("./pages/NotFound"));
+// PaymentTransparency, RegulatoryStatus removed — use catch-all
 
 // LP (Ad-safe landing pages) - lazy load
 const FlightsLP = lazy(() => import("./pages/lp/FlightsLP"));
@@ -686,64 +626,8 @@ const App = () => (
                 <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="/legal/refunds" element={<RefundPolicy />} />
                 <Route path="/partner-agreement" element={<PartnerAgreement />} />
-                <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
-                <Route path="/legal/community-standards" element={<CommunityStandards />} />
-                <Route path="/legal/faq" element={<LegalFAQ />} />
-                <Route path="/legal/verification-policy" element={<VerificationPolicy />} />
-                <Route path="/legal/account-security" element={<AccountSecurityPolicy />} />
-                <Route path="/legal/location-disclosure" element={<LocationDisclosure />} />
-                <Route path="/legal/communications" element={<CommunicationsPolicy />} />
-                <Route path="/legal/platform-availability" element={<PlatformAvailability />} />
-                <Route path="/legal/third-party-services" element={<ThirdPartyServices />} />
-                <Route path="/legal/sanctions" element={<SanctionsPolicy />} />
-                <Route path="/legal/age-policy" element={<AgePolicy />} />
-                <Route path="/legal/consumer-disclosures" element={<ConsumerDisclosures />} />
-                <Route path="/legal/payment-processors" element={<PaymentProcessors />} />
-                <Route path="/legal/ai-disclosure" element={<AIDisclosure />} />
-                <Route path="/legal/international" element={<InternationalPolicy />} />
-                <Route path="/legal/fraud" element={<FraudPolicy />} />
-                <Route path="/legal/contractor-status" element={<ContractorStatus />} />
-                <Route path="/legal/platform-neutrality" element={<PlatformNeutrality />} />
+                {/* Removed legal micro-pages — all handled by catch-all NotFound */}
                 <Route path="/legal/accessibility" element={<AccessibilityStatement />} />
-                <Route path="/legal/data-policies" element={<DataPolicies />} />
-                <Route path="/legal/ai-bias" element={<AIBiasPolicy />} />
-                <Route path="/legal/dispute-process" element={<DisputeProcess />} />
-                <Route path="/legal/platform-governance" element={<PlatformGovernance />} />
-                <Route path="/legal/government-orders" element={<GovernmentOrders />} />
-                <Route path="/legal/emergency-shutdown" element={<EmergencyShutdown />} />
-                <Route path="/legal/content-policy" element={<ContentPolicy />} />
-                <Route path="/legal/safety-disclaimer" element={<SafetyDisclaimer />} />
-                <Route path="/legal/marketplace-disclaimer" element={<MarketplaceDisclaimer />} />
-                <Route path="/legal/enforcement-rights" element={<EnforcementRights />} />
-                <Route path="/legal/brand-policy" element={<BrandPolicy />} />
-                <Route path="/legal/dmca" element={<DMCAPolicy />} />
-                <Route path="/legal/legal-process" element={<LegalProcess />} />
-                <Route path="/legal/records" element={<RecordsPolicy />} />
-                <Route path="/legal/whistleblower" element={<WhistleblowerPolicy />} />
-                <Route path="/legal/corporate-protection" element={<CorporateProtection />} />
-                <Route path="/legal/payment-finality" element={<PaymentFinality />} />
-                <Route path="/legal/chargebacks" element={<PaymentFinality />} />
-                <Route path="/legal/travel-rules" element={<TravelRules />} />
-                <Route path="/legal/rental-compliance" element={<RentalCompliance />} />
-                <Route path="/legal/platform-reliance" element={<PlatformReliancePolicy />} />
-                <Route path="/legal/terms-precedence" element={<TermsPrecedence />} />
-                <Route path="/legal/communications-consent" element={<CommunicationsConsent />} />
-                <Route path="/legal/data-breach" element={<DataBreachPolicy />} />
-                <Route path="/legal/data-residency" element={<DataResidency />} />
-                <Route path="/legal/children-privacy" element={<ChildrenPrivacy />} />
-                <Route path="/legal/insurance" element={<InsurancePolicy />} />
-                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
-                <Route path="/legal/notices" element={<LegalNoticesPolicy />} />
-                <Route path="/legal/compliance-operations" element={<ComplianceOperations />} />
-                <Route path="/legal/regulatory-response" element={<RegulatoryResponse />} />
-                <Route path="/legal/compliance-records" element={<ComplianceRecords />} />
-                <Route path="/legal/kyc" element={<KYCPolicy />} />
-                <Route path="/legal/aml" element={<AMLPolicy />} />
-                <Route path="/legal/complaints" element={<ComplaintsPolicy />} />
-                <Route path="/legal/financial-records" element={<FinancialRecords />} />
-                <Route path="/legal/governance" element={<Governance />} />
-                <Route path="/legal/ethics" element={<EthicsPolicy />} />
-                <Route path="/legal/regulator-communications" element={<RegulatorCommunications />} />
                 <Route path="/legal/do-not-sell" element={<DoNotSell />} />
                 <Route path="/legal/partner-disclosure" element={<PartnerDisclosure />} />
                 <Route path="/legal/cancellation" element={<CancellationPolicy />} />
@@ -767,7 +651,7 @@ const App = () => (
                 <Route path="/zivo-plus" element={<ZivoPlus />} />
                 <Route path="/vision" element={<Vision />} />
                 <Route path="/press" element={<Press />} />
-                <Route path="/how-zivo-makes-money" element={<HowZivoMakesMoney />} />
+                {/* how-zivo-makes-money removed */}
                 <Route path="/for-customers" element={<ForCustomers />} />
                 <Route path="/drive" element={<Drive />} />
                 <Route path="/for-restaurants" element={<ForRestaurants />} />
@@ -775,11 +659,11 @@ const App = () => (
                 <Route path="/help-center" element={<HelpCenter />} />
                 <Route path="/compliance" element={<ComplianceCenter />} />
                 <Route path="/enterprise-trust" element={<EnterpriseTrust />} />
-                <Route path="/payment-transparency" element={<PaymentTransparency />} />
+                {/* payment-transparency removed */}
                 <Route path="/partner-audit-docs" element={<PartnerAuditDocs />} />
                 <Route path="/reliability" element={<Reliability />} />
                 <Route path="/enterprise-ready" element={<EnterpriseReady />} />
-                <Route path="/regulatory-status" element={<RegulatoryStatus />} />
+                {/* regulatory-status removed */}
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
                 <Route path="/list-your-car" element={<ListYourCar />} />
 
@@ -816,7 +700,7 @@ const App = () => (
                 <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
-                <Route path="/events" element={<Events />} />
+                {/* events removed */}
                 <Route path="/things-to-do" element={<ThingsToDo />} />
                 <Route path="/activities" element={<ThingsToDo />} />
                 <Route path="/experiences" element={<ThingsToDo />} />
@@ -926,8 +810,7 @@ const App = () => (
                 <Route path="/offline" element={<Offline />} />
                 {/* Outbound redirect for affiliate tracking */}
                 <Route path="/out" element={<OutboundRedirect />} />
-                {/* Tracking test page (hidden from nav) */}
-                <Route path="/tracking-test" element={<TrackingTest />} />
+                {/* tracking-test removed */}
                 {/* Ad Landing Pages - for paid traffic */}
                 <Route path="/ads/flights" element={<FlightsAdLanding />} />
                 <Route path="/ads/hotels" element={<HotelsAdLanding />} />
@@ -935,7 +818,7 @@ const App = () => (
                 <Route path="/ads/transfers" element={<TransfersAdLanding />} />
                 <Route path="/ads/activities" element={<ActivitiesAdLanding />} />
                 {/* Creator Pages - for influencer traffic */}
-                <Route path="/creators" element={<Creators />} />
+                {/* creators index falls through to catch-all */}
                 <Route path="/creators/dashboard" element={<ProtectedRoute><CreatorDashboard /></ProtectedRoute>} />
                 <Route path="/creators/flights" element={<FlightsCreatorLanding />} />
                 <Route path="/creators/hotels" element={<HotelsCreatorLanding />} />
@@ -973,10 +856,7 @@ const App = () => (
                 <Route path="/brand" element={<BrandMission />} />
                 <Route path="/mission" element={<BrandMission />} />
                 <Route path="/company-profile" element={<CompanyProfile />} />
-                <Route path="/investors" element={<InvestorRelations />} />
-                <Route path="/investor-relations" element={<InvestorRelations />} />
-                <Route path="/strategic-partnerships" element={<StrategicPartnerships />} />
-                <Route path="/financial-transparency" element={<FinancialTransparency />} />
+                {/* investors, strategic-partnerships, financial-transparency removed */}
                 {/* Internal Investor & Acquisition Pages */}
                 <Route path="/internal/investor-overview" element={<InvestorOverview />} />
                 <Route path="/internal/tech-architecture" element={<TechArchitecture />} />
@@ -986,9 +866,7 @@ const App = () => (
                 <Route path="/internal/api-integrations" element={<APIIntegrationStatus />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/jobs" element={<Careers />} />
-                <Route path="/ecosystem" element={<EcosystemMap />} />
-                <Route path="/platform" element={<EcosystemMap />} />
-                <Route path="/strategic-roadmap" element={<StrategicRoadmap />} />
+                {/* ecosystem, platform, strategic-roadmap removed */}
                 <Route path="/trust-statement" element={<TrustStatement />} />
                 {/* Accept Team Invitation */}
                 <Route path="/accept-invite" element={<AcceptInvite />} />

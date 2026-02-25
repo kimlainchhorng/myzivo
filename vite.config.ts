@@ -40,8 +40,9 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
       manifest: {
-        name: "hiZIVO",
-        short_name: "hiZIVO",
+        name: "ZIVO",
+        short_name: "ZIVO",
+        theme_color: "#0D0D0F",
         description: "One app for every journey. Flights, hotels, cars, rides, and food delivery - all in one place.",
         background_color: "#000000",
         display: "standalone",
