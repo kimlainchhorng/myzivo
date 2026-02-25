@@ -192,7 +192,7 @@ export default function LoyaltyPage() {
                             .map((r) => (
                               <div
                                 key={r.id}
-                                className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20"
+                                className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20"
                               >
                                 <div>
                                   <p className="font-medium">{r.reward?.name}</p>
@@ -346,7 +346,7 @@ function HistoryItem({
   const isPositive = entry.pointsAmount > 0;
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-3">
         <div
           className={cn(

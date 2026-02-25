@@ -516,7 +516,7 @@ export default function GoLiveChecklist() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
                         catComplete ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
                       )}>
                         {category.icon}
@@ -543,7 +543,7 @@ export default function GoLiveChecklist() {
                     {category.items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           {getStatusIcon(item.status)}

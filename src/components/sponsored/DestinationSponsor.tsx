@@ -89,7 +89,7 @@ export function DestinationSponsor({
             <p className="text-muted-foreground mb-4">{description}</p>
 
             {dealHighlight && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
                 <span className="text-sm font-medium text-emerald-600">{dealHighlight}</span>
               </div>
             )}

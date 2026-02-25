@@ -91,7 +91,7 @@ export default function Security() {
               <Card key={practice.title} className="bg-card/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-3 text-lg">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                       <practice.icon className="w-5 h-5 text-primary" />
                     </div>
                     {practice.title}

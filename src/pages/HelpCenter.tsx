@@ -152,13 +152,13 @@ const HelpCenter = () => {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Tabs defaultValue="faq" className="mb-8">
             <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 sm:p-1.5 rounded-xl h-auto">
-              <TabsTrigger value="faq" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="faq" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
                 FAQ
               </TabsTrigger>
-              <TabsTrigger value="contact" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="contact" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
                 Contact Us
               </TabsTrigger>
-              <TabsTrigger value="ticket" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="ticket" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
                 Ticket
               </TabsTrigger>
             </TabsList>

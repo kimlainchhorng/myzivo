@@ -178,7 +178,7 @@ export default function AffiliateAnalytics({ className }: AffiliateAnalyticsProp
             ) : (
               <div className="space-y-2">
                 {analytics.topRoutes.map(([route, count], index) => (
-                  <div key={route} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                  <div key={route} className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 text-xs flex items-center justify-center font-bold">
                         {index + 1}
@@ -208,7 +208,7 @@ export default function AffiliateAnalytics({ className }: AffiliateAnalyticsProp
             ) : (
               <div className="space-y-2">
                 {analytics.topAirlines.map(([airline, count], index) => (
-                  <div key={airline} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                  <div key={airline} className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 text-xs flex items-center justify-center font-bold">
                         {index + 1}
@@ -237,7 +237,7 @@ export default function AffiliateAnalytics({ className }: AffiliateAnalyticsProp
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {analytics.recentClicks.slice(0, 10).map((click, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 text-sm">
+                <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 text-sm">
                   <div className="flex items-center gap-3">
                     <Plane className="w-4 h-4 text-sky-500" />
                     <div>

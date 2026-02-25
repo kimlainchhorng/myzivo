@@ -224,7 +224,7 @@ const DispatchDisputeDetail = () => {
               {dispute.description && (
                 <div>
                   <span className="text-sm text-muted-foreground">Description</span>
-                  <p className="mt-1 p-3 bg-muted rounded-lg text-sm">
+                  <p className="mt-1 p-3 bg-muted rounded-xl text-sm">
                     {dispute.description}
                   </p>
                 </div>
@@ -243,7 +243,7 @@ const DispatchDisputeDetail = () => {
                   {refundRequests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-xl"
                     >
                       <div>
                         <p className="font-medium">{formatCurrency(req.amount)}</p>
@@ -346,7 +346,7 @@ const DispatchDisputeDetail = () => {
               <CardTitle>Issue Refund</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+              <div className="p-3 bg-muted/50 rounded-xl space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Order Total</span>
                   <span>{formatCurrency(dispute.order?.total_amount)}</span>
@@ -402,14 +402,14 @@ const DispatchDisputeDetail = () => {
               </div>
 
               {dispute.payout_hold ? (
-                <div className="flex items-center gap-2 p-3 bg-amber-500/10 rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-amber-500/10 rounded-xl">
                   <Shield className="h-4 w-4 text-amber-500" />
                   <span className="text-sm text-amber-700 dark:text-amber-300">
                     Payout is currently held
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-xl">
                   <ShieldOff className="h-4 w-4 text-green-500" />
                   <span className="text-sm text-green-700 dark:text-green-300">
                     Payout can proceed

@@ -209,7 +209,7 @@ export const BookingConfirmation = ({
                     className="flex items-center gap-3"
                   >
                     {detail.icon && (
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                      <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                         {detail.icon}
                       </div>
                     )}

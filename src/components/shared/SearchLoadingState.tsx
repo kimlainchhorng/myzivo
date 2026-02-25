@@ -144,7 +144,7 @@ export function SearchLoadingState({
           <div
             key={partner.name}
             className={cn(
-              "w-11 h-11 rounded-xl flex items-center justify-center text-white text-xs font-bold transition-all duration-300",
+              "w-11 h-11 rounded-xl flex items-center justify-center text-white text-xs font-bold transition-all duration-200",
               partner.color,
               activePartner === index ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background" : "opacity-50 scale-90"
             )}

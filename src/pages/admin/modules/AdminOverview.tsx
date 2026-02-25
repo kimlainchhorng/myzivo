@@ -94,10 +94,10 @@ export default function AdminOverview() {
       {/* Summary Cards - Row 1: Core Ops */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Rides Today/Week */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Car className="w-5 h-5 text-primary" />
               </div>
               {ridesStats.new > 0 && (
@@ -115,10 +115,10 @@ export default function AdminOverview() {
         </Card>
 
         {/* Eats Today/Week */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "50ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "50ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-eats/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-eats/10 flex items-center justify-center">
                 <UtensilsCrossed className="w-5 h-5 text-eats" />
               </div>
               {eatsStats.pending > 0 && (
@@ -136,10 +136,10 @@ export default function AdminOverview() {
         </Card>
 
         {/* Active Drivers */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "100ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "100ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                 <Users className="w-5 h-5 text-emerald-500" />
               </div>
             </div>
@@ -152,10 +152,10 @@ export default function AdminOverview() {
         </Card>
 
         {/* Affiliate Clicks - Now with real data */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "150ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "150ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                 <MousePointerClick className="w-5 h-5 text-violet-500" />
               </div>
               {clickStats && clickStats.today > 0 && (
@@ -181,10 +181,10 @@ export default function AdminOverview() {
       {/* P2P Marketplace Stats - Row 2 */}
       <div className="grid grid-cols-3 gap-4">
         {/* P2P Owners */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "200ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "200ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
                 <UserCircle className="w-5 h-5 text-sky-500" />
               </div>
               {(p2pStats?.owners.pending ?? 0) > 0 && (
@@ -202,10 +202,10 @@ export default function AdminOverview() {
         </Card>
 
         {/* P2P Vehicles */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "250ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "250ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-cars/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-cars/10 flex items-center justify-center">
                 <CarFront className="w-5 h-5 text-cars" />
               </div>
               {(p2pStats?.vehicles.pending ?? 0) > 0 && (
@@ -223,10 +223,10 @@ export default function AdminOverview() {
         </Card>
 
         {/* P2P Bookings */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "300ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "300ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-amber-500" />
               </div>
               {(p2pStats?.bookings.active ?? 0) > 0 && (
@@ -248,7 +248,7 @@ export default function AdminOverview() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2 animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "350ms" }}>
+        <Card className="lg:col-span-2 animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "350ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Activity className="w-4 h-4 text-primary" />
@@ -269,10 +269,10 @@ export default function AdminOverview() {
                   {recentActivity.map((activity) => (
                     <div 
                       key={activity.id} 
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
                     >
                       <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                        "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0",
                         activity.type === "ride" ? "bg-primary/10" : "bg-eats/10"
                       )}>
                         {activity.type === "ride" ? (
@@ -302,7 +302,7 @@ export default function AdminOverview() {
         </Card>
 
         {/* Top Cities */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "400ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-200" style={{ animationDelay: "400ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <MapPin className="w-4 h-4 text-primary" />
