@@ -28,7 +28,7 @@ const LanguageSelector = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl hover:bg-muted/80 transition-all duration-200 active:scale-[0.97] touch-manipulation"
       >
         <Globe className="w-4 h-4 text-muted-foreground" />
         <span className="text-lg">{selected.flag}</span>

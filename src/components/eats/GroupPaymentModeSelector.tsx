@@ -83,7 +83,7 @@ export default function GroupPaymentModeSelector({ open, onOpenChange, items, to
               key={opt.value}
               htmlFor={opt.value}
               className={cn(
-                "flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-colors",
+                "flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200 active:scale-[0.98] touch-manipulation",
                 mode === opt.value
                   ? "border-violet-500 bg-violet-500/10"
                   : "border-border hover:bg-muted/50"

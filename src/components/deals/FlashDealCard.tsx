@@ -96,7 +96,7 @@ const FlashDealCard = ({ deal, onClaim, className }: FlashDealCardProps) => {
         {/* Category & Title */}
         <div className="flex items-start gap-3">
           <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
             `bg-${color}-500/20`
           )}>
             <Icon className={cn("w-5 h-5", `text-${color}-500`)} />

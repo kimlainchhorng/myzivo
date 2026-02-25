@@ -100,7 +100,7 @@ export function RewardSelector({ rewards, selectedReward, onSelect }: RewardSele
           type="button"
           variant="outline"
           size="sm"
-          className="w-full gap-2 text-primary border-primary/30"
+          className="w-full gap-2 text-primary border-primary/30 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
           onClick={() => {
             const sorted = [...rewards].sort((a, b) => {
               if (!a.expires_at) return 1;

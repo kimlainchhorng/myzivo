@@ -144,7 +144,7 @@ const HotelGuestReviews = () => {
                     <Calendar className="w-4 h-4" />
                     <span>Stayed in: {review.stayed}</span>
                   </div>
-                  <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-[0.95] touch-manipulation">
                     <ThumbsUp className="w-4 h-4" />
                     <span>Helpful ({review.helpful})</span>
                   </button>

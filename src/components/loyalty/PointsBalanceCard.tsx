@@ -134,7 +134,7 @@ export default function PointsBalanceCard({
 
         {/* Tier Bonus */}
         {tierConfig.earningBonus > 0 && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mb-4">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             <span className="text-sm">
               <span className="font-medium text-emerald-500">+{tierConfig.earningBonus * 100}%</span>

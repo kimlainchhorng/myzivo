@@ -89,7 +89,7 @@ export default function TierProgressCard({
 
         {/* Current Tier Details */}
         <div className={cn(
-          "p-4 rounded-xl border",
+          "p-4 rounded-2xl border",
           ZIVO_TIERS[tier].bgColor,
           ZIVO_TIERS[tier].borderColor
         )}>

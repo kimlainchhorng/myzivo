@@ -165,7 +165,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
                 )}>
                   <div className="flex items-center gap-2">
                     <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                      "w-8 h-8 rounded-xl flex items-center justify-center transition-colors",
                       saved ? colors.iconBg : "bg-muted/50"
                     )}>
                       <Icon className={cn(
@@ -205,7 +205,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
               <div
                 key={location.id}
                 className={cn(
-                  "flex items-center gap-2 p-2.5 rounded-lg cursor-pointer group transition-all duration-200 active:scale-[0.98]",
+                  "flex items-center gap-2 p-2.5 rounded-xl cursor-pointer group transition-all duration-200 active:scale-[0.98] touch-manipulation",
                   "bg-gradient-to-r",
                   colors.bg,
                   "border border-border/30 hover:shadow-md",
@@ -215,7 +215,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
                 onClick={() => handleLocationClick(location)}
               >
                 <div className={cn(
-                  "w-7 h-7 rounded-lg flex items-center justify-center",
+                  "w-7 h-7 rounded-xl flex items-center justify-center",
                   colors.iconBg
                 )}>
                   <Icon className={cn("w-3.5 h-3.5", colors.text)} />
@@ -246,7 +246,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
         <DialogTrigger asChild>
           <Button 
             variant="outline" 
-            className="w-full h-9 rounded-lg border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs"
+            className="w-full h-10 rounded-xl border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 text-xs active:scale-[0.97] touch-manipulation"
           >
             <Plus className="w-3.5 h-3.5 mr-1.5 text-primary" />
             <span className="text-primary font-medium">Add New Place</span>
@@ -305,7 +305,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
                   {searchResults.map((result, idx) => (
                     <button
                       key={idx}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted/50 flex items-start gap-3 transition-colors"
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted/50 flex items-start gap-3 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                       onClick={() => handleSelectSearchResult(result)}
                     >
                       <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
@@ -318,14 +318,14 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
 
             {selectedAddress && (
               <div className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in zoom-in-95 duration-200">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                   <Check className="w-4 h-4 text-emerald-500" />
                 </div>
                 <span className="text-sm flex-1 truncate font-medium">{selectedAddress.address}</span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg hover:bg-destructive/10"
+                  className="h-7 w-7 rounded-xl hover:bg-destructive/10 active:scale-[0.90] transition-all duration-200 touch-manipulation"
                   onClick={() => {
                     setSelectedAddress(null);
                     setSearchQuery("");
