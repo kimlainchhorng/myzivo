@@ -52,7 +52,7 @@ export default function FeaturedEatsSection() {
             <button
               key={c}
               onClick={() => setActive(c)}
-              className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap")}
+              className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all")}
             >
               {c}
             </button>
@@ -70,7 +70,7 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
+                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />

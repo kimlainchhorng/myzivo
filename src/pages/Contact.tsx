@@ -77,7 +77,7 @@ const Contact = () => {
           {/* Contact Emails */}
           <div className="space-y-4 mb-12">
             {contactEmails.map((item) => (
-              <Card key={item.email} className="border-border/50">
+              <Card key={item.email} className="border-border/50 hover:border-primary/20 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <CardContent className="p-6">
                   <p className="text-sm text-muted-foreground mb-2">{item.label}</p>
                   <a 
@@ -108,7 +108,7 @@ const Contact = () => {
           </div>
 
           {/* Company Info */}
-          <Card className="mb-12 border-border/50 bg-muted/30">
+          <Card className="mb-12 border-border/50 bg-muted/30 hover:border-primary/20 hover:shadow-md transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <Building2 className="w-6 h-6 text-muted-foreground" />
