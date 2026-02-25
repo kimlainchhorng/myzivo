@@ -218,7 +218,7 @@ const FlightStatusPage = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg border">
+                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Duffel Environment</p>
                   <p className="font-semibold flex items-center gap-2">
                     {duffelEnv === 'live' ? (
@@ -239,7 +239,7 @@ const FlightStatusPage = () => {
                     )}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border">
+                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Payment Processor</p>
                   <p className="font-semibold flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -249,7 +249,7 @@ const FlightStatusPage = () => {
                     Mode determined by STRIPE_SECRET_KEY prefix
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border">
+                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Ticketing Partner</p>
                   <p className="font-semibold flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />

@@ -123,7 +123,7 @@ const SellerOfTravel = () => {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg border">
+                  <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10">
                         Pending
@@ -143,7 +143,7 @@ const SellerOfTravel = () => {
                     </a>
                   </div>
                   
-                  <div className="p-4 rounded-lg border">
+                  <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10">
                         Pending
@@ -175,21 +175,21 @@ const SellerOfTravel = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-background border">
+                <div className="p-4 rounded-lg bg-background border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="font-medium mb-2">Sub-Agent Status</p>
                   <p className="text-muted-foreground">
                     {FLIGHT_MOR_DISCLAIMERS.seller}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-lg bg-background border">
+                <div className="p-4 rounded-lg bg-background border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="font-medium mb-2">Ticket Issuance</p>
                   <p className="text-muted-foreground">
                     {FLIGHT_MOR_DISCLAIMERS.ticketing}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-lg bg-background border">
+                <div className="p-4 rounded-lg bg-background border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="font-medium mb-2">How It Works</p>
                   <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                     <li>You search and select flights on ZIVO</li>

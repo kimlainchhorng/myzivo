@@ -257,7 +257,7 @@ export default function CorporateTravel() {
                     a: "Yes, we'll offer a free trial period so you can test all features before committing.",
                   },
                 ].map((faq, i) => (
-                  <div key={i} className="p-4 rounded-xl border border-border">
+                  <div key={i} className="p-4 rounded-xl border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <h3 className="font-semibold mb-2">{faq.q}</h3>
                     <p className="text-sm text-muted-foreground">{faq.a}</p>
                   </div>

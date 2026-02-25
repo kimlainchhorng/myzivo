@@ -193,7 +193,7 @@ export default function ZeroTrustPolicy() {
                   </p>
                   <div className="space-y-4">
                     {atoProtections.map((item) => (
-                      <div key={item.threat} className="p-4 rounded-lg border border-border">
+                      <div key={item.threat} className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
                             <AlertTriangle className="w-4 h-4 text-red-500" />
@@ -289,7 +289,7 @@ export default function ZeroTrustPolicy() {
                     to prevent unauthorized access or exposure.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg border border-border">
+                    <div className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <Lock className="w-4 h-4 text-primary" />
                         <h4 className="font-medium">Secure Storage</h4>
@@ -298,7 +298,7 @@ export default function ZeroTrustPolicy() {
                         Secrets stored only in encrypted environment vaults, never in code
                       </p>
                     </div>
-                    <div className="p-4 rounded-lg border border-border">
+                    <div className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <RefreshCw className="w-4 h-4 text-primary" />
                         <h4 className="font-medium">Automatic Rotation</h4>
@@ -307,7 +307,7 @@ export default function ZeroTrustPolicy() {
                         Keys are rotated regularly; compromised keys revoked immediately
                       </p>
                     </div>
-                    <div className="p-4 rounded-lg border border-border">
+                    <div className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <HardDrive className="w-4 h-4 text-primary" />
                         <h4 className="font-medium">Backup Protection</h4>
@@ -316,7 +316,7 @@ export default function ZeroTrustPolicy() {
                         Encrypted backups with restricted access and off-site storage
                       </p>
                     </div>
-                    <div className="p-4 rounded-lg border border-border">
+                    <div className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <Scan className="w-4 h-4 text-primary" />
                         <h4 className="font-medium">Continuous Monitoring</h4>
