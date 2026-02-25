@@ -241,7 +241,7 @@ export default function ABTestingDashboard() {
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       {Object.entries(revenueStats.performanceByService).map(([service, data]) => (
-                        <div key={service} className="p-4 rounded-lg border bg-card">
+                        <div key={service} className="p-4 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="font-medium capitalize mb-2">{service}</div>
                           <div className="text-2xl font-bold">{data.clicks}</div>
                           <div className="text-sm text-muted-foreground">clicks</div>
@@ -357,7 +357,7 @@ export default function ABTestingDashboard() {
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
                       {Object.entries(affiliateStats.clicksByCTA || {}).map(([type, count]) => (
-                        <div key={type} className="p-4 rounded-lg border bg-card text-center">
+                        <div key={type} className="p-4 rounded-lg border bg-card text-center hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                           <div className="text-2xl font-bold">{count as number}</div>
                           <div className="text-xs text-muted-foreground mt-1">
                             {type.replace(/_/g, ' ')}

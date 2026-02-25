@@ -195,7 +195,7 @@ export default function InvestorOverview() {
                   {POTENTIAL_ACQUIRERS.categories.map((cat) => (
                     <div
                       key={cat.type}
-                      className="p-4 rounded-lg border border-border/50 bg-card/50"
+                      className="p-4 rounded-lg border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <p className="font-medium mb-1">{cat.label}</p>
                       <p className="text-xs text-muted-foreground mb-2">
