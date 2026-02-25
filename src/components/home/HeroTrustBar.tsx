@@ -1,6 +1,6 @@
 /**
  * Hero Trust Bar
- * Critical trust indicators visible without scrolling
+ * Premium glass chips with green accent icons
  */
 
 import { CheckCircle } from "lucide-react";
@@ -21,8 +21,8 @@ interface HeroTrustBarProps {
 export default function HeroTrustBar({ className, variant = "default" }: HeroTrustBarProps) {
   return (
     <div className={cn(
-      "flex flex-wrap items-center justify-center gap-4 sm:gap-6",
-      variant === "default" && "py-4 px-4 bg-muted/30 rounded-xl border border-border/50",
+      "flex flex-wrap items-center justify-center gap-3 sm:gap-4",
+      variant === "default" && "py-3 px-3",
       variant === "compact" && "py-2",
       className
     )}>
@@ -30,14 +30,15 @@ export default function HeroTrustBar({ className, variant = "default" }: HeroTru
         <div
           key={item}
           className={cn(
-            "flex items-center gap-1.5",
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+            "glass-chip",
             "animate-in fade-in zoom-in-95"
           )}
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <CheckCircle className="w-4 h-4 shrink-0 text-emerald-500" />
+          <CheckCircle className="w-3.5 h-3.5 shrink-0 text-primary" />
           <span className={cn(
-            "font-medium text-foreground/80 whitespace-nowrap",
+            "font-medium text-foreground/90 whitespace-nowrap",
             variant === "default" ? "text-xs sm:text-sm" : "text-xs"
           )}>
             {item}

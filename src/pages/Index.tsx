@@ -9,26 +9,14 @@ import { WinBackBanner } from "@/components/home/WinBackBanner";
 import { motion } from "framer-motion";
 import { Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import HomepageAdBanner from "@/components/ads/HomepageAdBanner";
 
 // Desktop components
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
-import PrimaryServicesSection from "@/components/home/PrimaryServicesSection";
-import HowItWorksSimple from "@/components/home/HowItWorksSimple";
-import AirlineTrustSection from "@/components/home/AirlineTrustSection";
-import PopularRoutesSection from "@/components/home/PopularRoutesSection";
-import ExtrasSection from "@/components/home/ExtrasSection";
-import SocialProofSection from "@/components/home/SocialProofSection";
 import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
-import PriceAlertPromo from "@/components/home/PriceAlertPromo";
-import BentoFeatures from "@/components/home/BentoFeatures";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
-import TestimonialsCarousel from "@/components/home/TestimonialsCarousel";
-import AppDownloadCTA from "@/components/home/AppDownloadCTA";
 import DestinationShowcase from "@/components/home/DestinationShowcase";
-import NewsletterSignup from "@/components/shared/NewsletterSignup";
 
 // Mobile app home - lazy load to match App.tsx pattern
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -46,7 +34,7 @@ const FadeInSection = ({ children, className }: { children: React.ReactNode; cla
   </motion.div>
 );
 
-// Desktop version - Clean, premium layout focused on Flights
+// Desktop version - Clean, premium layout
 const DesktopHomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -71,97 +59,22 @@ const DesktopHomePage = () => {
         {/* Win-Back Banner for returning users */}
         {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
 
-        {/* 1. Hero Section with Trust Bar built-in */}
+        {/* 1. Hero Section */}
         <HeroSection />
 
-        {/* 2. Why Compare with ZIVO (3 value props) */}
-        <FadeInSection>
-          <WhyBookWithZivo />
-        </FadeInSection>
-
-        {/* 2.5. Bento Grid Features (Technology Trust) */}
-        <FadeInSection>
-          <BentoFeatures />
-        </FadeInSection>
-
-        {/* 3. Primary Services (Flights, Hotels, Cars) */}
-        <FadeInSection>
-          <PrimaryServicesSection />
-        </FadeInSection>
-
-        {/* 4. How ZIVO Works (3 steps) */}
-        <FadeInSection>
-          <HowItWorksSimple />
-        </FadeInSection>
-
-        {/* Sponsored Ad Banner */}
-        <FadeInSection className="container mx-auto px-4 py-6">
-          <HomepageAdBanner
-            headline="Fly smarter with ZIVO+"
-            description="Members save up to 20% on flights, hotels, and car rentals."
-            ctaText="Learn More"
-            ctaHref="/membership"
-          />
-        </FadeInSection>
-
-        {/* 5. Popular Routes */}
-        <FadeInSection>
-          <PopularRoutesSection />
-        </FadeInSection>
-
-        {/* Second Sponsored Ad Banner */}
-        <FadeInSection className="container mx-auto px-4 py-6">
-          <HomepageAdBanner
-            headline="Summer travel deals await"
-            description="Exclusive fares to beach destinations — book before they're gone."
-            ctaText="View Deals"
-            ctaHref="/flights"
-          />
-        </FadeInSection>
-
-        {/* 5.5. Smart Offers (signed-in) / Recommended Deals (signed-out) */}
-        <FadeInSection>
-          {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
-        </FadeInSection>
-
-        {/* 6. Price Alert Promo */}
-        <FadeInSection>
-          <PriceAlertPromo />
-        </FadeInSection>
-
-        {/* 7. Social Proof / Platform Trust */}
-        <FadeInSection>
-          <SocialProofSection />
-        </FadeInSection>
-
-        {/* Newsletter CTA */}
-        <FadeInSection>
-          <NewsletterSignup />
-        </FadeInSection>
-
-        {/* 8. Airline Trust Section */}
-        <FadeInSection>
-          <AirlineTrustSection />
-        </FadeInSection>
-
-        {/* 9. Destination Showcase */}
+        {/* 2. Popular Destinations */}
         <FadeInSection>
           <DestinationShowcase />
         </FadeInSection>
 
-        {/* 10. Testimonials */}
+        {/* 3. Best Deals / Smart Offers */}
         <FadeInSection>
-          <TestimonialsCarousel />
+          {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
         </FadeInSection>
 
-        {/* 11. ZIVO Extras */}
+        {/* 4. Why ZIVO */}
         <FadeInSection>
-          <ExtrasSection />
-        </FadeInSection>
-
-        {/* 12. App Download CTA */}
-        <FadeInSection>
-          <AppDownloadCTA />
+          <WhyBookWithZivo />
         </FadeInSection>
       </main>
 
@@ -174,7 +87,7 @@ const DesktopHomePage = () => {
       >
         <button
           onClick={() => navigate("/flights")}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full shadow-xl font-semibold text-sm hover:scale-105 transition-transform"
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full shadow-xl font-semibold text-sm hover:scale-105 transition-transform glow-green-btn"
         >
           <Plane className="w-4 h-4" />
           Search Flights
@@ -199,7 +112,6 @@ const Index = () => {
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
 
     if (error) {
-      // Parse user-friendly message
       let message = "Authentication failed. Please try again.";
       if (
         errorDesc?.toLowerCase().includes("database error") ||
@@ -215,13 +127,10 @@ const Index = () => {
         variant: "destructive",
       });
 
-      // Clean URL without reloading page
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
-  // Mobile: only enforce setup gate when a user is signed in.
-  // This prevents "new Google account" users from bypassing /setup after OAuth.
   if (isMobile) {
     if (user) {
       return (
@@ -233,7 +142,6 @@ const Index = () => {
       );
     }
 
-    // Keep current public mobile experience for signed-out visitors.
     return (
       <Suspense fallback={<div className="min-h-screen bg-background" />}>
         <AppHome />
@@ -241,7 +149,6 @@ const Index = () => {
     );
   }
 
-  // Desktop version
   return <DesktopHomePage />;
 };
 
