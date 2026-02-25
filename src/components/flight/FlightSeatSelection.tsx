@@ -76,7 +76,7 @@ const FlightSeatSelection = () => {
                       setSelectedClass(cls);
                       setSelectedSeats([]);
                     }}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.97] touch-manipulation ${
                       selectedClass === cls
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:text-foreground"
@@ -106,7 +106,7 @@ const FlightSeatSelection = () => {
                         key={i}
                         onClick={() => isAvailable && toggleSeat(seatNum)}
                         disabled={!isAvailable}
-                        className={`aspect-square rounded-lg text-xs font-medium transition-all ${
+                        className={`aspect-square rounded-xl text-xs font-medium transition-all duration-200 active:scale-[0.90] touch-manipulation ${
                           isSelected
                             ? "bg-primary text-primary-foreground scale-105"
                             : isAvailable

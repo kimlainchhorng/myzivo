@@ -152,7 +152,7 @@ const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodS
                 )}
               </div>
             ))}
-            <button className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <button className="w-full flex items-center justify-center gap-2 p-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-[0.98] touch-manipulation">
               <Plus className="w-3 h-3" />
               Add new card
             </button>

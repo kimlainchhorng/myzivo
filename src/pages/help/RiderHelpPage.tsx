@@ -242,7 +242,7 @@ const RiderHelpPage = () => {
               <Card key={index} className="overflow-hidden border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-all duration-200 touch-manipulation"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <Badge variant="secondary" className="text-[10px] shrink-0">
@@ -300,7 +300,7 @@ const RiderHelpPage = () => {
         {/* View Tickets */}
         <button
           onClick={() => navigate("/help/tickets")}
-          className="w-full flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
         >
           <div className="flex items-center gap-3">
             <Ticket className="w-5 h-5 text-muted-foreground" />

@@ -51,7 +51,7 @@ export function PWAUpdatePrompt() {
         </div>
         <button
           onClick={handleUpdate}
-          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
+          className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 flex-shrink-0 active:scale-[0.95] touch-manipulation"
         >
           Update
         </button>

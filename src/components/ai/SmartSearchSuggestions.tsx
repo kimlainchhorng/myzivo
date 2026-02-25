@@ -214,7 +214,7 @@ export function SmartSearchSuggestions({
                   <button
                     key={airport.code}
                     onClick={() => onSelectAirport?.(airport.code)}
-                    className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted/50 transition-all duration-200 text-left active:scale-[0.98] touch-manipulation"
                   >
                     <div className="flex items-center gap-2">
                       <Plane className="w-4 h-4 text-muted-foreground" />
@@ -248,7 +248,7 @@ export function SmartSearchSuggestions({
                   <button
                     key={i}
                     onClick={() => onSelectRoute?.(route.origin, route.destination)}
-                    className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted/50 transition-all duration-200 text-left active:scale-[0.98] touch-manipulation"
                   >
                     <span className="text-sm">{route.label}</span>
                     <div className="flex items-center gap-2">

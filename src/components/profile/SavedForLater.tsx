@@ -48,7 +48,7 @@ export function SavedForLater() {
           </p>
           <Link 
             to="/hotels"
-            className="inline-block text-xs font-bold text-white bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+            className="inline-block text-xs font-bold text-white bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-200 active:scale-[0.97] touch-manipulation"
           >
             Browse Hotels
           </Link>

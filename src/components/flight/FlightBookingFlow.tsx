@@ -543,7 +543,7 @@ export default function FlightBookingFlow({
                   href={outboundFlight.bookingLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-medium transition-all duration-200 active:scale-[0.97] touch-manipulation shadow-lg shadow-sky-500/20"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Book on {outboundFlight.airline}

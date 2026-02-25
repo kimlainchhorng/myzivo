@@ -45,7 +45,7 @@ const DuplicateBookingWarning = ({
     )}>
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1 rounded-lg hover:bg-amber-500/20 transition-colors"
+        className="absolute top-3 right-3 p-1 rounded-xl hover:bg-amber-500/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
         aria-label="Dismiss warning"
       >
         <X className="w-4 h-4 text-amber-600" />

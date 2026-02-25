@@ -124,7 +124,7 @@ const ServiceFlowHub = ({ currentService, className }: ServiceFlowHubProps) => {
               <button
                 key={service.id}
                 onClick={() => navigate(service.href)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted transition-all duration-200 active:scale-[0.97] touch-manipulation"
               >
                 <service.icon className={cn("w-4 h-4", service.color)} />
                 <span className="text-sm">{service.label}</span>

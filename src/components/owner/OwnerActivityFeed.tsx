@@ -102,7 +102,7 @@ function ActivityItem({ activity, onClick }: { activity: OwnerActivityItem; onCl
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg transition-colors",
+        "flex items-start gap-3 p-3 rounded-xl transition-all duration-200",
         onClick && "cursor-pointer hover:bg-muted/50"
       )}
       onClick={onClick}

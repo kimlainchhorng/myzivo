@@ -215,7 +215,7 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
         <div className="p-4 border-b border-border/50">
           <button
             onClick={() => setShowVisaInfo(!showVisaInfo)}
-            className="w-full flex items-center justify-between p-3 rounded-lg bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/15 transition-colors"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/15 transition-all duration-200 active:scale-[0.98] touch-manipulation"
           >
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-violet-400" />

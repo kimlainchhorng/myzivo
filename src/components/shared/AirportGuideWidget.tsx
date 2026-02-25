@@ -121,7 +121,7 @@ const AirportGuideWidget = ({
             return (
               <div
                 key={i}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/20 transition-all duration-200 cursor-pointer group"
               >
                 <div className="p-1.5 rounded-lg bg-primary/10">
                   <Icon className="w-4 h-4 text-primary" />

@@ -212,14 +212,14 @@ export function InlineFeedback({
       <div className="flex gap-1">
         <button
           onClick={() => handleFeedback(true)}
-          className="p-1.5 rounded-lg hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
+          className="p-1.5 rounded-xl hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
           aria-label="Yes, helpful"
         >
           <ThumbsUp className="w-4 h-4 text-muted-foreground hover:text-emerald-500" />
         </button>
         <button
           onClick={() => handleFeedback(false)}
-          className="p-1.5 rounded-lg hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
+          className="p-1.5 rounded-xl hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
           aria-label="No, not helpful"
         >
           <ThumbsDown className="w-4 h-4 text-muted-foreground hover:text-red-500" />

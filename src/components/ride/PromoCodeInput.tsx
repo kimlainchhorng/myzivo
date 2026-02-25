@@ -72,7 +72,7 @@ export function PromoCodeInput({
           </div>
           <button
             onClick={handleRemove}
-            className="p-1.5 rounded-lg hover:bg-emerald-100 active:scale-90 transition-all duration-150 touch-manipulation"
+            className="p-1.5 rounded-xl hover:bg-emerald-100 active:scale-90 transition-all duration-200 touch-manipulation"
             aria-label="Remove promo code"
           >
             <X className="w-4 h-4 text-emerald-600" />

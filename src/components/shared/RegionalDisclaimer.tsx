@@ -88,7 +88,7 @@ export function RegionalDisclaimer({
   return (
     <div
       className={cn(
-        "p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
+        "p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
         className
       )}
     >

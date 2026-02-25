@@ -90,7 +90,7 @@ export function FlightChangeRequest({
               onValueChange={(v) => setRequestType(v as RequestType)}
               className="space-y-2"
             >
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors">
+              <div className="flex items-center space-x-3 p-3 rounded-xl border border-border/50 hover:border-border transition-all duration-200">
                 <RadioGroupItem value="change_dates" id="change_dates" />
                 <Label htmlFor="change_dates" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export function FlightChangeRequest({
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors">
+              <div className="flex items-center space-x-3 p-3 rounded-xl border border-border/50 hover:border-border transition-all duration-200">
                 <RadioGroupItem value="cancel" id="cancel" />
                 <Label htmlFor="cancel" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export function FlightChangeRequest({
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors">
+              <div className="flex items-center space-x-3 p-3 rounded-xl border border-border/50 hover:border-border transition-all duration-200">
                 <RadioGroupItem value="other" id="other" />
                 <Label htmlFor="other" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export function FlightChangeRequest({
           )}
 
           {/* Support Contact */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+          <div className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <p className="text-sm font-medium mb-2">Need help?</p>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <a href="tel:+1-800-ZIVO" className="flex items-center gap-1 hover:text-foreground">
