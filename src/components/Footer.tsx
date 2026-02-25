@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import ZivoLogo from "./ZivoLogo";
+import { toast } from "sonner";
 
 const footerLinks = {
   flights: [
@@ -82,6 +83,10 @@ const FooterLinkCol = ({ title, links }: { title: string; links: typeof footerLi
 const Footer = ({ className }: { className?: string }) => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  const handleAppStore = (store: string) => {
+    toast("Coming soon!", { description: `The ZIVO ${store} app is launching soon.`, duration: 3000 });
+  };
+
   return (
     <footer className={`relative z-30 bg-[#0f1629] text-white ${className || ""}`}>
       <div className="container mx-auto px-4">
@@ -99,14 +104,20 @@ const Footer = ({ className }: { className?: string }) => {
               
               {/* App Store Badges */}
               <div className="flex flex-wrap gap-2 mb-5">
-                <a href="#" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-xs font-medium text-white/80">
+                <button
+                  onClick={() => handleAppStore("App Store")}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 active:scale-[0.97] transition-all text-xs font-medium text-white/80"
+                >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                   App Store
-                </a>
-                <a href="#" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-xs font-medium text-white/80">
+                </button>
+                <button
+                  onClick={() => handleAppStore("Google Play")}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 active:scale-[0.97] transition-all text-xs font-medium text-white/80"
+                >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3.609 1.814L13.792 12 3.609 22.186a.996.996 0 01-.609-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.707l2.386 1.381c.906.525.906 1.713 0 2.238l-2.386 1.38-2.538-2.538 2.538-2.461zM5.864 3.457L16.8 9.79l-2.302 2.302L5.864 3.457z"/></svg>
                   Google Play
-                </a>
+                </button>
               </div>
 
               {/* Social */}
@@ -117,7 +128,7 @@ const Footer = ({ className }: { className?: string }) => {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/20 transition-all"
+                    className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/20 active:scale-90 transition-all"
                     aria-label={social.label}
                   >
                     {social.icon}
@@ -145,7 +156,7 @@ const Footer = ({ className }: { className?: string }) => {
             {/* Back to top */}
             <button
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white active:scale-95 transition-all"
             >
               <ChevronUp className="w-4 h-4" /> Back to Top
             </button>

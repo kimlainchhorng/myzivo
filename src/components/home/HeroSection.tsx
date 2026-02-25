@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Search, Users } from "lucide-react";
+import { ArrowRight, Sparkles, Search, Users, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import HeroTrustBar from "./HeroTrustBar";
@@ -30,6 +30,16 @@ export default function HeroSection() {
     }, 3000);
     return () => clearInterval(timer);
   }, []);
+
+  const scrollToSearch = () => {
+    const el = document.getElementById("hero-search-card");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const scrollToServices = () => {
+    const el = document.getElementById("services-showcase");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <section className="relative overflow-hidden bg-background">
@@ -88,17 +98,14 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex gap-3"
           >
-            <Link to="/flights" className="flex-1">
-              <Button size="lg" className="w-full h-13 text-base font-semibold rounded-xl gap-2">
-                <Search className="w-5 h-5" />
-                Search Now
-              </Button>
-            </Link>
-            <Link to="/flights">
-              <Button variant="outline" size="lg" className="h-13 px-5 rounded-xl font-medium">
-                Explore
-              </Button>
-            </Link>
+            <Button size="lg" onClick={scrollToSearch} className="flex-1 h-13 text-base font-semibold rounded-xl gap-2">
+              <Search className="w-5 h-5" />
+              Search Now
+              <ArrowDown className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="lg" onClick={scrollToServices} className="h-13 px-5 rounded-xl font-medium">
+              Explore
+            </Button>
           </motion.div>
 
           <motion.div
@@ -179,21 +186,23 @@ export default function HeroSection() {
               transition={{ duration: 0.7, delay: 0.45 }}
               className="flex gap-4 mb-10"
             >
-              <Link to="/flights">
-                <Button
-                  size="lg"
-                  className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 hover:scale-[1.02] transition-transform"
-                >
-                  <Search className="w-5 h-5" />
-                  Search Now
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/flights">
-                <Button variant="outline" size="lg" className="h-14 px-7 text-base font-medium rounded-xl hover:bg-muted/50 transition-colors">
-                  Explore Services
-                </Button>
-              </Link>
+              <Button
+                size="lg"
+                onClick={scrollToSearch}
+                className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 hover:scale-[1.02] transition-transform"
+              >
+                <Search className="w-5 h-5" />
+                Search Now
+                <ArrowDown className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={scrollToServices}
+                className="h-14 px-7 text-base font-medium rounded-xl hover:bg-muted/50 transition-colors"
+              >
+                Explore Services
+              </Button>
             </motion.div>
 
             <motion.div
@@ -222,7 +231,7 @@ export default function HeroSection() {
           </AnimatePresence>
           <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/20" />
 
-          {/* Image dots - larger and more tactile */}
+          {/* Image dots */}
           <div className="absolute bottom-6 right-6 flex gap-2.5 z-10">
             {heroImages.map((_, i) => (
               <button

@@ -2,10 +2,11 @@
  * FeaturedEatsSection - Food delivery cards with ratings and badges
  */
 import { useState } from "react";
-import { Star, Clock, ArrowRight, Truck } from "lucide-react";
+import { Star, Clock, ArrowRight, Truck, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const categories = ["All", "American", "Italian", "Asian", "Mexican"];
 
@@ -19,6 +20,12 @@ const foods = [
 export default function FeaturedEatsSection() {
   const [active, setActive] = useState("All");
   const filtered = active === "All" ? foods : foods.filter((f) => f.category === active);
+
+  const handleQuickOrder = (e: React.MouseEvent, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toast.success(`${name} added to cart!`, { duration: 2000 });
+  };
 
   return (
     <section className="py-16 sm:py-20 bg-muted/30">
@@ -72,6 +79,14 @@ export default function FeaturedEatsSection() {
                       <Truck className="w-3 h-3" /> Free Delivery
                     </span>
                   )}
+                  {/* Quick order button on hover */}
+                  <button
+                    onClick={(e) => handleQuickOrder(e, food.name)}
+                    className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90 shadow-lg"
+                    aria-label="Quick order"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="p-5">
                   <h3 className="font-bold text-base mb-1">{food.name}</h3>
