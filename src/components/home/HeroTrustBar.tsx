@@ -1,15 +1,13 @@
 /**
- * Hero Trust Bar
- * Premium glass chips with green accent icons + shimmer effect
+ * HeroTrustBar - Clean trust chips
  */
-
 import { CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const trustItems = [
   "Secure Checkout",
   "Instant Confirmation", 
-  "24/7 Customer Support",
+  "24/7 Support",
   "No Hidden Fees",
 ];
 
@@ -22,23 +20,17 @@ export default function HeroTrustBar({ className, variant = "default" }: HeroTru
   return (
     <div className={cn(
       "flex flex-wrap items-center justify-center gap-3 sm:gap-4",
-      variant === "default" && "py-3 px-3",
-      variant === "compact" && "py-2",
+      variant === "default" && "py-2",
       className
     )}>
-      {trustItems.map((item, index) => (
+      {trustItems.map((item) => (
         <div
           key={item}
-          className={cn(
-            "flex items-center gap-1.5 px-3.5 py-2 rounded-full",
-            "glass-chip shimmer-chip",
-            "animate-in fade-in zoom-in-95"
-          )}
-          style={{ animationDelay: `${index * 80}ms` }}
+          className="flex items-center gap-1.5 text-muted-foreground"
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 text-primary" />
           <span className={cn(
-            "font-medium text-foreground/90 whitespace-nowrap",
+            "font-medium whitespace-nowrap",
             variant === "default" ? "text-xs sm:text-sm" : "text-xs"
           )}>
             {item}

@@ -6,53 +6,31 @@ import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
-import { motion } from "framer-motion";
-import { Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Desktop components
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
+import HeroSearchCard from "@/components/home/HeroSearchCard";
+import ServicesShowcase from "@/components/home/ServicesShowcase";
 import StatsSection from "@/components/home/StatsSection";
-import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
-import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
-import SmartOffersSection from "@/components/home/SmartOffersSection";
 import DestinationShowcase from "@/components/home/DestinationShowcase";
+import FeaturedCarsSection from "@/components/home/FeaturedCarsSection";
+import FeaturedHotelsSection from "@/components/home/FeaturedHotelsSection";
+import FeaturedEatsSection from "@/components/home/FeaturedEatsSection";
+import HowItWorksSection from "@/components/home/HowItWorksSection";
+import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import PartnerLogosShowcase from "@/components/home/PartnerLogosShowcase";
 import DownloadAppSection from "@/components/home/DownloadAppSection";
 import NewsletterSection from "@/components/home/NewsletterSection";
-import HowItWorksSection from "@/components/home/HowItWorksSection";
-import PartnerLogosShowcase from "@/components/home/PartnerLogosShowcase";
 
 // Mobile app home - lazy load
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
-// Scroll animation wrapper
-const FadeInSection = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-80px" }}
-    transition={{ duration: 0.5, ease: "easeOut" }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
-
 // Desktop version - Clean, premium layout
 const DesktopHomePage = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [showStickyCTA, setShowStickyCTA] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowStickyCTA(window.scrollY > 600);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,61 +43,45 @@ const DesktopHomePage = () => {
         {/* 1. Hero */}
         <HeroSection />
 
-        {/* 2. Stats Counter */}
+        {/* 2. Floating Search Card */}
+        <HeroSearchCard />
+
+        {/* 3. Services Grid */}
+        <ServicesShowcase />
+
+        {/* 4. Stats */}
         <StatsSection />
 
-        {/* 3. Partner Logos */}
+        {/* 5. Partner Logos */}
         <PartnerLogosShowcase />
 
-        {/* 4. Popular Destinations */}
-        <FadeInSection>
-          <DestinationShowcase />
-        </FadeInSection>
+        {/* 6. Popular Destinations */}
+        <DestinationShowcase />
 
-        {/* 5. How It Works */}
-        <FadeInSection>
-          <HowItWorksSection />
-        </FadeInSection>
+        {/* 7. Featured Car Rentals */}
+        <FeaturedCarsSection />
 
-        {/* 6. Best Deals / Smart Offers */}
-        <FadeInSection>
-          {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
-        </FadeInSection>
+        {/* 8. Featured Hotels */}
+        <FeaturedHotelsSection />
 
-        {/* 7. Why ZIVO */}
-        <FadeInSection>
-          <WhyBookWithZivo />
-        </FadeInSection>
+        {/* 9. Featured Eats */}
+        <FeaturedEatsSection />
 
-        {/* 8. Testimonials */}
+        {/* 10. How It Works */}
+        <HowItWorksSection />
+
+        {/* 11. Why ZIVO */}
+        <WhyBookWithZivo />
+
+        {/* 12. Testimonials */}
         <TestimonialsSection />
 
-        {/* 9. Download App */}
-        <FadeInSection>
-          <DownloadAppSection />
-        </FadeInSection>
+        {/* 13. Download App */}
+        <DownloadAppSection />
 
-        {/* 10. Newsletter */}
-        <FadeInSection>
-          <NewsletterSection />
-        </FadeInSection>
+        {/* 14. Newsletter */}
+        <NewsletterSection />
       </main>
-
-      {/* Sticky Search Flights CTA */}
-      <motion.div
-        initial={false}
-        animate={{ y: showStickyCTA ? 0 : 100, opacity: showStickyCTA ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
-      >
-        <button
-          onClick={() => navigate("/flights")}
-          className="flex items-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-full shadow-xl font-semibold text-sm hover:scale-105 transition-transform glow-green-btn pulse-ring"
-        >
-          <Plane className="w-4 h-4" />
-          Search Flights
-        </button>
-      </motion.div>
 
       <Footer />
     </div>

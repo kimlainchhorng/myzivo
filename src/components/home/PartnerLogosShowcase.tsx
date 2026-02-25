@@ -1,49 +1,35 @@
 /**
- * Partner Logos Showcase - Premium trusted-by section with glassmorphism
+ * Partner Logos - Clean horizontal strip
  */
 import { motion } from "framer-motion";
-import { Handshake } from "lucide-react";
 
 const partners = [
-  { name: "Duffel", logo: "✈️" },
-  { name: "Booking.com", logo: "🏨" },
-  { name: "RateHawk", logo: "🌐" },
-  { name: "Stripe", logo: "💳" },
-  { name: "TravelFusion", logo: "🔗" },
-  { name: "Google Maps", logo: "🗺️" },
+  { name: "Duffel" },
+  { name: "Booking.com" },
+  { name: "RateHawk" },
+  { name: "Stripe" },
+  { name: "TravelFusion" },
+  { name: "Google Maps" },
 ];
 
 export default function PartnerLogosShowcase() {
   return (
-    <section className="py-14 sm:py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-muted/10 to-background" />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50 mb-3">
-            <Handshake className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Trusted Partners</span>
-          </div>
-        </motion.div>
+    <section className="py-10 sm:py-12 bg-muted/30 border-y border-border/30">
+      <div className="container mx-auto px-4">
+        <p className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider mb-6">Trusted by leading travel partners</p>
         
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-5">
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
           {partners.map((partner, i) => (
-            <motion.div
+            <motion.span
               key={partner.name}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/40 hover:bg-card/80 hover:border-primary/20 hover:shadow-md transition-all duration-300 group"
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+              className="text-sm sm:text-base font-semibold text-muted-foreground/50 hover:text-muted-foreground transition-colors"
             >
-              <span className="text-xl group-hover:scale-110 transition-transform duration-300">{partner.logo}</span>
-              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{partner.name}</span>
-            </motion.div>
+              {partner.name}
+            </motion.span>
           ))}
         </div>
       </div>
