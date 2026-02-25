@@ -33,11 +33,11 @@ const CarRentalAnalytics = () => {
   ];
 
   const topVehicles = [
-    { name: "Tesla Model 3", rentals: 48, revenue: 9600, utilization: 92, emoji: "⚡" },
-    { name: "BMW X5", rentals: 42, revenue: 12600, utilization: 88, emoji: "🚙" },
-    { name: "Mercedes E-Class", rentals: 38, revenue: 11400, utilization: 85, emoji: "💎" },
-    { name: "Toyota Camry", rentals: 35, revenue: 5250, utilization: 78, emoji: "🚗" },
-    { name: "Honda CR-V", rentals: 32, revenue: 6400, utilization: 75, emoji: "🚙" },
+    { name: "Tesla Model 3", rentals: 48, revenue: 9600, utilization: 92 },
+    { name: "BMW X5", rentals: 42, revenue: 12600, utilization: 88 },
+    { name: "Mercedes E-Class", rentals: 38, revenue: 11400, utilization: 85 },
+    { name: "Toyota Camry", rentals: 35, revenue: 5250, utilization: 78 },
+    { name: "Honda CR-V", rentals: 32, revenue: 6400, utilization: 75 },
   ];
 
   const stats = [
@@ -355,7 +355,7 @@ const CarRentalAnalytics = () => {
                         <div>
                           <p className="font-semibold flex items-center gap-1.5 group-hover:text-primary transition-all duration-200">
                             {vehicle.name}
-                            <span className="text-sm">{vehicle.emoji}</span>
+                            <Car className="w-3.5 h-3.5 text-muted-foreground" />
                           </p>
                           <p className="text-xs text-muted-foreground">{vehicle.rentals} rentals</p>
                         </div>

@@ -17,22 +17,22 @@ import { createNewSearchSession } from "@/config/trackingParams";
 // Demo car results
 const carResults = [
   { 
-    id: "1", type: "Economy", model: "Toyota Corolla", image: "🚗",
+    id: "1", type: "Economy", model: "Toyota Corolla",
     price: 35, seats: 5, transmission: "Automatic", bags: 2,
     supplier: "Hertz", freeCancel: true, unlimitedMiles: true
   },
   { 
-    id: "2", type: "Compact SUV", model: "Honda CR-V", image: "🚙",
+    id: "2", type: "Compact SUV", model: "Honda CR-V",
     price: 55, seats: 5, transmission: "Automatic", bags: 3,
     supplier: "Enterprise", freeCancel: true, unlimitedMiles: true
   },
   { 
-    id: "3", type: "Full-Size SUV", model: "Ford Explorer", image: "🚐",
+    id: "3", type: "Full-Size SUV", model: "Ford Explorer",
     price: 75, seats: 7, transmission: "Automatic", bags: 4,
     supplier: "Budget", freeCancel: false, unlimitedMiles: true
   },
   { 
-    id: "4", type: "Premium", model: "BMW 5 Series", image: "🚘",
+    id: "4", type: "Premium", model: "BMW 5 Series",
     price: 120, seats: 5, transmission: "Automatic", bags: 3,
     supplier: "National", freeCancel: true, unlimitedMiles: false
   },
@@ -161,8 +161,8 @@ const HizovoCars = () => {
                   className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex gap-3">
-                    <div className="w-24 h-20 bg-muted rounded-xl flex items-center justify-center text-4xl flex-shrink-0">
-                      {car.image}
+                    <div className="w-24 h-20 bg-muted rounded-xl flex items-center justify-center flex-shrink-0">
+                      <CarFront className="w-10 h-10 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-cars font-semibold">{car.type}</p>

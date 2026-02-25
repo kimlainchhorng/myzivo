@@ -2,18 +2,18 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Plane } from "lucide-react";
 
 const partners = [
-  { name: "Delta", logo: "✈️" },
-  { name: "United", logo: "🛫" },
-  { name: "American", logo: "🇺🇸" },
-  { name: "British Airways", logo: "🇬🇧" },
-  { name: "Lufthansa", logo: "🇩🇪" },
-  { name: "Emirates", logo: "🇦🇪" },
-  { name: "Air France", logo: "🇫🇷" },
-  { name: "Qatar Airways", logo: "🌍" },
-  { name: "Singapore Airlines", logo: "🇸🇬" },
-  { name: "Cathay Pacific", logo: "🇭🇰" },
-  { name: "JetBlue", logo: "💙" },
-  { name: "Southwest", logo: "❤️" },
+  { name: "Delta" },
+  { name: "United" },
+  { name: "American" },
+  { name: "British Airways" },
+  { name: "Lufthansa" },
+  { name: "Emirates" },
+  { name: "Air France" },
+  { name: "Qatar Airways" },
+  { name: "Singapore Airlines" },
+  { name: "Cathay Pacific" },
+  { name: "JetBlue" },
+  { name: "Southwest" },
 ];
 
 export default function TrustedPartnersSection() {
@@ -39,9 +39,9 @@ export default function TrustedPartnersSection() {
           {partners.map((partner) => (
             <div
               key={partner.name}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all hover:shadow-md"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-md"
             >
-              <span className="text-2xl">{partner.logo}</span>
+              <Plane className="w-4 h-4 text-sky-500" />
               <span className="font-medium text-sm">{partner.name}</span>
             </div>
           ))}

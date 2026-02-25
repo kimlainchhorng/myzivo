@@ -3,7 +3,7 @@
  * Shared vertical timeline for rides and food orders.
  * Renders role-aware labels, ETA, delay indicators, and framer-motion transitions.
  */
-import { Check, Clock, Car, MapPin, Navigation, ChefHat, Package, Truck, Search, AlertTriangle } from "lucide-react";
+import { Check, Clock, Car, MapPin, Navigation, ChefHat, Package, Truck, Search, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -113,7 +113,7 @@ export function UnifiedOrderTimeline({
       <div className={cn("p-4 rounded-2xl bg-destructive/10 border border-destructive/20", className)}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
-            <span className="text-destructive text-lg">✕</span>
+            <X className="w-5 h-5 text-destructive" />
           </div>
           <div>
             <p className="font-bold text-destructive">

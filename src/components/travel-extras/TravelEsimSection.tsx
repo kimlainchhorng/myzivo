@@ -1,4 +1,4 @@
-import { Wifi, Globe, Smartphone, Zap, ExternalLink, Check } from "lucide-react";
+import { Wifi, Globe, Smartphone, Zap, ExternalLink, Check, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,8 +88,8 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
             >
               {/* Top Banner */}
               {index === 0 && (
-                <div className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-center py-1 text-xs font-medium">
-                  ⭐ Recommended
+                <div className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-center py-1 text-xs font-medium flex items-center justify-center gap-1">
+                  <Award className="w-3 h-3" /> Recommended
                 </div>
               )}
               

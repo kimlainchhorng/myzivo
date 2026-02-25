@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shield, MapPin, UserCheck } from "lucide-react";
+import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shield, MapPin, UserCheck, Search, Check } from "lucide-react";
 import { UnifiedOrderTimeline } from "@/components/shared/UnifiedOrderTimeline";
 import { Trip } from "@/hooks/useTrips";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
@@ -23,12 +23,12 @@ interface TripTrackerProps {
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const statusSteps = [
-  { status: "requested", label: "Finding driver", icon: "🔍", lucideIcon: null },
+  { status: "requested", label: "Finding driver", icon: null, lucideIcon: Search },
   { status: "accepted", label: "Driver assigned", icon: null, lucideIcon: UserCheck },
-  { status: "en_route", label: "Driver en route", icon: "🚗", lucideIcon: null },
-  { status: "arrived", label: "Driver arrived", icon: "📍", lucideIcon: null },
-  { status: "in_progress", label: "Trip in progress", icon: "🛣️", lucideIcon: null },
-  { status: "completed", label: "Trip completed", icon: "🎉", lucideIcon: null },
+  { status: "en_route", label: "Driver en route", icon: null, lucideIcon: Car },
+  { status: "arrived", label: "Driver arrived", icon: null, lucideIcon: MapPin },
+  { status: "in_progress", label: "Trip in progress", icon: null, lucideIcon: Navigation },
+  { status: "completed", label: "Trip completed", icon: null, lucideIcon: Check },
 ];
 
 const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {

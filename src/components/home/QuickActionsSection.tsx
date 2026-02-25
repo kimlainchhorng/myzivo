@@ -14,14 +14,14 @@ const quickActions = [
 ];
 
 const defaultRecentItems = [
-  { id: "1", title: "Pizza Palace", subtitle: "Italian", emoji: "🍕", type: "restaurant" as const },
-  { id: "2", title: "Grand Plaza", subtitle: "New York", emoji: "🏨", type: "hotel" as const },
-  { id: "3", title: "Home → Work", subtitle: "Daily commute", emoji: "🏠", type: "ride" as const },
+  { id: "1", title: "Pizza Palace", subtitle: "Italian", type: "restaurant" as const },
+  { id: "2", title: "Grand Plaza", subtitle: "New York", type: "hotel" as const },
+  { id: "3", title: "Home → Work", subtitle: "Daily commute", type: "ride" as const },
 ];
 
 const defaultRepeatOrders = [
-  { id: "1", title: "Burger Joint", items: ["Double Stack", "Fries", "Coke"], price: "$24.99", emoji: "🍔", lastOrdered: "2 days ago" },
-  { id: "2", title: "Sakura Sushi", items: ["Dragon Roll", "Miso Soup"], price: "$32.50", emoji: "🍣", lastOrdered: "Last week" },
+  { id: "1", title: "Burger Joint", items: ["Double Stack", "Fries", "Coke"], price: "$24.99", lastOrdered: "2 days ago" },
+  { id: "2", title: "Sakura Sushi", items: ["Dragon Roll", "Miso Soup"], price: "$32.50", lastOrdered: "Last week" },
 ];
 
 const QuickActionsSection = () => {
@@ -41,9 +41,9 @@ const QuickActionsSection = () => {
       ]);
 
       const items: any[] = [];
-      trips.data?.forEach(t => items.push({ id: t.id, title: t.pickup_address?.slice(0, 20) || "Ride", subtitle: "Recent trip", emoji: "🚗", type: "ride" as const }));
-      foodOrders.data?.forEach((o: any) => items.push({ id: o.id, title: o.restaurants?.name || "Order", subtitle: "Food order", emoji: "🍕", type: "restaurant" as const }));
-      hotels.data?.forEach((h: any) => items.push({ id: h.id, title: h.hotels?.name || "Hotel", subtitle: h.hotels?.city || "Stay", emoji: "🏨", type: "hotel" as const }));
+      trips.data?.forEach(t => items.push({ id: t.id, title: t.pickup_address?.slice(0, 20) || "Ride", subtitle: "Recent trip", type: "ride" as const }));
+      foodOrders.data?.forEach((o: any) => items.push({ id: o.id, title: o.restaurants?.name || "Order", subtitle: "Food order", type: "restaurant" as const }));
+      hotels.data?.forEach((h: any) => items.push({ id: h.id, title: h.hotels?.name || "Hotel", subtitle: h.hotels?.city || "Stay", type: "hotel" as const }));
       
       return items.slice(0, 3);
     },
@@ -72,7 +72,7 @@ const QuickActionsSection = () => {
           title: order.restaurants?.name || "Restaurant",
           items,
           price: `$${order.total_amount?.toFixed(2) || "0.00"}`,
-          emoji: "🍔",
+          
           lastOrdered: daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo} days ago`
         };
       }) || [];
@@ -90,9 +90,9 @@ const QuickActionsSection = () => {
       <div className="absolute top-1/4 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
       
-      {/* Floating emoji - CSS animated */}
-      <div className="absolute top-24 right-[10%] text-3xl sm:text-4xl hidden md:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
-        ⚡
+      {/* Floating icon - CSS animated */}
+      <div className="absolute top-24 right-[10%] hidden md:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
+        <Zap className="w-8 h-8 text-primary" />
       </div>
       
       <div className="container mx-auto px-4 relative z-10">

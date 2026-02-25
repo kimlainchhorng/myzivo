@@ -1,4 +1,4 @@
-import { BookOpen, Clock, ArrowRight, Heart, MessageCircle, Share2 } from "lucide-react";
+import { BookOpen, Clock, ArrowRight, Heart, MessageCircle, Share2, Palmtree, Landmark, Plane, Leaf } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +9,8 @@ const blogPosts = [
     excerpt: "Discover off-the-beaten-path destinations that will take your breath away...",
     category: "Destinations",
     readTime: "5 min",
-    image: "🏝️",
+    icon: Palmtree,
+    iconColor: "text-teal-500",
     likes: 342,
     comments: 28,
     featured: true
@@ -20,7 +21,8 @@ const blogPosts = [
     excerpt: "How to explore Europe without breaking the bank - expert tips and tricks...",
     category: "Tips & Tricks",
     readTime: "8 min",
-    image: "🗼",
+    icon: Landmark,
+    iconColor: "text-amber-500",
     likes: 567,
     comments: 45
   },
@@ -30,7 +32,8 @@ const blogPosts = [
     excerpt: "Data-driven insights on when to book your flights for the lowest prices...",
     category: "Savings",
     readTime: "4 min",
-    image: "✈️",
+    icon: Plane,
+    iconColor: "text-sky-500",
     likes: 891,
     comments: 67
   },
@@ -40,7 +43,8 @@ const blogPosts = [
     excerpt: "Simple ways to make your travels more eco-friendly without sacrificing comfort...",
     category: "Eco Travel",
     readTime: "6 min",
-    image: "🌱",
+    icon: Leaf,
+    iconColor: "text-emerald-500",
     likes: 234,
     comments: 19
   },
@@ -73,7 +77,7 @@ const TravelBlog = () => {
               }`}
             >
               <div className={`relative ${index === 0 ? "aspect-video" : "aspect-square"} bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center`}>
-                <span className={`${index === 0 ? "text-8xl" : "text-5xl"}`}>{post.image}</span>
+                <post.icon className={`${index === 0 ? "w-16 h-16" : "w-10 h-10"} ${post.iconColor}`} />
                 {post.featured && (
                   <Badge className="absolute top-3 left-3 bg-orange-500 text-white border-0">
                     Featured

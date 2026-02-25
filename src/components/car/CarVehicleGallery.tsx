@@ -7,7 +7,7 @@ const vehicles = [
     id: 1,
     name: "Tesla Model 3",
     category: "Electric",
-    images: ["🚗", "🔋", "📱"],
+    images: ["front", "battery", "interior"],
     price: 89,
     rating: 4.9,
     reviews: 1240,
@@ -24,7 +24,7 @@ const vehicles = [
     id: 2,
     name: "BMW M4",
     category: "Sports",
-    images: ["🏎️", "🔥", "💨"],
+    images: ["front", "engine", "exhaust"],
     price: 149,
     rating: 4.8,
     reviews: 892,
@@ -41,7 +41,7 @@ const vehicles = [
     id: 3,
     name: "Range Rover Sport",
     category: "Luxury SUV",
-    images: ["🚙", "🏔️", "✨"],
+    images: ["front", "terrain", "interior"],
     price: 199,
     rating: 4.9,
     reviews: 756,
@@ -86,7 +86,7 @@ const CarVehicleGallery = () => {
               {/* Main Image */}
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-emerald-500/20 aspect-[4/3] mb-4">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[140px]">{vehicle.images[activeImage]}</span>
+                  <Car className="w-24 h-24 text-primary/40" />
                 </div>
 
                 {/* Navigation Arrows */}

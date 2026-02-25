@@ -202,7 +202,7 @@ const TripComparisonWidget = ({
                     <span className={cn(
                       flight.rating === bestRating && "text-amber-400"
                     )}>
-                      {flight.rating} ★
+                      {flight.rating} <Star className="w-3 h-3 inline fill-current" />
                     </span>
                   </td>
                 ))}

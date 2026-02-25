@@ -43,13 +43,13 @@ const CarRentalInventory = () => {
 
   const getCategoryConfig = (category: string) => {
     switch (category?.toLowerCase()) {
-      case "electric": return { gradient: "from-emerald-500 to-teal-400", icon: "⚡", label: "Electric" };
-      case "suv": return { gradient: "from-amber-500 to-orange-500", icon: "🚙", label: "SUV" };
-      case "luxury": return { gradient: "from-purple-500 to-pink-500", icon: "💎", label: "Luxury" };
-      case "sedan": return { gradient: "from-blue-500 to-indigo-500", icon: "🚗", label: "Sedan" };
-      case "economy": return { gradient: "from-gray-500 to-slate-500", icon: "💰", label: "Economy" };
-      case "sports": return { gradient: "from-red-500 to-rose-500", icon: "🏎️", label: "Sports" };
-      default: return { gradient: "from-primary to-teal-400", icon: "🚗", label: "Standard" };
+      case "electric": return { gradient: "from-emerald-500 to-teal-400", label: "Electric" };
+      case "suv": return { gradient: "from-amber-500 to-orange-500", label: "SUV" };
+      case "luxury": return { gradient: "from-purple-500 to-pink-500", label: "Luxury" };
+      case "sedan": return { gradient: "from-blue-500 to-indigo-500", label: "Sedan" };
+      case "economy": return { gradient: "from-gray-500 to-slate-500", label: "Economy" };
+      case "sports": return { gradient: "from-red-500 to-rose-500", label: "Sports" };
+      default: return { gradient: "from-primary to-teal-400", label: "Standard" };
     }
   };
 
@@ -132,7 +132,7 @@ const CarRentalInventory = () => {
               const config = getCategoryConfig(cat);
               return (
                 <DropdownMenuItem key={cat} onClick={() => setCategoryFilter(cat)}>
-                  <span className="mr-2">{config.icon}</span>
+                  <Car className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
                   {cat}
                 </DropdownMenuItem>
               );
@@ -196,7 +196,7 @@ const CarRentalInventory = () => {
                     
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="secondary" className="bg-muted/50 font-normal text-xs">
-                        <span className="mr-1">{categoryConfig.icon}</span>
+                        <Car className="w-3 h-3 mr-1" />
                         {car.category || "Standard"}
                       </Badge>
                       <span className="text-muted-foreground text-sm">•</span>

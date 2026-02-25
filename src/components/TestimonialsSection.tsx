@@ -7,7 +7,7 @@ const testimonials = [
     id: 1,
     name: "Sarah M.",
     role: "Daily Commuter",
-    avatar: "👩‍💼",
+    avatar: "SM",
     rating: 5,
     text: "ZIVO has completely changed how I commute. The drivers are professional, and the app is so intuitive. I can't imagine going back to traditional taxis!",
     service: "Rides",
@@ -17,7 +17,7 @@ const testimonials = [
     id: 2,
     name: "Michael T.",
     role: "Food Enthusiast",
-    avatar: "👨‍🍳",
+    avatar: "MT",
     rating: 5,
     text: "The food delivery is incredibly fast, and the restaurant selection is amazing. I've discovered so many new favorite spots through ZIVO Eats!",
     service: "Eats",
@@ -27,7 +27,7 @@ const testimonials = [
     id: 3,
     name: "Emily R.",
     role: "Business Traveler",
-    avatar: "👩‍💻",
+    avatar: "ER",
     rating: 5,
     text: "Booking flights and hotels together through ZIVO saved me hours of planning and hundreds of dollars. The bundle deals are unbeatable!",
     service: "Travel",
@@ -37,7 +37,7 @@ const testimonials = [
     id: 4,
     name: "David K.",
     role: "Driver Partner",
-    avatar: "👨‍✈️",
+    avatar: "DK",
     rating: 5,
     text: "As a driver, ZIVO gives me the flexibility I need. The instant payouts are a game-changer, and I love being my own boss.",
     service: "Driver",
@@ -47,7 +47,7 @@ const testimonials = [
     id: 5,
     name: "Jessica L.",
     role: "Weekend Explorer",
-    avatar: "👩‍🎨",
+    avatar: "JL",
     rating: 5,
     text: "Renting a car through ZIVO was seamless. No hidden fees, easy pickup, and the car was exactly what I needed for my road trip!",
     service: "Car Rental",
@@ -123,9 +123,9 @@ const TestimonialsSection = () => {
       <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-gradient-radial from-sky-500/10 to-transparent rounded-full blur-3xl" />
       
       {/* Static floating elements */}
-      <div className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40 animate-float">⭐</div>
-      <div className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">💬</div>
-      <div className="absolute top-1/2 right-[12%] text-4xl hidden lg:block opacity-25 animate-float">💖</div>
+      <div className="absolute top-32 left-[10%] hidden lg:block opacity-40 animate-float"><Star className="w-10 h-10 text-amber-400" /></div>
+      <div className="absolute bottom-40 right-[8%] hidden lg:block opacity-30 animate-float-delayed"><Quote className="w-8 h-8 text-muted-foreground" /></div>
+      <div className="absolute top-1/2 right-[12%] hidden lg:block opacity-25 animate-float"><Sparkles className="w-8 h-8 text-pink-400" /></div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
