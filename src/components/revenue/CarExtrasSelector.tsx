@@ -144,7 +144,7 @@ export default function CarExtrasSelector({
               />
               
               <div className={cn(
-                "p-2 rounded-lg shrink-0",
+                "p-2 rounded-xl shrink-0",
                 isSelected ? "bg-primary/10" : "bg-muted"
               )}>
                 <extra.icon className={cn(
@@ -176,7 +176,7 @@ export default function CarExtrasSelector({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-8 w-8 rounded-lg active:scale-[0.90] transition-all duration-200 touch-manipulation"
                     onClick={(e) => { e.stopPropagation(); updateQuantity(extra.id, -1); }}
                   >
                     <Minus className="w-3 h-3" />
@@ -185,7 +185,7 @@ export default function CarExtrasSelector({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-8 w-8 rounded-lg active:scale-[0.90] transition-all duration-200 touch-manipulation"
                     onClick={(e) => { e.stopPropagation(); updateQuantity(extra.id, 1); }}
                   >
                     <Plus className="w-3 h-3" />
@@ -210,7 +210,7 @@ export default function CarExtrasSelector({
         
         {/* Total */}
         {totalExtras > 0 && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border">
             <span className="text-sm text-muted-foreground">Extras total ({rentalDays} days)</span>
             <span className="font-bold">${totalExtras}</span>
           </div>

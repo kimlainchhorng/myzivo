@@ -209,7 +209,7 @@ const TravelServicesSection = () => {
 
                 <Button 
                   variant="outline" 
-                  className="w-full group-hover:bg-muted transition-colors"
+                  className="w-full group-hover:bg-muted transition-all duration-200 rounded-xl min-h-[44px] active:scale-[0.97] touch-manipulation"
                   onClick={() => navigate(service.route)}
                 >
                   Explore {service.title.split(" ")[1]}

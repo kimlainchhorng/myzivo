@@ -118,6 +118,7 @@ export default function ReferralCard({
               variant="outline" 
               size="icon"
               onClick={handleCopy}
+              className="rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
             >
               {copied ? (
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -174,7 +175,7 @@ export default function ReferralCard({
 
         {/* Next Tier */}
         {nextTierBonus && (
-          <div className="p-3 rounded-lg border border-dashed">
+          <div className="p-3 rounded-xl border border-dashed">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
                 Refer {nextTierBonus.count - referralCount} more to unlock

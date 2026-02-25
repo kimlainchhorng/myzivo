@@ -96,7 +96,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200">
                       {provider.logo}
                     </div>
                     <div>

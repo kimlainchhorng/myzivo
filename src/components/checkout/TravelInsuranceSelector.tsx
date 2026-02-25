@@ -58,7 +58,7 @@ export function TravelInsuranceSelector({
             <div
               key={plan.id}
               className={cn(
-                "relative flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer",
+                "relative flex items-start gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation",
                 isSelected
                   ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                   : "border-border hover:border-primary/30"

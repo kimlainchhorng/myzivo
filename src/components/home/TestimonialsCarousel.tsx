@@ -157,7 +157,7 @@ const TestimonialsCarousel = () => {
                 variant="outline"
                 size="icon"
                 onClick={goToPrevious}
-                className="rounded-full w-12 h-12"
+                className="rounded-full w-12 h-12 active:scale-[0.90] transition-all duration-200 touch-manipulation"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
@@ -171,7 +171,7 @@ const TestimonialsCarousel = () => {
                       setIsAutoPlaying(false);
                       setCurrentIndex(index);
                     }}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 touch-manipulation ${
                       index === currentIndex
                         ? "bg-primary w-8"
                         : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
@@ -184,7 +184,7 @@ const TestimonialsCarousel = () => {
                 variant="outline"
                 size="icon"
                 onClick={goToNext}
-                className="rounded-full w-12 h-12"
+                className="rounded-full w-12 h-12 active:scale-[0.90] transition-all duration-200 touch-manipulation"
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>

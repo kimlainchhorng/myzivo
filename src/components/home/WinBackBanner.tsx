@@ -90,7 +90,7 @@ export function WinBackBanner({ className }: { className?: string }) {
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 z-10 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+          className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
         >
           <X className="w-3.5 h-3.5 text-foreground/60" />
         </button>
@@ -113,7 +113,7 @@ export function WinBackBanner({ className }: { className?: string }) {
                 </div>
                 <button
                   onClick={handleCopy}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
                 >
                   {copied ? (
                     <Check className="w-3.5 h-3.5 text-emerald-400" />

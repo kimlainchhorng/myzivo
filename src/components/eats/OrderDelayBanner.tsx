@@ -121,7 +121,7 @@ export function OrderDelayBanner({
                 variant="outline"
                 size="sm"
                 onClick={onContactSupport}
-                className="mt-3 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                className="mt-3 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
               >
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Contact Support
@@ -133,7 +133,7 @@ export function OrderDelayBanner({
           {delayLevel === "warning" && (
             <button
               onClick={() => setIsDismissed(true)}
-              className="p-1 rounded-full hover:bg-white/10 text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="p-1.5 rounded-full hover:bg-white/10 text-zinc-500 hover:text-zinc-300 transition-all duration-200 active:scale-[0.90] touch-manipulation"
               aria-label="Dismiss"
             >
               <X className="w-4 h-4" />
