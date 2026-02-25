@@ -201,7 +201,7 @@ export default function ScaleProtection() {
                       { action: "Cancellation", icon: Ban, desc: "Fraudulent orders voided" },
                       { action: "Reversal", icon: RefreshCw, desc: "Funds returned to source" },
                     ].map((item) => (
-                      <div key={item.action} className="p-3 rounded-lg border border-border">
+                      <div key={item.action} className="p-3 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                         <div className="flex items-center gap-2 mb-1">
                           <item.icon className="w-4 h-4 text-primary" />
                           <span className="font-medium text-sm">{item.action}</span>
@@ -211,7 +211,7 @@ export default function ScaleProtection() {
                     ))}
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <p className="text-sm text-muted-foreground">
                       <strong>No Guarantee:</strong> ZIVO does not guarantee transaction completion. 
                       Transactions may be declined or reversed for security reasons without detailed 
@@ -284,7 +284,7 @@ export default function ScaleProtection() {
                 <CardContent>
                   <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     {sessionControls.map((item) => (
-                      <div key={item.control} className="p-4 rounded-lg border border-border">
+                      <div key={item.control} className="p-4 rounded-lg border border-border hover:border-primary/20 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
                         <div className="flex items-center gap-2 mb-2">
                           <Zap className="w-4 h-4 text-primary" />
                           <h4 className="font-medium">{item.control}</h4>
