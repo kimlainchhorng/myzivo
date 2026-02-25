@@ -67,7 +67,7 @@ const TermsOfService = () => {
         {/* Terms Sections */}
         <Accordion type="single" collapsible className="space-y-4">
           {/* Section 1: Acceptance */}
-          <AccordionItem value="acceptance" className="border border-border rounded-lg px-4">
+          <AccordionItem value="acceptance" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -94,7 +94,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 2: User Accounts */}
-          <AccordionItem value="accounts" id="accounts" className="border border-border rounded-lg px-4">
+          <AccordionItem value="accounts" id="accounts" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -132,7 +132,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 3: Ride Services */}
-          <AccordionItem value="rides" id="rides" className="border border-border rounded-lg px-4">
+          <AccordionItem value="rides" id="rides" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-rides/20 flex items-center justify-center">
@@ -179,7 +179,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 4: Food Delivery */}
-          <AccordionItem value="eats" id="eats" className="border border-border rounded-lg px-4">
+          <AccordionItem value="eats" id="eats" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-eats/20 flex items-center justify-center">
@@ -225,7 +225,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 5: Car Rental */}
-          <AccordionItem value="rental" id="rental" className="border border-border rounded-lg px-4">
+          <AccordionItem value="rental" id="rental" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -274,7 +274,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 6: Flights */}
-          <AccordionItem value="flights" id="flights" className="border border-border rounded-lg px-4">
+          <AccordionItem value="flights" id="flights" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
@@ -319,7 +319,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 7: Hotels */}
-          <AccordionItem value="hotels" id="hotels" className="border border-border rounded-lg px-4">
+          <AccordionItem value="hotels" id="hotels" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
@@ -365,7 +365,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 8: Payment */}
-          <AccordionItem value="payment" className="border border-border rounded-lg px-4">
+          <AccordionItem value="payment" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -402,7 +402,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 9: Prohibited Conduct */}
-          <AccordionItem value="prohibited" className="border border-border rounded-lg px-4">
+          <AccordionItem value="prohibited" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
@@ -431,7 +431,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 10: Limitation of Liability */}
-          <AccordionItem value="liability" className="border border-border rounded-lg px-4">
+          <AccordionItem value="liability" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -470,7 +470,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 11: Dispute Resolution */}
-          <AccordionItem value="disputes" className="border border-border rounded-lg px-4">
+          <AccordionItem value="disputes" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -508,7 +508,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 12: General */}
-          <AccordionItem value="general" className="border border-border rounded-lg px-4">
+          <AccordionItem value="general" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -566,7 +566,7 @@ const TermsOfService = () => {
           </div>
 
           {/* Section 13: No Agency */}
-          <AccordionItem value="no-agency" className="border border-border rounded-lg px-4">
+          <AccordionItem value="no-agency" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
@@ -581,7 +581,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 14: Platform Disclaimer */}
-          <AccordionItem value="platform-disclaimer" className="border border-border rounded-lg px-4">
+          <AccordionItem value="platform-disclaimer" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -626,7 +626,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 17: Force Majeure Expanded */}
-          <AccordionItem value="force-majeure" className="border border-border rounded-lg px-4">
+          <AccordionItem value="force-majeure" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
@@ -641,7 +641,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 18: Third-Party Beneficiary */}
-          <AccordionItem value="third-party" className="border border-border rounded-lg px-4">
+          <AccordionItem value="third-party" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -656,7 +656,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 19: Strong Indemnification */}
-          <AccordionItem value="indemnification" className="border border-border rounded-lg px-4">
+          <AccordionItem value="indemnification" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -716,7 +716,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 23: Government Requests */}
-          <AccordionItem value="gov-requests" className="border border-border rounded-lg px-4">
+          <AccordionItem value="gov-requests" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -731,7 +731,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 24: Content Disclaimer */}
-          <AccordionItem value="content-disclaimer" className="border border-border rounded-lg px-4">
+          <AccordionItem value="content-disclaimer" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -746,7 +746,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 25: Intellectual Property */}
-          <AccordionItem value="ip-protection" className="border border-border rounded-lg px-4">
+          <AccordionItem value="ip-protection" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -761,7 +761,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 26: Service Modification */}
-          <AccordionItem value="service-mod" className="border border-border rounded-lg px-4">
+          <AccordionItem value="service-mod" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -776,7 +776,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 27: Termination Without Cause */}
-          <AccordionItem value="termination" className="border border-border rounded-lg px-4">
+          <AccordionItem value="termination" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -791,7 +791,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 28: Severability & Survival */}
-          <AccordionItem value="severability" className="border border-border rounded-lg px-4">
+          <AccordionItem value="severability" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -806,7 +806,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 29: International Users */}
-          <AccordionItem value="international" className="border border-border rounded-lg px-4">
+          <AccordionItem value="international" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -821,7 +821,7 @@ const TermsOfService = () => {
           </AccordionItem>
 
           {/* Section 30: Entire Agreement */}
-          <AccordionItem value="entire-agreement" className="border border-border rounded-lg px-4">
+          <AccordionItem value="entire-agreement" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">

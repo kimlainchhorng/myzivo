@@ -76,7 +76,7 @@ const PrivacyPolicy = () => {
         {/* Privacy Sections */}
         <Accordion type="single" collapsible className="space-y-4">
           {/* Data Minimization - NEW */}
-          <AccordionItem value="data-minimization" className="border border-border rounded-lg px-4">
+          <AccordionItem value="data-minimization" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -97,7 +97,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Third-Party Data Sharing - NEW */}
-          <AccordionItem value="third-party-sharing" className="border border-border rounded-lg px-4">
+          <AccordionItem value="third-party-sharing" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -122,7 +122,7 @@ const PrivacyPolicy = () => {
             </AccordionContent>
           </AccordionItem>
           {/* Section 1: Information We Collect */}
-          <AccordionItem value="collection" className="border border-border rounded-lg px-4">
+          <AccordionItem value="collection" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -179,7 +179,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 2: How We Use Information */}
-          <AccordionItem value="usage" className="border border-border rounded-lg px-4">
+          <AccordionItem value="usage" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -231,7 +231,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 3: Information Sharing */}
-          <AccordionItem value="sharing" className="border border-border rounded-lg px-4">
+          <AccordionItem value="sharing" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -284,7 +284,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 4: Data Security */}
-          <AccordionItem value="security" className="border border-border rounded-lg px-4">
+          <AccordionItem value="security" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -328,7 +328,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 5: Cookies */}
-          <AccordionItem value="cookies" className="border border-border rounded-lg px-4">
+          <AccordionItem value="cookies" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -376,7 +376,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 6: Your Rights */}
-          <AccordionItem value="rights" className="border border-border rounded-lg px-4">
+          <AccordionItem value="rights" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -424,7 +424,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 7: Data Retention */}
-          <AccordionItem value="retention" className="border border-border rounded-lg px-4">
+          <AccordionItem value="retention" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -475,7 +475,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 8: International Transfers */}
-          <AccordionItem value="international" className="border border-border rounded-lg px-4">
+          <AccordionItem value="international" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -510,7 +510,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 9: Children */}
-          <AccordionItem value="children" className="border border-border rounded-lg px-4">
+          <AccordionItem value="children" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -532,7 +532,7 @@ const PrivacyPolicy = () => {
           </AccordionItem>
 
           {/* Section 10: Updates */}
-          <AccordionItem value="updates" className="border border-border rounded-lg px-4">
+          <AccordionItem value="updates" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
