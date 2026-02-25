@@ -63,7 +63,7 @@ export default function HowItWorksSection() {
               )}
               
                <div className={cn(
-                "relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]",
+                "relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]",
                 step.accent
               )}>
                 {/* Step number */}
@@ -72,7 +72,7 @@ export default function HowItWorksSection() {
                 <div className={cn(
                   "w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center relative",
                   step.iconBg,
-                  "group-hover:scale-110 transition-transform duration-300"
+                  "group-hover:scale-110 transition-transform duration-200"
                 )}>
                   <step.icon className={cn("w-7 h-7", step.iconColor)} />
                 </div>

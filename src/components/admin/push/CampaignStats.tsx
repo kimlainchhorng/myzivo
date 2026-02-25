@@ -34,25 +34,25 @@ export function CampaignStats({ campaign }: CampaignStatsProps) {
       <CardContent className="space-y-4">
         {/* Summary stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
+          <div className="text-center p-3 bg-muted/50 rounded-xl">
             <Users className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
             <p className="text-2xl font-bold">{campaign.targeted_count.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Targeted</p>
           </div>
           
-          <div className="text-center p-3 bg-green-500/10 rounded-lg">
+          <div className="text-center p-3 bg-green-500/10 rounded-xl">
             <CheckCircle2 className="h-5 w-5 mx-auto text-green-600 mb-1" />
             <p className="text-2xl font-bold text-green-600">{campaign.sent_count.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Sent</p>
           </div>
           
-          <div className="text-center p-3 bg-red-500/10 rounded-lg">
+          <div className="text-center p-3 bg-red-500/10 rounded-xl">
             <XCircle className="h-5 w-5 mx-auto text-red-600 mb-1" />
             <p className="text-2xl font-bold text-red-600">{campaign.failed_count.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Failed</p>
           </div>
           
-          <div className="text-center p-3 bg-yellow-500/10 rounded-lg">
+          <div className="text-center p-3 bg-yellow-500/10 rounded-xl">
             <MinusCircle className="h-5 w-5 mx-auto text-yellow-600 mb-1" />
             <p className="text-2xl font-bold text-yellow-600">{campaign.skipped_count.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Skipped</p>

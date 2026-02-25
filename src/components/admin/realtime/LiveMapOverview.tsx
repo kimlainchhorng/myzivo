@@ -211,7 +211,7 @@ export default function LiveMapOverview() {
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               Live
             </Badge>
-            <div className="flex border rounded-lg overflow-hidden">
+            <div className="flex border rounded-xl overflow-hidden">
               {["all", "driver", "rider"].map((layer) => (
                 <Button
                   key={layer}

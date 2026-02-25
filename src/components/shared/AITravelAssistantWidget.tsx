@@ -163,7 +163,7 @@ const AITravelAssistantWidget = ({
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleSend(input)}
           placeholder="Ask anything about your trip..."
-          className="flex-1 px-3 py-2 rounded-lg bg-muted/30 border border-border/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="flex-1 px-3 py-2 rounded-xl bg-muted/30 border border-border/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         <Button size="icon" onClick={() => handleSend(input)} disabled={!input.trim()}>
           <Send className="w-4 h-4" />

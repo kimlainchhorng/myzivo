@@ -307,7 +307,7 @@ const LiveChatWidget = () => {
                 value={escalationMessage}
                 onChange={(e) => setEscalationMessage(e.target.value)}
                 placeholder="Describe your issue (optional)..."
-                className="w-full px-3 py-2 bg-muted rounded-lg text-xs outline-none focus:ring-2 focus:ring-primary/50 resize-none h-16"
+                className="w-full px-3 py-2 bg-muted rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary/50 resize-none h-16"
               />
               <div className="flex gap-2">
                 <Button

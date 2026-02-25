@@ -70,7 +70,7 @@ const AirportGuideWidget = ({
       </div>
 
       {/* Airport Info */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <p className="font-semibold">{airportName}</p>
         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
           <span>{terminal}</span>
@@ -93,17 +93,17 @@ const AirportGuideWidget = ({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="p-2 rounded-lg bg-muted/20 text-center">
+        <div className="p-2 rounded-xl bg-muted/20 text-center">
           <Clock className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Security</p>
           <p className="text-[10px] text-muted-foreground">{stats.securityWait} wait</p>
         </div>
-        <div className="p-2 rounded-lg bg-muted/20 text-center">
+        <div className="p-2 rounded-xl bg-muted/20 text-center">
           <Armchair className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Lounges</p>
           <p className="text-[10px] text-muted-foreground">{stats.loungesAvailable} available</p>
         </div>
-        <div className="p-2 rounded-lg bg-muted/20 text-center">
+        <div className="p-2 rounded-xl bg-muted/20 text-center">
           <Utensils className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Dining</p>
           <p className="text-[10px] text-muted-foreground">{stats.diningOptions} options</p>
@@ -123,7 +123,7 @@ const AirportGuideWidget = ({
                 key={i}
                 className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/20 transition-all duration-200 cursor-pointer group"
               >
-                <div className="p-1.5 rounded-lg bg-primary/10">
+                <div className="p-1.5 rounded-xl bg-primary/10">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">

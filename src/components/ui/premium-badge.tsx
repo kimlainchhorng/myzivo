@@ -171,7 +171,7 @@ export const DiscountBadge = ({ percentage, className, size = "md" }: DiscountBa
       animate={{ scale: 1, rotate: 0 }}
       transition={{ type: "spring", stiffness: 500, damping: 25 }}
       className={cn(
-        "inline-flex items-center font-bold rounded-lg",
+        "inline-flex items-center font-bold rounded-xl",
         "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30",
         sizeClasses[size],
         className
@@ -201,7 +201,7 @@ export const RatingBadge = ({
   return (
     <span
       className={cn(
-        "inline-flex items-center font-semibold rounded-lg",
+        "inline-flex items-center font-semibold rounded-xl",
         "bg-amber-500/20 text-amber-600 dark:text-amber-400",
         sizeClasses[size],
         className

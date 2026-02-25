@@ -13,7 +13,7 @@ interface ServiceBadgeProps {
 export const ServiceBadge = ({ icon: Icon, label, value, gradient, delay = 0 }: ServiceBadgeProps) => {
   return (
     <div
-      className="px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-xl flex items-center gap-3 animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:-translate-y-1 transition-all duration-200"
+      className="px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-xl flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200 hover:scale-110 hover:-translate-y-1 transition-all duration-200"
       style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       <div className={cn(
@@ -40,7 +40,7 @@ interface FeaturePillProps {
 export const FeaturePill = ({ icon: Icon, text, gradient, delay = 0 }: FeaturePillProps) => {
   return (
     <div
-      className="flex items-center gap-2.5 px-5 py-3 rounded-full bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:-translate-y-1"
+      className="flex items-center gap-2.5 px-5 py-3 rounded-full bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200 hover:scale-110 hover:-translate-y-1"
       style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       <div className={cn(
@@ -64,7 +64,7 @@ interface StatBadgeProps {
 export const StatBadge = ({ value, label, icon: Icon, delay = 0 }: StatBadgeProps) => {
   return (
     <div
-      className="flex items-center gap-3 px-4 py-2 rounded-xl bg-muted/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
+      className="flex items-center gap-3 px-4 py-2 rounded-xl bg-muted/30 animate-in fade-in slide-in-from-bottom-2 duration-200"
       style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       <Icon className="w-5 h-5 text-primary" />
@@ -86,7 +86,7 @@ export const AnimatedBadge = ({ children, className, animate = true }: AnimatedB
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold shadow-lg shadow-primary/10 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300",
+        "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold shadow-lg shadow-primary/10 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200",
         animate && "hover:scale-110 transition-all duration-200",
         className
       )}

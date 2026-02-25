@@ -337,7 +337,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "relative flex flex-col items-center gap-3 p-6 rounded-3xl border text-center group overflow-hidden transition-all duration-300",
+          "relative flex flex-col items-center gap-3 p-6 rounded-3xl border text-center group overflow-hidden transition-all duration-200",
           "bg-gradient-to-br from-card via-card/90 to-card/80 border-white/10",
           "hover:border-white/20 hover:shadow-2xl hover:shadow-black/10",
           disabled && "opacity-50 pointer-events-none"
@@ -406,7 +406,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative flex items-center gap-4 p-4 glass-card rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-300 w-full text-left group",
+        "relative flex items-center gap-4 p-4 glass-card rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-200 w-full text-left group",
         disabled && "opacity-50 pointer-events-none"
       )}
       whileHover={{ x: 4 }}

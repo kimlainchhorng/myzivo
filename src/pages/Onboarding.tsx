@@ -99,7 +99,7 @@ export default function Onboarding() {
           {slides.map((_, i) => (
             <div
               key={i}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`h-2 rounded-full transition-all duration-200 ${
                 i === current
                   ? "w-6 bg-primary"
                   : "w-2 bg-muted"

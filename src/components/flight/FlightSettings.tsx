@@ -78,7 +78,7 @@ const FlightSettings = () => {
             <div className="h-1 bg-gradient-to-r from-primary to-teal-400" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <User className="h-5 w-5 text-primary" />
                 </div>
                 Traveler Profile
@@ -115,7 +115,7 @@ const FlightSettings = () => {
             <div className="h-1 bg-gradient-to-r from-sky-500 to-blue-600" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-sky-500/10">
+                <div className="p-2 rounded-xl bg-sky-500/10">
                   <Plane className="h-5 w-5 text-sky-500" />
                 </div>
                 Flight Preferences
@@ -142,7 +142,7 @@ const FlightSettings = () => {
             <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-600" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-amber-500/10">
+                <div className="p-2 rounded-xl bg-amber-500/10">
                   <Bell className="h-5 w-5 text-amber-500" />
                 </div>
                 Notifications
@@ -152,7 +152,7 @@ const FlightSettings = () => {
             <CardContent className="space-y-5">
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <div className="p-2 rounded-xl bg-emerald-500/10">
                     <Shield className="h-5 w-5 text-emerald-500" />
                   </div>
                   <div>
@@ -164,7 +164,7 @@ const FlightSettings = () => {
               </div>
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
+                  <div className="p-2 rounded-xl bg-blue-500/10">
                     <Bell className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
@@ -176,7 +176,7 @@ const FlightSettings = () => {
               </div>
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10">
+                  <div className="p-2 rounded-xl bg-purple-500/10">
                     <CreditCard className="h-5 w-5 text-purple-500" />
                   </div>
                   <div>

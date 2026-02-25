@@ -57,7 +57,7 @@ const PromoCodeBanner = () => {
                 <p className="text-sm text-muted-foreground mb-3">{promo.description}</p>
 
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 px-4 py-2 bg-muted rounded-lg font-mono font-bold text-center border-2 border-dashed border-border">
+                  <div className="flex-1 px-4 py-2 bg-muted rounded-xl font-mono font-bold text-center border-2 border-dashed border-border">
                     {promo.code}
                   </div>
                   <Button

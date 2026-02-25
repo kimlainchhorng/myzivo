@@ -396,7 +396,7 @@ const AirportLoungeAccess = ({
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 {/* Guest Selection */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                   <span className="text-sm">Number of guests</span>
                   <div className="flex items-center gap-3">
                     <Button
@@ -420,7 +420,7 @@ const AirportLoungeAccess = ({
                 </div>
 
                 {/* Price Summary */}
-                <div className="space-y-2 p-4 rounded-lg border">
+                <div className="space-y-2 p-4 rounded-xl border">
                   <div className="flex justify-between text-sm">
                     <span>Lounge access × {guestCount}</span>
                     <span>${selectedLounge.price * guestCount}</span>
@@ -460,7 +460,7 @@ const AirportLoungeAccess = ({
                   Valid for {showPass.guestCount} guest{showPass.guestCount > 1 && "s"}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-sm">
+              <div className="p-3 rounded-xl bg-muted/50 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Valid from</span>
                   <span className="font-medium">

@@ -444,7 +444,7 @@ function VehicleCard({ vehicle }: { vehicle: P2PVehicleWithOwner }) {
 
   return (
     <Link to={`/cars/${vehicle.id}`}>
-      <Card className="overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <Card className="overflow-hidden group hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
         {/* Image */}
         <div className="aspect-[4/3] relative bg-muted overflow-hidden">
           {imageUrl ? (
