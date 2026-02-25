@@ -93,15 +93,20 @@ const PopularServicesShowcase = () => {
                 key={service.id}
                 onClick={() => navigate(service.href)}
                 className={cn(
-                  "group relative p-6 rounded-3xl bg-card/50 border border-border/50 backdrop-blur-sm",
+                  "group relative p-6 rounded-3xl bg-card/50 border border-border/50 backdrop-blur-sm overflow-hidden",
                   "text-left transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
-                  "touch-manipulation active:scale-[0.98]",
+                  "touch-manipulation active:scale-[0.98] hover:-translate-y-1",
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
+                {/* Shimmer overlay */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-slide-left" style={{ animationDuration: '3s' }} />
+                </div>
+
                 {service.popular && (
-                  <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-teal-400 text-xs font-bold text-white">
+                  <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-teal-400 text-xs font-bold text-white shadow-lg shadow-primary/30">
                     Popular
                   </div>
                 )}

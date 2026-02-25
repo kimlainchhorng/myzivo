@@ -74,11 +74,12 @@ export default function CuisinePhotoGrid({
                   width={300}
                   height={300}
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-115"
                 />
                 
-                {/* Overlay Gradient */}
+                {/* Multi-layer overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-eats/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Label */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-center">

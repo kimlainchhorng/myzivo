@@ -83,12 +83,13 @@ export function SponsoredHotelCard({
 
         <div className="flex flex-col lg:flex-row">
           {/* Image */}
-          <div className="relative lg:w-2/5 aspect-[16/9] lg:aspect-auto overflow-hidden">
+          <div className="relative lg:w-2/5 aspect-[16/9] lg:aspect-auto overflow-hidden group/img">
             <img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <Badge className="bg-amber-500/90 text-white border-0">
                 Sponsored
@@ -225,7 +226,7 @@ export function SponsoredHotelCard({
     <Card
       className={cn(
         "relative overflow-hidden border-amber-500/20",
-        "hover:border-amber-500/40 transition-colors",
+        "hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
         className
       )}
     >
@@ -233,8 +234,9 @@ export function SponsoredHotelCard({
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 z-10" />
 
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+      <div className="relative aspect-[4/3] overflow-hidden group/img">
+        <img src={imageUrl} alt={name} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
         <div className="absolute top-2 left-2">
           <Badge className="bg-amber-500/90 text-white border-0 text-xs">
             Sponsored

@@ -139,8 +139,8 @@ export function DestinationSponsor({
         )}
       >
         <div className="flex items-center gap-4 p-4">
-          <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0">
-            <img src={imageUrl} alt={destinationName} className="w-full h-full object-cover" />
+          <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 group/img">
+            <img src={imageUrl} alt={destinationName} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -174,7 +174,7 @@ export function DestinationSponsor({
   return (
     <Card
       className={cn(
-        "overflow-hidden border-amber-500/20 hover:border-amber-500/40 transition-colors",
+        "overflow-hidden border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
         className
       )}
     >
@@ -182,13 +182,13 @@ export function DestinationSponsor({
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-400 z-10" />
 
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden group/img">
         <img
           src={imageUrl}
           alt={destinationName}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
 
         {/* Overlay badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">

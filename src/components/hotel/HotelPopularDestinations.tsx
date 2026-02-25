@@ -5,15 +5,21 @@ import { cn } from "@/lib/utils";
 import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
 import { format, addDays } from "date-fns";
 
+// Import destination images
+import destCity from "@/assets/destination-city-night.jpg";
+import destEurope from "@/assets/destination-europe-street.jpg";
+import destMountains from "@/assets/destination-mountains.jpg";
+import destBeach from "@/assets/destination-tropical-beach.jpg";
+
 const destinations = [
-  { city: "New York", country: "USA", image: "🗽", hotels: 2450, avgPrice: 189, trending: true },
-  { city: "Paris", country: "France", image: "🗼", hotels: 1890, avgPrice: 165, trending: true },
-  { city: "Tokyo", country: "Japan", image: "🏯", hotels: 2100, avgPrice: 142, trending: false },
-  { city: "London", country: "UK", image: "🎡", hotels: 1980, avgPrice: 175, trending: true },
-  { city: "Dubai", country: "UAE", image: "🌴", hotels: 1250, avgPrice: 225, trending: true },
-  { city: "Bali", country: "Indonesia", image: "🏝️", hotels: 820, avgPrice: 95, trending: false },
-  { city: "Barcelona", country: "Spain", image: "⛪", hotels: 1120, avgPrice: 135, trending: false },
-  { city: "Sydney", country: "Australia", image: "🦘", hotels: 890, avgPrice: 168, trending: false },
+  { city: "New York", country: "USA", image: destCity, hotels: 2450, avgPrice: 189, trending: true },
+  { city: "Paris", country: "France", image: destEurope, hotels: 1890, avgPrice: 165, trending: true },
+  { city: "Tokyo", country: "Japan", image: destMountains, hotels: 2100, avgPrice: 142, trending: false },
+  { city: "London", country: "UK", image: destEurope, hotels: 1980, avgPrice: 175, trending: true },
+  { city: "Dubai", country: "UAE", image: destBeach, hotels: 1250, avgPrice: 225, trending: true },
+  { city: "Bali", country: "Indonesia", image: destBeach, hotels: 820, avgPrice: 95, trending: false },
+  { city: "Barcelona", country: "Spain", image: destEurope, hotels: 1120, avgPrice: 135, trending: false },
+  { city: "Sydney", country: "Australia", image: destCity, hotels: 890, avgPrice: 168, trending: false },
 ];
 
 interface HotelPopularDestinationsProps {
@@ -72,10 +78,15 @@ const HotelPopularDestinations = ({ onSelect }: HotelPopularDestinationsProps) =
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-0">
-                <div className="relative h-24 sm:h-32 bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-                  <span className="text-4xl sm:text-5xl transition-transform group-hover:scale-110">
-                    {dest.image}
-                  </span>
+                <div className="relative h-24 sm:h-32 overflow-hidden">
+                  <img 
+                    src={dest.image} 
+                    alt={dest.city} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   {dest.trending && (
                     <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs">
                       <TrendingUp className="w-3 h-3 mr-1" />

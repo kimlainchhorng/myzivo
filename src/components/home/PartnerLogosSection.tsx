@@ -36,10 +36,22 @@ const PartnerLogosSection = () => {
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
             
-            <div className="flex gap-8 animate-marquee-left">
+            {/* First row - slides left */}
+            <div className="flex gap-8 animate-marquee-left mb-3">
               {[...partners, ...partners].map((partner, index) => (
                 <div
-                  key={index}
+                  key={`l-${index}`}
+                  className="flex-shrink-0 px-6 py-3 rounded-xl bg-card/50 border border-border/30 text-muted-foreground font-medium text-sm whitespace-nowrap hover:text-foreground hover:border-primary/30 transition-all duration-200"
+                >
+                  {partner.name}
+                </div>
+              ))}
+            </div>
+            {/* Second row - slides right for visual depth */}
+            <div className="flex gap-8 animate-marquee-right">
+              {[...partners, ...partners].reverse().map((partner, index) => (
+                <div
+                  key={`r-${index}`}
                   className="flex-shrink-0 px-6 py-3 rounded-xl bg-card/50 border border-border/30 text-muted-foreground font-medium text-sm whitespace-nowrap hover:text-foreground hover:border-primary/30 transition-all duration-200"
                 >
                   {partner.name}

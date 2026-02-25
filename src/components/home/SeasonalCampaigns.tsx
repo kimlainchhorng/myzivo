@@ -77,10 +77,14 @@ const SeasonalCampaigns = () => {
                 >
                   {/* Background gradient on hover */}
                   <div className={cn(
-                    "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300",
+                    "absolute inset-0 opacity-0 group-hover:opacity-15 transition-opacity duration-500",
                     "bg-gradient-to-br",
                     campaign.gradient
                   )} />
+                  {/* Shimmer sweep on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-slide-left" style={{ animationDuration: '2.5s' }} />
+                  </div>
 
                   {/* Icon */}
                   <div className={cn(
