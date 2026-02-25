@@ -315,7 +315,7 @@ const ScheduledBookingsPage = () => {
                       key={slot}
                       onClick={() => setRescheduleTime(slot)}
                       className={cn(
-                        "text-xs py-1.5 rounded-lg transition-colors",
+                        "text-xs py-1.5 rounded-xl transition-colors",
                         rescheduleTime === slot
                           ? "bg-primary text-primary-foreground font-semibold"
                           : "hover:bg-muted text-foreground"

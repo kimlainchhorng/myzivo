@@ -29,7 +29,7 @@ export default function SystemLogsViewer() {
     return (
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 rounded-lg" />
+          <Skeleton key={i} className="h-14 rounded-xl" />
         ))}
       </div>
     );
@@ -77,7 +77,7 @@ export default function SystemLogsViewer() {
             return (
               <div
                 key={log.id}
-                className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-card/80 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-xl border border-border/50 bg-card/50 hover:bg-card/80 transition-colors"
               >
                 <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", config.color)} />
                 <div className="flex-1 min-w-0">

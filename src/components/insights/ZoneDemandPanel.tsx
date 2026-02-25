@@ -57,7 +57,7 @@ const ZoneDemandPanel = ({ compact = false, limit = 5 }: ZoneDemandPanelProps) =
       <Card className="bg-zinc-900/80 border-white/10">
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-amber-500/20">
+            <div className="p-2 rounded-xl bg-amber-500/20">
               <MapPin className="h-5 w-5 text-amber-400" />
             </div>
             <div>
@@ -118,7 +118,7 @@ const ZoneGapItem = ({ gap, index }: { gap: ZoneDemandGap; index: number }) => (
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay: index * 0.05 }}
-    className={`p-3 rounded-lg border ${urgencyBorders[gap.urgency]} bg-white/5`}
+    className={`p-3 rounded-xl border ${urgencyBorders[gap.urgency]} bg-white/5`}
   >
     <div className="flex items-start justify-between">
       <div className="flex-1">

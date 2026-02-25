@@ -69,7 +69,7 @@ const EmergencySupportWidget = ({
       </div>
 
       {/* Destination Info */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">{destination}</span>

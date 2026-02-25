@@ -75,7 +75,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
         {/* Eligibility Quick Check */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
           {eligibilityItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground bg-card/50 px-3 py-2 rounded-lg border border-border/50">
+            <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground bg-card/50 px-3 py-2 rounded-xl border border-border/50">
               <item.icon className="w-4 h-4 text-red-500" />
               <span>{item.text}</span>
             </div>

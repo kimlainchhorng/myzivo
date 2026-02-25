@@ -82,7 +82,7 @@ const StatCard = ({
               </div>
             )}
           </div>
-          <div className={cn("p-3 rounded-lg", variantStyles[variant])}>
+          <div className={cn("p-3 rounded-xl", variantStyles[variant])}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
@@ -110,7 +110,7 @@ const QuickAction = ({ title, description, count, href, variant = "default" }: Q
 
   return (
     <Link to={href}>
-      <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+      <div className="flex items-center justify-between p-3 rounded-xl border hover:bg-muted/50 transition-colors">
         <div>
           <p className="font-medium text-sm">{title}</p>
           <p className="text-xs text-muted-foreground">{description}</p>
@@ -321,7 +321,7 @@ const MasterDashboard = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Plane className="h-4 w-4 text-blue-500" />
               </div>
               <CardTitle className="text-base">Travel</CardTitle>
@@ -355,7 +355,7 @@ const MasterDashboard = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <Car className="h-4 w-4 text-green-500" />
               </div>
               <CardTitle className="text-base">Rides</CardTitle>
@@ -389,7 +389,7 @@ const MasterDashboard = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-red-500/10">
+              <div className="p-2 rounded-xl bg-red-500/10">
                 <Utensils className="h-4 w-4 text-red-500" />
               </div>
               <CardTitle className="text-base">Eats</CardTitle>
@@ -423,7 +423,7 @@ const MasterDashboard = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-violet-500/10">
+              <div className="p-2 rounded-xl bg-violet-500/10">
                 <Users className="h-4 w-4 text-violet-500" />
               </div>
               <CardTitle className="text-base">Users</CardTitle>

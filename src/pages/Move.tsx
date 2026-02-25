@@ -152,7 +152,7 @@ export default function Move() {
               {features.map((feature, index) => (
                 <Card 
                   key={feature.title}
-                  className="border-2 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  className="border-2 hover:border-primary/30 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
                 >
                   <CardContent className="p-6 text-center">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">

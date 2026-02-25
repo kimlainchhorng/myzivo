@@ -71,7 +71,7 @@ const AnomalySignalsPanel = ({ compact = false, limit = 10 }: AnomalySignalsPane
       <Card className="bg-zinc-900/80 border-white/10">
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-destructive/20">
+            <div className="p-2 rounded-xl bg-destructive/20">
               <Shield className="h-5 w-5 text-destructive" />
             </div>
             <div>
@@ -134,7 +134,7 @@ const SignalItem = ({ signal, index }: { signal: AnomalySignal; index: number })
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.03 }}
-      className={`p-3 rounded-lg border ${severityClass.split(" ")[2]} bg-white/5 ${
+      className={`p-3 rounded-xl border ${severityClass.split(" ")[2]} bg-white/5 ${
         signal.isResolved ? "opacity-50" : ""
       }`}
     >

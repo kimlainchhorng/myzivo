@@ -49,7 +49,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <Card 
-            className="overflow-hidden border-border/50 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group active:scale-[0.99] touch-manipulation rounded-2xl"
+            className="overflow-hidden border-border/50 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-200 cursor-pointer group active:scale-[0.99] touch-manipulation rounded-2xl"
             onClick={handleClick}
           >
             {/* Top Banner */}

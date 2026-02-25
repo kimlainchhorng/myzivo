@@ -469,7 +469,7 @@ function RegionDetailSheet({
             <div className="space-y-3">
               <Label className="text-sm font-medium">Services</Label>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                   <div className="flex items-center gap-2">
                     <Car className="w-4 h-4 text-blue-500" />
                     <span className="text-sm">Rides</span>
@@ -479,7 +479,7 @@ function RegionDetailSheet({
                     onCheckedChange={(checked) => onUpdateSettings({ rides_enabled: checked })}
                   />
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                   <div className="flex items-center gap-2">
                     <UtensilsCrossed className="w-4 h-4 text-orange-500" />
                     <span className="text-sm">Eats</span>
@@ -489,7 +489,7 @@ function RegionDetailSheet({
                     onCheckedChange={(checked) => onUpdateSettings({ eats_enabled: checked })}
                   />
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                   <div className="flex items-center gap-2">
                     <Package className="w-4 h-4 text-purple-500" />
                     <span className="text-sm">Move</span>

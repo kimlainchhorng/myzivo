@@ -123,7 +123,7 @@ export default function EnhanceYourTrip({
               <Link to="/extras" key={category.id}>
                 <Card 
                   className={cn(
-                    "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full active:scale-[0.98] touch-manipulation rounded-2xl",
+                    "group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg h-full active:scale-[0.98] touch-manipulation rounded-2xl",
                     category.borderColor
                   )}
                 >
@@ -176,7 +176,7 @@ export default function EnhanceYourTrip({
             <Link to="/extras" key={category.id}>
               <Card
                 className={cn(
-                  "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full active:scale-[0.98] touch-manipulation rounded-2xl",
+                  "group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full active:scale-[0.98] touch-manipulation rounded-2xl",
                   category.borderColor,
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}

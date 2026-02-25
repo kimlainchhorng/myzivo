@@ -231,7 +231,7 @@ const TripMap = () => {
 
   return (
     <Card className={cn(
-      "border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden transition-all duration-300",
+      "border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden transition-all duration-200",
       isFullscreen && "fixed inset-4 z-50"
     )}>
       <CardHeader className="pb-4 border-b border-border/50">

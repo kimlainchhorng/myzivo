@@ -143,7 +143,7 @@ const AdminRevenueDashboard = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className={cn(
-                      "p-2 rounded-lg bg-gradient-to-br",
+                      "p-2 rounded-xl bg-gradient-to-br",
                       metric.gradient
                     )}>
                       <Icon className="h-4 w-4 text-white" />

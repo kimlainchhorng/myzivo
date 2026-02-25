@@ -124,7 +124,7 @@ export default function AdminEmergencyResponse() {
         <Card className="bg-gradient-to-br from-red-500/10 to-orange-500/5 border-red-500/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-500/20">
+              <div className="p-2 rounded-xl bg-red-500/20">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <div>
@@ -137,7 +137,7 @@ export default function AdminEmergencyResponse() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-rose-500/10">
+              <div className="p-2 rounded-xl bg-rose-500/10">
                 <Ambulance className="h-5 w-5 text-rose-500" />
               </div>
               <div>
@@ -150,7 +150,7 @@ export default function AdminEmergencyResponse() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <PhoneCall className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -163,7 +163,7 @@ export default function AdminEmergencyResponse() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <Clock className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -186,7 +186,7 @@ export default function AdminEmergencyResponse() {
           </CardHeader>
           <CardContent>
             {emergencies.filter(e => e.severity === "critical" && e.status !== "closed").map((emergency) => (
-              <div key={emergency.id} className="flex items-center justify-between p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+              <div key={emergency.id} className="flex items-center justify-between p-4 rounded-xl bg-red-500/10 border border-red-500/30">
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-full bg-red-500/20">
                     <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />

@@ -162,7 +162,7 @@ export function SmartSearchSuggestions({
                   <X className="w-3 h-3" />
                 </Button>
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
                     <Calendar className="w-4 h-4 text-emerald-500" />
                   </div>
                   <div>

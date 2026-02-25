@@ -130,7 +130,7 @@ const TestimonialsSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-14 sm:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-200">
             <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '4s' }} />
             <span className="text-muted-foreground">Customer Stories</span>
           </div>
@@ -199,7 +199,7 @@ const TestimonialsSection = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className={cn(
-                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl",
+                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl",
                       serviceConfig.gradient
                     )}>
                       {currentTestimonial.avatar}
@@ -248,7 +248,7 @@ const TestimonialsSection = () => {
                 key={index}
                 onClick={() => setActiveIndex(index)}
                 className={cn(
-                  "h-2.5 sm:h-3 rounded-full transition-all duration-300 touch-manipulation hover:scale-110",
+                  "h-2.5 sm:h-3 rounded-full transition-all duration-200 touch-manipulation hover:scale-110",
                   index === activeIndex 
                     ? `w-8 sm:w-10 bg-gradient-to-r ${config.gradient}` 
                     : 'w-2.5 sm:w-3 bg-muted hover:bg-muted-foreground/50'

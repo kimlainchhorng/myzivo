@@ -222,7 +222,7 @@ export default function LiveMetricsPanel() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center bg-muted/50")}>
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-muted/50")}>
                       <metric.icon className={cn("h-5 w-5", metric.color)} />
                     </div>
                     <div>

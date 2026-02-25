@@ -96,7 +96,7 @@ export default function AdminFeedbackAnalytics() {
         <Card className="bg-gradient-to-br from-primary/10 to-teal-500/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/20">
+              <div className="p-2 rounded-xl bg-primary/20">
                 <ThumbsUp className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -114,7 +114,7 @@ export default function AdminFeedbackAnalytics() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <BarChart3 className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -132,7 +132,7 @@ export default function AdminFeedbackAnalytics() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <MessageSquare className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -145,7 +145,7 @@ export default function AdminFeedbackAnalytics() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-violet-500/10">
+              <div className="p-2 rounded-xl bg-violet-500/10">
                 <Filter className="h-5 w-5 text-violet-500" />
               </div>
               <div>
@@ -261,7 +261,7 @@ export default function AdminFeedbackAnalytics() {
           </CardHeader>
           <CardContent className="space-y-3">
             {topIssues.map((issue, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-muted-foreground">#{i + 1}</span>
                   <p className="text-sm">{issue.issue}</p>

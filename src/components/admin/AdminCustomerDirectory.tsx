@@ -244,7 +244,7 @@ const AdminCustomerDirectory = () => {
                 return (
                   <div
                     key={customer.id}
-                    className="p-4 hover:bg-muted/30 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    className="p-4 hover:bg-muted/30 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-200"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="flex items-center gap-4">

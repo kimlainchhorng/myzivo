@@ -218,7 +218,7 @@ const FlightStatusPage = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+                <div className="p-4 rounded-xl border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Duffel Environment</p>
                   <p className="font-semibold flex items-center gap-2">
                     {duffelEnv === 'live' ? (
@@ -239,7 +239,7 @@ const FlightStatusPage = () => {
                     )}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+                <div className="p-4 rounded-xl border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Payment Processor</p>
                   <p className="font-semibold flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -249,7 +249,7 @@ const FlightStatusPage = () => {
                     Mode determined by STRIPE_SECRET_KEY prefix
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+                <div className="p-4 rounded-xl border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <p className="text-sm text-muted-foreground mb-1">Ticketing Partner</p>
                   <p className="font-semibold flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -258,7 +258,7 @@ const FlightStatusPage = () => {
                 </div>
               </div>
 
-              <div className="mt-4 p-4 rounded-lg bg-muted/30 border">
+              <div className="mt-4 p-4 rounded-xl bg-muted/30 border">
                 <p className="text-sm text-muted-foreground">
                   <strong>Note:</strong> To switch from Sandbox to LIVE mode, update the{" "}
                   <code className="px-1 py-0.5 bg-muted rounded text-xs">DUFFEL_ENV</code> and{" "}
@@ -354,7 +354,7 @@ const FlightStatusPage = () => {
               <CardContent>
                 <div className="space-y-3">
                   {complianceItems.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl border">
                       <div className="flex items-center gap-3">
                         {item.status === 'done' ? (
                           <CheckCircle className="w-5 h-5 text-emerald-500" />
@@ -374,7 +374,7 @@ const FlightStatusPage = () => {
 
                 <Separator className="my-4" />
 
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                   <p className="text-sm font-medium text-emerald-600 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" />
                     All compliance requirements met
@@ -396,7 +396,7 @@ const FlightStatusPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 rounded-lg border">
+                  <div className="flex justify-between items-center p-3 rounded-xl border">
                     <span className="text-sm">Total Searches</span>
                     <span className="font-semibold">{stats?.totalSearches || 0}</span>
                   </div>

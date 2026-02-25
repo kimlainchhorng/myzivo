@@ -101,7 +101,7 @@ export default function RenterTrips() {
                   <Card key={i}>
                     <CardContent className="p-4">
                       <div className="flex gap-4">
-                        <Skeleton className="w-24 h-20 rounded-lg" />
+                        <Skeleton className="w-24 h-20 rounded-xl" />
                         <div className="flex-1 space-y-2">
                           <Skeleton className="h-6 w-3/4" />
                           <Skeleton className="h-4 w-1/2" />
@@ -190,7 +190,7 @@ function BookingCard({ booking, showReviewStatus }: { booking: BookingWithDetail
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Vehicle Image */}
-          <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-lg bg-muted overflow-hidden shrink-0">
+          <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-xl bg-muted overflow-hidden shrink-0">
             {images[0] ? (
               <img
                 src={images[0]}

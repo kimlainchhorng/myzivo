@@ -154,7 +154,7 @@ const AdminDriverIncentives = () => {
         {stats.map((stat, index) => (
           <Card 
             key={stat.label} 
-            className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
+            className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <CardContent className="p-4">
