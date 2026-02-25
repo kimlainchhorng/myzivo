@@ -423,9 +423,9 @@ const AdminDriverEarnings = ({ driverId }: AdminDriverEarningsProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/10">
+                  <div className="p-2 rounded-xl bg-green-500/10">
                     <Car className="h-4 w-4 text-green-500" />
                   </div>
                   <span>Trip Earnings</span>

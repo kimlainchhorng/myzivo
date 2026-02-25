@@ -276,7 +276,7 @@ const RestaurantOverview = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eats to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-eats/10">
+                <div className="p-2 rounded-xl bg-eats/10">
                   <Package className="h-5 w-5 text-eats" />
                 </div>
                 <div>
@@ -354,7 +354,7 @@ const RestaurantOverview = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-400" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <div>

@@ -216,7 +216,7 @@ const AdminFeatureFlags = () => {
             <Card 
               key={flag.id}
               className={cn(
-                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300",
+                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200",
                 !flag.enabled && "opacity-60"
               )}
               style={{ animationDelay: `${index * 50}ms` }}

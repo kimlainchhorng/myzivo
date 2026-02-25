@@ -130,7 +130,7 @@ export default function FleetDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -237,7 +237,7 @@ export default function FleetDashboard() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-20 h-14 rounded-lg bg-muted flex items-center justify-center">
+                          <div className="w-20 h-14 rounded-xl bg-muted flex items-center justify-center">
                             <Car className="w-8 h-8 text-muted-foreground" />
                           </div>
                           <div>
@@ -294,7 +294,7 @@ export default function FleetDashboard() {
                     {analytics.revenueByVehicle.slice(0, 5).map((item: any) => (
                       <div
                         key={item.vehicleId}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-xl"
                       >
                         <div>
                           <p className="font-medium">{item.name}</p>
@@ -326,7 +326,7 @@ export default function FleetDashboard() {
                     {analytics.revenueByClass.map((item: any) => (
                       <div
                         key={item.carClass}
-                        className="p-4 bg-muted/50 rounded-lg text-center"
+                        className="p-4 bg-muted/50 rounded-xl text-center"
                       >
                         <p className="text-sm text-muted-foreground capitalize">
                           {item.carClass}
@@ -418,7 +418,7 @@ export default function FleetDashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  <div className="p-4 border rounded-lg">
+                  <div className="p-4 border rounded-xl">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium">Default Fleet Pricing</p>
                       <Badge variant="secondary">Active</Badge>
@@ -449,7 +449,7 @@ export default function FleetDashboard() {
         </Tabs>
 
         {/* Legal disclosure */}
-        <div className="p-4 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+        <div className="p-4 bg-muted/30 rounded-xl text-sm text-muted-foreground">
           Fleet owners operate independently and are responsible for their vehicles.
           ZIVO facilitates booking, payment, and logistics and earns a service commission.
         </div>

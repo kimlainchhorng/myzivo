@@ -216,7 +216,7 @@ export function OptimizedImage({
         onLoad={handleLoad}
         onError={handleError}
         className={cn(
-          "w-full h-full object-cover transition-opacity duration-300",
+          "w-full h-full object-cover transition-opacity duration-200",
           isLoaded ? "opacity-100" : "opacity-0",
           className
         )}

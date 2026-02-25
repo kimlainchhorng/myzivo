@@ -26,7 +26,7 @@ const LiveStatsSection = () => {
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-xs sm:text-sm font-bold mb-4 sm:mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300">
+            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-xs sm:text-sm font-bold mb-4 sm:mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-200">
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary animate-spin" style={{ animationDuration: '3s' }} />
               <span className="text-muted-foreground">Live Platform Stats</span>
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -51,7 +51,7 @@ const LiveStatsSection = () => {
               <div 
                 key={stat.label}
                 className={cn(
-                  "group relative overflow-hidden rounded-xl sm:rounded-2xl transition-all duration-300",
+                  "group relative overflow-hidden rounded-xl sm:rounded-2xl transition-all duration-200",
                   "hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]",
                   "animate-in fade-in slide-in-from-bottom-4 touch-manipulation"
                 )}

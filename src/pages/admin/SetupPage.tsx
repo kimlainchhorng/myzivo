@@ -135,7 +135,7 @@ CREATE POLICY "Admins can update payouts"
               <div
                 key={env.key}
                 className={cn(
-                  "flex items-center justify-between p-3 rounded-lg border",
+                  "flex items-center justify-between p-3 rounded-xl border",
                   env.isSet ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"
                 )}
               >
@@ -166,13 +166,13 @@ CREATE POLICY "Admins can update payouts"
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
+              <div className="p-4 rounded-xl bg-muted/50 text-center">
                 <div className="text-3xl font-bold text-primary">
                   {(PLATFORM_COMMISSION_RATE * 100).toFixed(0)}%
                 </div>
                 <p className="text-sm text-muted-foreground">Platform Commission</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
+              <div className="p-4 rounded-xl bg-muted/50 text-center">
                 <div className="text-3xl font-bold text-green-600">
                   {(DRIVER_SHARE_RATE * 100).toFixed(0)}%
                 </div>
@@ -195,7 +195,7 @@ CREATE POLICY "Admins can update payouts"
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <pre className="p-4 rounded-lg bg-muted overflow-x-auto text-xs">
+              <pre className="p-4 rounded-xl bg-muted overflow-x-auto text-xs">
                 <code>{payoutsTableSQL}</code>
               </pre>
               <Button
@@ -219,28 +219,28 @@ CREATE POLICY "Admins can update payouts"
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <a
                 href="/admin/rides"
-                className="p-4 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors text-center"
+                className="p-4 rounded-xl border hover:border-primary hover:bg-primary/5 transition-colors text-center"
               >
                 <p className="font-medium">Rides</p>
                 <p className="text-xs text-muted-foreground">Manage rides</p>
               </a>
               <a
                 href="/admin/drivers"
-                className="p-4 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors text-center"
+                className="p-4 rounded-xl border hover:border-primary hover:bg-primary/5 transition-colors text-center"
               >
                 <p className="font-medium">Drivers</p>
                 <p className="text-xs text-muted-foreground">View drivers</p>
               </a>
               <a
                 href="/admin/payouts"
-                className="p-4 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors text-center"
+                className="p-4 rounded-xl border hover:border-primary hover:bg-primary/5 transition-colors text-center"
               >
                 <p className="font-medium">Payouts</p>
                 <p className="text-xs text-muted-foreground">Process payouts</p>
               </a>
               <a
                 href="/admin"
-                className="p-4 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors text-center"
+                className="p-4 rounded-xl border hover:border-primary hover:bg-primary/5 transition-colors text-center"
               >
                 <p className="font-medium">Dashboard</p>
                 <p className="text-xs text-muted-foreground">Overview</p>

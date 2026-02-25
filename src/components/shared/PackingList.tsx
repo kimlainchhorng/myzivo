@@ -64,7 +64,7 @@ const PackingList = () => {
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-200"
               style={{ width: `${progress}%` }}
             />
           </div>

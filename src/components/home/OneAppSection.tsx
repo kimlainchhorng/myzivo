@@ -98,7 +98,7 @@ export default function OneAppSection({ compact = false }: OneAppSectionProps) {
                 "group flex items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-2xl",
                 "bg-card/60 backdrop-blur-sm border border-border/50",
                 "hover:border-primary/30 hover:bg-card/80",
-                "transition-all duration-300",
+                "transition-all duration-200",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 100 + 100}ms`, animationFillMode: 'both' }}
@@ -107,7 +107,7 @@ export default function OneAppSection({ compact = false }: OneAppSectionProps) {
               <div className={cn(
                 "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0",
                 "bg-gradient-to-br border border-white/10",
-                "group-hover:scale-110 transition-transform duration-300",
+                "group-hover:scale-110 transition-transform duration-200",
                 service.gradient
               )}>
                 <service.icon className={cn("w-6 h-6 sm:w-7 sm:h-7", service.iconColor)} />
@@ -130,7 +130,7 @@ export default function OneAppSection({ compact = false }: OneAppSectionProps) {
 
         {/* Tagline */}
         <p
-          className="text-center text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mt-10 sm:mt-12 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="text-center text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mt-10 sm:mt-12 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-200"
           style={{ animationDelay: '400ms', animationFillMode: 'both' }}
         >
           ZIVO connects you to the best travel partners and local service providers — all in one place.

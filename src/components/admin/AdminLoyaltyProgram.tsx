@@ -149,7 +149,7 @@ const AdminLoyaltyProgram = () => {
             <Card className="border-0 bg-card/50 backdrop-blur-xl">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className={cn("p-2 rounded-lg", stat.bg)}>
+                  <div className={cn("p-2 rounded-xl", stat.bg)}>
                     <stat.icon className={cn("h-5 w-5", stat.color)} />
                   </div>
                   <div>
@@ -240,7 +240,7 @@ const AdminLoyaltyProgram = () => {
                 {recentActivity.map((activity) => (
                   <div 
                     key={activity.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/20"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/20"
                   >
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",

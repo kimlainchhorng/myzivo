@@ -29,7 +29,7 @@ export default function MapLocationChip({
     >
       {/* ETA Badge (only for pickup) - ZIVO emerald gradient */}
       {eta && type === "pickup" && (
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold leading-none">
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white px-2 py-1 rounded-xl text-[10px] font-bold leading-none">
           <div>{eta}</div>
           <div className="text-[8px] font-medium text-white/70">MIN</div>
         </div>
@@ -37,7 +37,7 @@ export default function MapLocationChip({
       
       {/* Pin icon for dropoff - ZIVO teal */}
       {type === "dropoff" && (
-        <div className="w-6 h-6 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-6 h-6 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
           <div className="w-2 h-2 bg-white rounded-full" />
         </div>
       )}

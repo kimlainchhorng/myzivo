@@ -54,7 +54,7 @@ export function PromoCodeInput({
     return (
       <div className={cn("space-y-2", className)}>
         <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 hover:shadow-sm transition-all duration-200">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="flex-1 min-w-0">

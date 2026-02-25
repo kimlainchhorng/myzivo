@@ -123,17 +123,17 @@ const CarRentalBookings = () => {
             return (
               <div 
                 key={booking.id} 
-                className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                className="animate-in fade-in slide-in-from-bottom-4 duration-200"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
-                <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 group overflow-hidden">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient}`} />
                   <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${statusConfig.gradient}`} />
                   <CardContent className="p-5 pl-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
                         <div 
-                          className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                          className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}
                         >
                           <Car className="h-7 w-7 text-white" />
                         </div>

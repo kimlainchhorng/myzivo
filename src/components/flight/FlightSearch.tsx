@@ -248,7 +248,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
         
         <div className="flex items-center gap-3">
           {/* Quick Sort Pills */}
-          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-xl">
             {[
               { key: "price", label: "Cheapest", icon: TrendingUp },
               { key: "duration", label: "Fastest", icon: Zap },
@@ -320,7 +320,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
                   {/* Direct Only */}
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Stops</Label>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
                       <span className="text-sm">Direct flights only</span>
                       <Switch 
                         checked={directOnly} 
@@ -384,7 +384,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
             onMouseLeave={() => setHoveredFlight(null)}
           >
             <Card className={cn(
-              "glass-card overflow-hidden transition-all duration-300",
+              "glass-card overflow-hidden transition-all duration-200",
               hoveredFlight === flight.id && "border-sky-500/50 shadow-lg shadow-sky-500/10"
             )}>
               <CardContent className="p-4 sm:p-5">
@@ -459,7 +459,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
                     {flight.amenities.slice(0, 4).map((amenity) => (
                       <div
                         key={amenity}
-                        className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        className="w-8 h-8 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         title={amenity.charAt(0).toUpperCase() + amenity.slice(1)}
                       >
                         {getAmenityIcon(amenity)}

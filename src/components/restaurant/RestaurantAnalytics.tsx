@@ -155,7 +155,7 @@ const RestaurantAnalytics = () => {
                     <span className="text-xs text-muted-foreground">vs last week</span>
                   </div>
                 </div>
-                <div className="p-2 rounded-lg bg-background/50">
+                <div className="p-2 rounded-xl bg-background/50">
                   <stat.icon className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
@@ -168,7 +168,7 @@ const RestaurantAnalytics = () => {
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <Users className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -179,7 +179,7 @@ const RestaurantAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <Clock className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -190,7 +190,7 @@ const RestaurantAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Utensils className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -201,7 +201,7 @@ const RestaurantAnalytics = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <TrendingUp className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -218,7 +218,7 @@ const RestaurantAnalytics = () => {
           <Card className="border-0 bg-card/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-eats/10">
+                <div className="p-1.5 rounded-xl bg-eats/10">
                   <BarChart className="h-4 w-4 text-eats" />
                 </div>
                 Weekly Orders & Revenue
@@ -251,7 +251,7 @@ const RestaurantAnalytics = () => {
           <Card className="border-0 bg-card/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-blue-500/10">
+                <div className="p-1.5 rounded-xl bg-blue-500/10">
                   <TrendingUp className="h-4 w-4 text-blue-500" />
                 </div>
                 Hourly Order Trend
@@ -353,7 +353,7 @@ const RestaurantAnalytics = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 rounded-lg bg-background/50 hover:bg-background/80 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${

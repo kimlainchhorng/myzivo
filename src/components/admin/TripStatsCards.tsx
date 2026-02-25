@@ -195,7 +195,7 @@ export const TripStatsCards = ({ stats, isLoading, variant = "compact", showTren
                   <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all group cursor-pointer">
                     {/* Background gradient on hover */}
                     <div className={cn(
-                      "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                      "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-200",
                       'bgGradient' in stat ? (stat.bgGradient as string) : ""
                     )} />
                     
