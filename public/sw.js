@@ -1,6 +1,6 @@
 /**
- * hiZIVO Service Worker
- * Handles push notifications and caching
+ * ZIVO Service Worker
+ * Handles push notifications, caching, and offline support
  */
 
 // Import Workbox from CDN
@@ -13,7 +13,6 @@ self.__WB_MANIFEST;
 if (workbox) {
   console.log('[SW] Workbox loaded successfully');
   
-  // Use workbox for precaching
   workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
   
   // Cache Google Fonts stylesheets
@@ -32,7 +31,7 @@ if (workbox) {
       plugins: [
         new workbox.expiration.ExpirationPlugin({
           maxEntries: 30,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+          maxAgeSeconds: 60 * 60 * 24 * 365,
         }),
       ],
     })
@@ -46,27 +45,13 @@ if (workbox) {
       plugins: [
         new workbox.expiration.ExpirationPlugin({
           maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-        }),
-      ],
-    })
-  );
-  
-  // Cache Mapbox tiles
-  workbox.routing.registerRoute(
-    /^https:\/\/api\.mapbox\.com\/.*/i,
-    new workbox.strategies.CacheFirst({
-      cacheName: 'mapbox-cache',
-      plugins: [
-        new workbox.expiration.ExpirationPlugin({
-          maxEntries: 50,
           maxAgeSeconds: 60 * 60 * 24 * 30,
         }),
       ],
     })
   );
 
-  // NetworkFirst for navigation (HTML pages) — always fetch fresh index.html
+  // NetworkFirst for navigation (HTML pages)
   workbox.routing.registerRoute(
     ({ request }) => request.mode === 'navigate',
     new workbox.strategies.NetworkFirst({
@@ -80,7 +65,7 @@ if (workbox) {
     })
   );
 
-  // NetworkFirst for Supabase API calls — never serve stale data
+  // NetworkFirst for Supabase API calls
   workbox.routing.registerRoute(
     /^https:\/\/.*\.supabase\.co\/.*/i,
     new workbox.strategies.NetworkFirst({
@@ -97,15 +82,12 @@ if (workbox) {
 // =============================================
 
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push received:', event);
-  
   let data = {};
   
   try {
     data = event.data?.json() || {};
   } catch (e) {
-    console.error('[SW] Failed to parse push data:', e);
-    data = { title: 'hiZIVO', body: event.data?.text() || 'You have a new notification' };
+    data = { title: 'ZIVO', body: event.data?.text() || 'You have a new notification' };
   }
   
   const options = {
@@ -122,29 +104,18 @@ self.addEventListener('push', (event) => {
   };
   
   event.waitUntil(
-    self.registration.showNotification(data.title || 'hiZIVO', options)
+    self.registration.showNotification(data.title || 'ZIVO', options)
   );
 });
 
-// Notification click handler - route to appropriate page
+// Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.notification.tag);
   event.notification.close();
   
   const data = event.notification.data;
   let urlToOpen = '/';
   
-  // Route based on notification type
   switch (data?.type) {
-    case 'order_status':
-      urlToOpen = `/eats/orders/${data.order_id}`;
-      break;
-    case 'chat_message':
-      urlToOpen = `/support/tickets/${data.ticket_id}`;
-      break;
-    case 'driver_assigned':
-      urlToOpen = `/eats/orders/${data.order_id}`;
-      break;
     case 'price_drop':
       urlToOpen = data.url || '/flights';
       break;
@@ -154,28 +125,22 @@ self.addEventListener('notificationclick', (event) => {
     case 'support_reply':
       urlToOpen = `/support/tickets/${data.ticket_id}`;
       break;
-    case 'test':
-      urlToOpen = data.url || '/account';
-      break;
     default:
       urlToOpen = data?.url || '/';
   }
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Try to focus an existing window
       for (const client of clientList) {
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      // No matching window, try to find any app window and navigate
       for (const client of clientList) {
         if ('focus' in client && 'navigate' in client) {
           return client.focus().then(() => client.navigate(urlToOpen));
         }
       }
-      // No windows open, open a new one
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
@@ -183,24 +148,17 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Handle notification close (for analytics)
-self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] Notification closed:', event.notification.tag);
-});
+self.addEventListener('notificationclose', () => {});
 
 // =============================================
 // SERVICE WORKER LIFECYCLE
 // =============================================
 
-self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
-  // Skip waiting to activate immediately
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
-  // Purge all caches except the ones we explicitly want to keep
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       const keepCaches = [
@@ -212,16 +170,12 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames
           .filter((name) => !keepCaches.some((keep) => name === keep))
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       );
     }).then(() => clients.claim())
   );
 });
 
-// Handle messages from the main app
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();

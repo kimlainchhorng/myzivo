@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-charts": ["recharts"],
-          "vendor-map": ["mapbox-gl"],
         },
       },
     },
