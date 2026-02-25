@@ -53,7 +53,7 @@ export function RecommendationCard({
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
       className={cn(
-        "flex-shrink-0 w-[260px] bg-zinc-900/80 border border-white/10 rounded-2xl overflow-hidden cursor-pointer touch-manipulation",
+        "flex-shrink-0 w-[260px] bg-zinc-900/80 border border-white/10 rounded-2xl overflow-hidden cursor-pointer touch-manipulation transition-all duration-200 hover:shadow-lg active:scale-[0.98]",
         className
       )}
     >
@@ -125,7 +125,7 @@ export function RecommendationCard({
             <button
               onClick={handleReorder}
               disabled={isReordering}
-              className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors active:scale-95"
+              className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-all duration-200 active:scale-90 touch-manipulation shadow-sm"
             >
               <RotateCcw className="w-4 h-4" />
             </button>

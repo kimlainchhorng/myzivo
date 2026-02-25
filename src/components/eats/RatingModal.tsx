@@ -160,7 +160,7 @@ export function RatingModal({
               variant="outline"
               onClick={handleSkip}
               disabled={createReview.isPending}
-              className="flex-1 h-12 rounded-xl border-zinc-700 bg-zinc-800 text-white"
+              className="flex-1 h-12 rounded-xl border-zinc-700 bg-zinc-800 text-white active:scale-95 transition-all duration-200 touch-manipulation"
             >
               Skip
             </Button>
@@ -168,7 +168,7 @@ export function RatingModal({
               onClick={handleSubmit}
               disabled={overallRating === 0 || createReview.isPending}
               className={cn(
-                "flex-1 h-12 rounded-xl font-bold",
+                "flex-1 h-12 rounded-xl font-bold shadow-lg active:scale-[0.97] transition-all duration-200 touch-manipulation",
                 overallRating > 0
                   ? "bg-gradient-to-r from-orange-500 to-orange-600"
                   : "bg-zinc-700 text-zinc-400"

@@ -24,11 +24,11 @@ const AccessDenied = ({
           <h2 className="text-xl font-semibold mb-2">{title}</h2>
           <p className="text-muted-foreground mb-6">{message}</p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate(-1)}>
+            <Button variant="outline" onClick={() => navigate(-1)} className="rounded-xl active:scale-95 transition-all duration-200 touch-manipulation">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Go Back
             </Button>
-            <Button onClick={() => navigate("/")}>
+            <Button onClick={() => navigate("/")} className="rounded-xl active:scale-95 transition-all duration-200 touch-manipulation shadow-md">
               <Home className="w-4 h-4 mr-2" />
               Home
             </Button>

@@ -180,7 +180,7 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
         <Button
           variant="outline"
           onClick={handlePrint}
-          className="flex-1 h-12 rounded-xl border-zinc-300"
+          className="flex-1 h-12 rounded-xl border-zinc-300 active:scale-[0.97] transition-all duration-200 touch-manipulation"
         >
           <Printer className="w-4 h-4 mr-2" />
           Print Receipt
@@ -206,7 +206,7 @@ export function OrderReceipt({ order, onPrint }: OrderReceiptProps) {
             };
             downloadReceipt(unified);
           }}
-          className="flex-1 h-12 rounded-xl border-zinc-300"
+          className="flex-1 h-12 rounded-xl border-zinc-300 active:scale-[0.97] transition-all duration-200 touch-manipulation"
         >
           <Download className="w-4 h-4 mr-2" />
           Download Invoice

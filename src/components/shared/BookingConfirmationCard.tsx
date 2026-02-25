@@ -61,7 +61,7 @@ const BookingConfirmationCard = ({
 
   return (
     <div className={cn(
-      "p-5 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-border/50 relative overflow-hidden",
+      "p-5 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-border/50 relative overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01]",
       className
     )}>
       {/* Success Animation Background */}
@@ -117,11 +117,11 @@ const BookingConfirmationCard = ({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1">
+        <Button variant="outline" size="sm" className="flex-1 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation">
           <Download className="w-4 h-4 mr-1" />
           E-Ticket
         </Button>
-        <Button size="sm" className="flex-1 bg-gradient-to-r from-primary to-teal-500">
+        <Button size="sm" className="flex-1 bg-gradient-to-r from-primary to-teal-500 rounded-xl shadow-md active:scale-95 transition-all duration-200 touch-manipulation">
           View Details
         </Button>
       </div>

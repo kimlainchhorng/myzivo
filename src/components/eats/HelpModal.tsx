@@ -138,7 +138,7 @@ export function HelpModal({
               <div className="flex flex-col gap-3 mt-6">
                 <Button
                   onClick={handleViewTicket}
-                  className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                  className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold active:scale-[0.98] transition-all duration-200 touch-manipulation shadow-md"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   View Ticket
@@ -146,7 +146,7 @@ export function HelpModal({
                 <Button
                   variant="outline"
                   onClick={handleClose}
-                  className="w-full h-12 rounded-xl border-zinc-700 bg-transparent text-white"
+                  className="w-full h-12 rounded-xl border-zinc-700 bg-transparent text-white active:scale-[0.98] transition-all duration-200 touch-manipulation"
                 >
                   Done
                 </Button>
@@ -174,14 +174,14 @@ export function HelpModal({
                 <Button
                   variant="outline"
                   onClick={() => setSelectedCategory(null)}
-                  className="flex-1 h-12 rounded-xl border-zinc-700 bg-transparent text-white"
+                  className="flex-1 h-12 rounded-xl border-zinc-700 bg-transparent text-white active:scale-[0.98] transition-all duration-200 touch-manipulation"
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleSubmitTicket}
                   disabled={createTicket.isPending}
-                  className="flex-1 h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                  className="flex-1 h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold active:scale-[0.98] transition-all duration-200 touch-manipulation shadow-md"
                 >
                   {createTicket.isPending ? (
                     "Submitting..."
@@ -212,7 +212,7 @@ export function HelpModal({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleSelectOption(option.category)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all text-left active:scale-[0.98]"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all duration-200 text-left active:scale-[0.98] touch-manipulation"
                 >
                   <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
                     <option.icon className="w-5 h-5 text-orange-500" />
@@ -233,7 +233,7 @@ export function HelpModal({
                   handleClose();
                   navigate(`/support/chat?context=eats&orderId=${orderId}`);
                 }}
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-emerald-500/30 transition-all text-left active:scale-[0.98]"
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-emerald-500/30 transition-all duration-200 text-left active:scale-[0.98] touch-manipulation"
               >
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <Headphones className="w-5 h-5 text-emerald-400" />
@@ -250,7 +250,7 @@ export function HelpModal({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
                 onClick={handleContactSupport}
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all text-left active:scale-[0.98]"
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all duration-200 text-left active:scale-[0.98] touch-manipulation"
               >
                 <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
                   <MessageCircle className="w-5 h-5 text-orange-500" />
@@ -265,7 +265,7 @@ export function HelpModal({
               {restaurantPhone && (
                 <a
                   href={`tel:${restaurantPhone}`}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-orange-500/30 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
                     <Phone className="w-5 h-5 text-emerald-400" />
@@ -280,7 +280,7 @@ export function HelpModal({
               <Button
                 variant="outline"
                 onClick={handleClose}
-                className="w-full h-12 rounded-xl border-zinc-700 bg-transparent text-white mt-2"
+                className="w-full h-12 rounded-xl border-zinc-700 bg-transparent text-white mt-2 active:scale-[0.98] transition-all duration-200 touch-manipulation"
               >
                 Close
               </Button>

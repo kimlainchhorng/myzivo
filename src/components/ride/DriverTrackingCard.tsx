@@ -53,7 +53,7 @@ export function DriverTrackingCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg border border-zinc-100 overflow-hidden hover:shadow-xl transition-all duration-200"
+      className="bg-white rounded-2xl shadow-lg border border-zinc-100 overflow-hidden hover:shadow-xl transition-all duration-300"
     >
       {/* Connection Status Bar */}
       <AnimatePresence>
@@ -155,7 +155,7 @@ export function DriverTrackingCard({
         <div className="mt-4 flex gap-2">
           <Button
             variant="outline"
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
             onClick={onCall}
           >
             <Phone className="w-4 h-4" />
@@ -163,7 +163,7 @@ export function DriverTrackingCard({
           </Button>
           <Button
             variant="outline"
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
             onClick={onMessage}
           >
             <MessageSquare className="w-4 h-4" />

@@ -97,7 +97,7 @@ export default function ContextualCrossSell({
             key={option.type}
             onClick={() => handleCrossSellClick(option)}
             className={cn(
-              "p-4 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5 text-left",
+              "p-4 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 text-left active:scale-[0.98] touch-manipulation",
               option.bgColor,
               option.borderColor
             )}
@@ -133,7 +133,7 @@ export default function ContextualCrossSell({
               <div
                 key={option.type}
                 className={cn(
-                  "p-4 rounded-xl border flex items-center justify-between transition-all hover:shadow-md",
+                  "p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:border-opacity-80 active:scale-[0.99] touch-manipulation cursor-pointer",
                   option.bgColor,
                   option.borderColor
                 )}
@@ -150,7 +150,7 @@ export default function ContextualCrossSell({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn("gap-1", option.borderColor)}
+                  className={cn("gap-1 rounded-xl active:scale-[0.95] transition-all duration-200 touch-manipulation", option.borderColor)}
                   onClick={() => handleCrossSellClick(option)}
                 >
                   {option.cta}
@@ -175,7 +175,7 @@ export default function ContextualCrossSell({
         <Badge
           key={option.type}
           variant="outline"
-          className={cn("cursor-pointer hover:shadow-sm transition-all gap-1 py-1.5", option.borderColor)}
+          className={cn("cursor-pointer hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 gap-1 py-1.5 px-3 rounded-lg touch-manipulation", option.borderColor)}
           onClick={() => handleCrossSellClick(option)}
         >
           <option.icon className={cn("w-3 h-3", option.textColor)} />

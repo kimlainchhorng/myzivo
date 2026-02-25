@@ -78,11 +78,11 @@ const NewsletterSignup = () => {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 w-full sm:w-[280px] bg-card/80 border-border/50"
+                    className="pl-10 h-12 w-full sm:w-[280px] bg-card/80 border-border/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                     required
                   />
                 </div>
-                <Button type="submit" size="lg" className="gap-2 h-12">
+                <Button type="submit" size="lg" className="gap-2 h-12 rounded-xl font-bold shadow-lg active:scale-[0.97] transition-all duration-200 touch-manipulation">
                   Subscribe <Send className="w-4 h-4" />
                 </Button>
               </form>

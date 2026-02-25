@@ -49,7 +49,7 @@ const CountdownTimer = ({
   }
 
   return (
-    <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+    <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
       <div className="flex items-center justify-center gap-2 mb-3">
         <Zap className="w-5 h-5 text-red-400 animate-pulse" />
         <span className="font-medium text-red-400">{label}</span>
@@ -62,7 +62,7 @@ const CountdownTimer = ({
           { value: timeLeft.seconds, label: "SEC" },
         ].map((unit, index) => (
           <div key={unit.label} className="flex items-center gap-2">
-            <div className="bg-card/80 backdrop-blur-sm rounded-lg px-4 py-2 min-w-[60px]">
+            <div className="bg-card/80 backdrop-blur-sm rounded-xl px-4 py-2 min-w-[60px] shadow-sm">
               <p className="text-2xl font-bold font-mono">{formatNumber(unit.value)}</p>
               <p className="text-[10px] text-muted-foreground">{unit.label}</p>
             </div>

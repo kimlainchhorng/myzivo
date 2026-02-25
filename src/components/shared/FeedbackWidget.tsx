@@ -83,7 +83,7 @@ export function FeedbackWidget({
         <PopoverTrigger asChild>
           <Button
             size="lg"
-            className="rounded-full shadow-lg h-12 w-12 p-0"
+            className="rounded-full shadow-xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-110 active:scale-90 touch-manipulation"
             variant="default"
           >
             <MessageSquare className="w-5 h-5" />
@@ -113,7 +113,7 @@ export function FeedbackWidget({
                 <div className="flex gap-3">
                   <Button
                     variant={rating === "positive" ? "default" : "outline"}
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 rounded-xl h-10 active:scale-95 transition-all duration-200 touch-manipulation"
                     onClick={() => handleQuickFeedback("positive")}
                   >
                     <ThumbsUp className="w-4 h-4" />
@@ -121,7 +121,7 @@ export function FeedbackWidget({
                   </Button>
                   <Button
                     variant={rating === "negative" ? "destructive" : "outline"}
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 rounded-xl h-10 active:scale-95 transition-all duration-200 touch-manipulation"
                     onClick={() => handleQuickFeedback("negative")}
                   >
                     <ThumbsDown className="w-4 h-4" />
@@ -132,7 +132,7 @@ export function FeedbackWidget({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full text-muted-foreground"
+                  className="w-full text-muted-foreground rounded-xl active:scale-95 transition-all duration-200 touch-manipulation mt-2"
                   onClick={() => setShowDetails(true)}
                 >
                   <AlertTriangle className="w-3.5 h-3.5 mr-2" />
@@ -149,13 +149,13 @@ export function FeedbackWidget({
                     placeholder="What could we improve?"
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    rows={3}
+                    className="resize-none rounded-xl focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation"
                     onClick={() => {
                       setShowDetails(false);
                       setRating(null);
@@ -164,7 +164,7 @@ export function FeedbackWidget({
                     Back
                   </Button>
                   <Button
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 rounded-xl shadow-md active:scale-95 transition-all duration-200 touch-manipulation"
                     onClick={() => submitFeedback(rating || "negative", feedback)}
                     disabled={isSubmitting}
                   >
@@ -212,14 +212,14 @@ export function InlineFeedback({
       <div className="flex gap-1">
         <button
           onClick={() => handleFeedback(true)}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors"
+          className="p-1.5 rounded-lg hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
           aria-label="Yes, helpful"
         >
           <ThumbsUp className="w-4 h-4 text-muted-foreground hover:text-emerald-500" />
         </button>
         <button
           onClick={() => handleFeedback(false)}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors"
+          className="p-1.5 rounded-lg hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
           aria-label="No, not helpful"
         >
           <ThumbsDown className="w-4 h-4 text-muted-foreground hover:text-red-500" />

@@ -112,7 +112,7 @@ export function ResumeBookingBanner({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         className={cn(
-          "bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-sky-500/10 border border-sky-500/20 rounded-xl overflow-hidden",
+          "bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-sky-500/10 border border-sky-500/20 rounded-2xl overflow-hidden shadow-sm",
           className
         )}
       >
@@ -145,7 +145,7 @@ export function ResumeBookingBanner({
 
             <div className="flex items-center gap-2 shrink-0">
               <Link to={latestBooking.checkoutUrl}>
-                <Button size="sm" className="bg-sky-500 hover:bg-sky-600 gap-1.5">
+                <Button size="sm" className="bg-sky-500 hover:bg-sky-600 gap-1.5 rounded-xl shadow-md active:scale-[0.95] transition-all duration-200 touch-manipulation">
                   Resume Booking
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
@@ -155,7 +155,7 @@ export function ResumeBookingBanner({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsDismissed(true)}
-                className="w-8 h-8 p-0 text-muted-foreground hover:text-foreground"
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-foreground rounded-full active:scale-90 transition-all duration-200 touch-manipulation"
               >
                 <X className="w-4 h-4" />
               </Button>

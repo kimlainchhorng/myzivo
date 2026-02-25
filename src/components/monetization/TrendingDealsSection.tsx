@@ -85,7 +85,7 @@ export default function TrendingDealsSection({
           <Card
             key={deal.id}
             className={cn(
-              "group hover:shadow-lg hover:border-sky-500/50 transition-all duration-300 cursor-pointer overflow-hidden",
+              "group hover:shadow-xl hover:scale-[1.02] hover:border-sky-500/50 transition-all duration-300 cursor-pointer overflow-hidden rounded-2xl touch-manipulation active:scale-[0.98]",
               variant === "carousel" && "min-w-[280px] snap-start"
             )}
             onClick={() => handleDealClick(deal)}
@@ -139,7 +139,7 @@ export default function TrendingDealsSection({
               {/* CTA - Internal navigation */}
               <div className="flex gap-2">
                 <Button
-                  className="flex-1 gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
+                  className="flex-1 gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDealClick(deal);

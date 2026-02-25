@@ -57,7 +57,7 @@ export function FavoriteButton({
       disabled={isToggling}
       whileTap={{ scale: 0.9 }}
       className={cn(
-        "rounded-full flex items-center justify-center backdrop-blur-md border transition-all",
+        "rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-200 active:scale-90 touch-manipulation",
         isFav
           ? "bg-red-500/20 border-red-500/30 text-red-500"
           : "bg-white/10 border-white/10 text-white/70 hover:text-white hover:bg-white/20",

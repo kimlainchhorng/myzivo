@@ -106,7 +106,7 @@ export default function ExitIntentPrompt({
           {/* Close Button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors"
+            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted active:scale-90 transition-all duration-200 touch-manipulation"
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -140,7 +140,7 @@ export default function ExitIntentPrompt({
 
             <Button
               size="lg"
-              className="w-full gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 mb-3"
+              className="w-full gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 mb-3 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
               onClick={handleCompareClick}
             >
               <TrendingDown className="w-4 h-4" />

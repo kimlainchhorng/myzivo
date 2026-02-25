@@ -195,7 +195,7 @@ export function PriceAlertModal({
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                     required
                   />
                 </div>
@@ -203,7 +203,7 @@ export function PriceAlertModal({
 
               <Button 
                 type="submit" 
-                className="w-full gap-2" 
+                className="w-full gap-2 rounded-xl h-11 font-semibold shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
