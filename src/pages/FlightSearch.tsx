@@ -38,33 +38,36 @@ const FadeInSection = ({ children, className, delay = 0 }: { children: React.Rea
   </motion.div>
 );
 
-// Flight Stats Bar
+// Flight Stats Bar — Premium card style
 const FlightStatsBar = () => {
   const stats = [
-    { icon: Plane, value: "500+", label: "Airlines" },
-    { icon: Globe, value: "190+", label: "Countries" },
-    { icon: Users, value: "2M+", label: "Searches/mo" },
-    { icon: Star, value: "4.8", label: "Rating" },
+    { icon: Plane, value: "500+", label: "Airlines", borderColor: "border-t-[hsl(var(--flights))]", iconBg: "bg-[hsl(var(--flights-light))]", iconColor: "text-[hsl(var(--flights))]" },
+    { icon: Globe, value: "190+", label: "Countries", borderColor: "border-t-primary", iconBg: "bg-primary/10", iconColor: "text-primary" },
+    { icon: Users, value: "2M+", label: "Searches/mo", borderColor: "border-t-[hsl(var(--cars))]", iconBg: "bg-[hsl(var(--cars-light))]", iconColor: "text-[hsl(var(--cars))]" },
+    { icon: Star, value: "4.8", label: "Rating", borderColor: "border-t-amber-500", iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
   ];
 
   return (
-    <section className="py-8 border-b border-border/30 bg-gradient-to-r from-sky-500/5 via-transparent to-blue-500/5">
+    <section className="py-10 border-b border-border/30">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        <p className="text-center text-sm font-medium text-muted-foreground mb-6">Trusted by millions of travelers</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="text-center group"
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="text-center"
             >
-              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500/15 transition-all duration-300 float-gentle" style={{ animationDelay: `${i * 200}ms` }}>
-                <stat.icon className="w-6 h-6 text-sky-500" />
+              <div className={`p-6 card-premium border-t-[3px] ${stat.borderColor}`}>
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
+                  <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
               </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
             </motion.div>
           ))}
         </div>

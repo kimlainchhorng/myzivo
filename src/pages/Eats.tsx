@@ -54,10 +54,10 @@ const howItWorks = [
 ];
 
 const eatsStats = [
-  { icon: UtensilsCrossed, value: "5,000+", label: "Restaurants" },
-  { icon: Users, value: "1M+", label: "Orders Delivered" },
-  { icon: Zap, value: "25 min", label: "Avg Delivery" },
-  { icon: Star, value: "4.9", label: "App Rating" },
+  { icon: UtensilsCrossed, value: "5,000+", label: "Restaurants", borderColor: "border-t-[hsl(var(--eats))]", iconBg: "bg-[hsl(var(--eats-light))]", iconColor: "text-[hsl(var(--eats))]" },
+  { icon: Users, value: "1M+", label: "Orders Delivered", borderColor: "border-t-primary", iconBg: "bg-primary/10", iconColor: "text-primary" },
+  { icon: Zap, value: "25 min", label: "Avg Delivery", borderColor: "border-t-amber-500", iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+  { icon: Star, value: "4.9", label: "App Rating", borderColor: "border-t-emerald-500", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
 ];
 
 export default function Eats() {
@@ -116,16 +116,19 @@ export default function Eats() {
         </section>
 
         {/* Stats Bar */}
-        <section className="py-10 bg-gradient-to-r from-eats/5 via-transparent to-orange-500/5 border-y border-border/30">
+        <section className="py-10 border-y border-border/30">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <p className="text-center text-sm font-medium text-muted-foreground mb-6">Delivering happiness every day</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
               {eatsStats.map((stat, i) => (
-                <motion.div key={stat.label} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }} className="text-center group">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-eats/10 border border-eats/20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 float-gentle" style={{ animationDelay: `${i * 200}ms` }}>
-                    <stat.icon className="w-6 h-6 text-eats" />
+                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} className="text-center">
+                  <div className={`p-6 card-premium border-t-[3px] ${stat.borderColor}`}>
+                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
+                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
