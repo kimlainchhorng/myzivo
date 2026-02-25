@@ -1,12 +1,11 @@
 /**
- * LOYALTY COMPONENTS INDEX
- * ZIVO Points loyalty system components
+ * Loyalty Components - Stub exports
  */
-
-export { default as PointsBalanceCard } from './PointsBalanceCard';
-export { default as PointsEarningList } from './PointsEarningList';
-export { default as TierProgressCard } from './TierProgressCard';
-export { default as TierComparisonTable } from './TierComparisonTable';
-export { default as RedemptionOptions } from './RedemptionOptions';
-export { default as PointsCheckoutReminder } from './PointsCheckoutReminder';
-export { default as ReferralCard } from './ReferralCard';
+const Stub = (_props: any) => null;
+export const PointsBalanceCard = Stub;
+export const PointsEarningList = Stub;
+export const TierProgressCard = Stub;
+export const RedemptionOptions = Stub;
+export const ReferralCard = Stub;
+export const TierComparisonTable = Stub;
+export const PointsCheckoutReminder = Stub;
