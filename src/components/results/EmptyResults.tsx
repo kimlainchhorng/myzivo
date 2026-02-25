@@ -171,7 +171,7 @@ export function EmptyResults({
           {onClearFilters && (
             <Button
               onClick={onClearFilters}
-              className={cn("gap-2 text-white font-semibold", config.bg)}
+              className={cn("gap-2 text-white font-semibold rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg", config.bg)}
             >
               <FilterX className="w-4 h-4" />
               Clear All Filters
@@ -179,7 +179,7 @@ export function EmptyResults({
           )}
           
           {onRetry && (
-            <Button variant="outline" onClick={onRetry} className="gap-2">
+            <Button variant="outline" onClick={onRetry} className="gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200">
               <RefreshCw className="w-4 h-4" />
               Retry Search
             </Button>
@@ -229,7 +229,7 @@ export function EmptyResults({
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           {onRetry && (
-            <Button variant="outline" onClick={onRetry} className="gap-2">
+            <Button variant="outline" onClick={onRetry} className="gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200">
               <RefreshCw className="w-4 h-4" />
               Try Again
             </Button>
@@ -307,7 +307,7 @@ export function EmptyResults({
             <Card 
               key={idx}
               className={cn(
-                "overflow-hidden transition-all hover:shadow-lg cursor-pointer",
+                "overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer rounded-2xl active:scale-[0.98] touch-manipulation",
                 idx === 1 && "ring-2 ring-amber-500/50 shadow-lg"
               )}
               onClick={partnerCta?.onClick}
@@ -343,7 +343,7 @@ export function EmptyResults({
           <Button
             onClick={partnerCta.onClick}
             size="lg"
-            className={cn("gap-2 text-white font-semibold px-8", config.bg)}
+            className={cn("gap-2 text-white font-semibold px-8 rounded-xl min-h-[48px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg hover:shadow-xl", config.bg)}
           >
             {partnerCta.label || "Continue to secure booking"}
             <ExternalLink className="w-4 h-4" />
@@ -352,7 +352,7 @@ export function EmptyResults({
 
         {onRetry && (
           <div>
-            <Button variant="outline" onClick={onRetry} className="gap-2">
+            <Button variant="outline" onClick={onRetry} className="gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200">
               <RefreshCw className="w-4 h-4" />
               Refresh Results
             </Button>

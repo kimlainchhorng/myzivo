@@ -229,7 +229,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
             </div>
             <Button
               onClick={() => onViewDeal(car)}
-              className="mt-3 w-full gap-2 font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-primary-foreground"
+              className="mt-3 w-full gap-2 font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-primary-foreground rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
             >
               Book with Provider
               <ExternalLink className="w-4 h-4" />

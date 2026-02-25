@@ -122,7 +122,7 @@ export function EditSearchTrigger({ onClick, service, className }: EditSearchTri
       size="sm"
       onClick={onClick}
       className={cn(
-        "gap-2 transition-colors",
+        "gap-2 transition-all duration-200 rounded-xl active:scale-95 touch-manipulation",
         buttonColors[service],
         className
       )}

@@ -49,7 +49,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <Card 
-            className="overflow-hidden border-border/50 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group"
+            className="overflow-hidden border-border/50 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group active:scale-[0.99] touch-manipulation rounded-2xl"
             onClick={handleClick}
           >
             {/* Top Banner */}
@@ -88,7 +88,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
                   
                   <Button 
                     size="lg"
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 touch-manipulation"
+                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 shadow-md shadow-purple-500/20"
                   >
                     <Luggage className="w-5 h-5" />
                     Find Storage Near You

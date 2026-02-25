@@ -80,7 +80,7 @@ export default function AirportTransfersSection({ className = '', destination }:
           {transferCards.map((partner, index) => (
             <Card 
               key={partner.id}
-              className="group cursor-pointer border-border/50 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+              className="group cursor-pointer border-border/50 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 active:scale-[0.98] touch-manipulation"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handlePartnerClick(partner)}
             >
@@ -108,7 +108,7 @@ export default function AirportTransfersSection({ className = '', destination }:
                     
                     <Button 
                       size="sm"
-                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 touch-manipulation"
+                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
                     >
                       Book Transfer
                       <ExternalLink className="w-3 h-3" />

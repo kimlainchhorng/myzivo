@@ -78,7 +78,7 @@ export const deliverySortOptions: SortOption[] = [
 export function SortSelect({ value, onValueChange, options, className }: SortSelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={cn("w-[160px] h-9 text-sm", className)}>
+      <SelectTrigger className={cn("w-[160px] h-10 text-sm rounded-xl border-border/50 bg-background/50 backdrop-blur-sm transition-all duration-200 hover:border-primary/30 hover:bg-muted/30 active:scale-[0.98] touch-manipulation", className)}>
         <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>

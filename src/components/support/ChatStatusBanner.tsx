@@ -55,7 +55,7 @@ export function ChatStatusBanner({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 p-3 rounded-xl border",
+        "flex items-center justify-between gap-3 p-3 rounded-2xl border transition-all duration-200",
         config.bgClass,
         className
       )}
@@ -75,7 +75,7 @@ export function ChatStatusBanner({
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="shrink-0 text-muted-foreground hover:text-foreground"
+          className="shrink-0 text-muted-foreground hover:text-foreground rounded-xl touch-manipulation active:scale-95 transition-all duration-200"
         >
           Cancel
         </Button>

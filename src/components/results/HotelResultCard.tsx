@@ -170,7 +170,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
             </div>
             <Button
               onClick={() => onViewDeal(hotel)}
-              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-white"
+              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-white rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
             >
               Book with Provider
               <ExternalLink className="w-4 h-4" />

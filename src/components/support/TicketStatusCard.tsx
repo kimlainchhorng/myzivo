@@ -76,7 +76,7 @@ function TicketItem({ ticket }: { ticket: SupportTicket }) {
   const Icon = config.icon;
 
   return (
-    <div className="p-4 rounded-lg border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+    <div className="p-4 rounded-2xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200 active:scale-[0.99] touch-manipulation">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className={cn("p-2 rounded-lg", config.bg)}>
@@ -129,7 +129,7 @@ export function TicketStatusCard({ orderId, className }: TicketStatusCardProps) 
             Support Tickets
           </h3>
           <Link to="/support/tickets">
-            <Button variant="ghost" size="sm" className="text-xs">
+            <Button variant="ghost" size="sm" className="text-xs rounded-xl hover:bg-primary/10 transition-all duration-200 active:scale-[0.95]">
               View All
               <ChevronRight className="w-3 h-3 ml-1" />
             </Button>

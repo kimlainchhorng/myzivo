@@ -149,7 +149,7 @@ export function FlightRefundRequest({ booking }: FlightRefundRequestProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation shadow-sm">
           <RefreshCcw className="w-4 h-4" />
           Request Refund
         </Button>
@@ -208,12 +208,13 @@ export function FlightRefundRequest({ booking }: FlightRefundRequestProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button variant="outline" onClick={() => setIsOpen(false)} className="rounded-xl active:scale-95 transition-all duration-200 touch-manipulation">
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!reason.trim() || requestRefund.isPending}
+            className="rounded-xl active:scale-95 transition-all duration-200 touch-manipulation shadow-md shadow-primary/20"
           >
             {requestRefund.isPending ? (
               <>

@@ -85,7 +85,7 @@ export function FiltersSheet({
               Filters
             </SheetTitle>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground gap-1.5">
+              <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground gap-1.5 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation">
                 <RotateCcw className="w-4 h-4" />
                 Reset All
               </Button>
@@ -98,13 +98,13 @@ export function FiltersSheet({
         </ScrollArea>
 
         <SheetFooter className="border-t border-border/50 pt-4 gap-3 sm:gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 rounded-xl h-12 active:scale-[0.97] transition-all duration-200 touch-manipulation">
             Cancel
           </Button>
           <Button
             onClick={handleApply}
             disabled={isLoading}
-            className={cn("flex-1 text-white font-semibold", colors.button)}
+            className={cn("flex-1 text-white font-semibold rounded-xl h-12 active:scale-[0.97] transition-all duration-200 touch-manipulation shadow-lg", colors.button)}
           >
             {isLoading ? (
               <>
@@ -139,7 +139,7 @@ export function FiltersTrigger({ onClick, activeCount = 0, service = "flights", 
       variant="outline"
       size="sm"
       onClick={onClick}
-      className={cn("lg:hidden gap-2", className)}
+      className={cn("lg:hidden gap-2 rounded-xl h-10 px-4 shadow-sm border-border/50 bg-background/50 backdrop-blur-sm active:scale-95 transition-all duration-200 touch-manipulation", className)}
     >
       <SlidersHorizontal className="w-4 h-4" />
       Filters

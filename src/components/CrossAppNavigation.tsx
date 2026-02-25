@@ -43,7 +43,7 @@ const CrossAppNavigation = ({ currentApp = "main" }: CrossAppNavigationProps) =>
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isRedirecting}>
+        <Button variant="outline" size="sm" disabled={isRedirecting} className="gap-2 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation min-h-[36px]">
           {isRedirecting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (

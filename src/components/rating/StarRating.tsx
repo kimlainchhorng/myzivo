@@ -46,7 +46,7 @@ const StarRating = ({
             onClick={() => handleClick(star)}
             disabled={disabled}
             className={cn(
-              "transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
+              "transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full p-1 touch-manipulation active:scale-90",
               disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:scale-110"
             )}
             aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}

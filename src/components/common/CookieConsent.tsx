@@ -1,3 +1,7 @@
+/**
+ * CookieConsent - Cookie Consent Banner
+ */
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -112,14 +116,14 @@ const CookieConsent = () => {
                       </p>
                       <div className="flex flex-wrap gap-3">
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30">
+                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                             Accept All
                           </Button>
                         </motion.div>
-                        <Button variant="outline" onClick={handleRejectAll} className="font-semibold">
+                        <Button variant="outline" onClick={handleRejectAll} className="font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                           Reject All
                         </Button>
-                        <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2 font-semibold">
+                        <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2 font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                           <Settings className="h-4 w-4" />
                           Customize
                         </Button>
@@ -129,7 +133,7 @@ const CookieConsent = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0 rounded-xl hover:bg-destructive/10"
+                        className="shrink-0 rounded-xl hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
                         onClick={handleRejectAll}
                       >
                         <X className="h-4 w-4" />
@@ -147,7 +151,7 @@ const CookieConsent = () => {
                       <h3 className="font-display font-bold text-xl">Cookie Preferences</h3>
                     </div>
                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                      <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)} className="rounded-xl">
+                      <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)} className="rounded-xl active:scale-90 transition-all duration-200 touch-manipulation">
                         <X className="h-4 w-4" />
                       </Button>
                     </motion.div>
@@ -176,6 +180,7 @@ const CookieConsent = () => {
                             setPreferences((prev) => ({ ...prev, [category.key]: checked }))
                           }
                           disabled={category.required}
+                          className="data-[state=checked]:bg-primary touch-manipulation"
                         />
                       </motion.div>
                     ))}
@@ -183,11 +188,11 @@ const CookieConsent = () => {
 
                   <div className="flex gap-3">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
-                      <Button onClick={handleSavePreferences} className="w-full bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30">
+                      <Button onClick={handleSavePreferences} className="w-full bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                         Save Preferences
                       </Button>
                     </motion.div>
-                    <Button variant="outline" onClick={handleAcceptAll} className="flex-1 font-semibold">
+                    <Button variant="outline" onClick={handleAcceptAll} className="flex-1 font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                       Accept All
                     </Button>
                   </div>

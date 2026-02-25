@@ -145,7 +145,7 @@ export function LiveChatInput({
           placeholder={placeholder}
           disabled={disabled || isPending}
           className={cn(
-            "min-h-[44px] max-h-[120px] resize-none",
+            "min-h-[44px] max-h-[120px] resize-none rounded-2xl py-3 px-4 shadow-sm focus-visible:ring-primary/20 transition-all duration-200",
             !onUploadImage && "flex-1"
           )}
           rows={1}
@@ -160,7 +160,7 @@ export function LiveChatInput({
             uploadingImage
           }
           size="icon"
-          className="shrink-0 h-11 w-11"
+          className="shrink-0 h-11 w-11 rounded-xl touch-manipulation active:scale-90 transition-all duration-200 shadow-md shadow-primary/20"
         >
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
