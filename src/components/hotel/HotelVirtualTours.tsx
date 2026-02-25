@@ -178,11 +178,11 @@ const HotelVirtualTours = () => {
                       : "bg-card/50 border border-border/50 hover:border-primary/30"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                     <img 
                       src={tour.thumbnail}
                       alt={tour.hotel}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <div className="flex-1 text-left">

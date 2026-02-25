@@ -54,7 +54,7 @@ const TravelCalendar = () => {
               <div
                 key={month.name}
                 className={cn(
-                  "relative p-3 rounded-xl border text-center transition-all hover:scale-105",
+                  "relative p-3 rounded-xl border text-center transition-all duration-200 hover:scale-110 hover:shadow-lg touch-manipulation active:scale-95",
                   priceColors[month.priceLevel],
                   index === currentMonth && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                 )}
@@ -114,7 +114,7 @@ const TravelCalendar = () => {
             <div
               key={tip.title}
               className={cn(
-                "p-4 rounded-xl border",
+                "p-4 rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
                 tip.color === "green" && "bg-green-500/10 border-green-500/20",
                 tip.color === "amber" && "bg-amber-500/10 border-amber-500/20",
                 tip.color === "violet" && "bg-violet-500/10 border-violet-500/20"

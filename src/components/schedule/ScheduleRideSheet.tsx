@@ -169,7 +169,7 @@ export function ScheduleRideSheet({
                       key={slot}
                       onClick={() => setTime(slot)}
                       className={cn(
-                        "text-xs py-2 px-1 rounded-lg font-medium transition-all",
+                        "text-xs py-2 px-1 rounded-xl font-medium transition-all duration-200 touch-manipulation active:scale-95",
                         time === slot
                           ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
                           : "bg-white border border-zinc-200 text-zinc-700 hover:border-emerald-300"

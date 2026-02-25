@@ -90,7 +90,7 @@ export const CheckoutModal = ({
       <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <LockKeyhole className="w-4 h-4 text-emerald-500" />
             </div>
             <span>Secure Checkout</span>
@@ -153,7 +153,7 @@ export const CheckoutModal = ({
                     "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-2 peer-data-[state=checked]:bg-primary/10">
+                   <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-2 peer-data-[state=checked]:bg-primary/10">
                     <CreditCard className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-medium">Card</span>
@@ -173,7 +173,7 @@ export const CheckoutModal = ({
                     "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-2 peer-data-[state=checked]:bg-primary/10">
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-2 peer-data-[state=checked]:bg-primary/10">
                     <Wallet className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-medium">Wallet</span>
@@ -246,7 +246,7 @@ export const CheckoutModal = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-muted/50 rounded-lg p-4 text-center"
+                className="bg-muted/50 rounded-xl p-4 text-center"
               >
                 <div className="flex items-center justify-center gap-4 mb-2">
                   <div className="w-12 h-8 bg-black rounded flex items-center justify-center text-white text-xs font-bold">
@@ -293,7 +293,7 @@ export const CheckoutModal = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg py-2"
+            className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-xl py-2"
           >
             <Shield className="w-3.5 h-3.5 text-emerald-500" />
             <span>256-bit SSL encrypted • PCI compliant</span>

@@ -114,7 +114,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
               <img
                 src={brandedCar.src}
                 alt={`${brandedCar.brand} ${brandedCar.model}`}
-                className="w-full h-full object-contain max-h-32 transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-contain max-h-32 transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
               />
             ) : car.imageUrl ? (

@@ -51,7 +51,7 @@ export default function CitySelector() {
           <button
             onClick={handleDetectLocation}
             disabled={isDetecting}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left disabled:opacity-50"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-all duration-200 text-left disabled:opacity-50 touch-manipulation active:scale-[0.98]"
           >
             {isDetecting ? (
               <Loader2 className="w-4 h-4 text-primary animate-spin" />
@@ -73,7 +73,7 @@ export default function CitySelector() {
                 key={city.id}
                 onClick={() => handleSelectCity(city)}
                 className={cn(
-                  "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left",
+                  "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-all duration-200 text-left touch-manipulation active:scale-[0.98]",
                   selectedCity?.id === city.id && "bg-muted"
                 )}
               >

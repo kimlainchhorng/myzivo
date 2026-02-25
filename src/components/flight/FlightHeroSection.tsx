@@ -310,7 +310,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
 
                 <Button
                   onClick={onSearch}
-                  className="h-14 px-12 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold text-lg shadow-xl shadow-sky-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/60 hover:scale-105 active:scale-[0.98] rounded-xl"
+                  className="h-14 px-12 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold text-lg shadow-xl shadow-sky-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/60 hover:scale-110 active:scale-[0.97] rounded-xl touch-manipulation"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Flights

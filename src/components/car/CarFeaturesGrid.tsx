@@ -159,9 +159,9 @@ const sections: FeatureSection[] = [
 
 function FeatureCard({ item }: { item: FeatureItem }) {
   const content = (
-    <div className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-border hover:bg-card/80 transition-all group">
-      <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-violet-500/10 transition-colors">
-        <span className="text-muted-foreground group-hover:text-violet-400 transition-colors">
+    <div className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-border hover:bg-card/80 transition-all duration-200 hover:shadow-sm group touch-manipulation active:scale-[0.98]">
+      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-violet-500/10 group-hover:scale-110 transition-all duration-200">
+        <span className="text-muted-foreground group-hover:text-violet-400 transition-all duration-200">
           {item.icon}
         </span>
       </div>
