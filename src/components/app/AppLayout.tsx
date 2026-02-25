@@ -3,7 +3,7 @@
  * Mobile-first shell with header and bottom navigation
  */
 import { ReactNode } from "react";
-import AppBottomNav from "./AppBottomNav";
+import ZivoMobileNav from "./ZivoMobileNav";
 import AppHeader from "./AppHeader";
 import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import OfflineBanner from "@/components/shared/OfflineBanner";
@@ -36,7 +36,7 @@ const AppLayout = ({
   const { isOnline } = useNetworkStatus();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overscroll-none tap-highlight-none">
       {!hideHeader && (
         <AppHeader 
           title={title}
@@ -54,15 +54,15 @@ const AppLayout = ({
       <OfflineBanner isOffline={!isOnline} />
 
       <main className={cn(
-        "flex-1",
+        "flex-1 scroll-momentum",
         !hideHeader && "pt-14",
-        !hideNav && "pb-20",
+        !hideNav && "pb-nav",
         className
       )}>
         {children}
       </main>
 
-      {!hideNav && <AppBottomNav />}
+      {!hideNav && <ZivoMobileNav />}
     </div>
   );
 };

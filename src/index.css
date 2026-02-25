@@ -286,6 +286,60 @@
     padding-top: max(env(safe-area-inset-top, 0px), 20px);
   }
 
+  /* Mobile-native overscroll behavior */
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+
+  .overscroll-none {
+    overscroll-behavior: none;
+  }
+
+  /* Native-like scroll snap for carousels */
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .snap-y-mandatory {
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  /* Prevent text selection on interactive elements (native feel) */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* iOS-style momentum scrolling */
+  .scroll-momentum {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+
+  /* Mobile touch target - ensures 48px minimum */
+  .touch-target {
+    min-width: 48px;
+    min-height: 48px;
+    @apply flex items-center justify-center touch-manipulation;
+  }
+
+  /* Native-like tap highlight */
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Bottom nav spacer — adds space for fixed bottom nav */
+  .pb-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
   /* Premium Card Styles */
   .card-elevated {
     @apply bg-card rounded-2xl shadow-md border border-border/50;
