@@ -53,30 +53,33 @@ const trustBadges = [
 // Hotel Stats Bar
 const HotelStatsBar = () => {
   const stats = [
-    { icon: Hotel, value: "2M+", label: "Properties" },
-    { icon: Globe, value: "150+", label: "Countries" },
-    { icon: Star, value: "4.8", label: "Avg Rating" },
-    { icon: BadgeDollarSign, value: "30%", label: "Avg Savings" },
+    { icon: Hotel, value: "2M+", label: "Properties", borderColor: "border-t-[hsl(var(--hotels))]", iconBg: "bg-[hsl(var(--hotels-light))]", iconColor: "text-[hsl(var(--hotels))]" },
+    { icon: Globe, value: "150+", label: "Countries", borderColor: "border-t-primary", iconBg: "bg-primary/10", iconColor: "text-primary" },
+    { icon: Star, value: "4.8", label: "Avg Rating", borderColor: "border-t-amber-500", iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    { icon: BadgeDollarSign, value: "30%", label: "Avg Savings", borderColor: "border-t-emerald-500", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
   ];
 
   return (
-    <section className="py-8 bg-gradient-to-r from-amber-500/5 via-transparent to-orange-500/5">
+    <section className="py-10">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        <p className="text-center text-sm font-medium text-muted-foreground mb-6">The world's best hotels at your fingertips</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="text-center group"
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="text-center"
             >
-              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-hotels/10 border border-hotels/20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 float-gentle" style={{ animationDelay: `${i * 200}ms` }}>
-                <stat.icon className="w-6 h-6 text-hotels" />
+              <div className={`p-6 card-premium border-t-[3px] ${stat.borderColor}`}>
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
+                  <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
               </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
             </motion.div>
           ))}
         </div>

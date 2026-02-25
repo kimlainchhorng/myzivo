@@ -176,6 +176,31 @@ export default function Cars() {
       <Header />
 
       <main className="pt-20 pb-16">
+        {/* Cars Stats Bar */}
+        <section className="py-10 border-b border-border/30 mb-8">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-sm font-medium text-muted-foreground mb-6">Your peer-to-peer car marketplace</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
+              {[
+                { icon: Car, value: "10K+", label: "Vehicles", borderColor: "border-t-[hsl(var(--cars))]", iconBg: "bg-[hsl(var(--cars-light))]", iconColor: "text-[hsl(var(--cars))]" },
+                { icon: Users, value: "50K+", label: "Owners", borderColor: "border-t-primary", iconBg: "bg-primary/10", iconColor: "text-primary" },
+                { icon: Star, value: "4.9", label: "Avg Rating", borderColor: "border-t-amber-500", iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+                { icon: Shield, value: "100%", label: "Insured", borderColor: "border-t-emerald-500", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+              ].map((stat, i) => (
+                <div key={stat.label} className="text-center">
+                  <div className={`p-6 card-premium border-t-[3px] ${stat.borderColor}`}>
+                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
+                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <div className="mb-8">
