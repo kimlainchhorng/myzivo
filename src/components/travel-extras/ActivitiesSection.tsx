@@ -100,7 +100,7 @@ export default function ActivitiesSection({ className = '', destination }: Activ
                       {provider.logo}
                     </div>
                     <div>
-                      <h3 className="font-bold text-base group-hover:text-emerald-500 transition-colors">
+                      <h3 className="font-bold text-base group-hover:text-emerald-500 transition-all duration-200">
                         {provider.name}
                       </h3>
                       <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-500">

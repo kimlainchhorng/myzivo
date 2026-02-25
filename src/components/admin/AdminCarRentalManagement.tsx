@@ -396,7 +396,7 @@ const AdminCarRentalManagement = () => {
                       filteredCars.map((car, index) => (
                         <TableRow
                           key={car.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell>
@@ -537,7 +537,7 @@ const AdminCarRentalManagement = () => {
                       filteredRentals.slice(0, 15).map((rental, index) => (
                         <TableRow
                           key={rental.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell className="font-mono font-medium text-sm">{rental.id.slice(0, 8)}...</TableCell>

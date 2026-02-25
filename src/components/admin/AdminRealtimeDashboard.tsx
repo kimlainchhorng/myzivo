@@ -27,7 +27,7 @@ export default function AdminRealtimeDashboard() {
         <Card className="bg-gradient-to-br from-primary/10 to-teal-500/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Zap className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -40,7 +40,7 @@ export default function AdminRealtimeDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
                 <Activity className="h-5 w-5 text-cyan-500" />
               </div>
               <div>
@@ -53,7 +53,7 @@ export default function AdminRealtimeDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                 <Server className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
@@ -66,7 +66,7 @@ export default function AdminRealtimeDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                 <Map className="h-5 w-5 text-violet-500" />
               </div>
               <div>

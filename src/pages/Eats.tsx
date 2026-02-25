@@ -199,7 +199,7 @@ export default function Eats() {
             <div className="container mx-auto px-4">
               <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-                  <img src={serviceEats} alt="ZIVO Eats food delivery" className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                  <img src={serviceEats} alt="ZIVO Eats food delivery" className="w-full aspect-[4/3] object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold mb-6">Delivery Made <span className="text-eats">Delicious</span></h2>

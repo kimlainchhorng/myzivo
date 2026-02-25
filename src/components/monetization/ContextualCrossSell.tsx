@@ -175,7 +175,7 @@ export default function ContextualCrossSell({
         <Badge
           key={option.type}
           variant="outline"
-          className={cn("cursor-pointer hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 gap-1 py-1.5 px-3 rounded-lg touch-manipulation", option.borderColor)}
+          className={cn("cursor-pointer hover:shadow-md hover:scale-110 active:scale-95 transition-all duration-200 gap-1 py-1.5 px-3 rounded-xl touch-manipulation", option.borderColor)}
           onClick={() => handleCrossSellClick(option)}
         >
           <option.icon className={cn("w-3 h-3", option.textColor)} />

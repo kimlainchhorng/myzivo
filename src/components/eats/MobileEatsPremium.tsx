@@ -290,7 +290,7 @@ export default function MobileEatsPremium() {
               {restaurant.cover_image_url ? (
                 <img 
                   src={restaurant.cover_image_url} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   alt={restaurant.name}
                   loading="lazy"
                 />

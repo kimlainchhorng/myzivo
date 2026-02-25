@@ -44,7 +44,7 @@ const CarRentalSettings = () => {
       {/* Header */}
       <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform hover:scale-105 hover:rotate-3">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform hover:scale-110 hover:rotate-3">
             <Settings className="h-6 w-6 text-primary" />
           </div>
           <div>
@@ -81,7 +81,7 @@ const CarRentalSettings = () => {
               {/* Logo Upload */}
               <div className="flex items-center gap-6">
                 <div 
-                  className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/50 transition-all hover:scale-105"
+                  className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/50 transition-all hover:scale-110"
                 >
                   <Car className="h-10 w-10 text-primary/60" />
                 </div>

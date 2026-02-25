@@ -207,7 +207,7 @@
                <div className="w-[1px] h-8 bg-border/50 dark:bg-white/10" />
                <button
                  onClick={handleSwap}
-                 className="absolute w-8 h-8 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-muted transition-colors hover:rotate-180 duration-500"
+                 className="absolute w-8 h-8 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-muted transition-all duration-200 hover:rotate-180 duration-500"
                >
                  <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
                </button>

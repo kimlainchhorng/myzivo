@@ -32,7 +32,7 @@ export function ThemeToggle({ onChange }: ThemeToggleProps) {
           key={value}
           onClick={() => handleChange(value)}
           className={cn(
-            "flex flex-col items-center gap-2 px-3 py-3 rounded-xl transition-colors touch-manipulation active:scale-[0.98]",
+            "flex flex-col items-center gap-2 px-3 py-3 rounded-xl transition-all duration-200 touch-manipulation active:scale-[0.98]",
             theme === value
               ? "bg-primary/10 text-primary ring-1 ring-primary/30"
               : "hover:bg-muted bg-muted/30"

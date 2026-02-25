@@ -31,7 +31,7 @@ const SimulatedLocationBanner = ({ onDismiss, className = "" }: SimulatedLocatio
         </div>
         <button
           onClick={handleDismiss}
-          className="text-yellow-400/60 hover:text-yellow-400 transition-colors p-1"
+          className="text-yellow-400/60 hover:text-yellow-400 transition-all duration-200 p-1"
           aria-label="Dismiss"
         >
           <X className="w-4 h-4" />
