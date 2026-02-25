@@ -119,7 +119,7 @@ export default function HowItWorks() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((item, index) => (
                 <div key={item.step} className="relative">
-                  <Card className={cn("h-full border-2", item.borderColor)}>
+                  <Card className={cn("h-full border-2 hover:shadow-lg hover:-translate-y-1 transition-all duration-300", item.borderColor)}>
                     <CardContent className="p-8">
                       {/* Step Number */}
                       <div className={cn(
@@ -161,7 +161,7 @@ export default function HowItWorks() {
               </div>
               
               <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
-                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
                     <Search className="w-5 h-5 text-sky-500" />
                   </div>
@@ -173,7 +173,7 @@ export default function HowItWorks() {
                 
                 <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
                 
-                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
                     <Sparkles className="w-5 h-5 text-violet-500" />
                   </div>
@@ -185,7 +185,7 @@ export default function HowItWorks() {
                 
                 <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
                 
-                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-emerald-500" />
                   </div>
@@ -197,7 +197,7 @@ export default function HowItWorks() {
                 
                 <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
                 
-                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
                     <CheckCircle2 className="w-5 h-5 text-amber-500" />
                   </div>
@@ -222,7 +222,7 @@ export default function HowItWorks() {
             
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit) => (
-                <Card key={benefit.title} className="text-center border-border/50">
+                <Card key={benefit.title} className="text-center border-border/50 hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-6">
                     <benefit.icon className={cn("w-10 h-10 mx-auto mb-4", benefit.color)} />
                     <h3 className="font-bold mb-2">{benefit.title}</h3>
