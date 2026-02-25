@@ -1,0 +1,94 @@
+/**
+ * FeaturedEatsSection - Food delivery cards with ratings
+ */
+import { useState } from "react";
+import { Star, Clock, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+const categories = ["All", "American", "Italian", "Asian", "Mexican"];
+
+const foods = [
+  { name: "Classic Burger", restaurant: "Joe's Grill", price: 12.99, rating: 4.7, time: "20-30 min", category: "American", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400" },
+  { name: "Margherita Pizza", restaurant: "Bella Napoli", price: 14.99, rating: 4.9, time: "25-35 min", category: "Italian", image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400" },
+  { name: "Pad Thai", restaurant: "Thai Palace", price: 13.50, rating: 4.6, time: "20-30 min", category: "Asian", image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&q=80&w=400" },
+  { name: "Chicken Tacos", restaurant: "El Azteca", price: 10.99, rating: 4.8, time: "15-25 min", category: "Mexican", image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400" },
+];
+
+export default function FeaturedEatsSection() {
+  const [active, setActive] = useState("All");
+  const filtered = active === "All" ? foods : foods.filter((f) => f.category === active);
+
+  return (
+    <section className="py-16 sm:py-20 bg-muted/30">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
+        >
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
+              Order <span className="text-primary">Food Delivery</span>
+            </h2>
+            <p className="text-muted-foreground">Delicious food from local restaurants, delivered fast.</p>
+          </div>
+          <Link to="/eats" className="text-primary font-semibold text-sm inline-flex items-center gap-1 hover:gap-2 transition-all">
+            View all <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+
+        <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setActive(c)}
+              className={cn(
+                "px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                active === c
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filtered.map((food, i) => (
+            <motion.div
+              key={food.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+            >
+              <Link
+                to="/eats"
+                className="group block bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="aspect-[16/10] overflow-hidden">
+                  <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-bold text-base mb-1">{food.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{food.restaurant}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {food.rating}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {food.time}</span>
+                    </div>
+                    <p className="font-bold text-base">${food.price}</p>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

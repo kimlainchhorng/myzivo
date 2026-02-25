@@ -1,11 +1,11 @@
 /**
  * NavBar - ZIVO Desktop Navigation
- * Premium glassmorphism nav with enhanced hover effects
+ * Clean white nav with centered service tabs
  */
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Plane, Hotel, CarFront, 
+  Plane, Hotel, CarFront, Car, UtensilsCrossed,
   Menu, X, User, ChevronDown, HelpCircle, ExternalLink,
   Sparkles, Users, Award, Crown
 } from "lucide-react";
@@ -24,10 +24,12 @@ import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-const mainNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane, color: "text-sky-500" },
-  { label: "Hotels", href: "/hotels", icon: Hotel, color: "text-amber-500" },
-  { label: "Cars", href: "/rent-car", icon: CarFront, color: "text-violet-500" },
+const serviceNavItems = [
+  { label: "Flights", href: "/flights", icon: Plane },
+  { label: "Hotels", href: "/hotels", icon: Hotel },
+  { label: "Cars", href: "/rent-car", icon: CarFront },
+  { label: "Rides", href: "/rides", icon: Car },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed },
 ];
 
 const moreItems = [
@@ -55,7 +57,7 @@ export default function NavBar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -74,21 +76,16 @@ export default function NavBar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background",
         scrolled
-          ? "bg-[hsl(222_47%_11%/0.97)] backdrop-blur-2xl shadow-xl border-b border-primary/15"
-          : "bg-[hsl(222_47%_11%/0.85)] backdrop-blur-lg border-b border-border/30"
+          ? "shadow-md border-b border-border/50"
+          : "border-b border-border/30"
       )}>
-        {/* Subtle gradient line at bottom when scrolled */}
-        {scrolled && (
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        )}
-        
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <motion.div
-              className="cursor-pointer"
+              className="cursor-pointer shrink-0"
               onClick={() => navigate("/")}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -96,28 +93,19 @@ export default function NavBar() {
               <ZivoLogo size="md" />
             </motion.div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-0.5">
-              {mainNavItems.map((item) => (
+            {/* Center: Service Tabs */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {serviceNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 group"
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 group"
                 >
-                  <item.icon className={cn("w-4 h-4 transition-transform duration-200 group-hover:scale-110", item.color)} />
+                  <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   {item.label}
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-6 transition-all duration-300" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-8 transition-all duration-300" />
                 </Link>
               ))}
-
-              <Link
-                to="/help"
-                className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 group"
-              >
-                <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                Help
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-6 transition-all duration-300" />
-              </Link>
 
               {/* More Dropdown */}
               <div ref={moreRef} className="relative">
@@ -126,8 +114,8 @@ export default function NavBar() {
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
                     moreOpen 
-                      ? "text-white bg-white/10" 
-                      : "text-white/70 hover:text-white hover:bg-white/10"
+                      ? "text-foreground bg-muted/50" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
                   More
@@ -139,7 +127,7 @@ export default function NavBar() {
                     initial={{ opacity: 0, y: -5, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full right-0 mt-2 w-72 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl p-2"
+                    className="absolute top-full right-0 mt-2 w-72 bg-card border border-border/50 rounded-2xl shadow-xl p-2"
                   >
                     {moreItems.map((item) => (
                       <Link
@@ -160,6 +148,22 @@ export default function NavBar() {
                     
                     <div className="border-t border-border/50 my-2" />
                     
+                    <Link
+                      to="/help"
+                      onClick={() => setMoreOpen(false)}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                        <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">Help Center</p>
+                        <p className="text-xs text-muted-foreground">FAQs & support</p>
+                      </div>
+                    </Link>
+
+                    <div className="border-t border-border/50 my-2" />
+                    
                     <div className="px-3 py-2">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Legal</p>
                       <div className="flex flex-wrap gap-2">
@@ -178,19 +182,9 @@ export default function NavBar() {
                   </motion.div>
                 )}
               </div>
-
-              <a
-                href="https://zivodriver.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
-              >
-                Rides / Eats / Move
-                <ExternalLink className="w-3 h-3 opacity-50" />
-              </a>
             </nav>
 
-            {/* Desktop Auth */}
+            {/* Right: Auth */}
             <div className="hidden md:flex items-center gap-3">
               {user ? (
                 <DropdownMenu>
@@ -198,10 +192,10 @@ export default function NavBar() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="gap-2 rounded-xl hover:bg-white/10"
+                      className="gap-2 rounded-xl"
                     >
                       <div className="relative">
-                        <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center border border-primary/20">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         {isMember && (
@@ -216,44 +210,21 @@ export default function NavBar() {
                   <DropdownMenuContent align="end" className="w-48 rounded-2xl">
                     {isMember && (
                       <>
-                        <DropdownMenuItem
-                          onClick={() => navigate("/account/membership")}
-                          className="cursor-pointer text-amber-500"
-                        >
-                          <Crown className="w-4 h-4 mr-2" />
-                          ZIVO+ Member
+                        <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer text-amber-500">
+                          <Crown className="w-4 h-4 mr-2" /> ZIVO+ Member
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     )}
-                    <DropdownMenuItem
-                      onClick={() => navigate("/profile")}
-                      className="cursor-pointer"
-                    >
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/trips")}
-                      className="cursor-pointer"
-                    >
-                      My Trips
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">My Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer">My Trips</DropdownMenuItem>
                     {!isMember && (
-                      <DropdownMenuItem
-                        onClick={() => navigate("/membership")}
-                        className="cursor-pointer text-amber-500"
-                      >
-                        <Crown className="w-4 h-4 mr-2" />
-                        Join ZIVO+
+                      <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer text-amber-500">
+                        <Crown className="w-4 h-4 mr-2" /> Join ZIVO+
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => signOut()}
-                      className="text-destructive cursor-pointer"
-                    >
-                      Sign out
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">Sign out</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
@@ -262,14 +233,14 @@ export default function NavBar() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/login")}
-                    className="rounded-xl font-medium text-white/80 hover:text-white hover:bg-white/10"
+                    className="rounded-xl font-medium text-foreground"
                   >
                     Log in
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => navigate("/signup")}
-                    className="rounded-xl font-semibold bg-primary text-primary-foreground glow-green-btn hover:bg-primary/90 hover:scale-[1.03] transition-all duration-200"
+                    className="rounded-full font-semibold px-5"
                   >
                     Sign up
                   </Button>
@@ -316,15 +287,15 @@ export default function NavBar() {
             </div>
 
             <nav className="p-4 space-y-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Travel</p>
-              {mainNavItems.map((item) => (
+              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Services</p>
+              {serviceNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
                 >
-                  <item.icon className={cn("w-5 h-5", item.color)} />
+                  <item.icon className="w-5 h-5 text-muted-foreground" />
                   {item.label}
                 </Link>
               ))}
@@ -340,17 +311,6 @@ export default function NavBar() {
                 Help Center
               </Link>
 
-              <a
-                href="https://zivodriver.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
-              >
-                <ExternalLink className="w-5 h-5 text-muted-foreground" />
-                Rides / Eats / Move
-              </a>
-              
               <div className="border-t border-border my-3" />
               
               <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">More</p>
@@ -382,7 +342,7 @@ export default function NavBar() {
               ) : (
                 <div className="space-y-2">
                   <Button
-                    className="w-full rounded-xl glow-green-btn"
+                    className="w-full rounded-xl"
                     onClick={() => {
                       navigate("/signup");
                       setIsMobileMenuOpen(false);
