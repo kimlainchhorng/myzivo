@@ -175,7 +175,7 @@ const PressKitAssets = () => {
                   )}
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground p-4 rounded-xl bg-muted/30 border border-border/50">
+              <p className="text-sm text-muted-foreground p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 {text}
               </p>
             </div>

@@ -158,7 +158,7 @@ const HizovoCars = () => {
               {carResults.map((car) => (
                 <div 
                   key={car.id}
-                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex gap-3">
                     <div className="w-24 h-20 bg-muted rounded-xl flex items-center justify-center text-4xl flex-shrink-0">

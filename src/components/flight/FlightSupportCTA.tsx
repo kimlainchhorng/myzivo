@@ -20,7 +20,7 @@ export default function FlightSupportCTA({ className, variant = 'default' }: Fli
   
   return (
     <div className={cn(
-      "flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-xl bg-muted/30 border border-border/50",
+      "flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
       isCompact ? "py-2.5 px-3" : "py-3 px-4",
       className
     )}>

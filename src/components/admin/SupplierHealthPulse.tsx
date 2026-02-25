@@ -66,7 +66,7 @@
      <motion.div
        initial={{ opacity: 0, y: 10 }}
        animate={{ opacity: 1, y: 0 }}
-       className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50"
+       className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
      >
        <div className="flex items-center gap-3">
          <PulseIndicator status={supplier.status} />

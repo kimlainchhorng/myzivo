@@ -207,7 +207,7 @@ export default function CompetitiveMoat() {
               {AI_MOAT.capabilities.map((cap, i) => (
                 <div
                   key={i}
-                  className="p-4 rounded-lg bg-card border border-border/50"
+                  className="p-4 rounded-lg bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <p className="font-medium mb-1">{cap.title}</p>
                   <p className="text-sm text-muted-foreground">{cap.description}</p>

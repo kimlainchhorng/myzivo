@@ -92,7 +92,7 @@ const MultiCityPlanner = ({ className }: MultiCityPlannerProps) => {
                 <div className="absolute left-5 top-12 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 to-primary/20 z-0" />
               )}
               
-              <div className="relative flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+              <div className="relative flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 {/* Drag Handle */}
                 <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
                 

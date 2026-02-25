@@ -71,7 +71,7 @@ const HotelGuestReviews = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Score Overview */}
           <div className="lg:col-span-1">
-            <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm sticky top-24">
+            <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm sticky top-24 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 mb-3">
                   <span className="text-3xl font-bold text-white">{overallScore}</span>

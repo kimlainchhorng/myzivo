@@ -286,7 +286,7 @@ export default function FiveYearVision() {
             {CORE_VISION.pillars.map((pillar) => (
               <div
                 key={pillar.title}
-                className="p-4 rounded-xl bg-card border border-border/50 text-center"
+                className="p-4 rounded-xl bg-card border border-border/50 text-center hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <pillar.icon className="w-8 h-8 text-primary mx-auto mb-2" />
                 <h4 className="font-semibold text-sm mb-1">{pillar.title}</h4>

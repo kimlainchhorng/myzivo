@@ -44,7 +44,7 @@ export default function SocialProofSection() {
             <div
               key={point.title}
               className={cn(
-                "text-center p-6 rounded-xl bg-muted/30 border border-border/50",
+                "text-center p-6 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
                 "animate-in fade-in zoom-in-95"
               )}
               style={{ animationDelay: `${index * 100}ms` }}

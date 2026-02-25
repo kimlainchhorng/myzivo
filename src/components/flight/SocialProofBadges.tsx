@@ -131,7 +131,7 @@ export function SocialProofSection({ routeStats, className }: SocialProofSection
 
   return (
     <div className={cn(
-      "p-3 rounded-xl bg-muted/30 border border-border/50",
+      "p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
       className
     )}>
       <div className="flex flex-wrap items-center gap-3">
