@@ -252,7 +252,7 @@ export default function NavBar() {
                   <Button
                     size="sm"
                     onClick={() => navigate("/signup")}
-                    className="rounded-full font-semibold px-5"
+                    className="rounded-full font-semibold px-5 shadow-[0_0_15px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.4)] transition-shadow"
                   >
                     Sign up
                   </Button>
