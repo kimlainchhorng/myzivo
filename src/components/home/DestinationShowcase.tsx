@@ -65,7 +65,7 @@ export default function DestinationShowcase() {
             >
               <Link
                 to={`/flights?to=${encodeURIComponent(dest.city)}`}
-                className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30 block shadow-sm hover:shadow-lg transition-all duration-300"
+                className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30 block shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300"
               >
                 <img
                   src={dest.image}

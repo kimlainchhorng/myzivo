@@ -159,7 +159,7 @@ const Footer = ({ className }: { className?: string }) => {
             {/* Back to top */}
             <button
               onClick={scrollToTop}
-              className="group/top inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-primary active:scale-95 transition-all"
+              className="group/top inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-primary px-3 py-1.5 rounded-full border border-white/10 hover:border-primary/30 active:scale-95 transition-all"
             >
               <ChevronUp className="w-4 h-4 group-hover/top:-translate-y-0.5 transition-transform" /> Back to Top
             </button>

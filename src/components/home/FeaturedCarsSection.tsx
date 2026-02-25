@@ -46,7 +46,7 @@ export default function FeaturedCarsSection() {
             <button
               key={f}
               onClick={() => setActive(f)}
-              className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap")}
+              className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all")}
             >
               {f}
             </button>

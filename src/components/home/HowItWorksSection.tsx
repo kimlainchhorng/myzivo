@@ -94,7 +94,7 @@ export default function HowItWorksSection() {
         >
           <Button
             size="lg"
-            className="rounded-full px-8 gap-2 font-semibold"
+            className="rounded-full px-8 gap-2 font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow"
             onClick={() => navigate("/flights")}
           >
             Start Searching <ArrowRight className="w-4 h-4" />
