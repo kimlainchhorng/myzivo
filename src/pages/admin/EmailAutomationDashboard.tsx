@@ -349,7 +349,7 @@ export default function EmailAutomationDashboard() {
           </Card>
 
           {/* Compliance Notice */}
-          <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border/50 text-center">
+          <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border/50 text-center">
             <p className="text-sm text-muted-foreground">
               <CheckCircle2 className="w-4 h-4 inline mr-1 text-emerald-500" />
               All emails are informational and booking-related only. Users can manage preferences in their account settings.

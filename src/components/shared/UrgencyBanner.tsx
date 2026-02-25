@@ -105,7 +105,7 @@ export function UrgencyBanner({
   return (
     <div
       className={cn(
-        "relative flex items-center justify-between gap-3 px-4 py-3 rounded-lg border",
+        "relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl border",
         config.bgColor,
         config.borderColor,
         sticky && "sticky top-0 z-40",
@@ -123,7 +123,7 @@ export function UrgencyBanner({
 
       <div className="flex items-center gap-2 shrink-0">
         {onAction && (
-          <Button size="sm" onClick={onAction} className="h-8 rounded-lg font-semibold shadow-sm active:scale-95 transition-all duration-200 touch-manipulation">
+          <Button size="sm" onClick={onAction} className="h-8 rounded-xl font-semibold shadow-sm active:scale-95 transition-all duration-200 touch-manipulation">
             Book Now
           </Button>
         )}

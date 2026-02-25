@@ -103,7 +103,7 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
         {/* Companions List */}
         <div className="space-y-2">
           {/* You (organizer) */}
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-3 p-2 rounded-xl bg-primary/5 border border-primary/20">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 You
@@ -122,7 +122,7 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
           {companions.map((companion) => (
             <div
               key={companion.id}
-              className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+              className="flex items-center gap-3 p-2 rounded-xl bg-muted/30"
             >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="text-xs">
@@ -148,7 +148,7 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
 
         {/* Invite Form */}
         {showInviteForm ? (
-          <div className="space-y-2 p-3 rounded-lg bg-muted/30">
+          <div className="space-y-2 p-3 rounded-xl bg-muted/30">
             <div className="flex gap-2">
               <Input
                 type="email"
@@ -184,10 +184,10 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
         )}
 
         {/* Share Link */}
-        <div className="p-3 rounded-lg bg-muted/30 space-y-2">
+        <div className="p-3 rounded-xl bg-muted/30 space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Or share link:</p>
           <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-background border text-sm">
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-background border text-sm">
               <Link className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="truncate text-muted-foreground">{shareLink}</span>
             </div>

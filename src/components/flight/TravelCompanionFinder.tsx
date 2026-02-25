@@ -441,7 +441,7 @@ const TravelCompanionFinder = ({
             {seatSwapRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-background border"
+                className="flex items-center justify-between p-3 rounded-xl bg-background border"
               >
                 <div className="flex items-center gap-3">
                   <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
@@ -511,7 +511,7 @@ const TravelCompanionFinder = ({
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">Your seat</p>
                     <p className="font-bold text-lg">{currentSeat}</p>

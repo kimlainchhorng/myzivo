@@ -174,7 +174,7 @@ const CustomerOverview = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05 }}
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 group cursor-pointer">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-3">

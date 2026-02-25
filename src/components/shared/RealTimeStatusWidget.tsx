@@ -93,7 +93,7 @@ const RealTimeStatusWidget = ({
       </div>
 
       {/* Flight Status Bar */}
-      <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-sky-500/10 border border-emerald-500/20 mb-4">
+      <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-sky-500/10 border border-emerald-500/20 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Plane className="w-4 h-4 text-emerald-400" />
@@ -118,9 +118,9 @@ const RealTimeStatusWidget = ({
           return (
             <div
               key={update.id}
-              className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors"
+              className="flex items-start gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors"
             >
-              <div className={cn("p-1.5 rounded-lg", statusColors[update.status])}>
+              <div className={cn("p-1.5 rounded-xl", statusColors[update.status])}>
                 <Icon className="w-3 h-3" />
               </div>
               <div className="flex-1 min-w-0">

@@ -176,7 +176,7 @@ export const FlightPaymentModal = ({
       <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <LockKeyhole className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
             </div>
             <span>Secure Payment</span>
@@ -188,10 +188,10 @@ export const FlightPaymentModal = ({
           <motion.div 
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg p-3 bg-gradient-to-br from-sky-500/10 to-sky-500/5 border border-sky-500/25"
+            className="rounded-xl p-3 bg-gradient-to-br from-sky-500/10 to-sky-500/5 border border-sky-500/25"
           >
             <div className="flex items-start gap-2.5 mb-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-sky-500/15 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/15 flex items-center justify-center">
                 <Plane className="w-4 h-4 text-sky-500" />
               </div>
               <div className="flex-1">
@@ -272,7 +272,7 @@ export const FlightPaymentModal = ({
                   <Label
                     htmlFor={value}
                     className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border bg-card/50 p-2 sm:p-2.5 cursor-pointer transition-all touch-manipulation active:scale-95",
+                      "flex flex-col items-center justify-center rounded-xl border bg-card/50 p-2 sm:p-2.5 cursor-pointer transition-all touch-manipulation active:scale-95",
                       "hover:bg-muted/50 hover:border-primary/30",
                       "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
                     )}
@@ -412,7 +412,7 @@ export const FlightPaymentModal = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-muted/40 rounded-lg p-3 text-center"
+                className="bg-muted/40 rounded-xl p-3 text-center"
               >
                 <div className="flex items-center justify-center gap-3 mb-1.5">
                   {paymentMethod === 'apple-pay' && (
@@ -453,7 +453,7 @@ export const FlightPaymentModal = ({
             transition={{ delay: 0.2 }}
           >
             <Button
-              className="w-full h-10 sm:h-11 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg shadow-sky-500/25 text-sm touch-manipulation active:scale-[0.98]"
+              className="w-full h-10 sm:h-11 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-sky-500/25 text-sm touch-manipulation active:scale-[0.98]"
               onClick={handleConfirm}
               disabled={!isFormValid || isProcessing}
             >

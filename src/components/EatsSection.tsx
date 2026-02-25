@@ -131,7 +131,7 @@ const EatsSection = () => {
           {restaurants.map((restaurant, index) => (
             <div
               key={restaurant.id}
-              className="glass-card overflow-hidden hover:border-eats/50 transition-all duration-300 cursor-pointer group animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 active:scale-[0.98]"
+              className="glass-card overflow-hidden hover:border-eats/50 transition-all duration-200 cursor-pointer group animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 active:scale-[0.98]"
               style={{ animationDelay: `${200 + index * 100}ms`, animationFillMode: 'both' }}
             >
               {/* Image Area */}

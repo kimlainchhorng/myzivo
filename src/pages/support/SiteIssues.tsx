@@ -221,7 +221,7 @@ export default function SiteIssuesSupport() {
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-primary transition-all duration-300"
+                    className="h-full bg-primary transition-all duration-200"
                     style={{ width: `${(completedSteps.size / troubleshootingSteps.length) * 100}%` }}
                   />
                 </div>
@@ -270,7 +270,7 @@ export default function SiteIssuesSupport() {
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {['Chrome 90+', 'Firefox 88+', 'Safari 14+', 'Edge 90+'].map((browser) => (
-                  <div key={browser} className="p-3 rounded-lg bg-muted/50 text-center">
+                  <div key={browser} className="p-3 rounded-xl bg-muted/50 text-center">
                     <p className="text-sm font-medium">{browser}</p>
                   </div>
                 ))}

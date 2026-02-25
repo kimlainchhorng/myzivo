@@ -94,7 +94,7 @@ const FlightDestinationInspiration = () => {
               }}
               className={cn(
                 "group relative p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
-                "text-left transition-all duration-300 hover:border-sky-500/30 hover:shadow-xl",
+                "text-left transition-all duration-200 hover:border-sky-500/30 hover:shadow-xl",
                 "touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}

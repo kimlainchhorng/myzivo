@@ -129,7 +129,7 @@ const TravelServicesSection = () => {
                 <Button 
                   size="lg"
                   onClick={() => navigate("/flights")}
-                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 transition-all duration-300"
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 transition-all duration-200"
                 >
                   Search Flights
                   <ArrowRight className="w-5 h-5 ml-2" />

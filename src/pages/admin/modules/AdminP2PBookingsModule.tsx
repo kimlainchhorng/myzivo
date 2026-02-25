@@ -102,7 +102,7 @@ export default function AdminP2PBookingsModule() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <Car className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -115,7 +115,7 @@ export default function AdminP2PBookingsModule() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <Clock className="w-5 h-5 text-amber-500" />
               </div>
               <div>
@@ -128,7 +128,7 @@ export default function AdminP2PBookingsModule() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
+              <div className="p-2 rounded-xl bg-emerald-500/10">
                 <CheckCircle className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
@@ -141,7 +141,7 @@ export default function AdminP2PBookingsModule() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <DollarSign className="w-5 h-5 text-green-500" />
               </div>
               <div>
@@ -295,7 +295,7 @@ export default function AdminP2PBookingsModule() {
                 const status = statusConfig[selectedBooking.status as keyof typeof statusConfig] || statusConfig.pending;
                 const StatusIcon = status.icon;
                 return (
-                  <div className={`p-4 rounded-lg ${status.bg}`}>
+                  <div className={`p-4 rounded-xl ${status.bg}`}>
                     <div className="flex items-center gap-3">
                       <StatusIcon className={`w-6 h-6 ${status.color}`} />
                       <div>

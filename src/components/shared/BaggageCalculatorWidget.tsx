@@ -92,7 +92,7 @@ const BaggageCalculatorWidget = ({
       </div>
 
       {/* Bag Counter */}
-      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <div>
           <p className="text-sm font-medium">Checked Bags</p>
           <p className="text-xs text-muted-foreground">Max {maxBagsAllowed} bags per passenger</p>
@@ -131,7 +131,7 @@ const BaggageCalculatorWidget = ({
               max="32"
               value={currentWeight}
               onChange={(e) => handleWeightChange(Number(e.target.value))}
-              className="w-20 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+              className="w-20 h-2 bg-muted rounded-xl appearance-none cursor-pointer"
             />
             <span className={cn(
               "font-bold text-sm w-12 text-right",
@@ -153,7 +153,7 @@ const BaggageCalculatorWidget = ({
 
       {/* Weight Status */}
       {isOverweight ? (
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 mb-4">
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span className="text-sm font-medium text-red-400">Overweight</span>
@@ -163,7 +163,7 @@ const BaggageCalculatorWidget = ({
           </p>
         </div>
       ) : (
-        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mb-4">
+        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-medium text-emerald-400">Within Limit</span>
@@ -175,7 +175,7 @@ const BaggageCalculatorWidget = ({
       )}
 
       {/* Cost Summary */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
         <p className="text-xs text-muted-foreground mb-2">Baggage Summary</p>
         <div className="space-y-1">
           {bags.map((bag) => (

@@ -162,7 +162,7 @@ export const PriceLock = ({
                 >
                   <RadioGroupItem value={option.id} id={option.id} />
                   
-                  <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
                     <Timer className="w-5 h-5 text-primary" />
                   </div>
                   

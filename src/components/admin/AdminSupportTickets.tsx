@@ -265,7 +265,7 @@ const AdminSupportTickets = () => {
           statusFilter === "open" && "ring-2 ring-blue-500"
         )} onClick={() => setStatusFilter(statusFilter === "open" ? "all" : "open")}>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <Inbox className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -279,7 +279,7 @@ const AdminSupportTickets = () => {
           statusFilter === "in_progress" && "ring-2 ring-amber-500"
         )} onClick={() => setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")}>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Clock className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -293,7 +293,7 @@ const AdminSupportTickets = () => {
           statusFilter === "resolved" && "ring-2 ring-green-500"
         )} onClick={() => setStatusFilter(statusFilter === "resolved" ? "all" : "resolved")}>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <CheckCircle className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -307,7 +307,7 @@ const AdminSupportTickets = () => {
           priorityFilter === "urgent" && "ring-2 ring-red-500"
         )} onClick={() => setPriorityFilter(priorityFilter === "urgent" ? "all" : "urgent")}>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-red-500/10">
+            <div className="p-2 rounded-xl bg-red-500/10">
               <Zap className="h-5 w-5 text-red-500" />
             </div>
             <div>
@@ -318,7 +318,7 @@ const AdminSupportTickets = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10">
+            <div className="p-2 rounded-xl bg-cyan-500/10">
               <Headphones className="h-5 w-5 text-cyan-500" />
             </div>
             <div>
@@ -453,22 +453,22 @@ const AdminSupportTickets = () => {
             <div className="flex-1 overflow-hidden flex flex-col">
               {/* Ticket Info */}
               <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-muted/30">
+                <div className="p-2 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">Status</p>
                   <StatusBadge status={selectedTicket.status} />
                 </div>
-                <div className="p-2 rounded-lg bg-muted/30">
+                <div className="p-2 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">Priority</p>
                   <PriorityBadge priority={selectedTicket.priority} />
                 </div>
-                <div className="p-2 rounded-lg bg-muted/30">
+                <div className="p-2 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">Category</p>
                   <p className="text-sm font-medium capitalize">{selectedTicket.category}</p>
                 </div>
               </div>
 
               {/* Original Message */}
-              <div className="p-3 rounded-lg bg-muted/30 mb-4">
+              <div className="p-3 rounded-xl bg-muted/30 mb-4">
                 <p className="text-xs text-muted-foreground mb-1">Original Message</p>
                 <p className="text-sm">{selectedTicket.description}</p>
               </div>
@@ -482,7 +482,7 @@ const AdminSupportTickets = () => {
                     <div
                       key={reply.id}
                       className={cn(
-                        "p-3 rounded-lg",
+                        "p-3 rounded-xl",
                         reply.is_admin ? "bg-primary/5 ml-6" : "bg-muted/30 mr-6"
                       )}
                     >

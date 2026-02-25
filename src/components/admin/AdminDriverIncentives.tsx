@@ -183,7 +183,7 @@ const AdminDriverIncentives = () => {
             <Card 
               key={incentive.id}
               className={cn(
-                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300",
+                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200",
                 !incentive.isActive && "opacity-60"
               )}
               style={{ animationDelay: `${index * 75}ms` }}
@@ -277,7 +277,7 @@ const AdminDriverIncentives = () => {
           return (
             <Card 
               key={type}
-              className="border-0 bg-card/30 backdrop-blur-sm border-dashed border-2 border-border/50 hover:border-primary/50 hover:bg-card/50 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-300"
+              className="border-0 bg-card/30 backdrop-blur-sm border-dashed border-2 border-border/50 hover:border-primary/50 hover:bg-card/50 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-200"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-6 flex flex-col items-center justify-center text-center">
