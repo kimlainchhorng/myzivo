@@ -75,7 +75,7 @@ export default function DoNotSell() {
                 To opt out of the sharing of your personal information, you can:
               </p>
               <div className="space-y-3">
-                <div className="p-4 rounded-xl border border-border bg-card">
+                <div className="p-4 rounded-xl border border-border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <h3 className="font-medium mb-1">1. Manage Cookie Preferences</h3>
                   <p className="text-sm text-muted-foreground mb-2">
                     Adjust your cookie settings to limit data sharing with third-party partners.
@@ -88,7 +88,7 @@ export default function DoNotSell() {
                   </Link>
                 </div>
 
-                <div className="p-4 rounded-xl border border-border bg-card">
+                <div className="p-4 rounded-xl border border-border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <h3 className="font-medium mb-1">2. Email Us Directly</h3>
                   <p className="text-sm text-muted-foreground mb-2">
                     Send a request to our privacy team and we will process your opt-out within 15 business days.
@@ -101,7 +101,7 @@ export default function DoNotSell() {
                   </a>
                 </div>
 
-                <div className="p-4 rounded-xl border border-border bg-card">
+                <div className="p-4 rounded-xl border border-border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <h3 className="font-medium mb-1">3. Account Privacy Controls</h3>
                   <p className="text-sm text-muted-foreground mb-2">
                     If you have a ZIVO account, manage your privacy preferences in your account settings.
