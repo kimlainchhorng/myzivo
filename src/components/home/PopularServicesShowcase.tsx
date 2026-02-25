@@ -113,7 +113,7 @@ const PopularServicesShowcase = () => {
                   <Icon className="w-7 h-7 text-white" />
                 </div>
 
-                <h3 className="font-display text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                <h3 className="font-display text-xl font-bold mb-2 group-hover:text-primary transition-all duration-200">
                   {service.title}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">

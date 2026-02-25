@@ -109,7 +109,7 @@ export default function NavBar() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
-                    <item.icon className={cn("w-4 h-4 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
+                    <item.icon className={cn("w-4 h-4 transition-all duration-200", isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     {item.label}
                     <span className={cn(
                       "absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300",
@@ -163,7 +163,7 @@ export default function NavBar() {
                     <Link
                       to="/help"
                       onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200"
                     >
                       <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
                         <HelpCircle className="w-4 h-4 text-muted-foreground" />
@@ -184,7 +184,7 @@ export default function NavBar() {
                             key={item.href}
                             to={item.href}
                             onClick={() => setMoreOpen(false)}
-                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                            className="text-xs text-muted-foreground hover:text-primary transition-all duration-200"
                           >
                             {item.label}
                           </Link>

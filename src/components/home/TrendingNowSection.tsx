@@ -122,7 +122,7 @@ const TrendingNowSection = () => {
               
               {/* Content */}
               <div className="p-5">
-                <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-all duration-200">
                   {item.title}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-3">{item.subtitle}</p>

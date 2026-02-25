@@ -201,9 +201,9 @@ export const AirportGuide = ({
         <div className="p-4 border-b border-border/50 bg-muted/20">
           <div className="flex items-center justify-between">
             {SERVICES.map(service => (
-              <div key={service.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-muted/30 transition-all duration-150">
+              <div key={service.id} className="flex items-center gap-2 text-sm p-1.5 rounded-xl hover:bg-muted/30 transition-all duration-200">
                 <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center",
+                  "w-8 h-8 rounded-xl flex items-center justify-center",
                   service.available 
                     ? "bg-emerald-500/20 text-emerald-400" 
                     : "bg-muted text-muted-foreground"

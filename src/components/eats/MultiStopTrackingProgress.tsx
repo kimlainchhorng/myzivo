@@ -81,7 +81,7 @@ export function MultiStopTrackingProgress({
           <div
             key={index}
             className={cn(
-              "flex items-start gap-3 py-2 px-3 rounded-xl transition-colors",
+              "flex items-start gap-3 py-2 px-3 rounded-xl transition-all duration-200",
               stop.status === "current" && "bg-eats/10 border border-eats/30",
               stop.status === "delivered" && "bg-emerald-500/10",
               stop.status === "pending" && "opacity-60"

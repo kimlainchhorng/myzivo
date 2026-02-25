@@ -50,7 +50,7 @@ const HotelAmenitiesShowcase = () => {
               )}>
                 <amenity.icon className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-semibold text-sm text-center mb-1 group-hover:text-amber-400 transition-colors">
+              <h3 className="font-semibold text-sm text-center mb-1 group-hover:text-amber-400 transition-all duration-200">
                 {amenity.label}
               </h3>
               <p className="text-xs text-muted-foreground text-center">

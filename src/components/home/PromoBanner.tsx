@@ -108,7 +108,7 @@ const PromoBanner = () => {
                   </h3>
                   <p className="text-white/85 text-xs sm:text-sm lg:text-base mb-3 sm:mb-4 font-medium">{promo.subtitle}</p>
                   <div className="flex items-center gap-3 sm:gap-4">
-                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-white/25 backdrop-blur-sm text-white font-mono font-black text-xs sm:text-sm shadow-lg border border-white/20 transition-transform duration-200 hover:scale-105">
+                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-xl bg-white/25 backdrop-blur-sm text-white font-mono font-black text-xs sm:text-sm shadow-lg border border-white/20 transition-transform duration-200 hover:scale-105">
                       {promo.code}
                     </span>
                     <span className="flex items-center gap-1 sm:gap-1.5 text-white/75 text-xs sm:text-sm font-medium">

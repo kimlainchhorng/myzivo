@@ -119,7 +119,7 @@ export default function ScamPrevention() {
             <CardContent>
               <div className="grid sm:grid-cols-3 gap-4">
                 {officialChannels.map((item) => (
-                  <div key={item.channel} className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <div key={item.channel} className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-center">
                     <item.icon className="w-6 h-6 text-green-500 mx-auto mb-2" />
                     <h4 className="font-semibold">{item.channel}</h4>
                     <p className="text-sm text-muted-foreground">{item.value}</p>
@@ -140,7 +140,7 @@ export default function ScamPrevention() {
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-3">
                 {neverAskFor.map((item) => (
-                  <div key={item} className="flex items-center gap-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+                  <div key={item} className="flex items-center gap-3 p-3 rounded-xl bg-red-500/5 border border-red-500/20">
                     <XCircle className="w-4 h-4 text-red-500 shrink-0" />
                     <span className="text-sm">{item}</span>
                   </div>
@@ -160,7 +160,7 @@ export default function ScamPrevention() {
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-4">
                 {scamWarnings.map((scam) => (
-                  <div key={scam.title} className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <div key={scam.title} className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                     <div className="flex items-center gap-3 mb-2">
                       <scam.icon className="w-5 h-5 text-amber-500" />
                       <h4 className="font-semibold">{scam.title}</h4>
@@ -216,7 +216,7 @@ export default function ScamPrevention() {
             <CardContent>
               <div className="space-y-4 mb-6">
                 {reportOptions.map((option) => (
-                  <div key={option.type} className="flex items-start gap-3 p-3 rounded-lg bg-background border border-border">
+                  <div key={option.type} className="flex items-start gap-3 p-3 rounded-xl bg-background border border-border">
                     <Flag className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <div>
                       <h4 className="font-medium text-sm">{option.type}</h4>

@@ -113,7 +113,7 @@ const HotelFeaturedProperties = ({ onSelect }: HotelFeaturedPropertiesProps) => 
                   <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                     {property.tag}
                   </Badge>
-                  <button className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors">
+                  <button className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-all duration-200 active:scale-[0.90] touch-manipulation">
                     <Heart className="w-4 h-4 text-muted-foreground hover:text-red-500" />
                   </button>
                   {property.originalPrice && (
@@ -129,7 +129,7 @@ const HotelFeaturedProperties = ({ onSelect }: HotelFeaturedPropertiesProps) => 
                     <span className="font-bold text-sm">{property.rating}</span>
                     <span className="text-xs text-muted-foreground">({property.reviews.toLocaleString()} reviews)</span>
                   </div>
-                  <h3 className="font-display font-bold text-lg group-hover:text-amber-400 transition-colors">
+                  <h3 className="font-display font-bold text-lg group-hover:text-amber-400 transition-all duration-200">
                     {property.name}
                   </h3>
                   <div className="flex items-center gap-1 text-muted-foreground text-sm mb-3">

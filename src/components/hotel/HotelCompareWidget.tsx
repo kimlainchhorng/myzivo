@@ -50,7 +50,7 @@ const HotelCompareWidget = () => {
             <div key={hotel.id} className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-4">
               <button
                 onClick={() => removeFromCompare(hotel.id)}
-                className="absolute top-2 right-2 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                className="absolute top-2 right-2 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
               >
                 <X className="w-4 h-4" />
               </button>

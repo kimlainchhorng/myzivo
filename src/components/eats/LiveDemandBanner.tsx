@@ -55,7 +55,7 @@ export function LiveDemandBanner({
         {/* Dismiss button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all duration-200"
           aria-label="Dismiss"
         >
           <X className="w-3.5 h-3.5 text-zinc-400" />

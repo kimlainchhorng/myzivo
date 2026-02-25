@@ -109,7 +109,7 @@ const HowItWorks = () => {
                   </span>
                 </div>
 
-                <h3 className="font-display text-base sm:text-lg lg:text-xl xl:text-2xl font-bold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-display text-base sm:text-lg lg:text-xl xl:text-2xl font-bold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-all duration-200">
                   {step.title}
                 </h3>
                 <p className="text-muted-foreground text-[11px] sm:text-xs lg:text-sm xl:text-base leading-relaxed line-clamp-3 sm:line-clamp-none">

@@ -34,7 +34,7 @@ export function BusyRestaurantBanner({
     >
       <button
         onClick={() => setDismissed(true)}
-        className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 hover:bg-amber-500/30 transition-colors"
+        className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 hover:bg-amber-500/30 transition-all duration-200"
         aria-label="Dismiss"
       >
         <X className="w-3.5 h-3.5" />

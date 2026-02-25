@@ -132,7 +132,7 @@ const TripBuilderWidget = ({ destination = "Paris", className }: TripBuilderWidg
               >
                 {/* Checkbox */}
                 <div className={cn(
-                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
+                  "w-6 h-6 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all duration-200",
                   component.selected 
                     ? "bg-primary border-primary" 
                     : "border-muted-foreground/30"

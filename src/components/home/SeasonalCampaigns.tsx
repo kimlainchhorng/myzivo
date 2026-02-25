@@ -96,7 +96,7 @@ const SeasonalCampaigns = () => {
                     <Badge variant="outline" className="mb-2 text-xs">
                       {campaign.season}
                     </Badge>
-                    <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-all duration-200">
                       {campaign.title}
                     </h3>
                     <p className="text-sm text-primary/80 font-medium mb-2">

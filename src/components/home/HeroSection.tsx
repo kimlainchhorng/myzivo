@@ -199,7 +199,7 @@ export default function HeroSection() {
                 variant="outline"
                 size="lg"
                 onClick={scrollToServices}
-                className="h-14 px-7 text-base font-medium rounded-xl hover:bg-muted/50 transition-colors"
+                className="h-14 px-7 text-base font-medium rounded-xl hover:bg-muted/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
               >
                 Explore Services
               </Button>

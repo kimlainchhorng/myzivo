@@ -123,7 +123,7 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                 </div>
                 
                 <div className="flex items-start gap-4 relative">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center ring-4 ring-primary/20 shadow-lg shadow-primary/30 z-10 hover:scale-110 transition-transform">
+                  <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center ring-4 ring-primary/20 shadow-lg shadow-primary/30 z-10 hover:scale-110 transition-transform">
                     <div className="w-2 h-2 bg-white rounded-sm" />
                   </div>
                   <div className="flex-1 min-w-0">

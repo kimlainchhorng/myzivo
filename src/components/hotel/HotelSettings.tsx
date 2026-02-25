@@ -149,21 +149,21 @@ const HotelSettings = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
                 <div>
                   <p className="font-medium">Booking Confirmations</p>
                   <p className="text-sm text-muted-foreground">Receive email confirmations</p>
                 </div>
                 <Switch defaultChecked />
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
                 <div>
                   <p className="font-medium">Check-in Reminders</p>
                   <p className="text-sm text-muted-foreground">24 hours before check-in</p>
                 </div>
                 <Switch defaultChecked />
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
                 <div>
                   <p className="font-medium">Special Offers</p>
                   <p className="text-sm text-muted-foreground">Receive promotional deals</p>

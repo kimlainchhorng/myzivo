@@ -96,7 +96,7 @@ const HotelRewardsSection = () => {
                         ))}
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-400 transition-colors" />
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-400 transition-all duration-200" />
                   </div>
                 </CardContent>
               </Card>
