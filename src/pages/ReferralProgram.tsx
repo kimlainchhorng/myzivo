@@ -118,12 +118,12 @@ export default function ReferralProgram() {
         <section className="py-12 border-y border-border">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              <div className="text-center p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+              <div className="text-center p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                 <Gift className="w-10 h-10 text-amber-500 mx-auto mb-3" />
                 <p className="text-3xl font-bold text-amber-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">ZIVO Points per referral</p>
               </div>
-              <div className="text-center p-6 rounded-2xl bg-violet-500/5 border border-violet-500/20">
+              <div className="text-center p-6 rounded-2xl bg-violet-500/5 border border-violet-500/20 hover:border-violet-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                 <Users className="w-10 h-10 text-violet-500 mx-auto mb-3" />
                 <p className="text-3xl font-bold text-violet-500">{REFERRAL_REWARDS.newUser.points.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Your friend gets too</p>
@@ -169,7 +169,7 @@ export default function ReferralProgram() {
 
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {REFERRAL_REWARDS.referrer.tierBonuses.map((tier) => (
-                <div key={tier.title} className="p-6 rounded-2xl bg-card border border-border text-center">
+                <div key={tier.title} className="p-6 rounded-2xl bg-card border border-border text-center hover:border-primary/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 mx-auto mb-4 flex items-center justify-center text-white font-bold">
                     {tier.count}
                   </div>
@@ -250,7 +250,7 @@ export default function ReferralProgram() {
               <p className="text-muted-foreground mb-6">
                 Create your account and get your unique referral link
               </p>
-              <Button asChild size="lg" className="gap-2">
+              <Button asChild size="lg" className="gap-2 shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-shadow">
                 <Link to="/signup">
                   Get Started
                   <ArrowRight className="w-4 h-4" />

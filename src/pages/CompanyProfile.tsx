@@ -156,7 +156,7 @@ const CompanyProfile = () => {
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-2 gap-4">
                   {businessModel.map((item) => (
-                    <div key={item.title} className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                    <div key={item.title} className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <h4 className="font-semibold mb-2">{item.title}</h4>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
@@ -175,7 +175,7 @@ const CompanyProfile = () => {
                 <CardContent>
                   <div className="grid sm:grid-cols-3 gap-4">
                     {services.map((service) => (
-                      <div key={service.name} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div key={service.name} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:bg-muted/50 transition-all duration-200">
                         <service.icon className="w-5 h-5 text-primary" />
                         <div>
                           <p className="font-medium text-sm">{service.name}</p>
@@ -244,7 +244,7 @@ const CompanyProfile = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {leadership.map((leader) => (
-                    <div key={leader.title} className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                    <div key={leader.title} className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <p className="text-sm text-muted-foreground">{leader.title}</p>
                       <p className="font-semibold">{leader.name}</p>
                       {leader.email && (
