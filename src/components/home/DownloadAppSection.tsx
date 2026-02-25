@@ -1,15 +1,15 @@
 /**
- * Download App Section - Clean white layout with phone mockup
+ * Download App Section - Premium phone mockup with gradient accents
  */
 import { motion } from "framer-motion";
-import { Plane, Bell, Shield, Star, Download } from "lucide-react";
+import { Plane, Bell, Shield, Star, Download, Hotel, CarFront, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 
 const features = [
-  { icon: Plane, text: "Book flights, hotels & cars on the go" },
-  { icon: Bell, text: "Real-time price alerts & notifications" },
-  { icon: Shield, text: "Secure checkout with biometric auth" },
-  { icon: Star, text: "Exclusive app-only deals & rewards" },
+  { icon: Plane, text: "Book flights, hotels & cars on the go", color: "text-[hsl(var(--flights))]", bg: "bg-[hsl(var(--flights-light))]" },
+  { icon: Bell, text: "Real-time price alerts & notifications", color: "text-primary", bg: "bg-primary/10" },
+  { icon: Shield, text: "Secure checkout with biometric auth", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: Star, text: "Exclusive app-only deals & rewards", color: "text-amber-500", bg: "bg-amber-500/10" },
 ];
 
 export default function DownloadAppSection() {
@@ -18,8 +18,11 @@ export default function DownloadAppSection() {
   };
 
   return (
-    <section className="py-16 sm:py-24">
-      <div className="container mx-auto px-4">
+    <section className="py-16 sm:py-24 relative overflow-hidden">
+      {/* Background gradient accent */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,hsl(var(--primary)/0.04)_0%,transparent_70%)] pointer-events-none" />
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
           {/* Left: Content */}
           <motion.div
@@ -50,8 +53,8 @@ export default function DownloadAppSection() {
                   transition={{ duration: 0.3, delay: i * 0.08 }}
                   className="flex items-center gap-3"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <feat.icon className="w-4.5 h-4.5 text-primary" />
+                  <div className={`w-9 h-9 rounded-xl ${feat.bg} flex items-center justify-center shrink-0`}>
+                    <feat.icon className={`w-[18px] h-[18px] ${feat.color}`} />
                   </div>
                   <span className="text-sm font-medium text-foreground/80">{feat.text}</span>
                 </motion.div>
@@ -76,7 +79,7 @@ export default function DownloadAppSection() {
             </div>
           </motion.div>
 
-          {/* Right: Phone mockup */}
+          {/* Right: Premium Phone mockup */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -84,28 +87,44 @@ export default function DownloadAppSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex justify-center"
           >
-            <div className="w-[260px] h-[520px] rounded-[2.5rem] bg-card border-2 border-border/60 shadow-xl overflow-hidden relative">
-              <div className="absolute inset-3 rounded-[2rem] overflow-hidden bg-background">
-                <div className="h-10 bg-primary/10 flex items-center justify-center">
-                  <span className="text-xs font-bold text-primary tracking-[0.2em]">ZIVO</span>
+            <div className="relative">
+              {/* Glow ring behind phone */}
+              <div className="absolute inset-0 scale-110 rounded-[3rem] bg-gradient-to-br from-primary/10 via-transparent to-[hsl(var(--flights)/0.1)] blur-2xl" />
+
+              <div className="w-[260px] h-[520px] rounded-[2.5rem] bg-card border-2 border-border/60 shadow-xl overflow-hidden relative">
+                <div className="absolute inset-3 rounded-[2rem] overflow-hidden bg-background">
+                  {/* Status bar */}
+                  <div className="h-10 bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary tracking-[0.2em]">ZIVO</span>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="h-7 rounded-lg bg-muted/50 w-3/4" />
+                    <div className="h-5 rounded-lg bg-muted/30 w-1/2" />
+                    {/* Mini search card */}
+                    <div className="h-28 rounded-2xl bg-primary/5 border border-primary/10 mt-3 flex items-center justify-center">
+                      <Plane className="w-8 h-8 text-primary/30" />
+                    </div>
+                    {/* Service icons */}
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {[
+                        { icon: Plane, color: "text-[hsl(var(--flights))]" },
+                        { icon: Hotel, color: "text-[hsl(var(--hotels))]" },
+                        { icon: CarFront, color: "text-[hsl(var(--cars))]" },
+                        { icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]" },
+                      ].map((s, i) => (
+                        <div key={i} className="h-14 rounded-xl bg-muted/30 flex items-center justify-center">
+                          <s.icon className={`w-5 h-5 ${s.color} opacity-50`} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-10 rounded-xl bg-primary/15 mt-2 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-primary">Search Flights</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="h-7 rounded-lg bg-muted/50 w-3/4" />
-                  <div className="h-5 rounded-lg bg-muted/30 w-1/2" />
-                  <div className="h-28 rounded-2xl bg-primary/5 border border-primary/10 mt-3 flex items-center justify-center">
-                    <Plane className="w-8 h-8 text-primary/30" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-14 rounded-xl bg-muted/30" />
-                    ))}
-                  </div>
-                  <div className="h-10 rounded-xl bg-primary/15 mt-2 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-primary">Search Flights</span>
-                  </div>
-                </div>
+                {/* Notch */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-card rounded-full" />
               </div>
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-card rounded-full" />
             </div>
           </motion.div>
         </div>
