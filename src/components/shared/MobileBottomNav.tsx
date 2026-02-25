@@ -1,4 +1,2 @@
-/** Mobile bottom nav stub - renders nothing (legacy) */
-export default function MobileBottomNav() {
-  return null;
-}
+/** Re-exports ZivoMobileNav as the unified mobile bottom nav */
+export { default } from "@/components/app/ZivoMobileNav";
