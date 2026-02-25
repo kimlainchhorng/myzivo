@@ -3,13 +3,12 @@ import { CarFront, Shield, Clock, CheckCircle, ExternalLink, ShieldCheck, Lock }
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import TrustIndicators from "@/components/shared/TrustIndicators";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
-import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { InternalLinkGrid } from "@/components/seo";
 import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
@@ -124,7 +123,7 @@ export default function CarRentalLanding() {
           limit={8}
         />
 
-        <TrustIndicators />
+        <GlobalTrustBar />
 
         {/* Testimonials */}
         <UserTestimonials />

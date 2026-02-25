@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import TrustIndicators from "@/components/shared/TrustIndicators";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import { InternalLinkGrid } from "@/components/seo";
 import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
@@ -227,7 +227,7 @@ export default function HotelLanding() {
         {/* Hotel Experience Gallery - Immersive Photo Grid */}
         <HotelExperienceGallery />
 
-        <TrustIndicators />
+        <GlobalTrustBar />
 
         {/* Internal Linking - Cross-sell Flights & Cars */}
         <InternalLinkGrid currentService="hotels" />

@@ -18,10 +18,16 @@ import {
   Clock,
   Gift,
 } from "lucide-react";
-import FlashDealCard from "@/components/deals/FlashDealCard";
-import DealCategoryTabs, { DealCategoryType } from "@/components/deals/DealCategoryTabs";
-import { FlashDeal } from "@/types/behaviorAnalytics";
 import { toast } from "sonner";
+
+type DealCategoryType = 'all' | 'flights' | 'hotels' | 'cars' | 'last-minute';
+
+interface FlashDeal {
+  id: string;
+  title: string;
+  category: string;
+  expiresAt: string;
+}
 
 // Deals loaded from real partner APIs and promotions database
 const liveDeals: FlashDeal[] = [];
@@ -102,11 +108,13 @@ export default function Deals() {
 
         {/* Category Tabs */}
         <section className="container mx-auto px-4 mb-8">
-          <DealCategoryTabs
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-            className="flex justify-center"
-          />
+          <div className="flex justify-center gap-2 flex-wrap">
+            {(['all', 'flights', 'hotels', 'cars', 'last-minute'] as DealCategoryType[]).map(cat => (
+              <Button key={cat} variant={activeCategory === cat ? "default" : "outline"} size="sm" onClick={() => setActiveCategory(cat)} className="rounded-full capitalize">
+                {cat === 'all' ? 'All Deals' : cat === 'last-minute' ? 'Last Minute' : cat}
+              </Button>
+            ))}
+          </div>
         </section>
 
         {/* Deals Grid */}
@@ -134,11 +142,11 @@ export default function Deals() {
             {filteredDeals.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDeals.map((deal) => (
-                  <FlashDealCard
-                    key={deal.id}
-                    deal={deal}
-                    onClaim={handleClaimDeal}
-                  />
+                  <div key={deal.id} className="bg-card border border-border/50 rounded-2xl p-6 hover:shadow-lg transition-shadow">
+                    <h3 className="font-semibold mb-2">{deal.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{deal.title}</p>
+                    <Button size="sm" onClick={() => handleClaimDeal(deal)}>Claim Deal</Button>
+                  </div>
                 ))}
               </div>
             ) : (
