@@ -74,7 +74,7 @@ export default function GroupPaymentCard({
             size="sm"
             disabled={isPaying}
             onClick={() => onPayNow(payment.id)}
-            className="rounded-lg bg-gradient-to-r from-violet-500 to-purple-600"
+            className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600"
           >
             {isPaying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Pay Now"}
           </Button>

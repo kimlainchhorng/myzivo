@@ -259,7 +259,7 @@ export const GroupBooking = ({
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center",
+                      "w-8 h-8 rounded-xl flex items-center justify-center",
                       passenger.type === 'adult' && "bg-violet-500/20 text-violet-400",
                       passenger.type === 'child' && "bg-sky-500/20 text-sky-400",
                       passenger.type === 'infant' && "bg-pink-500/20 text-pink-400"

@@ -116,7 +116,7 @@ const RestaurantRegistration = () => {
       <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
       
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl sticky top-0 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl sticky top-0 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
         <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
@@ -141,7 +141,7 @@ const RestaurantRegistration = () => {
           {[1, 2, 3].map((s, index) => (
             <div 
               key={s} 
-              className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300"
+              className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200"
               style={{ animationDelay: `${index * 75}ms` }}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all shadow-lg ${

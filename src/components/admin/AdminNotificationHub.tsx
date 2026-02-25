@@ -258,7 +258,7 @@ const AdminNotificationHub = () => {
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={cn("p-2 rounded-lg shrink-0", config.bg)}>
+                      <div className={cn("p-2 rounded-xl shrink-0", config.bg)}>
                         <TypeIcon className={cn("h-4 w-4", config.color)} />
                       </div>
                       <div className="flex-1 min-w-0">

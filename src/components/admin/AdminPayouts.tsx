@@ -263,7 +263,7 @@ const AdminPayouts = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Clock className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -274,7 +274,7 @@ const AdminPayouts = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <CheckCircle className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -285,7 +285,7 @@ const AdminPayouts = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <TrendingUp className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -296,7 +296,7 @@ const AdminPayouts = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <CreditCard className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -454,7 +454,7 @@ const AdminPayouts = () => {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={cn(
-                                "p-1.5 rounded-lg",
+                                "p-1.5 rounded-xl",
                                 payout.driver_id ? "bg-green-500/10" : "bg-rose-500/10"
                               )}>
                                 {payout.driver_id ? (
@@ -597,7 +597,7 @@ const AdminPayouts = () => {
                   </CardTitle>
                   <CardDescription>Driver cash collection reconciliation</CardDescription>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10">
                   <Banknote className="h-4 w-4 text-amber-500" />
                   <span className="font-semibold text-amber-500">${pendingCash.toFixed(2)}</span>
                   <span className="text-sm text-muted-foreground">pending</span>
@@ -695,27 +695,27 @@ const AdminPayouts = () => {
           {selectedPayout && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Recipient</p>
                   <p className="font-medium">
                     {selectedPayout.driver?.full_name || selectedPayout.restaurant?.name}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Amount</p>
                   <p className="font-semibold text-lg">${selectedPayout.amount.toFixed(2)}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Method</p>
                   <p className="font-medium capitalize">{selectedPayout.payout_method.replace("_", " ")}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
                   <StatusBadge status={selectedPayout.status} />
                 </div>
               </div>
               {selectedPayout.notes && (
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Notes</p>
                   <p className="text-sm">{selectedPayout.notes}</p>
                 </div>

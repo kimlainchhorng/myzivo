@@ -205,7 +205,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
 
         {/* Live indicator - Compact */}
         {driverLocation && isActive && (
-          <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-gradient-to-r from-emerald-500/25 to-emerald-500/10 backdrop-blur-2xl px-2.5 py-1.5 rounded-lg shadow-lg border border-emerald-500/30 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-gradient-to-r from-emerald-500/25 to-emerald-500/10 backdrop-blur-2xl px-2.5 py-1.5 rounded-xl shadow-lg border border-emerald-500/30 animate-in fade-in slide-in-from-right-4 duration-200">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-lg shadow-emerald-500/50" />
@@ -345,7 +345,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-lg bg-muted/50 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-xl bg-muted/50 flex items-center justify-center">
                   <Navigation className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <div>
@@ -354,7 +354,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-lg bg-muted/50 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-xl bg-muted/50 flex items-center justify-center">
                   <Clock className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <div>
@@ -376,7 +376,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
         <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent" />
           <div className="relative flex items-center gap-2.5 p-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-emerald-500" />
             </div>
             <div className="flex-1 min-w-0">

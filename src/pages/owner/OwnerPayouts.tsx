@@ -139,7 +139,7 @@ export default function OwnerPayouts() {
             </CardHeader>
             <CardContent>
             {ownerProfile?.stripe_account_id && ownerProfile?.payout_enabled ? (
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
                 <div>
                   <p className="font-medium">Stripe Connect Account</p>
                   <p className="text-sm text-muted-foreground">
@@ -201,7 +201,7 @@ export default function OwnerPayouts() {
                     return (
                       <div
                         key={payout.id}
-                        className="flex items-center justify-between p-4 rounded-lg border"
+                        className="flex items-center justify-between p-4 rounded-xl border"
                       >
                         <div>
                           <p className="font-medium">

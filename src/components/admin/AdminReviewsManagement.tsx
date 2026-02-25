@@ -69,7 +69,7 @@ export default function AdminReviewsManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <MessageSquare className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -82,7 +82,7 @@ export default function AdminReviewsManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <Star className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -95,7 +95,7 @@ export default function AdminReviewsManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-500/10">
+              <div className="p-2 rounded-xl bg-red-500/10">
                 <Flag className="h-5 w-5 text-red-500" />
               </div>
               <div>
@@ -108,7 +108,7 @@ export default function AdminReviewsManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
               <div>

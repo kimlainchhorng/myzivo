@@ -176,14 +176,14 @@ export function RestaurantReviewsSection({ restaurantId, className }: Restaurant
                   <img
                     src={review.photo_url}
                     alt="Review photo"
-                    className="w-24 h-24 object-cover rounded-lg border border-border/50"
+                    className="w-24 h-24 object-cover rounded-xl border border-border/50"
                     loading="lazy"
                   />
                 )}
 
                 {/* Merchant Reply */}
                 {review.merchant_reply && (
-                  <div className="ml-4 p-3 bg-muted/50 rounded-lg border-l-2 border-primary/50">
+                  <div className="ml-4 p-3 bg-muted/50 rounded-xl border-l-2 border-primary/50">
                     <p className="text-xs font-medium text-primary mb-1">Restaurant Reply</p>
                     <p className="text-sm text-foreground">{review.merchant_reply}</p>
                     {review.merchant_reply_at && (

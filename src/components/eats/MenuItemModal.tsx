@@ -118,7 +118,7 @@ export function MenuItemModal({
           )}
           {!isItemAvailable && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <div className="bg-red-500/90 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2">
+              <div className="bg-red-500/90 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2">
                 <X className="w-5 h-5" />
                 Out of Stock
               </div>

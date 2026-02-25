@@ -114,9 +114,9 @@ export default function UserPromoWallet({ onApplyPromo, compact = false }: UserP
             return (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/50 border border-white/5"
+                className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-white/5"
               >
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Tag className="h-5 w-5 text-primary" />
                 </div>
                 

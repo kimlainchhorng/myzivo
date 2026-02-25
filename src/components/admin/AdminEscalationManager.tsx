@@ -85,19 +85,19 @@ const AdminEscalationManager = () => {
         
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-2 mt-3">
-          <div className="p-2 rounded-lg bg-muted/30 text-center">
+          <div className="p-2 rounded-xl bg-muted/30 text-center">
             <p className="text-lg font-bold">{stats.total}</p>
             <p className="text-[10px] text-muted-foreground">Total</p>
           </div>
-          <div className="p-2 rounded-lg bg-red-500/10 text-center">
+          <div className="p-2 rounded-xl bg-red-500/10 text-center">
             <p className="text-lg font-bold text-red-500">{stats.level3}</p>
             <p className="text-[10px] text-muted-foreground">Level 3</p>
           </div>
-          <div className="p-2 rounded-lg bg-muted/30 text-center">
+          <div className="p-2 rounded-xl bg-muted/30 text-center">
             <p className="text-lg font-bold">{stats.avgResolutionTime}</p>
             <p className="text-[10px] text-muted-foreground">Avg Time</p>
           </div>
-          <div className="p-2 rounded-lg bg-green-500/10 text-center">
+          <div className="p-2 rounded-xl bg-green-500/10 text-center">
             <p className="text-lg font-bold text-green-500">{stats.resolutionRate}</p>
             <p className="text-[10px] text-muted-foreground">Resolved</p>
           </div>
@@ -136,7 +136,7 @@ const AdminEscalationManager = () => {
                     >
                       <div className="flex items-start gap-3">
                         <div className={cn(
-                          "p-2 rounded-lg shrink-0 flex flex-col items-center",
+                          "p-2 rounded-xl shrink-0 flex flex-col items-center",
                           levelConfig.bg
                         )}>
                           <ArrowUp className={cn("h-4 w-4", levelConfig.color)} />
@@ -201,7 +201,7 @@ const AdminEscalationManager = () => {
                       className="group p-3 rounded-xl border border-border/50 bg-background/30 opacity-75 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={cn("p-2 rounded-lg shrink-0", levelConfig.bg)}>
+                        <div className={cn("p-2 rounded-xl shrink-0", levelConfig.bg)}>
                           <ArrowUp className={cn("h-4 w-4", levelConfig.color)} />
                         </div>
                         

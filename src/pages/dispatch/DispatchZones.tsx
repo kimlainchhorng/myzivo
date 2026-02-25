@@ -145,7 +145,7 @@ const DispatchZones = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-xl">
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div>
@@ -156,7 +156,7 @@ const DispatchZones = () => {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
+            <div className="p-2 bg-green-500/10 rounded-xl">
               <Users className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -167,7 +167,7 @@ const DispatchZones = () => {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
+            <div className="p-2 bg-blue-500/10 rounded-xl">
               <Package className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -178,7 +178,7 @@ const DispatchZones = () => {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-amber-500/10 rounded-lg">
+            <div className="p-2 bg-amber-500/10 rounded-xl">
               <Zap className="h-5 w-5 text-amber-500" />
             </div>
             <div>
