@@ -198,7 +198,7 @@ const Vision = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="h-full hover:border-primary/50 transition-colors">
+                <Card className="h-full hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-5 flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0">
                       <feature.icon className="w-6 h-6 text-muted-foreground" />
@@ -241,7 +241,7 @@ const Vision = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-500 gap-2">
+                  <Button type="submit" className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-500 gap-2 shadow-[0_0_15px_hsl(270_60%_50%/0.3)] hover:shadow-[0_0_25px_hsl(270_60%_50%/0.4)] transition-shadow">
                     Subscribe
                     <ArrowRight className="w-4 h-4" />
                   </Button>
