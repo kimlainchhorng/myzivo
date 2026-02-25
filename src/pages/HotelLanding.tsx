@@ -170,7 +170,7 @@ export default function HotelLanding() {
                     className={cn(
                       "group rounded-2xl border border-border/50 bg-card overflow-hidden",
                       "hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10",
-                      "transition-all duration-300 hover:-translate-y-1"
+                      "transition-all duration-200 hover:-translate-y-1.5"
                     )}
                   >
                     {/* Destination Photo */}

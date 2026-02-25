@@ -73,7 +73,7 @@ export default function FlightSavingsStats({ className }: FlightSavingsStatsProp
           {stats.map((stat, index) => (
             <Card 
               key={stat.label}
-              className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1.5"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardContent className="p-4 sm:p-6 text-center">

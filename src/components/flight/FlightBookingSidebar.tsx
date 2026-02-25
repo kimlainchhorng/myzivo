@@ -136,7 +136,7 @@ export default function FlightBookingSidebar({
           <h4 className="text-sm font-semibold">Baggage Included</h4>
           <div className="grid gap-2">
             <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-lg",
+              "flex items-center gap-2 text-sm p-2 rounded-xl",
               baggage.personalItem ? "bg-emerald-500/10" : "bg-muted/50"
             )}>
               <Briefcase className={cn("w-4 h-4", baggage.personalItem ? "text-emerald-500" : "text-muted-foreground")} />
@@ -148,7 +148,7 @@ export default function FlightBookingSidebar({
               )}
             </div>
             <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-lg",
+              "flex items-center gap-2 text-sm p-2 rounded-xl",
               baggage.carryOn ? "bg-emerald-500/10" : "bg-muted/50"
             )}>
               <Package className={cn("w-4 h-4", baggage.carryOn ? "text-emerald-500" : "text-muted-foreground")} />
@@ -160,7 +160,7 @@ export default function FlightBookingSidebar({
               )}
             </div>
             <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-lg",
+              "flex items-center gap-2 text-sm p-2 rounded-xl",
               baggage.checkedBag ? "bg-emerald-500/10" : "bg-muted/50"
             )}>
               <Luggage className={cn("w-4 h-4", baggage.checkedBag ? "text-emerald-500" : "text-muted-foreground")} />
@@ -181,7 +181,7 @@ export default function FlightBookingSidebar({
           <h4 className="text-sm font-semibold">Fare Rules</h4>
           <div className="grid gap-2">
             <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-lg",
+              "flex items-center gap-2 text-sm p-2 rounded-xl",
               fareRules.changeable ? "bg-sky-500/10" : "bg-muted/50"
             )}>
               <RefreshCw className={cn("w-4 h-4", fareRules.changeable ? "text-sky-500" : "text-muted-foreground")} />
@@ -195,7 +195,7 @@ export default function FlightBookingSidebar({
               )}
             </div>
             <div className={cn(
-              "flex items-center gap-2 text-sm p-2 rounded-lg",
+              "flex items-center gap-2 text-sm p-2 rounded-xl",
               fareRules.refundable ? "bg-emerald-500/10" : "bg-amber-500/10"
             )}>
               <CreditCard className={cn("w-4 h-4", fareRules.refundable ? "text-emerald-500" : "text-amber-500")} />

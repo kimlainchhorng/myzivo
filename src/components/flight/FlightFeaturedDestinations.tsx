@@ -171,7 +171,7 @@ export default function FlightFeaturedDestinations({
               key={dest.id}
               className={cn(
                 "group relative overflow-hidden border-0 cursor-pointer transition-all duration-500",
-                "hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1",
+                "hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1.5",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 100}ms` }}

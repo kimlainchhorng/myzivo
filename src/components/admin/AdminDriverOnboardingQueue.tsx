@@ -330,7 +330,7 @@ const AdminDriverOnboardingQueue = () => {
         <CardContent>
           <div className="space-y-2">
             {recentApproved.map((driver) => (
-              <div key={driver.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+              <div key={driver.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-all duration-200">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={driver.avatar_url || undefined} />
                   <AvatarFallback className="text-xs">
@@ -386,26 +386,26 @@ const AdminDriverOnboardingQueue = () => {
 
               {/* Vehicle Info */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">Vehicle Type</p>
                   <p className="font-medium capitalize">{selectedDriver.vehicle_type}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">License Plate</p>
                   <p className="font-medium">{selectedDriver.vehicle_plate}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">Vehicle Model</p>
                   <p className="font-medium">{selectedDriver.vehicle_model || "Not specified"}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground">License Number</p>
                   <p className="font-medium">{selectedDriver.license_number}</p>
                 </div>
               </div>
 
               {/* Documents Status */}
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-amber-500" />
                   <span className="text-sm font-medium text-amber-500">Documents pending verification</span>

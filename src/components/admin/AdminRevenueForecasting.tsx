@@ -86,7 +86,7 @@ const AdminRevenueForecasting = () => {
 
       {/* Key Metrics */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-0 bg-gradient-to-br from-primary/10 to-teal-500/5 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300">
+        <Card className="border-0 bg-gradient-to-br from-primary/10 to-teal-500/5 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <DollarSign className="h-5 w-5 text-primary" />
@@ -100,7 +100,7 @@ const AdminRevenueForecasting = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "50ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "50ms" }}>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <Target className="h-5 w-5 text-amber-500" />
@@ -111,7 +111,7 @@ const AdminRevenueForecasting = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "100ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "100ms" }}>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -122,7 +122,7 @@ const AdminRevenueForecasting = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "150ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "150ms" }}>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <TrendingUp className="h-5 w-5 text-green-500" />
@@ -221,7 +221,7 @@ const AdminRevenueForecasting = () => {
               {serviceBreakdown.map((service, index) => (
                 <div 
                   key={service.service}
-                  className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -262,7 +262,7 @@ const AdminRevenueForecasting = () => {
                 <div 
                   key={insight.title}
                   className={cn(
-                    "p-4 rounded-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300",
+                    "p-4 rounded-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-200",
                     insight.impact === "positive" ? "bg-green-500/5 border border-green-500/20" : "bg-red-500/5 border border-red-500/20"
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}

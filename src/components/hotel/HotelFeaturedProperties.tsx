@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Wifi, Waves, Dumbbell, Heart, ArrowRight, Crown } from "lucide-react";
+import { Star, MapPin, Wifi, Waves, Dumbbell, Heart, ArrowRight, Crown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import hotel images
@@ -93,8 +93,8 @@ const HotelFeaturedProperties = ({ onSelect }: HotelFeaturedPropertiesProps) => 
             <Card
               key={property.id}
               className={cn(
-                "glass-card overflow-hidden group cursor-pointer transition-all duration-300 touch-manipulation active:scale-[0.98]",
-                "hover:border-amber-500/50 hover:-translate-y-1",
+                "glass-card overflow-hidden group cursor-pointer transition-all duration-200 touch-manipulation active:scale-[0.98]",
+                "hover:border-amber-500/50 hover:-translate-y-1.5",
                 property.featured && "lg:col-span-2 lg:row-span-2"
               )}
               onClick={() => onSelect?.(property.name)}
@@ -139,11 +139,11 @@ const HotelFeaturedProperties = ({ onSelect }: HotelFeaturedPropertiesProps) => 
 
                   <div className="flex gap-2 mb-3">
                     {property.amenities.slice(0, 3).map((amenity) => (
-                      <div key={amenity} className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center">
+                      <div key={amenity} className="w-7 h-7 rounded-xl bg-muted/50 flex items-center justify-center">
                         {amenity === "wifi" && <Wifi className="w-3.5 h-3.5 text-muted-foreground" />}
                         {amenity === "pool" && <Waves className="w-3.5 h-3.5 text-muted-foreground" />}
                         {amenity === "gym" && <Dumbbell className="w-3.5 h-3.5 text-muted-foreground" />}
-                        {amenity === "spa" && <span className="text-xs">💆</span>}
+                        {amenity === "spa" && <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />}
                       </div>
                     ))}
                   </div>

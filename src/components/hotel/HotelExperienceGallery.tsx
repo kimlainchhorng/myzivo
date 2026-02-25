@@ -108,7 +108,7 @@ export default function HotelExperienceGallery({ onCategorySelect, className }: 
                 key={exp.id}
                 className={cn(
                   "group relative overflow-hidden rounded-xl sm:rounded-2xl cursor-pointer",
-                  "transition-all duration-500 hover:shadow-2xl hover:-translate-y-1",
+                  "transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5",
                   isLarge ? "row-span-2 h-64 sm:h-80 md:h-full" : "h-32 sm:h-40 md:h-48"
                 )}
                 onClick={() => onCategorySelect?.(exp.title)}
