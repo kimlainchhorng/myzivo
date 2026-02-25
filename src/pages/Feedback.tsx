@@ -24,7 +24,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { PriceMismatchReport } from "@/components/feedback/PriceMismatchReport";
+// PriceMismatchReport removed
 
 type FeedbackType = "rating" | "price_mismatch" | "suggestion" | "bug";
 
@@ -168,7 +168,7 @@ export default function Feedback() {
                   <p className="text-muted-foreground mb-6">
                     Found a different price on the partner site? Click below to report it.
                   </p>
-                  <PriceMismatchReport />
+                  <p className="text-sm text-muted-foreground">Price mismatch reporting coming soon.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">

@@ -40,7 +40,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import PhishingWarning from "@/components/security/PhishingWarning";
+// PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -137,8 +137,7 @@ export default function AccountSecurity() {
             </div>
           </div>
 
-          {/* Phishing Warning */}
-          <PhishingWarning variant="compact" className="mb-6" />
+          {/* Phishing warning removed */}
 
           {/* Change Password */}
           <Card className="mb-6">

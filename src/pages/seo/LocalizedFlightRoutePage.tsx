@@ -15,7 +15,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 import { getCountryFromSlug, INTERNATIONAL_COMPLIANCE } from "@/config/internationalExpansion";
-import { CountryNotice, CurrencyDisclaimer } from "@/components/localization/InternationalCompliance";
+// InternationalCompliance removed
 import { cn } from "@/lib/utils";
 
 // Example route data - in production, this would come from the API/CMS
@@ -193,8 +193,7 @@ export default function LocalizedFlightRoutePage() {
           {/* Compliance */}
           <section className="py-8 border-t border-border">
             <div className="container mx-auto px-4 space-y-3">
-              <CurrencyDisclaimer />
-              <CountryNotice countryCode={country.code} />
+              <p className="text-xs text-muted-foreground">Prices shown in local currency where available.</p>
               <p className="text-xs text-muted-foreground">
                 {INTERNATIONAL_COMPLIANCE.globalDisclaimer}
               </p>

@@ -33,11 +33,8 @@ import { QuickStatsBar, HowBookingWorks, FlightTrustBadgesBar, FlightMobileResul
 import FlightTrustStrip from "@/components/flight/FlightTrustStrip";
 import FlightSupportCTA from "@/components/flight/FlightSupportCTA";
 import { EnhanceYourTrip } from "@/components/travel-extras";
-import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
-import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
+// Monetization/cross-sell components removed
 import { FLIGHT_DISCLAIMERS, FLIGHT_HEADER_MICROCOPY, FLIGHT_RESULTS_COMPLIANCE } from "@/config/flightCompliance";
-import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
-import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import {
   StickySearchSummary,
   FiltersSheet,
@@ -58,7 +55,7 @@ import {
   ActiveFiltersChips,
 } from "@/components/results";
 import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
-import SponsoredResultCard from "@/components/sponsored/SponsoredResultCard";
+// SponsoredResultCard removed
 import { FlightSearchFormPro } from "@/components/search";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -577,7 +574,7 @@ const FlightResults = () => {
                         flight={flight} 
                         onViewDeal={handleViewDeal}
                       />
-                      {(index + 1) % 5 === 0 && index < flightCards.length - 1 && (
+                      {false && (index + 1) % 5 === 0 && index < flightCards.length - 1 && (
                         <SponsoredResultCard
                           type="flight"
                           title="Airport Transfer Deal"
@@ -604,54 +601,7 @@ const FlightResults = () => {
                 <FlightsMoRFooter variant="compact" className="mt-6" />
               )}
 
-              {/* Cross-Sell Banner */}
-              {flights.length > 0 && !isLoading && (
-                <div className="mt-8">
-                  <ContextualCrossSell
-                    destination={destinationAirport?.city || destinationIata}
-                    origin={originAirport?.city || originIata}
-                    checkIn={departureDate || ""}
-                    checkOut={returnDate || ""}
-                    variant="banner"
-                  />
-                </div>
-              )}
-
-              {/* Cross-Sell Section - Hotels, Cars, Activities */}
-              {flights.length > 0 && !isLoading && (
-                <div className="mt-10">
-                  <CrossSellSection 
-                    destination={destinationAirport?.city || destinationIata}
-                    origin={originAirport?.city || originIata}
-                    checkIn={departureDate || ""}
-                    checkOut={returnDate || ""}
-                  />
-                </div>
-              )}
-
-              {/* Trending Deals */}
-              {flights.length > 0 && !isLoading && (
-                <TrendingDealsSection 
-                  title="More Popular Routes"
-                  subtitle="Deals travelers are booking now"
-                  maxDeals={6}
-                  className="mt-8"
-                />
-              )}
-
-              {/* Enhance Your Trip */}
-              {flights.length > 0 && !isLoading && (
-                <EnhanceYourTrip 
-                  currentService="flights"
-                  destination={destinationAirport?.city || destinationIata}
-                  className="mt-8"
-                />
-              )}
-
-              {/* Driver Cross-Sell - Airport Rides & Delivery */}
-              {flights.length > 0 && !isLoading && (
-                <DriverCrossSell source="flights" variant="full" className="mt-8" />
-              )}
+              {/* Cross-sell sections removed */}
             </ResultsContainer>
           </div>
         </section>
@@ -698,11 +648,7 @@ const FlightResults = () => {
       />
 
       {/* Exit Intent Prompt (Desktop Only) */}
-      <ExitIntentPrompt
-        origin={originIata}
-        destination={destinationIata}
-        lowestPrice={lowestPrice}
-      />
+      {/* ExitIntentPrompt removed */}
 
       <Footer />
     </div>

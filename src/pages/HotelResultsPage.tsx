@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Hotel, AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
-import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
+// DriverCrossSell removed
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -38,7 +38,7 @@ import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch"
 import { getCityBySlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
-import SponsoredResultCard from "@/components/sponsored/SponsoredResultCard";
+// SponsoredResultCard removed
 import { buildOutRedirectUrl, buildBookingDeepLink } from "@/lib/partnerDeepLinks";
 import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
@@ -429,10 +429,7 @@ export default function HotelResultsPage() {
           </div>
         </section>
 
-        {/* Driver Cross-Sell */}
-        <section className="container mx-auto px-4 mt-8 max-w-4xl">
-          <DriverCrossSell source="hotels" variant="full" />
-        </section>
+        {/* Cross-sell removed */}
 
         {/* FAQ Section */}
         <ResultsFAQ service="hotels" />
