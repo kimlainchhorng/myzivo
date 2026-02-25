@@ -6,22 +6,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
-import { PWAInstallPrompt } from "./components/mobile";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
-import { PreferencesSync } from "./components/shared/PreferencesSync";
-import { GoogleMapProvider } from "./components/maps";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 
@@ -32,7 +27,6 @@ import Signup from "./pages/Signup";
 
 // App (mobile-first) pages
 const AppHome = lazy(() => import("./pages/app/AppHome"));
-const ScheduledBookingsPage = lazy(() => import("./pages/ScheduledBookingsPage"));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
@@ -45,9 +39,7 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const Setup = lazy(() => import("./pages/Setup"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
@@ -58,8 +50,6 @@ const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage")
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
-const AchievementsPage = lazy(() => import("./pages/account/AchievementsPage"));
-const AccountRewardsPage = lazy(() => import("./pages/account/AccountRewardsPage"));
 
 // Flights
 const FlightBooking = lazy(() => import("./pages/FlightBooking"));
@@ -104,7 +94,6 @@ const TravelInsurance = lazy(() => import("./pages/TravelInsurance"));
 const TravelExtras = lazy(() => import("./pages/TravelExtras"));
 const TravelCheckoutPage = lazy(() => import("./pages/TravelCheckoutPage"));
 const TravelConfirmationPage = lazy(() => import("./pages/TravelConfirmationPage"));
-const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
 const TravelTripsPage = lazy(() => import("./pages/TravelTripsPage"));
 const TravelOrderDetailPage = lazy(() => import("./pages/TravelOrderDetailPage"));
 const TravelerDashboard = lazy(() => import("./pages/TravelerDashboard"));
@@ -114,24 +103,18 @@ const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
 const PartnerAgreement = lazy(() => import("./pages/legal/PartnerAgreement"));
-const InsurancePolicy = lazy(() => import("./pages/legal/InsurancePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilityStatement"));
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const CancellationPolicy = lazy(() => import("./pages/legal/CancellationPolicy"));
 const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
-const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
-const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
-const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
-const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 
 // Public pages
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const Partners = lazy(() => import("./pages/Partners"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Refunds = lazy(() => import("./pages/Refunds"));
@@ -173,7 +156,6 @@ const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
-const MyReviewsPage = lazy(() => import("./pages/account/MyReviewsPage"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
@@ -184,7 +166,6 @@ const AccountVerificationPage = lazy(() => import("./pages/account/VerificationP
 const TrustLevelPage = lazy(() => import("./pages/account/TrustLevelPage"));
 const PromosPage = lazy(() => import("./pages/account/PromosPage"));
 const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
-const ActivityPage = lazy(() => import("./pages/account/ActivityPage"));
 
 // Security pages
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
@@ -284,7 +265,6 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
   <QueryClientProvider client={queryClient}>
   <BrandProvider>
-    <GoogleMapProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -293,8 +273,6 @@ const App = () => (
           <CustomerCityProvider>
           <CurrencyProvider>
           <UTMProvider>
-          <RealtimeSyncProvider>
-            <PreferencesSync />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -302,14 +280,13 @@ const App = () => (
                 <Route path="/signup" element={<Signup />} />
 
                 {/* App Dashboard */}
-                <Route path="/app" element={<SetupRequiredRoute><UnifiedDashboard /></SetupRequiredRoute>} />
-                <Route path="/app/home" element={<SetupRequiredRoute><AppHome /></SetupRequiredRoute>} />
-                <Route path="/my-trips" element={<SetupRequiredRoute><MyTripsPage /></SetupRequiredRoute>} />
-                <Route path="/wallet" element={<SetupRequiredRoute><WalletPage /></SetupRequiredRoute>} />
-                <Route path="/support" element={<SetupRequiredRoute><SupportCenterPage /></SetupRequiredRoute>} />
-                <Route path="/travel" element={<SetupRequiredRoute><AppTravel /></SetupRequiredRoute>} />
-                <Route path="/more" element={<SetupRequiredRoute><AppMore /></SetupRequiredRoute>} />
-                <Route path="/scheduled" element={<SetupRequiredRoute><ScheduledBookingsPage /></SetupRequiredRoute>} />
+                <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
+                <Route path="/app/home" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
+                <Route path="/my-trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+                <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
+                <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
+                <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
 
                 {/* Legacy redirects */}
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
@@ -360,7 +337,6 @@ const App = () => (
                 {/* Travel Checkout */}
                 <Route path="/travel/checkout" element={<TravelCheckoutPage />} />
                 <Route path="/confirmation/:orderNumber" element={<TravelConfirmationPage />} />
-                <Route path="/my-orders" element={<MyOrdersPage />} />
                 <Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
 
                 {/* Extras */}
@@ -374,17 +350,15 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
-                <Route path="/setup" element={<Setup />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/verify-phone" element={<ProtectedRoute><VerifyPhonePage /></ProtectedRoute>} />
-                <Route path="/profile" element={<SetupRequiredRoute><Profile /></SetupRequiredRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<SetupRequiredRoute><CustomerDashboard /></SetupRequiredRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/payment-methods" element={<SetupRequiredRoute><PaymentMethodsPage /></SetupRequiredRoute>} />
+                <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
 
                 {/* Account sub-pages */}
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
@@ -392,17 +366,13 @@ const App = () => (
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
-                <Route path="/account/reviews" element={<ProtectedRoute><MyReviewsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/saved-places" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
                 <Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
-                <Route path="/account/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
                 <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
-                <Route path="/account/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
-                <Route path="/account/rewards" element={<ProtectedRoute><AccountRewardsPage /></ProtectedRoute>} />
                 <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
                 <Route path="/account/business" element={<ProtectedRoute><AccountBusinessPage /></ProtectedRoute>} />
                 <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
@@ -425,9 +395,6 @@ const App = () => (
                 <Route path="/legal/cancellation" element={<CancellationPolicy />} />
                 <Route path="/legal/security-incident" element={<SecurityIncident />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
-                <Route path="/legal/renter-terms" element={<RenterTerms />} />
-                <Route path="/legal/owner-terms" element={<OwnerTerms />} />
-                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
@@ -505,7 +472,7 @@ const App = () => (
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
                 <Route path="/support/tickets" element={<ProtectedRoute><UserSupportTicketsPage /></ProtectedRoute>} />
                 <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
-                <Route path="/support/chat" element={<SetupRequiredRoute><LiveSupportChatPage /></SetupRequiredRoute>} />
+                <Route path="/support/chat" element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
 
                 {/* Referrals & Feedback */}
                 <Route path="/referrals" element={<ReferralProgram />} />
@@ -530,19 +497,16 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
-          </RealtimeSyncProvider>
           </UTMProvider>
           </CurrencyProvider>
           </CustomerCityProvider>
           <CookieConsent />
-          <PWAInstallPrompt />
           <PWAUpdatePrompt />
           <SpatialCursor />
           <BrandThemeApplicator />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-    </GoogleMapProvider>
   </BrandProvider>
   </QueryClientProvider>
   </ThemeProvider>
