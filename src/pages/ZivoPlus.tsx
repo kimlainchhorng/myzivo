@@ -155,7 +155,7 @@ const ZivoPlus = () => {
                 </div>
 
                 {/* CTA */}
-                <Button className="w-full h-14 text-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2">
+                <Button className="w-full h-14 text-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow">
                   <Crown className="w-5 h-5" />
                   Join ZIVO Plus
                 </Button>
@@ -181,7 +181,7 @@ const ZivoPlus = () => {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className={cn(
-                  "h-full transition-all hover:border-amber-500/30",
+                  "h-full transition-all duration-300 hover:border-amber-500/30 hover:shadow-md hover:-translate-y-1",
                   benefit.highlight && "border-amber-500/20 bg-amber-500/5"
                 )}>
                   <CardContent className="p-5">
@@ -263,7 +263,7 @@ const ZivoPlus = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full">
+                <Card className="h-full hover:border-amber-500/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-sm font-bold text-amber-500">
@@ -293,7 +293,7 @@ const ZivoPlus = () => {
               <p className="text-muted-foreground mb-6">
                 Join thousands of members saving more on every trip.
               </p>
-              <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2">
+              <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow">
                 Get ZIVO Plus Now
                 <ArrowRight className="w-4 h-4" />
               </Button>
