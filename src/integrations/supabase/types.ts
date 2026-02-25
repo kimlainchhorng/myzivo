@@ -2622,6 +2622,27 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_relay_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          refresh_token: string
+          relay_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          refresh_token: string
+          relay_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          refresh_token?: string
+          relay_id?: string
+        }
+        Relationships: []
+      }
       auto_incentive_rules: {
         Row: {
           auto_apply: boolean
