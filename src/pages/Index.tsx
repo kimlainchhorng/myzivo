@@ -13,12 +13,16 @@ import { useNavigate } from "react-router-dom";
 // Desktop components
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
+import StatsSection from "@/components/home/StatsSection";
 import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
 import RecommendedDealsSection from "@/components/home/RecommendedDealsSection";
 import SmartOffersSection from "@/components/home/SmartOffersSection";
 import DestinationShowcase from "@/components/home/DestinationShowcase";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import DownloadAppSection from "@/components/home/DownloadAppSection";
+import NewsletterSection from "@/components/home/NewsletterSection";
 
-// Mobile app home - lazy load to match App.tsx pattern
+// Mobile app home - lazy load
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
 // Scroll animation wrapper
@@ -40,7 +44,6 @@ const DesktopHomePage = () => {
   const navigate = useNavigate();
   const [showStickyCTA, setShowStickyCTA] = useState(false);
 
-  // Show sticky CTA after scrolling past hero
   useEffect(() => {
     const handleScroll = () => {
       setShowStickyCTA(window.scrollY > 600);
@@ -52,29 +55,43 @@ const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <OGImageMeta pageType="homepage" />
-
       <NavBar />
 
       <main className="pt-16">
-        {/* Win-Back Banner for returning users */}
         {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
 
-        {/* 1. Hero Section */}
+        {/* 1. Hero */}
         <HeroSection />
 
-        {/* 2. Popular Destinations */}
+        {/* 2. Stats Counter */}
+        <StatsSection />
+
+        {/* 3. Popular Destinations */}
         <FadeInSection>
           <DestinationShowcase />
         </FadeInSection>
 
-        {/* 3. Best Deals / Smart Offers */}
+        {/* 4. Best Deals / Smart Offers */}
         <FadeInSection>
           {user ? <SmartOffersSection /> : <RecommendedDealsSection />}
         </FadeInSection>
 
-        {/* 4. Why ZIVO */}
+        {/* 5. Why ZIVO */}
         <FadeInSection>
           <WhyBookWithZivo />
+        </FadeInSection>
+
+        {/* 6. Testimonials */}
+        <TestimonialsSection />
+
+        {/* 7. Download App */}
+        <FadeInSection>
+          <DownloadAppSection />
+        </FadeInSection>
+
+        {/* 8. Newsletter */}
+        <FadeInSection>
+          <NewsletterSection />
         </FadeInSection>
       </main>
 
@@ -103,11 +120,9 @@ const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
-  // Detect OAuth errors that land on homepage (e.g., allowlist rejection)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-
     const error = params.get("error") || hashParams.get("error");
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
 
@@ -120,13 +135,7 @@ const Index = () => {
       ) {
         message = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
       }
-
-      toast({
-        title: "Sign-up blocked",
-        description: message,
-        variant: "destructive",
-      });
-
+      toast({ title: "Sign-up blocked", description: message, variant: "destructive" });
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -141,7 +150,6 @@ const Index = () => {
         </SetupRequiredRoute>
       );
     }
-
     return (
       <Suspense fallback={<div className="min-h-screen bg-background" />}>
         <AppHome />
