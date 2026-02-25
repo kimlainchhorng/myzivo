@@ -54,7 +54,7 @@ export default function PopularRoutesGrid({
               to={`/flights/results?origin=${route.code.from}&dest=${route.code.to}`}
               className="group block"
             >
-              <Card className="h-full border-border/50 hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10 transition-all duration-300 group-hover:-translate-y-1 cursor-pointer">
+              <Card className="h-full border-border/50 hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10 transition-all duration-200 group-hover:-translate-y-1 cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">

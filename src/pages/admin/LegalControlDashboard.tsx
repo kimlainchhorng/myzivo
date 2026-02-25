@@ -135,7 +135,7 @@ export default function LegalControlDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                   <FileText className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div>
@@ -149,7 +149,7 @@ export default function LegalControlDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
@@ -163,7 +163,7 @@ export default function LegalControlDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                   <AlertTriangle className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
@@ -177,7 +177,7 @@ export default function LegalControlDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                   <Shield className="h-5 w-5 text-violet-500" />
                 </div>
                 <div>
@@ -308,7 +308,7 @@ export default function LegalControlDashboard() {
                   {ADVANCED_CLAUSES_LIST.map((clause) => (
                     <div
                       key={clause.id}
-                      className="p-3 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+                      className="p-3 rounded-xl border bg-card hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{clause.title}</h5>
@@ -338,7 +338,7 @@ export default function LegalControlDashboard() {
                   {EXTENDED_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+                      className="p-3 rounded-xl border bg-card hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -373,7 +373,7 @@ export default function LegalControlDashboard() {
                   {EXTREME_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
+                      className="p-3 rounded-xl border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -407,7 +407,7 @@ export default function LegalControlDashboard() {
                   {ULTRA_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
+                      className="p-3 rounded-xl border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -441,7 +441,7 @@ export default function LegalControlDashboard() {
                   {ADVANCED_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-green-500/30 bg-green-500/5 hover:border-green-500/50 transition-colors"
+                      className="p-3 rounded-xl border border-green-500/30 bg-green-500/5 hover:border-green-500/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -475,7 +475,7 @@ export default function LegalControlDashboard() {
                   {GOVERNMENT_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
+                      className="p-3 rounded-xl border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -509,7 +509,7 @@ export default function LegalControlDashboard() {
                   {CORPORATE_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
+                      className="p-3 rounded-xl border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -543,7 +543,7 @@ export default function LegalControlDashboard() {
                   {FINAL_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 transition-colors"
+                      className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -577,7 +577,7 @@ export default function LegalControlDashboard() {
                   {COMMUNICATIONS_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
+                      className="p-3 rounded-xl border border-primary/30 bg-primary/5 hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -611,7 +611,7 @@ export default function LegalControlDashboard() {
                   {ONGOING_COMPLIANCE_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50 transition-colors"
+                      className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -645,7 +645,7 @@ export default function LegalControlDashboard() {
                   {FINANCIAL_COMPLIANCE_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:border-rose-500/50 transition-colors"
+                      className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/5 hover:border-rose-500/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
@@ -679,7 +679,7 @@ export default function LegalControlDashboard() {
                   {GOVERNANCE_POLICIES_LIST.map((policy) => (
                     <div
                       key={policy.id}
-                      className="p-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/50 transition-colors"
+                      className="p-3 rounded-xl border border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>

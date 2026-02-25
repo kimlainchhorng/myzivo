@@ -166,7 +166,7 @@ export const TravelAlerts = ({
           <div className="flex items-center gap-6">
             {/* Overall Status */}
             <div className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg",
+              "flex items-center gap-2 px-4 py-2 rounded-xl",
               dangerCount > 0 
                 ? "bg-red-500/20 text-red-400" 
                 : warningCount > 0 

@@ -90,7 +90,7 @@ const TripSharingWidget = ({
       </div>
 
       {/* Trip Name */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <p className="text-xs text-muted-foreground">Sharing</p>
         <p className="font-medium">{tripName}</p>
       </div>
@@ -116,7 +116,7 @@ const TripSharingWidget = ({
       <div className="mb-4">
         <p className="text-xs text-muted-foreground mb-2">Or share link</p>
         <div className="flex gap-2">
-          <div className="flex-1 px-3 py-2 rounded-lg bg-muted/30 border border-border/30 text-xs text-muted-foreground truncate">
+          <div className="flex-1 px-3 py-2 rounded-xl bg-muted/30 border border-border/30 text-xs text-muted-foreground truncate">
             {generatedLink}
           </div>
           <Button size="sm" variant="outline" onClick={handleCopy}>

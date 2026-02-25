@@ -58,7 +58,7 @@ export default function FlightStickyHeader({
           <div className="flex items-center gap-3 flex-wrap">
             {/* Route */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center">
                 <Plane className="w-4 h-4 text-sky-500" />
               </div>
               <div className="flex items-center gap-1.5 font-semibold">

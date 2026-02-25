@@ -179,7 +179,7 @@ const UnifiedSearchHub = ({ className }: UnifiedSearchHubProps) => {
                       onClick={() => handleTrendingClick(trend.destination)}
                       className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/5 to-teal-500/5 hover:from-primary/10 hover:to-teal-500/10 border border-primary/10 transition-all text-left group"
                     >
-                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", trend.color.split(" ")[1])}>
+                      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", trend.color.split(" ")[1])}>
                         <MapPin className={cn("w-4 h-4", trend.color.split(" ")[0])} />
                       </div>
                       <div className="flex-1">

@@ -79,7 +79,7 @@ const CustomerSupport247 = () => {
                         size="sm" 
                         variant={channel.primary ? "default" : "outline"}
                         className={cn(
-                          "rounded-lg text-xs",
+                          "rounded-xl text-xs",
                           channel.primary && "bg-gradient-to-r from-primary to-teal-400"
                         )}
                       >

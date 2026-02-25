@@ -92,7 +92,7 @@ export const NearbyAirports = ({
           <div className="p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/10 border-b border-emerald-500/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                   <TrendingDown className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
@@ -166,7 +166,7 @@ export const NearbyAirports = ({
         <div className="p-4 border-b border-border/50 bg-muted/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Plane className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -264,7 +264,7 @@ export const NearbyAirports = ({
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+                    <div className="p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">Total Cost Comparison</span>
                       </div>

@@ -172,7 +172,7 @@ const AdminFleetManagement = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300">
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-primary/10">
@@ -185,7 +185,7 @@ const AdminFleetManagement = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "50ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "50ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-green-500/10">
@@ -198,7 +198,7 @@ const AdminFleetManagement = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "100ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "100ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-amber-500/10">
@@ -211,7 +211,7 @@ const AdminFleetManagement = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "150ms" }}>
+        <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "150ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-blue-500/10">
@@ -242,7 +242,7 @@ const AdminFleetManagement = () => {
           return (
             <Card 
               key={vehicle.id}
-              className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300"
+              className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-4 sm:p-6">
