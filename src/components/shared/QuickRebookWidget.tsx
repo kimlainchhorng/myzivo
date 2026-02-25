@@ -67,7 +67,7 @@ const QuickRebookWidget = ({
               className="group p-3 rounded-xl bg-muted/20 border border-border/30 hover:border-primary/30 transition-all cursor-pointer"
             >
               <div className="flex items-start gap-3">
-                <div className={cn("p-2 rounded-lg", config.bg)}>
+                <div className={cn("p-2 rounded-xl", config.bg)}>
                   <Icon className={cn("w-4 h-4", config.color)} />
                 </div>
                 

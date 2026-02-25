@@ -51,7 +51,7 @@ function ChecklistItemRow({ item, onToggle }: ChecklistItemRowProps) {
 
   return (
     <div
-      className={`p-3 rounded-lg border transition-colors ${
+      className={`p-3 rounded-xl border transition-colors ${
         item.is_verified
           ? 'border-green-500/20 bg-green-500/5'
           : item.is_critical

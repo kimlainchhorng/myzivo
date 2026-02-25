@@ -82,7 +82,7 @@ const RewardsRedemptionWidget = ({
             key={percent}
             onClick={() => setMilesValue([Math.floor(maxRedeemable * percent / 100)])}
             className={cn(
-              "flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border",
+              "flex-1 py-1.5 rounded-xl text-xs font-medium transition-all border",
               usagePercent >= percent 
                 ? "bg-primary/20 border-primary/50 text-primary" 
                 : "bg-muted/20 border-border/30 text-muted-foreground hover:text-foreground"
@@ -94,7 +94,7 @@ const RewardsRedemptionWidget = ({
       </div>
 
       {/* Tip */}
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-sky-500/10 text-xs">
+      <div className="flex items-start gap-2 p-2 rounded-xl bg-sky-500/10 text-xs">
         <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
           <span className="text-sky-400 font-medium">Pro tip:</span> Save miles for premium upgrades to maximize value

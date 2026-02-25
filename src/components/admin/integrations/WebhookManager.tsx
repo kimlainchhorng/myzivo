@@ -151,7 +151,7 @@ export default function WebhookManager() {
               </div>
               <div className="space-y-2">
                 <Label>Events to Subscribe</Label>
-                <div className="max-h-48 overflow-y-auto border rounded-lg p-3 space-y-3">
+                <div className="max-h-48 overflow-y-auto border rounded-xl p-3 space-y-3">
                   {availableEvents.map((category) => (
                     <div key={category.category}>
                       <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
@@ -205,7 +205,7 @@ export default function WebhookManager() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     webhook.isActive ? "bg-primary/10" : "bg-muted"
                   }`}>
                     <Webhook className={`h-5 w-5 ${

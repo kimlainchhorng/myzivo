@@ -107,7 +107,7 @@ export default function ServiceCards() {
             >
               <Card
                 className={cn(
-                  "h-full border-2 transition-all duration-300",
+                  "h-full border-2 transition-all duration-200",
                   "hover:-translate-y-2 hover:shadow-2xl",
                   `bg-gradient-to-br ${service.bgGradient}`,
                   service.borderColor

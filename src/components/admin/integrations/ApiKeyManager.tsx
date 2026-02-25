@@ -206,7 +206,7 @@ export default function ApiKeyManager() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     key.isActive && !isExpired(key.expiresAt) 
                       ? "bg-primary/10" 
                       : "bg-muted"

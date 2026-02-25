@@ -159,7 +159,7 @@ const AdminGeographicInsights = () => {
                     <p className="text-[10px] text-muted-foreground">Revenue</p>
                   </div>
                   <div className={cn(
-                    "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium",
+                    "flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-medium",
                     region.growth >= 0 
                       ? "bg-green-500/10 text-green-500" 
                       : "bg-red-500/10 text-red-500"

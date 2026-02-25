@@ -67,7 +67,7 @@ export default function MerchantOrderChatPage() {
         <p className="text-lg font-medium mb-4">Order not found or not for your restaurant</p>
         <button
           onClick={() => navigate("/restaurant")}
-          className="px-4 py-2 bg-orange-500 rounded-lg text-white"
+          className="px-4 py-2 bg-orange-500 rounded-xl text-white"
         >
           Back to Dashboard
         </button>

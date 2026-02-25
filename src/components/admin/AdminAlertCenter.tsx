@@ -174,7 +174,7 @@ const AdminAlertCenter = () => {
                     >
                       <div className="flex gap-3">
                         <div className={cn(
-                          "p-2 rounded-lg shrink-0",
+                          "p-2 rounded-xl shrink-0",
                           config.bg
                         )}>
                           <Icon className={cn("h-4 w-4", config.color)} />

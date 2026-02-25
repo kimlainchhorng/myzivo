@@ -475,7 +475,7 @@ const GroundTransportBooking = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 text-sm mb-4">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 text-sm mb-4">
                   <MapPin className="h-4 w-4 text-primary" />
                   <span>{pickupLocation}</span>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />

@@ -64,7 +64,7 @@ const AllServicesSection = () => {
             <button
               key={service.id}
               onClick={() => navigate(service.href)}
-              className="relative p-4 sm:p-5 lg:p-7 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 group text-left overflow-hidden animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
+              className="relative p-4 sm:p-5 lg:p-7 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-200 group text-left overflow-hidden animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
               style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
             >
               {/* Gradient hover overlay */}
@@ -74,7 +74,7 @@ const AllServicesSection = () => {
               <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 ${service.color}`} />
               
               {service.isNew && (
-                <span className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-black bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg animate-in zoom-in duration-300" style={{ animationDelay: `${300 + index * 50}ms` }}>
+                <span className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-black bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg animate-in zoom-in duration-200" style={{ animationDelay: `${300 + index * 50}ms` }}>
                   New
                 </span>
               )}

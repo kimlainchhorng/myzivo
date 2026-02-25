@@ -253,7 +253,7 @@ export default function FlightBookingFlow({
           <div className="lg:col-span-2 space-y-6">
             {/* Passengers Step */}
             {currentStep === 'passengers' && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="animate-in fade-in slide-in-from-right-4 duration-200">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <Users className="w-6 h-6 text-sky-400" />
                   Passenger Details
@@ -268,7 +268,7 @@ export default function FlightBookingFlow({
 
             {/* Seats Step */}
             {currentStep === 'seats' && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="animate-in fade-in slide-in-from-right-4 duration-200">
                 <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
                   <Armchair className="w-6 h-6 text-sky-400" />
                   Select Your Seats

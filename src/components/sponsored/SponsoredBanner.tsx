@@ -56,7 +56,7 @@ export function SponsoredBanner({
     return (
       <div
         className={cn(
-          "relative flex items-center gap-3 p-3 rounded-lg",
+          "relative flex items-center gap-3 p-3 rounded-xl",
           "border border-amber-500/20 bg-amber-500/5",
           className
         )}
@@ -118,7 +118,7 @@ export function SponsoredBanner({
         {/* Image */}
         {imageUrl && (
           <div className={cn(
-            "rounded-lg overflow-hidden shrink-0",
+            "rounded-xl overflow-hidden shrink-0",
             variant === "wide" ? "w-32 h-24" : "w-full sm:w-24 h-32 sm:h-24"
           )}>
             <img

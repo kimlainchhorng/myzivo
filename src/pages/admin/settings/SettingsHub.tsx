@@ -144,7 +144,7 @@ const SettingsHub = () => {
               <CardDescription>Manage ride pricing by geographic zone</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-lg border">
+              <div className="flex items-center justify-between p-4 rounded-xl border">
                 <div>
                   <p className="font-medium">Zone-Based Pricing</p>
                   <p className="text-sm text-muted-foreground">
@@ -170,7 +170,7 @@ const SettingsHub = () => {
               <CardDescription>Configure operational areas and restrictions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-lg border">
+              <div className="flex items-center justify-between p-4 rounded-xl border">
                 <div>
                   <p className="font-medium">Zone Management</p>
                   <p className="text-sm text-muted-foreground">
@@ -320,7 +320,7 @@ const SettingsHub = () => {
               <div className="space-y-2">
                 <Label>Logo</Label>
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-lg border flex items-center justify-center bg-muted">
+                  <div className="h-16 w-16 rounded-xl border flex items-center justify-center bg-muted">
                     <span className="text-xl font-bold">Z</span>
                   </div>
                   <Button variant="outline">Upload New Logo</Button>

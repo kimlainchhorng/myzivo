@@ -85,7 +85,7 @@ const HowItWorks = () => {
               className="relative group animate-in fade-in slide-in-from-bottom-6 duration-500"
               style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'both' }}
             >
-              <div className="p-4 sm:p-5 lg:p-7 xl:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 text-center h-full overflow-hidden hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] touch-manipulation">
+              <div className="p-4 sm:p-5 lg:p-7 xl:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-200 text-center h-full overflow-hidden hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] touch-manipulation">
                 {/* Background glow on hover */}
                 <div className={cn(
                   "absolute -top-16 -right-16 w-32 h-32 bg-gradient-to-br rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500",
@@ -93,7 +93,7 @@ const HowItWorks = () => {
                 )} />
                 
                 {/* Step Number Badge */}
-                <div className="relative mb-4 sm:mb-6 animate-in zoom-in duration-300" style={{ animationDelay: `${300 + index * 100}ms` }}>
+                <div className="relative mb-4 sm:mb-6 animate-in zoom-in duration-200" style={{ animationDelay: `${300 + index * 100}ms` }}>
                   <div className={cn(
                     "w-12 h-12 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 mx-auto rounded-xl sm:rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg sm:shadow-xl relative overflow-hidden transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3",
                     step.gradient,

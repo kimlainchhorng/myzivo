@@ -76,7 +76,7 @@ export default function PrimaryServicesSection() {
             >
               <Card
                 className={cn(
-                  "h-full border overflow-hidden transition-all duration-300",
+                  "h-full border overflow-hidden transition-all duration-200",
                   "hover:-translate-y-2 hover:shadow-2xl",
                   service.borderHover,
                   service.primary && "ring-2 ring-flights/20 shadow-lg"

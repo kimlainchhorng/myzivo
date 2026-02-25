@@ -200,7 +200,7 @@ const TravelInsuranceWidget = ({
         </button>
 
         {showDetails && (
-          <div className="mt-3 p-3 rounded-lg bg-muted/30 text-xs text-muted-foreground space-y-2">
+          <div className="mt-3 p-3 rounded-xl bg-muted/30 text-xs text-muted-foreground space-y-2">
             <p>• Coverage begins at departure and ends upon return</p>
             <p>• Pre-existing conditions covered if purchased within 14 days of booking</p>
             <p>• 24/7 emergency assistance hotline included</p>

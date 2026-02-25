@@ -168,7 +168,7 @@ const FareClassSelector = ({
               key={fare.id}
               onClick={() => onSelectFare(fare.id)}
               className={cn(
-                "flex-shrink-0 px-4 py-3 rounded-xl border-2 transition-all duration-300",
+                "flex-shrink-0 px-4 py-3 rounded-xl border-2 transition-all duration-200",
                 colors.bg,
                 colors.border,
                 isSelected && `shadow-lg ${colors.glow}`
@@ -205,7 +205,7 @@ const FareClassSelector = ({
             key={fare.id}
             onClick={() => onSelectFare(fare.id)}
             className={cn(
-              "relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02]",
+              "relative overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02]",
               colors.bg,
               isSelected ? `border-2 ${colors.border} shadow-xl ${colors.glow}` : 'border border-border/50 hover:border-sky-500/50'
             )}

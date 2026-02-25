@@ -86,7 +86,7 @@ export default function FlightSearchForm({
               key={type.id}
               onClick={() => setTripType(type.id as typeof tripType)}
               className={cn(
-                "px-4 py-2 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 text-sm",
+                "px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 text-sm",
                 tripType === type.id
                   ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"

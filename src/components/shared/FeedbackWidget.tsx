@@ -83,7 +83,7 @@ export function FeedbackWidget({
         <PopoverTrigger asChild>
           <Button
             size="lg"
-            className="rounded-full shadow-xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-110 active:scale-90 touch-manipulation"
+            className="rounded-full shadow-xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-110 active:scale-90 touch-manipulation"
             variant="default"
           >
             <MessageSquare className="w-5 h-5" />

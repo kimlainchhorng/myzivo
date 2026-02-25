@@ -14,7 +14,7 @@ interface OrderCardSkeletonProps {
 
 const OrderCardSkeleton: React.FC<OrderCardSkeletonProps> = ({ className }) => {
   return (
-    <div className={cn('p-4 border rounded-lg space-y-3', className)}>
+    <div className={cn('p-4 border rounded-xl space-y-3', className)}>
       {/* Header with status badge */}
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-24" />

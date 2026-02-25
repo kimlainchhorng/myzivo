@@ -300,7 +300,7 @@ export function LaunchPhaseControl() {
               {phaseLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
+                  className="flex items-start gap-3 p-3 rounded-xl border bg-muted/30"
                 >
                   <span className="text-xl">{PHASE_CONFIG[log.phase].icon}</span>
                   <div className="flex-1">

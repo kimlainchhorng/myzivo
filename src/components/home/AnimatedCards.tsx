@@ -28,7 +28,7 @@ export const PremiumCard = ({
   return (
     <div
       className={cn(
-        "relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden animate-in fade-in slide-in-from-bottom-4",
+        "relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 group overflow-hidden animate-in fade-in slide-in-from-bottom-4",
         hoverEffect && "hover:-translate-y-2 hover:scale-[1.02]",
         className
       )}

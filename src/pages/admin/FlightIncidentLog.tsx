@@ -189,7 +189,7 @@ const FlightIncidentLog = () => {
                     return (
                       <div 
                         key={incident.id} 
-                        className={`p-4 rounded-lg border ${
+                        className={`p-4 rounded-xl border ${
                           isResolved ? 'bg-muted/20' : 'bg-destructive/5 border-destructive/30'
                         }`}
                       >

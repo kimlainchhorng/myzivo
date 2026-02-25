@@ -529,7 +529,7 @@ const AdminSecurity = () => {
                         {auditLogs.map((log) => (
                           <div
                             key={log.id}
-                            className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                            className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                           >
                             <Badge className={getActionBadgeColor(log.action)}>
                               {log.action.replace(/_/g, " ")}
