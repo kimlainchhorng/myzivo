@@ -297,12 +297,8 @@ export function useRealFlightSearch({
   return useQuery({
     queryKey: ['indicative-flights', origin, destination, departureDate, returnDate],
     queryFn: async (): Promise<GeneratedFlight[]> => {
-      console.log(`[FlightSearch] Generating indicative flights for ${origin} → ${destination}`);
-      
       // Generate indicative flight data (no API calls)
       const flights = generateIndicativeFlights(origin, destination, departureDate);
-      
-      console.log(`[FlightSearch] Generated ${flights.length} indicative flight options`);
       return flights;
     },
     enabled: enabled && !!origin && !!destination && origin.length === 3 && destination.length === 3,

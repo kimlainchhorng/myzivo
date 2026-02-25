@@ -163,7 +163,6 @@ export function useWebPush() {
         isLoading: false,
       }));
 
-      console.log("[useWebPush] Successfully subscribed to push notifications");
       return subscription;
     } catch (err) {
       console.error("[useWebPush] Subscribe error:", err);
@@ -195,7 +194,6 @@ export function useWebPush() {
         await supabase.functions.invoke("unregister-web-push", {
           body: { endpoint },
         });
-        console.log("[useWebPush] Subscription removed from server");
       } catch (serverErr) {
         console.warn("[useWebPush] Failed to remove from server:", serverErr);
         // Continue anyway - browser is unsubscribed
@@ -258,7 +256,7 @@ export function useWebPush() {
           tag: "test",
         });
       } else {
-        console.log("[useWebPush] Test notification sent via server");
+        // Test notification sent successfully
       }
     } catch (err) {
       console.error("[useWebPush] Test notification failed:", err);
