@@ -107,7 +107,7 @@ export default function DeliveryTaskCard({
         </div>
 
         {/* Payout info */}
-        <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-between p-2 bg-muted/50 rounded-xl">
           <span className="text-sm text-muted-foreground">Task Payout</span>
           <span className="font-bold text-emerald-600">
             ${(task.driver_payout || task.total_fee * 0.8).toFixed(2)}

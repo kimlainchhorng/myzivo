@@ -146,7 +146,7 @@ export default function DamageEvidenceUpload({
           {files.map((file) => (
             <div
               key={file.id}
-              className="relative group border rounded-lg overflow-hidden bg-muted"
+              className="relative group border rounded-xl overflow-hidden bg-muted"
             >
               {/* Image preview */}
               <div className="aspect-square relative">

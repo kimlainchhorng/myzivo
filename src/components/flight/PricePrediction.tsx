@@ -369,19 +369,19 @@ export const PricePrediction = ({
 
               {/* Price Range & Stats */}
               <div className="grid grid-cols-4 gap-3">
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/50 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase">30-Day Low</p>
                   <p className="text-lg font-bold text-emerald-400">${historicalLow}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/50 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase">30-Day High</p>
                   <p className="text-lg font-bold text-red-400">${historicalHigh}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/50 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase">Average</p>
                   <p className="text-lg font-bold">${avgPrice}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/40 text-center">
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-center">
                   <p className="text-[10px] text-emerald-400 uppercase">Best Predicted</p>
                   <p className="text-lg font-bold text-emerald-400">${predictedMinPrice}</p>
                   {predictedMinDate && (
@@ -405,10 +405,10 @@ export const PricePrediction = ({
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-card/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
                         factor.impact === 'positive' && "bg-emerald-500/20 text-emerald-400",
                         factor.impact === 'negative' && "bg-red-500/20 text-red-400",
                         factor.impact === 'neutral' && "bg-sky-500/20 text-sky-400",
@@ -454,7 +454,7 @@ export const PricePrediction = ({
                       <div
                         key={window.label}
                         className={cn(
-                          "flex items-center gap-3 p-2 rounded-lg transition-colors",
+                          "flex items-center gap-3 p-2 rounded-xl transition-colors",
                           isCurrent && "bg-primary/10 ring-1 ring-primary/40"
                         )}
                       >
@@ -495,7 +495,7 @@ export const PricePrediction = ({
                       <div
                         key={day}
                         className={cn(
-                          "p-3 rounded-lg text-center transition-all",
+                          "p-3 rounded-xl text-center transition-all",
                           isCheapest && "bg-emerald-500/20 border border-emerald-500/40",
                           isExpensive && !isCheapest && "bg-red-500/10 border border-red-500/30",
                           !isCheapest && !isExpensive && "bg-muted/30 border border-border/50"
@@ -540,7 +540,7 @@ export const PricePrediction = ({
                     <div
                       key={slot.time}
                       className={cn(
-                        "p-3 rounded-lg text-center",
+                        "p-3 rounded-xl text-center",
                         slot.best ? "bg-emerald-500/20 border border-emerald-500/40" : "bg-muted/30 border border-border/50"
                       )}
                     >

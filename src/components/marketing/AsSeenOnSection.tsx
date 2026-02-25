@@ -67,7 +67,7 @@ export function AsSeenOnSection({ className, variant = "default" }: AsSeenOnSect
           {MEDIA_LOGOS.map((logo) => (
             <div
               key={logo.name}
-              className="group flex items-center justify-center h-12 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+              className="group flex items-center justify-center h-12 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
               style={{ width: logo.width }}
             >
               {/* Placeholder text - replace with actual logo images */}

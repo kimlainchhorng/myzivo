@@ -102,7 +102,7 @@ const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodS
               )}
             >
               <div className={cn(
-                "p-2 rounded-lg",
+                "p-2 rounded-xl",
                 isSelected ? "bg-primary/10" : "bg-muted/30"
               )}>
                 <Icon className={cn(
@@ -139,7 +139,7 @@ const PaymentMethodSelector = ({ className, totalAmount = 1299 }: PaymentMethodS
             {savedCards.map((card) => (
               <div
                 key={card.id}
-                className="flex items-center gap-3 p-2 rounded-lg bg-background/50"
+                className="flex items-center gap-3 p-2 rounded-xl bg-background/50"
               >
                 <CreditCard className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm">

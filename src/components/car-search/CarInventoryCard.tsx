@@ -75,7 +75,7 @@ export function CarInventoryCard({ vehicle }: CarInventoryCardProps) {
                 alt={`${vehicle.make?.name} ${vehicle.model?.name}`}
                 onLoad={onLoad}
                 className={cn(
-                  "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
+                  "w-full h-full object-cover transition-all duration-200 group-hover:scale-105",
                   loaded ? "opacity-100" : "opacity-0"
                 )}
                 loading="lazy"

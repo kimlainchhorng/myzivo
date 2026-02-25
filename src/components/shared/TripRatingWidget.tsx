@@ -150,7 +150,7 @@ const TripRatingWidget = ({
       </div>
 
       {/* Photo Upload */}
-      <button className="w-full p-3 rounded-lg border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors flex items-center justify-center gap-2 mb-4">
+      <button className="w-full p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors flex items-center justify-center gap-2 mb-4">
         <Camera className="w-4 h-4" />
         Add photos
       </button>

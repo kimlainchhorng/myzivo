@@ -265,7 +265,7 @@ const TravelInsuranceSelector = ({
                   </p>
                 </div>
               </div>
-              <div className="mt-4 p-3 rounded-lg bg-muted/50">
+              <div className="mt-4 p-3 rounded-xl bg-muted/50">
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-primary" />
                   <span>24/7 Emergency Line: +1-800-ZIVO-SOS</span>
@@ -396,7 +396,7 @@ const TravelInsuranceSelector = ({
                       <TooltipProvider key={item.key}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="text-center p-3 rounded-lg bg-muted/50 cursor-help">
+                            <div className="text-center p-3 rounded-xl bg-muted/50 cursor-help">
                               <Icon className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
                               <p className="text-xs text-muted-foreground">{item.label}</p>
                               <p className="font-bold text-lg">${value.toLocaleString()}</p>
@@ -415,7 +415,7 @@ const TravelInsuranceSelector = ({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-4 p-4 rounded-lg bg-muted/30"
+                    className="mt-4 p-4 rounded-xl bg-muted/30"
                   >
                     <h4 className="font-medium mb-3">What's Covered</h4>
                     <div className="grid gap-2 md:grid-cols-2">
@@ -469,7 +469,7 @@ const TravelInsuranceSelector = ({
                     return (
                       <div
                         key={addon.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                           isAddonSelected
                             ? "border-primary bg-primary/5"
                             : "border-muted hover:border-muted-foreground/30"
@@ -481,7 +481,7 @@ const TravelInsuranceSelector = ({
                             checked={isAddonSelected}
                             className="pointer-events-none"
                           />
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                             <Info className="w-4 h-4 text-primary" />
                           </div>
                           <span className="font-medium">{addon.name}</span>

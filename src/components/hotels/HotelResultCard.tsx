@@ -83,7 +83,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
                 
                 {/* Rating */}
                 <div className="text-right shrink-0">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-hotels/10">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-hotels/10">
                     <span className="font-bold text-hotels">{hotel.guestRating.toFixed(1)}</span>
                     <span className="text-xs text-muted-foreground">/ 10</span>
                   </div>

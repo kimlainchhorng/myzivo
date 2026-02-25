@@ -70,7 +70,7 @@ const CarSeasonalOffers = () => {
                   className={cn(
                     "group relative overflow-hidden p-6 rounded-2xl h-full",
                     "border border-border/50 bg-card/50 backdrop-blur-sm",
-                    "hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer",
+                    "hover:border-primary/30 hover:-translate-y-1 transition-all duration-200 cursor-pointer",
                     "animate-in fade-in slide-in-from-bottom-4"
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}

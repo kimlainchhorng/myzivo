@@ -184,17 +184,17 @@ const HotelBookings = () => {
                             {hotel?.city}, {hotel?.country} • {room?.name || room?.room_type || "Room"} • Ref: <span className="font-mono font-medium text-foreground">{booking.booking_reference}</span>
                           </p>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">
                                 {format(new Date(booking.check_in_date), "MMM d")} - {format(new Date(booking.check_out_date), "MMM d, yyyy")}
                               </span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Moon className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{booking.nights} night{booking.nights > 1 ? 's' : ''}</span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Users className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{booking.guests} guest{booking.guests > 1 ? 's' : ''}</span>
                             </span>

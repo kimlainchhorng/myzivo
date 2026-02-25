@@ -174,7 +174,7 @@ export default function ContactForm({ className = '' }: ContactFormProps) {
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-muted-foreground">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-muted-foreground">
             <strong className="text-amber-500">Note:</strong> ZIVO cannot help with booking changes, 
             cancellations, refunds, or payment issues. Please contact your airline, hotel, or rental 
             company directly for booking-related inquiries.

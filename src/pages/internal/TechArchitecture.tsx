@@ -156,7 +156,7 @@ export default function TechArchitecture() {
                 {TECH_STACK.frontend.map((tech) => (
                   <div
                     key={tech.name}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                    className="flex items-center gap-2 p-2 rounded-xl bg-muted/30"
                   >
                     <span className="text-lg">{tech.icon}</span>
                     <div>
@@ -182,7 +182,7 @@ export default function TechArchitecture() {
                 {TECH_STACK.backend.map((tech) => (
                   <div
                     key={tech.name}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                    className="flex items-center gap-2 p-2 rounded-xl bg-muted/30"
                   >
                     <span className="text-lg">{tech.icon}</span>
                     <div>
@@ -208,7 +208,7 @@ export default function TechArchitecture() {
                 {TECH_STACK.infrastructure.map((tech) => (
                   <div
                     key={tech.name}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                    className="flex items-center gap-2 p-2 rounded-xl bg-muted/30"
                   >
                     <span className="text-lg">{tech.icon}</span>
                     <div>
@@ -234,7 +234,7 @@ export default function TechArchitecture() {
                 {TECH_STACK.integrations.map((tech) => (
                   <div
                     key={tech.name}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                    className="flex items-center gap-2 p-2 rounded-xl bg-muted/30"
                   >
                     <span className="text-lg">{tech.icon}</span>
                     <div>
@@ -257,7 +257,7 @@ export default function TechArchitecture() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative p-6 rounded-lg bg-muted/20 border border-border/50">
+            <div className="relative p-6 rounded-xl bg-muted/20 border border-border/50">
               {/* Simplified architecture visualization */}
               <div className="grid grid-cols-3 gap-8 text-center">
                 {/* Users */}
@@ -360,7 +360,7 @@ export default function TechArchitecture() {
 
 function ArchBlock({ icon, label }: { icon: string; label: string }) {
   return (
-    <div className="p-3 rounded-lg bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+    <div className="p-3 rounded-xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <span className="text-xl">{icon}</span>
       <p className="text-xs font-medium mt-1">{label}</p>
     </div>
@@ -369,7 +369,7 @@ function ArchBlock({ icon, label }: { icon: string; label: string }) {
 
 function SecurityCard({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+    <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <p className="font-medium text-sm mb-3">{title}</p>
       <ul className="space-y-1">
         {items.map((item, i) => (

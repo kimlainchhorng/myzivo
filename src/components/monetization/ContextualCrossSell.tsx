@@ -97,7 +97,7 @@ export default function ContextualCrossSell({
             key={option.type}
             onClick={() => handleCrossSellClick(option)}
             className={cn(
-              "p-4 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 text-left active:scale-[0.98] touch-manipulation",
+              "p-4 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 text-left active:scale-[0.98] touch-manipulation",
               option.bgColor,
               option.borderColor
             )}

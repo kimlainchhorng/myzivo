@@ -274,7 +274,7 @@ const FlightTravelerInfo = () => {
                 <img
                   src={getDuffelAirlineLogo(offer.airlineCode)}
                   alt={offer.airline}
-                  className="w-12 h-12 object-contain bg-white rounded-lg p-1"
+                  className="w-12 h-12 object-contain bg-white rounded-xl p-1"
                   onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
                 />
                 <div>

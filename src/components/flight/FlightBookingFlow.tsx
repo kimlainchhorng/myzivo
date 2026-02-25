@@ -216,7 +216,7 @@ export default function FlightBookingFlow({
                     onClick={() => idx <= currentStepIndex && setCurrentStep(step.id)}
                     disabled={idx > currentStepIndex}
                     className={cn(
-                      "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95",
+                      "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl transition-all touch-manipulation active:scale-95",
                       isActive && "bg-sky-500/20 text-sky-400",
                       isComplete && "text-emerald-400",
                       !isActive && !isComplete && "text-muted-foreground",
@@ -285,7 +285,7 @@ export default function FlightBookingFlow({
                         key={p.id}
                         onClick={() => setCurrentPassengerIndex(idx)}
                         className={cn(
-                          "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
+                          "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
                           idx === currentPassengerIndex
                             ? "bg-sky-500 text-white"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -392,7 +392,7 @@ export default function FlightBookingFlow({
                         <img 
                           src={outboundFlight.logo} 
                           alt={outboundFlight.airline}
-                          className="w-10 h-10 rounded-lg object-contain bg-white p-1"
+                          className="w-10 h-10 rounded-xl object-contain bg-white p-1"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -424,7 +424,7 @@ export default function FlightBookingFlow({
                           <img 
                             src={returnFlight.logo} 
                             alt={returnFlight.airline}
-                            className="w-10 h-10 rounded-lg object-contain bg-white p-1"
+                            className="w-10 h-10 rounded-xl object-contain bg-white p-1"
                           />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ export default function FlightBookingFlow({
                     </h3>
                     <div className="space-y-3">
                       {passengers.map((p, idx) => (
-                        <div key={p.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <div key={p.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                           <div>
                             <p className="font-medium">{p.firstName} {p.lastName}</p>
                             <p className="text-sm text-muted-foreground">{p.nationality || 'Passenger'}</p>

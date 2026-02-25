@@ -81,7 +81,7 @@ const HotelPriceCalendar = () => {
                   key={index}
                   disabled={!item.day}
                   className={cn(
-                    "aspect-square p-1 rounded-lg transition-all duration-200",
+                    "aspect-square p-1 rounded-xl transition-all duration-200",
                     "flex flex-col items-center justify-center",
                     item.day && "hover:-translate-y-0.5 hover:shadow-md cursor-pointer",
                     item.level === "low" && "bg-emerald-500/20 border border-emerald-500/30 hover:bg-emerald-500/30",

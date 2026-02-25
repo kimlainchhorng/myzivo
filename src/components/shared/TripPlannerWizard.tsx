@@ -201,13 +201,13 @@ const TripPlannerWizard = ({ className }: TripPlannerWizardProps) => {
                   )}
                 >
                   <div className={cn(
-                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0",
+                    "w-6 h-6 rounded-xl border-2 flex items-center justify-center shrink-0",
                     services[service.key] ? "bg-primary border-primary" : "border-muted-foreground/30"
                   )}>
                     {services[service.key] && <Check className="w-4 h-4 text-white" />}
                   </div>
                   <div className={cn(
-                    "p-2 rounded-lg",
+                    "p-2 rounded-xl",
                     `bg-${service.color}-500/10`
                   )}>
                     <service.icon className={cn("w-5 h-5", `text-${service.color}-500`)} />
