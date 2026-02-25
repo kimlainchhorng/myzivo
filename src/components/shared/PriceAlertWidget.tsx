@@ -153,7 +153,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
               <div className="flex items-center gap-3">
                 {/* Type Icon */}
                 <div className={cn(
-                  "p-2 rounded-lg",
+                  "p-2 rounded-xl",
                   typeColors[alert.type]
                 )}>
                   <Icon className="w-4 h-4" />

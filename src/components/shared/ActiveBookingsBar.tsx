@@ -72,7 +72,7 @@ const ActiveBookingsBar = ({ className }: ActiveBookingsBarProps) => {
           {inProgressBooking && (
             <div className="flex items-center gap-3">
               <div className={cn(
-                "p-2 rounded-lg",
+                "p-2 rounded-xl",
                 typeConfig[inProgressBooking.type].bg
               )}>
                 {(() => {
@@ -133,7 +133,7 @@ const ActiveBookingsBar = ({ className }: ActiveBookingsBarProps) => {
                   onClick={() => navigate(booking.href)}
                   className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                 >
-                  <div className={cn("p-1.5 rounded-lg", config.bg)}>
+                  <div className={cn("p-1.5 rounded-xl", config.bg)}>
                     <Icon className={cn("w-4 h-4", config.color)} />
                   </div>
                   <div className="flex-1 text-left">

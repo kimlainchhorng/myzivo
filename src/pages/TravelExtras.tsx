@@ -329,7 +329,7 @@ export default function TravelExtras() {
                           >
                             <Card
                               className={cn(
-                                "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full",
+                                "group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full",
                                 partner.borderHover,
                                 "animate-in fade-in slide-in-from-bottom-4"
                               )}

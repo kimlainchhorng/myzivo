@@ -145,7 +145,7 @@ const RideDetailDrawer = ({ ride, open, onClose }: RideDetailDrawerProps) => {
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground">Driver</h4>
             {ride.driver ? (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <div className="bg-muted/50 rounded-xl p-3 space-y-1">
                 <p className="font-medium">{ride.driver.full_name}</p>
                 <p className="text-sm text-muted-foreground">{ride.driver.phone}</p>
                 {ride.driver.vehicle_model && (
@@ -155,7 +155,7 @@ const RideDetailDrawer = ({ ride, open, onClose }: RideDetailDrawerProps) => {
                 )}
               </div>
             ) : (
-              <div className="bg-amber-500/10 text-amber-600 rounded-lg p-3 text-sm">
+              <div className="bg-amber-500/10 text-amber-600 rounded-xl p-3 text-sm">
                 No driver assigned
               </div>
             )}
@@ -193,14 +193,14 @@ const RideDetailDrawer = ({ ride, open, onClose }: RideDetailDrawerProps) => {
 
           {/* Fare & Trip Info */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-muted/50 rounded-lg p-3">
+            <div className="bg-muted/50 rounded-xl p-3">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <DollarSign className="w-4 h-4" />
                 <span className="text-xs">Fare</span>
               </div>
               <p className="text-lg font-bold">${(ride.fare_amount || 0).toFixed(2)}</p>
             </div>
-            <div className="bg-muted/50 rounded-lg p-3">
+            <div className="bg-muted/50 rounded-xl p-3">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Clock className="w-4 h-4" />
                 <span className="text-xs">Distance</span>

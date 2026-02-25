@@ -188,7 +188,7 @@ export function TestBookingRunner() {
               return (
                 <div
                   key={serviceType}
-                  className={`p-4 rounded-lg border ${
+                  className={`p-4 rounded-xl border ${
                     test?.test_status === 'success'
                       ? 'border-green-500/20 bg-green-500/5'
                       : test?.test_status === 'failed'

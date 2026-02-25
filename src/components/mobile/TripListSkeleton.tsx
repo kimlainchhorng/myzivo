@@ -22,7 +22,7 @@ const TripListSkeleton: React.FC<TripListSkeletonProps> = ({
       {Array.from({ length: count }).map((_, i) => (
         <div 
           key={i}
-          className="flex items-center gap-3 p-3 bg-card border rounded-lg"
+          className="flex items-center gap-3 p-3 bg-card border rounded-xl"
         >
           {/* Icon placeholder */}
           <Skeleton className="h-10 w-10 rounded-full shrink-0" />
@@ -50,19 +50,19 @@ export const DriverStatsSkeleton: React.FC<{ className?: string }> = ({ classNam
   return (
     <div className={cn('grid grid-cols-3 gap-3', className)}>
       {/* Today's Earnings */}
-      <div className="p-4 bg-card border rounded-lg text-center space-y-2">
+      <div className="p-4 bg-card border rounded-xl text-center space-y-2">
         <Skeleton className="h-3 w-16 mx-auto" />
         <Skeleton className="h-7 w-20 mx-auto" />
       </div>
       
       {/* Trips Completed */}
-      <div className="p-4 bg-card border rounded-lg text-center space-y-2">
+      <div className="p-4 bg-card border rounded-xl text-center space-y-2">
         <Skeleton className="h-3 w-12 mx-auto" />
         <Skeleton className="h-7 w-8 mx-auto" />
       </div>
       
       {/* Online Hours */}
-      <div className="p-4 bg-card border rounded-lg text-center space-y-2">
+      <div className="p-4 bg-card border rounded-xl text-center space-y-2">
         <Skeleton className="h-3 w-14 mx-auto" />
         <Skeleton className="h-7 w-12 mx-auto" />
       </div>
@@ -105,8 +105,8 @@ export const ActiveTripSkeleton: React.FC<{ className?: string }> = ({ className
       
       {/* Action buttons */}
       <div className="flex gap-2 pt-2">
-        <Skeleton className="h-10 flex-1 rounded-lg" />
-        <Skeleton className="h-10 flex-1 rounded-lg" />
+        <Skeleton className="h-10 flex-1 rounded-xl" />
+        <Skeleton className="h-10 flex-1 rounded-xl" />
       </div>
     </div>
   );

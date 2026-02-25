@@ -103,7 +103,7 @@ const FlightTrackerWidget = ({
       </div>
 
       {/* Flight Info */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <div className="flex items-center justify-between mb-2">
           <div>
             <p className="text-xs text-muted-foreground">{airline}</p>
@@ -154,17 +154,17 @@ const FlightTrackerWidget = ({
 
       {/* Live Stats Grid */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-center">
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
           <MapPin className="w-4 h-4 mx-auto mb-1 text-sky-400" />
           <p className="text-lg font-bold">{altitude.toLocaleString()}</p>
           <p className="text-[10px] text-muted-foreground">Altitude (ft)</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-center">
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
           <Wind className="w-4 h-4 mx-auto mb-1 text-emerald-400" />
           <p className="text-lg font-bold">{speed}</p>
           <p className="text-[10px] text-muted-foreground">Speed (mph)</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-center">
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
           <Thermometer className="w-4 h-4 mx-auto mb-1 text-purple-400" />
           <p className="text-lg font-bold">{temperature}°</p>
           <p className="text-[10px] text-muted-foreground">Outside (°C)</p>

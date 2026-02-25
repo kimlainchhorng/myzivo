@@ -167,7 +167,7 @@ export function EnvironmentVerificationPanel() {
             {checks.map((check) => (
               <div
                 key={check.key}
-                className={`flex items-center justify-between p-3 rounded-lg border ${
+                className={`flex items-center justify-between p-3 rounded-xl border ${
                   check.isValid
                     ? "border-green-500/20 bg-green-500/5"
                     : "border-destructive/20 bg-destructive/5"
@@ -216,7 +216,7 @@ export function EnvironmentVerificationPanel() {
             {API_ENDPOINTS.map((api) => (
               <div
                 key={api.name}
-                className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5"
+                className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5"
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -254,19 +254,19 @@ export function EnvironmentVerificationPanel() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5">
               <span className="text-sm">Test Mode Banners</span>
               <Badge className="bg-green-500">Hidden</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5">
               <span className="text-sm">Console Debug Logs</span>
               <Badge className="bg-green-500">Disabled</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5">
               <span className="text-sm">Sandbox UI Elements</span>
               <Badge className="bg-green-500">Hidden</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/20 bg-green-500/5">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-green-500/20 bg-green-500/5">
               <span className="text-sm">Mock Data Mode</span>
               <Badge className="bg-green-500">Disabled</Badge>
             </div>

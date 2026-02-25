@@ -72,7 +72,7 @@ const FlightAirportInfo = () => {
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       {airport.amenities.map((amenity, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-muted/30">
+                        <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-xl bg-muted/30">
                           {idx === 0 && <ShoppingBag className="w-4 h-4 text-amber-400" />}
                           {idx === 1 && <Wifi className="w-4 h-4 text-blue-400" />}
                           {idx === 2 && <ShoppingBag className="w-4 h-4 text-pink-400" />}
@@ -90,7 +90,7 @@ const FlightAirportInfo = () => {
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       {airport.transport.map((option, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-muted/30">
+                        <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-xl bg-muted/30">
                           {idx === 0 && <Train className="w-4 h-4 text-green-400" />}
                           {idx === 1 && <Car className="w-4 h-4 text-yellow-400" />}
                           {idx === 2 && <Car className="w-4 h-4 text-purple-400" />}

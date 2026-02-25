@@ -125,7 +125,7 @@ export default function SearchFlowValidator() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center",
+              "w-10 h-10 rounded-xl flex items-center justify-center",
               allPassed ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
             )}>
               <Search className="w-5 h-5" />
@@ -151,7 +151,7 @@ export default function SearchFlowValidator() {
             <div
               key={test.id}
               className={cn(
-                "flex items-center justify-between p-3 rounded-lg border",
+                "flex items-center justify-between p-3 rounded-xl border",
                 test.status === "pass"
                   ? "bg-emerald-500/5 border-emerald-500/30"
                   : test.status === "fail"

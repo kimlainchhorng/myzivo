@@ -87,7 +87,7 @@ export default function MobileTestChecklist() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center",
+              "w-10 h-10 rounded-xl flex items-center justify-center",
               allComplete ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
             )}>
               <Smartphone className="w-5 h-5" />
@@ -114,7 +114,7 @@ export default function MobileTestChecklist() {
             <div
               key={test.id}
               className={cn(
-                "flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                "flex items-start gap-3 p-3 rounded-xl border transition-colors cursor-pointer",
                 checked[test.id]
                   ? "bg-emerald-500/5 border-emerald-500/30"
                   : "bg-muted/30 border-transparent hover:bg-muted/50"

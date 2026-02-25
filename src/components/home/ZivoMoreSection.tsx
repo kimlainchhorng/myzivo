@@ -68,7 +68,7 @@ const ZivoMoreSection = () => {
               key={service.id}
               className={cn(
                 "group relative p-6 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm",
-                "hover:border-border hover:shadow-lg transition-all duration-300",
+                "hover:border-border hover:shadow-lg transition-all duration-200",
                 "flex flex-col items-center text-center"
               )}
             >

@@ -80,7 +80,7 @@ export default function CrossSellSection({
         <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/30">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
                 <Hotel className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
               </div>
               <div>
@@ -94,7 +94,7 @@ export default function CrossSellSection({
                 <button
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
-                  className="w-full flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm sm:text-base">{partner.logo}</span>
@@ -124,7 +124,7 @@ export default function CrossSellSection({
         <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/5 border-violet-500/30">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-violet-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
                 <Car className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
               </div>
               <div>
@@ -138,7 +138,7 @@ export default function CrossSellSection({
                 <button
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
-                  className="w-full flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm sm:text-base">{partner.logo}</span>
@@ -168,7 +168,7 @@ export default function CrossSellSection({
         <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/30 sm:col-span-2 md:col-span-1">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
               </div>
               <div>
@@ -182,7 +182,7 @@ export default function CrossSellSection({
                 <button
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
-                  className="w-full flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm sm:text-base">{partner.logo}</span>

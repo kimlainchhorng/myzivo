@@ -349,7 +349,7 @@ export default function NotificationsOutboxPage() {
                       open={expandedIds.has(notif.id)}
                       onOpenChange={() => toggleExpanded(notif.id)}
                     >
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
                         <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left">
                           <ChevronDown
                             className={cn(
@@ -384,7 +384,7 @@ export default function NotificationsOutboxPage() {
                         </Button>
                       </div>
                       <CollapsibleContent>
-                        <div className="p-3 mt-1 rounded-lg bg-muted/30 text-sm space-y-2">
+                        <div className="p-3 mt-1 rounded-xl bg-muted/30 text-sm space-y-2">
                           <div>
                             <span className="text-muted-foreground">Error:</span>
                             <p className="text-destructive">{notif.error_message || "Unknown error"}</p>
@@ -429,7 +429,7 @@ export default function NotificationsOutboxPage() {
                     className="flex items-center justify-between p-3 hover:bg-muted/30"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                         {getChannelIcon(notif.channel)}
                       </div>
                       <div className="flex-1 min-w-0">

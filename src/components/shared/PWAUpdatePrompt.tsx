@@ -40,7 +40,7 @@ export function PWAUpdatePrompt() {
   };
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-200">
       <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/95 border border-border/50 shadow-2xl backdrop-blur-xl max-w-sm">
         <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
           <RefreshCw className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '3s' }} />

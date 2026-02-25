@@ -93,7 +93,7 @@ export default function PopularDestinationsGrid({
               <div className={cn(
                 "relative overflow-hidden rounded-xl aspect-square",
                 "border border-border/50 bg-card/50",
-                "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+                "transition-all duration-200 hover:-translate-y-1 hover:shadow-lg",
                 colors.border,
                 colors.shadow
               )}>

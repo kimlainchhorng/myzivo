@@ -187,7 +187,7 @@ const AdminGoalsTracker = () => {
             <Card 
               key={goal.id}
               className={cn(
-                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300",
+                "border-0 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200",
                 goal.status === "at_risk" && "border border-amber-500/30",
                 goal.status === "completed" && "border border-green-500/30"
               )}

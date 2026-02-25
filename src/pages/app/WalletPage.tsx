@@ -204,7 +204,7 @@ export default function WalletPage() {
             {loadingMethods ? (
               <div className="space-y-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
+                  <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
                 ))}
               </div>
             ) : paymentMethods && paymentMethods.length > 0 ? (
@@ -259,7 +259,7 @@ export default function WalletPage() {
             {loadingTx ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
+                  <div key={i} className="h-16 bg-muted animate-pulse rounded-xl" />
                 ))}
               </div>
             ) : transactions && transactions.length > 0 ? (

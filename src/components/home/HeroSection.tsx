@@ -237,7 +237,7 @@ export default function HeroSection() {
               <button
                 key={i}
                 onClick={() => setCurrentImage(i)}
-                className={`rounded-full transition-all duration-300 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center ${
+                className={`rounded-full transition-all duration-200 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center ${
                   i === currentImage
                     ? "bg-primary w-8 h-3 shadow-md"
                     : "bg-white/50 hover:bg-white/70 w-3 h-3"

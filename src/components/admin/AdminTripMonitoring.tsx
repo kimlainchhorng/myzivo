@@ -489,11 +489,11 @@ const AdminTripMonitoring = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Rider ID</p>
                   <p className="font-medium truncate">{selectedTrip.rider_id || "N/A"}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Driver</p>
                   <p className="font-medium">
                     {selectedTrip.driver?.full_name || "Unassigned"}
@@ -543,7 +543,7 @@ const AdminTripMonitoring = () => {
               </div>
 
               {selectedTrip.rating && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10">
                   <p className="text-sm text-muted-foreground">Rating:</p>
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -621,7 +621,7 @@ const AdminTripMonitoring = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             {selectedTrip && (
-              <div className="p-3 rounded-lg bg-muted/30">
+              <div className="p-3 rounded-xl bg-muted/30">
                 <p className="text-xs text-muted-foreground mb-1">Trip</p>
                 <p className="font-medium">{selectedTrip.pickup_address}</p>
                 <p className="text-sm text-muted-foreground">→ {selectedTrip.dropoff_address}</p>
@@ -694,7 +694,7 @@ const AdminTripMonitoring = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <p className="text-sm text-amber-600">
                 ⚠️ Warning: Overriding status may affect driver earnings and customer experience.
               </p>

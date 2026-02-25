@@ -68,7 +68,7 @@ export function SponsoredResultCard({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Image (if provided) */}
           {imageUrl && (
-            <div className="w-full sm:w-32 h-24 rounded-lg overflow-hidden shrink-0">
+            <div className="w-full sm:w-32 h-24 rounded-xl overflow-hidden shrink-0">
               <img
                 src={imageUrl}
                 alt={title}

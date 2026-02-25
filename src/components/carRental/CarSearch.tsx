@@ -271,7 +271,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Quick Filters</Label>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl">
                       <span className="text-sm flex items-center gap-2">
                         <Zap className="w-4 h-4 text-primary" />
                         Instant Book
@@ -281,7 +281,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                         onCheckedChange={setInstantBookOnly}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl">
                       <span className="text-sm flex items-center gap-2">
                         <Leaf className="w-4 h-4 text-green-500" />
                         Electric Only

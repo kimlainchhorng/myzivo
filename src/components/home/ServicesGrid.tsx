@@ -127,7 +127,7 @@ export default function ServicesGrid() {
             >
               <Card
                 className={cn(
-                  "h-full border overflow-hidden transition-all duration-300",
+                  "h-full border overflow-hidden transition-all duration-200",
                   "hover:-translate-y-1 hover:shadow-xl",
                   service.borderHover
                 )}

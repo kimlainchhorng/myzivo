@@ -149,7 +149,7 @@ export function FilterOption({
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
       className={cn(
-        "w-full flex items-center justify-between py-2.5 px-3 rounded-lg border transition-colors touch-manipulation",
+        "w-full flex items-center justify-between py-2.5 px-3 rounded-xl border transition-colors touch-manipulation",
         checked
           ? "border-primary bg-primary/5 text-primary"
           : "border-border hover:border-muted-foreground/30",
