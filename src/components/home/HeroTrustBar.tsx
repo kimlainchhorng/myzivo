@@ -24,9 +24,9 @@ export default function HeroTrustBar({ className, variant = "default" }: HeroTru
       className
     )}>
       {trustItems.map((item) => (
-        <div
+         <div
           key={item}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-default"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-default touch-manipulation px-2 py-1 rounded-lg hover:bg-muted/30"
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 text-primary" />
           <span className={cn(

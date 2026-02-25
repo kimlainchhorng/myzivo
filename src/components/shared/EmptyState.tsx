@@ -84,11 +84,11 @@ export function EmptyState({
       </p>
 
       {/* Action Button */}
-      {actionLabel && onAction && (
+       {actionLabel && onAction && (
         <Button
           onClick={onAction}
           variant="outline"
-          className="mt-6"
+          className="mt-6 rounded-xl touch-manipulation active:scale-[0.97] min-h-[44px]"
         >
           {actionLabel}
         </Button>

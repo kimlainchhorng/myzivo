@@ -47,13 +47,13 @@ const GuestHomeSection = () => {
         {/* Trending Destinations Chips */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           {trendingDestinations.slice(0, 8).map((destination) => (
-            <Link
+             <Link
               key={destination}
               to={`/flights?to=${destination}`}
               className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium",
+                "px-4 py-2 rounded-full text-sm font-medium min-h-[40px] flex items-center",
                 "bg-card border border-border hover:border-primary/50 hover:bg-primary/5",
-                "transition-all duration-200"
+                "transition-all duration-200 touch-manipulation active:scale-95"
               )}
             >
               {destination}
@@ -74,7 +74,7 @@ const GuestHomeSection = () => {
                   <Link
                     key={route.label}
                     to={`/flights?from=${route.origin}&to=${route.destination}`}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all touch-manipulation active:scale-[0.99] group min-h-[48px]"
                   >
                     <span className="w-6 h-6 rounded-full bg-sky-500/20 text-sky-500 text-xs font-bold flex items-center justify-center">
                       {index + 1}
@@ -99,9 +99,9 @@ const GuestHomeSection = () => {
                   <Link
                     key={dest.name}
                     to={`/flights?to=${dest.name}`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all touch-manipulation active:scale-[0.99] group min-h-[48px]"
                   >
-                    <span>{dest.name}</span>
+                    <span className="font-medium">{dest.name}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">from</span>
                       <span className="font-bold">${dest.avgPrice}</span>

@@ -106,10 +106,10 @@ export default function TestimonialsSection() {
               </motion.div>
             </AnimatePresence>
 
-            <button onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-12 w-10 h-10 rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-95 transition-all shadow-sm" aria-label="Previous">
+             <button onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-90 transition-all shadow-sm touch-manipulation" aria-label="Previous">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-12 w-10 h-10 rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-95 transition-all shadow-sm" aria-label="Next">
+            <button onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-90 transition-all shadow-sm touch-manipulation" aria-label="Next">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -118,11 +118,11 @@ export default function TestimonialsSection() {
             {testimonials.map((tItem, i) => {
               const dotColor = serviceColors[tItem.service] || "bg-primary";
               return (
-                <button
+               <button
                   key={i}
                   onClick={() => goTo(i)}
                   className={cn(
-                    "rounded-full transition-all duration-300",
+                    "rounded-full transition-all duration-300 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center",
                     i === current ? `${dotColor} w-7 h-2.5` : "bg-muted-foreground/20 w-2.5 h-2.5 hover:bg-muted-foreground/40"
                   )}
                   aria-label={`Go to testimonial ${i + 1}`}

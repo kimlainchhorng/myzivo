@@ -15,10 +15,10 @@ const RideAppBar = ({ onMenuClick }: RideAppBarProps) => {
     >
       <BrandLogo size="sm" showText={true} />
       
-      <motion.button
+       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={onMenuClick}
-        className="p-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/10"
+        className="p-2.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5 text-white" />

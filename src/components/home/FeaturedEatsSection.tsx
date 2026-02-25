@@ -49,10 +49,10 @@ export default function FeaturedEatsSection() {
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {categories.map((c) => (
-            <button
+             <button
               key={c}
               onClick={() => setActive(c)}
-              className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all")}
+              className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
             >
               {c}
             </button>
@@ -70,7 +70,7 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -80,9 +80,9 @@ export default function FeaturedEatsSection() {
                     </span>
                   )}
                   {/* Quick order button on hover */}
-                  <button
+                   <button
                     onClick={(e) => handleQuickOrder(e, food.name)}
-                    className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90 shadow-lg"
+                    className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
                     aria-label="Quick order"
                   >
                     <ShoppingCart className="w-4 h-4" />

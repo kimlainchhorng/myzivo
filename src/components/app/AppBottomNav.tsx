@@ -46,11 +46,11 @@ const AppBottomNav = () => {
           const activeColor = isActive && tab.color ? tab.color : isActive ? "text-primary" : "text-muted-foreground";
           
           return (
-            <button
+             <button
               key={tab.id}
               onClick={() => navigate(tab.path)}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-1 transition-colors touch-manipulation active:scale-95",
+                "flex flex-col items-center justify-center flex-1 gap-1 transition-all touch-manipulation active:scale-90 min-w-[48px] min-h-[48px]",
                 activeColor
               )}
               aria-label={tab.label}

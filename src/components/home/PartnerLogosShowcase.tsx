@@ -37,7 +37,7 @@ export default function PartnerLogosShowcase() {
               {i > 0 && (
                 <div className="hidden md:block w-px h-6 bg-border/50" />
               )}
-              <div className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 cursor-default">
+              <div className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 cursor-default touch-manipulation active:scale-[0.98]">
                 <span className="text-sm sm:text-base font-semibold text-muted-foreground/60 group-hover:text-foreground group-hover:scale-105 transition-all duration-200">
                   {partner.name}
                 </span>

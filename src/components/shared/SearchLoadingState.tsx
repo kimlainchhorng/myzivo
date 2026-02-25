@@ -139,14 +139,14 @@ export function SearchLoadingState({
         <Search className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Searching partners:</span>
       </div>
-      <div className="flex items-center gap-3">
+       <div className="flex items-center gap-3">
         {partnerLogos.slice(0, 5).map((partner, index) => (
           <div
             key={partner.name}
             className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold transition-all duration-300",
+              "w-11 h-11 rounded-xl flex items-center justify-center text-white text-xs font-bold transition-all duration-300",
               partner.color,
-              activePartner === index ? "scale-110 ring-2 ring-primary ring-offset-2" : "opacity-50 scale-90"
+              activePartner === index ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background" : "opacity-50 scale-90"
             )}
           >
             {partner.name.slice(0, 2)}
