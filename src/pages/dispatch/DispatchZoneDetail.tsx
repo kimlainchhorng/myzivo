@@ -89,7 +89,7 @@ const DispatchZoneDetail = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
+              <div className="p-2 bg-green-500/10 rounded-xl">
                 <Users className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -104,7 +104,7 @@ const DispatchZoneDetail = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
+              <div className="p-2 bg-blue-500/10 rounded-xl">
                 <Package className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -121,7 +121,7 @@ const DispatchZoneDetail = () => {
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  "p-2 rounded-lg",
+                  "p-2 rounded-xl",
                   isSurging ? "bg-amber-500/10" : "bg-muted"
                 )}
               >
@@ -144,7 +144,7 @@ const DispatchZoneDetail = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
+              <div className="p-2 bg-purple-500/10 rounded-xl">
                 <Clock className="h-5 w-5 text-purple-500" />
               </div>
               <div>
@@ -273,7 +273,7 @@ const DispatchZoneDetail = () => {
                       <TableRow key={restaurant.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-muted rounded-lg">
+                            <div className="p-2 bg-muted rounded-xl">
                               <Store className="h-4 w-4" />
                             </div>
                             <span className="font-medium">{restaurant.name}</span>

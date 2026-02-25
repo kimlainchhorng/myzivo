@@ -236,7 +236,7 @@ const RestaurantOrders = () => {
                     
                     return (
                       <motion.div key={order.id} variants={item}>
-                        <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                        <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 group overflow-hidden">
                           <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${statusConfig.gradient}`} />
                           <CardContent className="p-5 pl-6">
                             <div className="flex items-start justify-between">

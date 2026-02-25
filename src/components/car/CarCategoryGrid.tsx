@@ -122,8 +122,8 @@ export default function CarCategoryGrid({ className, pickupLocation = "" }: CarC
             <Card
               key={cat.id}
               className={cn(
-                "overflow-hidden cursor-pointer group transition-all duration-300",
-                "hover:shadow-xl hover:-translate-y-1 hover:border-violet-500/50",
+                "overflow-hidden cursor-pointer group transition-all duration-200",
+                "hover:shadow-xl hover:-translate-y-1.5 hover:border-violet-500/50",
                 "touch-manipulation active:scale-[0.98]"
               )}
               onClick={() => handleCategoryClick(cat)}
@@ -131,7 +131,7 @@ export default function CarCategoryGrid({ className, pickupLocation = "" }: CarC
               <CardContent className="p-0">
                 {/* Icon header */}
                 <div className="h-24 bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center relative">
-                  <span className="text-5xl transition-transform duration-300 group-hover:scale-110">
+                  <span className="text-5xl transition-transform duration-200 group-hover:scale-110">
                     {cat.icon}
                   </span>
                   {cat.popular && (

@@ -118,7 +118,7 @@ const RefundPolicy = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <p className="font-medium flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     Hizivo is Merchant of Record
@@ -131,21 +131,21 @@ const RefundPolicy = () => {
                 <div>
                   <h4 className="font-semibold mb-3">Refund Eligibility by Rate Type</h4>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center p-4 bg-muted rounded-xl">
                       <div>
                         <p className="font-medium">Free Cancellation Rate</p>
                         <p className="text-sm text-muted-foreground">Cancelled before deadline</p>
                       </div>
                       <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Full Refund</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center p-4 bg-muted rounded-xl">
                       <div>
                         <p className="font-medium">Free Cancellation Rate</p>
                         <p className="text-sm text-muted-foreground">Cancelled after deadline</p>
                       </div>
                       <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Partial (minus 1 night)</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center p-4 bg-muted rounded-xl">
                       <div>
                         <p className="font-medium">Non-Refundable Rate</p>
                         <p className="text-sm text-muted-foreground">Discounted rate</p>
@@ -177,7 +177,7 @@ const RefundPolicy = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <p className="font-medium flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     Hizivo is Merchant of Record
@@ -190,11 +190,11 @@ const RefundPolicy = () => {
                 <div>
                   <h4 className="font-semibold mb-3">Cancellation Refunds</h4>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center p-4 bg-muted rounded-xl">
                       <span>48+ hours before pickup</span>
                       <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Full Refund</Badge>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center p-4 bg-muted rounded-xl">
                       <span>24-48 hours before pickup</span>
                       <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">75% Refund</Badge>
                     </div>

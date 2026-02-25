@@ -103,7 +103,7 @@ const CarFeaturedVehicles = ({ onSelect }: CarFeaturedVehiclesProps) => {
             <Card
               key={vehicle.id}
               className={cn(
-                "glass-card overflow-hidden group cursor-pointer transition-all duration-300 touch-manipulation active:scale-[0.98]",
+                "glass-card overflow-hidden group cursor-pointer transition-all duration-200 touch-manipulation active:scale-[0.98]",
                 "hover:border-violet-500/50 hover:-translate-y-1",
                 vehicle.featured && "lg:col-span-2"
               )}
@@ -127,7 +127,7 @@ const CarFeaturedVehicles = ({ onSelect }: CarFeaturedVehiclesProps) => {
                   <Badge className="absolute top-3 left-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white">
                     {vehicle.tag}
                   </Badge>
-                  <button className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors">
+                  <button className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-all duration-200">
                     <Heart className="w-4 h-4 text-muted-foreground hover:text-red-500" />
                   </button>
                   {vehicle.originalPrice && (
@@ -143,7 +143,7 @@ const CarFeaturedVehicles = ({ onSelect }: CarFeaturedVehiclesProps) => {
                     <span className="font-bold text-sm">{vehicle.rating}</span>
                     <span className="text-xs text-muted-foreground">({vehicle.reviews} reviews)</span>
                   </div>
-                  <h3 className="font-display font-bold text-lg group-hover:text-violet-400 transition-colors">
+                  <h3 className="font-display font-bold text-lg group-hover:text-violet-400 transition-all duration-200">
                     {vehicle.make} {vehicle.model}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">{vehicle.year} • {vehicle.category}</p>

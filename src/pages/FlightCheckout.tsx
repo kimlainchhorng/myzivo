@@ -491,7 +491,7 @@ const FlightCheckout = () => {
                           <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>
                         )}
                       </div>
-                      <button onClick={handleRemovePromo} className="p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" aria-label="Remove promo code">
+                      <button onClick={handleRemovePromo} className="p-1.5 rounded-xl hover:bg-emerald-500/10 transition-all duration-200" aria-label="Remove promo code">
                         <X className="w-4 h-4 text-emerald-500" />
                       </button>
                     </div>

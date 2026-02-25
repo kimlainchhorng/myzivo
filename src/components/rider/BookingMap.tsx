@@ -406,7 +406,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
               variant="ghost"
               size="icon"
               onClick={handleZoomIn}
-              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation"
+              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
             >
               <ZoomIn className="w-4 h-4" />
             </Button>
@@ -414,7 +414,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
               variant="ghost"
               size="icon"
               onClick={handleZoomOut}
-              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation"
+              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
             >
               <ZoomOut className="w-4 h-4" />
             </Button>
@@ -426,7 +426,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
               size="icon"
               onClick={handleLocate}
               disabled={isLocating}
-              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation"
+              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
             >
               <Locate className={cn("w-4 h-4", isLocating && "animate-pulse text-primary")} />
             </Button>
@@ -435,7 +435,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
               size="icon"
               onClick={handleResetBearing}
               className={cn(
-                "w-8 h-8 rounded-xl hover:bg-white/10 transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation",
+                "w-8 h-8 rounded-xl hover:bg-white/10 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation",
                 bearing !== 0 ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
               style={{ transform: `rotate(${-bearing}deg)` }}
@@ -446,7 +446,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
               variant="ghost"
               size="icon"
               onClick={handleToggleStyle}
-              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation"
+              className="w-8 h-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
             >
               <Layers className="w-4 h-4" />
             </Button>

@@ -152,7 +152,7 @@ export default function FlightEmptyState({
                   <Badge 
                     key={date}
                     variant="outline" 
-                    className="cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/50 transition-all duration-200 hover:scale-105"
+                    className="cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/50 transition-all duration-200 hover:scale-110"
                   >
                     {date}
                   </Badge>

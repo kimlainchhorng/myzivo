@@ -139,7 +139,7 @@ export const MobileFlightSearch = ({
         {/* From */}
         <Sheet open={activeSheet === 'from'} onOpenChange={(open) => setActiveSheet(open ? 'from' : null)}>
           <SheetTrigger asChild>
-            <button className="w-full p-4 text-left border-b border-border/30 active:bg-muted/50 transition-colors touch-manipulation">
+            <button className="w-full p-4 text-left border-b border-border/30 active:bg-muted/50 transition-all duration-200 touch-manipulation">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -184,7 +184,7 @@ export const MobileFlightSearch = ({
         {/* To */}
         <Sheet open={activeSheet === 'to'} onOpenChange={(open) => setActiveSheet(open ? 'to' : null)}>
           <SheetTrigger asChild>
-            <button className="w-full p-4 text-left active:bg-muted/50 transition-colors touch-manipulation">
+            <button className="w-full p-4 text-left active:bg-muted/50 transition-all duration-200 touch-manipulation">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
                   <MapPin className="w-5 h-5 text-red-500" />

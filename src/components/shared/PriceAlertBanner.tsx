@@ -51,7 +51,7 @@ const PriceAlertBanner = ({
       
       <button
         onClick={() => setIsVisible(false)}
-        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-all duration-200"
       >
         <X className="w-4 h-4" />
       </button>

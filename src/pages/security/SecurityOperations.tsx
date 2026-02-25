@@ -76,7 +76,7 @@ export default function SecurityOperations() {
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Back Link */}
           <div className="mb-6">
-            <Link to="/security" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/security" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all duration-200">
               <ArrowLeft className="w-4 h-4" />
               Back to Security
             </Link>

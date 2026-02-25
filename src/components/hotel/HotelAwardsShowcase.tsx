@@ -65,7 +65,7 @@ const HotelAwardsShowcase = () => {
                   "group relative overflow-hidden p-6 rounded-2xl border border-border/50",
                   "bg-gradient-to-br",
                   award.bg,
-                  "hover:border-primary/30 hover:-translate-y-1 transition-all duration-300",
+                  "hover:border-primary/30 hover:-translate-y-1.5 transition-all duration-200",
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
