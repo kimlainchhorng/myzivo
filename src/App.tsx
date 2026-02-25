@@ -348,13 +348,7 @@ const BookingManagement = lazy(() => import("./pages/BookingManagement"));
 // HowZivoMakesMoney removed
 const Press = lazy(() => import("./pages/Press"));
 
-// Internal investor/acquisition pages
-const InvestorOverview = lazy(() => import("./pages/internal/InvestorOverview"));
-const TechArchitecture = lazy(() => import("./pages/internal/TechArchitecture"));
-const GrowthRoadmap = lazy(() => import("./pages/internal/GrowthRoadmap"));
-const CompetitiveMoat = lazy(() => import("./pages/internal/CompetitiveMoat"));
-const FiveYearVision = lazy(() => import("./pages/internal/FiveYearVision"));
-const APIIntegrationStatus = lazy(() => import("./pages/internal/APIIntegrationStatus"));
+// Internal investor pages removed
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -857,13 +851,7 @@ const App = () => (
                 <Route path="/mission" element={<BrandMission />} />
                 <Route path="/company-profile" element={<CompanyProfile />} />
                 {/* investors, strategic-partnerships, financial-transparency removed */}
-                {/* Internal Investor & Acquisition Pages */}
-                <Route path="/internal/investor-overview" element={<InvestorOverview />} />
-                <Route path="/internal/tech-architecture" element={<TechArchitecture />} />
-                <Route path="/internal/growth-roadmap" element={<GrowthRoadmap />} />
-                <Route path="/internal/competitive-moat" element={<CompetitiveMoat />} />
-                <Route path="/internal/5-year-vision" element={<FiveYearVision />} />
-                <Route path="/internal/api-integrations" element={<APIIntegrationStatus />} />
+                {/* Internal pages removed */}
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/jobs" element={<Careers />} />
                 {/* ecosystem, platform, strategic-roadmap removed */}
