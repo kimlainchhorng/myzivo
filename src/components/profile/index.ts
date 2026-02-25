@@ -5,4 +5,3 @@ export { TravelerPassport } from "./TravelerPassport";
 export { TripTimeline } from "./TripTimeline";
 export { AIConciergeTrigger } from "./AIConciergeTrigger";
 export { SavedForLater } from "./SavedForLater";
-export { ZivoProfileReal } from "./ZivoProfileReal";

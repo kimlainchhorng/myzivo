@@ -3,7 +3,7 @@
   * Unified view of all travel bookings with tabs
   * Premium mobile experience with living timeline
   */
- import { useState, Suspense, lazy } from "react";
+ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { TripCard } from "@/components/travel/TripCard";
  import MobileBottomNav from "@/components/shared/MobileBottomNav";
  import { useIsMobile } from "@/hooks/use-mobile";
  
- const MobileTripsPremium = lazy(() => import("@/components/trips/MobileTripsPremium"));
+ // MobileTripsPremium removed - use standard trips view on mobile
 
 export default function TravelTripsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -29,18 +29,7 @@ export default function TravelTripsPage() {
     return <Navigate to="/login" replace />;
   }
  
-   // Mobile: Premium "Living Timeline" experience
-   if (isMobile) {
-     return (
-       <Suspense fallback={
-         <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-         </div>
-       }>
-         <MobileTripsPremium />
-       </Suspense>
-     );
-   }
+   // Mobile and desktop use the same trips view
 
   return (
     <div className="min-h-screen bg-background pb-20">
