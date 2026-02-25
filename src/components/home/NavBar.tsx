@@ -1,6 +1,6 @@
 /**
- * NavBar - Hizovo Travel Desktop Navigation
- * Clean OTA site map: Flights | Hotels | Cars | Help | Rides/Eats/Move (external)
+ * NavBar - ZIVO Desktop Navigation
+ * Premium glassmorphism nav with enhanced hover effects
  */
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,22 +22,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-// Main travel nav items (direct links, no dropdown)
 const mainNavItems = [
   { label: "Flights", href: "/flights", icon: Plane, color: "text-sky-500" },
   { label: "Hotels", href: "/hotels", icon: Hotel, color: "text-amber-500" },
   { label: "Cars", href: "/rent-car", icon: CarFront, color: "text-violet-500" },
 ];
 
-// More dropdown items
 const moreItems = [
   { label: "Extras", description: "Transfers, eSIM, Tours & more", href: "/extras", icon: Sparkles, color: "text-primary" },
   { label: "Partners", description: "Our travel partners", href: "/partners", icon: Users, color: "text-muted-foreground" },
   { label: "Creators", description: "Creator program", href: "/creators", icon: Award, color: "text-muted-foreground" },
 ];
 
-// Legal items for More dropdown
 const legalItems = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
@@ -55,7 +53,6 @@ export default function NavBar() {
   
   const moreRef = useRef<HTMLDivElement>(null);
 
-  // Track scroll for glassmorphism effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -64,7 +61,6 @@ export default function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
@@ -78,42 +74,49 @@ export default function NavBar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         scrolled
-          ? "bg-[hsl(222_47%_11%/0.95)] backdrop-blur-xl shadow-lg nav-glow-border border-primary/20"
-          : "bg-[hsl(222_47%_11%/0.9)] backdrop-blur-md border-border/50"
+          ? "bg-[hsl(222_47%_11%/0.97)] backdrop-blur-2xl shadow-xl border-b border-primary/15"
+          : "bg-[hsl(222_47%_11%/0.85)] backdrop-blur-lg border-b border-border/30"
       )}>
+        {/* Subtle gradient line at bottom when scrolled */}
+        {scrolled && (
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        )}
+        
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div
+            <motion.div
               className="cursor-pointer"
               onClick={() => navigate("/")}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               <ZivoLogo size="md" />
-            </div>
+            </motion.div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
-              {/* Main Travel Links - Direct navigation */}
+            <nav className="hidden md:flex items-center gap-0.5">
               {mainNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 group"
                 >
-                  <item.icon className={cn("w-4 h-4", item.color)} />
+                  <item.icon className={cn("w-4 h-4 transition-transform duration-200 group-hover:scale-110", item.color)} />
                   {item.label}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-6 transition-all duration-300" />
                 </Link>
               ))}
 
-              {/* Help - Direct link */}
               <Link
                 to="/help"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 group"
               >
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 Help
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-6 transition-all duration-300" />
               </Link>
 
               {/* More Dropdown */}
@@ -121,26 +124,31 @@ export default function NavBar() {
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
                   className={cn(
-                    "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
                     moreOpen 
                       ? "text-white bg-white/10" 
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   )}
                 >
                   More
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", moreOpen && "rotate-180")} />
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", moreOpen && "rotate-180")} />
                 </button>
                 
                 {moreOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl p-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-72 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl p-2"
+                  >
                     {moreItems.map((item) => (
                       <Link
                         key={item.href}
                         to={item.href}
                         onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-colors group"
                       >
-                        <div className={cn("w-9 h-9 rounded-lg bg-muted flex items-center justify-center", item.color)}>
+                        <div className={cn("w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
                           <item.icon className="w-4 h-4" />
                         </div>
                         <div>
@@ -150,7 +158,7 @@ export default function NavBar() {
                       </Link>
                     ))}
                     
-                    <div className="border-t border-border my-2" />
+                    <div className="border-t border-border/50 my-2" />
                     
                     <div className="px-3 py-2">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Legal</p>
@@ -160,23 +168,22 @@ export default function NavBar() {
                             key={item.href}
                             to={item.href}
                             onClick={() => setMoreOpen(false)}
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
                           >
                             {item.label}
                           </Link>
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
-              {/* Rides/Eats/Move - External link */}
               <a
                 href="https://zivodriver.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 Rides / Eats / Move
                 <ExternalLink className="w-3 h-3 opacity-50" />
@@ -191,10 +198,10 @@ export default function NavBar() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="gap-2 rounded-lg"
+                      className="gap-2 rounded-xl hover:bg-white/10"
                     >
                       <div className="relative">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center border border-primary/20">
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         {isMember && (
@@ -206,7 +213,7 @@ export default function NavBar() {
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                  <DropdownMenuContent align="end" className="w-48 rounded-2xl">
                     {isMember && (
                       <>
                         <DropdownMenuItem
@@ -255,14 +262,14 @@ export default function NavBar() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/login")}
-                    className="rounded-lg font-medium text-white/80 hover:text-white hover:bg-white/10"
+                    className="rounded-xl font-medium text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Log in
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => navigate("/signup")}
-                    className="rounded-lg font-semibold bg-primary text-primary-foreground glow-green-btn hover:bg-primary/90"
+                    className="rounded-xl font-semibold bg-primary text-primary-foreground glow-green-btn hover:bg-primary/90 hover:scale-[1.03] transition-all duration-200"
                   >
                     Sign up
                   </Button>
@@ -272,7 +279,7 @@ export default function NavBar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-lg"
+              className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-xl transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -285,33 +292,37 @@ export default function NavBar() {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-md"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* Menu Panel */}
-          <div className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card border-l border-border shadow-xl">
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card border-l border-border shadow-2xl"
+          >
             <div className="p-4 border-b border-border flex items-center justify-between">
               <ZivoLogo size="sm" />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 hover:bg-muted rounded-lg"
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <nav className="p-4 space-y-1">
-              {/* Travel Section */}
               <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Travel</p>
               {mainNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
                 >
                   <item.icon className={cn("w-5 h-5", item.color)} />
                   {item.label}
@@ -320,23 +331,21 @@ export default function NavBar() {
               
               <div className="border-t border-border my-3" />
               
-              {/* Help */}
               <Link
                 to="/help"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
               >
                 <HelpCircle className="w-5 h-5 text-muted-foreground" />
                 Help Center
               </Link>
 
-              {/* External Services */}
               <a
                 href="https://zivodriver.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
               >
                 <ExternalLink className="w-5 h-5 text-muted-foreground" />
                 Rides / Eats / Move
@@ -344,14 +353,13 @@ export default function NavBar() {
               
               <div className="border-t border-border my-3" />
               
-              {/* More */}
               <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">More</p>
               {moreItems.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
                 >
                   <link.icon className="w-5 h-5 text-muted-foreground" />
                   {link.label}
@@ -363,7 +371,7 @@ export default function NavBar() {
               {user ? (
                 <Button
                   variant="outline"
-                  className="w-full rounded-lg"
+                  className="w-full rounded-xl"
                   onClick={() => {
                     signOut();
                     setIsMobileMenuOpen(false);
@@ -374,7 +382,7 @@ export default function NavBar() {
               ) : (
                 <div className="space-y-2">
                   <Button
-                    className="w-full rounded-lg"
+                    className="w-full rounded-xl glow-green-btn"
                     onClick={() => {
                       navigate("/signup");
                       setIsMobileMenuOpen(false);
@@ -384,7 +392,7 @@ export default function NavBar() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full rounded-lg"
+                    className="w-full rounded-xl"
                     onClick={() => {
                       navigate("/login");
                       setIsMobileMenuOpen(false);
@@ -395,7 +403,7 @@ export default function NavBar() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>
