@@ -1,3 +1,6 @@
-/** Mobile components stubs */
-export function MobileDatePickerSheet(props: any) { return null; }
-export function MobilePassengerCabinSheet(props: any) { return null; }
+/**
+ * Mobile Components - Stubs
+ */
+const Stub = (_props: any) => null;
+export const MobileDatePickerSheet = Stub;
+export const MobilePassengerCabinSheet = Stub;
