@@ -69,7 +69,7 @@ const AcceptInvite = () => {
   };
 
   const handleContinue = () => {
-    navigate("/dispatch");
+    navigate("/");
   };
 
   return (
