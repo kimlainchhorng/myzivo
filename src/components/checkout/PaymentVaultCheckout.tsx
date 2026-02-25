@@ -140,7 +140,7 @@ export default function PaymentVaultCheckout({
                   onClick={handleSubmit}
                   disabled={processing}
                   className={cn(
-                    "w-full h-14 text-base font-bold rounded-xl gap-2",
+                    "w-full h-14 text-base font-bold rounded-2xl gap-2 touch-manipulation min-h-[56px]",
                     "bg-emerald-600 hover:bg-emerald-700 text-white",
                     "shadow-lg shadow-emerald-600/25"
                   )}

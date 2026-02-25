@@ -23,10 +23,11 @@ const MobileStickyFooter = ({
       className={cn(
         "fixed bottom-0 left-0 right-0 z-40 lg:hidden",
         "bg-background/95 backdrop-blur-xl border-t border-border/50",
-        "p-3 pb-safe",
+        "p-3",
         "animate-in slide-in-from-bottom-4 duration-300",
         className
       )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}
     >
       <div className="flex items-center gap-3 max-w-lg mx-auto">
         {children}

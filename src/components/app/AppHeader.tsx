@@ -42,14 +42,14 @@ const AppHeader = ({
       "fixed top-0 left-0 right-0 z-50 safe-area-top transition-all duration-200",
       transparent 
         ? "bg-transparent" 
-        : "bg-white dark:bg-background border-b border-border/50"
+        : "bg-card/95 backdrop-blur-xl border-b border-border/50"
     )}>
       <div className="flex items-center justify-between h-14 px-4">
         {/* Left */}
         {showBack ? (
           <button
             onClick={handleBack}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-colors active:scale-90 touch-manipulation"
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
             aria-label="Go back"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -76,7 +76,7 @@ const AppHeader = ({
         {rightAction || (
           <button
             onClick={() => navigate("/notifications")}
-            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-colors active:scale-90 touch-manipulation"
+            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
             aria-label="Notifications"
           >
             <Bell className="w-5 h-5 text-muted-foreground" />

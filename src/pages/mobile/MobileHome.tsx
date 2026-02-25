@@ -85,7 +85,7 @@ export default function MobileHome() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation",
+                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation active:scale-[0.97]",
                 activeTab === tab.id
                   ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -157,7 +157,7 @@ export default function MobileHome() {
           {bestDeals.map((deal, i) => (
             <Card 
               key={i} 
-              className="min-w-[200px] flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+              className="min-w-[200px] flex-shrink-0 cursor-pointer hover:shadow-lg transition-all active:scale-[0.97] touch-manipulation"
               onClick={() => navigate(`/flights?route=${deal.route.replace(' → ', '-')}`)}
             >
               <CardContent className="p-3">
@@ -194,7 +194,7 @@ export default function MobileHome() {
           {trendingDestinations.map((dest, i) => (
             <div 
               key={i}
-              className="min-w-[140px] flex-shrink-0 cursor-pointer group"
+              className="min-w-[140px] flex-shrink-0 cursor-pointer group touch-manipulation active:scale-[0.97]"
               onClick={() => navigate(`/flights/to/${dest.city.toLowerCase()}`)}
             >
               <div className="relative rounded-xl overflow-hidden aspect-[4/3] mb-2">
@@ -223,7 +223,7 @@ export default function MobileHome() {
           </div>
           <div className="space-y-2">
             {recentSearches.map((search, i) => (
-              <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors touch-manipulation active:scale-[0.98]">
                 <CardContent className="p-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Plane className="w-4 h-4 text-muted-foreground" />
