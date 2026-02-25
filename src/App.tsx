@@ -11,6 +11,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
@@ -261,6 +262,7 @@ function BrandThemeApplicator() {
 }
 
 const App = () => (
+  <ErrorBoundary>
   <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
   <QueryClientProvider client={queryClient}>
   <BrandProvider>
@@ -506,6 +508,7 @@ const App = () => (
   </BrandProvider>
   </QueryClientProvider>
   </ThemeProvider>
+  </ErrorBoundary>
 );
 
 export default App;

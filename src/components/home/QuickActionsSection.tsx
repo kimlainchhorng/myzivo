@@ -137,13 +137,13 @@ const QuickActionsSection = () => {
             <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: '200ms' }}>
               <RecentlyViewed 
                 items={recentItems} 
-                onItemClick={(item) => console.log("Clicked:", item)}
+                onItemClick={() => {}}
               />
             </div>
             <div className="animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: '200ms' }}>
               <QuickRepeatOrders 
                 orders={repeatOrders}
-                onReorder={(id) => console.log("Reorder:", id)}
+                onReorder={() => {}}
               />
             </div>
           </div>

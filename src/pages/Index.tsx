@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 import LazySection from "@/components/shared/LazySection";
+import { OrganizationSchema, WebsiteSearchSchema } from "@/components/seo/StructuredData";
 
 // Above-fold components (eager loaded for fast LCP)
 import NavBar from "@/components/home/NavBar";
@@ -43,6 +44,8 @@ const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <OGImageMeta pageType="homepage" />
+      <OrganizationSchema />
+      <WebsiteSearchSchema />
       <NavBar />
 
       <main id="main-content" className="pt-16">
