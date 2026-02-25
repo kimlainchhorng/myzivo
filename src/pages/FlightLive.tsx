@@ -65,10 +65,6 @@ export default function FlightLive() {
 
   const whitelabelUrl = isValid ? buildWhitelabelUrl(searchParams) : "";
 
-  // Debug log
-  console.log("[FlightLive] ENV:", { WL_BASE_URL, MARKER });
-  console.log("[FlightLive] Params:", Object.fromEntries(searchParams));
-  console.log("[FlightLive] Built URL:", whitelabelUrl);
 
   // Fallback: if iframe doesn't load within 5s, assume blocked
   useEffect(() => {
@@ -76,7 +72,6 @@ export default function FlightLive() {
     
     const timeout = setTimeout(() => {
       if (iframeStatus === "loading") {
-        console.log("[FlightLive] Iframe timeout - assuming blocked");
         setIframeStatus("blocked");
       }
     }, 5000);
@@ -87,18 +82,15 @@ export default function FlightLive() {
   // Auto-open in new tab if blocked
   useEffect(() => {
     if (iframeStatus === "blocked" && whitelabelUrl) {
-      console.log("[FlightLive] Opening in new tab as fallback");
       window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
     }
   }, [iframeStatus, whitelabelUrl]);
 
   const handleIframeLoad = () => {
-    console.log("[FlightLive] Iframe loaded successfully");
     setIframeStatus("loaded");
   };
 
   const handleIframeError = () => {
-    console.log("[FlightLive] Iframe error - blocked");
     setIframeStatus("blocked");
   };
 

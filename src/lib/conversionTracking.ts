@@ -28,7 +28,6 @@ interface TrackingParams {
 function sendGtagEvent(eventName: string, params: Record<string, unknown>) {
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('event', eventName, params);
-    console.log('[ConversionTracking] gtag:', eventName, params);
   }
 }
 
@@ -39,7 +38,6 @@ function sendGtagEvent(eventName: string, params: Record<string, unknown>) {
 function sendMetaEvent(eventName: string, params: Record<string, unknown>) {
   if (typeof window !== 'undefined' && (window as any).fbq) {
     (window as any).fbq('track', eventName, params);
-    console.log('[ConversionTracking] fbq:', eventName, params);
   }
 }
 
@@ -50,7 +48,6 @@ function sendMetaEvent(eventName: string, params: Record<string, unknown>) {
 function sendTikTokEvent(eventName: string, params: Record<string, unknown>) {
   if (typeof window !== 'undefined' && (window as any).ttq) {
     (window as any).ttq.track(eventName, params);
-    console.log('[ConversionTracking] ttq:', eventName, params);
   }
 }
 
@@ -78,7 +75,7 @@ export function trackPageView({ service, eventData = {} }: TrackingParams) {
   // TikTok
   sendTikTokEvent('ViewContent', params);
 
-  console.log('[ConversionTracking] page_view:', params);
+  
 }
 
 /**
@@ -108,7 +105,7 @@ export function trackSearchSubmitted({ service, eventData = {} }: TrackingParams
     ...eventData,
   });
 
-  console.log('[ConversionTracking] travel_search_submitted:', params);
+  
 }
 
 /**
@@ -138,7 +135,7 @@ export function trackOfferViewed({ service, eventData = {} }: TrackingParams) {
     ...eventData,
   });
 
-  console.log('[ConversionTracking] offer_viewed:', params);
+  
 }
 
 /**
@@ -179,7 +176,7 @@ export function trackPartnerCheckoutInitiated({ service, eventData = {} }: Track
     ...eventData,
   });
 
-  console.log('[ConversionTracking] partner_checkout_initiated:', params);
+  
 }
 
 // ============================================

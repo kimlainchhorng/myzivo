@@ -43,7 +43,6 @@ export const usePushNotifications = () => {
   // Request permission and register for push notifications
   const register = useCallback(async (): Promise<boolean> => {
     if (!Capacitor.isNativePlatform()) {
-      console.log("[Push] Not running on native platform");
       return false;
     }
 
@@ -82,9 +81,6 @@ export const usePushNotifications = () => {
     try {
       const platform = Capacitor.getPlatform();
       
-      // Store push token in user profile or use edge function
-      // For now, just log and update state - in production use an edge function
-      console.log("[Push] Token received:", token.slice(0, 20) + "...", "Platform:", platform);
       setState(prev => ({ ...prev, isRegistered: true, token }));
       
       // Optional: Call edge function to store token

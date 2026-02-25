@@ -239,12 +239,6 @@ export function logTrackedClick(log: TrackingLog): void {
   logs.push(log);
   sessionStorage.setItem('hizovo_tracking_logs', JSON.stringify(logs.slice(-50))); // Keep last 50
   
-  console.log('[Hizovo Tracking]', {
-    searchSessionId: log.searchSessionId,
-    partner: log.partner,
-    product: log.product,
-    url: log.trackedUrl,
-  });
 }
 
 /**
