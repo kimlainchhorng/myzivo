@@ -90,7 +90,7 @@ const CarInsuranceOptions = () => {
                 key={option.id}
                 className={cn(
                   "relative p-6 rounded-2xl bg-card/50 border backdrop-blur-sm",
-                  "transition-all duration-300",
+                  "transition-all duration-200",
                   option.recommended 
                     ? "border-emerald-500/50 shadow-lg shadow-emerald-500/10" 
                     : "border-border/50 hover:border-emerald-500/30",

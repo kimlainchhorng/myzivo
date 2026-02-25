@@ -103,7 +103,7 @@ const DriverCTASection = () => {
             {/* Left Content */}
             <div>
               <div
-                className="animate-in fade-in zoom-in-95 duration-300"
+                className="animate-in fade-in zoom-in-95 duration-200"
                 style={{ animationDelay: '100ms', animationFillMode: 'both' }}
               >
                 <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary/20">
@@ -178,7 +178,7 @@ const DriverCTASection = () => {
               {benefits.map((benefit, index) => (
                 <div
                   key={benefit.title}
-                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 border border-border/50 hover:border-primary/40 transition-all duration-300 group cursor-default shadow-lg hover:shadow-xl overflow-hidden relative hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4"
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 border border-border/50 hover:border-primary/40 transition-all duration-200 group cursor-default shadow-lg hover:shadow-xl overflow-hidden relative hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${200 + index * 75}ms`, animationFillMode: 'both' }}
                 >
                   {/* Decorative glow on hover */}

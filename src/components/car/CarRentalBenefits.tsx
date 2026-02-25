@@ -82,7 +82,7 @@ const CarRentalBenefits = () => {
                 key={benefit.title}
                 className={cn(
                   "group relative p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
-                  "hover:border-violet-500/50 hover:-translate-y-1 transition-all duration-300",
+                  "hover:border-violet-500/50 hover:-translate-y-1 transition-all duration-200",
                   "cursor-pointer touch-manipulation active:scale-[0.98]"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}

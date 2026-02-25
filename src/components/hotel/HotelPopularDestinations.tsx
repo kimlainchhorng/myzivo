@@ -70,7 +70,7 @@ const HotelPopularDestinations = ({ onSelect }: HotelPopularDestinationsProps) =
             <Card
               key={dest.city}
               className={cn(
-                "glass-card overflow-hidden group cursor-pointer transition-all duration-300",
+                "glass-card overflow-hidden group cursor-pointer transition-all duration-200",
                 "hover:border-amber-500/50 hover:-translate-y-1 touch-manipulation active:scale-[0.98] rounded-2xl",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}

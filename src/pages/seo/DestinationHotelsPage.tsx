@@ -239,7 +239,7 @@ export default function DestinationHotelsPage() {
                     className="group cursor-pointer hover:border-hotels/50 transition-all"
                   >
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-hotels/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-hotels/10 flex items-center justify-center">
                         <MapPin className="w-5 h-5 text-hotels" />
                       </div>
                       <div>

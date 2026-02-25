@@ -81,7 +81,7 @@ export const BookingStepIndicator = ({
             <div
               key={step.id}
               className={cn(
-                "flex items-start gap-4 p-3 rounded-xl transition-all animate-in fade-in slide-in-from-left-4 duration-300",
+                "flex items-start gap-4 p-3 rounded-xl transition-all animate-in fade-in slide-in-from-left-4 duration-200",
                 isClickable && "cursor-pointer hover:bg-muted/50",
                 isActive && "bg-muted/30"
               )}
@@ -91,7 +91,7 @@ export const BookingStepIndicator = ({
               <div className="relative flex flex-col items-center">
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200",
                     isCompleted && colors.completed,
                     isActive && cn(colors.active, "scale-110"),
                     !isCompleted && !isActive && colors.upcoming
@@ -107,7 +107,7 @@ export const BookingStepIndicator = ({
                 </div>
                 {index < steps.length - 1 && (
                   <div className={cn(
-                    "w-0.5 h-8 mt-2 rounded-full transition-colors duration-300",
+                    "w-0.5 h-8 mt-2 rounded-full transition-colors duration-200",
                     index < currentStep ? colors.line : colors.lineInactive
                   )} />
                 )}
@@ -146,7 +146,7 @@ export const BookingStepIndicator = ({
             <div
               key={step.id}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-sm",
+                "flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all text-sm",
                 isActive && "bg-background shadow-md scale-100",
                 !isActive && "scale-95",
                 isCompleted && "text-foreground",
@@ -205,14 +205,14 @@ export const BookingStepIndicator = ({
             >
               <div
                 className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200",
                   isCompleted && colors.completed,
                   isActive && cn(colors.active, "scale-115 ring-4 ring-offset-2 ring-offset-background", colors.glow),
                   !isCompleted && !isActive && colors.upcoming
                 )}
               >
                 {isCompleted ? (
-                  <div className="animate-in zoom-in spin-in-180 duration-300">
+                  <div className="animate-in zoom-in spin-in-180 duration-200">
                     <Check className="w-6 h-6" />
                   </div>
                 ) : step.icon ? (

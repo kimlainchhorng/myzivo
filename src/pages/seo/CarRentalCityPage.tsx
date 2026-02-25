@@ -224,7 +224,7 @@ export default function CarRentalCityPage() {
                     className="group cursor-pointer hover:border-violet-500/50 transition-all"
                   >
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                         <MapPin className="w-5 h-5 text-violet-500" />
                       </div>
                       <div>

@@ -174,7 +174,7 @@ export function DestinationSponsor({
   return (
     <Card
       className={cn(
-        "overflow-hidden border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+        "overflow-hidden border-amber-500/20 hover:border-amber-500/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg",
         className
       )}
     >

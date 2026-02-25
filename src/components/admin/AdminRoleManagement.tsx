@@ -199,7 +199,7 @@ const AdminRoleManagement = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex items-center gap-3 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
@@ -215,7 +215,7 @@ const AdminRoleManagement = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Crown className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -226,7 +226,7 @@ const AdminRoleManagement = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <ShieldCheck className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -237,7 +237,7 @@ const AdminRoleManagement = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <Car className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -248,7 +248,7 @@ const AdminRoleManagement = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-rose-500/10">
+            <div className="p-2 rounded-xl bg-rose-500/10">
               <Store className="h-5 w-5 text-rose-500" />
             </div>
             <div>

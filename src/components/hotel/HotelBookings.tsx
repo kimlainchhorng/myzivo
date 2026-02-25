@@ -163,7 +163,7 @@ const HotelBookings = () => {
             
             return (
               <motion.div key={booking.id} variants={item}>
-                <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden group">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient}`} />
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">

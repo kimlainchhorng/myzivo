@@ -369,7 +369,7 @@ const HotelSearch = ({ onSelectHotel, showFilters = true }: HotelSearchProps) =>
             onMouseLeave={() => setHoveredHotel(null)}
           >
             <Card className={cn(
-              "glass-card overflow-hidden transition-all duration-300",
+              "glass-card overflow-hidden transition-all duration-200",
               hoveredHotel === hotel.id && "border-amber-500/50 shadow-lg shadow-amber-500/10"
             )}>
               <CardContent className="p-0">

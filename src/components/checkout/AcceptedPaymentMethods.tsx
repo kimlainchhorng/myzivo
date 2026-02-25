@@ -43,20 +43,20 @@ export default function AcceptedPaymentMethods({
       
       {/* Payment Method Icons */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1 p-2 bg-muted/50 rounded-lg border border-border/50">
+        <div className="flex items-center gap-1 p-2 bg-muted/50 rounded-xl border border-border/50">
           <VisaIcon className="w-10 h-6" />
           <MastercardIcon className="w-10 h-6" />
           <AmexIcon className="w-10 h-6" />
         </div>
         
         {showApplePay && (
-          <div className="p-2 bg-muted/50 rounded-lg border border-border/50">
+          <div className="p-2 bg-muted/50 rounded-xl border border-border/50">
             <ApplePayIcon className="w-12 h-6" />
           </div>
         )}
         
         {showGooglePay && (
-          <div className="p-2 bg-muted/50 rounded-lg border border-border/50">
+          <div className="p-2 bg-muted/50 rounded-xl border border-border/50">
             <GooglePayIcon className="w-12 h-6" />
           </div>
         )}

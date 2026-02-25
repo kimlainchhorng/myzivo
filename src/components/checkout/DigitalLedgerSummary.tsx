@@ -135,7 +135,7 @@ export default function DigitalLedgerSummary({
       </div>
 
       {/* Price lock notice */}
-      <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+      <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
         <div className="flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 dark:text-amber-300">

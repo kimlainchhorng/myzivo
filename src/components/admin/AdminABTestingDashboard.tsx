@@ -72,7 +72,7 @@ export default function AdminABTestingDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <Play className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -85,7 +85,7 @@ export default function AdminABTestingDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <CheckCircle2 className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -98,7 +98,7 @@ export default function AdminABTestingDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -111,7 +111,7 @@ export default function AdminABTestingDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <Users className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -162,7 +162,7 @@ export default function AdminABTestingDashboard() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 {exp.variants.map((variant) => (
-                  <div key={variant.name} className="p-4 rounded-lg bg-muted/30">
+                  <div key={variant.name} className="p-4 rounded-xl bg-muted/30">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium">{variant.name}</span>
                       <Badge variant="outline">{variant.rate}% CVR</Badge>

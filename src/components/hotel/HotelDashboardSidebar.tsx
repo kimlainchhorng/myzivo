@@ -124,7 +124,7 @@ const HotelDashboardSidebar = ({
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: isActive ? 0 : 5 }}
                 className={cn(
-                  "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                  "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
                   isActive 
                     ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
                     : "bg-muted/50 group-hover:bg-muted"
@@ -157,7 +157,7 @@ const HotelDashboardSidebar = ({
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group"
         >
-          <div className="w-9 h-9 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
             <LogOut className="h-4 w-4" />
           </div>
           <span className="font-medium">Sign Out</span>

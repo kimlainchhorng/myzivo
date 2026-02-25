@@ -326,7 +326,7 @@ export default function AdminRentersModule() {
                       ))}
                     </div>
                   ) : renterDocuments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                    <div className="text-center py-8 text-muted-foreground border rounded-xl">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
                       <p>No documents uploaded</p>
                     </div>

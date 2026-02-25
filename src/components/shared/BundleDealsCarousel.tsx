@@ -150,7 +150,7 @@ const BundleDealsCarousel = ({ className }: BundleDealsCarouselProps) => {
       <CardContent className="p-4 pt-0">
         <div className="relative overflow-hidden">
           <div
-            className="flex transition-transform duration-300 ease-out"
+            className="flex transition-transform duration-200 ease-out"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {bundleDeals.map((deal) => (

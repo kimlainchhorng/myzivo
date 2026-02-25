@@ -23,7 +23,7 @@ export default function ImportantBookingNotice({
   if (compact) {
     return (
       <div className={cn(
-        "text-xs text-muted-foreground bg-muted/30 rounded-lg p-3",
+        "text-xs text-muted-foreground bg-muted/30 rounded-xl p-3",
         className
       )}>
         <p className="font-medium mb-1 flex items-center gap-1.5">
