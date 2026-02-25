@@ -94,8 +94,8 @@ const PopularServicesShowcase = () => {
                 onClick={() => navigate(service.href)}
                 className={cn(
                   "group relative p-6 rounded-3xl bg-card/50 border border-border/50 backdrop-blur-sm overflow-hidden",
-                  "text-left transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
-                  "touch-manipulation active:scale-[0.98] hover:-translate-y-1",
+                  "text-left transition-all duration-200 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
+                  "touch-manipulation active:scale-[0.98] hover:-translate-y-1.5",
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}

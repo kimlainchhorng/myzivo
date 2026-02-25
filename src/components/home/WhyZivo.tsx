@@ -58,8 +58,8 @@ export default function WhyZivo() {
               key={prop.title}
               className={cn(
                 "group p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50",
-                "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
-                "transition-all duration-300 text-center",
+                "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1.5",
+                "transition-all duration-200 text-center",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 100}ms` }}

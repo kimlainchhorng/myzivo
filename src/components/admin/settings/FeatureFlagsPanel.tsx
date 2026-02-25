@@ -228,7 +228,7 @@ const FeatureFlagsPanel = () => {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
+          <div className="p-2 rounded-xl bg-primary/10">
             <Flag className="h-4 w-4 text-primary" />
           </div>
           <div>
@@ -237,7 +237,7 @@ const FeatureFlagsPanel = () => {
           </div>
         </div>
         <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-500/10">
+          <div className="p-2 rounded-xl bg-green-500/10">
             <CheckCircle className="h-4 w-4 text-green-500" />
           </div>
           <div>
@@ -246,7 +246,7 @@ const FeatureFlagsPanel = () => {
           </div>
         </div>
         <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-500/10">
+          <div className="p-2 rounded-xl bg-amber-500/10">
             <Zap className="h-4 w-4 text-amber-500" />
           </div>
           <div>
@@ -255,7 +255,7 @@ const FeatureFlagsPanel = () => {
           </div>
         </div>
         <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-red-500/10">
+          <div className="p-2 rounded-xl bg-red-500/10">
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </div>
           <div>

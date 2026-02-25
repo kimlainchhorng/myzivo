@@ -181,7 +181,7 @@ const ZivoPlus = () => {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className={cn(
-                  "h-full transition-all duration-300 hover:border-amber-500/30 hover:shadow-md hover:-translate-y-1",
+                  "h-full transition-all duration-200 hover:border-amber-500/30 hover:shadow-md hover:-translate-y-1.5",
                   benefit.highlight && "border-amber-500/20 bg-amber-500/5"
                 )}>
                   <CardContent className="p-5">

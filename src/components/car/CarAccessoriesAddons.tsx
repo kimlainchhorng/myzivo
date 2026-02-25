@@ -92,7 +92,7 @@ const CarAccessoriesAddons = () => {
                   key={addon.id}
                   onClick={() => toggleAddon(addon.id)}
                   className={cn(
-                    "relative p-4 rounded-2xl border text-left transition-all duration-300",
+                    "relative p-4 rounded-2xl border text-left transition-all duration-200",
                     "touch-manipulation active:scale-[0.98]",
                     isSelected
                       ? "bg-emerald-500/10 border-emerald-500/50"

@@ -243,7 +243,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
       {/* Collapsible Filters */}
       <div
         className={cn(
-          "grid transition-all duration-300 ease-out",
+          "grid transition-all duration-200 ease-out",
           filtersOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         )}
       >
@@ -342,13 +342,13 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
         {filteredResults.map((car, index) => (
           <div
             key={car.id}
-            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            className="animate-in fade-in slide-in-from-bottom-4 duration-200"
             style={{ animationDelay: `${index * 50}ms` }}
             onMouseEnter={() => setHoveredCar(car.id)}
             onMouseLeave={() => setHoveredCar(null)}
           >
             <Card className={cn(
-              "glass-card overflow-hidden transition-all duration-300 h-full touch-manipulation",
+              "glass-card overflow-hidden transition-all duration-200 h-full touch-manipulation",
               hoveredCar === car.id && "border-primary/50 shadow-lg shadow-primary/10 -translate-y-1"
             )}>
               <CardContent className="p-0">
@@ -356,7 +356,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                 <div className="relative h-44 bg-gradient-to-br from-primary/20 to-cyan-500/20 flex items-center justify-center">
                   <span 
                     className={cn(
-                      "text-7xl transition-transform duration-300",
+                      "text-7xl transition-transform duration-200",
                       hoveredCar === car.id && "scale-110 translate-x-1"
                     )}
                   >
@@ -482,8 +482,8 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
 
       {/* Empty State */}
       {filteredResults.length === 0 && (
-        <div className="text-center py-16 animate-in fade-in zoom-in-95 duration-300">
-          <div className="text-6xl mb-4 animate-bounce">🚗</div>
+        <div className="text-center py-16 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center animate-bounce"><Car className="w-8 h-8 text-primary" /></div>
           <h3 className="text-xl font-semibold mb-2">No vehicles found</h3>
           <p className="text-muted-foreground mb-4">Try adjusting your filters</p>
           <Button

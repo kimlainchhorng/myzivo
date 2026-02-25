@@ -63,7 +63,7 @@ export default function CuisinePhotoGrid({
                   "group relative overflow-hidden rounded-2xl aspect-square",
                   "border border-border/50 bg-card/50",
                   "hover:border-eats/30 hover:shadow-lg hover:shadow-eats/20",
-                  "transition-all duration-300 hover:-translate-y-1"
+                  "transition-all duration-200 hover:-translate-y-1.5"
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >

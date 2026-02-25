@@ -79,7 +79,7 @@ export default function WhyCompareSection() {
           {benefits.map((benefit, index) => (
             <Card 
               key={benefit.title}
-              className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1.5"
             >
               <CardContent className="p-6">
                 <div className={cn(

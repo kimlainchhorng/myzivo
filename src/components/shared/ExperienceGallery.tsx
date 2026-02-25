@@ -124,7 +124,7 @@ export default function ExperienceGallery({
                 className={cn(
                   "group relative flex-shrink-0 w-[280px] rounded-2xl overflow-hidden",
                   "border border-border/50 bg-card/50",
-                  "hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  "hover:shadow-lg transition-all duration-200 hover:-translate-y-1.5"
                 )}
               >
                 {/* Photo */}

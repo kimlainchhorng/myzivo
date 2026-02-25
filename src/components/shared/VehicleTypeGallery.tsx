@@ -138,7 +138,7 @@ export default function VehicleTypeGallery({
               className={cn(
                 "group relative overflow-hidden rounded-2xl",
                 "border border-border/50 bg-card/50",
-                "hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
+                "hover:shadow-xl transition-all duration-200 hover:-translate-y-1.5",
                 "hover:border-violet-500/50 hover:shadow-violet-500/10"
               )}
               style={{ animationDelay: `${index * 50}ms` }}

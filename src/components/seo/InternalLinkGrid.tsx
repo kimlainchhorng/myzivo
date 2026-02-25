@@ -153,9 +153,9 @@ export default function InternalLinkGrid({ currentService, className }: Internal
               return (
                 <Link key={service} to={link}>
                   <Card className={cn(
-                    "border-border/50 transition-all duration-300",
+                    "border-border/50 transition-all duration-200",
                     data.borderHover,
-                    "hover:shadow-lg hover:-translate-y-1"
+                    "hover:shadow-lg hover:-translate-y-1.5"
                   )}>
                     <CardContent className="p-6 flex items-center gap-4">
                       <div className={cn("p-3 rounded-xl", data.bgColor)}>
