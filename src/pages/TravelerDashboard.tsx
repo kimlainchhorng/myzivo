@@ -15,14 +15,28 @@ export default function TravelerDashboard() {
     return <Navigate to="/login" replace />;
   }
 
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Traveler";
+
   return (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
-      {/* Background accents */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(142_71%_45%/0.06)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(221_83%_53%/0.04)_0%,transparent_70%)] pointer-events-none" />
+      {/* Subtle background accents */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(142_71%_45%/0.04)_0%,transparent_70%)] pointer-events-none" />
 
       {/* Main Content */}
       <div className="pt-20 px-4 sm:px-6 pb-32 relative z-10">
+        {/* Welcome greeting */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-7xl mx-auto mb-6"
+        >
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            Welcome back, <span className="text-primary">{firstName}</span> 👋
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Here's your travel overview.</p>
+        </motion.div>
+
         {/* Holographic Passport Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

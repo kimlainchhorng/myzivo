@@ -1,8 +1,8 @@
 /**
- * FeaturedEatsSection - Food delivery cards with ratings
+ * FeaturedEatsSection - Food delivery cards with ratings and badges
  */
 import { useState } from "react";
-import { Star, Clock, ArrowRight } from "lucide-react";
+import { Star, Clock, ArrowRight, Truck } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 const categories = ["All", "American", "Italian", "Asian", "Mexican"];
 
 const foods = [
-  { name: "Classic Burger", restaurant: "Joe's Grill", price: 12.99, rating: 4.7, time: "20-30 min", category: "American", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400" },
-  { name: "Margherita Pizza", restaurant: "Bella Napoli", price: 14.99, rating: 4.9, time: "25-35 min", category: "Italian", image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400" },
-  { name: "Pad Thai", restaurant: "Thai Palace", price: 13.50, rating: 4.6, time: "20-30 min", category: "Asian", image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&q=80&w=400" },
-  { name: "Chicken Tacos", restaurant: "El Azteca", price: 10.99, rating: 4.8, time: "15-25 min", category: "Mexican", image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400" },
+  { name: "Classic Burger", restaurant: "Joe's Grill", price: 12.99, rating: 4.7, time: "20-30 min", category: "American", freeDelivery: true, deliveryFee: 0, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400" },
+  { name: "Margherita Pizza", restaurant: "Bella Napoli", price: 14.99, rating: 4.9, time: "25-35 min", category: "Italian", freeDelivery: false, deliveryFee: 2.99, image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400" },
+  { name: "Pad Thai", restaurant: "Thai Palace", price: 13.50, rating: 4.6, time: "20-30 min", category: "Asian", freeDelivery: true, deliveryFee: 0, image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&q=80&w=400" },
+  { name: "Chicken Tacos", restaurant: "El Azteca", price: 10.99, rating: 4.8, time: "15-25 min", category: "Mexican", freeDelivery: false, deliveryFee: 1.99, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400" },
 ];
 
 export default function FeaturedEatsSection() {
@@ -45,12 +45,7 @@ export default function FeaturedEatsSection() {
             <button
               key={c}
               onClick={() => setActive(c)}
-              className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                active === c
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-              )}
+              className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap")}
             >
               {c}
             </button>
@@ -68,10 +63,15 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                className="group block bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="group block card-premium overflow-hidden"
               >
-                <div className="aspect-[16/10] overflow-hidden">
+                <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  {food.freeDelivery && (
+                    <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-sm flex items-center gap-1">
+                      <Truck className="w-3 h-3" /> Free Delivery
+                    </span>
+                  )}
                 </div>
                 <div className="p-5">
                   <h3 className="font-bold text-base mb-1">{food.name}</h3>
@@ -81,7 +81,12 @@ export default function FeaturedEatsSection() {
                       <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {food.rating}</span>
                       <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {food.time}</span>
                     </div>
-                    <p className="font-bold text-base">${food.price}</p>
+                    <div className="text-right">
+                      <p className="font-bold text-base">${food.price}</p>
+                      {!food.freeDelivery && (
+                        <p className="text-[10px] text-muted-foreground">+${food.deliveryFee} delivery</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Link>

@@ -1,8 +1,9 @@
 /**
- * Why Choose ZIVO - Clean feature cards
+ * Why Choose ZIVO - Numbered feature cards with CTA
  */
-import { Search, ShieldCheck, BadgeCheck, Globe } from "lucide-react";
+import { Search, ShieldCheck, BadgeCheck, Globe, ArrowRight, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const valueProps = [
@@ -21,7 +22,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
   const isCompact = variant === "compact";
 
   return (
-    <section className={cn("relative", isCompact ? "py-8" : "py-16 sm:py-24", className)}>
+    <section className={cn("relative", isCompact ? "py-8" : "section-padding", className)}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -52,10 +53,17 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.08 }}
               className={cn(
-                "group text-center rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300",
+                "group text-center card-premium",
                 isCompact ? "p-4" : "p-6 sm:p-8",
               )}
             >
+              {/* Step number */}
+              {!isCompact && (
+                <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-3 block">
+                  0{index + 1}
+                </span>
+              )}
+
               <div className={cn(
                 "mx-auto rounded-2xl flex items-center justify-center",
                 prop.iconBg,
@@ -71,9 +79,38 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
               <p className={cn("text-muted-foreground leading-relaxed", isCompact ? "text-xs" : "text-sm sm:text-base")}>
                 {prop.description}
               </p>
+
+              {/* Animated check */}
+              {!isCompact && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3, delay: index * 0.1 + 0.3 }}
+                  className="mt-4"
+                >
+                  <CheckCircle className="w-5 h-5 text-primary/30 mx-auto" />
+                </motion.div>
+              )}
             </motion.div>
           ))}
         </div>
+
+        {!isCompact && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-10"
+          >
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
+            >
+              Learn More About ZIVO <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+        )}
 
         <motion.p
           initial={{ opacity: 0 }}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Search } from "lucide-react";
+import { ArrowRight, Sparkles, Search, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import HeroTrustBar from "./HeroTrustBar";
@@ -11,13 +11,23 @@ import heroImg3 from "@/assets/hero-travel-3.jpg";
 
 const heroImages = [heroImg1, heroImg2, heroImg3];
 
+const rotatingWords = ["Travel", "Explore", "Discover", "Experience"];
+
 export default function HeroSection() {
   const [currentImage, setCurrentImage] = useState(0);
+  const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % heroImages.length);
     }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % rotatingWords.length);
+    }, 3000);
     return () => clearInterval(timer);
   }, []);
 
@@ -48,8 +58,20 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight"
           >
-            Travel. Ride. Eat.{" "}
-            <span className="text-primary">All in One Place.</span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={wordIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-primary inline-block"
+              >
+                {rotatingWords[wordIndex]}.
+              </motion.span>
+            </AnimatePresence>{" "}
+            Ride. Eat.{" "}
+            <span className="text-foreground">All in One Place.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 15 }}
@@ -104,14 +126,41 @@ export default function HeroSection() {
               <span className="text-sm font-medium text-primary">Your travel, simplified</span>
             </motion.div>
 
+            {/* Pulse badge */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border border-border/50 mb-6 ml-3"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+              </span>
+              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">Join 500K+ travelers</span>
+            </motion.div>
+
             <motion.h1
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-4xl xl:text-[3.5rem] font-bold text-foreground mb-5 leading-[1.1] tracking-tight"
             >
-              Travel. Ride. Eat.{" "}
-              <span className="text-primary">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={wordIndex}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35 }}
+                  className="text-primary inline-block"
+                >
+                  {rotatingWords[wordIndex]}.
+                </motion.span>
+              </AnimatePresence>{" "}
+              Ride. Eat.{" "}
+              <span className="text-foreground">
                 All in One Place.
               </span>
             </motion.h1>
@@ -173,16 +222,16 @@ export default function HeroSection() {
           </AnimatePresence>
           <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/20" />
 
-          {/* Image dots */}
-          <div className="absolute bottom-6 right-6 flex gap-2 z-10">
+          {/* Image dots - larger and more tactile */}
+          <div className="absolute bottom-6 right-6 flex gap-2.5 z-10">
             {heroImages.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentImage(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                className={`rounded-full transition-all duration-300 ${
                   i === currentImage
-                    ? "bg-primary w-7 shadow-md"
-                    : "bg-white/50 hover:bg-white/70"
+                    ? "bg-primary w-8 h-3 shadow-md"
+                    : "bg-white/50 hover:bg-white/70 w-3 h-3"
                 }`}
                 aria-label={`View image ${i + 1}`}
               />

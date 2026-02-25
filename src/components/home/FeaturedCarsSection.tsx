@@ -1,8 +1,8 @@
 /**
- * FeaturedCarsSection - Car rental deals inspired by premium car rental templates
+ * FeaturedCarsSection - Car rental deals with premium cards
  */
 import { useState } from "react";
-import { Star, Users, Fuel, ArrowRight } from "lucide-react";
+import { Star, Users, Fuel, ArrowRight, DoorOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 const filters = ["All", "SUV", "Sedan", "Economy", "Luxury"];
 
 const cars = [
-  { name: "Toyota RAV4", type: "SUV", passengers: 5, fuel: "Hybrid", price: 45, rating: 4.8, image: "https://images.unsplash.com/photo-1568844293986-8d0400f085b0?auto=format&fit=crop&q=80&w=400" },
-  { name: "Honda Civic", type: "Sedan", passengers: 5, fuel: "Gas", price: 32, rating: 4.6, image: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&q=80&w=400" },
-  { name: "Nissan Versa", type: "Economy", passengers: 5, fuel: "Gas", price: 24, rating: 4.4, image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0ffe?auto=format&fit=crop&q=80&w=400" },
-  { name: "BMW X5", type: "Luxury", passengers: 5, fuel: "Gas", price: 89, rating: 4.9, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=400" },
+  { name: "Toyota RAV4", type: "SUV", passengers: 5, fuel: "Hybrid", doors: 4, price: 45, rating: 4.8, cheapest: false, image: "https://images.unsplash.com/photo-1568844293986-8d0400f085b0?auto=format&fit=crop&q=80&w=400" },
+  { name: "Honda Civic", type: "Sedan", passengers: 5, fuel: "Gas", doors: 4, price: 32, rating: 4.6, cheapest: false, image: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&q=80&w=400" },
+  { name: "Nissan Versa", type: "Economy", passengers: 5, fuel: "Gas", doors: 4, price: 24, rating: 4.4, cheapest: true, image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0ffe?auto=format&fit=crop&q=80&w=400" },
+  { name: "BMW X5", type: "Luxury", passengers: 5, fuel: "Gas", doors: 4, price: 89, rating: 4.9, cheapest: false, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=400" },
 ];
 
 export default function FeaturedCarsSection() {
@@ -46,12 +46,7 @@ export default function FeaturedCarsSection() {
             <button
               key={f}
               onClick={() => setActive(f)}
-              className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                active === f
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-              )}
+              className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap")}
             >
               {f}
             </button>
@@ -69,10 +64,15 @@ export default function FeaturedCarsSection() {
             >
               <Link
                 to="/rent-car"
-                className="group block bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="group block card-premium overflow-hidden"
               >
-                <div className="aspect-[16/10] overflow-hidden bg-muted/50">
+                <div className="relative aspect-video overflow-hidden bg-muted/50">
                   <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  {car.cheapest && (
+                    <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-sm">
+                      Best Price
+                    </span>
+                  )}
                 </div>
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-2">
@@ -85,10 +85,14 @@ export default function FeaturedCarsSection() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
                     <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {car.passengers}</span>
                     <span className="flex items-center gap-1"><Fuel className="w-3.5 h-3.5" /> {car.fuel}</span>
+                    <span className="flex items-center gap-1"><DoorOpen className="w-3.5 h-3.5" /> {car.doors}dr</span>
                     <span className="px-2 py-0.5 rounded-full bg-muted text-xs">{car.type}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-bold">${car.price}<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+                    <p className="text-lg font-bold">
+                      <span className="gradient-text-primary">${car.price}</span>
+                      <span className="text-sm font-normal text-muted-foreground">/day</span>
+                    </p>
                     <span className="text-primary text-sm font-semibold group-hover:underline">Rent Now</span>
                   </div>
                 </div>
