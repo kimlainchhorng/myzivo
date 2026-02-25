@@ -66,7 +66,7 @@ export default function FeaturedHotelsSection() {
             >
               <Link
                 to="/hotels"
-                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
+                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
