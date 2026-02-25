@@ -89,11 +89,11 @@ const PersonalizedHomeSection = () => {
                 <h3 className="font-semibold">Price Alerts</h3>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                   <span className="text-sm text-muted-foreground">Active Alerts</span>
                   <span className="text-xl font-bold">{context.priceAlertsSummary.active}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10">
                   <div className="flex items-center gap-2">
                     <TrendingDown className="w-4 h-4 text-emerald-500" />
                     <span className="text-sm">Price Drops</span>

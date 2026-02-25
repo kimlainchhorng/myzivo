@@ -84,7 +84,7 @@ export function MilesBalanceChip({ className, variant = "default" }: MilesBalanc
     <Link
       to="/app/dashboard?tab=miles"
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+        "flex items-center gap-2 px-3 py-1.5 rounded-xl",
         "bg-gradient-to-r from-amber-500/10 to-orange-500/10",
         "border border-amber-500/20 hover:border-amber-500/40",
         "transition-all hover:scale-105",

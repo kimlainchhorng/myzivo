@@ -113,7 +113,7 @@ const AdminInsightsPage = () => {
           <Card className="bg-zinc-900/80 border-white/10">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-primary/20">
+                <div className="p-2 rounded-xl bg-primary/20">
                   <Clock className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ const AdminInsightsPage = () => {
           <Card className="bg-zinc-900/80 border-white/10">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-green-500/20">
+                <div className="p-2 rounded-xl bg-green-500/20">
                   <Users className="h-5 w-5 text-green-400" />
                 </div>
                 <div>
@@ -170,7 +170,7 @@ const AdminInsightsPage = () => {
           <Card className="bg-zinc-900/80 border-white/10">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-amber-500/20">
+                <div className="p-2 rounded-xl bg-amber-500/20">
                   <AlertTriangle className="h-5 w-5 text-amber-400" />
                 </div>
                 <div>
@@ -194,7 +194,7 @@ const AdminInsightsPage = () => {
           <Card className="bg-zinc-900/80 border-white/10">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-destructive/20">
+                <div className="p-2 rounded-xl bg-destructive/20">
                   <AlertTriangle className="h-5 w-5 text-destructive" />
                 </div>
                 <div>

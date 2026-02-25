@@ -248,15 +248,15 @@ const AdminInventoryManagement = () => {
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                          <div className="p-2 rounded-lg bg-green-500/10">
+                          <div className="p-2 rounded-xl bg-green-500/10">
                             <p className="text-lg font-bold text-green-500">{item.available}</p>
                             <p className="text-[10px] text-muted-foreground">Available</p>
                           </div>
-                          <div className="p-2 rounded-lg bg-blue-500/10">
+                          <div className="p-2 rounded-xl bg-blue-500/10">
                             <p className="text-lg font-bold text-blue-500">{item.reserved}</p>
                             <p className="text-[10px] text-muted-foreground">Reserved</p>
                           </div>
-                          <div className="p-2 rounded-lg bg-amber-500/10">
+                          <div className="p-2 rounded-xl bg-amber-500/10">
                             <p className="text-lg font-bold text-amber-500">{item.maintenance}</p>
                             <p className="text-[10px] text-muted-foreground">Maintenance</p>
                           </div>

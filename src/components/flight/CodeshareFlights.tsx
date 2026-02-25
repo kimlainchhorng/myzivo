@@ -72,7 +72,7 @@ const CodeshareFlights = ({ codeshares, showDetails = false }: CodeshareFlightsP
         >
           {/* Operating carrier */}
           <div className="flex items-center gap-3 mb-3 pb-3 border-b border-border/30">
-            <div className="w-10 h-10 rounded-lg bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden">
+            <div className="w-10 h-10 rounded-xl bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden">
               <img
                 src={getAirlineLogo(codeshare.operatingCarrier.code)}
                 alt={codeshare.operatingCarrier.name}
@@ -101,7 +101,7 @@ const CodeshareFlights = ({ codeshares, showDetails = false }: CodeshareFlightsP
               {codeshare.marketingCarriers.map((carrier, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/30"
+                  className="flex items-center gap-2 p-2 rounded-xl bg-background/50 border border-border/30"
                 >
                   <div className="w-6 h-6 rounded bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden">
                     <img

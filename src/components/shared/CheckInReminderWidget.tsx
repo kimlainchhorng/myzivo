@@ -86,8 +86,8 @@ const CheckInReminderWidget = ({
       </div>
 
       {/* Flight Info */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
-        <div className="p-2 rounded-lg bg-primary/10">
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
+        <div className="p-2 rounded-xl bg-primary/10">
           <Plane className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1">
@@ -98,7 +98,7 @@ const CheckInReminderWidget = ({
 
       {/* Countdown or Check-In Button */}
       {checkInOpen ? (
-        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mb-4 text-center">
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4 text-center">
           <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
           <p className="font-semibold text-emerald-400 mb-1">Check-In is Open!</p>
           <p className="text-xs text-muted-foreground mb-3">
@@ -110,20 +110,20 @@ const CheckInReminderWidget = ({
           </Button>
         </div>
       ) : (
-        <div className="p-4 rounded-lg bg-muted/30 border border-border/30 mb-4">
+        <div className="p-4 rounded-xl bg-muted/30 border border-border/30 mb-4">
           <p className="text-xs text-muted-foreground text-center mb-2">Check-in opens in</p>
           <div className="flex items-center justify-center gap-2">
-            <div className="p-2 rounded-lg bg-primary/10 min-w-12 text-center">
+            <div className="p-2 rounded-xl bg-primary/10 min-w-12 text-center">
               <p className="text-xl font-bold text-primary">{String(timeUntilCheckIn.hours).padStart(2, '0')}</p>
               <p className="text-[10px] text-muted-foreground">HRS</p>
             </div>
             <span className="text-xl font-bold text-muted-foreground">:</span>
-            <div className="p-2 rounded-lg bg-primary/10 min-w-12 text-center">
+            <div className="p-2 rounded-xl bg-primary/10 min-w-12 text-center">
               <p className="text-xl font-bold text-primary">{String(timeUntilCheckIn.minutes).padStart(2, '0')}</p>
               <p className="text-[10px] text-muted-foreground">MIN</p>
             </div>
             <span className="text-xl font-bold text-muted-foreground">:</span>
-            <div className="p-2 rounded-lg bg-primary/10 min-w-12 text-center">
+            <div className="p-2 rounded-xl bg-primary/10 min-w-12 text-center">
               <p className="text-xl font-bold text-primary">{String(timeUntilCheckIn.seconds).padStart(2, '0')}</p>
               <p className="text-[10px] text-muted-foreground">SEC</p>
             </div>
@@ -135,17 +135,14 @@ const CheckInReminderWidget = ({
       <div>
         <p className="text-xs text-muted-foreground mb-2">Remind me via</p>
         <div className="space-y-2">
-          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/20">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">Email</span>
+              <span className="text-sm">Push notification</span>
             </div>
-            <Switch 
-              checked={notifications.email}
-              onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-            />
+            <Switch defaultChecked />
           </div>
-          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/20">
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm">Push Notification</span>

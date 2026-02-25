@@ -55,11 +55,11 @@ const AppFeatures = () => {
                 
                 {/* App Content Preview */}
                 <div className="mt-16 p-4 space-y-3">
-                  <div className="h-8 bg-muted/50 rounded-lg" />
+                  <div className="h-8 bg-muted/50 rounded-xl" />
                   <div className="h-24 bg-primary/20 rounded-xl" />
                   <div className="grid grid-cols-4 gap-2">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-12 bg-muted/50 rounded-lg" />
+                      <div key={i} className="h-12 bg-muted/50 rounded-xl" />
                     ))}
                   </div>
                   <div className="h-32 bg-muted/50 rounded-xl" />
@@ -99,7 +99,7 @@ const AppFeatures = () => {
                     key={feature.title}
                     className="flex items-start gap-3 p-4 bg-card/60 rounded-xl border border-border/50"
                   >
-                    <div className={`w-10 h-10 rounded-lg bg-${feature.color}-500/10 flex items-center justify-center flex-shrink-0`}>
+                    <div className={`w-10 h-10 rounded-xl bg-${feature.color}-500/10 flex items-center justify-center flex-shrink-0`}>
                       <Icon className={`w-5 h-5 text-${feature.color}-400`} />
                     </div>
                     <div>

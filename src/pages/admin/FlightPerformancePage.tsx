@@ -485,15 +485,15 @@ const FlightPerformancePage = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center p-4 rounded-lg bg-muted/30">
+                <div className="text-center p-4 rounded-xl bg-muted/30">
                   <p className="text-4xl font-bold text-primary">{cacheStats?.activeEntries || 0}</p>
                   <p className="text-sm text-muted-foreground">Active Cache Entries</p>
                 </div>
-                <div className="text-center p-4 rounded-lg bg-muted/30">
+                <div className="text-center p-4 rounded-xl bg-muted/30">
                   <p className="text-4xl font-bold text-emerald-500">{cacheStats?.totalHits || 0}</p>
                   <p className="text-sm text-muted-foreground">Cache Hits (Total)</p>
                 </div>
-                <div className="text-center p-4 rounded-lg bg-muted/30">
+                <div className="text-center p-4 rounded-xl bg-muted/30">
                   <p className="text-4xl font-bold">{cacheStats?.avgHitsPerEntry || 0}</p>
                   <p className="text-sm text-muted-foreground">Avg Hits per Entry</p>
                 </div>

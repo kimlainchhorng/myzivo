@@ -122,7 +122,7 @@ const HelpCenter = () => {
 
       <main className="px-4 py-4 max-w-5xl mx-auto relative z-10">
         {/* Search - Mobile optimized */}
-        <div className="relative mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="relative mb-6 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search for help..."
@@ -133,7 +133,7 @@ const HelpCenter = () => {
         </div>
 
         {/* Quick Categories */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-200">
           {categories.map((cat) => (
             <a
               key={cat.label}
@@ -345,7 +345,7 @@ const HelpCenter = () => {
                 </CardHeader>
                 <CardContent>
                   {ticketSubmitted ? (
-                    <div className="text-center py-8 sm:py-10 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="text-center py-8 sm:py-10 animate-in fade-in zoom-in-95 duration-200">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-emerald-500/30">
                         <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                       </div>

@@ -71,7 +71,7 @@ const FlightMobileAppPromo = () => {
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
                     <feature.icon className="w-5 h-5 text-white" />
                   </div>
                   <span className="font-medium">{feature.text}</span>

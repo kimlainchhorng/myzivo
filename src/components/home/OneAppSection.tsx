@@ -53,7 +53,7 @@ export default function OneAppSection({ compact = false }: OneAppSectionProps) {
                 className="flex items-center gap-3 text-xs text-muted-foreground"
               >
                 <div className={cn(
-                  "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
+                  "w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0",
                   "bg-gradient-to-br",
                   service.gradient
                 )}>

@@ -10,7 +10,7 @@ function FleetImage({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative flex justify-center mb-4">
       {!loaded && <div className="absolute inset-0 animate-pulse bg-muted/50 rounded-xl" />}
-      <img src={src} alt={alt} onLoad={onLoad} className={cn("w-24 h-24 object-contain transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")} />
+      <img src={src} alt={alt} onLoad={onLoad} className={cn("w-24 h-24 object-contain transition-opacity duration-200", loaded ? "opacity-100" : "opacity-0")} />
     </div>
   );
 }

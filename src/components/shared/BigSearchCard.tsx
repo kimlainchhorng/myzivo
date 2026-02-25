@@ -49,7 +49,7 @@ export default function BigSearchCard({
       "shadow-2xl ring-1 ring-white/10",
       styles.glowColor,
       styles.borderHover,
-      "transition-all duration-300",
+      "transition-all duration-200",
       className
     )}>
       {/* Colorful accent bar at top */}

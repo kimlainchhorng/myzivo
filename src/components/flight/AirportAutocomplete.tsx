@@ -94,7 +94,7 @@ const AirportAutocomplete = ({
         <label className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 block font-medium">{label}</label>
       )}
       <div className="relative">
-        <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br from-sky-500/15 to-cyan-500/10 flex items-center justify-center">
+        <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-sky-500/15 to-cyan-500/10 flex items-center justify-center">
           <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400" />
         </div>
         <Input
@@ -109,7 +109,7 @@ const AirportAutocomplete = ({
 
       {/* Dropdown - Compact */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-card rounded-lg border border-border shadow-xl shadow-black/30 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-card rounded-xl border border-border shadow-xl shadow-black/30 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Recent searches - Compact */}
           {recentSearches.length > 0 && query.length < 2 && (
             <div className="p-2.5 sm:p-3 border-b border-border bg-muted/40">
@@ -128,7 +128,7 @@ const AirportAutocomplete = ({
                       onChange(search);
                       setIsOpen(false);
                     }}
-                    className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-background hover:bg-sky-500/10 border border-border hover:border-sky-500/40 text-xs font-medium rounded-lg transition-all touch-manipulation active:scale-95"
+                    className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-background hover:bg-sky-500/10 border border-border hover:border-sky-500/40 text-xs font-medium rounded-xl transition-all touch-manipulation active:scale-95"
                   >
                     <MapPin className="w-3 h-3 text-muted-foreground group-hover:text-sky-400" />
                     <span className="text-foreground group-hover:text-sky-400">{search}</span>
@@ -193,7 +193,7 @@ const AirportAutocomplete = ({
                   </div>
 
                   {/* Arrow - Compact */}
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted group-hover:bg-sky-500/15 flex items-center justify-center transition-all">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-muted group-hover:bg-sky-500/15 flex items-center justify-center transition-all">
                     <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-sky-400 -rotate-45" />
                   </div>
                 </button>
