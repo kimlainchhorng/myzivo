@@ -54,9 +54,6 @@ export { default as HowBookingWorks } from './HowBookingWorks';
 export { default as FlightTrustBadgesBar } from './FlightTrustBadgesBar';
 export { default as FlightMobileResultsBar } from './FlightMobileResultsBar';
 
-// Search
-export { default as SmartSearchLoader } from './SmartSearchLoader';
-
 // Stub exports (referenced by pages, kept as no-ops)
 export { default as BookingSupportPanel } from './BookingSupportPanel';
 export { default as FlightDetailStickyCTA } from './FlightDetailStickyCTA';

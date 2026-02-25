@@ -4,7 +4,7 @@
  */
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { TravelerPassport, TripTimeline, AIConciergeTrigger, SavedForLater } from "@/components/profile";
+import { TripTimeline, AIConciergeTrigger } from "@/components/profile";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { motion } from "framer-motion";
 
@@ -43,7 +43,7 @@ export default function TravelerDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <TravelerPassport />
+          {/* TravelerPassport removed */}
         </motion.div>
 
         {/* Two Column Layout */}
@@ -63,7 +63,7 @@ export default function TravelerDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <SavedForLater />
+            {/* SavedForLater removed */}
           </motion.div>
         </div>
       </div>
