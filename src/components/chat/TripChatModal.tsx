@@ -1,3 +1,8 @@
+/**
+ * TripChatModal Component
+ * Full-screen chat modal for trip communication
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
@@ -289,7 +294,7 @@ const TripChatModal = ({
                       ) : (
                         <div
                           className={cn(
-                            "max-w-[75%] px-4 py-3 rounded-2xl shadow-sm transition-all",
+                            "max-w-[75%] px-4 py-3 rounded-2xl shadow-sm transition-all animate-in fade-in duration-200",
                             isMe
                               ? "bg-gradient-to-r from-primary to-teal-400 text-white rounded-br-md shadow-primary/20"
                               : "bg-card border border-border/50 rounded-bl-md"
@@ -339,7 +344,7 @@ const TripChatModal = ({
                 key={reply}
                 variant="outline"
                 size="sm"
-                className="whitespace-nowrap text-xs h-8 flex-shrink-0"
+                className="whitespace-nowrap text-xs h-8 flex-shrink-0 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation"
                 onClick={() => handleQuickReply(reply)}
                 disabled={sendMessage.isPending}
               >
@@ -359,6 +364,7 @@ const TripChatModal = ({
               onClick={handleShareLocation}
               disabled={sendMessage.isPending || isGettingLocation}
               title="Share your location"
+              className="rounded-xl active:scale-90 transition-all duration-200 touch-manipulation"
             >
               {isGettingLocation ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -373,12 +379,13 @@ const TripChatModal = ({
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               disabled={sendMessage.isPending}
-              className="flex-1"
+              className="flex-1 rounded-xl"
             />
             <Button
               size="icon"
               onClick={handleSend}
               disabled={!newMessage.trim() || sendMessage.isPending}
+              className="rounded-xl active:scale-90 transition-all duration-200 touch-manipulation shadow-md shadow-primary/20"
             >
               {sendMessage.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

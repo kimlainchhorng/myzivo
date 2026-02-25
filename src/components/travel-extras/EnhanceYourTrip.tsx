@@ -123,7 +123,7 @@ export default function EnhanceYourTrip({
               <Link to="/extras" key={category.id}>
                 <Card 
                   className={cn(
-                    "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full",
+                    "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full active:scale-[0.98] touch-manipulation rounded-2xl",
                     category.borderColor
                   )}
                 >
@@ -176,7 +176,7 @@ export default function EnhanceYourTrip({
             <Link to="/extras" key={category.id}>
               <Card
                 className={cn(
-                  "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full",
+                  "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full active:scale-[0.98] touch-manipulation rounded-2xl",
                   category.borderColor,
                   "animate-in fade-in slide-in-from-bottom-4"
                 )}
@@ -200,7 +200,7 @@ export default function EnhanceYourTrip({
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors touch-manipulation"
+                        className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200 touch-manipulation rounded-xl min-h-[36px]"
                       >
                         View Options
                         <ArrowRight className="w-3 h-3" />
@@ -237,7 +237,7 @@ export default function EnhanceYourTrip({
         {/* View All Link */}
         <div className="text-center mt-6">
           <Link to="/extras">
-            <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500 rounded-2xl h-12 px-8 font-semibold touch-manipulation active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20">
               View All Travel Extras
               <ArrowRight className="w-4 h-4" />
             </Button>

@@ -87,7 +87,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
           {compensationCards.map((partner, index) => (
             <Card 
               key={partner.id}
-              className="group cursor-pointer border-border/50 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4"
+              className="group cursor-pointer border-border/50 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4 active:scale-[0.98] touch-manipulation"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handlePartnerClick(partner)}
             >
@@ -134,7 +134,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
                 
                 <Button 
                   size="sm"
-                  className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white hover:opacity-90 touch-manipulation"
+                  className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
                 >
                   <Euro className="w-4 h-4" />
                   Check My Compensation

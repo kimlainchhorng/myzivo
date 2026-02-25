@@ -132,7 +132,7 @@ function FilterContent({ filters, onFilterChange }: HotelFiltersProps) {
               variant={filters.starRating.includes(star) ? "default" : "outline"}
               size="sm"
               className={cn(
-                "h-9 px-3 rounded-lg",
+                "h-9 px-3 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation",
                 filters.starRating.includes(star) && "bg-hotels hover:bg-hotels/90"
               )}
               onClick={() => {
@@ -269,7 +269,7 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs h-7"
+                className="text-xs h-7 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation"
                 onClick={() => onFilterChange({
                   priceRange: [0, 500],
                   starRating: [],
@@ -295,7 +295,7 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
       <div className="lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 rounded-xl h-10 px-4 active:scale-95 transition-all duration-200 touch-manipulation bg-background/50 backdrop-blur-sm shadow-sm">
               <Filter className="w-4 h-4" />
               Filters
               {activeFilterCount > 0 && (
@@ -313,7 +313,7 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs"
+                    className="text-xs rounded-lg active:scale-95 transition-all duration-200 touch-manipulation"
                     onClick={() => onFilterChange({
                       priceRange: [0, 500],
                       starRating: [],
@@ -335,7 +335,7 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
             </ScrollArea>
             <div className="pt-4 border-t">
               <SheetClose asChild>
-                <Button className="w-full bg-hotels hover:bg-hotels/90">
+                <Button className="w-full bg-hotels hover:bg-hotels/90 rounded-xl h-12 text-base font-semibold shadow-lg shadow-hotels/20 active:scale-[0.98] transition-all duration-200 touch-manipulation">
                   Show Results
                 </Button>
               </SheetClose>

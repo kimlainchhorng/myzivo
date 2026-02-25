@@ -79,7 +79,7 @@
              </h1>
              <p className="text-zinc-400 text-sm">Curated stays for the modern nomad.</p>
            </div>
-           <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+           <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center active:scale-90 transition-all duration-200 touch-manipulation">
              <Filter className="w-4 h-4" />
            </button>
          </div>
@@ -122,7 +122,7 @@
              <button
                key={mood}
                onClick={() => setActiveMood(mood)}
-               className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
+               className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 touch-manipulation border ${
                  activeMood === mood 
                    ? "bg-emerald-500 border-emerald-500 text-black shadow-lg shadow-emerald-500/20" 
                    : "bg-transparent border-white/10 text-zinc-400 hover:border-white/30"
@@ -163,7 +163,7 @@
                  </div>
                  <button 
                    onClick={(e) => { e.stopPropagation(); }}
-                   className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-white/10 transition-colors text-white"
+                   className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all duration-200 touch-manipulation text-white"
                  >
                    <Heart className="w-5 h-5" />
                  </button>
@@ -195,7 +195,7 @@
                        </div>
                      ))}
                    </div>
-                   <button className="bg-white text-black px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-emerald-400 transition-colors">
+                   <button className="bg-white text-black px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-emerald-400 active:scale-95 transition-all duration-200 touch-manipulation shadow-lg">
                      View <ChevronRight className="w-4 h-4" />
                    </button>
                  </div>

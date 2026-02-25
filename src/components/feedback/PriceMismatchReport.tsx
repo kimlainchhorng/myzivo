@@ -112,7 +112,7 @@ export function PriceMismatchReport({
         <Button
           variant="ghost"
           size="sm"
-          className={cn("gap-2 text-muted-foreground", className)}
+          className={cn("gap-2 text-muted-foreground rounded-xl active:scale-95 transition-all duration-200 touch-manipulation", className)}
         >
           <AlertTriangle className="w-4 h-4" />
           Report price mismatch
@@ -243,10 +243,11 @@ export function PriceMismatchReport({
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
+              className="rounded-xl active:scale-95 transition-all duration-200 touch-manipulation"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="gap-2">
+            <Button type="submit" disabled={isSubmitting} className="gap-2 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation shadow-md shadow-primary/20">
               <Send className="w-4 h-4" />
               {isSubmitting ? "Submitting..." : "Submit Report"}
             </Button>

@@ -101,7 +101,7 @@ export function ActiveFiltersChips({
             variant="ghost"
             size="sm"
             onClick={onClearAll}
-            className={cn("h-7 text-xs gap-1.5", clearColor)}
+            className={cn("h-7 text-xs gap-1.5 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation", clearColor)}
           >
             <Trash2 className="w-3 h-3" />
             Clear all

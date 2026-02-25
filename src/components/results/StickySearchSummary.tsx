@@ -106,7 +106,7 @@ export function StickySearchSummary({
                 variant="outline"
                 size="sm"
                 onClick={handleEditClick}
-                className={cn("gap-2 transition-colors min-h-[40px]", colors.button)}
+                className={cn("gap-2 transition-all duration-200 min-h-[40px] rounded-xl active:scale-95 touch-manipulation border-transparent bg-background/20 backdrop-blur-sm", colors.button)}
               >
                 <Pencil className="w-4 h-4" />
                 <span className="hidden sm:inline">Modify Search</span>

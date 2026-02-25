@@ -70,7 +70,7 @@ export function FlightsLaunchBanner({
         <AlertDescription className="flex items-center justify-between">
           <span>{reason}</span>
           {phase === 'private_beta' && (
-            <Button variant="outline" size="sm" asChild className="ml-4">
+            <Button variant="outline" size="sm" asChild className="ml-4 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation h-8">
               <Link to="/flights/beta">Request Access</Link>
             </Button>
           )}
@@ -95,7 +95,7 @@ export function FlightsLaunchBanner({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full active:scale-90 transition-all duration-200 touch-manipulation"
             onClick={dismissAnnouncement}
           >
             <X className="w-4 h-4" />

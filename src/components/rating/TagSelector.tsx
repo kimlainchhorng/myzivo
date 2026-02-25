@@ -62,7 +62,7 @@ const TagSelector = ({ selectedTags, onChange, disabled = false }: TagSelectorPr
                 key={tag.id}
                 variant={isSelected ? "default" : "outline"}
                 className={cn(
-                  "cursor-pointer transition-all",
+                  "cursor-pointer transition-all duration-200 touch-manipulation active:scale-95 rounded-xl px-3 py-1.5",
                   isSelected
                     ? "bg-green-600 hover:bg-green-700 border-green-600"
                     : "hover:bg-green-100 hover:border-green-300",
@@ -89,7 +89,7 @@ const TagSelector = ({ selectedTags, onChange, disabled = false }: TagSelectorPr
                 key={tag.id}
                 variant={isSelected ? "default" : "outline"}
                 className={cn(
-                  "cursor-pointer transition-all",
+                  "cursor-pointer transition-all duration-200 touch-manipulation active:scale-95 rounded-xl px-3 py-1.5",
                   isSelected
                     ? "bg-destructive hover:bg-destructive/90 border-destructive"
                     : "hover:bg-red-50 hover:border-red-300",

@@ -123,7 +123,7 @@ export default function RenterDocumentUpload({
               <Button
                 variant="secondary"
                 size="icon"
-                className="h-6 w-6"
+                className="h-6 w-6 rounded-full hover:bg-destructive/20 active:scale-90 transition-all duration-200 touch-manipulation"
                 onClick={(e) => {
                   e.preventDefault();
                   handleClear();

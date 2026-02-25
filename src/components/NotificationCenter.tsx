@@ -59,7 +59,7 @@ const NotificationItem = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-primary/10 transition-transform duration-200 hover:scale-110 active:scale-90"
+              className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-primary/10 transition-all duration-200 hover:scale-110 active:scale-90 touch-manipulation"
               onClick={() => onMarkAsRead(notification.id)}
             >
               <Check className="h-3 w-3" />
@@ -85,7 +85,7 @@ const NotificationCenter = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="relative rounded-xl hover:bg-primary/10 transition-transform duration-200 hover:scale-105 active:scale-95"
+          className="relative rounded-xl hover:bg-primary/10 transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation w-10 h-10"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -108,7 +108,7 @@ const NotificationCenter = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs rounded-lg hover:bg-primary/10"
+                className="h-7 text-xs rounded-lg hover:bg-primary/10 active:scale-95 transition-all duration-200 touch-manipulation"
                 onClick={markAllAsRead}
               >
                 <CheckCheck className="h-3 w-3 mr-1" />
@@ -119,7 +119,7 @@ const NotificationCenter = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-lg hover:bg-destructive/10"
+                className="h-7 w-7 rounded-lg hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
                 onClick={clearAll}
               >
                 <Trash2 className="h-3 w-3 text-destructive" />

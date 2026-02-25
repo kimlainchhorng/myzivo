@@ -40,7 +40,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
   const { formatted: nightlyPrice, wasConverted } = getDisplay(hotel.pricePerNight, "USD");
   
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-border/50 bg-card/50">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 border-border/50 bg-card/50 rounded-2xl hover:border-amber-500/30 hover:-translate-y-0.5 active:scale-[0.995] touch-manipulation">
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
@@ -125,7 +125,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
               </div>
               <Button 
                 onClick={() => onViewDeal(hotel)}
-                className="bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2"
+                className="bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-md shadow-hotels/20"
               >
                 Book with Provider
                 <ExternalLink className="w-4 h-4" />

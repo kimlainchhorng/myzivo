@@ -71,7 +71,7 @@ export function SupportRequestForm({
   };
 
   const trigger = triggerButton || (
-    <Button variant="outline" className={cn("gap-2", className)}>
+    <Button variant="outline" className={cn("gap-2 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm", className)}>
       <HelpCircle className="w-4 h-4" />
       Get Help
     </Button>
