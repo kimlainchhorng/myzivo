@@ -89,9 +89,9 @@ const RecentlyViewed = () => {
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className={`absolute top-2 left-2 w-8 h-8 ${typeColor} rounded-lg flex items-center justify-center`}>
+                  <div className={`absolute top-2 left-2 w-8 h-8 ${typeColor} rounded-xl flex items-center justify-center`}>
                     <TypeIcon className="w-4 h-4 text-white" />
                   </div>
                   <Badge className="absolute top-2 right-2 bg-black/60 text-white border-0 text-xs">

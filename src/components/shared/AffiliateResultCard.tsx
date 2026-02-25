@@ -196,7 +196,7 @@ export default function AffiliateResultCard(props: AffiliateResultCardProps) {
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 group cursor-pointer",
+        "overflow-hidden transition-all duration-200 group cursor-pointer",
         `hover:shadow-lg hover:${colors.border}`,
         className
       )}
@@ -213,7 +213,7 @@ export default function AffiliateResultCard(props: AffiliateResultCardProps) {
               <img 
                 src={image} 
                 alt={title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               {badges.length > 0 && (
                 <div className="absolute top-2 left-2 flex flex-wrap gap-1">
@@ -240,7 +240,7 @@ export default function AffiliateResultCard(props: AffiliateResultCardProps) {
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex-1">
                   <h3 className={cn(
-                    "font-bold text-base sm:text-lg line-clamp-1 transition-colors",
+                    "font-bold text-base sm:text-lg line-clamp-1 transition-all duration-200",
                     `group-hover:${colors.accent}`
                   )}>
                     {title}

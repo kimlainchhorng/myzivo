@@ -452,7 +452,7 @@ const AdminDocumentReview = () => {
                                 <motion.div 
                                   whileHover={{ scale: 1.05 }}
                                   className={cn(
-                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-200",
                                     doc.status === "approved" ? "bg-green-500/10" :
                                     doc.status === "rejected" ? "bg-red-500/10" :
                                     "bg-amber-500/10"
@@ -461,7 +461,7 @@ const AdminDocumentReview = () => {
                                   {getDocumentIcon(doc.document_type)}
                                 </motion.div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate group-hover:text-primary transition-colors">
+                                  <p className="font-medium truncate group-hover:text-primary transition-all duration-200">
                                     {getDocumentTypeLabel(doc.document_type)}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1">

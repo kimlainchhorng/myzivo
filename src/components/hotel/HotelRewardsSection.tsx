@@ -67,7 +67,7 @@ const HotelRewardsSection = () => {
               <Card
                 key={tier.name}
                 className={cn(
-                  "glass-card overflow-hidden group cursor-pointer transition-all duration-300",
+                  "glass-card overflow-hidden group cursor-pointer transition-all duration-200",
                   "hover:border-amber-500/50 hover:-translate-x-2 touch-manipulation active:scale-[0.98]"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}

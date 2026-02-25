@@ -68,7 +68,7 @@ const SavedSearches = () => {
             return (
               <div
                 key={search.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-violet-500/30 hover:shadow-lg transition-all duration-300"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-violet-500/30 hover:shadow-lg transition-all duration-200"
               >
                 <div className="w-12 h-12 bg-violet-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <TypeIcon className="w-6 h-6 text-violet-400" />

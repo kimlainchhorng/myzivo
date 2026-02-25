@@ -49,7 +49,7 @@ export function CategoryTile({
       to={href}
       className={cn(
         "group relative block overflow-hidden rounded-2xl",
-        "transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+        "transition-all duration-200 hover:shadow-xl hover:-translate-y-1.5",
         className
       )}
     >
@@ -59,7 +59,7 @@ export function CategoryTile({
           src={image}
           alt={title}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
 
         {/* Overlay */}
@@ -67,7 +67,7 @@ export function CategoryTile({
           className={cn(
             "absolute inset-0",
             overlay === "gradient" && "bg-gradient-to-t from-black/70 via-black/20 to-transparent",
-            overlay === "dark" && "bg-black/40 group-hover:bg-black/50 transition-colors",
+            overlay === "dark" && "bg-black/40 group-hover:bg-black/50 transition-all duration-200",
             overlay === "light" && "bg-white/20"
           )}
         />

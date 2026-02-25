@@ -475,7 +475,7 @@ const AdminFlightManagement = () => {
                       filteredFlights.map((flight, index) => (
                         <TableRow
                           key={flight.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell className="font-medium font-mono">{flight.flight_number}</TableCell>
@@ -609,7 +609,7 @@ const AdminFlightManagement = () => {
                       filteredBookings.slice(0, 15).map((booking, index) => (
                         <TableRow
                           key={booking.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell className="font-mono font-medium">{booking.booking_reference}</TableCell>
@@ -780,7 +780,7 @@ const AdminFlightManagement = () => {
                       filteredBookings.map((booking, index) => (
                         <TableRow
                           key={booking.id}
-                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="group hover:bg-muted/30 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell className="font-mono font-medium">{booking.booking_reference}</TableCell>

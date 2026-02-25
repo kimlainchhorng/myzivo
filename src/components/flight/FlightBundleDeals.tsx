@@ -52,7 +52,7 @@ const FlightBundleDeals = () => {
           {bundles.map((bundle) => (
             <div
               key={bundle.id}
-              className={`relative bg-card/50 backdrop-blur-xl border rounded-2xl p-6 transition-all hover:scale-105 ${
+              className={`relative bg-card/50 backdrop-blur-xl border rounded-2xl p-6 transition-all duration-200 hover:scale-[1.03] hover:shadow-lg ${
                 bundle.popular ? "border-sky-500/50 ring-2 ring-sky-500/20" : "border-border/50"
               }`}
             >

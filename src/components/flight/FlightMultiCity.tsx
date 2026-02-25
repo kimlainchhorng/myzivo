@@ -160,11 +160,11 @@ export const FlightMultiCity = ({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="overflow-hidden border-border/50 bg-card/50 backdrop-blur hover:border-border transition-colors group">
+              <Card className="overflow-hidden border-border/50 bg-card/50 backdrop-blur hover:border-border transition-all duration-200 group">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     {/* Drag Handle */}
-                    <div className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground transition-colors">
+                    <div className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground transition-all duration-200">
                       <GripVertical className="w-4 h-4" />
                     </div>
 

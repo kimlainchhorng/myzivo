@@ -92,10 +92,10 @@ export default function PartnerLogosStrip({
             <div
               key={`${partner.name}-${index}`}
               className={cn(
-                "flex-shrink-0 mx-6 px-5 py-3 rounded-lg",
+                "flex-shrink-0 mx-6 px-5 py-3 rounded-xl",
                 "bg-muted/50 border border-border/50",
                 "text-sm font-semibold text-muted-foreground",
-                "hover:text-foreground hover:border-border transition-colors",
+                "hover:text-foreground hover:border-border transition-all duration-200",
                 "grayscale hover:grayscale-0"
               )}
             >

@@ -211,7 +211,7 @@ const ServicesShowcase = () => {
                   </div>
 
                   {/* Content */}
-                  <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-all duration-200">
                     {service.title}
                   </h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-4 leading-relaxed">

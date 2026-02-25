@@ -75,7 +75,7 @@ export function FlightFailuresTable({ data, isLoading }: FlightFailuresTableProp
       <CardContent className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-lg border bg-muted/30">
+          <div className="p-4 rounded-xl border bg-muted/30">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               <span className="text-sm text-muted-foreground">Zero Results</span>
@@ -83,7 +83,7 @@ export function FlightFailuresTable({ data, isLoading }: FlightFailuresTableProp
             <p className="text-2xl font-bold">{data.zeroResultsCount}</p>
           </div>
 
-          <div className="p-4 rounded-lg border bg-muted/30">
+          <div className="p-4 rounded-xl border bg-muted/30">
             <div className="flex items-center gap-2 mb-2">
               <XCircle className="w-4 h-4 text-destructive" />
               <span className="text-sm text-muted-foreground">Payment Failures</span>
@@ -91,7 +91,7 @@ export function FlightFailuresTable({ data, isLoading }: FlightFailuresTableProp
             <p className="text-2xl font-bold text-destructive">{data.paymentFailures}</p>
           </div>
 
-          <div className="p-4 rounded-lg border bg-muted/30">
+          <div className="p-4 rounded-xl border bg-muted/30">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-4 h-4 text-destructive" />
               <span className="text-sm text-muted-foreground">Ticketing Failures</span>
@@ -99,7 +99,7 @@ export function FlightFailuresTable({ data, isLoading }: FlightFailuresTableProp
             <p className="text-2xl font-bold text-destructive">{data.ticketingFailures}</p>
           </div>
 
-          <div className="p-4 rounded-lg border bg-muted/30">
+          <div className="p-4 rounded-xl border bg-muted/30">
             <div className="flex items-center gap-2 mb-2">
               <RefreshCw className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-muted-foreground">Auto-Refunds</span>

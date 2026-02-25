@@ -159,7 +159,7 @@ export default function HotelSpaServices() {
           ))}
         </div>
 
-        <div className="p-3 rounded-lg bg-gradient-to-r from-pink-500/10 to-rose-500/10 border border-pink-500/20">
+        <div className="p-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-rose-500/10 border border-pink-500/20">
           <p className="text-sm text-center">
             <Users className="w-4 h-4 inline mr-1" />
             Book 2+ treatments & get <span className="text-pink-400 font-medium">15% off</span>
