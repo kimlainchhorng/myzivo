@@ -13,15 +13,36 @@ const config: CapacitorConfig = {
     },
     Camera: {
       presentationStyle: 'fullscreen'
+    },
+    SplashScreen: {
+      launchAutoHide: true,
+      launchShowDuration: 2000,
+      backgroundColor: '#0D0D0F',
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#0D0D0F'
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   },
   ios: {
-    backgroundColor: '#000000',
-    contentInset: 'automatic'
+    backgroundColor: '#0D0D0F',
+    contentInset: 'automatic',
+    preferredContentMode: 'mobile',
+    scrollEnabled: true
   },
   android: {
-    backgroundColor: '#000000',
-    allowMixedContent: true
+    backgroundColor: '#0D0D0F',
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
   }
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState } from "react";
+import { useEffect, lazy, Suspense, useState, forwardRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -88,7 +88,7 @@ const DesktopHomePage = () => {
   );
 };
 
-const Index = () => {
+const Index = forwardRef<HTMLDivElement>((_, ref) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
@@ -130,6 +130,8 @@ const Index = () => {
   }
 
   return <DesktopHomePage />;
-};
+});
+
+Index.displayName = "Index";
 
 export default Index;
