@@ -90,7 +90,7 @@ export function CreateDisputeDialog({
 
         <div className="space-y-4 py-4">
           {/* Order Info */}
-          <div className="p-3 rounded-lg bg-muted/50 border">
+          <div className="p-3 rounded-xl bg-muted/50 border">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Order ID</span>
               <span className="font-mono">{orderId.slice(0, 8)}</span>

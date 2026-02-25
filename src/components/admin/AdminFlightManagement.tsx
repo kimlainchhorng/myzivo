@@ -911,22 +911,22 @@ const AdminFlightManagement = () => {
                 </Badge>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Departure</p>
                   <p className="font-medium">{format(new Date(selectedFlight.departure_time), "MMM d, h:mm a")}</p>
                   <p className="text-sm text-muted-foreground">{selectedFlight.departure_airport}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Arrival</p>
                   <p className="font-medium">{format(new Date(selectedFlight.arrival_time), "MMM d, h:mm a")}</p>
                   <p className="text-sm text-muted-foreground">{selectedFlight.arrival_airport}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Economy</p>
                   <p className="font-medium text-lg">${Number(selectedFlight.economy_price).toFixed(0)}</p>
                   <p className="text-xs text-muted-foreground">{selectedFlight.economy_seats_available || 0} seats left</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30">
+                <div className="p-3 rounded-xl bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Business</p>
                   <p className="font-medium text-lg">${Number(selectedFlight.business_price || 0).toFixed(0)}</p>
                   <p className="text-xs text-muted-foreground">{selectedFlight.business_seats_available || 0} seats left</p>

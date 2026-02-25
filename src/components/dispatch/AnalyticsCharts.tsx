@@ -40,7 +40,7 @@ const formatCurrency = (value: number) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+      <div className="bg-popover border border-border rounded-xl p-3 shadow-lg">
         <p className="font-medium mb-1">
           {label ? format(parseISO(label), "MMM d, yyyy") : label}
         </p>

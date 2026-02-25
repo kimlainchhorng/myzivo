@@ -70,7 +70,7 @@ const CarRentalSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="border-b border-border/50">
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <Car className="h-5 w-5 text-primary" />
                 </div>
                 Business Profile
@@ -162,7 +162,7 @@ const CarRentalSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-amber-500/10">
+                <div className="p-2 rounded-xl bg-amber-500/10">
                   <FileText className="h-5 w-5 text-amber-500" />
                 </div>
                 Rental Policies
@@ -235,7 +235,7 @@ const CarRentalSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500" />
             <CardHeader className="border-b border-border/50">
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
+                <div className="p-2 rounded-xl bg-emerald-500/10">
                   <Shield className="h-5 w-5 text-emerald-500" />
                 </div>
                 Insurance & Protection
@@ -284,7 +284,7 @@ const CarRentalSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
             <CardHeader className="border-b border-border/50">
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-purple-500/10">
+                <div className="p-2 rounded-xl bg-purple-500/10">
                   <Bell className="h-5 w-5 text-purple-500" />
                 </div>
                 Notifications
@@ -323,7 +323,7 @@ const CarRentalSettings = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
             <CardHeader className="border-b border-border/50">
               <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-500/10">
+                <div className="p-2 rounded-xl bg-blue-500/10">
                   <CreditCard className="h-5 w-5 text-blue-500" />
                 </div>
                 Payment Settings

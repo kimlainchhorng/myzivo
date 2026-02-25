@@ -27,7 +27,7 @@ const KanbanColumn = ({
   onStatusChange,
 }: KanbanColumnProps) => {
   return (
-    <div className="flex flex-col min-w-[300px] max-w-[350px] bg-muted/30 rounded-lg">
+    <div className="flex flex-col min-w-[300px] max-w-[350px] bg-muted/30 rounded-xl">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">

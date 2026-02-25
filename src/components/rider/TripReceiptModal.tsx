@@ -60,7 +60,7 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
         <div className="p-6">
           <DialogHeader className="relative pb-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-lg animate-in zoom-in-75 duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-lg animate-in zoom-in-75 duration-200">
                 <Receipt className="w-7 h-7 text-primary" />
               </div>
               <div>
@@ -245,7 +245,7 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   <p className="text-xs text-muted-foreground">Visa ending in 4242</p>
                 </div>
               </div>
-              <CheckCircle2 className="w-7 h-7 text-emerald-500 animate-in zoom-in-50 duration-300" style={{ animationDelay: '400ms' }} />
+              <CheckCircle2 className="w-7 h-7 text-emerald-500 animate-in zoom-in-50 duration-200" style={{ animationDelay: '400ms' }} />
             </div>
 
             {/* Security Notice */}

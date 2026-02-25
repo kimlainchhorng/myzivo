@@ -307,7 +307,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
                   e.stopPropagation();
                   setShowPriceAlertModal(true);
                 }}
-                className="gap-1 text-xs text-muted-foreground hover:text-sky-500 w-full lg:w-auto mt-1 rounded-lg h-8 active:scale-95 transition-all duration-200"
+                className="gap-1 text-xs text-muted-foreground hover:text-sky-500 w-full lg:w-auto mt-1 rounded-xl h-8 active:scale-95 transition-all duration-200"
               >
                 <Bell className="w-3 h-3" />
                 Track price

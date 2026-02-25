@@ -146,7 +146,7 @@ export function SupportRequestForm({
 
               {/* Partner routing notice */}
               {(category === 'cancellation_refund' || category === 'change_request') && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm">
                   <p className="text-amber-600 dark:text-amber-400">
                     <strong>Note:</strong> For booking changes, cancellations, or refunds, 
                     you may need to contact the booking partner directly. We'll provide 

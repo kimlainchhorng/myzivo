@@ -42,7 +42,7 @@
        initial={{ opacity: 0, x: -10 }}
        animate={{ opacity: 1, x: 0 }}
        className={cn(
-         "p-3 rounded-lg border",
+         "p-3 rounded-xl border",
          booking.isLowMargin
            ? "bg-amber-500/5 border-amber-500/20"
            : "bg-muted/30 border-border/50"
@@ -136,17 +136,17 @@
        <CardContent className="space-y-4">
          {/* Aggregate Stats */}
          <div className="grid grid-cols-3 gap-3">
-           <div className="text-center p-3 rounded-lg bg-muted/30">
-             <p className="text-xs text-muted-foreground mb-1">Revenue</p>
-             <p className="text-lg font-bold">${(agg?.totalRevenue || 0).toLocaleString()}</p>
-           </div>
-           <div className="text-center p-3 rounded-lg bg-muted/30">
-             <p className="text-xs text-muted-foreground mb-1">Net Margin</p>
-             <p className="text-lg font-bold text-emerald-500">
-               ${(agg?.totalMargin || 0).toLocaleString()}
-             </p>
-           </div>
-           <div className="text-center p-3 rounded-lg bg-muted/30">
+            <div className="text-center p-3 rounded-xl bg-muted/30">
+              <p className="text-xs text-muted-foreground mb-1">Revenue</p>
+              <p className="text-lg font-bold">${(agg?.totalRevenue || 0).toLocaleString()}</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-muted/30">
+              <p className="text-xs text-muted-foreground mb-1">Net Margin</p>
+              <p className="text-lg font-bold text-emerald-500">
+                ${(agg?.totalMargin || 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-muted/30">
              <p className="text-xs text-muted-foreground mb-1">Avg %</p>
              <div className="flex items-center justify-center gap-1">
                {(agg?.avgMarginPercent || 0) >= 5 ? (
@@ -161,7 +161,7 @@
  
          {/* Low margin alert */}
          {(agg?.lowMarginCount || 0) > 0 && (
-           <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+           <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
              <AlertTriangle className="w-4 h-4 text-amber-500" />
              <span className="text-sm">
                <strong>{agg?.lowMarginCount}</strong> bookings with margin below 5%

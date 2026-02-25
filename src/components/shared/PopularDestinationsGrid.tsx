@@ -137,7 +137,7 @@ export default function PopularDestinationsGrid({
               <div
                 key={dest.city}
                 className={cn(
-                  "overflow-hidden group cursor-pointer transition-all duration-300 rounded-xl",
+                  "overflow-hidden group cursor-pointer transition-all duration-200 rounded-xl",
                   "hover:-translate-y-1 hover:shadow-lg border border-border/50",
                   config.hoverBorder,
                   config.hoverShadow

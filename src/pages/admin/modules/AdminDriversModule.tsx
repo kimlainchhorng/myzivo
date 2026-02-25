@@ -378,7 +378,7 @@ export default function AdminDriversModule() {
               <div className="border-t pt-4">
                 <Label className="text-sm font-medium mb-3 block">Service Toggles</Label>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-xl">
                     <div className="flex items-center gap-2">
                       <Car className="w-4 h-4 text-blue-500" />
                       <span className="text-sm">Rides</span>
@@ -388,7 +388,7 @@ export default function AdminDriversModule() {
                       onCheckedChange={(checked) => handleServiceToggle(selectedDriver.id, 'rides_enabled', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-xl">
                     <div className="flex items-center gap-2">
                       <UtensilsCrossed className="w-4 h-4 text-orange-500" />
                       <span className="text-sm">Eats</span>
@@ -398,7 +398,7 @@ export default function AdminDriversModule() {
                       onCheckedChange={(checked) => handleServiceToggle(selectedDriver.id, 'eats_enabled', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-xl">
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4 text-purple-500" />
                       <span className="text-sm">Move</span>
@@ -414,7 +414,7 @@ export default function AdminDriversModule() {
               {/* Push Notification Status */}
               <div className="border-t pt-4">
                 <Label className="text-sm font-medium mb-3 block">Push Notifications</Label>
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
                   {(selectedDriver as any).fcm_token || (selectedDriver as any).apns_token ? (
                     <>
                       <Bell className="w-5 h-5 text-green-500" />
@@ -455,7 +455,7 @@ export default function AdminDriversModule() {
                     {notificationLogs && notificationLogs.length > 0 ? (
                       <div className="space-y-2 p-2">
                         {notificationLogs.map((log) => (
-                          <div key={log.id} className="p-2 bg-muted/30 rounded-lg text-xs">
+                          <div key={log.id} className="p-2 bg-muted/30 rounded-xl text-xs">
                             <div className="flex items-center justify-between mb-1">
                               <span className="font-medium">{log.title}</span>
                               <Badge 

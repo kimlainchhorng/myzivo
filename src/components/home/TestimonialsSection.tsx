@@ -122,7 +122,7 @@ export default function TestimonialsSection() {
                   key={i}
                   onClick={() => goTo(i)}
                   className={cn(
-                    "rounded-full transition-all duration-300 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center",
+                    "rounded-full transition-all duration-200 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center",
                     i === current ? `${dotColor} w-7 h-2.5` : "bg-muted-foreground/20 w-2.5 h-2.5 hover:bg-muted-foreground/40"
                   )}
                   aria-label={`Go to testimonial ${i + 1}`}

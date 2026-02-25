@@ -66,7 +66,7 @@ export default function AchievementsPage() {
     <div className="min-h-screen bg-background pb-20 safe-area-top safe-area-bottom">
       <div className="container max-w-lg mx-auto px-4 pt-4">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-2 duration-200">
           <Button
             variant="ghost"
             size="icon"

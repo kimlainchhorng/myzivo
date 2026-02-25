@@ -103,7 +103,7 @@ export function HotelFiltersContent({
               variant={filters.starRating.includes(star) ? "default" : "outline"}
               size="sm"
               className={cn(
-                "h-9 px-3 rounded-lg",
+                "h-9 px-3 rounded-xl",
                 filters.starRating.includes(star) && "bg-amber-500 hover:bg-amber-500/90"
               )}
               onClick={() => toggleStar(star)}

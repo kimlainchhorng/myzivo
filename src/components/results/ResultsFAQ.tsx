@@ -255,7 +255,7 @@ export function ResultsFAQ({ service, className }: ResultsFAQProps) {
         <div className="container mx-auto px-4">
           {/* Section Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className={cn("p-2 rounded-lg", colors.iconBg)}>
+            <div className={cn("p-2 rounded-xl", colors.iconBg)}>
               <HelpCircle className={cn("w-5 h-5", colors.accent)} />
             </div>
             <h2 className="text-xl font-semibold">Frequently Asked Questions</h2>
@@ -276,7 +276,7 @@ export function ResultsFAQ({ service, className }: ResultsFAQProps) {
                   className={cn(
                     "text-left text-sm sm:text-base font-medium py-4",
                     colors.hoverBg,
-                    "rounded-lg -mx-2 px-2"
+                    "rounded-xl -mx-2 px-2"
                   )}
                 >
                   {faq.question}

@@ -196,7 +196,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
         
         <div className="flex items-center gap-3">
           {/* Quick Sort Pills */}
-          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-xl">
             {[
               { key: "recommended", label: "Best Match", icon: Sparkles },
               { key: "price", label: "Lowest", icon: TrendingUp },

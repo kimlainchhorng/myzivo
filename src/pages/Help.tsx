@@ -192,7 +192,7 @@ export default function Help() {
                 
                 return (
                   <Component key={link.title} {...props as any}>
-                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full group">
+                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full group">
                       <CardContent className="p-5">
                         <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
                           <Icon className={`w-5 h-5 ${link.color}`} />
@@ -218,7 +218,7 @@ export default function Help() {
                 const Icon = link.icon;
                 return (
                   <Link key={link.title} to={link.href}>
-                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full group">
+                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full group">
                       <CardContent className="p-5">
                         <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
                           <Icon className={`w-5 h-5 ${link.color}`} />

@@ -172,21 +172,21 @@ export default function PartnerOverview() {
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-3 gap-6">
-                <div className="p-6 rounded-xl bg-sky-500/5 border border-sky-500/20 text-center hover:border-sky-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="p-6 rounded-xl bg-sky-500/5 border border-sky-500/20 text-center hover:border-sky-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                   <Plane className="w-10 h-10 text-sky-500 mx-auto mb-3" />
                   <h3 className="font-semibold">Flights</h3>
                   <p className="text-sm text-muted-foreground mt-2">
                     Search and compare flights from multiple airlines and OTAs.
                   </p>
                 </div>
-                <div className="p-6 rounded-xl bg-violet-500/5 border border-violet-500/20 text-center hover:border-violet-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="p-6 rounded-xl bg-violet-500/5 border border-violet-500/20 text-center hover:border-violet-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                   <Hotel className="w-10 h-10 text-violet-500 mx-auto mb-3" />
                   <h3 className="font-semibold">Hotels</h3>
                   <p className="text-sm text-muted-foreground mt-2">
                     Compare hotel rates and availability from booking partners.
                   </p>
                 </div>
-                <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center hover:border-emerald-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center hover:border-emerald-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                   <Car className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
                   <h3 className="font-semibold">Car Rentals</h3>
                   <p className="text-sm text-muted-foreground mt-2">

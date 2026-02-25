@@ -232,7 +232,7 @@ export function FlightMultiProviderCard({
                   <div 
                     key={provider.id}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border transition-all",
+                      "flex items-center justify-between p-3 rounded-xl border transition-all",
                       provider.isBestDeal 
                         ? "bg-emerald-500/10 border-emerald-500/30" 
                         : "bg-card border-border/50 hover:border-primary/30"

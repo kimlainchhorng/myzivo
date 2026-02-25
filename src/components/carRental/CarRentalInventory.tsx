@@ -205,7 +205,7 @@ const CarRentalInventory = () => {
                     
                     <div className="flex items-center gap-3 mt-3">
                       {car.color && (
-                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground px-2.5 py-1 rounded-lg bg-muted/50 border border-border/50">
+                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground px-2.5 py-1 rounded-xl bg-muted/50 border border-border/50">
                           <div 
                             className="w-3 h-3 rounded-full ring-1 ring-border/50" 
                             style={{ backgroundColor: colorValue }} 
@@ -214,7 +214,7 @@ const CarRentalInventory = () => {
                         </span>
                       )}
                       {car.fuel_type && (
-                        <span className="text-sm text-muted-foreground px-2.5 py-1 rounded-lg bg-muted/50 border border-border/50">
+                        <span className="text-sm text-muted-foreground px-2.5 py-1 rounded-xl bg-muted/50 border border-border/50">
                           ⛽ {car.fuel_type}
                         </span>
                       )}
