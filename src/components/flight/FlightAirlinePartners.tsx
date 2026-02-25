@@ -6,8 +6,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Globe, Star, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AirlineLogoCard } from "./AirlineLogoCard";
-import { topAirlines, allAirlines } from "@/data/airlines";
+import { topAirlines } from "@/data/airlines";
 
 const FlightAirlinePartners = () => {
   return (
@@ -18,51 +17,28 @@ const FlightAirlinePartners = () => {
         <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-500 text-sm font-medium mb-4">
             <Globe className="w-4 h-4" />
-            Global Partners
+            Global Network
           </div>
-          <h2 className="text-heading-lg mb-4">
-            <span className="text-foreground">{allAirlines.length}+</span>{' '}
-            <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">
-              Airline Partners
-            </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2">
+            Airline Partners
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Compare prices across all major airlines worldwide
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Access flights from 500+ airlines worldwide through our trusted partners.
           </p>
         </div>
 
-        {/* Airlines Grid using new card component */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-          {topAirlines.slice(0, 18).map((airline, index) => (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+          {topAirlines.slice(0, 12).map((airline) => (
             <div
               key={airline.code}
-              className="animate-in fade-in slide-in-from-bottom-4"
-              style={{ animationDelay: `${index * 40}ms` }}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border/50 hover:border-sky-500/30 hover:shadow-md transition-all duration-200"
             >
-              <AirlineLogoCard
-                airline={airline}
-                size="md"
-                showAlliance={true}
-                showCategory={false}
-              />
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center font-bold text-sm">
+                {airline.code}
+              </div>
+              <span className="text-xs text-center text-muted-foreground line-clamp-1">{airline.name}</span>
             </div>
           ))}
-        </div>
-
-        {/* Alliance badges */}
-        <div className="flex justify-center gap-3 sm:gap-4 mt-8 flex-wrap">
-          <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
-            <Star className="w-3 h-3 text-amber-500" />
-            Star Alliance
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
-            <Globe className="w-3 h-3 text-sky-500" />
-            SkyTeam
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
-            <Crown className="w-3 h-3 text-rose-500" />
-            Oneworld
-          </Badge>
         </div>
       </div>
     </section>
