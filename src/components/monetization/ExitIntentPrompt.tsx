@@ -150,7 +150,7 @@ export default function ExitIntentPrompt({
 
             <button
               onClick={handleDismiss}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-200"
             >
               No thanks, I'll continue browsing
             </button>

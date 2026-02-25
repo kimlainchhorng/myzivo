@@ -120,7 +120,7 @@ const CreatorStats = ({ stats, className }: CreatorStatsProps) => {
               {stats.topLinks.slice(0, 3).map((link, index) => (
                 <div
                   key={link.product}
-                  className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                  className="flex items-center justify-between p-2 rounded-xl bg-muted/50 hover:bg-muted/70 transition-all duration-200"
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">

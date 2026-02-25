@@ -99,7 +99,7 @@ export default function TravelExtrasSection({ className, destination }: TravelEx
             <Card
               key={extra.id}
               className={cn(
-                "group cursor-pointer transition-all duration-300 hover:shadow-lg",
+                "group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
                 extra.color === "sky" && "border-sky-500/20 hover:border-sky-500/40",
                 extra.color === "emerald" && "border-emerald-500/20 hover:border-emerald-500/40",
                 extra.color === "violet" && "border-violet-500/20 hover:border-violet-500/40",

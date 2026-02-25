@@ -228,7 +228,7 @@ const HotelBooking = () => {
                 "w-full h-14 font-bold text-lg mt-6",
                 "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
                 "shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40",
-                "transition-all duration-300 active:scale-[0.98]"
+                "transition-all duration-200 active:scale-[0.98]"
               )}
             >
               {isLoading ? (

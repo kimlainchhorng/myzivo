@@ -296,13 +296,13 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                   </div>
                 </div>
                 <div className="flex gap-1.5">
-                  <Button variant="outline" size="icon" className="rounded-full w-9 h-9 transition-all duration-200 hover:scale-105 active:scale-95">
+                  <Button variant="outline" size="icon" className="rounded-full w-9 h-9 transition-all duration-200 hover:scale-110 active:scale-95">
                     <Phone className="w-3.5 h-3.5" />
                   </Button>
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="relative rounded-full w-9 h-9 transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="relative rounded-full w-9 h-9 transition-all duration-200 hover:scale-110 active:scale-95"
                     onClick={() => setIsChatOpen(true)}
                   >
                     <MessageCircle className="w-3.5 h-3.5" />

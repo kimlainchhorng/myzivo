@@ -78,7 +78,7 @@ const HeroSection = () => {
                 onClick={() => navigate(service.href)}
                 className={cn(
                   "flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-white/10 backdrop-blur-sm transition-all duration-200 touch-manipulation shrink-0 group",
-                  "hover:scale-105 hover:-translate-y-0.5 active:scale-95",
+                  "hover:scale-110 hover:-translate-y-0.5 active:scale-95",
                   service.bgColor,
                   service.glowColor
                 )}
@@ -122,7 +122,7 @@ const HeroSection = () => {
                 style={{ animationDelay: `${200 + index * 50}ms` }}
               >
                 <div className="relative mb-3">
-                  <div className="w-full aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center text-4xl sm:text-5xl overflow-hidden group-hover:scale-105 transition-transform duration-200">
+                  <div className="w-full aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center text-4xl sm:text-5xl overflow-hidden group-hover:scale-110 transition-transform duration-200">
                     <span className="group-hover:scale-110 transition-transform duration-200">{restaurant.image}</span>
                   </div>
                   {restaurant.promo && (

@@ -173,7 +173,7 @@ const TravelConfirmationPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {items.map((item) => (
-              <div key={item.id} className="border rounded-lg p-4">
+              <div key={item.id} className="border rounded-xl p-4 hover:border-primary/20 transition-all duration-200">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-muted-foreground">
                     {getItemIcon(item.type)}

@@ -424,7 +424,7 @@ function VehicleCard({
           <img
             src={primaryImage}
             alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
           {vehicle.instant_book && (
             <Badge className="absolute top-3 left-3 bg-emerald-500 text-white gap-1">

@@ -172,7 +172,7 @@ export default function MembershipPage() {
         <div className="container mx-auto px-4 mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all duration-200"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Back</span>

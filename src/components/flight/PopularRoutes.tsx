@@ -59,7 +59,7 @@ function RouteCard({ route, onSelect }: { route: RouteData; onSelect: (price?: n
     >
       <Card 
         className={cn(
-          "cursor-pointer overflow-hidden transition-all duration-300 border-border/50 hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10",
+          "cursor-pointer overflow-hidden transition-all duration-200 border-border/50 hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10",
           hasRealPrice && "border-emerald-500/30"
         )}
         onClick={() => onSelect(realPrice ?? undefined)}
