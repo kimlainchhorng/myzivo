@@ -92,7 +92,7 @@
              onChange={(e) => setDestination(e.target.value)}
              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
              placeholder="City, Hotel, or Vibe..." 
-             className="w-full h-14 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder-zinc-500 outline-none focus:border-emerald-500/50 transition-colors"
+             className="w-full h-14 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder-zinc-500 outline-none focus:border-emerald-500/50 transition-all duration-200"
            />
          </div>
  
@@ -150,7 +150,7 @@
                {/* Background Image */}
                <img 
                  src={hotel.image} 
-                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                  alt={hotel.name}
                  loading="lazy"
                />

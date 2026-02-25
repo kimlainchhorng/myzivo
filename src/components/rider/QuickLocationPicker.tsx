@@ -109,7 +109,7 @@ const QuickLocationPicker = ({ userId, onSelect }: QuickLocationPickerProps) => 
             >
               {/* Icon container */}
               <div className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200",
                 colors.bg
               )}>
                 <Icon className={cn("w-4 h-4", colors.text)} />

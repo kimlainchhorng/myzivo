@@ -43,7 +43,7 @@ export function TrustLevelCard() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className={cn("p-2 rounded-lg", colors.bg)}>
+              <div className={cn("p-2 rounded-xl", colors.bg)}>
                 <Icon className={cn("w-5 h-5", colors.text)} />
               </div>
               <div>

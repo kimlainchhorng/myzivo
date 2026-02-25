@@ -48,7 +48,7 @@ function RatingInput({ label, value, onChange }: RatingInputProps) {
           >
             <Star
               className={cn(
-                "w-6 h-6 transition-colors",
+                "w-6 h-6 transition-all duration-200",
                 star <= (hovered || value)
                   ? "fill-amber-400 text-amber-400"
                   : "text-muted-foreground/30"
@@ -113,7 +113,7 @@ export default function ReviewForm({
   };
 
   if (isLoading) {
-    return <div className="animate-pulse h-48 bg-muted rounded-lg" />;
+    return <div className="animate-pulse h-48 bg-muted rounded-xl" />;
   }
 
   if (existingReview) {

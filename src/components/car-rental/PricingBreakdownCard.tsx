@@ -109,7 +109,7 @@ export default function PricingBreakdownCard({
 
         {/* Deposit */}
         {breakdown.depositAmount > 0 && (
-          <div className="flex justify-between text-sm bg-muted/50 p-2 rounded-lg">
+          <div className="flex justify-between text-sm bg-muted/50 p-2 rounded-xl">
             <span className="flex items-center gap-1 text-muted-foreground">
               <Shield className="w-3 h-3" />
               Security deposit (refundable)

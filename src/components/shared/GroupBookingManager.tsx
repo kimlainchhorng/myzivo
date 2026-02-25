@@ -153,7 +153,7 @@ const GroupBookingManager = ({
             <div
               key={member.id}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-xl border transition-colors",
+                "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200",
                 member.status === "confirmed" 
                   ? "bg-emerald-500/5 border-emerald-500/20" 
                   : member.status === "declined"
@@ -222,7 +222,7 @@ const GroupBookingManager = ({
                     {member.status === "pending" && (
                       <button
                         onClick={() => handleSendReminder(member)}
-                        className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-primary/10 transition-all duration-200 hover:scale-110"
                         title="Send reminder"
                       >
                         <MessageSquare className="w-4 h-4 text-primary" />
@@ -230,7 +230,7 @@ const GroupBookingManager = ({
                     )}
                     <button
                       onClick={() => handleRemove(member.id)}
-                      className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all duration-200 hover:scale-110"
                       title="Remove member"
                     >
                       <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
