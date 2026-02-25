@@ -65,13 +65,13 @@ const AirportPage = lazy(() => import("./pages/AirportPage"));
 const FlightCityPage = lazy(() => import("./pages/FlightCityPage"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
 const EmbeddedCheckout = lazy(() => import("./pages/EmbeddedCheckout"));
-const FlightDashboard = lazy(() => import("./pages/FlightDashboard"));
+// FlightDashboard removed
 
 // Hotels
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 const HotelsPage = lazy(() => import("./pages/HotelsPage"));
-const HotelDashboard = lazy(() => import("./pages/HotelDashboard"));
+// HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
 
 // Car Rental
@@ -82,7 +82,7 @@ const CarDetailPage = lazy(() => import("./pages/CarDetailPage"));
 const CarTravelerInfoPage = lazy(() => import("./pages/CarTravelerInfoPage"));
 const CarCheckoutPage = lazy(() => import("./pages/CarCheckoutPage"));
 const CarConfirmationPage = lazy(() => import("./pages/CarConfirmationPage"));
-const CarSearch = lazy(() => import("./pages/CarSearch"));
+// CarSearch removed
 const Cars = lazy(() => import("./pages/Cars"));
 const CarsSearchPage = lazy(() => import("./pages/cars/CarsSearchPage"));
 const CarsDetailPage = lazy(() => import("./pages/cars/CarDetailPage"));
@@ -160,12 +160,8 @@ const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
 const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"));
-const AccountBusinessPage = lazy(() => import("./pages/account/BusinessAccountPage"));
 const AccountInvoicesPage = lazy(() => import("./pages/account/BusinessInvoicesPage"));
-const AccountVerificationPage = lazy(() => import("./pages/account/VerificationPage"));
-const TrustLevelPage = lazy(() => import("./pages/account/TrustLevelPage"));
 const PromosPage = lazy(() => import("./pages/account/PromosPage"));
-const SpendingPage = lazy(() => import("./pages/account/SpendingPage"));
 
 // Security pages
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
@@ -308,7 +304,7 @@ const App = () => (
                 <Route path="/flights/traveler-info" element={<FlightTravelerInfo />} />
                 <Route path="/flights/checkout" element={<FlightCheckout />} />
                 <Route path="/flights/confirmation/:bookingId" element={<FlightConfirmation />} />
-                <Route path="/flights-dashboard" element={<FlightDashboard />} />
+                {/* flights-dashboard removed */}
                 <Route path="/airports/:iata" element={<AirportPage />} />
                 <Route path="/booking/duffel-checkout" element={<DuffelCheckout />} />
                 <Route path="/checkout" element={<EmbeddedCheckout />} />
@@ -317,7 +313,7 @@ const App = () => (
                 <Route path="/hotels" element={<HotelsPage />} />
                 <Route path="/hotels/:city" element={<HotelCityLandingPage />} />
                 <Route path="/hotels/in-:city" element={<HotelsPage />} />
-                <Route path="/hotels-dashboard" element={<HotelDashboard />} />
+                {/* hotels-dashboard removed */}
 
                 {/* Car Rental */}
                 <Route path="/car-rental" element={<CarRentalLanding />} />
@@ -371,13 +367,7 @@ const App = () => (
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/saved-places" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
-                <Route path="/account/spending" element={<ProtectedRoute><SpendingPage /></ProtectedRoute>} />
-                <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
-                <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
-                <Route path="/account/business" element={<ProtectedRoute><AccountBusinessPage /></ProtectedRoute>} />
-                <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
-                <Route path="/account/verification" element={<ProtectedRoute><AccountVerificationPage /></ProtectedRoute>} />
-                <Route path="/account/trust" element={<ProtectedRoute><TrustLevelPage /></ProtectedRoute>} />
+                {/* removed: spending, business, verification, trust */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
 
