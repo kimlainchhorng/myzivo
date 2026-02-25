@@ -146,9 +146,9 @@ export default function NavBar() {
                         key={item.href}
                         to={item.href}
                         onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
                       >
-                        <div className={cn("w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
+                        <div className={cn("w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-200", item.color)}>
                           <item.icon className="w-4 h-4" />
                         </div>
                         <div>

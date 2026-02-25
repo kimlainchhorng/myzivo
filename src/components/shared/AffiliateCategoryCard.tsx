@@ -147,8 +147,8 @@ export default function AffiliateCategoryCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer group transition-all duration-300",
-        "hover:shadow-lg hover:-translate-y-1",
+        "overflow-hidden cursor-pointer group transition-all duration-200",
+        "hover:shadow-lg hover:-translate-y-1.5",
         colors.border,
         className
       )}
@@ -161,7 +161,7 @@ export default function AffiliateCategoryCard({
             <img 
               src={image} 
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             {badge && (
@@ -181,7 +181,7 @@ export default function AffiliateCategoryCard({
           <div className="flex items-start justify-between mb-2">
             <div>
               <h3 className={cn(
-                "font-bold text-base transition-colors",
+                "font-bold text-base transition-all duration-200",
                 `group-hover:${colors.text}`
               )}>
                 {title}

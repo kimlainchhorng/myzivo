@@ -70,7 +70,7 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 touch-manipulation active:scale-[0.99]"
+                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
@@ -84,7 +84,7 @@ export default function FeaturedEatsSection() {
                   {/* Quick order button on hover */}
                    <button
                     onClick={(e) => handleQuickOrder(e, food.name)}
-                    className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
+                    className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
                     aria-label="Quick order"
                   >
                     <ShoppingCart className="w-4 h-4" />

@@ -105,7 +105,7 @@ const RestaurantMenu = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.05 }}
-                        className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group ${!menuItem.available ? 'opacity-60' : ''}`}
+                        className={`flex items-center justify-between p-4 hover:bg-muted/30 transition-all duration-200 group ${!menuItem.available ? 'opacity-60' : ''}`}
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">

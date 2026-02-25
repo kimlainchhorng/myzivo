@@ -96,7 +96,7 @@ const CarRentalAnalytics = () => {
       {/* Header */}
       <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform hover:scale-105 hover:rotate-3">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform duration-200 hover:scale-110 hover:rotate-3">
             <TrendingUp className="h-6 w-6 text-primary" />
           </div>
           <div>
@@ -123,10 +123,10 @@ const CarRentalAnalytics = () => {
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            className="animate-in fade-in slide-in-from-bottom-4 duration-200"
             style={{ animationDelay: `${index * 80}ms` }}
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] group">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] group">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-50`} />
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="relative p-5">
@@ -165,7 +165,7 @@ const CarRentalAnalytics = () => {
           { icon: Fuel, color: "amber", value: "$2,340", label: "Fuel Costs" },
           { icon: MapPin, color: "purple", value: "115 mi", label: "Avg Distance" },
         ].map((stat, index) => (
-          <Card key={index} className="border-0 bg-card/50 backdrop-blur-xl hover:bg-card/70 transition-colors">
+          <Card key={index} className="border-0 bg-card/50 backdrop-blur-xl hover:bg-card/70 transition-all duration-200">
             <CardContent className="p-4 flex items-center gap-3">
               <div className={cn(
                 "p-2.5 rounded-xl",
@@ -198,7 +198,7 @@ const CarRentalAnalytics = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-1.5 rounded-lg bg-primary/10">
+                <div className="p-1.5 rounded-xl bg-primary/10">
                   <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
                 Monthly Performance
@@ -233,7 +233,7 @@ const CarRentalAnalytics = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-1.5 rounded-lg bg-blue-500/10">
+                <div className="p-1.5 rounded-xl bg-blue-500/10">
                   <Calendar className="h-4 w-4 text-blue-500" />
                 </div>
                 Weekly Booking Trend
@@ -339,7 +339,7 @@ const CarRentalAnalytics = () => {
                 {topVehicles.map((vehicle, index) => (
                   <div 
                     key={vehicle.name}
-                    className="p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-all duration-200 border border-border/50 hover:border-primary/20 group animate-in fade-in slide-in-from-right-2 duration-300"
+                    className="p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-all duration-200 border border-border/50 hover:border-primary/20 group animate-in fade-in slide-in-from-right-2"
                     style={{ animationDelay: `${700 + index * 80}ms` }}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -353,7 +353,7 @@ const CarRentalAnalytics = () => {
                           {index < 3 ? ["🥇", "🥈", "🥉"][index] : index + 1}
                         </div>
                         <div>
-                          <p className="font-semibold flex items-center gap-1.5 group-hover:text-primary transition-colors">
+                          <p className="font-semibold flex items-center gap-1.5 group-hover:text-primary transition-all duration-200">
                             {vehicle.name}
                             <span className="text-sm">{vehicle.emoji}</span>
                           </p>

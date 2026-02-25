@@ -216,7 +216,7 @@ export const FlightAmenityComparison = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "relative rounded-xl p-4 bg-gradient-to-br border cursor-pointer transition-all duration-300",
+                "relative rounded-xl p-4 bg-gradient-to-br border cursor-pointer transition-all duration-200",
                 categoryColors[flight.category],
                 selectedIndex === index && "ring-2 ring-primary ring-offset-2 ring-offset-background"
               )}
@@ -243,7 +243,7 @@ export const FlightAmenityComparison = ({
                 <img
                   src={getAirlineLogo(flight.airlineCode)}
                   alt={flight.airline}
-                  className="w-10 h-10 rounded-lg object-contain bg-white p-1"
+                  className="w-10 h-10 rounded-xl object-contain bg-white p-1"
                 />
                 <div>
                   <p className="font-semibold text-sm line-clamp-1">{flight.airline}</p>
@@ -265,7 +265,7 @@ export const FlightAmenityComparison = ({
         {sections.map((section) => (
           <Card key={section.id} className="overflow-hidden border-border/50 bg-card/50 backdrop-blur">
             <button
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-all duration-200"
               onClick={() =>
                 setExpandedSection(expandedSection === section.id ? null : section.id)
               }

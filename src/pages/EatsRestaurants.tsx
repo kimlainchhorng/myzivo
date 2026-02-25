@@ -211,7 +211,7 @@ function EatsRestaurantsContent() {
               {sortedRestaurants.map((restaurant, index) => (
                 <Card
                   key={restaurant.id}
-                  className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-eats/30 animate-in fade-in slide-in-from-bottom-4"
+                  className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-200 hover:-translate-y-1.5 border-2 border-transparent hover:border-eats/30 animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => navigate(`/eats/restaurant/${restaurant.id}`)}
                 >

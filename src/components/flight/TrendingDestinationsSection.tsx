@@ -28,7 +28,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
             <div
               key={dest.code}
               onClick={() => onSelectDestination(dest.city, dest.code)}
-              className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 touch-manipulation active:scale-[0.98]"
+              className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-200 touch-manipulation active:scale-[0.98]"
               style={{ animationDelay: `${index * 75}ms` }}
             >
               <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative">
@@ -58,7 +58,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                         <span className="text-xs text-muted-foreground">round trip</span>
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground mr-4 group-hover:text-sky-400 transition-colors" />
+                    <ArrowRight className="w-5 h-5 text-muted-foreground mr-4 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all duration-200" />
                   </div>
                 </CardContent>
               </Card>
