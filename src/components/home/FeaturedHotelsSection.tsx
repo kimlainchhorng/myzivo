@@ -1,9 +1,11 @@
 /**
  * FeaturedHotelsSection - Hotel room cards with premium features
  */
+import { useState } from "react";
 import { Star, MapPin, ArrowRight, Heart, Wifi, Waves, Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 const hotels = [
   { name: "The Grand Plaza", location: "New York, USA", price: 189, rating: 4.8, freeCancellation: true, amenities: ["wifi", "gym"], image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=500" },
@@ -15,6 +17,24 @@ const hotels = [
 const amenityIcons: Record<string, typeof Wifi> = { wifi: Wifi, pool: Waves, gym: Dumbbell };
 
 export default function FeaturedHotelsSection() {
+  const [savedHotels, setSavedHotels] = useState<Set<string>>(new Set());
+
+  const toggleSave = (e: React.MouseEvent, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSavedHotels((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+        toast("Removed from saved", { duration: 1500 });
+      } else {
+        next.add(name);
+        toast.success("Saved to favorites!", { duration: 1500 });
+      }
+      return next;
+    });
+  };
+
   return (
     <section className="py-16 sm:py-20">
       <div className="container mx-auto px-4">
@@ -53,9 +73,13 @@ export default function FeaturedHotelsSection() {
                   <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg">
                     ${hotel.price}<span className="text-xs font-normal opacity-80">/night</span>
                   </div>
-                  {/* Save icon on hover */}
-                  <button className="absolute top-3 left-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-card" aria-label="Save hotel">
-                    <Heart className="w-4 h-4 text-foreground" />
+                  {/* Save icon */}
+                  <button
+                    onClick={(e) => toggleSave(e, hotel.name)}
+                    className="absolute top-3 left-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-card active:scale-90"
+                    aria-label="Save hotel"
+                  >
+                    <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
                   </button>
                   {hotel.freeCancellation && (
                     <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/90 text-white shadow-sm">

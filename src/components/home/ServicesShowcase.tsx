@@ -52,7 +52,7 @@ const services = [
 
 export default function ServicesShowcase() {
   return (
-    <section className="section-padding relative">
+    <section id="services-showcase" className="section-padding relative">
       {/* Subtle dot pattern bg */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
 

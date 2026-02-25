@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const tabs = [
   { id: "flights", label: "Flights", icon: Plane, color: "text-[hsl(var(--flights))]" },
@@ -30,11 +31,12 @@ export default function HeroSearchCard() {
       rides: "/rides",
       eats: "/eats",
     };
+    toast.success(`Searching ${activeTab}...`, { duration: 1500 });
     navigate(routes[activeTab] || "/flights");
   };
 
   return (
-    <section className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12">
+    <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -83,14 +85,14 @@ export default function HeroSearchCard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where are you flying from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                     {/* Swap button */}
                     <button
-                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all z-10 hidden sm:flex"
+                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-300 z-10 hidden sm:flex"
                       aria-label="Swap origin and destination"
                     >
                       <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -104,7 +106,7 @@ export default function HeroSearchCard() {
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                   </div>
-                  <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base">
+                  <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                     <Search className="w-4 h-4" /> Search
                   </Button>
                 </div>
@@ -125,7 +127,7 @@ export default function HeroSearchCard() {
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input placeholder="Guests & rooms" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                 </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base">
+                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
                 </Button>
               </div>
@@ -145,7 +147,7 @@ export default function HeroSearchCard() {
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input placeholder="Return date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                 </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base">
+                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
                 </Button>
               </div>
@@ -161,7 +163,7 @@ export default function HeroSearchCard() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
                   <Input placeholder="Where are you going?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                 </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base">
+                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
                 </Button>
               </div>
@@ -173,7 +175,7 @@ export default function HeroSearchCard() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input placeholder="Enter your delivery address" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                 </div>
-                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base">
+                <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
                 </Button>
               </div>
