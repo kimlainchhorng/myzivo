@@ -175,7 +175,7 @@ const HizovoHotels = () => {
               {hotelResults.map((hotel) => (
                 <div 
                   key={hotel.id}
-                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex gap-3">
                     <div className={`w-24 h-24 bg-gradient-to-br ${hotel.iconGradient} rounded-xl flex items-center justify-center flex-shrink-0`}>

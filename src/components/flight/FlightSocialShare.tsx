@@ -73,7 +73,7 @@ const FlightSocialShare = () => {
             </div>
 
             {/* Invite Travel Companion */}
-            <div className="bg-card/60 backdrop-blur-xl rounded-xl p-6 border border-border/30">
+            <div className="bg-card/60 backdrop-blur-xl rounded-xl p-6 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
                   <Users className="w-5 h-5 text-violet-400" />
@@ -100,7 +100,7 @@ const FlightSocialShare = () => {
             </div>
 
             {/* Trip Link Preview */}
-            <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-dashed border-border">
+            <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-dashed border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-primary to-teal-400 rounded-xl flex items-center justify-center">
                   <Plane className="w-6 h-6 text-white" />

@@ -81,7 +81,7 @@ const HizovoHome = () => {
               <button
                 key={action.id}
                 onClick={() => navigate(action.href)}
-                className="p-5 rounded-2xl bg-card border border-border text-center touch-manipulation active:scale-[0.97] transition-transform"
+                className="p-5 rounded-2xl bg-card border border-border text-center touch-manipulation active:scale-[0.97] hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3",
@@ -173,7 +173,7 @@ const HizovoHome = () => {
 
         {/* ZIVO Driver Link */}
         <section className="px-4">
-          <div className="p-4 rounded-2xl bg-muted border border-border">
+          <div className="p-4 rounded-2xl bg-muted border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">

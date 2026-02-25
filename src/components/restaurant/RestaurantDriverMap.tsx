@@ -120,7 +120,7 @@ export default function RestaurantDriverMap({
 
   if (drivers.length === 0) {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 flex flex-col items-center justify-center min-h-[200px] gap-3">
+      <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 flex flex-col items-center justify-center min-h-[200px] gap-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center">
           <Truck className="w-6 h-6 text-muted-foreground" />
         </div>

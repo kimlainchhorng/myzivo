@@ -289,7 +289,7 @@ export default function PrivacyCompliance() {
                 <CardContent>
                   <div className="space-y-4">
                     {requestTimelines.map((item) => (
-                      <div key={item.regulation} className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <div key={item.regulation} className="p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold">{item.regulation}</h4>
                           <Badge variant="outline">{item.timeline}</Badge>

@@ -19,7 +19,7 @@ export function RampResultsLayout({ filters, children, className }: RampResultsL
       {/* Left Sidebar - Filters (Desktop) */}
       <aside className="hidden lg:block w-72 shrink-0">
         <div className="sticky top-24 space-y-6">
-          <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-6">
+          <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-6 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             {filters}
           </div>
         </div>

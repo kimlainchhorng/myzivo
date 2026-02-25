@@ -49,7 +49,7 @@ export function ActivePromotionsSection({ promos, className }: ActivePromotionsS
           return (
             <div
               key={promo.id}
-              className="snap-start shrink-0 w-64 rounded-2xl border border-border/50 bg-muted/50 p-4 space-y-3"
+              className="snap-start shrink-0 w-64 rounded-2xl border border-border/50 bg-muted/50 p-4 space-y-3 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
             >
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center shrink-0">

@@ -127,7 +127,7 @@ export default function ReceiptPage() {
       <div className="flex-1 px-4 py-6 max-w-lg mx-auto w-full space-y-5">
         {/* Trip details */}
         {job && (
-          <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
+          <div className="p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200 space-y-3">
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center gap-1 pt-1">
                 <div className="w-2.5 h-2.5 rounded-full bg-primary" />
@@ -168,7 +168,7 @@ export default function ReceiptPage() {
         )}
 
         {/* Fare breakdown */}
-        <div className="p-4 rounded-xl bg-card border border-border space-y-2">
+        <div className="p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200 space-y-2">
           <div className="flex items-center gap-2 pb-2 border-b border-border">
             <Receipt className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">Fare Breakdown</span>

@@ -314,7 +314,7 @@ function SecurityRow({
   action,
 }: SecurityRowProps) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
       <div className={cn(
         "w-9 h-9 rounded-lg flex items-center justify-center",
         completed ? "bg-emerald-500/10" : "bg-muted/50"

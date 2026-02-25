@@ -98,7 +98,7 @@ export default function OutboundRedirect() {
           {status === 'ready' && (
             <div className="space-y-6">
               {/* Interstitial Message */}
-              <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
+              <div className="p-6 rounded-2xl bg-card border border-border shadow-lg hover:border-primary/20 hover:shadow-xl transition-all duration-200">
                 <ExternalLink className="w-12 h-12 mx-auto text-primary mb-4" />
                 
                 <h1 className="text-xl font-semibold mb-2">
