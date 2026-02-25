@@ -1,127 +1,267 @@
 
 
-# ZIVO Homepage: AI-Generated Videos + UX/UI Polish
+# ZIVO Homepage & Site-Wide Premium Redesign
 
 ## Overview
 
-Replace the copied hero video with AI-generated travel videos using Lovable AI (Gemini image model), delete the static MP4 file, and further polish the homepage UX/UI for a more premium 2026 feel.
+Complete visual overhaul of the ZIVO website to match the premium multi-service inspiration (travel landing, car rental, hotel booking, food delivery). The redesign shifts from a dark glassmorphism aesthetic to a clean, white/light gradient look with ZIVO green as the dominant accent -- matching global products like Booking.com, Airbnb, and Uber.
 
-## What Changes
+## Visual Direction Change
 
-### 1. Delete Static Hero Video
-- Remove `src/assets/hero-video.mp4` from the project
-- The hero section will use AI-generated images instead (video generation is not supported by current AI models, but we can generate stunning cinematic travel images)
+Current: Dark navy backgrounds, glassmorphism cards, neon glow effects
+New: Clean white/soft gradient backgrounds, rounded cards (16-20px), soft shadows, ZIVO green as the hero accent color. Premium but light and airy -- like the car rental and food delivery inspiration images.
 
-### 2. AI-Generated Hero Images via Edge Function
-Create a new edge function `generate-hero-image` that uses Lovable AI Gateway with the `google/gemini-2.5-flash-image` model to generate premium travel visuals on demand. The hero section will display a rotating set of AI-generated cinematic travel images (airplane at sunset, luxury hotel lobby, city skyline at night, etc.).
+---
 
-**How it works:**
-- Edge function calls Lovable AI with image generation prompts
-- Generated images are stored in Supabase Storage (`hero-images` bucket)
-- Hero section fetches and displays them with smooth crossfade transitions
-- Fallback to high-quality static Unsplash images if generation fails
+## 1. Color & Theme Overhaul (index.css)
 
-### 3. Hero Section Restyle (HeroSection.tsx)
-- Replace `<video>` element with an AI-generated image carousel using crossfade animation
-- Add a shimmer/loading state while images generate
-- Keep the split layout (text left, visual right on desktop)
-- Add a subtle parallax scroll effect on the hero image
-- Enhance the dark gradient overlays for more depth
+Update CSS variables for a cleaner, lighter palette:
+- Background: Pure white (#FFFFFF)
+- Card: White with very subtle gray tones
+- Muted backgrounds: Soft gray-blue (like f8f9fc)
+- Softer borders and shadows
+- Keep ZIVO green (142 71% 45%) as primary accent
+- Remove heavy glassmorphism in favor of clean soft shadows
+- Add new soft gradient backgrounds (.bg-gradient-soft, .bg-gradient-hero)
+- Update dark mode to keep working
 
-### 4. UX/UI Polish Across Homepage
+## 2. NavBar Redesign (NavBar.tsx)
 
-**NavBar improvements:**
-- Add a subtle bottom border glow (green accent line) when scrolled
-- Smoother dropdown animation with spring easing
-- Slightly larger touch targets on nav items
+Match the inspiration: clean, spacious, professional.
 
-**Hero Section enhancements:**
-- Staggered text animation (headline, then subheadline, then buttons fade in sequentially)
-- Buttons get a subtle hover glow effect (not just scale)
-- "Track prices and get alerts" link gets an animated sparkle icon
+**Layout:**
+- Left: ZIVO logo
+- Center: Flights | Hotels | Cars | Rides | Eats (5 service tabs with icons, active tab has green underline/highlight)
+- Right: Log in (text) + Sign up (green filled button, rounded)
 
-**Destination Cards (DestinationShowcase):**
-- Add a subtle glass overlay on hover with a "Explore" label
-- Smoother image zoom on hover (scale 1.05 instead of 1.10)
-- Add a small airplane icon next to "from $XX" price
+**Style changes:**
+- White/light background (not dark navy)
+- Clean text links, no glassmorphism
+- Active service tab gets green underline or pill highlight
+- Subtle bottom shadow on scroll instead of glow border
+- Mobile: Clean slide-out drawer with white background
 
-**Why ZIVO Section:**
-- Cards get a subtle border glow on hover (green accent)
-- Icon containers get a gentle float animation
-- Add a subtle background pattern/texture
+## 3. Hero Section Redesign (HeroSection.tsx)
 
-**Trust Bar:**
-- Add a gentle shimmer animation across the chips
-- Slightly larger on desktop for better readability
+Match the travel/car rental inspiration with a split hero layout.
 
-**Sticky CTA Button:**
-- Add a pulse ring animation to draw attention
-- Slightly larger with more padding
+**Desktop:**
+- Left side:
+  - Headline: "Travel. Ride. Eat. All in One Place."
+  - Subheadline: "Book flights, hotels, car rentals, rides, and food delivery with ZIVO."
+  - Primary CTA: "Search Now" (green filled, large)
+  - Secondary CTA: "Explore Services" (outline)
+- Right side:
+  - Large premium image carousel (keep existing crossfade logic but with cleaner overlay)
+  - Soft gradient background wash instead of dark gradients
+- Below: Trust indicators (Secure checkout, Instant confirmation, No hidden fees)
 
-### 5. Global CSS Additions (index.css)
-- `.hero-image-crossfade` - smooth crossfade transition for hero images
-- `.shimmer-loading` - premium loading shimmer effect
-- `.glow-border-hover` - green border glow on hover
-- `.float-gentle` - subtle floating animation for icons
-- Enhanced `.glow-green-btn` with stronger glow on hover
+**Mobile:**
+- Stacked layout: Image on top, text below
+- Large green CTA button
+- Clean white background
+
+## 4. New Floating Search Card (new component: HeroSearchCard.tsx)
+
+A floating tabbed search block below the hero, like the hotel/car rental inspiration.
+
+**Tabs:** Flights | Hotels | Cars | Rides | Eats
+
+Each tab shows its contextual search form:
+- Flights: From, To, Dates, Passengers
+- Hotels: Location, Check-in/out, Guests
+- Cars: Pickup, Dates, Time
+- Rides: Pickup, Dropoff
+- Eats: Delivery address
+
+**Style:**
+- White card with soft shadow
+- Rounded-2xl corners
+- Green "Search" button per tab
+- Floating over the hero/section boundary (negative margin overlap)
+
+## 5. Services Grid Section (new component: ServicesShowcase.tsx)
+
+5 large cards for Flights, Hotels, Car Rentals, Rides, Eats.
+
+**Each card:**
+- Clean white background
+- Service icon (in a colored circle)
+- Title + short description
+- "Book Now" green button or link
+- Soft shadow, rounded-2xl, hover lift effect
+- Matches the food card UI style from inspiration
+
+## 6. Featured Car Rentals Section (new component: FeaturedCarsSection.tsx)
+
+Inspired by the car rental templates:
+- Section title: "Most Popular Car Rentals"
+- Filter chips: All | Mitsubishi | Honda | Toyota
+- Grid of car deal cards with:
+  - Car image
+  - Name, specs (passengers, transmission, fuel)
+  - Price per day
+  - "Rent Now" green link
+  - Star rating
+- Clean white cards, soft shadows
+
+## 7. Featured Hotels Section (new component: FeaturedHotelsSection.tsx)
+
+Inspired by hotel booking template:
+- Section title: "Featured Hotels"
+- Grid of hotel room cards:
+  - Large image
+  - Price badge overlay (top-right)
+  - Hotel name, location
+  - Star rating
+  - "Book Now" button
+- Clean image cards with price overlays
+
+## 8. Featured Eats Section (new component: FeaturedEatsSection.tsx)
+
+Inspired by food delivery template:
+- Section title: "Order Food Delivery"
+- Cuisine category chips: American | Italian | Asian | Mexican
+- Grid of food cards:
+  - Food image
+  - Name
+  - Star rating
+  - Price
+  - Quick "Order" button
+- Clean cards, white backgrounds
+
+## 9. Updated Existing Sections
+
+**StatsSection.tsx:**
+- Remove dark glassmorphism cards
+- Use clean white cards with colored top border accent
+- Keep animated counters
+- Lighter background
+
+**DestinationShowcase.tsx:**
+- Keep image cards but with cleaner overlays
+- Softer shadows, rounded-2xl
+- Green accent on hover instead of glow border
+
+**WhyBookWithZivo.tsx:**
+- Rename to "Why Choose ZIVO"
+- Clean white feature cards with colored icon circles
+- Remove glassmorphism/glow effects
+- Add side image (split layout like car rental "Why choose us" section)
+
+**HowItWorksSection.tsx:**
+- Clean 3-4 step cards
+- Dotted connector lines between steps (like car rental inspiration)
+- Colored circle step numbers
+- White background
+
+**TestimonialsSection.tsx:**
+- Clean white carousel cards
+- Avatar photos (circular)
+- Star ratings
+- Simpler layout without glassmorphism
+
+**PartnerLogosShowcase.tsx:**
+- Cleaner horizontal logo strip
+- Remove emojis, use text-only partner names with subtle dividers
+- Light gray background band
+
+**DownloadAppSection.tsx:**
+- White background, split layout
+- Clean phone mockup
+- Green accent CTA buttons
+
+**NewsletterSection.tsx:**
+- Clean card with green gradient accent
+- White background
+- Simple input + green subscribe button
+
+## 10. Footer Redesign (Footer.tsx)
+
+Multi-column footer organized by service:
+- Column 1: ZIVO brand + description
+- Column 2: Flights links
+- Column 3: Hotels links
+- Column 4: Car Rentals links
+- Column 5: Rides & Eats links
+- Column 6: Company & Legal
+- Bottom bar: Copyright, social icons, legal links
+- Clean dark footer (dark navy, like inspiration) with white text
+
+## 11. Homepage Layout (Index.tsx)
+
+Updated section order:
+1. NavBar (white, clean)
+2. Hero (split layout, large visual)
+3. Floating Search Card (tabbed, overlapping hero)
+4. Services Grid (5 service cards)
+5. Stats Counter
+6. Popular Destinations
+7. Featured Car Rentals
+8. Featured Hotels
+9. Featured Eats
+10. How It Works
+11. Why Choose ZIVO
+12. Testimonials
+13. Download App
+14. Newsletter
+15. Footer
+
+---
 
 ## Technical Details
 
 ### New Files
 | File | Purpose |
 |------|---------|
-| `supabase/functions/generate-hero-image/index.ts` | Edge function to generate travel images via Lovable AI |
+| `src/components/home/HeroSearchCard.tsx` | Floating tabbed search card |
+| `src/components/home/ServicesShowcase.tsx` | 5-service card grid |
+| `src/components/home/FeaturedCarsSection.tsx` | Car rental deals section |
+| `src/components/home/FeaturedHotelsSection.tsx` | Hotel room cards section |
+| `src/components/home/FeaturedEatsSection.tsx` | Food delivery cards section |
 
 ### Modified Files
 | File | Change |
 |------|--------|
-| `src/assets/hero-video.mp4` | DELETED |
-| `src/components/home/HeroSection.tsx` | Replace video with AI image carousel, add staggered animations |
-| `src/components/home/NavBar.tsx` | Add green accent border on scroll, smoother transitions |
-| `src/components/home/DestinationShowcase.tsx` | Enhanced hover effects, glass overlay |
-| `src/components/home/WhyBookWithZivo.tsx` | Glow borders, floating icons |
-| `src/components/home/HeroTrustBar.tsx` | Shimmer effect, larger desktop sizing |
-| `src/pages/Index.tsx` | Updated sticky CTA with pulse, remove video import |
-| `src/index.css` | New animation utilities and effects |
+| `src/index.css` | Lighter color palette, soft shadows, remove heavy glassmorphism |
+| `src/components/home/NavBar.tsx` | White/light nav, 5 service tabs, cleaner layout |
+| `src/components/home/HeroSection.tsx` | New headline, lighter gradients, cleaner split layout |
+| `src/components/home/StatsSection.tsx` | Clean white stat cards |
+| `src/components/home/DestinationShowcase.tsx` | Cleaner hover effects |
+| `src/components/home/WhyBookWithZivo.tsx` | Clean white feature cards, split layout |
+| `src/components/home/HowItWorksSection.tsx` | Clean step cards with dotted connectors |
+| `src/components/home/TestimonialsSection.tsx` | Clean white testimonial cards |
+| `src/components/home/PartnerLogosShowcase.tsx` | Text logos, cleaner strip |
+| `src/components/home/DownloadAppSection.tsx` | White background, cleaner mockup |
+| `src/components/home/NewsletterSection.tsx` | Clean card, green accents |
+| `src/components/Footer.tsx` | Multi-column by service, dark footer |
+| `src/pages/Index.tsx` | New section order, add new sections |
 
-### AI Image Generation Flow
+### Design Tokens Summary
 
 ```text
-User visits homepage
-       |
-       v
-Frontend checks Supabase Storage for cached hero images
-       |
-  [Images exist?]
-    /        \
-  Yes         No
-   |           |
-   v           v
-Display    Call generate-hero-image edge function
-cached     (uses Lovable AI + Gemini image model)
-images          |
-                v
-           Save to Supabase Storage
-                |
-                v
-           Display generated images
+Backgrounds:     White (#fff) + Soft gray (#f8f9fc) + Light green tint
+Cards:           White, rounded-2xl (16px), soft shadow
+Buttons:         Green filled (primary), outline (secondary)
+Accent:          ZIVO Green (hsl 142 71% 45%)
+Typography:      Inter, bold headlines, clean body
+Hover effects:   Soft shadow increase, subtle lift (-2px)
+Border radius:   16px cards, 12px inputs, full-round buttons
+Shadows:         Soft, layered (no glow/neon)
 ```
 
-### Edge Function: generate-hero-image
-- Uses `google/gemini-2.5-flash-image` model via Lovable AI Gateway
-- Generates 3-4 premium travel scenes with prompts like:
-  - "Cinematic aerial view of an airplane wing at golden hour over clouds, luxury travel photography, 16:9 aspect ratio"
-  - "Premium hotel infinity pool overlooking a tropical ocean at sunset, travel magazine quality"
-  - "Modern city skyline at night with dramatic lighting, travel destination photography"
-- Stores base64 results in Supabase Storage bucket
-- Returns public URLs to frontend
-
-### Fallback Strategy
-If AI generation fails or takes too long, the hero uses premium Unsplash images as fallback -- ensuring the page always looks great immediately on load.
+### Mobile Considerations
+- Stacked hero layout (image top, text bottom)
+- Full-width search card (no float)
+- Single-column service cards
+- Large touch-friendly buttons (min 48px height)
+- Smooth scroll between sections
+- No crowded layouts -- generous spacing
 
 ### No Breaking Changes
-- All existing routes and functionality preserved
+- All existing routes preserved
 - Mobile app home (AppHome) untouched
-- Footer and compliance disclosures untouched
 - Auth flows untouched
+- Service pages (FlightSearch, HotelsPage, etc.) will benefit from global CSS updates but core functionality unchanged
+- Dark mode CSS variables preserved (updated for consistency)
 
