@@ -89,7 +89,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
                   transition={{ duration: 0.3, delay: index * 0.1 + 0.3 }}
                   className="mt-4"
                 >
-                  <CheckCircle className="w-5 h-5 text-primary/30 mx-auto" />
+                  <CheckCircle className="w-5 h-5 text-primary mx-auto" />
                 </motion.div>
               )}
             </motion.div>

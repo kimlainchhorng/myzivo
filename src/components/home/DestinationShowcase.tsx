@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowRight, TrendingUp } from "lucide-react";
+import { Plane, ArrowRight, TrendingUp, Heart } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const destinations = [
   { city: "New York", country: "USA", flag: "🇺🇸", tagline: "The city that never sleeps", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", from: "$89", trending: true },
@@ -12,6 +14,24 @@ const destinations = [
 ];
 
 export default function DestinationShowcase() {
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+
+  const toggleSave = (e: React.MouseEvent, city: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSaved((prev) => {
+      const next = new Set(prev);
+      if (next.has(city)) {
+        next.delete(city);
+        toast("Removed from saved", { duration: 1500 });
+      } else {
+        next.add(city);
+        toast.success(`${city} saved to wishlist!`, { duration: 1500 });
+      }
+      return next;
+    });
+  };
+
   return (
     <section className="py-16 sm:py-20">
       <div className="container mx-auto px-4">
@@ -62,7 +82,15 @@ export default function DestinationShowcase() {
                   </span>
                 )}
 
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                {/* Save + Explore buttons on hover */}
+                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  <button
+                    onClick={(e) => toggleSave(e, dest.city)}
+                    className="w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card active:scale-90 transition-all"
+                    aria-label={`Save ${dest.city}`}
+                  >
+                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-white"}`} />
+                  </button>
                   <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 shadow-md">
                     Explore <ArrowRight className="w-3 h-3" />
                   </span>

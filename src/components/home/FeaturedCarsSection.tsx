@@ -64,7 +64,7 @@ export default function FeaturedCarsSection() {
             >
               <Link
                 to="/rent-car"
-                className="group block card-premium overflow-hidden"
+                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
               >
                 <div className="relative aspect-video overflow-hidden bg-muted/50">
                   <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -93,7 +93,9 @@ export default function FeaturedCarsSection() {
                       <span className="gradient-text-primary">${car.price}</span>
                       <span className="text-sm font-normal text-muted-foreground">/day</span>
                     </p>
-                    <span className="text-primary text-sm font-semibold group-hover:underline">Rent Now</span>
+                    <span className="text-primary text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Rent Now <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
               </Link>
