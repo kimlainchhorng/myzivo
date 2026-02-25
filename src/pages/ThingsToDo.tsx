@@ -395,7 +395,7 @@ const ThingsToDo = () => {
                 .map((activity, index) => (
                 <Card 
                   key={activity.id}
-                  className="overflow-hidden border-0 bg-card shadow-lg group cursor-pointer hover:shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                  className="overflow-hidden border-0 bg-card shadow-lg group cursor-pointer hover:shadow-xl transition-all duration-200 animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={handleBookActivity}
                 >
@@ -403,7 +403,7 @@ const ThingsToDo = () => {
                     <img
                       src={activity.image}
                       alt={activity.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <button className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all touch-manipulation">

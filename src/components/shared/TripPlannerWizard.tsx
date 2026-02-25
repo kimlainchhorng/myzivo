@@ -11,7 +11,13 @@ import {
   ArrowLeft,
   Sparkles,
   Check,
-  Globe
+  Globe,
+  Mountain,
+  Palmtree,
+  Landmark,
+  Heart,
+  Baby,
+  Briefcase
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,21 +30,21 @@ interface TripPlannerWizardProps {
 }
 
 const destinations = [
-  { id: "paris", name: "Paris", emoji: "🇫🇷", popular: true },
-  { id: "tokyo", name: "Tokyo", emoji: "🇯🇵", popular: true },
-  { id: "nyc", name: "New York", emoji: "🗽", popular: true },
-  { id: "bali", name: "Bali", emoji: "🏝️", popular: false },
-  { id: "dubai", name: "Dubai", emoji: "🏙️", popular: false },
-  { id: "rome", name: "Rome", emoji: "🇮🇹", popular: false },
+  { id: "paris", name: "Paris", icon: Globe, popular: true },
+  { id: "tokyo", name: "Tokyo", icon: Globe, popular: true },
+  { id: "nyc", name: "New York", icon: Landmark, popular: true },
+  { id: "bali", name: "Bali", icon: Palmtree, popular: false },
+  { id: "dubai", name: "Dubai", icon: Globe, popular: false },
+  { id: "rome", name: "Rome", icon: Landmark, popular: false },
 ];
 
 const tripTypes = [
-  { id: "adventure", label: "Adventure", emoji: "🏔️" },
-  { id: "relaxation", label: "Relaxation", emoji: "🏖️" },
-  { id: "cultural", label: "Cultural", emoji: "🏛️" },
-  { id: "romantic", label: "Romantic", emoji: "💕" },
-  { id: "family", label: "Family", emoji: "👨‍👩‍👧‍👦" },
-  { id: "business", label: "Business", emoji: "💼" },
+  { id: "adventure", label: "Adventure", icon: Mountain },
+  { id: "relaxation", label: "Relaxation", icon: Palmtree },
+  { id: "cultural", label: "Cultural", icon: Landmark },
+  { id: "romantic", label: "Romantic", icon: Heart },
+  { id: "family", label: "Family", icon: Baby },
+  { id: "business", label: "Business", icon: Briefcase },
 ];
 
 const TripPlannerWizard = ({ className }: TripPlannerWizardProps) => {
@@ -131,7 +137,7 @@ const TripPlannerWizard = ({ className }: TripPlannerWizardProps) => {
                       : "border-border hover:border-primary/30"
                   )}
                 >
-                  <span className="text-xl">{dest.emoji}</span>
+                  <dest.icon className="w-5 h-5 text-primary" />
                   <span className="font-medium text-sm">{dest.name}</span>
                   {dest.popular && (
                     <Badge variant="secondary" className="text-[10px] px-1 py-0 ml-auto">
@@ -163,7 +169,7 @@ const TripPlannerWizard = ({ className }: TripPlannerWizardProps) => {
                       : "border-border hover:border-primary/30"
                   )}
                 >
-                  <span className="text-2xl">{type.emoji}</span>
+                  <type.icon className="w-6 h-6 text-primary" />
                   <span className="font-medium text-sm">{type.label}</span>
                 </button>
               ))}

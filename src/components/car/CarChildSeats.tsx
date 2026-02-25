@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Baby, Plus, Minus, Shield, Check, Info } from "lucide-react";
+import { Baby, Plus, Minus, Shield, Check, Info, Heart, User, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const seatTypes = [
@@ -12,7 +12,7 @@ const seatTypes = [
     ageRange: "0-12 months",
     weightRange: "Up to 22 lbs",
     price: 12,
-    icon: "👶",
+    icon: "infant" as const,
     description: "Rear-facing infant carrier",
     features: ["5-point harness", "Base included", "Canopy"]
   },
@@ -22,7 +22,7 @@ const seatTypes = [
     ageRange: "1-4 years",
     weightRange: "22-40 lbs",
     price: 10,
-    icon: "🧒",
+    icon: "toddler" as const,
     description: "Convertible car seat",
     features: ["Forward/rear facing", "Adjustable headrest", "Cup holder"]
   },
@@ -32,7 +32,7 @@ const seatTypes = [
     ageRange: "4-8 years",
     weightRange: "40-100 lbs",
     price: 8,
-    icon: "👦",
+    icon: "booster" as const,
     description: "High-back booster",
     features: ["Height adjustable", "Armrests", "Lightweight"]
   }
@@ -89,7 +89,9 @@ export default function CarChildSeats() {
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{seat.icon}</span>
+                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                  {seat.icon === "infant" ? <Baby className="w-5 h-5 text-pink-400" /> : seat.icon === "toddler" ? <Heart className="w-5 h-5 text-pink-400" /> : <UserRound className="w-5 h-5 text-pink-400" />}
+                </div>
                 <div>
                   <h4 className="font-medium">{seat.name}</h4>
                   <p className="text-xs text-muted-foreground">{seat.ageRange} • {seat.weightRange}</p>
@@ -148,7 +150,7 @@ export default function CarChildSeats() {
           </div>
         )}
 
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-muted/30 text-sm text-muted-foreground">
           <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <p>All seats are professionally cleaned and inspected before each rental. Installation assistance available at pickup.</p>
         </div>

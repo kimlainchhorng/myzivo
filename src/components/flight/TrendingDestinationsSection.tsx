@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, TrendingUp, Plane } from "lucide-react";
+import { ArrowRight, TrendingUp, Plane, MapPin } from "lucide-react";
 import { useTrendingDestinations } from "@/hooks/useTrendingFlights";
 
 interface TrendingDestinationsSectionProps {
@@ -40,8 +40,8 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                 )}
                 <CardContent className="p-0">
                   <div className="flex items-center">
-                    <div className="w-24 h-24 bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform relative">
-                      <span className="text-3xl">{dest.image}</span>
+                    <div className="w-24 h-24 bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 relative">
+                      <MapPin className="w-8 h-8 text-sky-400" />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
                     </div>
                     <div className="flex-1 p-4">

@@ -126,7 +126,7 @@ const GroundTransport = () => {
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Back Navigation */}
-            <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-left-2 duration-200">
               <Button
                 variant="ghost"
                 onClick={() => navigate(-1)}
@@ -159,7 +159,7 @@ const GroundTransport = () => {
               {stats.map((stat, index) => (
                 <div
                   key={stat.label}
-                  className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  className="text-center animate-in fade-in slide-in-from-bottom-4 duration-200"
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
                   <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 flex items-center justify-center">

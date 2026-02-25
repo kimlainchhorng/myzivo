@@ -72,7 +72,7 @@ export default function ConversionHero() {
                 className={cn(
                   "h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold rounded-2xl gap-3",
                   "bg-gradient-to-r text-white shadow-2xl",
-                  "hover:scale-105 hover:shadow-xl transition-all duration-200",
+                  "hover:scale-[1.03] hover:shadow-xl transition-all duration-200",
                   "active:scale-[0.98]",
                   cta.gradient
                 )}

@@ -25,9 +25,9 @@ interface FlightToHotelBridgeProps {
 }
 
 const suggestedHotels = [
-  { id: "1", name: "Grand Plaza Hotel", rating: 4.8, price: 189, image: "🏨", discount: "-20%" },
-  { id: "2", name: "City Center Suites", rating: 4.6, price: 145, image: "🏢", discount: "-15%" },
-  { id: "3", name: "Boutique Inn", rating: 4.9, price: 210, image: "🏛️", discount: "-25%" },
+  { id: "1", name: "Grand Plaza Hotel", rating: 4.8, price: 189, icon: "hotel" as const, discount: "-20%" },
+  { id: "2", name: "City Center Suites", rating: 4.6, price: 145, icon: "hotel" as const, discount: "-15%" },
+  { id: "3", name: "Boutique Inn", rating: 4.9, price: 210, icon: "hotel" as const, discount: "-25%" },
 ];
 
 const FlightToHotelBridge = ({ 
@@ -104,7 +104,7 @@ const FlightToHotelBridge = ({
                     : "border-border hover:border-amber-500/30"
                 )}
               >
-                <span className="text-2xl">{hotel.image}</span>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center"><Hotel className="w-5 h-5 text-amber-500" /></div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{hotel.name}</p>
                   <div className="flex items-center gap-1">

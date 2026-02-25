@@ -260,35 +260,35 @@ const SellerOfTravel = () => {
                 <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <Link
                     to={FLIGHT_LEGAL_LINKS.terms}
-                    className="p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    className="p-3 rounded-xl border hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
                   >
                     <p className="font-medium text-sm">Terms of Service</p>
                     <p className="text-xs text-muted-foreground">General terms</p>
                   </Link>
                   <Link
                     to={FLIGHT_LEGAL_LINKS.flightTerms}
-                    className="p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    className="p-3 rounded-xl border hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
                   >
                     <p className="font-medium text-sm">Flight Terms</p>
                     <p className="text-xs text-muted-foreground">Booking policies</p>
                   </Link>
                   <Link
                     to={FLIGHT_LEGAL_LINKS.privacy}
-                    className="p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    className="p-3 rounded-xl border hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
                   >
                     <p className="font-medium text-sm">Privacy Policy</p>
                     <p className="text-xs text-muted-foreground">Data protection</p>
                   </Link>
                   <Link
                     to={FLIGHT_LEGAL_LINKS.partnerDisclosure}
-                    className="p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    className="p-3 rounded-xl border hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
                   >
                     <p className="font-medium text-sm">Partner Disclosure</p>
                     <p className="text-xs text-muted-foreground">Partner info</p>
                   </Link>
                   <Link
                     to={FLIGHT_LEGAL_LINKS.refundPolicy}
-                    className="p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    className="p-3 rounded-xl border hover:border-primary/50 hover:bg-muted/30 transition-all duration-200"
                   >
                     <p className="font-medium text-sm">Refund Policy</p>
                     <p className="text-xs text-muted-foreground">Cancellations</p>
