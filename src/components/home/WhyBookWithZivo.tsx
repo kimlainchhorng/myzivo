@@ -1,7 +1,6 @@
 /**
  * Why Book with ZIVO
- * 4-card value proposition section for homepage
- * Compliance-safe messaging (no "cheapest guaranteed" claims)
+ * 4-card value proposition section with glow borders and floating icons
  */
 
 import { Search, ShieldCheck, BadgeCheck, Globe } from "lucide-react";
@@ -70,7 +69,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
           )}
         </div>
 
-        {/* Value Props Grid - 4 cards */}
+        {/* Value Props Grid */}
         <div className={cn(
           "grid gap-6",
           isCompact ? "grid-cols-1 sm:grid-cols-4 max-w-4xl mx-auto" : "sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto sm:gap-8"
@@ -82,7 +81,8 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
                 "group text-center",
                 isCompact ? "p-4" : "p-6 sm:p-8",
                 "rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50",
-                "hover:border-primary/30 hover:shadow-xl hover:-translate-y-1",
+                "glow-border-hover",
+                "hover:-translate-y-1",
                 "transition-all duration-300",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
@@ -93,8 +93,11 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
                 "mx-auto rounded-2xl flex items-center justify-center",
                 "bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20",
                 "group-hover:scale-110 transition-transform duration-300",
+                "float-gentle",
                 isCompact ? "w-12 h-12 mb-3" : "w-16 h-16 mb-5"
-              )}>
+              )}
+              style={{ animationDelay: `${index * 200}ms` }}
+              >
                 <prop.icon className={cn(
                   isCompact ? "w-6 h-6" : "w-8 h-8",
                   "text-primary"

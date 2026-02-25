@@ -67,15 +67,22 @@ export default function DestinationShowcase() {
             <Link
               key={dest.city}
               to={`/flights?to=${encodeURIComponent(dest.city)}`}
-              className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30"
+              className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30 glow-border-hover"
             >
               <img
                 src={dest.image}
                 alt={`${dest.city}, ${dest.country}`}
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              {/* Glass overlay on hover */}
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                <span className="px-3 py-1.5 rounded-full glass-chip text-xs font-medium text-white">
+                  Explore →
+                </span>
+              </div>
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-end justify-between">
                   <div>
@@ -83,7 +90,10 @@ export default function DestinationShowcase() {
                     <p className="text-white/70 text-sm">{dest.tagline}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white/60 text-xs">from</p>
+                    <p className="text-white/60 text-xs flex items-center gap-1">
+                      <Plane className="w-3 h-3" />
+                      from
+                    </p>
                     <p className="text-white font-bold text-lg">{dest.from}</p>
                   </div>
                 </div>
@@ -94,7 +104,7 @@ export default function DestinationShowcase() {
 
         <div className="text-center mt-8">
           <Link to="/flights">
-            <Button variant="outline" className="rounded-xl gap-2">
+            <Button variant="outline" className="rounded-xl gap-2 hover:border-primary/40 transition-all duration-200">
               Explore All Destinations
               <ArrowRight className="w-4 h-4" />
             </Button>

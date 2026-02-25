@@ -87,7 +87,7 @@ const DesktopHomePage = () => {
       >
         <button
           onClick={() => navigate("/flights")}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full shadow-xl font-semibold text-sm hover:scale-105 transition-transform glow-green-btn"
+          className="flex items-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-full shadow-xl font-semibold text-sm hover:scale-105 transition-transform glow-green-btn pulse-ring"
         >
           <Plane className="w-4 h-4" />
           Search Flights
