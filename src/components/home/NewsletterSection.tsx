@@ -32,7 +32,7 @@ export default function NewsletterSection() {
           className="max-w-2xl mx-auto"
         >
           {/* Gradient border wrapper */}
-          <div className="p-[1px] rounded-2xl bg-gradient-to-br from-primary/40 via-transparent to-primary/20">
+          <div className="p-[1px] rounded-2xl bg-gradient-to-br from-primary/40 via-transparent to-primary/20 hover:from-primary/60 hover:to-primary/30 transition-all duration-500">
             <div className="rounded-2xl bg-card p-8 sm:p-12 text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-5">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
