@@ -1,17 +1,6 @@
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plane } from "lucide-react";
-import PopularRoutes from "./PopularRoutes";
-import FlexibleDatesCalendar from "./FlexibleDatesCalendar";
 import AITripSuggestions from "./AITripSuggestions";
-import CalendarHeatmap from "./CalendarHeatmap";
-import NearbyAirports from "./NearbyAirports";
-import PricePrediction from "./PricePrediction";
-import PriceLock from "./PriceLock";
-import AirportGuide from "./AirportGuide";
-import AirlineLogosCarousel from "./AirlineLogosCarousel";
-import CodeshareFlights from "./CodeshareFlights";
-
 import { airports } from "@/data/airports";
 
 interface FlightDiscoverySectionsProps {
@@ -45,76 +34,6 @@ export default function FlightDiscoverySections({
 }: FlightDiscoverySectionsProps) {
   return (
     <>
-      {/* Airline Partners Carousel */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <AirlineLogosCarousel />
-        </div>
-      </section>
-
-      {/* Codeshare Flights */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-              <Plane className="w-6 h-6 text-sky-500" />
-              Codeshare Partners
-            </h2>
-            <CodeshareFlights
-              codeshares={[
-                {
-                  operatingCarrier: { code: "UA", name: "United Airlines", flightNumber: "UA1234" },
-                  marketingCarriers: [
-                    { code: "LH", name: "Lufthansa", flightNumber: "LH7890", alliance: "Star Alliance" },
-                    { code: "SQ", name: "Singapore Airlines", flightNumber: "SQ5678", alliance: "Star Alliance" },
-                  ],
-                },
-              ]}
-              showDetails
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Popular Routes with Live Pricing */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <PopularRoutes
-            onSelectRoute={(from, to, price) => {
-              const fromAirport = airports.find((a) => a.code === from);
-              const toAirport = airports.find((a) => a.code === to);
-              setFromCity(
-                fromAirport ? `${fromAirport.city} (${fromAirport.code})` : `${from}`
-              );
-              setToCity(
-                toAirport ? `${toAirport.city} (${toAirport.code})` : `${to}`
-              );
-              if (price) {
-                toast.success(`Selected route with live price: $${price}`);
-              }
-            }}
-          />
-        </div>
-      </section>
-
-      {/* Flexible Dates Calendar */}
-      {fromCity && toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <FlexibleDatesCalendar
-              origin={fromCode}
-              destination={toCode}
-              basePrice={299}
-              onSelectDate={(date, price) => {
-                setDepartDate(date);
-                toast.success(`Selected ${format(date, "MMM d")} - $${price} fare`);
-              }}
-              className="max-w-3xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
-
       {/* AI Trip Suggestions */}
       <section className="py-12 border-t border-border/50">
         <div className="container mx-auto px-4">
@@ -133,66 +52,6 @@ export default function FlightDiscoverySections({
           />
         </div>
       </section>
-
-      {/* Calendar Heatmap */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <CalendarHeatmap
-              origin={fromCode}
-              destination={toCode}
-              onMonthSelect={(month, year) => {
-                toast.success(`Viewing prices for ${month} ${year}`);
-              }}
-              className="max-w-3xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Nearby Airports Comparison */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <NearbyAirports
-              mainAirport={toCode}
-              destination={toCode}
-              mainPrice={299}
-              className="max-w-4xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Price Prediction & Lock */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              <PricePrediction
-                route={{
-                  origin: fromCity.split(" (")[0] || "Los Angeles",
-                  originCode: fromCode,
-                  destination: toCity.split(" (")[0] || "New York",
-                  destCode: toCode,
-                }}
-                departureDate={departDate}
-                currentPrice={299}
-              />
-              <PriceLock flightPrice={299} route={{ from: fromCode, to: toCode }} />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Airport Guide */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <AirportGuide airportCode={toCode} className="max-w-4xl mx-auto" />
-          </div>
-        </section>
-      )}
     </>
   );
 }
