@@ -85,7 +85,7 @@ const NotificationCenter = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="relative rounded-xl hover:bg-primary/10 transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation w-10 h-10"
+          className="relative rounded-xl hover:bg-primary/10 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation w-10 h-10"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (

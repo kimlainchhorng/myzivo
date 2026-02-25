@@ -92,7 +92,7 @@ export default function HeroSearchCard() {
                     <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
                     {/* Swap button */}
                     <button
-                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-300 z-10 hidden sm:flex"
+                      className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-200 z-10 hidden sm:flex hover:scale-110"
                       aria-label="Swap origin and destination"
                     >
                       <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />

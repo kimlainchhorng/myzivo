@@ -99,7 +99,7 @@ const FeaturesSection = () => {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="relative p-6 sm:p-7 lg:p-8 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-default hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4"
+              className="relative p-6 sm:p-7 lg:p-8 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 group overflow-hidden cursor-default hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4"
               style={{ animationDelay: `${index * 75}ms`, animationFillMode: 'both' }}
             >
               {/* Shine sweep effect */}
@@ -120,7 +120,7 @@ const FeaturesSection = () => {
               {/* Stat badge */}
               <div className="absolute top-4 right-4 sm:top-5 sm:right-5">
                 <span className={cn(
-                  "text-sm font-bold px-3 py-1 rounded-full bg-gradient-to-r text-white shadow-lg relative overflow-hidden transition-transform hover:scale-105",
+                  "text-sm font-bold px-3 py-1 rounded-full bg-gradient-to-r text-white shadow-lg relative overflow-hidden transition-transform duration-200 hover:scale-110",
                   feature.gradient
                 )}>
                   {feature.stat}

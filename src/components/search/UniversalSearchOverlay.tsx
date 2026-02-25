@@ -406,7 +406,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
             </div>
             <button
               onClick={onClose}
-              className="text-sm text-muted-foreground font-medium active:text-foreground transition-colors touch-manipulation"
+              className="text-sm text-muted-foreground font-medium active:text-foreground transition-all duration-200 touch-manipulation"
             >
               Cancel
             </button>
@@ -464,7 +464,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                         <button
                           key={i}
                           onClick={() => setQuery(s.query)}
-                          className="w-full flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-accent active:bg-accent/80 transition-colors text-left touch-manipulation"
+                          className="w-full flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-accent active:bg-accent/80 transition-all duration-200 text-left touch-manipulation"
                         >
                           <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                           <span className="text-sm text-foreground truncate">{s.query}</span>
@@ -500,7 +500,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                       <button
                         key={term}
                         onClick={() => setQuery(term)}
-                        className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border hover:bg-accent touch-manipulation transition-colors"
+                        className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border hover:bg-accent touch-manipulation transition-all duration-200 hover:scale-105 active:scale-[0.97]"
                       >
                         {term}
                       </button>

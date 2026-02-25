@@ -95,7 +95,7 @@ const PlatformMoat = ({ variant = 'full', className }: PlatformMoatProps) => {
             return (
               <div
                 key={item.title}
-                className="p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-colors"
+                className="p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Icon className="w-6 h-6 text-primary" />

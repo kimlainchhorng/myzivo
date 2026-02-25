@@ -83,7 +83,7 @@ export default function ServicesShowcase() {
             >
               <Link
                 to={service.href}
-                 className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 touch-manipulation active:scale-[0.98]"
+                 className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.98]"
               >
                 {/* Badge */}
                 {'badge' in service && service.badge && (
@@ -95,7 +95,7 @@ export default function ServicesShowcase() {
                 <div className={cn(
                   "w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4",
                   service.iconBg,
-                  "group-hover:scale-110 transition-transform duration-300"
+                  "group-hover:scale-110 transition-transform duration-200"
                 )}>
                   <service.icon className={cn("w-7 h-7", service.iconColor)} />
                 </div>

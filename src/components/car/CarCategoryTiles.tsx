@@ -62,8 +62,8 @@ export default function CarCategoryTiles({
               <Card
                 key={categoryKey}
                 className={cn(
-                  "group overflow-hidden cursor-pointer transition-all duration-300",
-                  "hover:-translate-y-1 hover:shadow-xl border-0 bg-card",
+                  "group overflow-hidden cursor-pointer transition-all duration-200",
+                  "hover:-translate-y-1.5 hover:shadow-xl border-0 bg-card",
                   isSelected && "ring-2 ring-violet-500 ring-offset-2 ring-offset-background"
                 )}
                 onClick={() => onSelect?.(categoryKey)}

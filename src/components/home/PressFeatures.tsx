@@ -57,7 +57,7 @@ const PressFeatures = () => {
               key={feature.publication}
               className={cn(
                 "group p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
-                "hover:border-primary/30 hover:-translate-y-1 transition-all duration-300",
+                "hover:border-primary/30 hover:-translate-y-1.5 hover:shadow-lg transition-all duration-200",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               style={{ animationDelay: `${index * 100}ms` }}

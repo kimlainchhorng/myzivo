@@ -48,19 +48,19 @@ export default function LPComplianceFooter() {
 
         {/* Legal Links */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground mb-6">
-          <Link to="/privacy" className="hover:text-foreground transition-colors">
+          <Link to="/privacy" className="hover:text-foreground transition-all duration-200">
             Privacy
           </Link>
-          <Link to="/terms" className="hover:text-foreground transition-colors">
+          <Link to="/terms" className="hover:text-foreground transition-all duration-200">
             Terms
           </Link>
-          <Link to="/affiliate-disclosure" className="hover:text-foreground transition-colors">
+          <Link to="/affiliate-disclosure" className="hover:text-foreground transition-all duration-200">
             Affiliate Disclosure
           </Link>
-          <Link to="/partner-disclosure" className="hover:text-foreground transition-colors">
+          <Link to="/partner-disclosure" className="hover:text-foreground transition-all duration-200">
             Partner Disclosure
           </Link>
-          <Link to="/contact" className="hover:text-foreground transition-colors">
+          <Link to="/contact" className="hover:text-foreground transition-all duration-200">
             Contact
           </Link>
         </div>

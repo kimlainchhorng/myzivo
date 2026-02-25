@@ -262,7 +262,7 @@ export default function DestinationCardsGrid({
               </p>
             </div>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -273,8 +273,8 @@ export default function DestinationCardsGrid({
             <Card
               key={dest.city}
               className={cn(
-                "group overflow-hidden cursor-pointer transition-all duration-300",
-                "hover:-translate-y-1 hover:shadow-xl border-0 bg-card"
+                "group overflow-hidden cursor-pointer transition-all duration-200",
+                "hover:-translate-y-1.5 hover:shadow-xl border-0 bg-card"
               )}
               onClick={() => onSelect?.(dest.city)}
             >
@@ -287,7 +287,7 @@ export default function DestinationCardsGrid({
                   height={400}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   style={{ aspectRatio: "1/1" }}
                 />
                 {/* Gradient overlay */}
@@ -334,7 +334,7 @@ export default function DestinationCardsGrid({
         </div>
 
         {/* Mobile view all */}
-        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm">
+        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm active:scale-[0.98] touch-manipulation">
           View all destinations <ArrowRight className="w-4 h-4" />
         </button>
       </div>

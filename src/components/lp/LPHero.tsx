@@ -98,7 +98,7 @@ export default function LPHero({
               "h-14 px-8 text-lg font-semibold gap-3",
               "bg-white text-black hover:bg-white/90",
               "shadow-2xl shadow-black/30",
-              "transition-all duration-300 hover:scale-105"
+              "transition-all duration-200 hover:scale-110 active:scale-[0.97]"
             )}
           >
             {ctaText}
