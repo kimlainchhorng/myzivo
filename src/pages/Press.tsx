@@ -108,7 +108,7 @@ const Press = () => {
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Company Facts */}
-                  <Card className="border-border/50">
+                   <Card className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Building2 className="w-5 h-5 text-primary" />
@@ -126,7 +126,7 @@ const Press = () => {
                   </Card>
 
                   {/* Press Contacts */}
-                  <Card className="border-border/50">
+                   <Card className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Mail className="w-5 h-5 text-primary" />
@@ -152,7 +152,7 @@ const Press = () => {
                   </Card>
 
                   {/* Resources */}
-                  <Card className="border-border/50">
+                   <Card className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-primary" />
@@ -186,7 +186,7 @@ const Press = () => {
                 </div>
 
                 {/* Right Column - Contact Form */}
-                <Card className="border-border/50">
+                <Card className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Briefcase className="w-5 h-5 text-primary" />
@@ -236,7 +236,7 @@ const Press = () => {
                           placeholder="Please describe your inquiry or interview request..."
                         />
                       </div>
-                      <Button type="submit" className="w-full">
+                      <Button type="submit" className="w-full shadow-[0_0_15px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.3)] transition-shadow">
                         Submit Inquiry
                       </Button>
                       <p className="text-xs text-muted-foreground text-center">

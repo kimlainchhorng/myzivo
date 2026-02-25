@@ -46,23 +46,23 @@ export default function Partners() {
           <div className="mb-12">
             <h2 className="text-xl font-bold mb-6">We help travelers discover and compare:</h2>
             <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-muted-foreground">
+              <li className="flex items-center gap-3 text-muted-foreground p-3 rounded-xl hover:bg-muted/40 transition-colors">
                 <Plane className="w-5 h-5 text-primary" />
                 Flights
               </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
+              <li className="flex items-center gap-3 text-muted-foreground p-3 rounded-xl hover:bg-muted/40 transition-colors">
                 <Hotel className="w-5 h-5 text-primary" />
                 Hotels & accommodations
               </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
+              <li className="flex items-center gap-3 text-muted-foreground p-3 rounded-xl hover:bg-muted/40 transition-colors">
                 <Car className="w-5 h-5 text-primary" />
                 Car rentals
               </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
+              <li className="flex items-center gap-3 text-muted-foreground p-3 rounded-xl hover:bg-muted/40 transition-colors">
                 <MapPin className="w-5 h-5 text-primary" />
                 Airport transfers
               </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
+              <li className="flex items-center gap-3 text-muted-foreground p-3 rounded-xl hover:bg-muted/40 transition-colors">
                 <Ticket className="w-5 h-5 text-primary" />
                 Activities & travel services
               </li>
@@ -166,7 +166,7 @@ export default function Partners() {
             </p>
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-primary to-teal-400 gap-2"
+              className="bg-gradient-to-r from-primary to-teal-400 gap-2 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow"
               onClick={() => window.location.href = "mailto:kimlain@hizivo.com"}
             >
               <Mail className="w-5 h-5" />
