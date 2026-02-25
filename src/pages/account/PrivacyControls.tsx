@@ -214,17 +214,17 @@ export default function PrivacyControls() {
 
           {/* Quick Stats */}
           <div className="grid sm:grid-cols-3 gap-4 mb-8">
-            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center hover:border-primary/20 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
               <History className="w-6 h-6 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold">{consents?.length || 0}</p>
               <p className="text-xs text-muted-foreground">Consent Records</p>
             </div>
-            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center hover:border-primary/20 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
               <Database className="w-6 h-6 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold">{pendingRequests.length}</p>
               <p className="text-xs text-muted-foreground">Pending Requests</p>
             </div>
-            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border text-center hover:border-primary/20 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
               <Lock className="w-6 h-6 text-green-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-green-600">Protected</p>
               <p className="text-xs text-muted-foreground">Data Status</p>
@@ -259,7 +259,7 @@ export default function PrivacyControls() {
 
                 <div className="grid gap-4">
                   {dsarRequestTypes.map((request) => (
-                    <Card key={request.id}>
+                    <Card key={request.id} className="hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3">
@@ -345,7 +345,7 @@ export default function PrivacyControls() {
                     {consentCategories.map((category) => (
                       <div
                         key={category.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border"
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 hover:bg-muted/70 transition-all duration-200"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">

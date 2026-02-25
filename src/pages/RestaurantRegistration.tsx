@@ -172,7 +172,7 @@ const RestaurantRegistration = () => {
 
               <div className="space-y-4">
                 {benefits.map((benefit, i) => (
-                  <Card key={i} className="border-0 bg-muted/50">
+                  <Card key={i} className="border-0 bg-muted/50 hover:bg-muted/70 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200">
                     <CardContent className="p-4 flex items-start gap-4">
                       <div className="w-10 h-10 rounded-lg bg-eats/10 flex items-center justify-center shrink-0">
                         <benefit.icon className="h-5 w-5 text-eats" />
@@ -186,7 +186,7 @@ const RestaurantRegistration = () => {
                 ))}
               </div>
 
-              <div className="p-4 rounded-lg bg-eats/10 border border-eats/20">
+              <div className="p-4 rounded-lg bg-eats/10 border border-eats/20 hover:border-eats/40 hover:shadow-sm transition-all duration-200">
                 <p className="text-sm">
                   <strong>Commission:</strong> 15-20% per order<br />
                   <strong>Payout:</strong> Weekly direct deposit<br />

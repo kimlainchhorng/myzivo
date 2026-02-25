@@ -65,7 +65,7 @@ const FlightDashboard = () => {
 
       {/* User Info */}
       <div className="p-4">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-sky-500/5 border border-sky-500/10">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-sky-500/5 border border-sky-500/10 hover:border-sky-500/30 transition-all duration-200">
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center">
             <User className="h-4 w-4 sm:h-5 sm:w-5 text-sky-500" />
           </div>
@@ -79,11 +79,11 @@ const FlightDashboard = () => {
       {/* Quick Stats */}
       <div className="px-4 mb-4">
         <div className="grid grid-cols-2 gap-2">
-          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/5 border border-sky-500/20">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/5 border border-sky-500/20 hover:border-sky-500/40 hover:shadow-sm transition-all duration-200">
             <p className="text-base sm:text-lg font-bold text-sky-500">12</p>
             <p className="text-[10px] text-muted-foreground">Active Flights</p>
           </div>
-          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-sm transition-all duration-200">
             <p className="text-base sm:text-lg font-bold text-emerald-500">847</p>
             <p className="text-[10px] text-muted-foreground">Passengers</p>
           </div>
