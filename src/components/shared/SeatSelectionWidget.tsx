@@ -139,7 +139,7 @@ const SeatSelectionWidget = ({
       </div>
 
       {/* Seat Map */}
-      <div className="p-4 rounded-lg bg-muted/20 border border-border/30">
+      <div className="p-4 rounded-xl bg-muted/20 border border-border/30">
         {/* Plane nose indicator */}
         <div className="flex justify-center mb-3">
           <div className="w-16 h-6 rounded-t-full bg-muted/30 flex items-center justify-center text-[10px] text-muted-foreground">

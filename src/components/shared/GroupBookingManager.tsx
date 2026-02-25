@@ -222,7 +222,7 @@ const GroupBookingManager = ({
                     {member.status === "pending" && (
                       <button
                         onClick={() => handleSendReminder(member)}
-                        className="p-1.5 rounded-lg hover:bg-primary/10 transition-all duration-200 hover:scale-110"
+                        className="p-1.5 rounded-xl hover:bg-primary/10 transition-all duration-200 hover:scale-110"
                         title="Send reminder"
                       >
                         <MessageSquare className="w-4 h-4 text-primary" />
@@ -230,7 +230,7 @@ const GroupBookingManager = ({
                     )}
                     <button
                       onClick={() => handleRemove(member.id)}
-                      className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all duration-200 hover:scale-110"
+                      className="p-1.5 rounded-xl hover:bg-destructive/10 transition-all duration-200 hover:scale-110"
                       title="Remove member"
                     >
                       <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />

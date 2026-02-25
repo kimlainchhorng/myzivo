@@ -292,7 +292,7 @@ const ThingsToDo = () => {
               {featuredExperiences.map((exp, index) => (
                 <Card 
                   key={exp.id}
-                  className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl group cursor-pointer hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                  className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl group cursor-pointer hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-200 animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={handleBookActivity}
                 >
@@ -440,7 +440,7 @@ const ThingsToDo = () => {
                       <Button 
                         size="sm"
                         variant="outline"
-                        className="gap-1 text-xs rounded-lg border-purple-500/50 text-purple-500 hover:bg-purple-500/10 touch-manipulation"
+                        className="gap-1 text-xs rounded-xl border-purple-500/50 text-purple-500 hover:bg-purple-500/10 touch-manipulation"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBookActivity();
@@ -493,7 +493,7 @@ const ThingsToDo = () => {
               {activityPartnerCards.map((partner, index) => (
                 <Card 
                   key={partner.id}
-                  className="group cursor-pointer border-border/50 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4"
+                  className="group cursor-pointer border-border/50 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => handlePartnerClick(partner)}
                 >

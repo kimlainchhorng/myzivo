@@ -68,14 +68,14 @@ export const ServiceCard = ({
   return (
     <button
       onClick={onClick}
-      className="relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group text-left overflow-hidden hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] animate-in fade-in slide-in-from-bottom-4 zoom-in-95"
+      className="relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 group text-left overflow-hidden hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] animate-in fade-in slide-in-from-bottom-4 zoom-in-95"
       style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       {/* Decorative glow */}
       <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       {isNew && (
-        <span className="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg animate-in zoom-in duration-300">
+        <span className="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg animate-in zoom-in duration-200">
           New
         </span>
       )}
@@ -119,7 +119,7 @@ export const FeatureCard = ({
 }: FeatureCardProps) => {
   return (
     <div
-      className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-default hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-6"
+      className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-200 group overflow-hidden cursor-default hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-6"
       style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       {/* Corner glow */}

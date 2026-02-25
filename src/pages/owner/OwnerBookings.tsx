@@ -331,7 +331,7 @@ function BookingRequestCard({
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Vehicle Image */}
-          <div className="w-full sm:w-32 h-32 sm:h-24 rounded-lg bg-muted overflow-hidden shrink-0">
+          <div className="w-full sm:w-32 h-32 sm:h-24 rounded-xl bg-muted overflow-hidden shrink-0">
             {images[0] ? (
               <img
                 src={images[0]}
@@ -377,7 +377,7 @@ function BookingRequestCard({
             </div>
 
             {booking.notes && (
-              <div className="p-3 rounded-lg bg-muted/50 text-sm mb-4">
+              <div className="p-3 rounded-xl bg-muted/50 text-sm mb-4">
                 <p className="text-muted-foreground">
                   <MessageCircle className="w-4 h-4 inline mr-2" />
                   "{booking.notes}"
@@ -436,7 +436,7 @@ function BookingCard({
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Vehicle Image */}
-          <div className="w-24 h-20 rounded-lg bg-muted overflow-hidden shrink-0">
+          <div className="w-24 h-20 rounded-xl bg-muted overflow-hidden shrink-0">
             {images[0] ? (
               <img
                 src={images[0]}

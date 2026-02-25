@@ -67,7 +67,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
               <div className={cn(
                 "mx-auto rounded-2xl flex items-center justify-center",
                 prop.iconBg,
-                "group-hover:scale-110 transition-transform duration-300",
+                "group-hover:scale-110 transition-transform duration-200",
                 isCompact ? "w-12 h-12 mb-3" : "w-14 h-14 mb-5"
               )}>
                 <prop.icon className={cn(isCompact ? "w-6 h-6" : "w-7 h-7", prop.iconColor)} />

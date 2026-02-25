@@ -109,7 +109,7 @@ export const FeatureHighlight = ({
           <motion.div 
             whileHover={{ scale: 1.1, rotate: 5 }}
             className={cn(
-              "rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm",
+              "rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
               colors.bg,
               sizes.icon
             )}

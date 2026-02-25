@@ -91,7 +91,7 @@ export default function AdminWebhooksManager() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 <Webhook className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -104,7 +104,7 @@ export default function AdminWebhooksManager() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -117,7 +117,7 @@ export default function AdminWebhooksManager() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Send className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -130,7 +130,7 @@ export default function AdminWebhooksManager() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <RefreshCw className="h-5 w-5 text-amber-500" />
               </div>
               <div>

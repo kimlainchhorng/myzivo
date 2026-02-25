@@ -51,7 +51,7 @@ const AdminRatingOverview = () => {
         <Card className="border-0 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
                 <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
               </div>
               <div>

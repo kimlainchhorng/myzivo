@@ -139,7 +139,7 @@ export default function AdminRevenueAssumptionsModule() {
               <div className={cn("absolute top-0 left-0 right-0 h-1", serviceBgColors[rate.service])} />
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
-                  <div className={cn("p-2 rounded-lg", serviceBgColors[rate.service])}>
+                  <div className={cn("p-2 rounded-xl", serviceBgColors[rate.service])}>
                     <Icon className={cn("h-5 w-5", serviceColors[rate.service])} />
                   </div>
                   <CardTitle className="capitalize">{rate.service}</CardTitle>
@@ -208,7 +208,7 @@ export default function AdminRevenueAssumptionsModule() {
                 <div
                   key={aov.service}
                   className={cn(
-                    "p-4 rounded-lg border",
+                    "p-4 rounded-xl border",
                     isApplicable ? "bg-card" : "bg-muted/30"
                   )}
                 >
@@ -251,7 +251,7 @@ export default function AdminRevenueAssumptionsModule() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 rounded-lg border bg-muted/30">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <p className="text-sm text-muted-foreground mb-2">Traffic Growth</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold">25K</span>
@@ -261,7 +261,7 @@ export default function AdminRevenueAssumptionsModule() {
               </div>
               <p className="text-xs text-muted-foreground mt-1">Month 6 → Month 12</p>
             </div>
-            <div className="p-4 rounded-lg border bg-muted/30">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <p className="text-sm text-muted-foreground mb-2">Partner Completion Rate</p>
               <p className="text-2xl font-bold">65%</p>
               <p className="text-xs text-muted-foreground mt-1">Of checkout clicks complete booking</p>
@@ -272,7 +272,7 @@ export default function AdminRevenueAssumptionsModule() {
             {CONVERSION_RATES.map((rate) => {
               const Icon = serviceIcons[rate.service];
               return (
-                <div key={rate.service} className="p-4 rounded-lg border">
+                <div key={rate.service} className="p-4 rounded-xl border">
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className={cn("h-4 w-4", serviceColors[rate.service])} />
                     <span className="font-medium capitalize">{rate.service}</span>
@@ -367,7 +367,7 @@ export default function AdminRevenueAssumptionsModule() {
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             {[{ label: "Month 6", data: month6 }, { label: "Month 12", data: month12 }].map(({ label, data }) => (
-              <div key={label} className="p-4 rounded-lg border">
+              <div key={label} className="p-4 rounded-xl border">
                 <h4 className="font-semibold mb-4">{label} ({data.visits.toLocaleString()} visits)</h4>
                 <div className="space-y-3">
                   {(['flights', 'hotels', 'cars'] as const).map((service) => {
@@ -418,9 +418,9 @@ export default function AdminRevenueAssumptionsModule() {
               return (
                 <div
                   key={example.service}
-                  className="flex items-center gap-4 p-4 rounded-lg border bg-muted/30"
+                  className="flex items-center gap-4 p-4 rounded-xl border bg-muted/30"
                 >
-                  <div className={cn("p-2 rounded-lg", serviceBgColors[example.service])}>
+                  <div className={cn("p-2 rounded-xl", serviceBgColors[example.service])}>
                     <Icon className={cn("h-5 w-5", serviceColors[example.service])} />
                   </div>
                   <div className="flex-1">

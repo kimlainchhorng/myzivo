@@ -166,7 +166,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   if (variant === "card") {
     return (
       <div className={cn("p-4 rounded-xl border border-border/50", className)}>
-        <div className="h-32 bg-muted animate-pulse rounded-lg mb-4" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl mb-4" />
         <div className="space-y-2">
           <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
           <div className="h-4 bg-muted animate-pulse rounded w-1/2" />

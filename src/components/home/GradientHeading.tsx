@@ -90,7 +90,7 @@ export const SectionHeading = ({
       )}
     >
       {badge && (
-        <div className="mb-6 animate-in zoom-in-95 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+        <div className="mb-6 animate-in zoom-in-95 duration-200" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           {badge}
         </div>
       )}
@@ -99,7 +99,7 @@ export const SectionHeading = ({
       </GradientHeading>
       {description && (
         <p
-          className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-200"
           style={{ animationDelay: '200ms', animationFillMode: 'both' }}
         >
           {description}

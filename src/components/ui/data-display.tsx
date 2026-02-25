@@ -151,7 +151,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       initial={animated ? { opacity: 0, y: 20 } : false}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "relative overflow-hidden rounded-3xl transition-all duration-300 group",
+        "relative overflow-hidden rounded-3xl transition-all duration-200 group",
         variantStyles[variant],
         onClick && "cursor-pointer",
         sizeClasses[size],
@@ -160,7 +160,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       {/* Background decoration */}
       <div className={cn(
-        "absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-50",
+        "absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-30 pointer-events-none transition-opacity duration-200 group-hover:opacity-50",
         config.iconBg
       )} />
 
@@ -294,7 +294,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 h-7 rounded-lg"
+              className="w-7 h-7 rounded-xl"
               onClick={handleCopy}
             >
               {copied ? (
@@ -308,7 +308,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="w-7 h-7 rounded-lg"
+              className="w-7 h-7 rounded-xl"
               onClick={() => window.open(link, "_blank")}
             >
               <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
@@ -343,7 +343,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="w-7 h-7 rounded-lg hover:bg-muted/50"
+            className="w-7 h-7 rounded-xl hover:bg-muted/50"
             onClick={handleCopy}
           >
             <AnimatePresence mode="wait">
@@ -373,7 +373,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="w-7 h-7 rounded-lg hover:bg-muted/50"
+            className="w-7 h-7 rounded-xl hover:bg-muted/50"
             onClick={() => window.open(link, "_blank")}
           >
             <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />

@@ -78,7 +78,7 @@
        className={`
           fixed top-0 left-0 w-8 h-8 rounded-full pointer-events-none z-40
          flex items-center justify-center text-[10px] font-bold uppercase
-         transition-all duration-300 ease-out
+         transition-all duration-200 ease-out
          ${isVisible ? "opacity-100" : "opacity-0"}
          ${isActive 
            ? "scale-[2] bg-primary border-none text-primary-foreground shadow-lg" 

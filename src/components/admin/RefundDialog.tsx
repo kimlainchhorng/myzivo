@@ -71,7 +71,7 @@ export function RefundDialog({
 
         <div className="space-y-4 py-4">
           {/* Order Info */}
-          <div className="p-4 rounded-lg bg-muted/50 border">
+          <div className="p-4 rounded-xl bg-muted/50 border">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <span className="text-muted-foreground">Order ID:</span>
@@ -120,7 +120,7 @@ export function RefundDialog({
           </div>
 
           {/* Warning */}
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700 dark:text-amber-300">
               Refunds are processed immediately via Stripe and cannot be

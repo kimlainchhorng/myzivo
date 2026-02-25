@@ -220,7 +220,7 @@ const FlightOverview = () => {
       >
         {stats.map((stat) => (
           <motion.div key={stat.label} variants={item}>
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-200 group">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="p-4 relative">
@@ -261,7 +261,7 @@ const FlightOverview = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-blue-600" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-sky-500/10">
+                <div className="p-2 rounded-xl bg-sky-500/10">
                   <Calendar className="h-5 w-5 text-sky-500" />
                 </div>
                 <div>
@@ -343,7 +343,7 @@ const FlightOverview = () => {
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-sky-500/10">
+                  <div className="p-2 rounded-xl bg-sky-500/10">
                     <Plane className="h-5 w-5 text-sky-500" />
                   </div>
                   <div>
@@ -407,7 +407,7 @@ const FlightOverview = () => {
                   <span className="font-semibold">Quick Stats</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50">
+                  <div className="text-center p-2 rounded-xl bg-background/50">
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (
@@ -415,7 +415,7 @@ const FlightOverview = () => {
                     )}
                     <p className="text-xs text-muted-foreground">Confirmed</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-background/50">
+                  <div className="text-center p-2 rounded-xl bg-background/50">
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (

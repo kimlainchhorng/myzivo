@@ -50,7 +50,7 @@ export default function TrustSignals({
               const Icon = badge.icon;
               return (
                 <div key={i} className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                     <Icon className="w-4 h-4 text-emerald-500" />
                   </div>
                   <span className="text-sm font-medium">{badge.shortText}</span>

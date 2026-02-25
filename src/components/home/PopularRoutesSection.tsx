@@ -99,7 +99,7 @@ export default function PopularRoutesSection() {
               className="group"
             >
               <Card className={cn(
-                "h-full border transition-all duration-300",
+                "h-full border transition-all duration-200",
                 "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10 hover:-translate-y-1",
                 route.trend === "hot" && "border-orange-500/30 bg-orange-500/5",
                 route.trend === "trending" && "border-sky-500/30 bg-sky-500/5"

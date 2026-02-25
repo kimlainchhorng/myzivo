@@ -79,10 +79,10 @@ const ItineraryExporter = ({ className, tripName = "Paris Adventure" }: Itinerar
       </div>
 
       {/* Share Link */}
-      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+      <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
         <p className="text-xs text-muted-foreground mb-2">Share trip link</p>
         <div className="flex gap-2">
-          <div className="flex-1 px-3 py-2 rounded-lg bg-background/50 text-xs text-muted-foreground truncate">
+          <div className="flex-1 px-3 py-2 rounded-xl bg-background/50 text-xs text-muted-foreground truncate">
             zivo.app/trip/paris-2024-abc123
           </div>
           <Button
