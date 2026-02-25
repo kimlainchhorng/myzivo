@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState, forwardRef } from "react";
+import { useEffect, lazy, Suspense, forwardRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -6,29 +6,37 @@ import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
-import { useNavigate } from "react-router-dom";
+import LazySection from "@/components/shared/LazySection";
 
-// Desktop components
+// Above-fold components (eager loaded for fast LCP)
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
 import HeroSearchCard from "@/components/home/HeroSearchCard";
 import ServicesShowcase from "@/components/home/ServicesShowcase";
 import StatsSection from "@/components/home/StatsSection";
-import DestinationShowcase from "@/components/home/DestinationShowcase";
-import FeaturedCarsSection from "@/components/home/FeaturedCarsSection";
-import FeaturedHotelsSection from "@/components/home/FeaturedHotelsSection";
-import FeaturedEatsSection from "@/components/home/FeaturedEatsSection";
-import HowItWorksSection from "@/components/home/HowItWorksSection";
-import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
-import PartnerLogosShowcase from "@/components/home/PartnerLogosShowcase";
-import DownloadAppSection from "@/components/home/DownloadAppSection";
-import NewsletterSection from "@/components/home/NewsletterSection";
 
-// Mobile app home - lazy load
+// Below-fold components (lazy loaded for performance)
+const DestinationShowcase = lazy(() => import("@/components/home/DestinationShowcase"));
+const FeaturedCarsSection = lazy(() => import("@/components/home/FeaturedCarsSection"));
+const FeaturedHotelsSection = lazy(() => import("@/components/home/FeaturedHotelsSection"));
+const FeaturedEatsSection = lazy(() => import("@/components/home/FeaturedEatsSection"));
+const HowItWorksSection = lazy(() => import("@/components/home/HowItWorksSection"));
+const WhyBookWithZivo = lazy(() => import("@/components/home/WhyBookWithZivo"));
+const TestimonialsSection = lazy(() => import("@/components/home/TestimonialsSection"));
+const PartnerLogosShowcase = lazy(() => import("@/components/home/PartnerLogosShowcase"));
+const DownloadAppSection = lazy(() => import("@/components/home/DownloadAppSection"));
+const NewsletterSection = lazy(() => import("@/components/home/NewsletterSection"));
+
+// Mobile app home
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
-// Desktop version - Clean, premium layout
+const SectionFallback = () => (
+  <div className="min-h-[250px] flex items-center justify-center">
+    <div className="w-7 h-7 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+  </div>
+);
+
+// Desktop version - Premium layout with lazy-loaded below-fold sections
 const DesktopHomePage = () => {
   const { user } = useAuth();
 
@@ -40,47 +48,23 @@ const DesktopHomePage = () => {
       <main className="pt-16">
         {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
 
-        {/* 1. Hero */}
+        {/* Above-fold: Eager loaded */}
         <HeroSection />
-
-        {/* 2. Floating Search Card */}
         <HeroSearchCard />
-
-        {/* 3. Services Grid */}
         <ServicesShowcase />
-
-        {/* 4. Stats */}
         <StatsSection />
 
-        {/* 5. Partner Logos */}
-        <PartnerLogosShowcase />
-
-        {/* 6. Popular Destinations */}
-        <DestinationShowcase />
-
-        {/* 7. Featured Car Rentals */}
-        <FeaturedCarsSection />
-
-        {/* 8. Featured Hotels */}
-        <FeaturedHotelsSection />
-
-        {/* 9. Featured Eats */}
-        <FeaturedEatsSection />
-
-        {/* 10. How It Works */}
-        <HowItWorksSection />
-
-        {/* 11. Why ZIVO */}
-        <WhyBookWithZivo />
-
-        {/* 12. Testimonials */}
-        <TestimonialsSection />
-
-        {/* 13. Download App */}
-        <DownloadAppSection />
-
-        {/* 14. Newsletter */}
-        <NewsletterSection />
+        {/* Below-fold: Lazy loaded with IntersectionObserver */}
+        <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosShowcase /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><DestinationShowcase /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedCarsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedHotelsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedEatsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><HowItWorksSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><WhyBookWithZivo /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><TestimonialsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><DownloadAppSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><NewsletterSection /></Suspense></LazySection>
       </main>
 
       <Footer />

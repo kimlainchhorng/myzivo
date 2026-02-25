@@ -152,7 +152,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="text-4xl xl:text-[3.5rem] font-bold text-foreground mb-5 leading-[1.1] tracking-tight"
+              className="text-4xl xl:text-[3.5rem] font-bold text-foreground mb-5 leading-[1.1] tracking-tight text-shimmer"
             >
               <AnimatePresence mode="wait">
                 <motion.span
