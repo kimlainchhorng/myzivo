@@ -61,7 +61,7 @@ const BookingConfirmationCard = ({
 
   return (
     <div className={cn(
-      "p-5 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-border/50 relative overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01]",
+      "p-5 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-border/50 relative overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.01]",
       className
     )}>
       {/* Success Animation Background */}

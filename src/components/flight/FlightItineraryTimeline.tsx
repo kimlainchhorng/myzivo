@@ -145,7 +145,7 @@ export default function FlightItineraryTimeline({
             {layovers[index] && index < segments.length - 1 && (
               <div className="px-4 py-3 bg-amber-500/10 border-y border-amber-500/20">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center">
                     <MapPin className="w-4 h-4 text-amber-500" />
                   </div>
                   <div>

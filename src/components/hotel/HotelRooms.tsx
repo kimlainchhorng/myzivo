@@ -136,7 +136,7 @@ const HotelRooms = () => {
                       <span className="text-emerald-500">{room.price}</span>
                       <span className="text-sm font-normal text-muted-foreground ml-1">/night</span>
                     </p>
-                    <span className={`text-sm font-semibold px-2 py-1 rounded-lg ${room.available > 3 ? 'bg-emerald-500/10 text-emerald-500' : room.available > 0 ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'}`}>
+                    <span className={`text-sm font-semibold px-2 py-1 rounded-xl ${room.available > 3 ? 'bg-emerald-500/10 text-emerald-500' : room.available > 0 ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'}`}>
                       {room.available}/{room.total}
                     </span>
                   </div>

@@ -312,7 +312,7 @@ export const FlightAmenityComparison = ({
                           <div
                             key={`${flight.airlineCode}-${item.key}`}
                             className={cn(
-                              "flex items-center justify-center py-1 rounded-lg",
+                              "flex items-center justify-center py-1 rounded-xl",
                               selectedIndex === index && "bg-primary/5"
                             )}
                           >

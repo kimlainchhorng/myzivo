@@ -148,7 +148,7 @@ export function DestinationFAQ({ faqs, serviceType }: DestinationFAQProps) {
               <AccordionItem
                 key={index}
                 value={`faq-${index}`}
-                className="border rounded-lg px-4 bg-card/50"
+                className="border rounded-xl px-4 bg-card/50"
               >
                 <AccordionTrigger className="text-left hover:no-underline">
                   {faq.question}

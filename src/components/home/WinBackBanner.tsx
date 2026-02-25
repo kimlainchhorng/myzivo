@@ -108,7 +108,7 @@ export function WinBackBanner({ className }: { className?: string }) {
             {/* Promo code display */}
             {promoCode && (tier === "small" || tier === "strong") && (
               <div className="mt-2 flex items-center gap-2">
-                <div className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 font-mono text-sm font-bold text-foreground tracking-wider">
+                <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 font-mono text-sm font-bold text-foreground tracking-wider">
                   {promoCode}
                 </div>
                 <button

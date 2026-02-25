@@ -146,7 +146,7 @@ const CarMileageCalculator = () => {
                     { name: "Standard (30 mpg)", cost: ((distance[0] / 30) * fuelPrice[0]).toFixed(2) },
                     { name: "SUV (22 mpg)", cost: ((distance[0] / 22) * fuelPrice[0]).toFixed(2) },
                   ].map((vehicle, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-card/50">
+                    <div key={index} className="flex items-center justify-between p-2 rounded-xl bg-card/50">
                       <span className="text-sm">{vehicle.name}</span>
                       <span className="font-medium text-primary">${vehicle.cost}</span>
                     </div>

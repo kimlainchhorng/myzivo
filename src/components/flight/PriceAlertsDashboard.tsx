@@ -111,15 +111,15 @@ export function PriceAlertsDashboard({ className, onBookNow }: PriceAlertsDashbo
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
             <p className="text-xs text-muted-foreground">Active</p>
             <p className="text-2xl font-bold text-primary">{pendingAlerts.length}</p>
           </div>
-          <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+          <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
             <p className="text-xs text-muted-foreground">Triggered</p>
             <p className="text-2xl font-bold text-emerald-500">{triggeredAlerts.length}</p>
           </div>
-          <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+          <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
             <p className="text-xs text-muted-foreground">Avg. Target</p>
             <p className="text-2xl font-bold text-amber-500">
               ${Math.round(alerts.reduce((sum, a) => sum + a.targetPrice, 0) / alerts.length)}

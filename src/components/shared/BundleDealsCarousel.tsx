@@ -192,7 +192,7 @@ const BundleDealsCarousel = ({ className }: BundleDealsCarouselProps) => {
                       return (
                         <div
                           key={service}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/80"
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-background/80"
                         >
                           <config.icon className="w-3.5 h-3.5 text-primary" />
                           <span className="text-xs font-medium">{config.label}</span>

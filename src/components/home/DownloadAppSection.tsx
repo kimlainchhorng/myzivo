@@ -98,8 +98,8 @@ export default function DownloadAppSection() {
                     <span className="text-xs font-bold text-primary tracking-[0.2em]">ZIVO</span>
                   </div>
                   <div className="p-4 space-y-3">
-                    <div className="h-7 rounded-lg bg-muted/50 w-3/4" />
-                    <div className="h-5 rounded-lg bg-muted/30 w-1/2" />
+                    <div className="h-7 rounded-xl bg-muted/50 w-3/4" />
+                    <div className="h-5 rounded-xl bg-muted/30 w-1/2" />
                     {/* Mini search card */}
                     <div className="h-28 rounded-2xl bg-primary/5 border border-primary/10 mt-3 flex items-center justify-center">
                       <Plane className="w-8 h-8 text-primary/30" />

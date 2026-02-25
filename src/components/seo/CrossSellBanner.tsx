@@ -43,7 +43,7 @@ export default function CrossSellBanner() {
         <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {crossSellItems.map((item) => (
             <Link key={item.href} to={item.href} className="group">
-              <Card className="h-full border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
+              <Card className="h-full border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 group-hover:-translate-y-1">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className={cn(
                     "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-lg",

@@ -76,27 +76,27 @@ export default function SimplifiedNav() {
                   <DropdownMenuContent align="end" className="w-56 rounded-xl">
                     <DropdownMenuItem
                       onClick={() => navigate("/dashboard")}
-                      className="cursor-pointer rounded-lg py-2.5"
+                      className="cursor-pointer rounded-xl py-2.5"
                     >
                       My Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => navigate("/trips")}
-                      className="cursor-pointer rounded-lg py-2.5"
+                      className="cursor-pointer rounded-xl py-2.5"
                     >
                       My Trips
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => navigate("/help")}
-                      className="cursor-pointer rounded-lg py-2.5"
+                      className="cursor-pointer rounded-xl py-2.5"
                     >
                       Help Center
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => signOut()}
-                      className="text-destructive cursor-pointer rounded-lg py-2.5"
+                      className="text-destructive cursor-pointer rounded-xl py-2.5"
                     >
                       Sign out
                     </DropdownMenuItem>

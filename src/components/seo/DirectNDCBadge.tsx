@@ -105,7 +105,7 @@
          className
        )}
      >
-       <div className="shrink-0 w-10 h-10 rounded-lg bg-sky-500/20 flex items-center justify-center">
+       <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
          <Zap className="w-5 h-5 text-sky-500" />
        </div>
        <div>

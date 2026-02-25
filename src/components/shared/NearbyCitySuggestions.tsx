@@ -90,7 +90,7 @@ export function NearbyCitySuggestions({
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <MapPin className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>

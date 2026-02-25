@@ -119,12 +119,12 @@ const CarbonFootprintWidget = ({
 
       {/* Impact Equivalents */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-center">
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
           <TreePine className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
           <p className="text-lg font-bold">{treesNeeded}</p>
           <p className="text-[10px] text-muted-foreground">Trees to offset/year</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-center">
+        <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
           <Droplets className="w-5 h-5 mx-auto mb-1 text-sky-400" />
           <p className="text-lg font-bold">{waterSaved}L</p>
           <p className="text-[10px] text-muted-foreground">Water equivalent</p>
@@ -141,13 +141,13 @@ const CarbonFootprintWidget = ({
               key={option.id}
               onClick={() => setOffsetSelected(!offsetSelected)}
               className={cn(
-                "w-full p-3 rounded-lg border transition-all flex items-center gap-3",
+                "w-full p-3 rounded-xl border transition-all duration-200 flex items-center gap-3",
                 offsetSelected && option.id === "forest"
                   ? "border-emerald-500 bg-emerald-500/10"
                   : "border-border/30 hover:border-primary/30"
               )}
             >
-              <div className="p-2 rounded-lg bg-emerald-500/10">
+              <div className="p-2 rounded-xl bg-emerald-500/10">
                 <Icon className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="flex-1 text-left">
@@ -173,7 +173,7 @@ const CarbonFootprintWidget = ({
           Add Offset (${offsetCost.toFixed(2)})
         </Button>
       ) : (
-        <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-lg bg-muted/20">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-muted/20">
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <p>{airline} is committed to net-zero emissions by 2050. Offset your flight to contribute.</p>
         </div>

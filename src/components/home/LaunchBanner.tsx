@@ -44,7 +44,7 @@ export default function LaunchBanner() {
             <Link to="/book-flight">
               <Button 
                 size="sm" 
-                className="bg-white text-primary hover:bg-white/90 font-semibold gap-2 h-9 px-4 rounded-lg shadow-lg"
+                className="bg-white text-primary hover:bg-white/90 font-semibold gap-2 h-9 px-4 rounded-xl shadow-lg"
               >
                 <Plane className="w-4 h-4" />
                 <span className="hidden xs:inline">Search</span> Flights
@@ -53,7 +53,7 @@ export default function LaunchBanner() {
             <Link to="/book-hotel">
               <Button 
                 size="sm" 
-                className="bg-white/15 text-white hover:bg-white/25 border border-white/30 font-semibold gap-2 h-9 px-4 rounded-lg"
+                className="bg-white/15 text-white hover:bg-white/25 border border-white/30 font-semibold gap-2 h-9 px-4 rounded-xl"
               >
                 <Hotel className="w-4 h-4" />
                 <span className="hidden xs:inline">Search</span> Hotels
@@ -62,7 +62,7 @@ export default function LaunchBanner() {
             <Link to="/rent-car">
               <Button 
                 size="sm" 
-                className="bg-white/15 text-white hover:bg-white/25 border border-white/30 font-semibold gap-2 h-9 px-4 rounded-lg"
+                className="bg-white/15 text-white hover:bg-white/25 border border-white/30 font-semibold gap-2 h-9 px-4 rounded-xl"
               >
                 <CarFront className="w-4 h-4" />
                 Rent a Car

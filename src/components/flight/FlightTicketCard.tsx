@@ -381,14 +381,14 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
         <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-dashed border-border/40 text-xs text-muted-foreground lg:hidden">
           <div className="flex items-center gap-3">
             {flight.amenities.map((amenity, i) => (
-              <span key={i} className="capitalize flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-lg">
+              <span key={i} className="capitalize flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-xl">
                 {getAmenityIcon(amenity)}
                 {amenity}
               </span>
             ))}
           </div>
           {flight.co2 && (
-            <span className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+            <span className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-xl">
               <Leaf className="w-3 h-3" /> {flight.co2} CO₂
             </span>
           )}

@@ -67,7 +67,7 @@ function AirlineLogoCardComponent({
     <div
       className={cn(
         'group relative flex flex-col items-center rounded-xl bg-card border',
-        'transition-all duration-300',
+        'transition-all duration-200',
         config.card,
         styles.border,
         interactive && [
@@ -87,7 +87,7 @@ function AirlineLogoCardComponent({
 
       {/* Logo Container */}
       <div className={cn(
-        'relative flex items-center justify-center rounded-lg overflow-hidden',
+        'relative flex items-center justify-center rounded-xl overflow-hidden',
         'bg-gradient-to-br from-muted/50 to-muted/30',
         airline.category === 'premium' && 'ring-1 ring-amber-500/20'
       )}>

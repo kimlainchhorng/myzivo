@@ -93,7 +93,7 @@ const TripRatingWidget = ({
       </div>
 
       {/* Provider */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
         <p className="text-xs text-muted-foreground">Rate your experience with</p>
         <p className="font-medium">{providerName}</p>
         {bookingId && (

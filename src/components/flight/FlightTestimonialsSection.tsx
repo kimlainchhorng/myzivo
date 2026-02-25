@@ -263,7 +263,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
           {testimonials.filter((_, i) => i !== activeIndex).slice(0, 3).map((testimonial, index) => (
             <Card
               key={testimonial.id}
-              className="cursor-pointer hover:border-sky-500/50 transition-all duration-300 bg-card/50 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4"
+              className="cursor-pointer hover:border-sky-500/50 transition-all duration-200 bg-card/50 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4"
               style={{ animationDelay: `${(index + 4) * 100}ms` }}
               onClick={() => setActiveIndex(testimonials.findIndex(t => t.id === testimonial.id))}
             >

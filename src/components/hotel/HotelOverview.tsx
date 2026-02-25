@@ -304,7 +304,7 @@ const HotelOverview = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
+                <div className="p-2 rounded-xl bg-amber-500/10">
                   <Calendar className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
@@ -381,7 +381,7 @@ const HotelOverview = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
+                <div className="p-2 rounded-xl bg-blue-500/10">
                   <BedDouble className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
@@ -446,7 +446,7 @@ const HotelOverview = () => {
                   <span className="font-semibold">Quick Stats</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50">
+                  <div className="text-center p-2 rounded-xl bg-background/50">
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (
@@ -454,7 +454,7 @@ const HotelOverview = () => {
                     )}
                     <p className="text-xs text-muted-foreground">Confirmed</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-background/50">
+                  <div className="text-center p-2 rounded-xl bg-background/50">
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (
