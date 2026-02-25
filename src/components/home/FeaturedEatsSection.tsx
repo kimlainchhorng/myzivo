@@ -70,7 +70,7 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                className="group block card-premium overflow-hidden"
+                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -103,6 +103,9 @@ export default function FeaturedEatsSection() {
                       )}
                     </div>
                   </div>
+                  <span className="mt-3 text-primary text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Order Now <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
               </Link>
             </motion.div>

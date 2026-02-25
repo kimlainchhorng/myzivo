@@ -66,7 +66,7 @@ export default function FeaturedHotelsSection() {
             >
               <Link
                 to="/hotels"
-                className="group block card-premium overflow-hidden"
+                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -92,7 +92,7 @@ export default function FeaturedHotelsSection() {
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
                     <MapPin className="w-3.5 h-3.5" /> {hotel.location}
                   </p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, j) => (
                         <Star key={j} className={`w-3.5 h-3.5 ${j < Math.floor(hotel.rating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} />
@@ -107,6 +107,9 @@ export default function FeaturedHotelsSection() {
                       })}
                     </div>
                   </div>
+                  <span className="text-primary text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Book Now <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
               </Link>
             </motion.div>
