@@ -204,8 +204,7 @@ const FlightBooking = () => {
   const handleSelectFlight = (flight: GeneratedFlight) => {
     // User selected a flight - they will be redirected via the modal
     setSelectedFlight(flight);
-    // Track affiliate click (would normally send to analytics)
-    console.log('Affiliate click tracked for flight:', flight.airline, flight.flightNumber);
+    // Affiliate click tracked via analytics pipeline
   };
 
   const handleReset = () => {
