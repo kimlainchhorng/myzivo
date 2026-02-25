@@ -1,8 +1,9 @@
 // Affiliate tracking utilities for flight bookings
-// Enhanced with A/B testing and revenue optimization integration
 
-import { getUserVariant, trackABEvent } from './abTesting';
-import { trackPartnerClick } from './revenueOptimization';
+// Stubs for removed modules
+function getUserVariant(_expId: string) { return null as any; }
+function trackABEvent(..._args: any[]) {}
+function trackPartnerClick(..._args: any[]) {}
 
 export interface AffiliateClick {
   id: string;

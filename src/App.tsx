@@ -14,6 +14,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
+import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
@@ -492,6 +493,7 @@ const App = () => (
           </CustomerCityProvider>
           <CookieConsent />
           <PWAUpdatePrompt />
+          <PWAInstallBanner />
           <SpatialCursor />
           <BrandThemeApplicator />
         </AuthProvider>
