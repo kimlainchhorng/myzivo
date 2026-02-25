@@ -78,10 +78,10 @@ export default function NavBar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b border-border/50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
         scrolled
-          ? "bg-[hsl(222_47%_11%/0.95)] backdrop-blur-xl shadow-lg"
-          : "bg-[hsl(222_47%_11%/0.9)] backdrop-blur-md"
+          ? "bg-[hsl(222_47%_11%/0.95)] backdrop-blur-xl shadow-lg nav-glow-border border-primary/20"
+          : "bg-[hsl(222_47%_11%/0.9)] backdrop-blur-md border-border/50"
       )}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">

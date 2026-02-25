@@ -1,6 +1,6 @@
 /**
  * Hero Trust Bar
- * Premium glass chips with green accent icons
+ * Premium glass chips with green accent icons + shimmer effect
  */
 
 import { CheckCircle } from "lucide-react";
@@ -30,11 +30,11 @@ export default function HeroTrustBar({ className, variant = "default" }: HeroTru
         <div
           key={item}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
-            "glass-chip",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-full",
+            "glass-chip shimmer-chip",
             "animate-in fade-in zoom-in-95"
           )}
-          style={{ animationDelay: `${index * 50}ms` }}
+          style={{ animationDelay: `${index * 80}ms` }}
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 text-primary" />
           <span className={cn(
