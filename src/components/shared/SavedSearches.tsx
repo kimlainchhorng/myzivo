@@ -68,7 +68,7 @@ const SavedSearches = () => {
             return (
               <div
                 key={search.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-xl hover:border-violet-500/30 transition-all"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-violet-500/30 hover:shadow-lg transition-all duration-300"
               >
                 <div className="w-12 h-12 bg-violet-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <TypeIcon className="w-6 h-6 text-violet-400" />
@@ -109,14 +109,14 @@ const SavedSearches = () => {
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-muted-foreground" />
-                      <Switch checked={search.alerts} />
+                      <Switch checked={search.alerts} className="data-[state=checked]:bg-violet-500 touch-manipulation" />
                     </div>
-                    <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-red-400">
+                    <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-red-400 rounded-xl active:scale-90 transition-all duration-200 touch-manipulation">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
 
-                  <Button className="bg-gradient-to-r from-violet-500 to-purple-500">
+                  <Button className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 rounded-xl shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation">
                     Search <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>

@@ -130,7 +130,7 @@ export function SocialShareSheet({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation">
             <Share2 className="w-4 h-4" />
             Share
           </Button>
@@ -152,7 +152,7 @@ export function SocialShareSheet({
                 key={option.id}
                 variant="outline"
                 onClick={() => handleShare(option.id)}
-                className={`h-14 flex-col gap-1 border rounded-2xl touch-manipulation active:scale-[0.97] ${option.className}`}
+                className={`h-14 flex-col gap-1 border rounded-2xl touch-manipulation active:scale-[0.95] transition-all duration-200 hover:shadow-md ${option.className}`}
               >
                 <option.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{option.label}</span>
@@ -165,7 +165,7 @@ export function SocialShareSheet({
             <Button
               variant="outline"
               onClick={() => handleShare("native")}
-              className="w-full h-11 gap-2"
+              className="w-full h-11 gap-2 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
             >
               <Share2 className="w-4 h-4" />
               More Options
@@ -194,7 +194,7 @@ export function SocialShareSheet({
                   variant="outline"
                   size="sm"
                   onClick={copyReferralLink}
-                  className="w-full gap-2"
+                  className="w-full gap-2 rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation border-primary/20 hover:bg-primary/5"
                 >
                   <Copy className="w-4 h-4" />
                   Copy Referral Link

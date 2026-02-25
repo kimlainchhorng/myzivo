@@ -123,14 +123,14 @@ export function UrgencyBanner({
 
       <div className="flex items-center gap-2 shrink-0">
         {onAction && (
-          <Button size="sm" onClick={onAction} className="h-8">
+          <Button size="sm" onClick={onAction} className="h-8 rounded-lg font-semibold shadow-sm active:scale-95 transition-all duration-200 touch-manipulation">
             Book Now
           </Button>
         )}
         <button
           onClick={handleDismiss}
           className={cn(
-            "p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors",
+            "p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all duration-200 touch-manipulation",
             config.color
           )}
           aria-label="Dismiss"

@@ -70,7 +70,7 @@ export function PromoCodeInput({
             </span>
             <button
               onClick={onClear}
-              className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors"
+              className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-all duration-200 active:scale-90 touch-manipulation"
             >
               <X className="w-4 h-4 text-zinc-400" />
             </button>
@@ -101,7 +101,7 @@ export function PromoCodeInput({
             onClick={handleApply}
             disabled={!code.trim() || isValidating}
             size="sm"
-            className="h-8 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs"
+            className="h-8 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-sm active:scale-95 transition-all duration-200 touch-manipulation"
           >
             {isValidating ? (
               <Loader2 className="w-4 h-4 animate-spin" />

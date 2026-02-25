@@ -45,7 +45,7 @@ export function CreditSelector({
         <Switch
           checked={useCredits}
           onCheckedChange={onToggle}
-          className="data-[state=checked]:bg-emerald-500"
+          className="data-[state=checked]:bg-emerald-500 touch-manipulation"
         />
       </div>
 

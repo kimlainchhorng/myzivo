@@ -80,7 +80,7 @@ const RideStatusBanner = ({
             {!persistent && onDismiss && (
               <button
                 onClick={onDismiss}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:scale-90 transition-all duration-150 touch-manipulation"
+                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:scale-90 transition-all duration-200 touch-manipulation"
               >
                 <X className="w-4 h-4" />
               </button>

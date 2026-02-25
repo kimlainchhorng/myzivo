@@ -35,7 +35,7 @@ export function DeliverySpeedSelector({
         disabled={disabled}
         onClick={() => onSelect(false)}
         className={cn(
-          "relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all text-left",
+          "relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200 active:scale-[0.98] touch-manipulation text-left",
           !isExpress
             ? "border-eats bg-eats/5 ring-1 ring-eats/20"
             : "border-border hover:border-muted-foreground/30"
@@ -55,7 +55,7 @@ export function DeliverySpeedSelector({
         disabled={disabled}
         onClick={() => onSelect(true)}
         className={cn(
-          "relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all text-left",
+          "relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200 active:scale-[0.98] touch-manipulation text-left",
           isExpress
             ? "border-amber-500 bg-amber-500/5 ring-1 ring-amber-500/20"
             : "border-border hover:border-amber-500/40"

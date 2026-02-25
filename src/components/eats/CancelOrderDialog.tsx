@@ -83,14 +83,14 @@ export function CancelOrderDialog({
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={isCancelling}
-            className="flex-1 h-11 rounded-xl border-white/10 bg-zinc-900"
+            className="flex-1 h-11 rounded-xl border-white/10 bg-zinc-900 active:scale-[0.97] transition-all duration-200 touch-manipulation"
           >
             Keep Order
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isCancelling}
-            className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white active:scale-[0.97] transition-all duration-200 touch-manipulation shadow-md shadow-red-500/20"
           >
             {isCancelling ? "Cancelling..." : "Yes, Cancel"}
           </Button>

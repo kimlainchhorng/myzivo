@@ -31,14 +31,14 @@ export function NoDriversAvailable({ onRetry, onCancel, isRetrying }: NoDriversA
         <Button
           variant="outline"
           onClick={onCancel}
-          className="border-white/20 text-white hover:bg-white/10"
+          className="border-white/20 text-white hover:bg-white/10 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation"
         >
           Cancel
         </Button>
         <Button
           onClick={onRetry}
           disabled={isRetrying}
-          className="bg-primary"
+          className="bg-primary hover:bg-primary/90 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation shadow-md"
         >
           {isRetrying ? (
             <>

@@ -49,7 +49,7 @@ const RideCard = ({
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
       className={cn(
-        "relative w-full rounded-2xl overflow-hidden transition-all duration-300",
+        "relative w-full rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.98] touch-manipulation",
         "bg-white/5 border backdrop-blur-sm",
         isSelected
           ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/20"
