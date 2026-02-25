@@ -183,7 +183,7 @@ const RiderHelpPage = () => {
 
         {/* Chat with Support */}
         <Card
-          className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-primary/5 cursor-pointer hover:from-emerald-500/15 hover:to-primary/10 transition-colors"
+          className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-primary/5 cursor-pointer hover:from-emerald-500/15 hover:to-primary/10 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
           onClick={() => navigate("/support/chat")}
         >
           <CardContent className="p-4 flex items-center gap-4">
@@ -239,7 +239,7 @@ const RiderHelpPage = () => {
 
           <div className="space-y-2">
             {filteredFaqs.map((faq, index) => (
-              <Card key={index} className="overflow-hidden border-border/50">
+              <Card key={index} className="overflow-hidden border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
