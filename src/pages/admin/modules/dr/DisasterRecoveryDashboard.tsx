@@ -198,7 +198,7 @@ export default function DisasterRecoveryDashboard() {
               {templates?.length ? (
                 <div className="space-y-3">
                   {templates.map(t => (
-                    <div key={t.id} className="p-4 rounded-lg border">
+                    <div key={t.id} className="p-4 rounded-lg border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">{t.template_name}</span>
                         <Badge variant="outline">{t.incident_severity}</Badge>
