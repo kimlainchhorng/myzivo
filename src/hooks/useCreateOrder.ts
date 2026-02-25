@@ -14,10 +14,13 @@ export function useCreateOrder() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createOrder = useCallback(async (..._args: any[]) => {
+  const createOrder = useCallback(async (..._args: any[]): Promise<{ orderId: string } | null> => {
     setIsLoading(true);
     try {
       throw new Error("Order creation not implemented");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+      return null;
     } finally {
       setIsLoading(false);
     }

@@ -38,7 +38,7 @@ export function hasGoogleMapsKey(): boolean {
   }
   
   // Check if Google Maps was already loaded (by GoogleMapProvider)
-  if (typeof window !== 'undefined' && window.google?.maps) {
+  if (typeof window !== 'undefined' && (window as any).google?.maps) {
     apiKeyVerified = true;
     return true;
   }

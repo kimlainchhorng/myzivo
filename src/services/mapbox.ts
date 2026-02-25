@@ -25,7 +25,7 @@ interface RouteResult {
   duration: number; // seconds
   distanceMiles: number;
   durationMinutes: number;
-  geometry: GeoJSON.LineString;
+  geometry: { type: "LineString"; coordinates: [number, number][] };
   coordinates: [number, number][]; // [lng, lat] pairs
 }
 
