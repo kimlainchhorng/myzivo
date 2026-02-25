@@ -1,3 +1,6 @@
-/** Marketing components stubs */
-export function TrustFeatureCards(_props: any) { return null; }
-export function OGImageMeta(_props: any) { return null; }
+/**
+ * Marketing Components - Stubs
+ */
+const Stub = (_props: any) => null;
+export const TrustFeatureCards = Stub;
+export const OGImageMeta = Stub;
