@@ -106,7 +106,7 @@ const HotelConciergeServices = () => {
                   {conciergeServices.map((service, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 p-3 rounded-lg bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-150"
+                      className="flex items-center gap-2 p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-sm">{service}</span>

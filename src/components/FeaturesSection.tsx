@@ -136,7 +136,7 @@ const FeaturesSection = () => {
                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               
-              <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
+              <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-all duration-200">
                 {feature.title}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">

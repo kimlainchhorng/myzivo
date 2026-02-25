@@ -144,7 +144,7 @@ export default function CarCategoryGrid({ className, pickupLocation = "" }: CarC
                 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-bold text-lg group-hover:text-violet-500 transition-colors">
+                  <h3 className="font-bold text-lg group-hover:text-violet-500 transition-all duration-200">
                     {cat.name}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">

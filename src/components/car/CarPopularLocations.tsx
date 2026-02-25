@@ -85,7 +85,7 @@ const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
                   </Badge>
                 </div>
                 <div className="p-3 sm:p-4">
-                  <h3 className="font-display font-bold text-sm sm:text-base group-hover:text-violet-400 transition-colors">
+                  <h3 className="font-display font-bold text-sm sm:text-base group-hover:text-violet-400 transition-all duration-200">
                     {loc.city}
                   </h3>
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mb-2">

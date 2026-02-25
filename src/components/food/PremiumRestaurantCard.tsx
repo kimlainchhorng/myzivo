@@ -323,7 +323,7 @@ export const PremiumRestaurantCard = ({
                 onFavorite(restaurant.id);
               }}
               className={cn(
-                "absolute bottom-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-md",
+                "absolute bottom-2 right-2 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-md touch-manipulation",
                 isFavorited 
                   ? "bg-red-500 text-white" 
                   : "bg-white/90 backdrop-blur-sm text-muted-foreground hover:text-red-500"
@@ -341,7 +341,7 @@ export const PremiumRestaurantCard = ({
         </div>
 
         <CardContent className="p-4">
-          <h3 className="font-semibold truncate group-hover:text-eats transition-colors">{restaurant.name}</h3>
+          <h3 className="font-semibold truncate group-hover:text-eats transition-all duration-200">{restaurant.name}</h3>
           <p className="text-sm text-muted-foreground truncate mb-2">{restaurant.cuisine}</p>
           
           <div className="flex items-center justify-between text-sm">

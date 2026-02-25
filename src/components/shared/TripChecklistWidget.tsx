@@ -140,7 +140,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
+                "px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 active:scale-[0.95] touch-manipulation",
                 activeCategory === cat.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
@@ -157,7 +157,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
             <div
               key={item.id}
               className={cn(
-                "flex items-center gap-3 p-2 rounded-lg transition-colors group",
+                "flex items-center gap-3 p-2 rounded-xl transition-all duration-200 group",
                 item.checked ? "bg-muted/30" : "hover:bg-muted/50"
               )}
             >

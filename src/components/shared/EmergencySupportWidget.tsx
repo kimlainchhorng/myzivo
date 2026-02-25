@@ -122,7 +122,7 @@ const EmergencySupportWidget = ({
           <button 
             key={link.label}
             onClick={link.onClick}
-            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors text-sm"
+            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted/20 transition-all duration-200 text-sm active:scale-[0.98] touch-manipulation"
           >
             <span>{link.label}</span>
             <ExternalLink className="w-4 h-4 text-muted-foreground" />

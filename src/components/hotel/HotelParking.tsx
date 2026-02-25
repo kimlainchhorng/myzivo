@@ -94,7 +94,7 @@ const HotelParking = () => {
         <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-2xl p-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
-              <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
                 <Clock className="w-5 h-5 text-violet-400" />
               </div>
               <div>
@@ -103,7 +103,7 @@ const HotelParking = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
-              <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
                 <Shield className="w-5 h-5 text-violet-400" />
               </div>
               <div>
@@ -112,7 +112,7 @@ const HotelParking = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-500/10 transition-all duration-150">
-              <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-violet-400" />
               </div>
               <div>

@@ -61,7 +61,7 @@ const ItineraryExporter = ({ className, tripName = "Paris Adventure" }: Itinerar
               key={option.id}
               onClick={() => handleExport(option.id)}
               disabled={isExporting}
-              className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/30 transition-all text-left group"
+              className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 border border-border/30 transition-all duration-200 text-left group active:scale-[0.98] touch-manipulation"
             >
               <div className="flex items-center gap-2 mb-1">
                 <Icon className={cn(

@@ -77,7 +77,7 @@ export function EatsPriceBreakdown({
                     key={tip}
                     onClick={() => onTipChange(tip)}
                     className={cn(
-                      "flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors",
+                      "flex-1 py-1.5 text-xs font-medium rounded-xl border transition-all duration-200 active:scale-[0.95] touch-manipulation",
                       breakdown.tip === tip
                         ? "bg-eats text-white border-eats"
                         : "bg-background border-border hover:border-eats/50"

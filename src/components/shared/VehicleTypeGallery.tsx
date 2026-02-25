@@ -166,7 +166,7 @@ export default function VehicleTypeGallery({
                 
                 {/* Info Overlay (bottom) */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="font-bold text-lg text-white mb-1 group-hover:text-violet-300 transition-colors">
+                  <h3 className="font-bold text-lg text-white mb-1 group-hover:text-violet-300 transition-all duration-200">
                     {vehicle.label}
                   </h3>
                   

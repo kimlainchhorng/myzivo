@@ -155,7 +155,7 @@ const TripSharingWidget = ({
             {sharedUsers.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 transition-colors"
+                className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/20 transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                   <span className="text-xs font-medium">{user.name[0]}</span>

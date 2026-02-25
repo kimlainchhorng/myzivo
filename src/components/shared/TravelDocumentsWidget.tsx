@@ -89,7 +89,7 @@ const TravelDocumentsWidget = ({
           return (
             <div
               key={doc.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 transition-colors"
+              className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/20 transition-all duration-200"
             >
               <div className={cn("p-1.5 rounded-lg", config.color.split(" ")[1])}>
                 <StatusIcon className={cn("w-4 h-4", config.color.split(" ")[0])} />

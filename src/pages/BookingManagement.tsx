@@ -279,14 +279,14 @@ const BookingManagement = () => {
               <div className="grid sm:grid-cols-2 gap-3">
                 <a
                   href={`tel:${booking.providerPhone.replace(/-/g, "")}`}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                 >
                   <Phone className="w-5 h-5 text-muted-foreground" />
                   <span className="font-medium">{booking.providerPhone}</span>
                 </a>
                 <a
                   href={`mailto:${booking.providerEmail}`}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                 >
                   <Mail className="w-5 h-5 text-muted-foreground" />
                   <span className="font-medium">{booking.providerEmail}</span>

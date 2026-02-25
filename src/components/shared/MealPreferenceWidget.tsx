@@ -116,14 +116,14 @@ const MealPreferenceWidget = ({
               key={meal.id}
               onClick={() => handleMealClick(meal)}
               className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                "w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left active:scale-[0.98] touch-manipulation",
                 isSelected 
                   ? "bg-primary/10 border-primary/30" 
                   : "bg-muted/20 border-border/30 hover:bg-muted/30"
               )}
             >
               <div className={cn(
-                "p-2 rounded-lg",
+                "p-2 rounded-xl",
                 isSelected ? "bg-primary/20" : "bg-muted/30"
               )}>
                 <Icon className={cn(
@@ -164,13 +164,13 @@ const MealPreferenceWidget = ({
           value={specialRequests}
           onChange={(e) => setSpecialRequests(e.target.value)}
           placeholder="Allergies, religious requirements, etc."
-          className="w-full px-3 py-2 rounded-lg bg-muted/30 border border-border/30 text-sm resize-none h-16 focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="w-full px-3 py-2 rounded-xl bg-muted/30 border border-border/30 text-sm resize-none h-16 focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
       </div>
 
       {/* Selection Summary */}
       {selectedMeal && (
-        <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+        <div className="p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">{selectedMeal.name}</p>

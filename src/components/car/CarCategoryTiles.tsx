@@ -46,7 +46,7 @@ export default function CarCategoryTiles({
               Find the perfect vehicle for your trip
             </p>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-[0.97] touch-manipulation">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -121,7 +121,7 @@ export default function CarCategoryTiles({
         </div>
 
         {/* Mobile view all */}
-        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm">
+        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm active:scale-[0.98] touch-manipulation min-h-[44px]">
           View all car types <ArrowRight className="w-4 h-4" />
         </button>
       </div>

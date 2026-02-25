@@ -70,7 +70,7 @@ export function CheckoutTermsAcceptance({
       </div>
 
       {/* Fare Rules / Cancellation Policy */}
-      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+      <div className="flex items-start gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <Checkbox
           id="fare-rules"
           checked={state.fareRules}
@@ -105,7 +105,7 @@ export function CheckoutTermsAcceptance({
       </div>
 
       {/* Terms of Service */}
-      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+      <div className="flex items-start gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <Checkbox
           id="terms-of-service"
           checked={state.termsOfService}

@@ -55,7 +55,7 @@ export function MilesBalanceChip({ className, variant = "default" }: MilesBalanc
         className={cn(
           "inline-flex items-center gap-1 px-2 py-0.5 rounded-full",
           "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-          "text-xs font-medium hover:bg-amber-500/20 transition-colors",
+          "text-xs font-medium hover:bg-amber-500/20 transition-all duration-200",
           className
         )}
       >
@@ -70,7 +70,7 @@ export function MilesBalanceChip({ className, variant = "default" }: MilesBalanc
       <Link
         to="/app/dashboard?tab=miles"
         className={cn(
-          "flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors",
+          "flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-200",
           className
         )}
       >

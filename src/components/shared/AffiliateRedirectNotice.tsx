@@ -40,7 +40,7 @@ export default function AffiliateRedirectNotice({
 
   return (
     <div className={cn(
-      "flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
+      "flex items-start gap-2 p-3 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200",
       className
     )}>
       <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />

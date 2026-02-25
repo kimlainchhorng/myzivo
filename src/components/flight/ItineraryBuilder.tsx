@@ -203,10 +203,10 @@ export const ItineraryBuilder = ({
             {/* Day Header */}
             <button
               onClick={() => setExpandedDay(expandedDay === day.id ? null : day.id)}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-all duration-200 touch-manipulation"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex flex-col items-center justify-center">
                   <span className="text-xs font-medium text-primary">Day</span>
                   <span className="text-lg font-bold leading-none">{dayIndex + 1}</span>
                 </div>
@@ -259,7 +259,7 @@ export const ItineraryBuilder = ({
                             className="list-none"
                           >
                             <div className={cn(
-                              "flex items-start gap-3 p-3 rounded-lg group transition-colors",
+                              "flex items-start gap-3 p-3 rounded-xl group transition-all duration-200",
                               isEditing ? "bg-primary/10 border border-primary/30" : "bg-muted/30 hover:bg-muted/50"
                             )}>
                               <div className="cursor-grab active:cursor-grabbing mt-1 opacity-50 group-hover:opacity-100">
@@ -267,7 +267,7 @@ export const ItineraryBuilder = ({
                               </div>
                               
                               <div className={cn(
-                                "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                                "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
                                 getTypeColor(item.type)
                               )}>
                                 <Icon className="w-4 h-4" />
@@ -324,7 +324,7 @@ export const ItineraryBuilder = ({
                                 <button
                                   onClick={() => updateItem(day.id, item.id, { confirmed: !item.confirmed })}
                                   className={cn(
-                                    "p-1.5 rounded-lg transition-colors",
+                                    "p-1.5 rounded-xl transition-all duration-200 active:scale-[0.90] touch-manipulation",
                                     item.confirmed 
                                       ? "text-emerald-400 bg-emerald-500/20" 
                                       : "text-muted-foreground hover:bg-muted"
@@ -334,13 +334,13 @@ export const ItineraryBuilder = ({
                                 </button>
                                 <button
                                   onClick={() => setEditingItem(isEditing ? null : item.id)}
-                                  className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                                  className="p-1.5 rounded-xl text-muted-foreground hover:bg-muted transition-all duration-200 active:scale-[0.90] touch-manipulation"
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => removeItem(day.id, item.id)}
-                                  className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors opacity-0 group-hover:opacity-100"
+                                  className="p-1.5 rounded-xl text-red-400 hover:bg-red-500/20 transition-all duration-200 active:scale-[0.90] touch-manipulation opacity-0 group-hover:opacity-100"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -383,7 +383,7 @@ export const ItineraryBuilder = ({
         <Button
           variant="outline"
           onClick={addDay}
-          className="w-full border-dashed gap-2"
+          className="w-full border-dashed gap-2 rounded-xl active:scale-[0.98] transition-all duration-200 touch-manipulation"
         >
           <Plus className="w-4 h-4" />
           Add Day

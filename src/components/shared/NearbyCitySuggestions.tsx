@@ -118,7 +118,7 @@ export function NearbyCitySuggestions({
                 <div
                   key={city.name}
                   onClick={() => onSelectCity?.(city.name)}
-                  className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card transition-colors cursor-pointer group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-card/50 hover:bg-card transition-all duration-200 cursor-pointer group active:scale-[0.98] touch-manipulation"
                 >
                   <div className="flex items-center gap-3">
                     {(() => { const TransitIcon = transitIcons[city.transitType] || Train; return <TransitIcon className="w-5 h-5 text-emerald-400" />; })()}
