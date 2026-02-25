@@ -147,7 +147,7 @@ const AdminDataExport = () => {
                       key={type.id}
                       onClick={() => toggleType(type.id)}
                       className={cn(
-                        "p-4 rounded-xl border transition-all text-left animate-in fade-in zoom-in-95 duration-300",
+                        "p-4 rounded-xl border transition-all text-left animate-in fade-in zoom-in-95 duration-200",
                         isSelected 
                           ? "border-primary bg-primary/5" 
                           : "border-border/50 hover:border-border"
@@ -223,10 +223,10 @@ const AdminDataExport = () => {
 
         {/* Quick Stats */}
         <div className="space-y-4">
-          <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "50ms" }}>
+          <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "50ms" }}>
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <Database className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -247,7 +247,7 @@ const AdminDataExport = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: "100ms" }}>
+          <Card className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200" style={{ animationDelay: "100ms" }}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <History className="h-4 w-4" />
@@ -291,7 +291,7 @@ const AdminDataExport = () => {
               return (
                 <div
                   key={job.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center gap-3 flex-1">

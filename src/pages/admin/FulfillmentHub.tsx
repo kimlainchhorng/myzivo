@@ -326,19 +326,19 @@ import FunnelHealthPulse from "@/components/admin/FunnelHealthPulse";
                </CardHeader>
                <CardContent className="space-y-4">
                  <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 rounded-lg bg-muted/30 text-center">
+                   <div className="p-4 rounded-xl bg-muted/30 text-center">
                      <p className="text-2xl font-bold">{systemHealth?.duffel.totalSearches || 0}</p>
                      <p className="text-xs text-muted-foreground">Searches (1h)</p>
                    </div>
-                   <div className="p-4 rounded-lg bg-muted/30 text-center">
+                   <div className="p-4 rounded-xl bg-muted/30 text-center">
                      <p className="text-2xl font-bold">{systemHealth?.duffel.avgResponseTime || 0}ms</p>
                      <p className="text-xs text-muted-foreground">Avg Response</p>
                    </div>
-                   <div className="p-4 rounded-lg bg-muted/30 text-center">
+                   <div className="p-4 rounded-xl bg-muted/30 text-center">
                      <p className="text-2xl font-bold">{systemHealth?.bookings.totalToday || 0}</p>
                      <p className="text-xs text-muted-foreground">Bookings Today</p>
                    </div>
-                   <div className="p-4 rounded-lg bg-muted/30 text-center">
+                   <div className="p-4 rounded-xl bg-muted/30 text-center">
                      <p className="text-2xl font-bold">{systemHealth?.bookings.pendingTickets || 0}</p>
                      <p className="text-xs text-muted-foreground">Pending Tickets</p>
                    </div>

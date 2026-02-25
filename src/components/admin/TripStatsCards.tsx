@@ -153,7 +153,7 @@ export const TripStatsCards = ({ stats, isLoading, variant = "compact", showTren
           const value = stats?.[stat.key as keyof TripStats] as number | undefined;
           return (
             <div key={stat.key} className="flex items-center gap-2">
-              <div className={cn("p-1.5 rounded-lg bg-gradient-to-br", stat.gradient)}>
+              <div className={cn("p-1.5 rounded-xl bg-gradient-to-br", stat.gradient)}>
                 <Icon className="h-3.5 w-3.5 text-white" />
               </div>
               <div>

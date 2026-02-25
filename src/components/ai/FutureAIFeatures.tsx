@@ -76,7 +76,7 @@ export function FutureAIFeatures({
               <div className="flex items-center gap-4">
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    "w-10 h-10 rounded-xl flex items-center justify-center",
                     feature.status === "coming_soon"
                       ? "bg-muted"
                       : "bg-violet-500/10"
@@ -216,7 +216,7 @@ export function FutureAIFeaturesCompact({ className }: { className?: string }) {
       <Card className="border-violet-500/20 bg-gradient-to-r from-violet-500/10 to-purple-500/10 hover:from-violet-500/15 hover:to-purple-500/15 transition-colors">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <Icon className="w-5 h-5 text-violet-500" />
             </div>
             <div className="flex-1">

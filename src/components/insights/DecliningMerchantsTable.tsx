@@ -51,7 +51,7 @@ const DecliningMerchantsTable = ({ compact = false, limit = 10 }: DecliningMerch
       <Card className="bg-zinc-900/80 border-white/10">
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-red-500/20">
+            <div className="p-2 rounded-xl bg-red-500/20">
               <TrendingDown className="h-5 w-5 text-red-400" />
             </div>
             <div>

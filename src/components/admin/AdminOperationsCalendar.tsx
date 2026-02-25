@@ -79,7 +79,7 @@ export default function AdminOperationsCalendar() {
                 return (
                   <div
                     key={i}
-                    className={`aspect-square p-1 rounded-lg border ${
+                    className={`aspect-square p-1 rounded-xl border ${
                       isCurrentMonth 
                         ? hasEvent 
                           ? "bg-primary/10 border-primary/30" 
@@ -107,7 +107,7 @@ export default function AdminOperationsCalendar() {
           </CardHeader>
           <CardContent className="space-y-4">
             {events.slice(0, 4).map((event) => (
-              <div key={event.id} className="p-3 rounded-lg bg-muted/30 space-y-2">
+              <div key={event.id} className="p-3 rounded-xl bg-muted/30 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{event.title}</span>
                   {getEventTypeBadge(event.type)}
@@ -147,9 +147,9 @@ export default function AdminOperationsCalendar() {
         <CardContent>
           <div className="space-y-3">
             {events.map((event) => (
-              <div key={event.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
+              <div key={event.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
                 <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10">
+                  <div className="p-2 rounded-xl bg-primary/10">
                     <Calendar className="h-5 w-5 text-primary" />
                   </div>
                   <div>

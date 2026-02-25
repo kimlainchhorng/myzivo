@@ -61,7 +61,7 @@ const AdminDriverManagement = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="animate-in fade-in zoom-in-95 duration-300">
+      <div className="animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/10">
             <Car className="h-6 w-6 text-emerald-500" />
@@ -76,7 +76,7 @@ const AdminDriverManagement = () => {
       </div>
 
       {/* Tabs */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: "100ms" }}>
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-200" style={{ animationDelay: "100ms" }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-card/50 p-1 h-auto flex-wrap gap-1">
             {tabs.map((tab) => (

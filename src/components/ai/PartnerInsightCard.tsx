@@ -95,7 +95,7 @@ export function PartnerInsightCard({ insight, onAction }: PartnerInsightCardProp
 
             {/* Metric comparison */}
             {hasMetric && (
-              <div className="mt-3 p-2 bg-muted/50 rounded-lg">
+              <div className="mt-3 p-2 bg-muted/50 rounded-xl">
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-muted-foreground">{insight.metric_name}</span>
                   <span className="font-medium">

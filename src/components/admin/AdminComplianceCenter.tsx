@@ -149,7 +149,7 @@ const AdminComplianceCenter = () => {
 
       {/* Overall Score & Stats */}
       <div className="grid lg:grid-cols-5 gap-4">
-        <Card className="lg:col-span-2 border-0 bg-gradient-to-br from-primary/10 to-teal-500/5 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300">
+        <Card className="lg:col-span-2 border-0 bg-gradient-to-br from-primary/10 to-teal-500/5 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
               <div className="relative">
@@ -189,7 +189,7 @@ const AdminComplianceCenter = () => {
           return (
             <Card 
               key={key}
-              className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300"
+              className="border-0 bg-card/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200"
               style={{ animationDelay: `${(index + 1) * 50}ms` }}
             >
               <CardContent className="p-4">
@@ -227,7 +227,7 @@ const AdminComplianceCenter = () => {
               return (
                 <Card 
                   key={item.id}
-                  className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  className="border-0 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4 sm:p-6">
@@ -289,7 +289,7 @@ const AdminComplianceCenter = () => {
               return (
                 <Card 
                   key={item.id}
-                  className="border-0 bg-red-500/5 border-red-500/20 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  className="border-0 bg-red-500/5 border-red-500/20 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4 sm:p-6">

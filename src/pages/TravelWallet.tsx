@@ -175,7 +175,7 @@ export default function TravelWallet() {
                     return (
                       <div
                         key={tx.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/50"
                       >
                         <div className="flex items-center gap-3">
                           <div className={cn("w-8 h-8 rounded-full flex items-center justify-center bg-muted", colorClass)}>

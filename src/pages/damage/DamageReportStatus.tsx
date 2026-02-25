@@ -145,7 +145,7 @@ export default function DamageReportStatus() {
                           href={photo.image_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="aspect-square rounded-lg overflow-hidden border hover:ring-2 ring-primary transition-all"
+                          className="aspect-square rounded-xl overflow-hidden border hover:ring-2 ring-primary transition-all"
                         >
                           <img
                             src={photo.image_url}
@@ -171,7 +171,7 @@ export default function DamageReportStatus() {
                           href={photo.image_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="aspect-square rounded-lg overflow-hidden border hover:ring-2 ring-primary transition-all"
+                          className="aspect-square rounded-xl overflow-hidden border hover:ring-2 ring-primary transition-all"
                         >
                           <img
                             src={photo.image_url}
@@ -197,7 +197,7 @@ export default function DamageReportStatus() {
                           href={photo.image_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="aspect-square rounded-lg overflow-hidden border hover:ring-2 ring-primary transition-all"
+                          className="aspect-square rounded-xl overflow-hidden border hover:ring-2 ring-primary transition-all"
                         >
                           <img
                             src={photo.image_url}
