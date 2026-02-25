@@ -146,7 +146,7 @@ export default function SecurityIncident() {
             <h2 className="text-xl font-semibold mb-4">Incident Response Process</h2>
             <div className="space-y-4">
               {responseSteps.map((item) => (
-                <div key={item.step} className="flex gap-4 p-4 rounded-lg border border-border bg-card">
+                <div key={item.step} className="flex gap-4 p-4 rounded-lg border border-border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
                     {item.step}
                   </div>
