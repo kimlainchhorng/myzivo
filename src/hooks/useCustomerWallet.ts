@@ -2,7 +2,10 @@
 export interface WalletTransaction {
   id: string;
   amount: number;
+  amount_cents: number;
   type: string;
+  description?: string;
+  created_at: string;
   createdAt: string;
 }
 

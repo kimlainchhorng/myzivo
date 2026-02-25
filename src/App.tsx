@@ -192,7 +192,7 @@ const DataInsights = lazy(() => import("./pages/business/DataInsights"));
 const TravelBookingsSupport = lazy(() => import("./pages/support/TravelBookings"));
 const SiteIssuesSupport = lazy(() => import("./pages/support/SiteIssues"));
 const UserSupportTicketsPage = lazy(() => import("./pages/support/UserSupportTicketsPage"));
-const LiveSupportChatPage = lazy(() => import("./pages/support/LiveSupportChatPage"));
+
 const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
 
 // SEO pages
@@ -462,7 +462,7 @@ const App = () => (
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
                 <Route path="/support/tickets" element={<ProtectedRoute><UserSupportTicketsPage /></ProtectedRoute>} />
                 <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
-                <Route path="/support/chat" element={<ProtectedRoute><LiveSupportChatPage /></ProtectedRoute>} />
+                
 
                 {/* Referrals & Feedback */}
                 <Route path="/referrals" element={<ReferralProgram />} />
