@@ -523,7 +523,7 @@ function CityChecklistPanel({
             status={{ complete: checklistStatus.supply.isComplete ? 1 : 0, total: 1, isComplete: checklistStatus.supply.isComplete }}
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="p-4 rounded-lg border bg-card">
+              <div className="p-4 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5 text-muted-foreground" />
@@ -542,7 +542,7 @@ function CityChecklistPanel({
                   </span>
                 </p>
               </div>
-              <div className="p-4 rounded-lg border bg-card">
+              <div className="p-4 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Car className="w-5 h-5 text-muted-foreground" />

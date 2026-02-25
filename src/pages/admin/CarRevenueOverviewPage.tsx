@@ -292,7 +292,7 @@ export default function CarRevenueOverviewPage() {
                   {topCars.map((car, index) => (
                     <div
                       key={car.id}
-                      className="flex items-center gap-4 p-3 rounded-lg border bg-card"
+                      className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                     >
                       <div className="font-bold text-2xl text-muted-foreground w-8">
                         #{index + 1}

@@ -230,7 +230,7 @@ export default function OwnerEarningsPage() {
                 {payouts.slice(0, 10).map((payout) => (
                   <div
                     key={payout.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-full ${
