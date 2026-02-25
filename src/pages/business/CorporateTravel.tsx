@@ -152,7 +152,7 @@ export default function CorporateTravel() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {FEATURES.map((feature) => (
-                <div key={feature.title} className="p-6 rounded-2xl border border-border bg-card">
+                <div key={feature.title} className="p-6 rounded-2xl border border-border bg-card hover:border-violet-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
                   <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
                     <feature.icon className="w-6 h-6 text-violet-500" />
                   </div>

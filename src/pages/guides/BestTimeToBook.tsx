@@ -118,7 +118,7 @@ export default function BestTimeToBook() {
               
               <div className="space-y-4">
                 {BOOKING_WINDOWS.map((window) => (
-                  <div key={window.type} className="p-5 rounded-2xl border border-border bg-card">
+                  <div key={window.type} className="p-5 rounded-2xl border border-border bg-card hover:border-emerald-500/30 hover:shadow-md transition-all duration-200">
                     <h3 className="font-semibold text-lg mb-4">{window.type}</h3>
                     
                     <div className="grid sm:grid-cols-3 gap-3 mb-4">

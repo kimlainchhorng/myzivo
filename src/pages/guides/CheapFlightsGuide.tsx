@@ -140,7 +140,7 @@ export default function CheapFlightsGuide() {
               
               <div className="space-y-6">
                 {TIPS.map((tip, index) => (
-                  <div key={tip.title} className="flex gap-4 p-5 rounded-2xl border border-border bg-card">
+                  <div key={tip.title} className="flex gap-4 p-5 rounded-2xl border border-border bg-card hover:border-emerald-500/30 hover:shadow-md transition-all duration-200">
                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                       <tip.icon className="w-6 h-6 text-emerald-500" />
                     </div>
