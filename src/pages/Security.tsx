@@ -170,7 +170,7 @@ export default function Security() {
                 We believe in working with security researchers to keep ZIVO safe. If you discover a security vulnerability, 
                 we encourage you to report it responsibly. We will acknowledge your contribution and work to address the issue promptly.
               </p>
-              <div className="p-4 rounded-lg bg-background border border-border">
+              <div className="p-4 rounded-lg bg-background border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <p className="font-medium mb-2">Report a security issue:</p>
                 <a 
                   href="mailto:security@hizivo.com" 

@@ -27,7 +27,7 @@ const LiveActivityFeed = () => {
             return (
               <div
                 key={feature.label}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm hover:border-primary/20 hover:shadow-sm transition-all duration-200"
               >
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", feature.bg)}>
                   <Icon className={cn("w-5 h-5", feature.color)} />

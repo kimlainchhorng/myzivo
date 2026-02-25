@@ -128,7 +128,7 @@ const ForCustomers = () => {
 
         {/* App Screenshot Placeholder */}
         <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-3xl text-center">
-          <div className="rounded-2xl border border-border/50 bg-muted/30 p-12">
+          <div className="rounded-2xl border border-border/50 bg-muted/30 p-12 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <Smartphone className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">Available on all devices</h3>
             <p className="text-muted-foreground mb-6">Download the ZIVO app or use it on the web — your bookings sync everywhere.</p>

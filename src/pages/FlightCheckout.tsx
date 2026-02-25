@@ -528,7 +528,7 @@ const FlightCheckout = () => {
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-6 space-y-4">
                   {/* Pre-payment clarity message */}
-                  <div className="p-3 rounded-lg bg-background/60 border border-border/50 mb-2">
+                  <div className="p-3 rounded-lg bg-background/60 border border-border/50 mb-2 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <p className="text-xs text-center text-muted-foreground">
                       {FLIGHT_CHECKOUT_CLARITY.prePayment}
                     </p>

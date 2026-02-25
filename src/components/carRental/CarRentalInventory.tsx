@@ -149,7 +149,7 @@ const CarRentalInventory = () => {
           { label: "Rented", value: cars?.filter((c: any) => c.status === "rented" || !c.is_available).length || 0, color: "text-blue-500" },
           { label: "Maintenance", value: cars?.filter((c: any) => c.status === "maintenance").length || 0, color: "text-amber-500" },
         ].map((stat, idx) => (
-          <div key={stat.label} className="p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 transition-colors">
+          <div key={stat.label} className="p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </div>

@@ -48,7 +48,7 @@ const CarPickupMap = () => {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Map Placeholder */}
-          <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 p-6 min-h-[350px] flex items-center justify-center relative overflow-hidden">
+          <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 p-6 min-h-[350px] flex items-center justify-center relative overflow-hidden hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-primary/5" />
             <div className="text-center z-10">
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">

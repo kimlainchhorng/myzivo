@@ -105,7 +105,7 @@ const UpgradeOpportunityWidget = ({
       </div>
 
       {/* Current Class */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
+      <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">Current Booking</p>
