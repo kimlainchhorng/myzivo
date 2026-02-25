@@ -116,7 +116,7 @@ const QuickBookingFlow = ({ defaultTab = "flight", className }: QuickBookingFlow
                   <button
                     key={dest.code}
                     onClick={() => setFlightTo(`${dest.name} (${dest.code})`)}
-                    className="px-3 py-1.5 rounded-full bg-muted/50 hover:bg-primary/10 hover:text-primary text-sm font-medium transition-colors flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-full bg-muted/50 hover:bg-primary/10 hover:text-primary text-sm font-medium transition-all duration-200 hover:scale-105 flex items-center gap-1.5 active:scale-[0.97] touch-manipulation"
                   >
                     <span>{dest.emoji}</span>
                     {dest.name}

@@ -68,9 +68,9 @@ const driverBenefits = [
 function ServiceCard({ item }: { item: ServiceItem }) {
   return (
     <Link to={item.href || "#"} className="block group">
-      <div className="p-5 rounded-2xl bg-card border border-border/50 hover:border-border hover:shadow-lg transition-all">
+      <div className="p-5 rounded-2xl bg-card border border-border/50 hover:border-border hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
         <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform",
+          "w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200",
           item.bgColor
         )}>
           <span className={item.color}>{item.icon}</span>

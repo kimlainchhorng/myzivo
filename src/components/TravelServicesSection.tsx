@@ -94,7 +94,7 @@ const TravelServicesSection = () => {
             <img 
               src={airplaneCloudsImage} 
               alt="Premium flight experience" 
-              className="w-full h-[400px] lg:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-[400px] lg:h-[500px] object-cover group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
@@ -141,7 +141,7 @@ const TravelServicesSection = () => {
                 <p className="text-xs text-muted-foreground mb-3">Trusted airline partners</p>
                 <div className="flex flex-wrap gap-3">
                   {featuredAirlines.slice(0, 6).map((airline) => (
-                    <div key={airline.code} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/30 backdrop-blur-xl border border-border/30">
+                    <div key={airline.code} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/30 backdrop-blur-xl border border-border/30 hover:bg-card/50 transition-all duration-200">
                       <img 
                         src={getAirlineLogo(airline.code, 24)} 
                         alt={airline.name}

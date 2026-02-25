@@ -64,7 +64,7 @@ const CarAccessibility = () => {
               {accessibleVehicles.map((vehicle) => (
                 <div
                   key={vehicle.type}
-                  className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 hover:border-blue-500/50 transition-colors"
+                  className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 hover:border-blue-500/50 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/30 to-cyan-500/30 flex items-center justify-center mb-4">
                     <Car className="w-7 h-7 text-blue-400" />
@@ -109,7 +109,7 @@ const CarAccessibility = () => {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {additionalEquipment.map((item) => (
-                  <div key={item.name} className="p-3 bg-muted/30 rounded-lg">
+                  <div key={item.name} className="p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all duration-200">
                     <p className="font-medium text-sm">{item.name}</p>
                     <p className="text-xs text-muted-foreground mb-1">{item.description}</p>
                     <Badge variant="secondary" className="text-xs">

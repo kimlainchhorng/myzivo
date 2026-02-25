@@ -131,7 +131,7 @@ export default function CarResultCardPro({
               <img 
                 src={image} 
                 alt={name || category}
-                className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover:scale-110"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -151,7 +151,7 @@ export default function CarResultCardPro({
               {/* Header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-violet-500 transition-colors">
+                  <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-violet-500 transition-all duration-200">
                     {name || `${category} Car`}
                   </h3>
                   {provider && (
@@ -171,26 +171,26 @@ export default function CarResultCardPro({
               {/* Specs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
                     <Users className="w-4 h-4 text-violet-500" />
                   </div>
                   <span className="text-xs">{passengers} seats</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
                     <Briefcase className="w-4 h-4 text-violet-500" />
                   </div>
                   <span className="text-xs">{bags} bags</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
                     <Cog className="w-4 h-4 text-violet-500" />
                   </div>
                   <span className="text-xs">{transmission}</span>
                 </div>
                 {hasAC && (
                   <div className="flex items-center gap-2 text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
                       <Snowflake className="w-4 h-4 text-violet-500" />
                     </div>
                     <span className="text-xs">A/C</span>

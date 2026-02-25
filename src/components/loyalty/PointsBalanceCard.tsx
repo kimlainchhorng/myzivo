@@ -54,7 +54,7 @@ export default function PointsBalanceCard({
           "flex items-center gap-3 p-3 rounded-2xl border bg-gradient-to-r from-primary/5 to-amber-500/5 hover:border-primary/50 hover:shadow-sm transition-all duration-200 touch-manipulation active:scale-[0.98]",
           className
         )}>
-          <div className={cn("p-2 rounded-lg", tierConfig.bgColor)}>
+          <div className={cn("p-2 rounded-xl", tierConfig.bgColor)}>
             <Sparkles className={cn("w-4 h-4", tierConfig.color)} />
           </div>
           <div className="flex-1 min-w-0">

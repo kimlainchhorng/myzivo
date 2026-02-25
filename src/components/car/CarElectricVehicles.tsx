@@ -56,7 +56,7 @@ const CarElectricVehicles = () => {
                   <img
                     src={car.src}
                     alt={car.alt}
-                    className="w-24 h-16 object-cover rounded-lg"
+                    className="w-24 h-16 object-cover rounded-xl"
                   />
                   <div className="flex-1">
                     <h3 className="font-bold">{car.brand} {car.model}</h3>

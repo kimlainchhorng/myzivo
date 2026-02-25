@@ -45,7 +45,7 @@ export default function CarMobileAppPromo({ className }: CarMobileAppPromoProps)
                 <div className="space-y-3 mb-6">
                   {appFeatures.map((feature) => (
                     <div key={feature.text} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center">
                         <feature.icon className="w-4 h-4 text-blue-400" />
                       </div>
                       <span className="text-sm">{feature.text}</span>
@@ -97,7 +97,7 @@ export default function CarMobileAppPromo({ className }: CarMobileAppPromoProps)
                       {/* Mini cards */}
                       <div className="space-y-2 w-full">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-8 rounded-lg bg-white/10 backdrop-blur-sm animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
+                          <div key={i} className="h-8 rounded-xl bg-white/10 backdrop-blur-sm animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
                         ))}
                       </div>
                     </div>
