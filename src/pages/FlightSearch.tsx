@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plane, ShieldCheck, Clock } from "lucide-react";
+import { Plane, ShieldCheck, Clock, TrendingUp, Star, Globe, Users } from "lucide-react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -23,6 +24,54 @@ import {
   FlightComplianceFooter
 } from "@/components/flight";
 import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
+
+// Scroll animation wrapper
+const FadeInSection = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.6, ease: "easeOut", delay }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
+
+// Flight Stats Bar
+const FlightStatsBar = () => {
+  const stats = [
+    { icon: Plane, value: "500+", label: "Airlines" },
+    { icon: Globe, value: "190+", label: "Countries" },
+    { icon: Users, value: "2M+", label: "Searches/mo" },
+    { icon: Star, value: "4.8", label: "Rating" },
+  ];
+
+  return (
+    <section className="py-8 border-b border-border/30 bg-gradient-to-r from-sky-500/5 via-transparent to-blue-500/5">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
+              className="text-center group"
+            >
+              <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500/15 transition-all duration-300 float-gentle" style={{ animationDelay: `${i * 200}ms` }}>
+                <stat.icon className="w-6 h-6 text-sky-500" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // Recently Searched Chips Component
 const RecentlySearchedChips = () => {
@@ -59,9 +108,7 @@ const RecentlySearchedChips = () => {
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
- * Skyscanner / Kayak / Google Flights quality
  */
-
 const FlightSearch = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -83,60 +130,91 @@ const FlightSearch = () => {
         {/* Recently Searched Routes */}
         <RecentlySearchedChips />
 
-        {/* Legal Disclaimer - Cleaner card design */}
-        <section className="py-4">
-          <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto p-3 rounded-xl bg-muted/50 border border-border/50 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                {FLIGHT_DISCLAIMERS.ticketing}
-              </p>
+        {/* Flight Stats Bar */}
+        <FlightStatsBar />
+
+        {/* Legal Disclaimer */}
+        <FadeInSection>
+          <section className="py-4">
+            <div className="container mx-auto px-4">
+              <div className="max-w-2xl mx-auto p-3 rounded-xl bg-muted/50 border border-border/50 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  {FLIGHT_DISCLAIMERS.ticketing}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </FadeInSection>
 
-        {/* How Booking Works - RIGHT AFTER SEARCH */}
-        <HowBookingWorks className="border-b border-border/50" />
+        {/* How Booking Works */}
+        <FadeInSection>
+          <HowBookingWorks className="border-b border-border/50" />
+        </FadeInSection>
 
-        {/* Flight Features Grid - Cabin Classes, Flight Types, Extras, Deals */}
-        <FlightFeaturesGrid className="border-b border-border/50 bg-muted/5" />
+        {/* Flight Features Grid */}
+        <FadeInSection>
+          <FlightFeaturesGrid className="border-b border-border/50 bg-muted/5" />
+        </FadeInSection>
 
-        {/* SEO Content Block - H1 and intro for search engines */}
-        <SEOContentBlock serviceType="flights" className="bg-muted/5" />
+        {/* SEO Content Block */}
+        <FadeInSection>
+          <SEOContentBlock serviceType="flights" className="bg-muted/5" />
+        </FadeInSection>
 
-        {/* Popular Routes Grid with clickable cards */}
-        <section className="container mx-auto px-4 py-10">
-          <PopularRoutesGrid />
-        </section>
+        {/* Popular Routes Grid */}
+        <FadeInSection>
+          <section className="container mx-auto px-4 py-10">
+            <PopularRoutesGrid />
+          </section>
+        </FadeInSection>
 
-        {/* Popular Destinations with Real Images */}
-        <DestinationCardsGrid service="flights" />
+        {/* Popular Destinations */}
+        <FadeInSection>
+          <DestinationCardsGrid service="flights" />
+        </FadeInSection>
 
-        {/* Airline Partners Grid */}
-        <FlightAirlinePartners />
+        {/* Airline Partners */}
+        <FadeInSection>
+          <FlightAirlinePartners />
+        </FadeInSection>
 
-        {/* Airline Logos Section - Trust building */}
-        <section className="border-y border-border/30 bg-gradient-to-b from-muted/10 to-muted/5">
-          <AirlineLogosCarousel />
-        </section>
+        {/* Airline Logos */}
+        <FadeInSection>
+          <section className="border-y border-border/30 bg-gradient-to-b from-muted/10 to-muted/5">
+            <AirlineLogosCarousel />
+          </section>
+        </FadeInSection>
 
         {/* Trust Features */}
-        <TrustFeatureCards columns={4} />
+        <FadeInSection>
+          <TrustFeatureCards columns={4} />
+        </FadeInSection>
 
         {/* Trust Badges */}
-        <FlightTrustBadgesBar />
+        <FadeInSection>
+          <FlightTrustBadgesBar />
+        </FadeInSection>
 
         {/* Why Book Section */}
-        <TrustSection service="flights" />
+        <FadeInSection>
+          <TrustSection service="flights" />
+        </FadeInSection>
 
         {/* Travel Extras */}
-        <TravelExtrasCTA currentService="flights" />
+        <FadeInSection>
+          <TravelExtrasCTA currentService="flights" />
+        </FadeInSection>
 
-        {/* Internal Linking - Cross-sell to Hotels & Cars */}
-        <InternalLinkGrid currentService="flights" />
+        {/* Internal Linking */}
+        <FadeInSection>
+          <InternalLinkGrid currentService="flights" />
+        </FadeInSection>
 
-        {/* FAQ Section with Schema */}
-        <TravelFAQ serviceType="flights" className="bg-muted/20" />
+        {/* FAQ */}
+        <FadeInSection>
+          <TravelFAQ serviceType="flights" className="bg-muted/20" />
+        </FadeInSection>
 
         {/* Service Disclaimer */}
         <ServiceDisclaimer type="travel" />
