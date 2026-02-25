@@ -63,16 +63,19 @@ const socialLinks = [
 
 const FooterLinkCol = ({ title, links }: { title: string; links: typeof footerLinks.flights }) => (
   <div>
-    <h4 className="font-semibold text-sm mb-4 text-white/90">{title}</h4>
+    <h4 className="font-semibold text-sm mb-4 text-white/90 flex items-center gap-2">
+      <span className="w-4 h-0.5 bg-primary rounded-full" />
+      {title}
+    </h4>
     <ul className="space-y-2.5">
       {links.map((link) => (
         <li key={link.name}>
           {'external' in link && (link as any).external ? (
-            <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white transition-colors inline-flex items-center gap-1">
+            <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white hover:translate-x-0.5 transition-all inline-flex items-center gap-1">
               {link.name} <ExternalLink className="w-3 h-3 opacity-50" />
             </a>
           ) : (
-            <Link to={link.href} className="text-sm text-white/50 hover:text-white transition-colors">{link.name}</Link>
+            <Link to={link.href} className="text-sm text-white/50 hover:text-white hover:translate-x-0.5 transition-all inline-block">{link.name}</Link>
           )}
         </li>
       ))}
@@ -128,7 +131,7 @@ const Footer = ({ className }: { className?: string }) => {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/20 active:scale-90 transition-all"
+                    className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all"
                     aria-label={social.label}
                   >
                     {social.icon}
@@ -156,9 +159,9 @@ const Footer = ({ className }: { className?: string }) => {
             {/* Back to top */}
             <button
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white active:scale-95 transition-all"
+              className="group/top inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-primary active:scale-95 transition-all"
             >
-              <ChevronUp className="w-4 h-4" /> Back to Top
+              <ChevronUp className="w-4 h-4 group-hover/top:-translate-y-0.5 transition-transform" /> Back to Top
             </button>
           </div>
           

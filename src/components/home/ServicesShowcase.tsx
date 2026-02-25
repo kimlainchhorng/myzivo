@@ -83,7 +83,7 @@ export default function ServicesShowcase() {
             >
               <Link
                 to={service.href}
-                className="group block p-6 sm:p-7 card-premium text-center h-full relative"
+                className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
               >
                 {/* Badge */}
                 {'badge' in service && service.badge && (
