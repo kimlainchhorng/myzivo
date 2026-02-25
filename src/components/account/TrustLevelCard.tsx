@@ -37,7 +37,7 @@ export function TrustLevelCard() {
   return (
     <div className="px-4 pb-2">
       <Card
-        className="cursor-pointer hover:shadow-md transition-shadow"
+        className="cursor-pointer hover:shadow-md active:scale-[0.98] transition-all duration-200 touch-manipulation"
         onClick={() => navigate("/account/trust")}
       >
         <CardContent className="p-4">

@@ -45,7 +45,7 @@ export function NotificationChannelCard({
   const showVerificationStatus = verificationRequired && verified !== undefined;
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden rounded-2xl border-border/50", className)}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -101,6 +101,7 @@ export function NotificationChannelCard({
               size="sm"
               onClick={onVerify}
               disabled={isLoading}
+              className="rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
             >
               {isLoading ? (
                 <>

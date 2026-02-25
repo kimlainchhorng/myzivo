@@ -79,9 +79,9 @@ const HotelAmenityFilters = () => {
                       <button
                         key={amenity.label}
                         onClick={() => toggleAmenity(amenity.label)}
-                        className={`group relative flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                        className={`group relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 active:scale-[0.97] touch-manipulation ${
                           isSelected
-                            ? "bg-primary/10 border-primary text-primary"
+                            ? "bg-primary/10 border-primary text-primary shadow-sm"
                             : "bg-card/50 border-border/50 hover:border-primary/30"
                         }`}
                       >

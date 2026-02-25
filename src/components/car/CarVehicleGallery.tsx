@@ -93,7 +93,7 @@ const CarVehicleGallery = () => {
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur hover:bg-white/30"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur hover:bg-white/30 active:scale-[0.90] transition-all duration-200 touch-manipulation"
                   onClick={() => setActiveImage((prev) => (prev - 1 + vehicle.images.length) % vehicle.images.length)}
                 >
                   <ChevronLeft className="w-5 h-5 text-white" />
@@ -101,7 +101,7 @@ const CarVehicleGallery = () => {
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur hover:bg-white/30"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 backdrop-blur hover:bg-white/30 active:scale-[0.90] transition-all duration-200 touch-manipulation"
                   onClick={() => setActiveImage((prev) => (prev + 1) % vehicle.images.length)}
                 >
                   <ChevronRight className="w-5 h-5 text-white" />
@@ -124,8 +124,8 @@ const CarVehicleGallery = () => {
                   <button
                     key={index}
                     onClick={() => setActiveImage(index)}
-                    className={`flex-1 aspect-square rounded-xl bg-gradient-to-br from-primary/10 to-emerald-500/10 flex items-center justify-center text-4xl border-2 transition-all ${
-                      activeImage === index ? "border-primary" : "border-transparent opacity-60"
+                    className={`flex-1 aspect-square rounded-xl bg-gradient-to-br from-primary/10 to-emerald-500/10 flex items-center justify-center text-4xl border-2 transition-all duration-200 active:scale-[0.95] touch-manipulation ${
+                      activeImage === index ? "border-primary shadow-md" : "border-transparent opacity-60"
                     }`}
                   >
                     {img}
@@ -145,9 +145,9 @@ const CarVehicleGallery = () => {
                       setActiveVehicle(index);
                       setActiveImage(0);
                     }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-[0.95] touch-manipulation ${
                       activeVehicle === index
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-primary text-primary-foreground shadow-md"
                         : "bg-card/50 text-muted-foreground hover:text-foreground"
                     }`}
                   >

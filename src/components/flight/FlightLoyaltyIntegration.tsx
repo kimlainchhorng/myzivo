@@ -159,7 +159,7 @@ export const FlightLoyaltyIntegration = ({
           variant="outline"
           size="sm"
           onClick={() => setIsAddingProgram(true)}
-          className="gap-2"
+          className="gap-2 rounded-xl active:scale-[0.95] transition-all duration-200 touch-manipulation"
         >
           <Plus className="w-4 h-4" />
           Link Program
@@ -314,9 +314,9 @@ export const FlightLoyaltyIntegration = ({
                       key={program.id}
                       onClick={() => setSelectedProgram(program.id)}
                       className={cn(
-                        "flex items-center gap-2 p-3 rounded-lg border transition-all text-left",
+                        "flex items-center gap-2 p-3 rounded-xl border transition-all duration-200 active:scale-[0.98] touch-manipulation text-left",
                         selectedProgram === program.id
-                          ? "bg-sky-500/10 border-sky-500/50"
+                          ? "bg-sky-500/10 border-sky-500/50 shadow-sm"
                           : "bg-muted/30 border-border/50 hover:border-border"
                       )}
                     >
@@ -345,7 +345,7 @@ export const FlightLoyaltyIntegration = ({
                 <Button
                   onClick={handleAddProgram}
                   disabled={!selectedProgram || !newMemberNumber}
-                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white"
+                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Link Program

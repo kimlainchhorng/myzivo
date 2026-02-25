@@ -117,7 +117,7 @@ export default function CarChildSeats() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
                   onClick={() => updateQuantity(seat.id, -1)}
                   disabled={quantities[seat.id] === 0}
                 >
@@ -127,7 +127,7 @@ export default function CarChildSeats() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 rounded-xl active:scale-[0.90] transition-all duration-200 touch-manipulation"
                   onClick={() => updateQuantity(seat.id, 1)}
                   disabled={quantities[seat.id] >= 3}
                 >
@@ -144,7 +144,7 @@ export default function CarChildSeats() {
               <span className="font-medium">{totalSeats} seat(s) selected</span>
               <span className="text-lg font-bold">+${totalCost}/day</span>
             </div>
-            <Button className="w-full">Add to Booking</Button>
+            <Button className="w-full rounded-xl h-11 shadow-md active:scale-[0.97] transition-all duration-200 touch-manipulation">Add to Booking</Button>
           </div>
         )}
 
