@@ -26,7 +26,7 @@ export default function HeroTrustBar({ className, variant = "default" }: HeroTru
       {trustItems.map((item) => (
         <div
           key={item}
-          className="flex items-center gap-1.5 text-muted-foreground"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-default"
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 text-primary" />
           <span className={cn(

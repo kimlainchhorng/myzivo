@@ -254,7 +254,7 @@ const Login = () => {
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -273,7 +273,7 @@ const Login = () => {
                         <FormLabel className="text-zinc-300 text-sm font-medium">Password</FormLabel>
                         <Link
                           to="/forgot-password"
-                          className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
+                          className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                         >
                           Forgot?
                         </Link>
@@ -285,7 +285,7 @@ const Login = () => {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="current-password"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -297,7 +297,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -326,7 +326,7 @@ const Login = () => {
                           <input
                             placeholder="John Doe"
                             autoComplete="name"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -349,7 +349,7 @@ const Login = () => {
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -372,7 +372,7 @@ const Login = () => {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -395,7 +395,7 @@ const Login = () => {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -407,7 +407,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
+                  className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -495,7 +495,7 @@ const Login = () => {
               className="text-sm text-zinc-400 hover:text-white transition-colors"
             >
               {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <span className="text-blue-500 font-semibold">
+              <span className="text-primary font-semibold">
                 {isLogin ? "Sign Up" : "Log In"}
               </span>
             </button>
