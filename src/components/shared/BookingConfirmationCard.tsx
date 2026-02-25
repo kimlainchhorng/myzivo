@@ -87,7 +87,7 @@ const BookingConfirmationCard = ({
       </div>
 
       {/* Confirmation Code */}
-      <div className="p-4 rounded-xl bg-muted/30 border border-border/30 mb-4">
+      <div className="p-4 rounded-xl bg-muted/30 border border-border/30 mb-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Confirmation Code</p>

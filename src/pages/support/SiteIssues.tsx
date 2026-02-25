@@ -240,7 +240,7 @@ export default function SiteIssuesSupport() {
             <CardContent>
               <div className="grid gap-4">
                 {commonIssues.map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <div key={idx} className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                     <p className="font-semibold mb-3">{item.issue}</p>
                     <ul className="space-y-2">
                       {item.solutions.map((solution, sIdx) => (

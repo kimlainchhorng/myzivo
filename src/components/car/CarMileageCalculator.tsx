@@ -138,7 +138,7 @@ const CarMileageCalculator = () => {
               </div>
 
               {/* Vehicle Recommendations */}
-              <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <h4 className="text-sm font-medium mb-3">Recommended Vehicles</h4>
                 <div className="space-y-2">
                   {[

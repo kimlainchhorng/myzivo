@@ -228,7 +228,7 @@ export default function BusinessInvoiceList({ accountId }: BusinessInvoiceListPr
       </Card>
 
       {/* Compliance note */}
-      <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+      <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
         <div className="flex items-start gap-3">
           <ExternalLink className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           <div>
