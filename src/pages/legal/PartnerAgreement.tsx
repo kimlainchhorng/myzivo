@@ -375,7 +375,7 @@ const PartnerAgreement = () => {
 
         {/* Common Terms */}
         <Accordion type="single" collapsible className="space-y-4">
-          <AccordionItem value="relationship" className="border border-border rounded-lg px-4">
+          <AccordionItem value="relationship" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Nature of Relationship</span>
             </AccordionTrigger>
@@ -394,7 +394,7 @@ const PartnerAgreement = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="ip" className="border border-border rounded-lg px-4">
+          <AccordionItem value="ip" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Intellectual Property</span>
             </AccordionTrigger>
@@ -412,7 +412,7 @@ const PartnerAgreement = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="confidentiality" className="border border-border rounded-lg px-4">
+          <AccordionItem value="confidentiality" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Confidentiality</span>
             </AccordionTrigger>
@@ -433,7 +433,7 @@ const PartnerAgreement = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="termination" className="border border-border rounded-lg px-4">
+          <AccordionItem value="termination" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Termination</span>
             </AccordionTrigger>
@@ -459,7 +459,7 @@ const PartnerAgreement = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="liability" className="border border-border rounded-lg px-4">
+          <AccordionItem value="liability" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Limitation of Liability & Indemnification</span>
             </AccordionTrigger>

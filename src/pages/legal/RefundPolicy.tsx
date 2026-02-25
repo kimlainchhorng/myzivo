@@ -292,7 +292,7 @@ const RefundPolicy = () => {
 
         {/* General Information */}
         <Accordion type="single" collapsible className="space-y-4">
-          <AccordionItem value="process" className="border border-border rounded-lg px-4">
+          <AccordionItem value="process" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">How to Request a Refund (Hotels & Car Rentals)</span>
             </AccordionTrigger>
@@ -308,7 +308,7 @@ const RefundPolicy = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="timing" className="border border-border rounded-lg px-4">
+          <AccordionItem value="timing" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <span className="font-semibold">Refund Processing Times</span>
             </AccordionTrigger>
