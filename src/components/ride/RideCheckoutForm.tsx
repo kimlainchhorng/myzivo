@@ -193,7 +193,7 @@ export default function RideCheckoutForm({
       {/* Order Summary - Receipt Rail */}
       <div className="rides-glass-panel rounded-2xl p-5 border border-white/10">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
             <CreditCard className="w-4 h-4 text-primary" />
           </div>
           <h3 className="font-bold text-lg">Order Summary</h3>
@@ -226,7 +226,7 @@ export default function RideCheckoutForm({
         {/* Security Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
               <Lock className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
@@ -341,7 +341,7 @@ export default function RideCheckoutForm({
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {errorMessage}
             </div>
           )}

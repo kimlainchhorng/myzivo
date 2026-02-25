@@ -861,7 +861,7 @@ const AdminFlightManagement = () => {
                 {airlines?.map((airline: any, index: number) => (
                   <Card 
                     key={airline.id} 
-                    className="border border-border/50 bg-muted/20 hover:bg-muted/40 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    className="border border-border/50 bg-muted/20 hover:bg-muted/40 transition-all animate-in fade-in slide-in-from-bottom-4 duration-200"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <CardContent className="p-4">

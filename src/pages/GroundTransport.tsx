@@ -268,10 +268,10 @@ const GroundTransport = () => {
               {filteredRoutes.map((route, index) => (
                 <div
                   key={route.id}
-                  className="animate-in fade-in slide-in-from-left-4 duration-300 hover:-translate-y-1 transition-transform"
+                  className="animate-in fade-in slide-in-from-left-4 duration-200 hover:-translate-y-1 transition-transform"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-300 cursor-pointer group overflow-hidden">
+                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-200 cursor-pointer group overflow-hidden">
                     <CardContent className="p-4 sm:p-6 lg:p-8">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
                         {/* Icon & Operator */}

@@ -115,7 +115,7 @@ export default function FlightResultCard({
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 border-border/50",
+        "overflow-hidden transition-all duration-200 border-border/50",
         isHovered && "shadow-lg border-sky-500/30",
         isSelected && "ring-2 ring-sky-500",
         flight.category === 'premium' && "border-amber-500/20"
@@ -209,7 +209,7 @@ export default function FlightResultCard({
                   
                   {/* Plane icon */}
                   <div className={cn(
-                    "absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 transition-transform duration-300",
+                    "absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 transition-transform duration-200",
                     isHovered && "-translate-x-2"
                   )}>
                     <Plane className={cn("w-4 h-4 rotate-90", category.textColor)} />
@@ -278,7 +278,7 @@ export default function FlightResultCard({
               {amenities.filter(a => a.available).map(amenity => (
                 <div 
                   key={amenity.key}
-                  className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center"
+                  className="w-7 h-7 rounded-xl bg-muted/50 flex items-center justify-center"
                   title={amenity.label}
                 >
                   <amenity.icon className="w-4 h-4 text-muted-foreground" />
@@ -318,7 +318,7 @@ export default function FlightResultCard({
 
         {/* Expanded Details */}
         {isExpanded && (
-          <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-border/30 bg-muted/20 animate-in slide-in-from-top-2 duration-300">
+          <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-border/30 bg-muted/20 animate-in slide-in-from-top-2 duration-200">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Baggage */}
               <div className="p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">

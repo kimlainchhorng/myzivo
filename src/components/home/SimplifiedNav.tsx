@@ -145,7 +145,7 @@ export default function SimplifiedNav() {
           />
 
           {/* Menu Panel */}
-          <div className="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-card border-l border-border shadow-2xl animate-in slide-in-from-right duration-300">
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-card border-l border-border shadow-2xl animate-in slide-in-from-right duration-200">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <ZivoLogo size="sm" />
               <button

@@ -37,7 +37,7 @@ const HotelAmenitiesShowcase = () => {
               key={amenity.label}
               className={cn(
                 "group relative p-4 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
-                "hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-300",
+                "hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-200",
                 "cursor-pointer touch-manipulation active:scale-[0.95]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}

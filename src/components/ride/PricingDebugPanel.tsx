@@ -16,7 +16,7 @@ export function PricingDebugPanel({ quote, show }: PricingDebugPanelProps) {
   if (!show || !quote) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 z-[100] bg-zinc-900/95 text-green-400 font-mono text-[10px] p-3 rounded-lg max-w-[200px] shadow-xl border border-green-500/30 backdrop-blur-sm">
+    <div className="fixed bottom-24 left-4 z-[100] bg-zinc-900/95 text-green-400 font-mono text-[10px] p-3 rounded-xl max-w-[200px] shadow-xl border border-green-500/30 backdrop-blur-sm">
       <div className="font-bold text-yellow-400 mb-2 flex items-center gap-1.5">
         <span>🔧</span>
         <span>Pricing Debug</span>

@@ -357,7 +357,7 @@ const RestaurantSettings = () => {
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
+                  <div className="p-2 rounded-xl bg-blue-500/10">
                     <CreditCard className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
@@ -370,7 +370,7 @@ const RestaurantSettings = () => {
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/10">
+                  <div className="p-2 rounded-xl bg-green-500/10">
                     <Shield className="h-5 w-5 text-green-500" />
                   </div>
                   <div>
@@ -383,7 +383,7 @@ const RestaurantSettings = () => {
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10">
+                  <div className="p-2 rounded-xl bg-purple-500/10">
                     <Palette className="h-5 w-5 text-purple-500" />
                   </div>
                   <div>

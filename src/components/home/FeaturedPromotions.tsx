@@ -150,7 +150,7 @@ const FeaturedPromotions = () => {
                 setProgress(0);
               }}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300",
+                "flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200",
                 index === activeIndex
                   ? "bg-card border border-primary/30 shadow-lg"
                   : "bg-card/50 border border-border/50 hover:border-primary/20"

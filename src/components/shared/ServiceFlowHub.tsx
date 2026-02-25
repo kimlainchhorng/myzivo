@@ -105,7 +105,7 @@ const ServiceFlowHub = ({ currentService, className }: ServiceFlowHubProps) => {
                     service.bgColor
                   )}
                 >
-                  <div className={cn("p-2 rounded-lg", service.bgColor)}>
+                  <div className={cn("p-2 rounded-xl", service.bgColor)}>
                     <service.icon className={cn("w-5 h-5", service.color)} />
                   </div>
                   <span className="text-sm font-medium">{service.label}</span>

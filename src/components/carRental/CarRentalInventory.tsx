@@ -98,7 +98,7 @@ const CarRentalInventory = () => {
           </h1>
           <p className="text-muted-foreground">Manage your vehicle fleet with style</p>
         </div>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 touch-manipulation active:scale-95">
+        <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 touch-manipulation active:scale-95">
           <Plus className="h-4 w-4" />
           Add Vehicle
         </Button>
@@ -167,7 +167,7 @@ const CarRentalInventory = () => {
             return (
               <div
                 key={car.id}
-                className="animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300"
+                className="animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-200"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 group hover:-translate-y-1">
@@ -180,7 +180,7 @@ const CarRentalInventory = () => {
                   <CardContent className="p-5 relative">
                     <div className="flex items-start justify-between mb-4">
                       <div 
-                        className={`p-3 rounded-xl bg-gradient-to-br ${categoryConfig.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                        className={`p-3 rounded-xl bg-gradient-to-br ${categoryConfig.gradient} shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}
                       >
                         <Car className="h-6 w-6 text-white" />
                       </div>

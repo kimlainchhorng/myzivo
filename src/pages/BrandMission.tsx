@@ -162,7 +162,7 @@ const BrandMission = () => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {brandValues.map((value) => (
-                <Card key={value.title} className="border-border/50 hover:border-primary/30 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <Card key={value.title} className="border-border/50 hover:border-primary/30 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                   <CardContent className="p-6 text-center">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <value.icon className="w-6 h-6 text-primary" />
@@ -186,7 +186,7 @@ const BrandMission = () => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {brandArchitecture.map((service) => (
-                <Card key={service.name} className="border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <Card key={service.name} className="border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
                   <CardContent className="p-6">
                     <div className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 ${service.color}`}>
                       <service.icon className="w-6 h-6" />
@@ -210,7 +210,7 @@ const BrandMission = () => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {brandTone.map((tone) => (
-                <div key={tone.label} className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div key={tone.label} className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                   <Globe className="w-6 h-6 text-primary mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">{tone.label}</h3>
                   <p className="text-sm text-muted-foreground">{tone.description}</p>

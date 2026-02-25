@@ -49,7 +49,7 @@ const RideCard = ({
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
       className={cn(
-        "relative w-full rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.98] touch-manipulation",
+        "relative w-full rounded-2xl overflow-hidden transition-all duration-200 active:scale-[0.98] touch-manipulation",
         "bg-white/5 border backdrop-blur-sm",
         isSelected
           ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/20"
@@ -63,7 +63,7 @@ const RideCard = ({
           src={ride.image}
           alt={ride.name}
           onLoad={onRideImageLoad}
-          className={cn("w-20 h-20 object-contain transition-opacity duration-300", rideImageLoaded ? "opacity-100" : "opacity-0")}
+          className={cn("w-20 h-20 object-contain transition-opacity duration-200", rideImageLoaded ? "opacity-100" : "opacity-0")}
         />
         
         {/* Surge Badge */}

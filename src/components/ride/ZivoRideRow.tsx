@@ -288,7 +288,7 @@ function ZivoCarThumbnail({ compact = false, category = "economy", rideName }: {
         alt={`${category} vehicle`}
         onLoad={onLoad}
         className={cn(
-          "object-contain transition-opacity duration-300",
+          "object-contain transition-opacity duration-200",
           compact ? "w-[38px] h-[38px]" : "w-[48px] h-[48px]",
           loaded ? "opacity-100" : "opacity-0"
         )}

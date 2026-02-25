@@ -157,7 +157,7 @@ export default function WhyBookSection({ service, className = '' }: WhyBookSecti
           {content.points.map((point, index) => (
             <Card 
               key={point.title}
-              className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50"
+              className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-border/50"
             >
               <CardContent className="p-5 sm:p-6">
                 <div className={cn(

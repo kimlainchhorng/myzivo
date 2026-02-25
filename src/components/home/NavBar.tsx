@@ -77,7 +77,7 @@ export default function NavBar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-background",
         scrolled
           ? "shadow-md border-b border-border/50"
           : "border-b border-border/30"
@@ -112,7 +112,7 @@ export default function NavBar() {
                     <item.icon className={cn("w-4 h-4 transition-all duration-200", isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                     {item.label}
                     <span className={cn(
-                      "absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300",
+                      "absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-200",
                       isActive ? "w-8" : "w-0 group-hover:w-8"
                     )} />
                   </Link>
@@ -131,7 +131,7 @@ export default function NavBar() {
                   )}
                 >
                   More
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", moreOpen && "rotate-180")} />
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", moreOpen && "rotate-180")} />
                 </button>
                 
                 {moreOpen && (

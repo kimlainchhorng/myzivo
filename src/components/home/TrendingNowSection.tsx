@@ -101,7 +101,7 @@ const TrendingNowSection = () => {
           {trendingItems.map((item) => (
             <div
               key={item.id}
-              className="group relative rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+              className="group relative rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all duration-200 hover:-translate-y-1"
             >
               {/* Image Area */}
               <div className="relative h-48 bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center overflow-hidden group/area">

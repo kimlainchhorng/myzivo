@@ -96,7 +96,7 @@ const PWAInstallPrompt = ({ enabled = true }: PWAInstallPromptProps) => {
           "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
           "bg-gradient-to-r from-primary/95 to-teal-500/95 backdrop-blur-xl",
           "p-4 pb-safe",
-          "animate-in slide-in-from-bottom-4 duration-300",
+          "animate-in slide-in-from-bottom-4 duration-200",
           "border-t border-white/10"
         )}
       >
@@ -149,7 +149,7 @@ const PWAInstallPrompt = ({ enabled = true }: PWAInstallPromptProps) => {
       {/* iOS Instructions Modal */}
       {showIOSInstructions && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 backdrop-blur-sm lg:hidden">
-          <div className="w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-in slide-in-from-bottom duration-300">
+          <div className="w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Install Hizovo</h3>
               <Button

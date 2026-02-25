@@ -61,7 +61,7 @@ const PromoBanner = () => {
               onClick={() => navigate(promo.href)}
               className={cn(
                 "relative p-5 sm:p-7 lg:p-9 rounded-2xl sm:rounded-3xl cursor-pointer group overflow-hidden shadow-xl sm:shadow-2xl text-left",
-                "transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98]",
+                "transition-all duration-200 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4 touch-manipulation",
                 promo.glowColor
               )}
@@ -84,7 +84,7 @@ const PromoBanner = () => {
               {/* Hot badge */}
               {promo.badge && (
                 <div
-                  className="absolute -top-1 -right-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-white text-foreground rounded-full text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-xl z-20 animate-in zoom-in duration-300"
+                  className="absolute -top-1 -right-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-white text-foreground rounded-full text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-xl z-20 animate-in zoom-in duration-200"
                   style={{ animationDelay: `${300 + index * 100}ms`, animationFillMode: 'both' }}
                 >
                   <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-500" />

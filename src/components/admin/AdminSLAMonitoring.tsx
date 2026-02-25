@@ -82,7 +82,7 @@ const AdminSLAMonitoring = () => {
         <Card className="border-0 bg-gradient-to-br from-green-500/10 to-emerald-500/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -95,7 +95,7 @@ const AdminSLAMonitoring = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -108,7 +108,7 @@ const AdminSLAMonitoring = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                 <XCircle className="h-5 w-5 text-red-500" />
               </div>
               <div>
@@ -121,7 +121,7 @@ const AdminSLAMonitoring = () => {
         <Card className="border-0 bg-card/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Shield className="h-5 w-5 text-primary" />
               </div>
               <div>
