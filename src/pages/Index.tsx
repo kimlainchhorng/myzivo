@@ -22,9 +22,8 @@ const FeaturedCarsSection = lazy(() => import("@/components/home/FeaturedCarsSec
 const FeaturedHotelsSection = lazy(() => import("@/components/home/FeaturedHotelsSection"));
 const FeaturedEatsSection = lazy(() => import("@/components/home/FeaturedEatsSection"));
 const HowItWorksSection = lazy(() => import("@/components/home/HowItWorksSection"));
-const WhyBookWithZivo = lazy(() => import("@/components/home/WhyBookWithZivo"));
 const TestimonialsSection = lazy(() => import("@/components/home/TestimonialsSection"));
-const PartnerLogosShowcase = lazy(() => import("@/components/home/PartnerLogosShowcase"));
+const PartnerLogosSection = lazy(() => import("@/components/home/PartnerLogosSection"));
 const DownloadAppSection = lazy(() => import("@/components/home/DownloadAppSection"));
 const NewsletterSection = lazy(() => import("@/components/home/NewsletterSection"));
 
@@ -58,13 +57,12 @@ const DesktopHomePage = () => {
         <StatsSection />
 
         {/* Below-fold: Lazy loaded with IntersectionObserver */}
-        <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosShowcase /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><DestinationShowcase /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><FeaturedCarsSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><FeaturedHotelsSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><FeaturedEatsSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><HowItWorksSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><WhyBookWithZivo /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><TestimonialsSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><DownloadAppSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><NewsletterSection /></Suspense></LazySection>
