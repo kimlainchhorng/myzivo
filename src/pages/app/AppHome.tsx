@@ -85,7 +85,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, onSeeAll }: { icon: Lucid
       <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
       {title}
     </h2>
-    <button onClick={onSeeAll} className="text-xs text-primary font-semibold">See all</button>
+     <button onClick={onSeeAll} className="text-xs text-primary font-semibold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center">See all</button>
   </div>
 );
 
@@ -214,9 +214,9 @@ const AppHome = () => {
                 <div className="text-sm font-bold text-foreground">{userName}</div>
               </div>
             </div>
-            <button
+             <button
               onClick={() => navigate("/alerts")}
-              className="w-9 h-9 bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 transition-colors relative touch-manipulation"
+              className="w-10 h-10 min-w-[44px] min-h-[44px] bg-muted rounded-full flex items-center justify-center border border-border active:bg-muted/80 active:scale-90 transition-all relative touch-manipulation"
             >
               <Bell className="w-4 h-4 text-muted-foreground" />
               <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-destructive rounded-full" />
@@ -229,8 +229,8 @@ const AppHome = () => {
               onClick={() => setIsSearchOpen(true)}
               className="w-full touch-manipulation"
             >
-              <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg active:scale-[0.99] transition-transform">
-                <Search className="w-4 h-4 text-muted-foreground" />
+               <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl p-3.5 flex items-center gap-2.5 shadow-lg active:scale-[0.99] transition-transform min-h-[52px]">
+                <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 <span className="text-muted-foreground font-medium text-left flex-1 text-sm">Where to?</span>
                 <div className="h-5 w-[1px] bg-border" />
                 <div className="p-1.5 bg-primary/10 rounded-lg">
@@ -249,7 +249,7 @@ const AppHome = () => {
                   <button
                     key={loc.id}
                     onClick={() => navigate("/rides")}
-                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-card border border-border/60 shadow-sm active:scale-95 transition-transform touch-manipulation"
+                     className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-card border border-border/60 shadow-sm active:scale-95 transition-transform touch-manipulation min-h-[40px]"
                   >
                     <Icon className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs font-semibold text-foreground whitespace-nowrap">{loc.label}</span>
@@ -259,7 +259,7 @@ const AppHome = () => {
               {(!savedLocations || savedLocations.length < 2) && (
                 <button
                   onClick={() => navigate("/account/saved-places")}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/50 border border-dashed border-border active:scale-95 transition-transform touch-manipulation"
+                   className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/50 border border-dashed border-border active:scale-95 transition-transform touch-manipulation min-h-[40px]"
                 >
                   <Plus className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add Place</span>
@@ -298,7 +298,7 @@ const AppHome = () => {
                 key={action.label}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate(action.href)}
-                className="relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow touch-manipulation overflow-hidden"
+                 className="relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border shadow-sm hover:shadow-md transition-all touch-manipulation overflow-hidden min-h-[100px]"
               >
                 {/* Accent line */}
                 <div className={`absolute top-0 left-3 right-3 h-0.5 rounded-b-full ${action.accent}`} />

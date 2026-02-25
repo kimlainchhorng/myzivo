@@ -43,10 +43,10 @@ export default function FeaturedCarsSection() {
         {/* Filter chips */}
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {filters.map((f) => (
-            <button
+             <button
               key={f}
               onClick={() => setActive(f)}
-              className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all")}
+              className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
             >
               {f}
             </button>
@@ -64,7 +64,7 @@ export default function FeaturedCarsSection() {
             >
               <Link
                 to="/rent-car"
-                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-video overflow-hidden bg-muted/50">
                   <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />

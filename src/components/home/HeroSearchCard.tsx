@@ -46,12 +46,12 @@ export default function HeroSearchCard() {
         >
           {/* Tabs */}
           <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => (
+             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative",
+                  "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation active:scale-[0.97] min-h-[48px]",
                   activeTab === tab.id
                     ? `${tab.border} ${tab.color} ${tab.bg}`
                     : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -68,16 +68,16 @@ export default function HeroSearchCard() {
             {activeTab === "flights" && (
               <div className="space-y-4">
                 {/* Trip type toggle */}
-                <div className="flex gap-2">
+                 <div className="flex gap-2">
                   <button
                     onClick={() => setTripType("round")}
-                    className={cn(tripType === "round" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5")}
+                    className={cn(tripType === "round" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5 touch-manipulation active:scale-95 min-h-[36px]")}
                   >
                     Round Trip
                   </button>
                   <button
                     onClick={() => setTripType("oneway")}
-                    className={cn(tripType === "oneway" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5")}
+                    className={cn(tripType === "oneway" ? "chip-active" : "chip-inactive", "text-xs px-4 py-1.5 touch-manipulation active:scale-95 min-h-[36px]")}
                   >
                     One Way
                   </button>

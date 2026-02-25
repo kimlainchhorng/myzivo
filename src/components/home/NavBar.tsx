@@ -262,7 +262,7 @@ export default function NavBar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-xl transition-colors"
+              className="md:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-xl transition-all touch-manipulation active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -282,17 +282,17 @@ export default function NavBar() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          <motion.div
+           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card border-l border-border shadow-2xl"
+            className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card border-l border-border shadow-2xl safe-area-top safe-area-bottom"
           >
             <div className="p-4 border-b border-border flex items-center justify-between">
               <ZivoLogo size="sm" />
-              <button
+               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 hover:bg-muted rounded-xl transition-colors"
+                className="p-2 hover:bg-muted rounded-xl transition-all touch-manipulation active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -305,7 +305,7 @@ export default function NavBar() {
                   key={item.href}
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all touch-manipulation active:scale-[0.98] active:bg-muted min-h-[48px]"
                 >
                   <item.icon className="w-5 h-5 text-muted-foreground" />
                   {item.label}
@@ -317,7 +317,7 @@ export default function NavBar() {
               <Link
                 to="/help"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all touch-manipulation active:scale-[0.98] active:bg-muted min-h-[48px]"
               >
                 <HelpCircle className="w-5 h-5 text-muted-foreground" />
                 Help Center
@@ -331,7 +331,7 @@ export default function NavBar() {
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all touch-manipulation active:scale-[0.98] active:bg-muted min-h-[48px]"
                 >
                   <link.icon className="w-5 h-5 text-muted-foreground" />
                   {link.label}

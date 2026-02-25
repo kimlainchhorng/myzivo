@@ -52,8 +52,8 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.08 }}
-              className={cn(
-                "group text-center card-premium",
+               className={cn(
+                "group text-center card-premium touch-manipulation active:scale-[0.99]",
                 isCompact ? "p-4" : "p-6 sm:p-8",
               )}
             >

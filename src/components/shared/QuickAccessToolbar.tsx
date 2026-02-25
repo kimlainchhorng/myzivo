@@ -18,10 +18,10 @@ const QuickAccessToolbar = () => {
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border/50 py-2 px-4 md:hidden">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {quickLinks.slice(0, 5).map((link) => (
-          <button
+           <button
             key={link.label}
             onClick={() => navigate(link.path)}
-            className="relative flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-muted transition-colors touch-manipulation"
+            className="relative flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-muted transition-all touch-manipulation active:scale-90 min-w-[48px] min-h-[48px]"
           >
             <div className="relative">
               <link.icon className={`w-5 h-5 ${link.color}`} />

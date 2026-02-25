@@ -67,8 +67,8 @@ const ZivoMobileNav = () => {
             <button
               key={tab.id}
               onClick={() => navigate(tab.path)}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-all touch-manipulation active:scale-95 relative",
+               className={cn(
+                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-all touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={tab.label}

@@ -62,8 +62,8 @@ export default function HowItWorksSection() {
                 </div>
               )}
               
-              <div className={cn(
-                "relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300",
+               <div className={cn(
+                "relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]",
                 step.accent
               )}>
                 {/* Step number */}
@@ -92,9 +92,9 @@ export default function HowItWorksSection() {
           transition={{ delay: 0.5 }}
           className="text-center mt-12"
         >
-          <Button
+           <Button
             size="lg"
-            className="rounded-full px-8 gap-2 font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow"
+            className="rounded-full px-8 gap-2 font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow touch-manipulation active:scale-[0.97] min-h-[48px]"
             onClick={() => navigate("/flights")}
           >
             Start Searching <ArrowRight className="w-4 h-4" />

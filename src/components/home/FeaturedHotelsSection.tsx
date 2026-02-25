@@ -66,7 +66,7 @@ export default function FeaturedHotelsSection() {
             >
               <Link
                 to="/hotels"
-                className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -74,9 +74,9 @@ export default function FeaturedHotelsSection() {
                     ${hotel.price}<span className="text-xs font-normal opacity-80">/night</span>
                   </div>
                   {/* Save icon */}
-                  <button
+                   <button
                     onClick={(e) => toggleSave(e, hotel.name)}
-                    className="absolute top-3 left-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-card active:scale-90"
+                    className="absolute top-3 left-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-card active:scale-90 touch-manipulation"
                     aria-label="Save hotel"
                   >
                     <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
