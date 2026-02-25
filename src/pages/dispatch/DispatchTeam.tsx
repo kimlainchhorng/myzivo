@@ -209,7 +209,7 @@ const DispatchTeam = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {invitations.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+              <div key={invite.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <div>
                   <p className="font-medium">{invite.email}</p>
                   <p className="text-sm text-muted-foreground">
