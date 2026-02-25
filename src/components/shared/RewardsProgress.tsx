@@ -125,7 +125,7 @@ const RewardsProgress = ({
                 {upcomingRewards.map((reward) => (
                   <div
                     key={reward.points}
-                    className="p-3 bg-muted/30 rounded-lg text-center"
+                    className="p-3 bg-muted/30 rounded-xl text-center"
                   >
                     <reward.icon className="w-5 h-5 text-violet-400 mx-auto mb-2" />
                     <p className="text-xs font-medium">{reward.reward}</p>

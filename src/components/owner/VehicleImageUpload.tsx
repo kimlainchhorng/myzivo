@@ -138,7 +138,7 @@ export function VehicleImageUpload({
 
         {/* Upload button */}
         {images.length < maxImages && (
-          <Card className="aspect-[4/3] border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer">
+          <Card className="aspect-[4/3] border-dashed border-2 hover:border-primary/50 transition-all duration-200 cursor-pointer">
             <label className="flex flex-col items-center justify-center h-full cursor-pointer p-4">
               <input
                 type="file"

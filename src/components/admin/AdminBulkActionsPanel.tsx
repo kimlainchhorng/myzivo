@@ -171,7 +171,7 @@ const AdminBulkActionsPanel = () => {
                     onClick={() => handleActionClick(action)}
                   >
                     <div className={cn(
-                      "p-2 rounded-lg",
+                      "p-2 rounded-xl",
                       action.destructive ? "bg-destructive/10" : `${action.color.replace("text-", "bg-")}/10`
                     )}>
                       <Icon className={cn("h-4 w-4", action.destructive ? "text-destructive" : action.color)} />

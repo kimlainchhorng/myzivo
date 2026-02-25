@@ -74,7 +74,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-105 active:scale-95"
+                className="text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-110 active:scale-95"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
                 <Search className="h-5 w-5" />
@@ -172,7 +172,7 @@ const Header = () => {
 
             {/* Mobile Menu Button - Enhanced */}
             <button
-              className="lg:hidden p-2.5 -mr-2 text-foreground hover:bg-muted/50 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
+              className="lg:hidden p-2.5 -mr-2 text-foreground hover:bg-muted/50 rounded-xl transition-all duration-150 hover:scale-110 active:scale-95"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >

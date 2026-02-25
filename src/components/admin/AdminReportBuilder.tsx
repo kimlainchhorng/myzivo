@@ -120,7 +120,7 @@ export default function AdminReportBuilder() {
         <Card className="bg-gradient-to-br from-primary/10 to-teal-500/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/20">
+              <div className="p-2 rounded-xl bg-primary/20">
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -133,7 +133,7 @@ export default function AdminReportBuilder() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Clock className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -146,7 +146,7 @@ export default function AdminReportBuilder() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="p-2 rounded-xl bg-green-500/10">
                 <BarChart3 className="h-5 w-5 text-green-500" />
               </div>
               <div>
@@ -159,7 +159,7 @@ export default function AdminReportBuilder() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-xl bg-amber-500/10">
                 <LineChart className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -174,7 +174,7 @@ export default function AdminReportBuilder() {
       {/* Reports Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {reports.map((report) => (
-          <Card key={report.id} className="hover:border-primary/50 transition-colors">
+          <Card key={report.id} className="hover:border-primary/50 transition-all duration-200 hover:shadow-md">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 {getTypeBadge(report.type)}

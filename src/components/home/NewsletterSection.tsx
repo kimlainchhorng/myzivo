@@ -62,7 +62,7 @@ export default function NewsletterSection() {
                   type="submit"
                   size="lg"
                   className={cn(
-                    "h-12 px-8 rounded-xl font-semibold gap-2 transition-all duration-300 active:scale-[0.97] touch-manipulation min-h-[48px]",
+                    "h-12 px-8 rounded-xl font-semibold gap-2 transition-all duration-200 active:scale-[0.97] touch-manipulation min-h-[48px]",
                     subscribed ? "bg-emerald-500 hover:bg-emerald-500" : ""
                   )}
                 >

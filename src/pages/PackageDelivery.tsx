@@ -144,7 +144,7 @@ const PackageDelivery = () => {
                 {stats.map((stat, index) => (
                   <div
                     key={stat.label}
-                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-200"
                     style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-2xl bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
@@ -171,7 +171,7 @@ const PackageDelivery = () => {
               {features.map((feature, index) => (
                 <Card 
                   key={feature.title} 
-                  className="h-full text-center border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  className="h-full text-center border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all duration-200 overflow-hidden group animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
                   <CardContent className="p-4 sm:pt-8 sm:pb-6 relative">
@@ -319,7 +319,7 @@ const PackageDelivery = () => {
               {faqs.map((faq, index) => (
                 <div
                   key={faq.q}
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-300 hover:-translate-y-0.5 transition-transform"
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-200 hover:-translate-y-0.5 transition-transform"
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
                   <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
