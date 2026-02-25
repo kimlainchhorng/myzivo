@@ -97,7 +97,7 @@ export default function SecurityReport() {
               Thank you for helping keep ZIVO secure. Our security team will review your report 
               and respond within 48 hours.
             </p>
-            <div className="p-4 rounded-lg bg-muted/50 border border-border text-left mb-8">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border text-left mb-8 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <h3 className="font-semibold mb-2">What happens next?</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -162,7 +162,7 @@ export default function SecurityReport() {
             {/* Guidelines Sidebar */}
             <div className="space-y-6">
               {/* Our Commitment */}
-              <Card>
+              <Card className="hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Shield className="w-4 h-4 text-primary" />
@@ -178,7 +178,7 @@ export default function SecurityReport() {
               </Card>
 
               {/* In Scope */}
-              <Card>
+              <Card className="hover:border-green-500/20 hover:shadow-sm transition-all duration-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2 text-green-500">
                     <CheckCircle2 className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function SecurityReport() {
               </Card>
 
               {/* Out of Scope */}
-              <Card>
+              <Card className="hover:border-amber-500/20 hover:shadow-sm transition-all duration-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2 text-amber-500">
                     <AlertTriangle className="w-4 h-4" />
@@ -315,7 +315,7 @@ export default function SecurityReport() {
                     </div>
 
                     {/* Terms Agreement */}
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 transition-all duration-200">
                       <h4 className="font-medium mb-3">Responsible Disclosure Guidelines</h4>
                       <ul className="space-y-1 text-sm text-muted-foreground mb-4">
                         {guidelines.map((item) => (

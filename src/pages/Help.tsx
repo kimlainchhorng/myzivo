@@ -192,7 +192,7 @@ export default function Help() {
                 
                 return (
                   <Component key={link.title} {...props as any}>
-                    <Card className="hover:border-primary/50 transition-all cursor-pointer h-full group">
+                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full group">
                       <CardContent className="p-5">
                         <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
                           <Icon className={`w-5 h-5 ${link.color}`} />
@@ -218,7 +218,7 @@ export default function Help() {
                 const Icon = link.icon;
                 return (
                   <Link key={link.title} to={link.href}>
-                    <Card className="hover:border-primary/50 transition-all cursor-pointer h-full group">
+                    <Card className="hover:border-primary/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full group">
                       <CardContent className="p-5">
                         <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
                           <Icon className={`w-5 h-5 ${link.color}`} />
@@ -264,7 +264,7 @@ export default function Help() {
           </section>
 
           {/* Partner Disclosure */}
-          <div className="p-6 rounded-2xl bg-muted/50 border border-border/50 mb-8">
+          <div className="p-6 rounded-2xl bg-muted/50 border border-border/50 mb-8 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-4">
               <Shield className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div>
