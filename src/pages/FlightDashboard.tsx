@@ -21,7 +21,7 @@ import FlightSearch from "@/components/flight/FlightSearch";
 import FlightBookings from "@/components/flight/FlightBookings";
 import FlightSchedules from "@/components/flight/FlightSchedules";
 import FlightSettings from "@/components/flight/FlightSettings";
-import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
@@ -245,7 +245,7 @@ const FlightDashboard = () => {
           </Tabs>
         </main>
       </div>
-      <AdminFloatingButton />
+      
     </div>
   );
 };

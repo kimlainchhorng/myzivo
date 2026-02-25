@@ -25,7 +25,7 @@ import CustomerFoodOrders from "@/components/customer/CustomerFoodOrders";
 import CustomerCarRentals from "@/components/customer/CustomerCarRentals";
 import CustomerFlights from "@/components/customer/CustomerFlights";
 import CustomerHotels from "@/components/customer/CustomerHotels";
-import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import { cn } from "@/lib/utils";
@@ -246,7 +246,7 @@ const CustomerDashboard = () => {
           </div>
         </main>
       </div>
-      <AdminFloatingButton />
+      
     </div>
   );
 };

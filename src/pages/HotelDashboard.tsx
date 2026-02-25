@@ -21,7 +21,7 @@ import HotelSearch from "@/components/hotel/HotelSearch";
 import HotelBookings from "@/components/hotel/HotelBookings";
 import HotelRooms from "@/components/hotel/HotelRooms";
 import HotelSettings from "@/components/hotel/HotelSettings";
-import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
@@ -245,7 +245,7 @@ const HotelDashboard = () => {
           </Tabs>
         </main>
       </div>
-      <AdminFloatingButton />
+      
     </div>
   );
 };

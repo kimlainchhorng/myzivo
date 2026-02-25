@@ -53,33 +53,6 @@ const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
 const MobileTrips = lazy(() => import("./pages/mobile/MobileTrips"));
 const MobileAlerts = lazy(() => import("./pages/mobile/MobileAlerts"));
 const MobileAccount = lazy(() => import("./pages/mobile/MobileAccount"));
-const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
-const CommissionsPage = lazy(() => import("./pages/admin/CommissionsPage"));
-const GrowthDashboard = lazy(() => import("./pages/admin/GrowthDashboard"));
-const SecurityDashboard = lazy(() => import("./pages/admin/SecurityDashboard"));
-const GlobalDashboard = lazy(() => import("./pages/admin/GlobalDashboard"));
-const AIInsightsDashboard = lazy(() => import("./pages/admin/AIInsightsDashboard"));
-const RecoveryDashboard = lazy(() => import("./pages/admin/RecoveryDashboard"));
-const BackupsPage = lazy(() => import("./pages/admin/BackupsPage"));
-const RecoveryGuidePage = lazy(() => import("./pages/admin/RecoveryGuidePage"));
-const LegalControlDashboard = lazy(() => import("./pages/admin/LegalControlDashboard"));
-const SystemHealthDashboard = lazy(() => import("./pages/admin/SystemHealthDashboard"));
-// Master Admin Control Center
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const MasterDashboard = lazy(() => import("./pages/admin/MasterDashboard"));
-const DriverDetail = lazy(() => import("./pages/admin/drivers/DriverDetail"));
-const TravelBookingsPage = lazy(() => import("./pages/admin/travel/TravelBookingsPage"));
-const TravelRefundsPage = lazy(() => import("./pages/admin/travel/TravelRefundsPage"));
-const SuppliersStatusPage = lazy(() => import("./pages/admin/travel/SuppliersStatusPage"));
-const AdminJobsPage = lazy(() => import("./pages/admin/JobsPage"));
-const SettingsHub = lazy(() => import("./pages/admin/settings/SettingsHub"));
-const InviteManagement = lazy(() => import("./pages/admin/settings/InviteManagement"));
-const ZonePricingRatesPage = lazy(() => import("./pages/admin/ZonePricingRatesPage"));
-// ZIVO Admin Dashboard - Rides Operations
-const RidesHubPage = lazy(() => import("./pages/admin/rides/RidesHubPage"));
-const DriversHubPage = lazy(() => import("./pages/admin/drivers/DriversHubPage"));
-const PayoutsHubPage = lazy(() => import("./pages/admin/payouts/PayoutsHubPage"));
-const AdminSetupPage = lazy(() => import("./pages/admin/SetupPage"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
@@ -104,35 +77,6 @@ const DriverAccountPage = lazy(
 const DriverOrderChatPage = lazy(() => import("./pages/driver/DriverOrderChatPage"));
 const DriverAnalyticsPage = lazy(() => import("./pages/driver/DriverAnalyticsPage"));
 const DriverActivityPage = lazy(() => import("./pages/driver/DriverActivityPage"));
-
-// Admin Analytics Pages
-const AnalyticsHub = lazy(() => import("./pages/admin/analytics/AnalyticsHub"));
-const AnalyticsOrders = lazy(() => import("./pages/admin/analytics/AnalyticsOrders"));
-const AnalyticsRevenue = lazy(() => import("./pages/admin/analytics/AnalyticsRevenue"));
-const AnalyticsDrivers = lazy(() => import("./pages/admin/analytics/AnalyticsDrivers"));
-const AnalyticsMerchants = lazy(() => import("./pages/admin/analytics/AnalyticsMerchants"));
-
-// Admin AI Insights Page
-const AdminInsightsPage = lazy(() => import("./pages/admin/AdminInsightsPage"));
-
-// Admin Marketing Pages
-const MarketingHub = lazy(() => import("./pages/admin/marketing/MarketingHub"));
-const MarketingCampaignsPage = lazy(() => import("./pages/admin/marketing/CampaignsPage"));
-const MarketingCampaignDetailPage = lazy(() => import("./pages/admin/marketing/CampaignDetailPage"));
-
-// Admin Push Broadcast Pages
-const PushDashboard = lazy(() => import("./pages/admin/push/PushDashboard"));
-const PushSegmentsPage = lazy(() => import("./pages/admin/push/SegmentsPage"));
-const PushCampaignsPage = lazy(() => import("./pages/admin/push/CampaignsPage"));
-const PushCampaignDetailPage = lazy(() => import("./pages/admin/push/CampaignDetailPage"));
-const NotificationsOutboxPage = lazy(() => import("./pages/admin/NotificationsOutboxPage"));
-const NotificationAuditPage = lazy(() => import("./pages/admin/NotificationAuditPage"));
-
-// Admin Loyalty
-const AdminLoyaltyPage = lazy(() => import("./pages/admin/AdminLoyaltyPage"));
-
-// Admin Ads
-const AdminAdsPage = lazy(() => import("./pages/admin/AdminAdsPage"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
@@ -169,7 +113,6 @@ const CarRentalDashboard = lazy(() => import("./pages/CarRentalDashboard"));
 const MerchantOrderChatPage = lazy(() => import("./pages/merchant/MerchantOrderChatPage"));
 const FlightDashboard = lazy(() => import("./pages/FlightDashboard"));
 const HotelDashboard = lazy(() => import("./pages/HotelDashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Setup = lazy(() => import("./pages/Setup"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -237,11 +180,6 @@ const Cars = lazy(() => import("./pages/Cars"));
 const CarsSearchPage = lazy(() => import("./pages/cars/CarsSearchPage"));
 const CarsDetailPage = lazy(() => import("./pages/cars/CarDetailPage"));
 const HowToRent = lazy(() => import("./pages/HowToRent"));
-// Admin car rental settings
-const CarRentalSettingsPage = lazy(() => import("./pages/admin/CarRentalSettingsPage"));
-const CarDamageClaimsPage = lazy(() => import("./pages/admin/CarDamageClaimsPage"));
-const CarRevenueOverviewPage = lazy(() => import("./pages/admin/CarRevenueOverviewPage"));
-const FleetOversightPage = lazy(() => import("./pages/admin/FleetOversightPage"));
 // Owner Earnings
 const OwnerEarningsPage = lazy(() => import("./pages/owner/OwnerEarningsPage"));
 // Fleet pages
@@ -334,10 +272,6 @@ const FinancialRecords = lazy(() => import("./pages/NotFound"));
 const Governance = lazy(() => import("./pages/NotFound"));
 const EthicsPolicy = lazy(() => import("./pages/NotFound"));
 const RegulatorCommunications = lazy(() => import("./pages/NotFound"));
-const LegalDocCenter = lazy(() => import("./pages/admin/LegalDocCenter"));
-const EvidenceLogging = lazy(() => import("./pages/admin/EvidenceLogging"));
-const CaseFileSystem = lazy(() => import("./pages/admin/CaseFileSystem"));
-const LegalResponseProtocols = lazy(() => import("./pages/admin/LegalResponseProtocols"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -392,19 +326,18 @@ const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const PromosPage = lazy(() => import("./pages/account/PromosPage"));
 const Vision = lazy(() => import("./pages/Vision"));
-const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
 // Corporate & Brand pages
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
-const InvestorRelations = lazy(() => import("./pages/NotFound")); // Removed: placeholder
-const StrategicPartnerships = lazy(() => import("./pages/NotFound")); // Removed: internal
-const FinancialTransparency = lazy(() => import("./pages/NotFound")); // Removed: internal
+const InvestorRelations = lazy(() => import("./pages/NotFound"));
+const StrategicPartnerships = lazy(() => import("./pages/NotFound"));
+const FinancialTransparency = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const ForCustomers = lazy(() => import("./pages/ForCustomers"));
 const Drive = lazy(() => import("./pages/Drive"));
 const ForRestaurants = lazy(() => import("./pages/ForRestaurants"));
-const EcosystemMap = lazy(() => import("./pages/NotFound")); // Removed: internal diagram
-const StrategicRoadmap = lazy(() => import("./pages/NotFound")); // Removed: internal
+const EcosystemMap = lazy(() => import("./pages/NotFound"));
+const StrategicRoadmap = lazy(() => import("./pages/NotFound"));
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
 
 // Support pages
@@ -413,81 +346,14 @@ const TravelBookingsSupport = lazy(() => import("./pages/support/TravelBookings"
 const SiteIssuesSupport = lazy(() => import("./pages/support/SiteIssues"));
 const UserSupportTicketsPage = lazy(() => import("./pages/support/UserSupportTicketsPage"));
 const LiveSupportChatPage = lazy(() => import("./pages/support/LiveSupportChatPage"));
-const AdminSupportDashboard = lazy(() => import("./pages/admin/modules/support/AdminSupportDashboard"));
 const PartnerOverview = lazy(() => import("./pages/partner/Overview"));
 
-// Admin pages - lazy load
-const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
-const ClicksAnalytics = lazy(() => import("./pages/admin/ClicksAnalytics"));
-const TravelAdminDashboard = lazy(() => import("./pages/admin/TravelAdminDashboard"));
-const TravelPartnersPage = lazy(() => import("./pages/admin/TravelPartnersPage"));
-const TravelHandoffPage = lazy(() => import("./pages/admin/TravelHandoffPage"));
-const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
-const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
-const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
-const PhoneCompliancePage = lazy(() => import("./pages/admin/PhoneCompliancePage"));
 const VerifyPhonePage = lazy(() => import("./pages/VerifyPhonePage"));
-const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
-const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
-const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
-const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
-const FlightDebugPage = lazy(() => import("./pages/admin/FlightDebugPage"));
-const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
-const FlightsLaunchControl = lazy(() => import("./pages/admin/FlightsLaunchControl"));
-const FlightIncidentLog = lazy(() => import("./pages/admin/FlightIncidentLog"));
-const FlightAnalyticsPage = lazy(() => import("./pages/admin/FlightAnalyticsPage"));
-const FlightRefundsPage = lazy(() => import("./pages/admin/FlightRefundsPage"));
-const FlightEmailLogsPage = lazy(() => import("./pages/admin/FlightEmailLogsPage"));
-const FlightPerformancePage = lazy(() => import("./pages/admin/FlightPerformancePage"));
-const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
-const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOfTravelSettings"));
-const OperationsPlaybook = lazy(() => import("./pages/admin/modules/operations/OperationsPlaybook"));
-const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
-const TravelOperationsCenter = lazy(() => import("./pages/admin/TravelOperationsCenter"));
- const FulfillmentHub = lazy(() => import("./pages/admin/FulfillmentHub"));
-const MissionControlLayout = lazy(() => import("./layouts/MissionControlLayout"));
-const BookingLedgerPage = lazy(() => import("./components/admin/BookingLedger"));
-const MarketingDashboard = lazy(() => import("./pages/admin/MarketingDashboard"));
-const AdminNotificationsModule = lazy(() => import("./pages/admin/modules/notifications/AdminNotificationsModule"));
-const AdminFinanceDashboard = lazy(() => import("./pages/admin/modules/finance/AdminFinanceDashboard"));
-const AdminFraudDashboard = lazy(() => import("./pages/admin/modules/fraud/AdminFraudDashboard"));
-const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/modules/analytics/AdminAnalyticsDashboard"));
-const AdminPricingDashboard = lazy(() => import("./pages/admin/modules/pricing/AdminPricingDashboard"));
-const ComplianceDashboard = lazy(() => import("./pages/admin/modules/compliance/ComplianceDashboard"));
-const AutomationDashboard = lazy(() => import("./pages/admin/modules/automation/AutomationDashboard"));
-const ProductionLaunchDashboard = lazy(() => import("./pages/admin/modules/launch/ProductionLaunchDashboard"));
 
-// Dispatch Panel
-const DispatchLayout = lazy(() => import("./pages/dispatch/DispatchLayout"));
-const DispatchDashboard = lazy(() => import("./pages/dispatch/DispatchDashboard"));
-const DispatchOrdersKanban = lazy(() => import("./pages/dispatch/DispatchOrdersKanban"));
-const DispatchOrderDetail = lazy(() => import("./pages/dispatch/DispatchOrderDetail"));
-const DispatchDrivers = lazy(() => import("./pages/dispatch/DispatchDrivers"));
-const DispatchMerchants = lazy(() => import("./pages/dispatch/DispatchMerchants"));
-const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
-const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
-const DispatchAnalytics = lazy(() => import("./pages/dispatch/DispatchAnalytics"));
-const DispatchQuality = lazy(() => import("./pages/dispatch/DispatchQuality"));
-const DispatchSupport = lazy(() => import("./pages/dispatch/DispatchSupport"));
-const DispatchSupportTicket = lazy(() => import("./pages/dispatch/DispatchSupportTicket"));
-const DispatchDisputes = lazy(() => import("./pages/dispatch/DispatchDisputes"));
-const DispatchDisputeDetail = lazy(() => import("./pages/dispatch/DispatchDisputeDetail"));
+const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+
 const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
-// Batch management
-const DispatchBatches = lazy(() => import("./pages/dispatch/DispatchBatches"));
-const DispatchBatchNew = lazy(() => import("./pages/dispatch/DispatchBatchNew"));
-const DispatchBatchDetail = lazy(() => import("./pages/dispatch/DispatchBatchDetail"));
-const DispatchTeam = lazy(() => import("./pages/dispatch/DispatchTeam"));
-const DispatchPromotions = lazy(() => import("./pages/dispatch/DispatchPromotions"));
-const DispatchReferrals = lazy(() => import("./pages/dispatch/DispatchReferrals"));
-const DispatchAudit = lazy(() => import("./pages/dispatch/DispatchAudit"));
-const DispatchAuditDetail = lazy(() => import("./pages/dispatch/DispatchAuditDetail"));
-const DispatchAlerts = lazy(() => import("./pages/dispatch/DispatchAlerts"));
-const DispatchSLA = lazy(() => import("./pages/dispatch/DispatchSLA"));
-const DispatchSafety = lazy(() => import("./pages/dispatch/DispatchSafety"));
-const DispatchDevices = lazy(() => import("./pages/dispatch/DispatchDevices"));
-// Admin Safety Dashboard
-const AdminSafetyDashboard = lazy(() => import("./pages/admin/AdminSafetyDashboard"));
+
 // Driver batch page
 const DriverBatchPage = lazy(() => import("./pages/driver/DriverBatchPage"));
 // Accept Invitation
@@ -499,13 +365,9 @@ const RateOrderPage = lazy(() => import("./pages/rate/RateOrderPage"));
 // Order Tracking
 const OrderTrackingPage = lazy(() => import("./pages/track/OrderTrackingPage"));
 
-// Go-Live & Launch Runbook
-const GoLiveChecklist = lazy(() => import("./pages/admin/GoLiveChecklist"));
-const LaunchDayRunbook = lazy(() => import("./pages/admin/LaunchDayRunbook"));
-
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
-const TrackingTest = lazy(() => import("./pages/NotFound")); // Removed: dev test page
+const TrackingTest = lazy(() => import("./pages/NotFound"));
 const Offline = lazy(() => import("./pages/Offline"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -518,9 +380,6 @@ const CountryHubPage = lazy(() => import("./pages/seo/CountryHubPage"));
 const LocalizedFlightRoutePage = lazy(() => import("./pages/seo/LocalizedFlightRoutePage"));
 const CityLandingPage = lazy(() => import("./pages/seo/CityLandingPage"));
 const HotelCityLandingPage = lazy(() => import("./pages/seo/HotelCityLandingPage"));
-
-// Admin scaling dashboards
-const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard"));
 
 // Rewards/Loyalty
 const RewardsPage = lazy(() => import("./pages/RewardsPage"));
@@ -542,7 +401,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
 // Operations & Launch pages
 const BookingManagement = lazy(() => import("./pages/BookingManagement"));
-const HowZivoMakesMoney = lazy(() => import("./pages/NotFound")); // Removed: internal
+const HowZivoMakesMoney = lazy(() => import("./pages/NotFound"));
 const Press = lazy(() => import("./pages/Press"));
 
 // Internal investor/acquisition pages
@@ -553,10 +412,6 @@ const CompetitiveMoat = lazy(() => import("./pages/internal/CompetitiveMoat"));
 const FiveYearVision = lazy(() => import("./pages/internal/FiveYearVision"));
 const APIIntegrationStatus = lazy(() => import("./pages/internal/APIIntegrationStatus"));
 
-// Admin analytics
-const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
-const KPIDashboard = lazy(() => import("./pages/admin/KPIDashboard"));
-
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
 const HotelsAdLanding = lazy(() => import("./pages/ads/HotelsAdLanding"));
@@ -565,7 +420,7 @@ const TransfersAdLanding = lazy(() => import("./pages/ads/TransfersAdLanding"));
 const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding"));
 
 // Creator pages - lazy load
-const Creators = lazy(() => import("./pages/NotFound")); // Removed: no creator program
+const Creators = lazy(() => import("./pages/NotFound"));
 const CreatorDashboard = lazy(() => import("./pages/creators/CreatorDashboard"));
 const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
 const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
@@ -746,10 +601,6 @@ const App = () => (
                 <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 
-{/* Admin analytics */}
-                <Route path="/admin/analytics-dashboard" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
-                <Route path="/admin/kpi-dashboard" element={<ProtectedRoute><KPIDashboard /></ProtectedRoute>} />
-                
                 {/* Airport Pages - SEO */}
                 <Route path="/airports/:iata" element={<AirportPage />} />
                 
@@ -878,123 +729,61 @@ const App = () => (
                 <Route path="/legal/terms-precedence" element={<TermsPrecedence />} />
                 <Route path="/legal/communications-consent" element={<CommunicationsConsent />} />
                 <Route path="/legal/data-breach" element={<DataBreachPolicy />} />
+                <Route path="/legal/data-residency" element={<DataResidency />} />
                 <Route path="/legal/children-privacy" element={<ChildrenPrivacy />} />
+                <Route path="/legal/insurance" element={<InsurancePolicy />} />
                 <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
-                <Route path="/legal/legal-notices" element={<LegalNoticesPolicy />} />
+                <Route path="/legal/notices" element={<LegalNoticesPolicy />} />
                 <Route path="/legal/compliance-operations" element={<ComplianceOperations />} />
                 <Route path="/legal/regulatory-response" element={<RegulatoryResponse />} />
                 <Route path="/legal/compliance-records" element={<ComplianceRecords />} />
-                <Route path="/legal/kyc-policy" element={<KYCPolicy />} />
+                <Route path="/legal/kyc" element={<KYCPolicy />} />
                 <Route path="/legal/aml" element={<AMLPolicy />} />
                 <Route path="/legal/complaints" element={<ComplaintsPolicy />} />
                 <Route path="/legal/financial-records" element={<FinancialRecords />} />
                 <Route path="/legal/governance" element={<Governance />} />
                 <Route path="/legal/ethics" element={<EthicsPolicy />} />
                 <Route path="/legal/regulator-communications" element={<RegulatorCommunications />} />
-                <Route path="/legal/data-residency" element={<DataResidency />} />
-                <Route path="/admin/legal-docs" element={<LegalDocCenter />} />
-                <Route path="/admin/evidence-logging" element={<EvidenceLogging />} />
-                <Route path="/admin/case-files" element={<CaseFileSystem />} />
-                <Route path="/admin/legal-response" element={<LegalResponseProtocols />} />
-                <Route path="/help" element={<HelpCenter />} />
-                <Route path="/promotions" element={<Promotions />} />
-                <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
-                
-                {/* Loyalty Routes */}
-                <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
-                <Route path="/account/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
-                <Route path="/account/rewards" element={<ProtectedRoute><AccountRewardsPage /></ProtectedRoute>} />
-                <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
-                <Route path="/admin/loyalty" element={<ProtectedRoute><AdminLoyaltyPage /></ProtectedRoute>} />
-
-                {/* Restaurant Ads Routes */}
-                <Route path="/merchant/ads" element={<ProtectedRoute><MerchantAdsPage /></ProtectedRoute>} />
-                <Route path="/merchant/reviews" element={<ProtectedRoute><MerchantReviewsPage /></ProtectedRoute>} />
-                <Route path="/admin/ads" element={<ProtectedRoute><AdminAdsPage /></ProtectedRoute>} />
-
-                {/* P2P Car Rental - Owner Routes */}
-                <Route path="/list-your-car" element={<ListYourCar />} />
-                <Route path="/owner/apply" element={<ProtectedRoute><OwnerApply /></ProtectedRoute>} />
-                <Route path="/owner/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
-                <Route path="/owner/profile" element={<ProtectedRoute><OwnerProfile /></ProtectedRoute>} />
-                <Route path="/owner/cars" element={<ProtectedRoute><OwnerCars /></ProtectedRoute>} />
-                <Route path="/owner/cars/new" element={<ProtectedRoute><AddVehicle /></ProtectedRoute>} />
-                <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
-                <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
-                <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
-                <Route path="/owner/earnings" element={<ProtectedRoute><OwnerEarningsPage /></ProtectedRoute>} />
-                <Route path="/owner/payouts" element={<ProtectedRoute><OwnerPayouts /></ProtectedRoute>} />
-                <Route path="/owner/stripe-connect/return" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
-                <Route path="/owner/stripe-connect/refresh" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
-                
-                {/* Public Car Routes */}
-                <Route path="/cars" element={<Cars />} />
-                <Route path="/rent" element={<HowToRent />} />
-                
-                {/* Renter Dashboard Routes */}
-                <Route path="/renter/dashboard" element={<ProtectedRoute><RenterDashboard /></ProtectedRoute>} />
-                <Route path="/renter/bookings" element={<ProtectedRoute><RenterBookings /></ProtectedRoute>} />
-                <Route path="/renter/verification" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
-                {/* P2P Car Rental - Renter Routes */}
-                <Route path="/p2p/search" element={<P2PVehicleSearch />} />
-                <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />
-                <Route path="/p2p/booking/:id/confirmation" element={<ProtectedRoute><P2PBookingConfirmation /></ProtectedRoute>} />
-                <Route path="/p2p/my-trips" element={<ProtectedRoute><RenterTrips /></ProtectedRoute>} />
-                
-                {/* Renter Verification Routes */}
-                <Route path="/verify/driver" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
-                <Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
-                
-                {/* Beta Routes */}
-                <Route path="/beta/waitlist" element={<RenterWaitlist />} />
-                
-                {/* Damage Report Routes */}
-                <Route path="/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
-                <Route path="/owner/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
-                <Route path="/damage/:reportId/status" element={<ProtectedRoute><DamageReportStatus /></ProtectedRoute>} />
-                
-                <Route path="/community-guidelines" element={<CommunityGuidelines />} />
-                <Route path="/insurance" element={<InsurancePolicy />} />
-                
-                {/* Compliance & Enterprise Trust Routes */}
-                <Route path="/compliance" element={<ComplianceCenter />} />
-                <Route path="/legal/compliance-center" element={<ComplianceCenter />} />
-                <Route path="/security/enterprise" element={<EnterpriseTrust />} />
-                <Route path="/trust" element={<EnterpriseTrust />} />
-                <Route path="/legal/payment-transparency" element={<PaymentTransparency />} />
-                <Route path="/business/partner-audit" element={<PartnerAuditDocs />} />
-                <Route path="/reliability" element={<Reliability />} />
-                <Route path="/business/enterprise" element={<EnterpriseReady />} />
-                <Route path="/enterprise" element={<EnterpriseReady />} />
-                <Route path="/legal/regulatory-status" element={<RegulatoryStatus />} />
-                
-                {/* P2P Legal Pages */}
-                <Route path="/terms/renter" element={<RenterTerms />} />
-                <Route path="/terms/owner" element={<OwnerTerms />} />
-                <Route path="/damage-policy" element={<DamagePolicy />} />
-                <Route path="/accessibility" element={<AccessibilityStatement />} />
-                <Route path="/do-not-sell" element={<DoNotSell />} />
+                <Route path="/legal/do-not-sell" element={<DoNotSell />} />
+                <Route path="/legal/partner-disclosure" element={<PartnerDisclosure />} />
+                <Route path="/legal/cancellation" element={<CancellationPolicy />} />
+                <Route path="/legal/security-incident" element={<SecurityIncident />} />
+                <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
+                <Route path="/legal/renter-terms" element={<RenterTerms />} />
+                <Route path="/legal/owner-terms" element={<OwnerTerms />} />
+                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
-                <Route path="/partner-disclosure" element={<PartnerDisclosure />} />
-                <Route path="/for-customers" element={<ForCustomers />} />
-                <Route path="/drive" element={<Drive />} />
-                <Route path="/for-restaurants" element={<ForRestaurants />} />
+
+                {/* Public Pages */}
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/partners" element={<Partners />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
-                
-                {/* Operations & Launch Routes */}
-                <Route path="/bookings/:bookingId" element={<BookingManagement />} />
-                <Route path="/how-zivo-makes-money" element={<HowZivoMakesMoney />} />
-                <Route path="/transparency" element={<HowZivoMakesMoney />} />
+                <Route path="/ai-trip-planner" element={<AITripPlanner />} />
+                <Route path="/zivo-plus" element={<ZivoPlus />} />
+                <Route path="/vision" element={<Vision />} />
                 <Route path="/press" element={<Press />} />
-                <Route path="/media" element={<Press />} />
+                <Route path="/how-zivo-makes-money" element={<HowZivoMakesMoney />} />
+                <Route path="/for-customers" element={<ForCustomers />} />
+                <Route path="/drive" element={<Drive />} />
+                <Route path="/for-restaurants" element={<ForRestaurants />} />
+                <Route path="/promotions" element={<Promotions />} />
+                <Route path="/help-center" element={<HelpCenter />} />
+                <Route path="/compliance" element={<ComplianceCenter />} />
+                <Route path="/enterprise-trust" element={<EnterpriseTrust />} />
+                <Route path="/payment-transparency" element={<PaymentTransparency />} />
+                <Route path="/partner-audit-docs" element={<PartnerAuditDocs />} />
+                <Route path="/reliability" element={<Reliability />} />
+                <Route path="/enterprise-ready" element={<EnterpriseReady />} />
+                <Route path="/regulatory-status" element={<RegulatoryStatus />} />
+                <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
+                <Route path="/list-your-car" element={<ListYourCar />} />
+
+                {/* Security Pages */}
                 <Route path="/security/report" element={<SecurityReport />} />
                 <Route path="/security/zero-trust" element={<ZeroTrustPolicy />} />
                 <Route path="/security/scale-protection" element={<ScaleProtection />} />
@@ -1023,8 +812,6 @@ const App = () => (
                 <Route path="/account/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
-                <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
-                <Route path="/legal/security-incident" element={<SecurityIncident />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
@@ -1043,27 +830,6 @@ const App = () => (
                 <Route path="/:countrySlug/flights/:routeSlug" element={<LocalizedFlightRoutePage />} />
                 
                 <Route path="/install" element={<Install />} />
-                
-                {/* Admin SEO Scaling Dashboard */}
-                <Route path="/admin/seo-scaling" element={<ProtectedRoute requireAdmin><SEOScalingDashboard /></ProtectedRoute>} />
-                
-                {/* Admin Login (public) */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                
-                {/* Mission Control - Power User Ops Dashboard */}
-                <Route path="/admin/ops" element={<ProtectedRoute requireAdmin><MissionControlLayout /></ProtectedRoute>}>
-                  <Route index element={<BookingLedgerPage />} />
-                  <Route path="bookings" element={<BookingLedgerPage />} />
-                </Route>
-                
-                {/* New Master Admin Routes */}
-                <Route path="/admin/travel/bookings" element={<ProtectedRoute requireAdmin><TravelBookingsPage /></ProtectedRoute>} />
-                <Route path="/admin/travel/refunds" element={<ProtectedRoute requireAdmin><TravelRefundsPage /></ProtectedRoute>} />
-                <Route path="/admin/travel/suppliers" element={<ProtectedRoute requireAdmin><SuppliersStatusPage /></ProtectedRoute>} />
-                <Route path="/admin/jobs" element={<ProtectedRoute requireAdmin><AdminJobsPage /></ProtectedRoute>} />
-                <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><SettingsHub /></ProtectedRoute>} />
-                <Route path="/admin/settings/invites" element={<ProtectedRoute requireAdmin><InviteManagement /></ProtectedRoute>} />
-                <Route path="/admin/phone-compliance" element={<ProtectedRoute requireAdmin><PhoneCompliancePage /></ProtectedRoute>} />
                 
                 {/* Rewards / Loyalty */}
                 <Route path="/rewards" element={<RewardsPage />} />
@@ -1087,506 +853,69 @@ const App = () => (
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/disputes" element={<ProtectedRoute><CustomerDisputesPage /></ProtectedRoute>} />
                 
-                {/* Eats Analytics Routes */}
-                <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AnalyticsHub /></ProtectedRoute>} />
-                <Route path="/admin/analytics/orders" element={<ProtectedRoute requireAdmin><AnalyticsOrders /></ProtectedRoute>} />
-                <Route path="/admin/analytics/revenue" element={<ProtectedRoute requireAdmin><AnalyticsRevenue /></ProtectedRoute>} />
-                <Route path="/admin/analytics/drivers" element={<ProtectedRoute requireAdmin><AnalyticsDrivers /></ProtectedRoute>} />
-                <Route path="/admin/analytics/merchants" element={<ProtectedRoute requireAdmin><AnalyticsMerchants /></ProtectedRoute>} />
-                
-                {/* Admin AI Insights */}
-                <Route path="/admin/insights" element={<ProtectedRoute requireAdmin><AdminInsightsPage /></ProtectedRoute>} />
-                
-                {/* Admin Marketing */}
-                <Route path="/admin/marketing" element={<ProtectedRoute requireAdmin><MarketingHub /></ProtectedRoute>} />
-                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin><MarketingCampaignsPage /></ProtectedRoute>} />
-                <Route path="/admin/marketing/campaigns/:id" element={<ProtectedRoute requireAdmin><MarketingCampaignDetailPage /></ProtectedRoute>} />
-                
-                {/* Admin Push Notifications */}
-                <Route path="/admin/push" element={<PushDashboard />} />
-                <Route path="/admin/push/segments" element={<PushSegmentsPage />} />
-                <Route path="/admin/push/campaigns" element={<PushCampaignsPage />} />
-                <Route path="/admin/push/campaigns/:id" element={<PushCampaignDetailPage />} />
-                
-                {/* Admin Notifications Outbox & Audit */}
-                <Route path="/admin/notifications/outbox" element={<ProtectedRoute requireAdmin><NotificationsOutboxPage /></ProtectedRoute>} />
-                <Route path="/admin/notifications/audit" element={<ProtectedRoute requireAdmin><NotificationAuditPage /></ProtectedRoute>} />
-                
                 {/* Driver Analytics & Activity */}
                 <Route path="/driver/analytics" element={<DriverAnalyticsPage />} />
                 <Route path="/driver/activity" element={<DriverActivityPage />} />
                 
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/ab-testing"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <ABTestingDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/revenue"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <RevenueDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/growth"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <GrowthDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/clicks"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <ClicksAnalytics />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/travel"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <TravelAdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/travel/partners"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <TravelPartnersPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/travel/handoff"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <TravelHandoffPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/travel/logs"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <TravelLogsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Debug Panel */}
-                <Route
-                  path="/admin/flights/debug"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightDebugPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Status Dashboard */}
-                <Route
-                  path="/admin/flights/status"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightStatusPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flights Launch Control */}
-                <Route
-                  path="/admin/flights/launch"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightsLaunchControl />
-                    </ProtectedRoute>
-                  }
-                  />
-                {/* Flights Incident Log */}
-                <Route
-                  path="/admin/flights/incidents"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightIncidentLog />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Analytics Dashboard */}
-                <Route
-                  path="/admin/flights/analytics"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightAnalyticsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Refunds Admin */}
-                <Route
-                  path="/admin/flights/refunds"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightRefundsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Email Logs */}
-                <Route
-                  path="/admin/flights/emails"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightEmailLogsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Flight Performance & Costs */}
-                <Route
-                  path="/admin/flights/performance"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FlightPerformancePage />
-                    </ProtectedRoute>
-                  }
-                />
-{/* Car Rental Admin Settings */}
-                <Route
-                  path="/admin/cars/settings"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <CarRentalSettingsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Car Damage Claims Admin */}
-                <Route
-                  path="/admin/cars/damage-claims"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <CarDamageClaimsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Car Revenue Overview */}
-                <Route
-                  path="/admin/cars/revenue"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <CarRevenueOverviewPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Fleet Oversight */}
-                <Route
-                  path="/admin/fleets"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FleetOversightPage />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Cars Pages */}
+                <Route path="/cars" element={<Cars />} />
+                <Route path="/cars/search" element={<CarsSearchPage />} />
+                <Route path="/cars/:id" element={<CarsDetailPage />} />
+                <Route path="/how-to-rent" element={<HowToRent />} />
+                
+                {/* Owner Dashboard Routes */}
+                <Route path="/owner/apply" element={<OwnerApply />} />
+                <Route path="/owner/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
+                <Route path="/owner/profile" element={<ProtectedRoute><OwnerProfile /></ProtectedRoute>} />
+                <Route path="/owner/cars" element={<ProtectedRoute><OwnerCars /></ProtectedRoute>} />
+                <Route path="/owner/cars/add" element={<ProtectedRoute><AddVehicle /></ProtectedRoute>} />
+                <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
+                <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
+                <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
+                <Route path="/owner/payouts" element={<ProtectedRoute><OwnerPayouts /></ProtectedRoute>} />
+                <Route path="/owner/earnings" element={<ProtectedRoute><OwnerEarningsPage /></ProtectedRoute>} />
+                <Route path="/owner/stripe-return" element={<StripeConnectReturn />} />
+                
+                {/* P2P Car Rental Routes */}
+                <Route path="/p2p/search" element={<P2PVehicleSearch />} />
+                <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />
+                <Route path="/p2p/confirmation/:id" element={<P2PBookingConfirmation />} />
+                <Route path="/p2p/trips" element={<ProtectedRoute><RenterTrips /></ProtectedRoute>} />
+                
+                {/* Renter Dashboard */}
+                <Route path="/renter/dashboard" element={<ProtectedRoute><RenterDashboard /></ProtectedRoute>} />
+                <Route path="/renter/bookings" element={<ProtectedRoute><RenterBookings /></ProtectedRoute>} />
+                
+                {/* Renter Verification */}
+                <Route path="/verify/renter" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
+                <Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
+                
+                {/* Beta / Waitlist */}
+                <Route path="/beta/renter-waitlist" element={<RenterWaitlist />} />
+                
+                {/* Damage Reports */}
+                <Route path="/damage/report" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
+                <Route path="/damage/status/:id" element={<ProtectedRoute><DamageReportStatus /></ProtectedRoute>} />
+                
                 {/* Fleet Dashboard */}
                 <Route path="/fleet/dashboard" element={<FleetDashboard />} />
                 <Route path="/fleet/onboarding" element={<FleetOnboarding />} />
                 {/* Business Account */}
                 <Route path="/business/account" element={<BusinessAccountPage />} />
-                {/* Seller of Travel Settings */}
-                <Route
-                  path="/admin/travel/seller-of-travel"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <SellerOfTravelSettings />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Zone Pricing Rates Admin */}
-                <Route
-                  path="/admin/zone-pricing"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <ZonePricingRatesPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* System Status Dashboard */}
-                <Route
-                  path="/admin/system/status"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <SystemStatusPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Admin QA & Compliance */}
-                <Route
-                  path="/admin/qa"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminQA />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/compliance"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminCompliance />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* System Health Dashboard */}
-                <Route
-                  path="/admin/system-health"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <SystemHealthDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Enterprise Security Dashboard */}
-                <Route
-                  path="/admin/security"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <SecurityDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Global Dashboard */}
-                <Route
-                  path="/admin/global"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <GlobalDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* AI Insights Dashboard */}
-                <Route
-                  path="/admin/ai-insights"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AIInsightsDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* ZIVO Admin Dashboard - Rides Operations */}
-                <Route
-                  path="/admin/rides"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <RidesHubPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/drivers"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <DriversHubPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/payouts"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <PayoutsHubPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/setup"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminSetupPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/safety"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminSafetyDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Driver Detail Page */}
-                <Route
-                  path="/admin/drivers/:id"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <DriverDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Recovery Dashboard */}
-                <Route
-                  path="/admin/recovery"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <RecoveryDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Backups Page */}
-                <Route
-                  path="/admin/backups"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <BackupsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Recovery Guide */}
-                <Route
-                  path="/admin/system/recovery"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <RecoveryGuidePage />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Legal Control Dashboard */}
-                <Route
-                  path="/admin/legal-control"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <LegalControlDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/mobile"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminMobile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/email"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminEmail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/support"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminSupport />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/notifications"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminNotificationsModule />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/travel-operations"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <TravelOperationsCenter />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/fulfillment"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FulfillmentHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/marketing"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <MarketingDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/finance"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminFinanceDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/fraud"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminFraudDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/analytics"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminAnalyticsDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/pricing"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminPricingDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/operations-playbook"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <OperationsPlaybook />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/compliance"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <ComplianceDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/automation"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <AutomationDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/production-launch"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <ProductionLaunchDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                
+                {/* Customer Loyalty */}
+                <Route path="/account/loyalty" element={<ProtectedRoute><LoyaltyPage /></ProtectedRoute>} />
+                <Route path="/account/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
+                <Route path="/account/rewards" element={<ProtectedRoute><AccountRewardsPage /></ProtectedRoute>} />
+                <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
+                
+                {/* Merchant Pages */}
+                <Route path="/merchant/ads" element={<ProtectedRoute><MerchantAdsPage /></ProtectedRoute>} />
+                <Route path="/merchant/reviews" element={<ProtectedRoute><MerchantReviewsPage /></ProtectedRoute>} />
+
+                {/* Booking Management */}
+                <Route path="/booking-management" element={<ProtectedRoute><BookingManagement /></ProtectedRoute>} />
+                
                 {/* Public Support Pages */}
                 <Route path="/help" element={<Help />} />
                 <Route path="/support/travel-bookings" element={<TravelBookingsSupport />} />
@@ -1661,39 +990,6 @@ const App = () => (
                 <Route path="/platform" element={<EcosystemMap />} />
                 <Route path="/strategic-roadmap" element={<StrategicRoadmap />} />
                 <Route path="/trust-statement" element={<TrustStatement />} />
-                {/* Admin Email Automation */}
-                <Route path="/admin/email-automation" element={<ProtectedRoute requireAdmin><EmailAutomationDashboard /></ProtectedRoute>} />
-                {/* Go-Live Checklist & Launch Runbook */}
-                <Route path="/admin/go-live" element={<ProtectedRoute requireAdmin><GoLiveChecklist /></ProtectedRoute>} />
-                <Route path="/admin/launch-runbook" element={<ProtectedRoute requireAdmin><LaunchDayRunbook /></ProtectedRoute>} />
-                {/* Dispatch Panel Routes */}
-                <Route path="/dispatch" element={<ProtectedRoute requireAdmin><DispatchLayout /></ProtectedRoute>}>
-                  <Route index element={<DispatchDashboard />} />
-                  <Route path="orders" element={<DispatchOrdersKanban />} />
-                  <Route path="orders/:id" element={<DispatchOrderDetail />} />
-                  <Route path="batches" element={<DispatchBatches />} />
-                  <Route path="batches/new" element={<DispatchBatchNew />} />
-                  <Route path="batches/:id" element={<DispatchBatchDetail />} />
-                  <Route path="drivers" element={<DispatchDrivers />} />
-                  <Route path="merchants" element={<DispatchMerchants />} />
-                  <Route path="payouts" element={<DispatchPayouts />} />
-                  <Route path="analytics" element={<DispatchAnalytics />} />
-                  <Route path="quality" element={<DispatchQuality />} />
-                  <Route path="support" element={<DispatchSupport />} />
-                  <Route path="support/:id" element={<DispatchSupportTicket />} />
-                  <Route path="disputes" element={<DispatchDisputes />} />
-                  <Route path="disputes/:id" element={<DispatchDisputeDetail />} />
-                  <Route path="settings" element={<DispatchSettings />} />
-                  <Route path="team" element={<DispatchTeam />} />
-                  <Route path="promotions" element={<DispatchPromotions />} />
-                  <Route path="referrals" element={<DispatchReferrals />} />
-                  <Route path="audit" element={<DispatchAudit />} />
-                  <Route path="audit/:id" element={<DispatchAuditDetail />} />
-                  <Route path="alerts" element={<DispatchAlerts />} />
-                  <Route path="sla" element={<DispatchSLA />} />
-                  <Route path="safety" element={<DispatchSafety />} />
-                  <Route path="devices" element={<DispatchDevices />} />
-                </Route>
                 {/* Accept Team Invitation */}
                 <Route path="/accept-invite" element={<AcceptInvite />} />
                 {/* User Ticket Detail Page */}

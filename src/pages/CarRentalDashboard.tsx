@@ -20,7 +20,7 @@ import CarRentalBookings from "@/components/carRental/CarRentalBookings";
 import CarRentalInventory from "@/components/carRental/CarRentalInventory";
 import CarRentalAnalytics from "@/components/carRental/CarRentalAnalytics";
 import CarRentalSettings from "@/components/carRental/CarRentalSettings";
-import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
@@ -258,7 +258,7 @@ const CarRentalDashboard = () => {
           </Tabs>
         </main>
       </div>
-      <AdminFloatingButton />
+      
     </div>
   );
 };
