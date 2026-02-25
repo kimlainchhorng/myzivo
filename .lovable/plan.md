@@ -1,80 +1,127 @@
 
 
-# ZIVO Homepage Premium Restyle
+# ZIVO Homepage: AI-Generated Videos + UX/UI Polish
 
 ## Overview
 
-Complete restyle of the ZIVO customer homepage to achieve a premium, global-brand-quality design (Uber/Booking/Expedia level). The user uploaded an MP4 video to use as the hero background media. The design will feature a split hero layout (text left, cinematic video right), neon green ZIVO accents, deep navy/charcoal tones, and smooth micro-animations throughout.
+Replace the copied hero video with AI-generated travel videos using Lovable AI (Gemini image model), delete the static MP4 file, and further polish the homepage UX/UI for a more premium 2026 feel.
 
 ## What Changes
 
-### 1. Hero Section Restyle (HeroSection.tsx)
-- **Desktop**: Split layout -- left side has headline, subheadline, CTA buttons row, "Track prices" link, and trust badges; right side shows the uploaded MP4 video with a dark gradient overlay and subtle ZIVO green glow
-- **Mobile**: Video stacks above content
-- **Headline**: "Book Flights, Hotels, and Car Rentals -- All in One Place"
-- **Subheadline**: "ZIVO helps you book travel with secure checkout and instant confirmation."
-- **Buttons row**: "Book Flights" (filled green), "Book Hotels" (outline), "Book Car Rentals" (outline), "Book Rides" (outline)
-- **Under buttons**: Small "Track prices and get alerts" link
-- **Trust badges**: Secure Checkout, Instant Confirmation, 24/7 Customer Support, No Hidden Fees
-- Copy the uploaded MP4 video to `src/assets/hero-video.mp4`
+### 1. Delete Static Hero Video
+- Remove `src/assets/hero-video.mp4` from the project
+- The hero section will use AI-generated images instead (video generation is not supported by current AI models, but we can generate stunning cinematic travel images)
 
-### 2. NavBar Restyle (NavBar.tsx)
-- Deep charcoal/navy background with backdrop blur
-- Left: ZIVO logo
-- Center: Flights, Hotels, Cars, Help, More (existing), Rides/Eats/Move link
-- Right: "Log in" (ghost) + "Sign up" (filled neon green button with glow)
-- Smooth hover transitions on all nav items
+### 2. AI-Generated Hero Images via Edge Function
+Create a new edge function `generate-hero-image` that uses Lovable AI Gateway with the `google/gemini-2.5-flash-image` model to generate premium travel visuals on demand. The hero section will display a rotating set of AI-generated cinematic travel images (airplane at sunset, luxury hotel lobby, city skyline at night, etc.).
 
-### 3. Homepage Layout Simplification (Index.tsx - DesktopHomePage)
-Streamline sections to match the requested layout:
-1. Hero (restyled)
-2. Popular Destinations (existing DestinationShowcase, restyled cards)
-3. Best Deals carousel (RecommendedDealsSection, horizontal scroll)
-4. Why ZIVO (WhyBookWithZivo, restyled as 4 feature cards)
-5. Footer (existing, minor polish)
+**How it works:**
+- Edge function calls Lovable AI with image generation prompts
+- Generated images are stored in Supabase Storage (`hero-images` bucket)
+- Hero section fetches and displays them with smooth crossfade transitions
+- Fallback to high-quality static Unsplash images if generation fails
 
-Remove or reorder excess sections (BentoFeatures, PrimaryServicesSection, HowItWorksSimple, AirlineTrustSection, etc.) to reduce clutter and match the clean premium layout requested.
+### 3. Hero Section Restyle (HeroSection.tsx)
+- Replace `<video>` element with an AI-generated image carousel using crossfade animation
+- Add a shimmer/loading state while images generate
+- Keep the split layout (text left, visual right on desktop)
+- Add a subtle parallax scroll effect on the hero image
+- Enhance the dark gradient overlays for more depth
 
-### 4. Global Style Enhancements (index.css)
-- Add ZIVO green glow utility classes for buttons and hero accents
-- Add subtle green radial glow behind hero section
-- Ensure dark theme uses deep navy (`--background: 222 47% 11%`) with proper contrast
-- Add smooth section reveal animations (already using Framer Motion FadeInSection)
+### 4. UX/UI Polish Across Homepage
 
-### 5. Trust Badges Restyle (HeroTrustBar.tsx)
-- Styled as small chips/cards with checkmark icons
-- White text on transparent glass backgrounds
-- Subtle green accent on icons
+**NavBar improvements:**
+- Add a subtle bottom border glow (green accent line) when scrolled
+- Smoother dropdown animation with spring easing
+- Slightly larger touch targets on nav items
 
-### 6. Sign Up Button Glow
-- NavBar "Sign up" button gets neon green fill with a soft green glow shadow (`shadow-[0_0_20px_rgba(34,197,94,0.3)]`)
+**Hero Section enhancements:**
+- Staggered text animation (headline, then subheadline, then buttons fade in sequentially)
+- Buttons get a subtle hover glow effect (not just scale)
+- "Track prices and get alerts" link gets an animated sparkle icon
 
----
+**Destination Cards (DestinationShowcase):**
+- Add a subtle glass overlay on hover with a "Explore" label
+- Smoother image zoom on hover (scale 1.05 instead of 1.10)
+- Add a small airplane icon next to "from $XX" price
+
+**Why ZIVO Section:**
+- Cards get a subtle border glow on hover (green accent)
+- Icon containers get a gentle float animation
+- Add a subtle background pattern/texture
+
+**Trust Bar:**
+- Add a gentle shimmer animation across the chips
+- Slightly larger on desktop for better readability
+
+**Sticky CTA Button:**
+- Add a pulse ring animation to draw attention
+- Slightly larger with more padding
+
+### 5. Global CSS Additions (index.css)
+- `.hero-image-crossfade` - smooth crossfade transition for hero images
+- `.shimmer-loading` - premium loading shimmer effect
+- `.glow-border-hover` - green border glow on hover
+- `.float-gentle` - subtle floating animation for icons
+- Enhanced `.glow-green-btn` with stronger glow on hover
 
 ## Technical Details
 
-### Files Modified
+### New Files
+| File | Purpose |
+|------|---------|
+| `supabase/functions/generate-hero-image/index.ts` | Edge function to generate travel images via Lovable AI |
+
+### Modified Files
 | File | Change |
 |------|--------|
-| `src/assets/hero-video.mp4` | NEW -- copy uploaded MP4 video |
-| `src/components/home/HeroSection.tsx` | Full restyle: split layout with video, new button row, green glow accents |
-| `src/components/home/NavBar.tsx` | Restyle: darker bg, green Sign up button with glow, cleaner nav spacing |
-| `src/components/home/HeroTrustBar.tsx` | Restyle as premium glass chips |
-| `src/components/home/WhyBookWithZivo.tsx` | Add 4th card, update to match premium dark/white aesthetic |
-| `src/pages/Index.tsx` | Simplify section order: Hero, Destinations, Deals, Why ZIVO, Footer |
-| `src/index.css` | Add green glow utilities, hero glow background class |
+| `src/assets/hero-video.mp4` | DELETED |
+| `src/components/home/HeroSection.tsx` | Replace video with AI image carousel, add staggered animations |
+| `src/components/home/NavBar.tsx` | Add green accent border on scroll, smoother transitions |
+| `src/components/home/DestinationShowcase.tsx` | Enhanced hover effects, glass overlay |
+| `src/components/home/WhyBookWithZivo.tsx` | Glow borders, floating icons |
+| `src/components/home/HeroTrustBar.tsx` | Shimmer effect, larger desktop sizing |
+| `src/pages/Index.tsx` | Updated sticky CTA with pulse, remove video import |
+| `src/index.css` | New animation utilities and effects |
 
-### Key Design Tokens
-- **Neon green accent**: existing `--primary: 142 71% 45%` (Verdant Green) -- already in place
-- **Button glow**: `shadow-primary/30` + `hover:shadow-primary/50`
-- **Hero video overlay**: `bg-gradient-to-l from-transparent to-background/30` + subtle green radial glow
-- **Typography**: Inter (already configured), bold headlines, clean body text
-- **Border radius**: 12-16px (`rounded-xl` to `rounded-2xl`)
-- **Micro-animations**: Framer Motion `whileInView` fade-in, button `hover:scale-[1.03]`, nav item transitions
+### AI Image Generation Flow
+
+```text
+User visits homepage
+       |
+       v
+Frontend checks Supabase Storage for cached hero images
+       |
+  [Images exist?]
+    /        \
+  Yes         No
+   |           |
+   v           v
+Display    Call generate-hero-image edge function
+cached     (uses Lovable AI + Gemini image model)
+images          |
+                v
+           Save to Supabase Storage
+                |
+                v
+           Display generated images
+```
+
+### Edge Function: generate-hero-image
+- Uses `google/gemini-2.5-flash-image` model via Lovable AI Gateway
+- Generates 3-4 premium travel scenes with prompts like:
+  - "Cinematic aerial view of an airplane wing at golden hour over clouds, luxury travel photography, 16:9 aspect ratio"
+  - "Premium hotel infinity pool overlooking a tropical ocean at sunset, travel magazine quality"
+  - "Modern city skyline at night with dramatic lighting, travel destination photography"
+- Stores base64 results in Supabase Storage bucket
+- Returns public URLs to frontend
+
+### Fallback Strategy
+If AI generation fails or takes too long, the hero uses premium Unsplash images as fallback -- ensuring the page always looks great immediately on load.
 
 ### No Breaking Changes
 - All existing routes and functionality preserved
 - Mobile app home (AppHome) untouched
-- Footer compliance disclosures untouched
+- Footer and compliance disclosures untouched
 - Auth flows untouched
 
