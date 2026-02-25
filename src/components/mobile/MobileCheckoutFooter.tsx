@@ -64,7 +64,7 @@ const MobileCheckoutFooter = ({
       {/* CTA Button */}
       <Button
         className={cn(
-          "flex-1 h-12 rounded-xl font-bold gap-2 text-white",
+          "flex-1 h-12 rounded-xl font-bold gap-2 text-white touch-manipulation active:scale-[0.98] transition-all duration-150",
           variantColors[variant]
         )}
         onClick={onClick}

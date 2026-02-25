@@ -45,13 +45,13 @@ const HotelCheckInOut = () => {
 
         {/* Time Display */}
         <div className="flex justify-center gap-8 mb-10">
-          <div className="text-center p-6 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50">
+          <div className="text-center p-6 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 hover:border-emerald-500/30 hover:shadow-md transition-all duration-200">
             <Clock className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-1">Check-In</p>
             <p className="text-2xl font-display font-bold">3:00 PM</p>
             <p className="text-xs text-muted-foreground mt-1">Early available from 12 PM (+$25)</p>
           </div>
-          <div className="text-center p-6 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50">
+          <div className="text-center p-6 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 hover:border-amber-500/30 hover:shadow-md transition-all duration-200">
             <Clock className="w-8 h-8 text-amber-400 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-1">Check-Out</p>
             <p className="text-2xl font-display font-bold">11:00 AM</p>
@@ -67,7 +67,7 @@ const HotelCheckInOut = () => {
             return (
               <div
                 key={feature.title}
-                className="flex items-start gap-4 p-5 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50"
+                className="flex items-start gap-4 p-5 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 hover:border-emerald-500/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-6 h-6 text-emerald-400" />

@@ -81,7 +81,7 @@ const HotelAccessibility = () => {
               {accessibilityFeatures.map((category) => (
                 <div
                   key={category.category}
-                  className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30"
+                  className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 hover:border-blue-500/30 hover:shadow-sm transition-all duration-200"
                 >
                   <div className={`w-12 h-12 ${category.bgColor} rounded-xl flex items-center justify-center mb-4`}>
                     <category.icon className={`w-6 h-6 ${category.color}`} />
@@ -100,7 +100,7 @@ const HotelAccessibility = () => {
             </div>
 
             {/* Service Animals */}
-            <div className="bg-card/60 backdrop-blur-xl rounded-xl p-6 border border-border/30 mb-6">
+            <div className="bg-card/60 backdrop-blur-xl rounded-xl p-6 border border-border/30 mb-6 hover:border-amber-500/30 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-amber-500/20 rounded-xl flex items-center justify-center">
                   <Dog className="w-7 h-7 text-amber-400" />

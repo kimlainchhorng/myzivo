@@ -142,7 +142,7 @@ export default function FlightEmptyState({
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {/* Try alternate dates */}
           {alternateDates.length > 0 && (
-            <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-sky-500/30 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-sky-500" />
                 <h3 className="font-semibold text-sm">Try flexible dates</h3>
@@ -163,7 +163,7 @@ export default function FlightEmptyState({
 
           {/* Try nearby airports */}
           {(nearbyOrigin.length > 0 || nearbyDestination.length > 0) && (
-            <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-emerald-500/30 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-5 h-5 text-emerald-500" />
                 <h3 className="font-semibold text-sm">Try nearby airports</h3>

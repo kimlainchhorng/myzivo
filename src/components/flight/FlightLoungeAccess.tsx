@@ -76,7 +76,7 @@ export default function FlightLoungeAccess() {
           <div
             key={lounge.id}
             className={cn(
-              "p-4 rounded-xl border transition-all hover:border-primary/50",
+              "p-4 rounded-xl border transition-all duration-200 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5",
               lounge.isPremium 
                 ? "bg-gradient-to-r from-amber-500/5 to-yellow-500/5 border-amber-500/30" 
                 : "bg-muted/30 border-border/50"
@@ -126,7 +126,7 @@ export default function FlightLoungeAccess() {
           </div>
         ))}
 
-        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center hover:bg-primary/15 transition-all duration-200">
           <p className="text-sm text-muted-foreground">
             <Crown className="w-4 h-4 inline mr-1 text-primary" />
             ZIVO Miles members get <span className="text-primary font-medium">20% off</span> all lounge bookings

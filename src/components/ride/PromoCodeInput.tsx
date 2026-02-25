@@ -53,7 +53,7 @@ export function PromoCodeInput({
   if (appliedPromo?.valid) {
     return (
       <div className={cn("space-y-2", className)}>
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 hover:shadow-sm transition-all duration-200">
           <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
@@ -72,7 +72,7 @@ export function PromoCodeInput({
           </div>
           <button
             onClick={handleRemove}
-            className="p-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-emerald-100 active:scale-90 transition-all duration-150 touch-manipulation"
             aria-label="Remove promo code"
           >
             <X className="w-4 h-4 text-emerald-600" />

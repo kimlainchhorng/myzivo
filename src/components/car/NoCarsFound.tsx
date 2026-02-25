@@ -60,7 +60,7 @@ export default function NoCarsFound({
 
       {/* Primary Affiliate CTA */}
       <div className="max-w-md mx-auto">
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-indigo-500/10 border border-violet-500/20">
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-indigo-500/10 border border-violet-500/20 hover:border-violet-500/40 hover:shadow-md transition-all duration-200">
           <p className="text-sm text-muted-foreground mb-4">
             Search 500+ car rental providers with our trusted partner
           </p>

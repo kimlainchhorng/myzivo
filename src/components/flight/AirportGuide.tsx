@@ -201,7 +201,7 @@ export const AirportGuide = ({
         <div className="p-4 border-b border-border/50 bg-muted/20">
           <div className="flex items-center justify-between">
             {SERVICES.map(service => (
-              <div key={service.id} className="flex items-center gap-2 text-sm">
+              <div key={service.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-muted/30 transition-all duration-150">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center",
                   service.available 
@@ -268,10 +268,10 @@ export const AirportGuide = ({
                     transition={{ delay: i * 0.05 }}
                     onClick={() => setSelectedAmenity(isSelected ? null : amenity.id)}
                     className={cn(
-                      "rounded-xl border p-4 cursor-pointer transition-all",
+                      "rounded-xl border p-4 cursor-pointer transition-all duration-200",
                       isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border/50 hover:border-border bg-card/30"
+                        ? "border-primary bg-primary/5 shadow-md"
+                        : "border-border/50 hover:border-border hover:shadow-sm bg-card/30"
                     )}
                   >
                     <div className="flex items-start gap-4">

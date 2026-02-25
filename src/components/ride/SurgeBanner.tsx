@@ -101,7 +101,7 @@ export function SurgeBanner({
           <button
             onClick={() => setIsDismissed(true)}
             className={cn(
-              "flex-shrink-0 p-1.5 rounded-full transition-colors",
+              "flex-shrink-0 p-1.5 rounded-full transition-all duration-150 active:scale-90 touch-manipulation",
               isHigh
                 ? "hover:bg-rose-200/50 text-rose-600"
                 : "hover:bg-orange-200/50 text-orange-600"

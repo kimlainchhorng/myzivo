@@ -71,7 +71,7 @@ export function EatsBottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "relative flex flex-col items-center justify-center flex-1 h-full transition-colors touch-manipulation",
+                "relative flex flex-col items-center justify-center flex-1 h-full transition-all duration-150 touch-manipulation active:scale-[0.92]",
                 active ? "text-orange-500" : "text-zinc-500"
               )}
             >

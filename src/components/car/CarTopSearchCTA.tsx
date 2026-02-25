@@ -56,7 +56,7 @@ export default function CarTopSearchCTA({
 
   return (
     <div className={cn(
-      "p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-indigo-500/10 border border-violet-500/20",
+      "p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-indigo-500/10 border border-violet-500/20 hover:border-violet-500/40 hover:shadow-md transition-all duration-200",
       className
     )}>
       {/* Trust Text */}

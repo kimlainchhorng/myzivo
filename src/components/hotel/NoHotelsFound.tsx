@@ -63,7 +63,7 @@ export default function NoHotelsFound({
 
       {/* Primary Affiliate CTA */}
       <div className="max-w-md mx-auto">
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-yellow-500/10 border border-amber-500/20">
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-yellow-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:shadow-md transition-all duration-200">
           <p className="text-sm text-muted-foreground mb-4">
             Search thousands of hotels with our trusted partner
           </p>

@@ -110,10 +110,10 @@ export default function HotelSpaServices() {
               key={service.id}
               onClick={() => setSelectedService(service.id)}
               className={cn(
-                "p-4 rounded-xl border cursor-pointer transition-all",
+                "p-4 rounded-xl border cursor-pointer transition-all duration-200 touch-manipulation",
                 selectedService === service.id
-                  ? "border-pink-500/50 bg-pink-500/10"
-                  : "border-border/50 bg-muted/20 hover:border-border"
+                  ? "border-pink-500/50 bg-pink-500/10 shadow-md"
+                  : "border-border/50 bg-muted/20 hover:border-border hover:shadow-sm"
               )}
             >
               <div className="flex items-start justify-between">
