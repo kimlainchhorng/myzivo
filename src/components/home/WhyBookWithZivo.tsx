@@ -1,10 +1,10 @@
 /**
  * Why Book with ZIVO
- * 3-icon value proposition section for homepage
+ * 4-card value proposition section for homepage
  * Compliance-safe messaging (no "cheapest guaranteed" claims)
  */
 
-import { Search, ShieldCheck, BadgeCheck } from "lucide-react";
+import { Search, ShieldCheck, BadgeCheck, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const valueProps = [
@@ -12,22 +12,21 @@ const valueProps = [
     icon: Search,
     title: "Compare Multiple Providers",
     description: "Search across hundreds of airlines, hotels, and rental partners to compare prices per trip.",
-    gradient: "from-sky-500/20 to-blue-500/10",
-    iconColor: "text-sky-500",
   },
   {
     icon: ShieldCheck,
     title: "Transparent Pricing",
     description: "See prices from multiple providers upfront. No hidden fees from ZIVO — what you see is what partners charge.",
-    gradient: "from-emerald-500/20 to-teal-500/10",
-    iconColor: "text-emerald-500",
   },
   {
     icon: BadgeCheck,
     title: "Price Alerts",
     description: "Track routes you care about and get notified when prices change. Never miss a price drop.",
-    gradient: "from-amber-500/20 to-orange-500/10",
-    iconColor: "text-amber-500",
+  },
+  {
+    icon: Globe,
+    title: "Flexible Search",
+    description: "Flexible dates and nearby airport suggestions help you find the best options available.",
   },
 ];
 
@@ -71,10 +70,10 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
           )}
         </div>
 
-        {/* Value Props Grid */}
+        {/* Value Props Grid - 4 cards */}
         <div className={cn(
           "grid gap-6",
-          isCompact ? "grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto" : "sm:grid-cols-3 max-w-5xl mx-auto sm:gap-8"
+          isCompact ? "grid-cols-1 sm:grid-cols-4 max-w-4xl mx-auto" : "sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto sm:gap-8"
         )}>
           {valueProps.map((prop, index) => (
             <div
@@ -92,14 +91,13 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
               {/* Icon */}
               <div className={cn(
                 "mx-auto rounded-2xl flex items-center justify-center",
-                "bg-gradient-to-br border border-white/10",
+                "bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20",
                 "group-hover:scale-110 transition-transform duration-300",
-                isCompact ? "w-12 h-12 mb-3" : "w-16 h-16 mb-5",
-                prop.gradient
+                isCompact ? "w-12 h-12 mb-3" : "w-16 h-16 mb-5"
               )}>
                 <prop.icon className={cn(
                   isCompact ? "w-6 h-6" : "w-8 h-8",
-                  prop.iconColor
+                  "text-primary"
                 )} />
               </div>
 

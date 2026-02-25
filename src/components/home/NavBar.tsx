@@ -78,10 +78,10 @@ export default function NavBar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b border-border transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 border-b border-border/50 transition-all duration-300",
         scrolled
-          ? "bg-background/80 backdrop-blur-xl shadow-sm"
-          : "bg-background/95 backdrop-blur-md"
+          ? "bg-[hsl(222_47%_11%/0.95)] backdrop-blur-xl shadow-lg"
+          : "bg-[hsl(222_47%_11%/0.9)] backdrop-blur-md"
       )}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -100,7 +100,7 @@ export default function NavBar() {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <item.icon className={cn("w-4 h-4", item.color)} />
                   {item.label}
@@ -110,7 +110,7 @@ export default function NavBar() {
               {/* Help - Direct link */}
               <Link
                 to="/help"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <HelpCircle className="w-4 h-4" />
                 Help
@@ -123,8 +123,8 @@ export default function NavBar() {
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                     moreOpen 
-                      ? "text-foreground bg-muted" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "text-white bg-white/10" 
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   )}
                 >
                   More
@@ -176,7 +176,7 @@ export default function NavBar() {
                 href="https://zivodriver.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
               >
                 Rides / Eats / Move
                 <ExternalLink className="w-3 h-3 opacity-50" />
@@ -255,14 +255,14 @@ export default function NavBar() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/login")}
-                    className="rounded-lg font-medium"
+                    className="rounded-lg font-medium text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Log in
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => navigate("/signup")}
-                    className="rounded-lg font-semibold"
+                    className="rounded-lg font-semibold bg-primary text-primary-foreground glow-green-btn hover:bg-primary/90"
                   >
                     Sign up
                   </Button>
