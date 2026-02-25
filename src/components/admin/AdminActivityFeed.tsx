@@ -151,7 +151,7 @@ const AdminActivityFeed = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ const AdminActivityFeed = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="p-2 rounded-xl bg-green-500/10">
               <Zap className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -191,7 +191,7 @@ const AdminActivityFeed = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
+            <div className="p-2 rounded-xl bg-amber-500/10">
               <Clock className="h-5 w-5 text-amber-500" />
             </div>
             <div>
@@ -204,7 +204,7 @@ const AdminActivityFeed = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
+            <div className="p-2 rounded-xl bg-blue-500/10">
               <TrendingUp className="h-5 w-5 text-blue-500" />
             </div>
             <div>
@@ -215,7 +215,7 @@ const AdminActivityFeed = () => {
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
+            <div className="p-2 rounded-xl bg-purple-500/10">
               <DollarSign className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -268,7 +268,7 @@ const AdminActivityFeed = () => {
                     return (
                       <div 
                         key={activity.id}
-                        className="relative flex items-start gap-4 pl-10 animate-in fade-in slide-in-from-left-2 duration-300"
+                        className="relative flex items-start gap-4 pl-10 animate-in fade-in slide-in-from-left-2 duration-200"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         {/* Timeline dot */}

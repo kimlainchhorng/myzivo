@@ -117,7 +117,7 @@ const QuickActionsSection = () => {
             {quickActions.map((action, index) => (
               <div
                 key={action.id}
-                className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                className="animate-in fade-in slide-in-from-bottom-4 duration-200"
                 style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
               >
                 <QuickAction

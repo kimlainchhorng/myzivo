@@ -70,7 +70,7 @@ const SeasonalCampaigns = () => {
                   className={cn(
                     "group relative overflow-hidden rounded-2xl p-6 h-full cursor-pointer",
                     "border border-border/50 bg-card/50 backdrop-blur-sm",
-                    "hover:border-primary/30 hover:-translate-y-1 transition-all duration-300",
+                    "hover:border-primary/30 hover:-translate-y-1 transition-all duration-200",
                     "animate-in fade-in slide-in-from-bottom-4"
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -82,7 +82,7 @@ const SeasonalCampaigns = () => {
                     campaign.gradient
                   )} />
                   {/* Shimmer sweep on hover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 overflow-hidden pointer-events-none">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 overflow-hidden pointer-events-none">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-slide-left" style={{ animationDuration: '2.5s' }} />
                   </div>
 

@@ -69,7 +69,7 @@ const BookingFlowStepper = ({
             {/* Step Circle */}
             <div className={cn(
               "relative flex items-center",
-              isVertical && "flex-row gap-3 w-full p-2 rounded-lg",
+              isVertical && "flex-row gap-3 w-full p-2 rounded-xl",
               isVertical && step.status === "current" && "bg-muted/50"
             )}>
               {/* Icon Container */}

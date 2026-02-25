@@ -71,7 +71,7 @@ const TripNotificationsCenter = ({ className }: TripNotificationsCenterProps) =>
               <div
                 key={notif.id}
                 className={cn(
-                  "flex items-start gap-3 p-2 rounded-lg transition-colors",
+                  "flex items-start gap-3 p-2 rounded-xl transition-colors",
                   notif.read ? "bg-muted/20" : "bg-primary/5 border border-primary/20"
                 )}
               >
@@ -103,7 +103,7 @@ const TripNotificationsCenter = ({ className }: TripNotificationsCenterProps) =>
           return (
             <div
               key={setting.id}
-              className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors"
+              className="flex items-center justify-between p-2 rounded-xl hover:bg-muted/20 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Icon className={cn(

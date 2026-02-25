@@ -117,13 +117,13 @@ const HotelRoomTypesShowcase = () => {
                 {room.features.slice(0, 3).map((feature) => (
                   <span
                     key={feature}
-                    className="px-2 py-1 text-xs rounded-lg bg-muted/50 text-muted-foreground"
+                    className="px-2 py-1 text-xs rounded-xl bg-muted/50 text-muted-foreground"
                   >
                     {feature}
                   </span>
                 ))}
                 {room.features.length > 3 && (
-                  <span className="px-2 py-1 text-xs rounded-lg bg-amber-500/10 text-amber-400">
+                  <span className="px-2 py-1 text-xs rounded-xl bg-amber-500/10 text-amber-400">
                     +{room.features.length - 3} more
                   </span>
                 )}

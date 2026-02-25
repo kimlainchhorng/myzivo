@@ -374,7 +374,7 @@ const CarRentalSettings = () => {
 
         {/* Save Button */}
         <div className="flex justify-end animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "480ms" }}>
-          <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 touch-manipulation active:scale-95">
+          <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 touch-manipulation active:scale-95">
             <Save className="h-4 w-4" />
             Save Changes
           </Button>

@@ -158,7 +158,7 @@ const sections: FeatureSection[] = [
 function FeatureCard({ item }: { item: FeatureItem }) {
   const content = (
     <div className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-border hover:bg-card/80 transition-all group">
-      <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-hotels/10 transition-colors">
+      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-hotels/10 transition-colors">
         <span className="text-muted-foreground group-hover:text-hotels transition-colors">
           {item.icon}
         </span>

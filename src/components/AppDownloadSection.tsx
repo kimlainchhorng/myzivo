@@ -53,7 +53,7 @@ const AppDownloadSection = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl animate-pulse-slow" />
 
           <div className="relative z-10">
-            <div className="animate-in zoom-in-95 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+            <div className="animate-in zoom-in-95 duration-200" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
               <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-eats/20 text-primary border-primary/30 px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary/20">
                 <Sparkles className="w-4 h-4 mr-2 animate-spin" style={{ animationDuration: '3s' }} />
                 Available now

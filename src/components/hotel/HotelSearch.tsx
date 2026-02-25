@@ -189,7 +189,7 @@ const HotelSearch = ({ onSelectHotel, showFilters = true }: HotelSearchProps) =>
         
         <div className="flex items-center gap-3">
           {/* Quick Sort Pills */}
-          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-xl">
             {[
               { key: "recommended", label: "Best Match", icon: Sparkles },
               { key: "price", label: "Lowest Price", icon: TrendingUp },
@@ -267,7 +267,7 @@ const HotelSearch = ({ onSelectHotel, showFilters = true }: HotelSearchProps) =>
                           key={stars}
                           onClick={() => setMinStars(stars)}
                           className={cn(
-                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                            "flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium transition-all",
                             minStars === stars
                               ? "bg-amber-500 text-white"
                               : "bg-muted hover:bg-muted/80 text-muted-foreground"
@@ -288,7 +288,7 @@ const HotelSearch = ({ onSelectHotel, showFilters = true }: HotelSearchProps) =>
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Quick Filters</Label>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl">
                         <span className="text-sm flex items-center gap-2">
                           <Shield className="w-4 h-4 text-green-500" />
                           Free cancellation
@@ -298,7 +298,7 @@ const HotelSearch = ({ onSelectHotel, showFilters = true }: HotelSearchProps) =>
                           onCheckedChange={setFreeCancellationOnly}
                         />
                       </div>
-                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl">
                         <span className="text-sm flex items-center gap-2">
                           <Coffee className="w-4 h-4 text-amber-500" />
                           Breakfast included

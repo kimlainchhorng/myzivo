@@ -100,7 +100,7 @@ const FlightPriceHistoryWidget = ({
       </div>
 
       {/* Selected/Summary Info */}
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+      <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
         {selectedMonth ? (
           <div className="flex items-center justify-between">
             <div>

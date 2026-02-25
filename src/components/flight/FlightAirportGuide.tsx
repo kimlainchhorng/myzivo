@@ -83,7 +83,7 @@ const FlightAirportGuide = () => {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {airport.transport.map((t) => (
-                      <span key={t} className="px-2 py-1 text-xs rounded-lg bg-muted/50">
+                      <span key={t} className="px-2 py-1 text-xs rounded-xl bg-muted/50">
                         {t}
                       </span>
                     ))}
@@ -96,7 +96,7 @@ const FlightAirportGuide = () => {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {airport.amenities.map((a) => (
-                      <span key={a} className="px-2 py-1 text-xs rounded-lg bg-muted/50">
+                      <span key={a} className="px-2 py-1 text-xs rounded-xl bg-muted/50">
                         {a}
                       </span>
                     ))}

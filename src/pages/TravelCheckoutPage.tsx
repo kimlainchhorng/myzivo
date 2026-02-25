@@ -263,7 +263,7 @@ const TravelCheckoutPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="bg-muted/50 rounded-xl p-4">
                     <p className="text-sm text-muted-foreground mb-2">Booking for:</p>
                     <p className="font-medium">{holder.name}</p>
                     <p className="text-sm text-muted-foreground">{holder.email}</p>
@@ -362,7 +362,7 @@ const TravelCheckoutPage = () => {
                 {/* Promo Code */}
                 {appliedPromo?.valid ? (
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -372,7 +372,7 @@ const TravelCheckoutPage = () => {
                       </div>
                       {appliedPromo.description && <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>}
                     </div>
-                    <button onClick={handleRemovePromo} className="p-1 rounded-lg hover:bg-emerald-500/10" aria-label="Remove promo">
+                    <button onClick={handleRemovePromo} className="p-1 rounded-xl hover:bg-emerald-500/10" aria-label="Remove promo">
                       <X className="w-3.5 h-3.5 text-emerald-500" />
                     </button>
                   </div>

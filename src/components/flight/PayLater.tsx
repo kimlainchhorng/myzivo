@@ -188,7 +188,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
                 return (
                   <div 
                     key={i}
-                    className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
+                    className="flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
                       <div className={cn(
@@ -211,7 +211,7 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
             </div>
 
             {/* Total Summary */}
-            <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
+            <div className="mt-4 p-3 rounded-xl bg-primary/10 border border-primary/30">
               <div className="flex items-center justify-between">
                 <span>Total to pay</span>
                 <span className="font-bold text-lg">${selectedPlanData.totalAmount}</span>

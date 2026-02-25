@@ -132,7 +132,7 @@ const TripOverviewCard = ({
                 )}
               >
                 <div className={cn(
-                  "p-2 rounded-lg",
+                  "p-2 rounded-xl",
                   serviceColors[service.type].split(" ")[1]
                 )}>
                   <Icon className={cn("w-4 h-4", serviceColors[service.type].split(" ")[0])} />

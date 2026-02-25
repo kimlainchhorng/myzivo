@@ -79,7 +79,7 @@ function TicketItem({ ticket }: { ticket: SupportTicket }) {
     <div className="p-4 rounded-2xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200 active:scale-[0.99] touch-manipulation">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className={cn("p-2 rounded-lg", config.bg)}>
+          <div className={cn("p-2 rounded-xl", config.bg)}>
             <Icon className={cn("w-4 h-4", config.color)} />
           </div>
           <div>
@@ -110,7 +110,7 @@ export function TicketStatusCard({ orderId, className }: TicketStatusCardProps) 
     return (
       <Card className={cn("animate-pulse", className)}>
         <CardContent className="p-4">
-          <div className="h-16 bg-muted/30 rounded-lg" />
+          <div className="h-16 bg-muted/30 rounded-xl" />
         </CardContent>
       </Card>
     );
