@@ -106,10 +106,10 @@ export default function TestimonialsSection() {
               </motion.div>
             </AnimatePresence>
 
-             <button onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-90 transition-all shadow-sm touch-manipulation" aria-label="Previous">
+             <button onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-110 active:scale-90 transition-all duration-200 shadow-sm touch-manipulation" aria-label="Previous">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-105 active:scale-90 transition-all shadow-sm touch-manipulation" aria-label="Next">
+            <button onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-12 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-110 active:scale-90 transition-all duration-200 shadow-sm touch-manipulation" aria-label="Next">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>

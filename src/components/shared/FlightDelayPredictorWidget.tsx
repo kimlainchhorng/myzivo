@@ -64,8 +64,8 @@ const FlightDelayPredictorWidget = ({
       </div>
 
       {/* Flight Info */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
-        <div className="p-2 rounded-lg bg-primary/10">
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30 mb-4">
+        <div className="p-2 rounded-xl bg-primary/10">
           <Plane className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1">
@@ -96,7 +96,7 @@ const FlightDelayPredictorWidget = ({
       </div>
 
       {/* Risk Assessment */}
-      <div className={cn("p-3 rounded-lg border mb-4", risk.bg)}>
+      <div className={cn("p-3 rounded-xl border mb-4", risk.bg)}>
         <div className="flex items-center gap-2">
           <RiskIcon className={cn("w-4 h-4", risk.color)} />
           <span className={cn("text-sm font-medium", risk.color)}>{risk.label}</span>
@@ -115,7 +115,7 @@ const FlightDelayPredictorWidget = ({
             return (
               <div
                 key={i}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors"
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-muted/20 transition-all duration-200"
               >
                 <div className="flex items-center gap-2">
                   <div className={cn("w-2 h-2 rounded-full", colors.dot)} />
@@ -134,7 +134,7 @@ const FlightDelayPredictorWidget = ({
       </div>
 
       {/* Recommendation */}
-      <div className="flex items-start gap-2 mt-4 p-2 rounded-lg bg-primary/5 text-xs">
+      <div className="flex items-start gap-2 mt-4 p-2 rounded-xl bg-primary/5 text-xs">
         <TrendingUp className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
           <span className="text-foreground font-medium">Pro tip:</span> Arrive 2h early for domestic, 3h for international to account for any unexpected delays.

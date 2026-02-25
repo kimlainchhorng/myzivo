@@ -49,7 +49,7 @@ export default function TravelCrossSell({ className, source = 'driver' }: Travel
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "flex items-center gap-1.5 text-sm font-medium transition-colors",
+              "flex items-center gap-1.5 text-sm font-medium transition-all duration-200 hover:scale-105",
               service.color
             )}
           >
@@ -74,7 +74,7 @@ export function TravelCrossSellFooter({ className, source = 'driver' }: TravelCr
             href={buildCrossSellUrl(service.path, source)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 group p-2 rounded-lg hover:bg-muted/50 touch-manipulation"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 group p-2 rounded-xl hover:bg-muted/50 touch-manipulation active:scale-[0.97]"
           >
             <service.icon className="w-4 h-4" />
             {service.name}

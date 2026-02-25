@@ -187,7 +187,7 @@ export default function TrustSection({ service, className = '' }: TrustSectionPr
             {partners[service].map((partner) => (
               <div 
                 key={partner}
-                className="px-4 py-2 rounded-lg bg-muted/50 text-xs sm:text-sm text-muted-foreground font-medium"
+                className="px-4 py-2 rounded-xl bg-muted/50 text-xs sm:text-sm text-muted-foreground font-medium hover:bg-muted/70 transition-all duration-200"
               >
                 {partner}
               </div>

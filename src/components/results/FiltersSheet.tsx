@@ -85,7 +85,7 @@ export function FiltersSheet({
               Filters
             </SheetTitle>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground gap-1.5 rounded-lg active:scale-95 transition-all duration-200 touch-manipulation">
+              <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground gap-1.5 rounded-xl active:scale-95 transition-all duration-200 touch-manipulation">
                 <RotateCcw className="w-4 h-4" />
                 Reset All
               </Button>

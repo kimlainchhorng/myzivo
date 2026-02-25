@@ -125,7 +125,7 @@
                  ) : (
                    <Link
                      to={item.url}
-                     className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                     className="text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center gap-1"
                    >
                      {item.icon && <item.icon className="w-3 h-3" />}
                      {index === 0 ? <span className="sr-only">{item.name}</span> : item.name}

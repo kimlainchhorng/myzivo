@@ -124,7 +124,7 @@ export default function HotelResultCardPro({
                 <img 
                   src={image} 
                   alt={name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -147,7 +147,7 @@ export default function HotelResultCardPro({
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-amber-500 transition-colors">
+                    <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-amber-500 transition-all duration-200">
                       {name}
                     </h3>
                     <div className="flex items-center gap-1 text-muted-foreground text-xs mt-0.5">

@@ -79,7 +79,7 @@
          {/* Tab Switcher */}
          <div className="bg-zinc-900/50 p-1 rounded-xl border border-white/10 flex relative">
             <motion.div 
-              className="absolute inset-y-1 w-[calc(50%-4px)] bg-zinc-800 rounded-lg shadow-lg"
+              className="absolute inset-y-1 w-[calc(50%-4px)] bg-zinc-800 rounded-xl shadow-lg"
               animate={{ x: activeTab === 'Upcoming' ? 4 : 'calc(100% + 4px)' }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
@@ -87,7 +87,7 @@
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative z-10 flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center transition-colors ${activeTab === tab ? 'text-white' : 'text-zinc-500'}`}
+                className={`relative z-10 flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center transition-all duration-200 ${activeTab === tab ? 'text-white' : 'text-zinc-500'}`}
               >
                 {tab}
               </button>

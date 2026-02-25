@@ -150,7 +150,7 @@ const FlightBookings = () => {
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
-                        <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-105 transition-transform">
+                        <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <Plane className="h-7 w-7 text-white" />
                         </div>
                         <div className="flex-1">
@@ -167,17 +167,17 @@ const FlightBookings = () => {
                             {flight?.airlines?.name} • {flight?.flight_number} • {booking.cabin_class} • Ref: <span className="font-mono font-medium text-foreground">{booking.booking_reference}</span>
                           </p>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">
                                 {flight?.departure_time ? format(new Date(flight.departure_time), "MMM d, yyyy • HH:mm") : "TBD"}
                               </span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Clock className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{flight?.duration_minutes ? formatDuration(flight.duration_minutes) : "TBD"}</span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
                               <Users className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{booking.total_passengers} passenger{booking.total_passengers > 1 ? 's' : ''}</span>
                             </span>
