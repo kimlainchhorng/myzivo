@@ -157,7 +157,7 @@ export default function FavoritesPage() {
                   >
                     {/* Cover */}
                     {image ? (
-                      <img src={image} alt={getItemName(fav)} className="w-full h-28 object-cover" />
+                      <img src={image} alt={getItemName(fav)} className="w-full h-28 object-cover" loading="lazy" />
                     ) : (
                       <div className={cn("w-full h-28 flex items-center justify-center", style.bg)}>
                         <TypeIcon className={cn("w-10 h-10", style.color)} />

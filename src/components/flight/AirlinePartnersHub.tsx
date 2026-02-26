@@ -265,6 +265,7 @@ export const AirlinePartnersHub = ({ className, zivoMiles = 45680 }: AirlinePart
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    aria-label="Unlink partner"
                     onClick={() => handleUnlink(partner.id)}
                   >
                     <Unlink className="w-4 h-4" />

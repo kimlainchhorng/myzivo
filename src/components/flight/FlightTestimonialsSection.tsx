@@ -226,6 +226,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
             <Button
               variant="outline"
               size="icon"
+              aria-label="Previous slide"
               onClick={prevSlide}
               className="rounded-full"
             >
@@ -236,6 +237,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
               {testimonials.map((_, index) => (
                 <button
                   key={index}
+                  aria-label={`Go to testimonial ${index + 1}`}
                   onClick={() => setActiveIndex(index)}
                   className={cn(
                     "w-2.5 h-2.5 rounded-full transition-all",
@@ -250,6 +252,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
             <Button
               variant="outline"
               size="icon"
+              aria-label="Next slide"
               onClick={nextSlide}
               className="rounded-full"
             >

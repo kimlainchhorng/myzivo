@@ -143,6 +143,7 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
                 src={property.image}
                 alt={property.name}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                loading="lazy"
               />
               
               {/* Gradient Overlays */}

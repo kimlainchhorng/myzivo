@@ -111,6 +111,7 @@ export default function FlightSearchForm({
             <Button
               variant="outline"
               size="icon"
+              aria-label="Swap cities"
               onClick={swapCities}
               className="h-12 w-12 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500"
             >

@@ -1003,7 +1003,7 @@ export default function EatsLanding() {
             )}
 
             <div className="relative h-48 overflow-hidden">
-              <img src={currentRestaurant.image} alt={currentRestaurant.name} className="w-full h-full object-cover" />
+              <img src={currentRestaurant.image} alt={currentRestaurant.name} className="w-full h-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 flex items-center gap-2">
                 {currentRestaurant.freeDelivery && <Badge className="bg-primary text-primary-foreground text-[10px] font-bold gap-1"><Truck className="w-3 h-3" /> Free Delivery</Badge>}

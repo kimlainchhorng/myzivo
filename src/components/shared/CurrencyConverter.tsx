@@ -75,6 +75,7 @@ export default function CurrencyConverter() {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Refresh rates"
             onClick={handleRefresh}
             className={isUpdating ? "animate-spin" : ""}
           >
@@ -114,6 +115,7 @@ export default function CurrencyConverter() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Swap currencies"
             onClick={handleSwap}
             className="rounded-full h-10 w-10 active:scale-[0.90] transition-all duration-200 touch-manipulation"
           >

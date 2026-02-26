@@ -144,7 +144,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                 <h3 className="font-bold text-lg">{car.category}</h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   {car.companyLogo && (
-                    <img src={car.companyLogo} alt={car.company} className="h-4 object-contain" />
+                    <img src={car.companyLogo} alt={car.company} className="h-4 object-contain" loading="lazy" />
                   )}
                   {car.company}
                 </p>

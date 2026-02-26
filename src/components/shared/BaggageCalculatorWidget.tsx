@@ -101,6 +101,7 @@ const BaggageCalculatorWidget = ({
           <Button
             variant="outline"
             size="icon"
+            aria-label="Remove bag"
             className="h-8 w-8"
             onClick={removeBag}
             disabled={bags.length <= 1}
@@ -111,6 +112,7 @@ const BaggageCalculatorWidget = ({
           <Button
             variant="outline"
             size="icon"
+            aria-label="Add bag"
             className="h-8 w-8"
             onClick={addBag}
             disabled={bags.length >= maxBagsAllowed}
