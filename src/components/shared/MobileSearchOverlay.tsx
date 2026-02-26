@@ -43,6 +43,8 @@ export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProp
     if (q.includes("flight") || q.includes("fly")) navigate("/flights");
     else if (q.includes("hotel") || q.includes("stay")) navigate("/hotels");
     else if (q.includes("car") || q.includes("rent")) navigate("/rent-car");
+    else if (q.includes("ride") || q.includes("taxi") || q.includes("uber")) navigate("/rides");
+    else if (q.includes("food") || q.includes("eat") || q.includes("restaurant") || q.includes("delivery")) navigate("/eats");
     else navigate("/flights");
     onClose();
   };

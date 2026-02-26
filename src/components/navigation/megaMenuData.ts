@@ -267,25 +267,25 @@ export const megaMenuData: MegaMenuData[] = [
   },
 ];
 
-// ZIVO More dropdown - links to external ZIVO Driver services
+// ZIVO More dropdown - Rides, Eats & local services
 export const moreServicesData: MegaMenuData = {
   id: "more",
   label: "Rides · Eats · Move",
   icon: Package,
   color: "text-rides",
   hoverColor: "hover:text-rides",
-  description: "Local services powered by ZIVO Driver",
+  description: "Local services powered by ZIVO",
   mainAction: {
-    label: "Open ZIVO Driver",
-    href: "https://zivodriver.com",
+    label: "Explore Services",
+    href: "/rides",
   },
   sections: [
     {
       title: "Services",
       items: [
-        { icon: Car, label: "ZIVO Rides", description: "Request local rides", href: "https://zivodriver.com/rides", color: "text-rides", badge: "External" },
-        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "https://zivodriver.com/eats", color: "text-eats", badge: "External" },
-        { icon: Package, label: "ZIVO Move", description: "Package and courier delivery", href: "https://zivodriver.com/move", color: "text-primary", badge: "External" },
+        { icon: Car, label: "ZIVO Rides", description: "Request local rides", href: "/rides", color: "text-rides" },
+        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "/eats", color: "text-eats" },
+        { icon: Package, label: "ZIVO Delivery", description: "Package and courier delivery", href: "/extras", color: "text-primary" },
       ],
     },
     {
