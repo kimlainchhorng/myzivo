@@ -172,6 +172,7 @@ const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"))
 const AccountFavoritesPage = lazy(() => import("./pages/account/FavoritesPage"));
 const AccountInvoicesPage = lazy(() => import("./pages/account/BusinessInvoicesPage"));
 const PromosPage = lazy(() => import("./pages/account/PromosPage"));
+const TravelerProfilesPage = lazy(() => import("./pages/account/TravelerProfilesPage"));
 
 // Security pages
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
@@ -393,6 +394,7 @@ const App = () => (
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
+                <Route path="/account/travelers" element={<ProtectedRoute><TravelerProfilesPage /></ProtectedRoute>} />
                 <Route path="/account/addresses" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/saved-places" element={<ProtectedRoute><AccountAddressesPage /></ProtectedRoute>} />
                 <Route path="/account/favorites" element={<ProtectedRoute><AccountFavoritesPage /></ProtectedRoute>} />
