@@ -1,5 +1,5 @@
 /**
- * Unified ZIVO Dashboard
+ * Unified ZIVO Dashboard — Premium 2026
  * Super-App home with access to all services
  */
 
@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Plane, Car, UtensilsCrossed, Package, MapPin, Hotel,
-  Wallet, Clock, ChevronRight, HelpCircle, User, Settings
+  Wallet, Clock, ChevronRight, HelpCircle, User, Settings, Shield, Star
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,38 +19,39 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { format } from "date-fns";
 
 const services = [
-  { id: "flights", name: "Flights", icon: Plane, color: "bg-blue-500", link: "/flights" },
-  { id: "hotels", name: "Hotels", icon: Hotel, color: "bg-teal-500", link: "/hotels" },
-  { id: "cars", name: "Cars", icon: Car, color: "bg-orange-500", link: "/cars" },
-  { id: "rides", name: "Rides", icon: MapPin, color: "bg-yellow-500", link: "/rides" },
-  { id: "eats", name: "Eats", icon: UtensilsCrossed, color: "bg-red-500", link: "/eats" },
-  { id: "move", name: "Move", icon: Package, color: "bg-purple-500", link: "/move" },
+  { id: "flights", name: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600", link: "/flights" },
+  { id: "hotels", name: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-500", link: "/hotels" },
+  { id: "cars", name: "Cars", icon: Car, gradient: "from-emerald-500 to-teal-600", link: "/cars" },
+  { id: "rides", name: "Rides", icon: MapPin, gradient: "from-primary to-emerald-500", link: "/rides" },
+  { id: "eats", name: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/eats" },
+  { id: "move", name: "Move", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/move" },
 ];
 
-function TripCard({ trip }: { trip: UnifiedTrip }) {
+function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
   const meta = getServiceMeta(trip.service);
-  
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="text-2xl">{trip.icon}</div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{trip.title}</p>
-            <p className="text-sm text-muted-foreground truncate">{trip.subtitle}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">
-                {trip.status}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                ${trip.amount.toFixed(2)}
-              </span>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+    >
+      <Card className="hover:shadow-lg transition-all duration-300 border-border/40 hover:border-primary/15 group">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">{trip.icon}</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm truncate">{trip.title}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{trip.subtitle}</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Badge variant="outline" className="text-[9px] font-bold">{trip.status}</Badge>
+                <span className="text-[10px] text-muted-foreground font-medium">${trip.amount.toFixed(2)}</span>
+              </div>
             </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -59,81 +60,70 @@ export default function UnifiedDashboard() {
   const { data: recentActivity, isLoading: loadingRecent } = useRecentActivity();
   const { data: activeTrips } = useActiveTrips();
   const { data: walletSummary } = useWalletSummary();
-
   const firstName = user?.email?.split("@")[0] || "there";
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container px-4 py-4">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/40">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(), "EEEE, MMMM d")}
-              </p>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{format(new Date(), "EEEE, MMMM d")}</p>
               <h1 className="text-xl font-bold">Hello, {firstName}</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" asChild>
-                <Link to="/support">
-                  <HelpCircle className="w-5 h-5" />
-                </Link>
+            <div className="flex items-center gap-1.5">
+              <Button variant="ghost" size="icon" asChild className="rounded-xl">
+                <Link to="/support"><HelpCircle className="w-5 h-5" /></Link>
               </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link to="/profile">
-                  <User className="w-5 h-5" />
-                </Link>
+              <Button variant="ghost" size="icon" asChild className="rounded-xl">
+                <Link to="/profile"><User className="w-5 h-5" /></Link>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container px-4 py-6 space-y-6">
-        {/* Wallet Summary */}
+      <div className="px-4 py-5 space-y-6">
+        {/* Wallet */}
         <Link to="/wallet">
-          <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Wallet className="w-8 h-8" />
-                  <div>
-                    <p className="text-sm opacity-90">ZIVO Wallet</p>
-                    <p className="text-2xl font-bold">
-                      ${walletSummary?.availableCredits?.toFixed(2) || "0.00"}
-                    </p>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground p-5 relative overflow-hidden shadow-xl shadow-primary/20"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-12 translate-x-12 blur-2xl" />
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
                 </div>
-                <div className="text-right">
-                  <p className="text-xs opacity-75">Total Spent</p>
-                  <p className="font-semibold">
-                    ${walletSummary?.totalSpent?.toFixed(2) || "0.00"}
-                  </p>
+                <div>
+                  <p className="text-xs opacity-80">ZIVO Wallet</p>
+                  <p className="text-2xl font-bold">${walletSummary?.availableCredits?.toFixed(2) || "0.00"}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-right">
+                <p className="text-[10px] opacity-60">Total Spent</p>
+                <p className="font-bold">${walletSummary?.totalSpent?.toFixed(2) || "0.00"}</p>
+              </div>
+            </div>
+          </motion.div>
         </Link>
 
         {/* Services Grid */}
         <div>
-          <h2 className="font-semibold mb-3">Services</h2>
+          <h2 className="font-bold text-sm mb-3">Services</h2>
           <div className="grid grid-cols-3 gap-3">
             {services.map((service, i) => (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
+              <motion.div key={service.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                 <Link to={service.link}>
-                  <Card className="hover:shadow-md transition-all hover:scale-[1.02] active:scale-95">
+                  <Card className="hover:shadow-lg transition-all duration-300 active:scale-95 border-border/40 hover:border-primary/15">
                     <CardContent className="p-4 flex flex-col items-center gap-2">
-                      <div className={`w-12 h-12 rounded-xl ${service.color} flex items-center justify-center`}>
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.gradient} flex items-center justify-center shadow-md`}>
                         <service.icon className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-sm font-medium">{service.name}</span>
+                      <span className="text-xs font-bold">{service.name}</span>
                     </CardContent>
                   </Card>
                 </Link>
@@ -145,16 +135,11 @@ export default function UnifiedDashboard() {
         {/* Active Trips */}
         {activeTrips && activeTrips.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
-                Active Now
-              </h2>
-            </div>
+            <h2 className="font-bold text-sm mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />Active Now
+            </h2>
             <div className="space-y-2">
-              {activeTrips.slice(0, 3).map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
+              {activeTrips.slice(0, 3).map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}
             </div>
           </div>
         )}
@@ -162,31 +147,24 @@ export default function UnifiedDashboard() {
         {/* Recent Activity */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Recent Activity</h2>
-            <Button variant="ghost" size="sm" asChild>
+            <h2 className="font-bold text-sm">Recent Activity</h2>
+            <Button variant="ghost" size="sm" asChild className="text-xs font-bold text-primary">
               <Link to="/my-trips">View All</Link>
             </Button>
           </div>
-          
           {loadingRecent ? (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
-              ))}
+              {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-muted/50 animate-pulse rounded-2xl" />)}
             </div>
           ) : recentActivity && recentActivity.length > 0 ? (
             <div className="space-y-2">
-              {recentActivity.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
+              {recentActivity.map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}
             </div>
           ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">No recent activity</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Book a flight, car, or ride to get started!
-                </p>
+            <Card className="border-border/30">
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground text-sm">No recent activity</p>
+                <p className="text-xs text-muted-foreground mt-1">Book a service to get started!</p>
               </CardContent>
             </Card>
           )}
@@ -194,32 +172,21 @@ export default function UnifiedDashboard() {
 
         {/* Quick Links */}
         <div>
-          <h2 className="font-semibold mb-3">Quick Links</h2>
+          <h2 className="font-bold text-sm mb-3">Quick Links</h2>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/my-trips">
-                <Clock className="w-4 h-4 mr-2" />
-                My Trips
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/wallet">
-                <Wallet className="w-4 h-4 mr-2" />
-                Wallet
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/support">
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Support
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/profile/settings">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Link>
-            </Button>
+            {[
+              { to: "/my-trips", icon: Clock, label: "My Trips" },
+              { to: "/wallet", icon: Wallet, label: "Wallet" },
+              { to: "/support", icon: HelpCircle, label: "Support" },
+              { to: "/profile/settings", icon: Settings, label: "Settings" },
+            ].map((link) => (
+              <Button key={link.to} variant="outline" asChild className="justify-start rounded-xl border-border/40 hover:border-primary/15 font-bold">
+                <Link to={link.to}>
+                  <link.icon className="w-4 h-4 mr-2" />
+                  {link.label}
+                </Link>
+              </Button>
+            ))}
           </div>
         </div>
       </div>
