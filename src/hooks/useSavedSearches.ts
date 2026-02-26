@@ -41,6 +41,47 @@ export function useSavedSearches() {
     },
   });
 
+  const saveMutation = useMutation({
+    mutationFn: async (input: {
+      title: string;
+      service_type: string;
+      search_params: Record<string, unknown>;
+      price_alert_enabled?: boolean;
+      target_price?: number | null;
+      current_price?: number | null;
+      notification_email?: boolean;
+      notification_push?: boolean;
+    }) => {
+      const { data, error } = await supabase
+        .from("user_saved_searches")
+        .insert({ ...input, user_id: user!.id } as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as SavedSearch;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
+      toast.success("Search saved");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<SavedSearch> & { id: string }) => {
+      const { error } = await supabase
+        .from("user_saved_searches")
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
+        .eq("id", id)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
+      toast.success("Search updated");
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -74,6 +115,9 @@ export function useSavedSearches() {
   return {
     searches: query.data || [],
     isLoading: query.isLoading,
+    saveSearch: saveMutation.mutateAsync,
+    isSaving: saveMutation.isPending,
+    updateSearch: updateMutation.mutate,
     deleteSearch: deleteMutation.mutate,
     toggleAlert: toggleAlertMutation.mutate,
   };
