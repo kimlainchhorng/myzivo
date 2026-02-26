@@ -276,8 +276,8 @@ export default function EatsLanding() {
   const [rateOrder, setRateOrder] = useState<number | null>(null);
   const [noUtensils, setNoUtensils] = useState(false);
   const [showMealDeals, setShowMealDeals] = useState(false);
-  const [giftOrder, setGiftOrder] = useState(false);
-  const [giftMessage, setGiftMessage] = useState("");
+  const [giftOrderOld, setGiftOrderOld] = useState(false);
+  const [giftMessageOld, setGiftMessageOld] = useState("");
   const [groupSize, setGroupSize] = useState("solo");
   const [selectedDeliverySpeed, setSelectedDeliverySpeed] = useState("standard");
   const [showReviews, setShowReviews] = useState(false);
@@ -311,6 +311,35 @@ export default function EatsLanding() {
   const [mealReminder, setMealReminder] = useState(false);
   const [favoriteItems, setFavoriteItems] = useState<string[]>([]);
   const [dineInOption, setDineInOption] = useState(false);
+  const [scheduledOrder, setScheduledOrder] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [cuisineRoulette, setCuisineRoulette] = useState(false);
+  const [rouletteResult, setRouletteResult] = useState("");
+  const [photoRating, setPhotoRating] = useState(false);
+  const [pantryMode, setPantryMode] = useState(false);
+  const [chefsSpecial, setChefsSpecial] = useState(false);
+  const [giftOrder, setGiftOrder] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+  const [giftRecipient, setGiftRecipient] = useState("");
+  const [showNutritionSummary, setShowNutritionSummary] = useState(false);
+  const [showCuisineStats, setShowCuisineStats] = useState(false);
+  const [cuisineStats] = useState([
+    { cuisine: "Japanese", count: 12, pct: 30 },
+    { cuisine: "Italian", count: 8, pct: 20 },
+    { cuisine: "Mexican", count: 7, pct: 17 },
+    { cuisine: "Indian", count: 6, pct: 15 },
+    { cuisine: "Other", count: 7, pct: 18 },
+  ]);
+  const [socialShare, setSocialShare] = useState(false);
+  const [orderStreak] = useState(5);
+  const [maxStreak] = useState(14);
+  const [dietGoal, setDietGoal] = useState<"none" | "low-cal" | "high-protein" | "low-carb">("none");
+  const [showReorderHistory, setShowReorderHistory] = useState(false);
+  const [pastOrders] = useState([
+    { id: "1", restaurant: "Sakura Sushi", items: "Dragon Roll x2", total: "$24.50", date: "Yesterday" },
+    { id: "2", restaurant: "Pizza Palace", items: "Margherita + Garlic Bread", total: "$18.00", date: "3 days ago" },
+    { id: "3", restaurant: "Green Bowl", items: "Buddha Bowl", total: "$13.50", date: "Last week" },
+  ]);
   const totalCalories = cart.reduce((sum, item) => {
     const restaurant = restaurants.find(r => r.id === item.restaurantId);
     const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
@@ -1255,6 +1284,142 @@ export default function EatsLanding() {
                         }} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95">
                           Send
                         </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Scheduled Order */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setScheduledOrder(!scheduledOrder)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", scheduledOrder ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", scheduledOrder ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Schedule for later</p>
+                    <p className="text-[10px] text-muted-foreground">Pick a delivery time</p>
+                  </div>
+                </div>
+                {scheduledOrder && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
+                    <Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} className="h-9 text-xs" />
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Cuisine Roulette */}
+              <div className="rounded-2xl bg-gradient-to-r from-pink-500/10 to-amber-500/10 border border-pink-500/20 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2">🎰 Feeling lucky?</p>
+                <button onClick={() => {
+                  const cuisines = ["Japanese", "Italian", "Mexican", "Indian", "Thai", "Chinese", "Mediterranean", "Korean"];
+                  const pick = cuisines[Math.floor(Math.random() * cuisines.length)];
+                  setRouletteResult(pick);
+                  toast.success(`🎲 The wheel says: ${pick}!`);
+                }} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-all">
+                  {rouletteResult ? `🎲 ${rouletteResult} — Spin again?` : "🎲 Spin the cuisine wheel!"}
+                </button>
+              </div>
+
+              {/* Gift Order */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setGiftOrder(!giftOrder)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", giftOrder ? "bg-pink-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", giftOrder ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-pink-500" /> Send as gift</p>
+                    <p className="text-[10px] text-muted-foreground">Surprise someone with food 🎁</p>
+                  </div>
+                </div>
+                {giftOrder && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 mt-2">
+                    <Input value={giftRecipient} onChange={e => setGiftRecipient(e.target.value)} placeholder="Recipient name or address" className="h-9 text-xs" />
+                    <Input value={giftMessage} onChange={e => setGiftMessage(e.target.value)} placeholder="Add a gift message..." className="h-9 text-xs" />
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Diet Goal */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2">🎯 Diet goal</p>
+                <div className="flex gap-2 flex-wrap">
+                  {([
+                    { id: "none" as const, label: "None" },
+                    { id: "low-cal" as const, label: "🔥 Low-Cal" },
+                    { id: "high-protein" as const, label: "💪 High Protein" },
+                    { id: "low-carb" as const, label: "🥑 Low Carb" },
+                  ]).map(d => (
+                    <button key={d.id} onClick={() => setDietGoal(d.id)}
+                      className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                        dietGoal === d.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Streak */}
+              <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-primary/10 border border-amber-500/20 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Flame className="w-3.5 h-3.5 text-amber-500" /> Order streak</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-500 to-primary rounded-full transition-all" style={{ width: `${(orderStreak / maxStreak) * 100}%` }} />
+                  </div>
+                  <span className="text-xs font-bold text-amber-500">{orderStreak}/{maxStreak} 🔥</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Keep ordering to earn free delivery!</p>
+              </div>
+
+              {/* Cuisine Stats */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <button onClick={() => setShowCuisineStats(!showCuisineStats)} className="w-full flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-primary" /> Your cuisine breakdown</p>
+                  <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showCuisineStats && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showCuisineStats && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="space-y-2 mt-3">
+                        {cuisineStats.map(s => (
+                          <div key={s.cuisine} className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-foreground w-16">{s.cuisine}</span>
+                            <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                              <div className="h-full bg-primary rounded-full" style={{ width: `${s.pct}%` }} />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground w-8">{s.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Past Orders Quick Reorder */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <button onClick={() => setShowReorderHistory(!showReorderHistory)} className="w-full flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-primary" /> Quick reorder</p>
+                  <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showReorderHistory && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showReorderHistory && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="space-y-2 mt-3">
+                        {pastOrders.map(o => (
+                          <button key={o.id} onClick={() => toast.info(`Reordering from ${o.restaurant}...`)}
+                            className="w-full rounded-xl bg-muted/30 p-3 text-left hover:bg-muted/50 transition-colors touch-manipulation">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="text-xs font-bold text-foreground">{o.restaurant}</p>
+                                <p className="text-[10px] text-muted-foreground">{o.items} · {o.date}</p>
+                              </div>
+                              <span className="text-xs font-bold text-primary">{o.total}</span>
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </motion.div>
                   )}
