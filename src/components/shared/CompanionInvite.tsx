@@ -194,6 +194,7 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
             <Button
               variant="outline"
               size="icon"
+              aria-label="Copy invite link"
               onClick={handleCopyLink}
             >
               {copied ? (

@@ -172,7 +172,7 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
               <div className="flex-1 p-3 rounded-lg bg-muted/50 border border-border/50 font-mono text-lg text-center">
                 {referralCode}
               </div>
-              <Button variant="outline" size="icon" onClick={copyLink}>
+              <Button variant="outline" size="icon" aria-label="Copy referral code" onClick={copyLink}>
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
@@ -182,7 +182,7 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
             <label className="text-sm font-medium mb-2 block">Share Link</label>
             <div className="flex gap-2">
               <Input value={referralLink} readOnly className="font-mono text-sm" />
-              <Button variant="outline" size="icon" onClick={copyLink}>
+              <Button variant="outline" size="icon" aria-label="Copy share link" onClick={copyLink}>
                 <Link2 className="w-4 h-4" />
               </Button>
             </div>
@@ -195,6 +195,7 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
                 key={option.name}
                 variant="outline"
                 size="icon"
+                aria-label={`Share on ${option.name}`}
                 className={cn("hover:bg-opacity-100", option.color, "hover:text-primary-foreground hover:border-transparent")}
                 onClick={option.action}
               >

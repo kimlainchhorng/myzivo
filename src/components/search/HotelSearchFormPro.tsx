@@ -336,6 +336,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Fewer adults"
                       className="h-8 w-8"
                       onClick={() => setAdults(Math.max(1, adults - 1))}
                       disabled={adults <= 1}
@@ -346,6 +347,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="More adults"
                       className="h-8 w-8"
                       onClick={() => setAdults(Math.min(10, adults + 1))}
                       disabled={adults >= 10}
@@ -365,6 +367,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Fewer children"
                       className="h-8 w-8"
                       onClick={() => setChildren(Math.max(0, children - 1))}
                       disabled={children <= 0}
@@ -375,6 +378,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="More children"
                       className="h-8 w-8"
                       onClick={() => setChildren(Math.min(6, children + 1))}
                       disabled={children >= 6}
@@ -393,6 +397,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Fewer rooms"
                       className="h-8 w-8"
                       onClick={() => setRooms(Math.max(1, rooms - 1))}
                       disabled={rooms <= 1}
@@ -403,6 +408,7 @@ export default function HotelSearchFormPro({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="More rooms"
                       className="h-8 w-8"
                       onClick={() => setRooms(Math.min(5, rooms + 1))}
                       disabled={rooms >= 5}

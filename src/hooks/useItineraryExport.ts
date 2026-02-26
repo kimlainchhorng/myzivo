@@ -234,7 +234,7 @@ END:VCALENDAR`;
   const exportToGoogleCalendar = (flight: FlightData) => {
     try {
       const url = generateGoogleCalendarURL(flight);
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
       toast.success('Opening Google Calendar...');
     } catch (error) {
       toast.error('Failed to open Google Calendar');
@@ -245,7 +245,7 @@ END:VCALENDAR`;
   const exportToPDF = (flight: FlightData) => {
     try {
       const htmlContent = generatePDFContent(flight);
-      const printWindow = window.open('', '_blank');
+      const printWindow = window.open('', '_blank', 'noopener,noreferrer');
       if (printWindow) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();

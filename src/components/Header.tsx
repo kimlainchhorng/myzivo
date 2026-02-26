@@ -74,6 +74,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
+                aria-label="Search"
                 className="text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-110 active:scale-95"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >

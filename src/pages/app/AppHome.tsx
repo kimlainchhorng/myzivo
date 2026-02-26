@@ -228,7 +228,7 @@ const AppHome = () => {
               >
                 <div className="w-12 h-12 rounded-2xl border-2 border-primary/25 p-0.5 overflow-hidden bg-card shadow-md shadow-primary/10">
                   {avatarUrl ? (
-                    <img src={avatarUrl} className="w-full h-full rounded-xl object-cover" alt="Profile" />
+                    <img src={avatarUrl} className="w-full h-full rounded-xl object-cover" alt="Profile" loading="lazy" />
                   ) : (
                     <div className="w-full h-full rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {initials}

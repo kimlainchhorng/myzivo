@@ -62,13 +62,13 @@ export default function FlightPriceCalendar({ className, onSelectDate }: FlightP
             <CardContent className="p-4 sm:p-6">
               {/* Calendar Header */}
               <div className="flex items-center justify-between mb-6">
-                <Button variant="ghost" size="icon" onClick={prevMonth} className="touch-manipulation">
+                <Button variant="ghost" size="icon" aria-label="Previous month" onClick={prevMonth} className="touch-manipulation">
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
                 <h3 className="text-lg sm:text-xl font-semibold">
                   {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h3>
-                <Button variant="ghost" size="icon" onClick={nextMonth} className="touch-manipulation">
+                <Button variant="ghost" size="icon" aria-label="Next month" onClick={nextMonth} className="touch-manipulation">
                   <ChevronRight className="w-5 h-5" />
                 </Button>
               </div>
