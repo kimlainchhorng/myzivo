@@ -53,7 +53,7 @@ const ZivoMobileNav = () => {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {/* Frosted glass background */}
-      <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30" />
+      <div className="absolute inset-0 bg-card/92 backdrop-blur-2xl border-t border-border/30 shadow-[0_-4px_20px_-4px_hsl(var(--foreground)/0.05)]" />
       {/* Top highlight line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
 

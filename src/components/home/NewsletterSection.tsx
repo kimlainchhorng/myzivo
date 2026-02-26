@@ -1,5 +1,5 @@
 /**
- * Newsletter Section - Bold split-layout CTA
+ * Newsletter Section - Bold split-layout CTA with premium glassmorphism
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -41,8 +41,9 @@ export default function NewsletterSection() {
             {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
             <div className="absolute top-0 right-0 w-72 h-72 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[hsl(var(--flights))/0.08] rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
 
-            <div className="relative border border-border/40 rounded-3xl bg-card/80 backdrop-blur-sm p-8 sm:p-12 lg:p-14">
+            <div className="relative border border-border/40 rounded-3xl bg-card/80 backdrop-blur-xl p-8 sm:p-12 lg:p-14">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                 {/* Left - Copy */}
                 <div>

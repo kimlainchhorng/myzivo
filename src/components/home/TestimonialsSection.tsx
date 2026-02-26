@@ -6,12 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const serviceAccents: Record<string, { bg: string; text: string; border: string }> = {
-  Flights: { bg: "bg-[hsl(var(--flights))]", text: "text-[hsl(var(--flights))]", border: "border-[hsl(var(--flights)/0.3)]" },
-  "Price Alerts": { bg: "bg-primary", text: "text-primary", border: "border-primary/30" },
-  Hotels: { bg: "bg-[hsl(var(--hotels))]", text: "text-[hsl(var(--hotels))]", border: "border-[hsl(var(--hotels)/0.3)]" },
-  "Car Rentals": { bg: "bg-[hsl(var(--cars))]", text: "text-[hsl(var(--cars))]", border: "border-[hsl(var(--cars)/0.3)]" },
-  Support: { bg: "bg-[hsl(var(--success))]", text: "text-[hsl(var(--success))]", border: "border-[hsl(var(--success)/0.3)]" },
+const serviceColorVars: Record<string, string> = {
+  Flights: "--flights",
+  "Price Alerts": "--primary",
+  Hotels: "--hotels",
+  "Car Rentals": "--cars",
+  Support: "--success",
 };
 
 const testimonials = [
@@ -74,7 +74,6 @@ export default function TestimonialsSection() {
         </motion.div>
 
         <div className="relative max-w-5xl mx-auto">
-          {/* Cards grid */}
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={page}
@@ -86,7 +85,7 @@ export default function TestimonialsSection() {
               className="grid grid-cols-1 md:grid-cols-3 gap-5"
             >
               {currentItems.map((t, i) => {
-                const accent = serviceAccents[t.service] || serviceAccents["Flights"];
+                const colorVar = serviceColorVars[t.service] || "--primary";
                 return (
                   <motion.div
                     key={`${page}-${i}`}
@@ -100,10 +99,16 @@ export default function TestimonialsSection() {
                       "hover:border-border/60 hover:shadow-lg transition-all duration-300"
                     )}>
                       {/* Top accent bar */}
-                      <div className={cn("absolute top-0 left-6 right-6 h-[2px] rounded-b-full", accent.bg)} />
+                      <div
+                        className="absolute top-0 left-6 right-6 h-[2px] rounded-b-full"
+                        style={{ backgroundColor: `hsl(var(${colorVar}))` }}
+                      />
 
                       {/* Quote icon */}
-                      <Quote className={cn("w-7 h-7 mb-4 opacity-30", accent.text)} />
+                      <Quote
+                        className="w-7 h-7 mb-4 opacity-30"
+                        style={{ color: `hsl(var(${colorVar}))` }}
+                      />
 
                       {/* Stars */}
                       <div className="flex gap-0.5 mb-4">
@@ -125,20 +130,20 @@ export default function TestimonialsSection() {
 
                       {/* Author */}
                       <div className="flex items-center gap-3 pt-4 border-t border-border/30">
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0",
-                          accent.bg
-                        )}>
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0"
+                          style={{ backgroundColor: `hsl(var(${colorVar}))` }}
+                        >
                           {t.avatar}
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-sm truncate">{t.name}</p>
                           <div className="flex items-center gap-2">
                             <p className="text-xs text-muted-foreground truncate">{t.role}</p>
-                            <span className={cn(
-                              "inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0",
-                              accent.bg, "text-primary-foreground"
-                            )}>
+                            <span
+                              className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0 text-primary-foreground"
+                              style={{ backgroundColor: `hsl(var(${colorVar}))` }}
+                            >
                               {t.service}
                             </span>
                           </div>
