@@ -845,6 +845,40 @@ const AppHome = () => {
             </div>
           </div>
 
+          {/* ─── GUEST SIGN-UP CTA ─── */}
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl bg-gradient-to-br from-primary/12 via-sky-500/6 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm"
+            >
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl" />
+              <div className="relative z-10">
+                <h3 className="text-base font-bold text-foreground mb-1">Join ZIVO — it's free</h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Earn rewards, save trips, get price alerts, and access exclusive deals.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigate("/signup")}
+                    size="sm"
+                    className="flex-1 h-11 rounded-xl font-bold shadow-md shadow-primary/20"
+                  >
+                    Sign Up Free
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/login")}
+                    variant="outline"
+                    size="sm"
+                    className="h-11 px-5 rounded-xl font-medium"
+                  >
+                    Log In
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* ─── TRUST BAR ─── */}
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
