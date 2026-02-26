@@ -311,6 +311,76 @@ const CompanyProfile = () => {
               </Card>
             </div>
           </div>
+
+          {/* === WAVE 12: Rich Company Content === */}
+
+          {/* Key Metrics */}
+          <Card className="mt-12 border-primary/20 bg-primary/5">
+            <CardContent className="p-8">
+              <h3 className="font-bold text-xl text-center mb-6">Company Highlights</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+                {[
+                  { stat: "2024", label: "Founded", emoji: "🏢" },
+                  { stat: "6", label: "Product verticals", emoji: "🚀" },
+                  { stat: "500+", label: "Partner integrations", emoji: "🤝" },
+                  { stat: "30+", label: "Countries served", emoji: "🌍" },
+                ].map(s => (
+                  <div key={s.label}>
+                    <span className="text-2xl">{s.emoji}</span>
+                    <p className="text-2xl font-bold text-primary mt-2">{s.stat}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Company Timeline */}
+          <div className="mt-10">
+            <h3 className="text-xl font-bold text-center mb-6">Company Timeline</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { date: "Q1 2024", event: "ZIVO LLC founded", desc: "Company established in the United States", icon: "🏢" },
+                { date: "Q3 2024", event: "Flights & Hotels launch", desc: "Core travel search platform goes live", icon: "✈️" },
+                { date: "Q1 2025", event: "Car rentals added", desc: "Third vertical expands platform scope", icon: "🚗" },
+                { date: "Q2 2025", event: "AI-powered features", desc: "Smart recommendations & trip planning", icon: "🤖" },
+              ].map(t => (
+                <Card key={t.date} className="border-border/50 hover:border-primary/20 transition-all">
+                  <CardContent className="p-5">
+                    <span className="text-2xl">{t.icon}</span>
+                    <Badge variant="secondary" className="text-[10px] ml-2">{t.date}</Badge>
+                    <h4 className="font-bold text-sm mt-3">{t.event}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Competitive Advantages */}
+          <div className="mt-10">
+            <h3 className="text-xl font-bold text-center mb-6">Competitive Advantages</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { advantage: "Unified Ecosystem", desc: "Single platform for flights, hotels, cars, rides, food, and logistics — unlike fragmented competitors", icon: Globe },
+                { advantage: "AI-First Architecture", desc: "Machine learning powers every search, recommendation, and pricing insight", icon: TrendingUp },
+                { advantage: "Zero-Fee Model", desc: "Users never pay extra fees — ZIVO earns from partner commissions only", icon: Target },
+                { advantage: "Global from Day One", desc: "Built for international scale with multi-currency and multi-language support", icon: Shield },
+              ].map(a => (
+                <Card key={a.advantage} className="border-border/50 hover:border-primary/20 hover:shadow-sm transition-all">
+                  <CardContent className="p-5 flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <a.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">{a.advantage}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{a.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
 
