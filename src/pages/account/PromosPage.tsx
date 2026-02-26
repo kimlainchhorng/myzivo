@@ -34,10 +34,8 @@ export default function PromosPage() {
   const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fetch user's assigned promos from wallet
   const { data: walletPromos, isLoading: walletLoading } = useUserPromoWallet(user?.id);
 
-  // Fetch public available promo codes
   const { data: publicPromos, isLoading: publicLoading } = useQuery({
     queryKey: ["public-promo-codes"],
     queryFn: async () => {
@@ -58,7 +56,6 @@ export default function PromosPage() {
 
   const isLoading = walletLoading || publicLoading;
 
-  // Filter active wallet promos
   const activeWalletPromos = walletPromos?.filter(item => {
     if (!item.is_active) return false;
     if (item.used_at) return false;
@@ -80,7 +77,6 @@ export default function PromosPage() {
   };
 
   const handleUseNow = (code: string) => {
-    // Navigate to eats with promo code
     navigate("/eats", { state: { promoCode: code } });
   };
 
@@ -93,30 +89,30 @@ export default function PromosPage() {
 
   const getExpirationStatus = (expiresAt: string | null) => {
     if (!expiresAt) {
-      return { text: "No expiration", color: "text-emerald-400", urgent: false };
+      return { text: "No expiration", color: "text-emerald-500", urgent: false };
     }
     const expDate = new Date(expiresAt);
     const now = new Date();
     
     if (isBefore(expDate, now)) {
-      return { text: "Expired", color: "text-red-400", urgent: true };
+      return { text: "Expired", color: "text-destructive", urgent: true };
     }
     if (isBefore(expDate, addDays(now, 3))) {
-      return { text: `Expires ${format(expDate, "MMM d")}`, color: "text-amber-400", urgent: true };
+      return { text: `Expires ${format(expDate, "MMM d")}`, color: "text-amber-500", urgent: true };
     }
-    return { text: `Expires ${format(expDate, "MMM d")}`, color: "text-zinc-400", urgent: false };
+    return { text: `Expires ${format(expDate, "MMM d")}`, color: "text-muted-foreground", urgent: false };
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="My Promos — ZIVO" description="Your available promo codes and coupons" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -130,18 +126,18 @@ export default function PromosPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-amber-500/20 to-zinc-900 border border-amber-500/30 rounded-3xl p-6"
+          className="bg-gradient-to-br from-amber-500/20 to-card border border-amber-500/30 rounded-3xl p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center">
-              <Tag className="w-6 h-6 text-amber-400" />
+              <Tag className="w-6 h-6 text-amber-500" />
             </div>
             <div>
-              <p className="text-sm text-zinc-400">Available Promos</p>
+              <p className="text-sm text-muted-foreground">Available Promos</p>
               <p className="text-2xl font-bold">{isLoading ? "—" : totalPromos}</p>
             </div>
           </div>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             Use promo codes at checkout to save on your orders!
           </p>
         </motion.div>
@@ -150,12 +146,12 @@ export default function PromosPage() {
         {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-32 w-full bg-zinc-800/50 rounded-2xl" />
+              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
             ))}
           </div>
         )}
 
-        {/* Wallet Promos (Campaign-assigned) */}
+        {/* Wallet Promos */}
         {!isLoading && activeWalletPromos.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -163,7 +159,7 @@ export default function PromosPage() {
             transition={{ delay: 0.1 }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-amber-400" />
+              <Sparkles className="w-4 h-4 text-amber-500" />
               <h2 className="font-bold">Exclusive Offers</h2>
             </div>
             <div className="space-y-3">
@@ -238,11 +234,11 @@ export default function PromosPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-zinc-900/80 border border-white/5 rounded-2xl p-8 text-center"
+            className="bg-card border border-border/50 rounded-2xl p-8 text-center"
           >
-            <Gift className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-            <p className="font-medium text-zinc-400">No promo codes available</p>
-            <p className="text-sm text-zinc-600 mt-1">
+            <Gift className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="font-medium text-muted-foreground">No promo codes available</p>
+            <p className="text-sm text-muted-foreground/60 mt-1">
               Check back later for exclusive offers!
             </p>
           </motion.div>
@@ -253,13 +249,13 @@ export default function PromosPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-zinc-900/80 border border-white/5 rounded-2xl p-5"
+          className="bg-card border border-border/50 rounded-2xl p-5"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Info className="w-4 h-4 text-zinc-400" />
+            <Info className="w-4 h-4 text-muted-foreground" />
             <h2 className="font-bold">How to Use</h2>
           </div>
-          <ul className="space-y-2 text-sm text-zinc-400">
+          <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
               Enter the code at checkout
@@ -307,26 +303,26 @@ function PromoCard({
   onUse,
 }: PromoCardProps) {
   return (
-    <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-4">
+    <div className="bg-card border border-border/50 rounded-2xl p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
             isExclusive ? "bg-amber-500/20" : "bg-primary/20"
           }`}>
-            <Tag className={`w-5 h-5 ${isExclusive ? "text-amber-400" : "text-primary"}`} />
+            <Tag className={`w-5 h-5 ${isExclusive ? "text-amber-500" : "text-primary"}`} />
           </div>
           <div>
             <p className="font-mono font-bold text-lg">{code}</p>
             <Badge 
               variant="outline" 
-              className={`text-xs ${isExclusive ? "border-amber-500/50 text-amber-400" : ""}`}
+              className={`text-xs ${isExclusive ? "border-amber-500/50 text-amber-500" : ""}`}
             >
               {discountText}
             </Badge>
           </div>
         </div>
         {isExclusive && (
-          <Badge className="bg-amber-500/20 text-amber-400 border-0 text-xs">
+          <Badge className="bg-amber-500/20 text-amber-500 border-0 text-xs">
             <Sparkles className="w-3 h-3 mr-1" />
             Exclusive
           </Badge>
@@ -339,7 +335,7 @@ function PromoCard({
           {expirationText}
         </span>
         {minOrder && (
-          <span className="text-zinc-500">
+          <span className="text-muted-foreground">
             {minOrder}
           </span>
         )}
@@ -349,12 +345,12 @@ function PromoCard({
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 h-10 bg-zinc-800/50 border-white/10 hover:bg-zinc-800"
+          className="flex-1 h-10"
           onClick={onCopy}
         >
           {isCopied ? (
             <>
-              <Check className="w-4 h-4 mr-2 text-emerald-400" />
+              <Check className="w-4 h-4 mr-2 text-emerald-500" />
               Copied
             </>
           ) : (
