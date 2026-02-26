@@ -145,6 +145,7 @@ const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
+const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const Vision = lazy(() => import("./pages/Vision"));
@@ -436,6 +437,7 @@ const App = () => (
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
+                <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
                 <Route path="/zivo-plus" element={<ZivoPlus />} />
                 <Route path="/vision" element={<Vision />} />
                 <Route path="/press" element={<Press />} />
