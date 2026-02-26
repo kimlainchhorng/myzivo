@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { motion } from "framer-motion";
 
 export interface HotelCardData {
   id: string;
@@ -51,144 +52,147 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
   const totalFormatted = hotel.totalPrice ? format(hotel.totalPrice, "USD") : null;
 
   return (
-    <Card
-      className={cn(
-        "overflow-hidden transition-all duration-200",
-        "hover:shadow-lg hover:shadow-amber-500/10 hover:border-amber-500/30",
-        hotel.isBestValue && "ring-2 ring-emerald-500/50",
-        hotel.isMostPopular && !hotel.isBestValue && "ring-2 ring-amber-500/50",
-        className
-      )}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      {/* Top badges */}
-      {(hotel.isBestValue || hotel.isMostPopular) && (
-        <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
-          {hotel.isBestValue && (
-            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
-              Best Value
-            </Badge>
-          )}
-          {hotel.isMostPopular && !hotel.isBestValue && (
-            <Badge className="bg-amber-500 text-primary-foreground text-[10px] gap-1">
-              <Sparkles className="w-3 h-3" /> Popular Choice
-            </Badge>
-          )}
-        </div>
-      )}
-
-      <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
-          {/* LEFT: Image */}
-          <div className="relative w-full sm:w-52 h-48 sm:h-auto shrink-0">
-            <img
-              src={hotel.imageUrl}
-              alt={hotel.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            {hotel.freeCancellation && (
-              <Badge className="absolute top-2 left-2 bg-emerald-500/90 text-primary-foreground text-[10px] gap-1">
-                <CheckCircle className="w-3 h-3" />
-                Free Cancellation
+      <Card
+        className={cn(
+          "overflow-hidden transition-all duration-300 group",
+          "hover:shadow-xl hover:shadow-[hsl(var(--hotels))/0.08] hover:border-[hsl(var(--hotels))/0.3] hover:-translate-y-0.5",
+          hotel.isBestValue && "ring-2 ring-[hsl(var(--success))/0.5]",
+          hotel.isMostPopular && !hotel.isBestValue && "ring-2 ring-[hsl(var(--hotels))/0.5]",
+          className
+        )}
+      >
+        {/* Top badges */}
+        {(hotel.isBestValue || hotel.isMostPopular) && (
+          <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
+            {hotel.isBestValue && (
+              <Badge className="bg-[hsl(var(--success))] text-primary-foreground text-[10px] gap-1">
+                Best Value
+              </Badge>
+            )}
+            {hotel.isMostPopular && !hotel.isBestValue && (
+              <Badge className="bg-[hsl(var(--hotels))] text-primary-foreground text-[10px] gap-1">
+                <Sparkles className="w-3 h-3" /> Popular Choice
               </Badge>
             )}
           </div>
+        )}
 
-          {/* CENTER: Details */}
-          <div className="flex-1 p-4 flex flex-col">
-            <div className="flex-1">
-              {/* Header with name and rating */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <h3 className="font-bold text-lg leading-tight line-clamp-2">{hotel.name}</h3>
-                  <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Booking Partner</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                    <div className="flex shrink-0">
-                      {Array.from({ length: hotel.starRating }).map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      ))}
+        <CardContent className="p-0">
+          <div className="flex flex-col sm:flex-row">
+            {/* LEFT: Image */}
+            <div className="relative w-full sm:w-52 h-48 sm:h-auto shrink-0 overflow-hidden">
+              <img
+                src={hotel.imageUrl}
+                alt={hotel.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                loading="lazy"
+              />
+              {hotel.freeCancellation && (
+                <Badge className="absolute top-2 left-2 bg-[hsl(var(--success))/0.9] text-primary-foreground text-[10px] gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Free Cancellation
+                </Badge>
+              )}
+            </div>
+
+            {/* CENTER: Details */}
+            <div className="flex-1 p-4 flex flex-col">
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-lg leading-tight line-clamp-2">{hotel.name}</h3>
+                    <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Booking Partner</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="flex shrink-0">
+                        {Array.from({ length: hotel.starRating }).map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-xs">•</span>
+                      <span className="flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{hotel.area}</span>
+                      </span>
                     </div>
-                    <span className="text-xs">•</span>
-                    <span className="flex items-center gap-1 truncate">
-                      <MapPin className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{hotel.area}</span>
-                    </span>
+                  </div>
+
+                  {/* Guest Rating */}
+                  <div className="text-right shrink-0">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[hsl(var(--hotels))/0.1] border border-[hsl(var(--hotels))/0.2]">
+                      <span className="font-bold text-[hsl(var(--hotels))] text-lg">{hotel.guestRating.toFixed(1)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{ratingLabel}</p>
+                    <p className="text-[10px] text-muted-foreground">{hotel.reviewCount.toLocaleString()} reviews</p>
                   </div>
                 </div>
 
-                {/* Guest Rating */}
-                <div className="text-right shrink-0">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <span className="font-bold text-amber-500 text-lg">{hotel.guestRating.toFixed(1)}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">{ratingLabel}</p>
-                  <p className="text-[10px] text-muted-foreground">{hotel.reviewCount.toLocaleString()} reviews</p>
+                {/* Amenities */}
+                <div className="flex flex-wrap gap-2">
+                  {hotel.amenities.slice(0, 3).map((amenity) => {
+                    const Icon = amenityIcons[amenity];
+                    return (
+                      <span
+                        key={amenity}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg"
+                      >
+                        {Icon && <Icon className="w-3.5 h-3.5" />}
+                        {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
+                      </span>
+                    );
+                  })}
+                  {hotel.distanceFromCenter && (
+                    <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
+                      {hotel.distanceFromCenter} km from center
+                    </span>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {/* Amenities */}
-              <div className="flex flex-wrap gap-2">
-                {hotel.amenities.slice(0, 3).map((amenity) => {
-                  const Icon = amenityIcons[amenity];
-                  return (
-                    <span
-                      key={amenity}
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded"
-                    >
-                      {Icon && <Icon className="w-3.5 h-3.5" />}
-                      {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-                    </span>
-                  );
-                })}
-                {hotel.distanceFromCenter && (
-                  <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                    {hotel.distanceFromCenter} km from center
-                  </span>
+            {/* RIGHT: Price & CTA */}
+            <div className="sm:w-44 p-4 bg-gradient-to-br from-muted/30 to-muted/10 flex flex-col justify-center items-center sm:items-end border-t sm:border-t-0 sm:border-l border-border/50">
+              <div className="text-center sm:text-right">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
+                <p className="text-2xl font-bold text-[hsl(var(--hotels))]">{nightlyPrice}</p>
+                <p className="text-xs text-muted-foreground">
+                  per night*
+                </p>
+                {totalFormatted && hotel.nights && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {totalFormatted} total ({hotel.nights} night{hotel.nights !== 1 ? "s" : ""})
+                  </p>
+                )}
+                {wasConverted && (
+                  <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                    Converted from USD
+                  </p>
                 )}
               </div>
+              <Button
+                onClick={() => onViewDeal(hotel)}
+                className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-[hsl(var(--hotels))] to-orange-600 hover:from-[hsl(var(--hotels))/0.9] hover:to-orange-700 shadow-lg shadow-[hsl(var(--hotels))/0.2] hover:shadow-[hsl(var(--hotels))/0.3] text-primary-foreground rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
+              >
+                Book with Provider
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+              <p className="text-[9px] text-muted-foreground mt-2 text-center">
+                Continue to Partner
+              </p>
             </div>
           </div>
 
-          {/* RIGHT: Price & CTA */}
-          <div className="sm:w-44 p-4 bg-gradient-to-br from-muted/30 to-muted/10 flex flex-col justify-center items-center sm:items-end border-t sm:border-t-0 sm:border-l border-border/50">
-            <div className="text-center sm:text-right">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
-              <p className="text-2xl font-bold text-amber-500">{nightlyPrice}</p>
-              <p className="text-xs text-muted-foreground">
-                per night*
-              </p>
-              {totalFormatted && hotel.nights && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {totalFormatted} total ({hotel.nights} night{hotel.nights !== 1 ? "s" : ""})
-                </p>
-              )}
-              {wasConverted && (
-                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
-                  Converted from USD
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={() => onViewDeal(hotel)}
-              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-primary-foreground rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
-            >
-              Book with Provider
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-            {/* Price confirmation micro-copy */}
-            <p className="text-[9px] text-muted-foreground mt-2 text-center">
-              Continue to Partner
+          <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
+            <p className="text-[10px] text-muted-foreground">
+              Prices may change until booking is completed with the provider.
             </p>
           </div>
-        </div>
-
-        {/* Redirect notice with booking handled by partner */}
-        <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
-          <p className="text-[10px] text-muted-foreground">
-            Prices may change until booking is completed with the provider.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

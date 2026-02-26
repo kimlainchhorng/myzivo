@@ -213,7 +213,7 @@ const AppHome = () => {
       {/* Scrollable content */}
       <div className="overflow-y-auto pb-24">
         {/* ─── PREMIUM HEADER ZONE ─── */}
-        <div className="bg-gradient-to-b from-primary/8 via-primary/3 to-background relative overflow-hidden">
+        <div className="bg-gradient-to-b from-primary/10 via-primary/4 to-background relative overflow-hidden">
           {/* Animated decorative orbs */}
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute top-16 -left-16 w-36 h-36 bg-emerald-500/8 rounded-full blur-3xl" />
