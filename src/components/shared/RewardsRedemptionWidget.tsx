@@ -1,33 +1,32 @@
 import { useState } from "react";
-import { 
-  Sparkles, 
-  Coins,
-  ArrowRight,
-  Info,
-  Zap
-} from "lucide-react";
+import { Sparkles, Coins, Info, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RewardsRedemptionWidgetProps {
   className?: string;
   totalPrice?: number;
-  availableMiles?: number;
 }
 
-const RewardsRedemptionWidget = ({ 
-  className, 
+const RewardsRedemptionWidget = ({
+  className,
   totalPrice = 1299,
-  availableMiles = 45000 
 }: RewardsRedemptionWidgetProps) => {
+  const { user } = useAuth();
+  const { points, pointsToValue, redeemPoints, isRedeeming, MIN_REDEMPTION_POINTS } = useLoyaltyPoints();
   const [milesValue, setMilesValue] = useState([0]);
-  
+
+  const availableMiles = points.points_balance;
   const maxRedeemable = Math.min(availableMiles, totalPrice * 100); // 100 miles = $1
   const dollarValue = milesValue[0] / 100;
   const remainingCash = totalPrice - dollarValue;
-  const usagePercent = (milesValue[0] / maxRedeemable) * 100;
+  const usagePercent = maxRedeemable > 0 ? (milesValue[0] / maxRedeemable) * 100 : 0;
+
+  if (!user || availableMiles < MIN_REDEMPTION_POINTS) return null;
 
   return (
     <div className={cn("p-4 rounded-xl bg-gradient-to-br from-primary/10 to-amber-500/10 border border-primary/30", className)}>
@@ -42,7 +41,6 @@ const RewardsRedemptionWidget = ({
         </Badge>
       </div>
 
-      {/* Miles Slider */}
       <div className="mb-4">
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-muted-foreground">Miles to redeem</span>
@@ -61,7 +59,6 @@ const RewardsRedemptionWidget = ({
         </div>
       </div>
 
-      {/* Value Breakdown */}
       <div className="p-3 rounded-xl bg-background/50 border border-border/30 mb-4">
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
@@ -75,7 +72,6 @@ const RewardsRedemptionWidget = ({
         </div>
       </div>
 
-      {/* Quick Options */}
       <div className="flex gap-2 mb-4">
         {[25, 50, 100].map((percent) => (
           <button
@@ -83,8 +79,8 @@ const RewardsRedemptionWidget = ({
             onClick={() => setMilesValue([Math.floor(maxRedeemable * percent / 100)])}
             className={cn(
               "flex-1 py-1.5 rounded-xl text-xs font-medium transition-all border",
-              usagePercent >= percent 
-                ? "bg-primary/20 border-primary/50 text-primary" 
+              usagePercent >= percent
+                ? "bg-primary/20 border-primary/50 text-primary"
                 : "bg-muted/20 border-border/30 text-muted-foreground hover:text-foreground"
             )}
           >
@@ -93,7 +89,6 @@ const RewardsRedemptionWidget = ({
         ))}
       </div>
 
-      {/* Tip */}
       <div className="flex items-start gap-2 p-2 rounded-xl bg-sky-500/10 text-xs">
         <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
@@ -101,11 +96,20 @@ const RewardsRedemptionWidget = ({
         </p>
       </div>
 
-      {/* Apply Button */}
-      {milesValue[0] > 0 && (
-        <Button className="w-full mt-4 bg-gradient-to-r from-primary to-amber-500">
+      {milesValue[0] >= MIN_REDEMPTION_POINTS && (
+        <Button
+          className="w-full mt-4 bg-gradient-to-r from-primary to-amber-500"
+          onClick={() =>
+            redeemPoints({
+              pointsToRedeem: milesValue[0],
+              referenceType: "checkout",
+              referenceId: "manual",
+            })
+          }
+          disabled={isRedeeming}
+        >
           <Zap className="w-4 h-4 mr-2" />
-          Apply {milesValue[0].toLocaleString()} Miles
+          {isRedeeming ? "Applying..." : `Apply ${milesValue[0].toLocaleString()} Miles`}
         </Button>
       )}
     </div>
