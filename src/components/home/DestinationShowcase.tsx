@@ -4,13 +4,20 @@ import { Plane, ArrowRight, TrendingUp, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
+import imgNewYork from "@/assets/dest-newyork.jpg";
+import imgParis from "@/assets/dest-paris.jpg";
+import imgTokyo from "@/assets/dest-tokyo.jpg";
+import imgDubai from "@/assets/dest-dubai.jpg";
+import imgCancun from "@/assets/dest-cancun.jpg";
+import imgLondon from "@/assets/dest-london.jpg";
+
 const destinations = [
-  { city: "New York", country: "USA", code: "US", tagline: "The city that never sleeps", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", from: "$89", trending: true },
-  { city: "Paris", country: "France", code: "FR", tagline: "Romance and culture", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800", from: "$299", trending: true },
-  { city: "Tokyo", country: "Japan", code: "JP", tagline: "Where tradition meets future", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800", from: "$449" },
-  { city: "Dubai", country: "UAE", code: "AE", tagline: "Luxury beyond limits", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800", from: "$379" },
-  { city: "Cancún", country: "Mexico", code: "MX", tagline: "Paradise beaches await", image: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?auto=format&fit=crop&q=80&w=800", from: "$199" },
-  { city: "London", country: "UK", code: "GB", tagline: "History and charm", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80&w=800", from: "$279" },
+  { city: "New York", country: "USA", code: "US", tagline: "The city that never sleeps", image: imgNewYork, from: "$89", trending: true },
+  { city: "Paris", country: "France", code: "FR", tagline: "Romance and culture", image: imgParis, from: "$299", trending: true },
+  { city: "Tokyo", country: "Japan", code: "JP", tagline: "Where tradition meets future", image: imgTokyo, from: "$449" },
+  { city: "Dubai", country: "UAE", code: "AE", tagline: "Luxury beyond limits", image: imgDubai, from: "$379" },
+  { city: "Cancún", country: "Mexico", code: "MX", tagline: "Paradise beaches await", image: imgCancun, from: "$199" },
+  { city: "London", country: "UK", code: "GB", tagline: "History and charm", image: imgLondon, from: "$279" },
 ];
 
 export default function DestinationShowcase() {
@@ -73,7 +80,7 @@ export default function DestinationShowcase() {
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
                 
                 {/* Trending badge */}
                 {dest.trending && (
@@ -89,7 +96,7 @@ export default function DestinationShowcase() {
                     className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card active:scale-90 transition-all touch-manipulation"
                     aria-label={`Save ${dest.city}`}
                   >
-                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-primary-foreground"}`} />
+                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
                   </button>
                   <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 shadow-md">
                     Explore <ArrowRight className="w-3 h-3" />
@@ -99,14 +106,14 @@ export default function DestinationShowcase() {
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <div className="flex items-end justify-between">
                     <div>
-                      <h3 className="text-primary-foreground font-bold text-xl tracking-tight">{dest.city}</h3>
-                      <p className="text-primary-foreground/70 text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
+                      <h3 className="text-foreground font-bold text-xl tracking-tight">{dest.city}</h3>
+                      <p className="text-muted-foreground text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-primary-foreground/60 text-xs flex items-center gap-1">
+                      <p className="text-muted-foreground text-xs flex items-center gap-1">
                         <Plane className="w-3 h-3" /> Flights from
                       </p>
-                      <p className="text-primary-foreground font-bold text-xl">{dest.from}</p>
+                      <p className="text-foreground font-bold text-xl">{dest.from}</p>
                     </div>
                   </div>
                 </div>

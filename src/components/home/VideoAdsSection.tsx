@@ -137,14 +137,14 @@ export default function VideoAdsSection() {
 
                   {/* Right side decorative icon */}
                   <div className="hidden sm:flex items-center justify-center">
-                    <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-full bg-foreground/10 backdrop-blur-sm flex items-center justify-center">
                       <Icon className="w-16 h-16 text-primary-foreground/40" />
                     </div>
                   </div>
                 </div>
 
                 {/* Play button overlay (decorative) */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm">
+                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/30 backdrop-blur-sm">
                   <Play className="w-3 h-3 text-primary-foreground fill-primary-foreground" />
                   <span className="text-[11px] text-primary-foreground/80 font-medium">Watch Promo</span>
                 </div>
