@@ -254,7 +254,7 @@ export default function BookingReturnPage() {
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
                     <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
                         <Mail className="w-4 h-4" />
                         Check my email
                       </a>
@@ -339,7 +339,7 @@ export default function BookingReturnPage() {
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
                     <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
                         <Mail className="w-4 h-4" />
                         Check my email
                       </a>
@@ -386,7 +386,7 @@ export default function BookingReturnPage() {
                   {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
                     <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
-                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                      <a href="mailto:support@hizivo.com" target="_blank" rel="noopener noreferrer">
                         <Mail className="w-4 h-4" />
                         Check my email
                       </a>
