@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus, Thermometer, Lock as LockIcon } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus, Thermometer, Lock as LockIcon, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -292,6 +292,62 @@ export default function DeliveryPage() {
   const [backgroundCheckedDriver, setBackgroundCheckedDriver] = useState(true);
   const [photoOnPickup, setPhotoOnPickup] = useState(true);
   const [photoOnDelivery, setPhotoOnDeliveryNew] = useState(true);
+
+  // === WAVE 3: Analytics & Smart Shipping ===
+  const [showShippingAnalytics, setShowShippingAnalytics] = useState(false);
+  const [showBulkDiscounts, setShowBulkDiscounts] = useState(false);
+  const [showShippingCalendar, setShowShippingCalendar] = useState(false);
+  const [showCarrierComparison, setShowCarrierComparison] = useState(false);
+  const [showPackagingGuide, setShowPackagingGuide] = useState(false);
+  const [showDeliveryZones, setShowDeliveryZones] = useState(false);
+
+  // Shipping analytics
+  const shippingAnalytics = {
+    totalShipments: 47,
+    avgDeliveryTime: "2.4 hrs",
+    onTimeRate: 96,
+    avgCost: "$14.20",
+    monthlySpend: [
+      { month: "Oct", amount: 89 },
+      { month: "Nov", amount: 134 },
+      { month: "Dec", amount: 212 },
+      { month: "Jan", amount: 98 },
+      { month: "Feb", amount: 76 },
+    ],
+    topDestinations: ["Downtown", "Airport", "Warehouse District"],
+  };
+
+  // Bulk discounts
+  const bulkDiscountTiers = [
+    { qty: "1-4", discount: "0%", perPkg: "$14.99", label: "Standard" },
+    { qty: "5-9", discount: "10%", perPkg: "$13.49", label: "Bronze" },
+    { qty: "10-24", discount: "20%", perPkg: "$11.99", label: "Silver" },
+    { qty: "25+", discount: "30%", perPkg: "$10.49", label: "Gold" },
+  ];
+
+  // Carrier comparison
+  const carrierOptions = [
+    { name: "ZIVO Express", time: "1-2 hrs", price: "$14.99", rating: 4.8, tracking: true, insurance: true },
+    { name: "ZIVO Standard", time: "2-4 hrs", price: "$8.99", rating: 4.6, tracking: true, insurance: false },
+    { name: "ZIVO Overnight", time: "Next AM", price: "$19.99", rating: 4.9, tracking: true, insurance: true },
+    { name: "Peer Delivery", time: "1-3 hrs", price: "$12.99", rating: 4.5, tracking: true, insurance: false },
+  ];
+
+  // Packaging guide
+  const packagingTips = [
+    { item: "Electronics", tip: "Double box with 2\" foam padding", icon: "📱" },
+    { item: "Fragile items", tip: "Wrap individually, fill all gaps", icon: "🏺" },
+    { item: "Documents", tip: "Use rigid mailer, mark 'Do Not Bend'", icon: "📄" },
+    { item: "Perishables", tip: "Insulated box + ice packs required", icon: "🧊" },
+  ];
+
+  // Delivery zones
+  const deliveryZones = [
+    { zone: "Zone 1 (0-5 mi)", time: "30-60 min", baseFee: "$5.99", color: "text-emerald-500" },
+    { zone: "Zone 2 (5-15 mi)", time: "1-2 hrs", baseFee: "$8.99", color: "text-sky-500" },
+    { zone: "Zone 3 (15-30 mi)", time: "2-4 hrs", baseFee: "$14.99", color: "text-amber-500" },
+    { zone: "Zone 4 (30+ mi)", time: "Same day", baseFee: "$24.99", color: "text-violet-500" },
+  ];
 
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
@@ -1542,6 +1598,105 @@ export default function DeliveryPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* === WAVE 3: Analytics & Smart Shipping (address step) === */}
+      {step === "address" && (
+        <div className="px-4 pb-4 space-y-3">
+          {/* Shipping Analytics */}
+          <button onClick={() => setShowShippingAnalytics(!showShippingAnalytics)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Shipping Analytics
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showShippingAnalytics && "rotate-90")} />
+          </button>
+          {showShippingAnalytics && (
+            <div className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{shippingAnalytics.totalShipments}</p><p className="text-[9px] text-muted-foreground">Total</p></div>
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{shippingAnalytics.avgDeliveryTime}</p><p className="text-[9px] text-muted-foreground">Avg time</p></div>
+                <div className="text-center p-2 rounded-xl bg-emerald-500/10"><p className="text-sm font-bold text-emerald-500">{shippingAnalytics.onTimeRate}%</p><p className="text-[9px] text-muted-foreground">On-time</p></div>
+              </div>
+              <div className="flex items-end gap-1.5 h-16">
+                {shippingAnalytics.monthlySpend.map(m => (
+                  <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 250) * 100}%` }} className="w-full rounded-t bg-violet-500/30" />
+                    <span className="text-[8px] text-muted-foreground">{m.month}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Discounts */}
+          <button onClick={() => setShowBulkDiscounts(!showBulkDiscounts)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Percent className="w-3.5 h-3.5 text-emerald-500" /> Bulk Discounts
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showBulkDiscounts && "rotate-90")} />
+          </button>
+          {showBulkDiscounts && (
+            <div className="grid grid-cols-2 gap-2">
+              {bulkDiscountTiers.map(t => (
+                <div key={t.qty} className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                  <p className="text-[10px] text-muted-foreground">{t.qty} packages</p>
+                  <p className="text-sm font-bold text-emerald-500">{t.discount} off</p>
+                  <p className="text-[10px] font-bold text-foreground">{t.perPkg}/pkg</p>
+                  <Badge className="mt-1 bg-muted/50 text-muted-foreground border-0 text-[8px]">{t.label}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Carrier Comparison */}
+          <button onClick={() => setShowCarrierComparison(!showCarrierComparison)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Truck className="w-3.5 h-3.5 text-sky-500" /> Compare Carriers
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showCarrierComparison && "rotate-90")} />
+          </button>
+          {showCarrierComparison && (
+            <div className="space-y-2">
+              {carrierOptions.map(c => (
+                <div key={c.name} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{c.name}</p><p className="text-[10px] text-muted-foreground">{c.time} · ★ {c.rating}</p></div>
+                  <span className="text-sm font-bold text-violet-500">{c.price}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Packaging Guide */}
+          <button onClick={() => setShowPackagingGuide(!showPackagingGuide)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Box className="w-3.5 h-3.5 text-amber-500" /> Packaging Guide
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showPackagingGuide && "rotate-90")} />
+          </button>
+          {showPackagingGuide && (
+            <div className="space-y-2">
+              {packagingTips.map(t => (
+                <div key={t.item} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <span className="text-lg">{t.icon}</span>
+                  <div><p className="text-xs font-bold text-foreground">{t.item}</p><p className="text-[10px] text-muted-foreground">{t.tip}</p></div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Delivery Zones */}
+          <button onClick={() => setShowDeliveryZones(!showDeliveryZones)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <MapPin className="w-3.5 h-3.5 text-sky-500" /> Delivery Zones & Pricing
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showDeliveryZones && "rotate-90")} />
+          </button>
+          {showDeliveryZones && (
+            <div className="space-y-2">
+              {deliveryZones.map(z => (
+                <div key={z.zone} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <div className="flex-1"><p className={cn("text-xs font-bold", z.color)}>{z.zone}</p><p className="text-[10px] text-muted-foreground">{z.time}</p></div>
+                  <span className="text-sm font-bold text-foreground">{z.baseFee}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {step !== "confirmation" && <ZivoMobileNav />}
     </div>

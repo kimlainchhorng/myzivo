@@ -3,7 +3,7 @@
  * Premium glassmorphism style matching the ZIVO super-app
  */
 import { useState, useEffect } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight, Users, Calendar, Bell } from "lucide-react";
+import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight, Users, Calendar, Bell, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -374,6 +374,57 @@ export default function EatsLanding() {
     { id: "2", restaurant: "Pizza Palace", items: "Margherita + Garlic Bread", total: "$18.00", date: "3 days ago" },
     { id: "3", restaurant: "Green Bowl", items: "Buddha Bowl", total: "$13.50", date: "Last week" },
   ]);
+
+  // === WAVE 3: Discovery & Intelligence ===
+  const [showTasteProfile, setShowTasteProfile] = useState(false);
+  const [showFoodSafety, setShowFoodSafety] = useState(false);
+  const [showFlavorMap, setShowFlavorMap] = useState(false);
+  const [showRestaurantAwards, setShowRestaurantAwards] = useState(false);
+  const [showSpendingInsights, setShowSpendingInsights] = useState(false);
+  const [showMealPlanner, setShowMealPlanner] = useState(false);
+
+  // Taste profile
+  const tasteProfile = {
+    spicy: 72, sweet: 45, savory: 88, sour: 30, umami: 65,
+    topCuisines: ["Japanese", "Italian", "Mexican"],
+    adventureScore: 78,
+    healthScore: 62,
+  };
+
+  // Food safety scores (Yelp/DoorDash)
+  const foodSafetyScores = [
+    { restaurant: "Joe's Grill", grade: "A", score: 96, lastInspection: "Jan 2026", icon: "🏆" },
+    { restaurant: "Bella Napoli", grade: "A", score: 98, lastInspection: "Feb 2026", icon: "🏆" },
+    { restaurant: "Thai Palace", grade: "A-", score: 92, lastInspection: "Dec 2025", icon: "✅" },
+    { restaurant: "El Azteca", grade: "A", score: 95, lastInspection: "Jan 2026", icon: "🏆" },
+  ];
+
+  // Restaurant awards
+  const restaurantAwards = [
+    { restaurant: "Sakura Sushi", award: "Best Sushi 2025", org: "City Eats Awards", icon: "🏅" },
+    { restaurant: "Bella Napoli", award: "Top Italian Restaurant", org: "Food & Wine", icon: "🍷" },
+    { restaurant: "Green Bowl", award: "Healthiest Menu", org: "Wellness Weekly", icon: "🥗" },
+  ];
+
+  // Spending insights
+  const spendingInsights = {
+    thisMonth: 127.50,
+    lastMonth: 142.80,
+    avgOrderValue: 18.20,
+    ordersThisMonth: 7,
+    topCategory: "Asian",
+    savingsFromDeals: 23.50,
+    loyaltyValue: "$4.70",
+  };
+
+  // Meal planner
+  const mealPlanSuggestions = [
+    { day: "Mon", meal: "Quinoa Salad", restaurant: "Green Bowl", cal: 420, price: 13.99 },
+    { day: "Tue", meal: "Chicken Tacos", restaurant: "El Azteca", cal: 420, price: 10.99 },
+    { day: "Wed", meal: "Pad Thai", restaurant: "Thai Palace", cal: 620, price: 13.50 },
+    { day: "Thu", meal: "Margherita Pizza", restaurant: "Bella Napoli", cal: 780, price: 14.99 },
+    { day: "Fri", meal: "Dragon Roll", restaurant: "Sakura Sushi", cal: 520, price: 16.99 },
+  ];
   const totalCalories = cart.reduce((sum, item) => {
     const restaurant = restaurants.find(r => r.id === item.restaurantId);
     const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
@@ -1751,6 +1802,111 @@ export default function EatsLanding() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* === WAVE 3: Discovery & Intelligence Sections (browse step) === */}
+      {step === "browse" && (
+        <div className="container mx-auto px-4 pb-8 space-y-4">
+          {/* Taste Profile */}
+          <button onClick={() => setShowTasteProfile(!showTasteProfile)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Your Taste Profile
+            <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px] ml-auto">AI</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showTasteProfile && "rotate-90")} />
+          </button>
+          {showTasteProfile && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-amber-500/20 p-4 space-y-3">
+              <div className="space-y-2">
+                {Object.entries({ Spicy: tasteProfile.spicy, Sweet: tasteProfile.sweet, Savory: tasteProfile.savory, Umami: tasteProfile.umami }).map(([label, val]) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground w-12">{label}</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${val}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500" />
+                    </div>
+                    <span className="text-[10px] font-bold text-foreground w-8 text-right">{val}%</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1 text-center p-2 rounded-xl bg-muted/30"><p className="text-xs font-bold text-foreground">{tasteProfile.adventureScore}%</p><p className="text-[9px] text-muted-foreground">Adventure</p></div>
+                <div className="flex-1 text-center p-2 rounded-xl bg-muted/30"><p className="text-xs font-bold text-foreground">{tasteProfile.healthScore}%</p><p className="text-[9px] text-muted-foreground">Health</p></div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Food Safety Scores */}
+          <button onClick={() => setShowFoodSafety(!showFoodSafety)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Food Safety Scores
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showFoodSafety && "rotate-90")} />
+          </button>
+          {showFoodSafety && (
+            <div className="space-y-2">
+              {foodSafetyScores.map(r => (
+                <div key={r.restaurant} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <span className="text-lg">{r.icon}</span>
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{r.restaurant}</p><p className="text-[10px] text-muted-foreground">Inspected {r.lastInspection}</p></div>
+                  <div className="text-center"><p className="text-sm font-bold text-emerald-500">{r.grade}</p><p className="text-[9px] text-muted-foreground">{r.score}/100</p></div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Restaurant Awards */}
+          <button onClick={() => setShowRestaurantAwards(!showRestaurantAwards)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all">
+            <Award className="w-3.5 h-3.5 text-amber-500" /> Restaurant Awards
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showRestaurantAwards && "rotate-90")} />
+          </button>
+          {showRestaurantAwards && (
+            <div className="space-y-2">
+              {restaurantAwards.map(a => (
+                <div key={a.restaurant} className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <span className="text-lg">{a.icon}</span>
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.restaurant}</p><p className="text-[10px] text-amber-500 font-bold">{a.award}</p><p className="text-[9px] text-muted-foreground">{a.org}</p></div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Spending Insights */}
+          <button onClick={() => setShowSpendingInsights(!showSpendingInsights)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all">
+            <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Spending Insights
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showSpendingInsights && "rotate-90")} />
+          </button>
+          {showSpendingInsights && (
+            <div className="rounded-2xl bg-card border border-border/40 p-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">${spendingInsights.thisMonth}</p><p className="text-[9px] text-muted-foreground">This month</p></div>
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">${spendingInsights.avgOrderValue}</p><p className="text-[9px] text-muted-foreground">Avg order</p></div>
+                <div className="text-center p-2 rounded-xl bg-emerald-500/10"><p className="text-sm font-bold text-emerald-500">${spendingInsights.savingsFromDeals}</p><p className="text-[9px] text-muted-foreground">Saved from deals</p></div>
+                <div className="text-center p-2 rounded-xl bg-amber-500/10"><p className="text-sm font-bold text-amber-500">{spendingInsights.loyaltyValue}</p><p className="text-[9px] text-muted-foreground">Loyalty value</p></div>
+              </div>
+            </div>
+          )}
+
+          {/* Meal Planner */}
+          <button onClick={() => setShowMealPlanner(!showMealPlanner)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all">
+            <Calendar className="w-3.5 h-3.5 text-violet-500" /> AI Meal Planner
+            <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[8px] ml-auto">NEW</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showMealPlanner && "rotate-90")} />
+          </button>
+          {showMealPlanner && (
+            <div className="space-y-2">
+              {mealPlanSuggestions.map(m => (
+                <div key={m.day} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-xs font-bold text-violet-500">{m.day}</div>
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{m.meal}</p><p className="text-[10px] text-muted-foreground">{m.restaurant} · {m.cal} cal</p></div>
+                  <span className="text-xs font-bold text-primary">${m.price}</span>
+                </div>
+              ))}
+              <button onClick={() => toast.success("🍽️ Meal plan saved!")} className="w-full py-2 rounded-xl bg-violet-500/10 text-violet-500 text-xs font-bold border border-violet-500/20">
+                Save Meal Plan
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
