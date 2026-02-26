@@ -193,7 +193,7 @@ export default function FlightFeaturedDestinations({
                 
                 {/* Badge */}
                 <Badge className={cn(
-                  "absolute top-4 left-4 text-white font-semibold",
+                  "absolute top-4 left-4 text-primary-foreground font-semibold",
                   dest.badgeColor
                 )}>
                   <TrendingUp className="w-3.5 h-3.5 mr-1" />
@@ -209,7 +209,7 @@ export default function FlightFeaturedDestinations({
                   className={cn(
                     "absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all",
                     likedDestinations.has(dest.id)
-                      ? "bg-rose-500 text-white"
+                      ? "bg-rose-500 text-primary-foreground"
                       : "bg-background/80 backdrop-blur-sm text-foreground hover:bg-background"
                   )}
                 >

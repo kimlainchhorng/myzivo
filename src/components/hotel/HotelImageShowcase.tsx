@@ -151,18 +151,18 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
               
               {/* Top Badges */}
               <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground border-0 shadow-lg">
                   {property.tag}
                 </Badge>
                 <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all duration-200 group/heart">
-                  <Heart className="w-5 h-5 text-white group-hover/heart:text-red-400 group-hover/heart:fill-red-400 transition-all duration-200" />
+                  <Heart className="w-5 h-5 text-primary-foreground group-hover/heart:text-red-400 group-hover/heart:fill-red-400 transition-all duration-200" />
                 </button>
               </div>
               
               {/* Discount Badge */}
               {property.originalPrice && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-16 sm:translate-x-0">
-                  <Badge className="bg-red-500 text-white border-0 shadow-lg animate-pulse">
+                  <Badge className="bg-red-500 text-primary-foreground border-0 shadow-lg animate-pulse">
                     Save ${property.originalPrice - property.pricePerNight}
                   </Badge>
                 </div>
@@ -176,10 +176,10 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
                 </span>
                 
                 {/* Title & Location */}
-                <h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-1 group-hover:text-amber-200 transition-all duration-200">
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-primary-foreground mb-1 group-hover:text-amber-200 transition-all duration-200">
                   {property.name}
                 </h3>
-                <div className="flex items-center gap-1 text-white/80 text-sm mb-3">
+                <div className="flex items-center gap-1 text-primary-foreground/80 text-sm mb-3">
                   <MapPin className="w-3.5 h-3.5" />
                   {property.location}
                 </div>
@@ -188,23 +188,23 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm">
                     <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span className="font-bold text-white text-sm">{property.rating}</span>
+                    <span className="font-bold text-primary-foreground text-sm">{property.rating}</span>
                   </div>
-                  <span className="text-white/70 text-sm">({property.reviews.toLocaleString()} reviews)</span>
+                  <span className="text-primary-foreground/70 text-sm">({property.reviews.toLocaleString()} reviews)</span>
                 </div>
                 
                 {/* Price & CTA */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xl sm:text-3xl font-bold text-white">${property.pricePerNight}</span>
-                    <span className="text-white/60 text-sm">/night</span>
+                    <span className="text-2xl sm:text-3xl font-bold text-primary-foreground">${property.pricePerNight}</span>
+                    <span className="text-primary-foreground/60 text-sm">/night</span>
                     {property.originalPrice && (
-                      <span className="ml-2 text-white/40 line-through text-sm">${property.originalPrice}</span>
+                      <span className="ml-2 text-primary-foreground/40 line-through text-sm">${property.originalPrice}</span>
                     )}
                   </div>
                   <Button 
                     size="sm" 
-                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-primary-foreground border-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     View <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -221,7 +221,7 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
         <div className="text-center mt-10">
           <Button 
             size="lg"
-            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 gap-2"
+            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-primary-foreground shadow-lg shadow-amber-500/30 gap-2"
           >
             <Sparkles className="w-5 h-5" />
             Explore All Properties

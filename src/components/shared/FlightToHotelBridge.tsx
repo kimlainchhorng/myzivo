@@ -67,7 +67,7 @@ const FlightToHotelBridge = ({
               Add a hotel in {flightDestination} & save up to 25%
             </p>
           </div>
-          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground">
             <Sparkles className="w-3 h-3 mr-1" />
             Bundle Deal
           </Badge>

@@ -189,7 +189,7 @@ export const TripSharing = ({
           {/* QR Code Display */}
           <div className="flex items-center justify-center p-4 rounded-xl bg-white">
             <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center">
-              <QrCode className="w-16 h-16 text-white" />
+              <QrCode className="w-16 h-16 text-primary-foreground" />
             </div>
           </div>
         </div>
@@ -288,7 +288,7 @@ export const TripSharing = ({
                   className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-sm font-medium text-white">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-sm font-medium text-primary-foreground">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>

@@ -99,7 +99,7 @@ const FlightClassComparison = () => {
                     "w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3",
                     "bg-gradient-to-br", cabin.color
                   )}>
-                    <cabin.Icon className="w-6 h-6 text-white" />
+                    <cabin.Icon className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <h3 className="font-bold text-lg">{cabin.name}</h3>
                   <p className="text-sky-400 font-bold">{cabin.priceRange}</p>

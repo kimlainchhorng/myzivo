@@ -119,7 +119,7 @@ export default function DestinationHero({
           
           <h1 className={cn(
             "text-display mb-4",
-            backgroundImage && "text-white"
+            backgroundImage && "text-primary-foreground"
           )}>
             {title}
           </h1>

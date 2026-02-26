@@ -195,7 +195,7 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
                 key={option.name}
                 variant="outline"
                 size="icon"
-                className={cn("hover:bg-opacity-100", option.color, "hover:text-white hover:border-transparent")}
+                className={cn("hover:bg-opacity-100", option.color, "hover:text-primary-foreground hover:border-transparent")}
                 onClick={option.action}
               >
                 <option.icon className="w-4 h-4" />

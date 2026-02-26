@@ -291,7 +291,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
                 e.stopPropagation();
                 onViewDeal(flight);
               }}
-              className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white min-h-[48px] touch-manipulation active:scale-[0.97] rounded-xl"
+              className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-primary-foreground min-h-[48px] touch-manipulation active:scale-[0.97] rounded-xl"
             >
               <span className="hidden sm:inline">Book with Provider</span>
               <span className="sm:hidden">View Deal</span>

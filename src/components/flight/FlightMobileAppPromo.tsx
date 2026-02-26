@@ -27,20 +27,20 @@ const FlightMobileAppPromo = () => {
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500/30 to-blue-600/20 flex items-center justify-center mb-4 mx-auto">
                     <Plane className="w-10 h-10 text-sky-300" />
                   </div>
-                  <h3 className="font-display font-bold text-xl text-white mb-2">ZIVO Flights</h3>
-                  <p className="text-sm text-white/70 text-center px-6 mb-4">Your next adventure starts here</p>
+                  <h3 className="font-display font-bold text-xl text-primary-foreground mb-2">ZIVO Flights</h3>
+                  <p className="text-sm text-primary-foreground/70 text-center px-6 mb-4">Your next adventure starts here</p>
                   <div className="flex gap-2">
-                    <Badge className="bg-white/20 text-white text-xs">4.9</Badge>
-                    <Badge className="bg-white/20 text-white text-xs">10M+ Downloads</Badge>
+                    <Badge className="bg-white/20 text-primary-foreground text-xs">4.9</Badge>
+                    <Badge className="bg-white/20 text-primary-foreground text-xs">10M+ Downloads</Badge>
                   </div>
                 </div>
               </div>
               
               {/* Floating badges */}
-              <div className="absolute -top-4 -right-4 px-3 py-2 rounded-xl bg-green-500 text-white text-xs font-bold shadow-lg animate-bounce" style={{ animationDuration: '2s' }}>
+              <div className="absolute -top-4 -right-4 px-3 py-2 rounded-xl bg-green-500 text-primary-foreground text-xs font-bold shadow-lg animate-bounce" style={{ animationDuration: '2s' }}>
                 Save $50 Today!
               </div>
-              <div className="absolute -bottom-4 -left-4 px-3 py-2 rounded-xl bg-sky-500 text-white text-xs font-bold shadow-lg">
+              <div className="absolute -bottom-4 -left-4 px-3 py-2 rounded-xl bg-sky-500 text-primary-foreground text-xs font-bold shadow-lg">
                 <Bell className="w-3 h-3 inline mr-1" /> Price Drop Alert
               </div>
             </div>
@@ -48,7 +48,7 @@ const FlightMobileAppPromo = () => {
 
           {/* Right: Content */}
           <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 text-white text-sm font-bold mb-6 shadow-lg shadow-sky-500/30">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground text-sm font-bold mb-6 shadow-lg shadow-sky-500/30">
               <Smartphone className="w-4 h-4" />
               Get the App
             </div>
@@ -72,7 +72,7 @@ const FlightMobileAppPromo = () => {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
-                    <feature.icon className="w-5 h-5 text-white" />
+                    <feature.icon className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <span className="font-medium">{feature.text}</span>
                 </div>
@@ -80,11 +80,11 @@ const FlightMobileAppPromo = () => {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white">
+              <Button size="lg" className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-primary-foreground">
                 <Download className="w-4 h-4 mr-2" />
                 App Store
               </Button>
-              <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white">
+              <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-primary-foreground">
                 <Download className="w-4 h-4 mr-2" />
                 Google Play
               </Button>

@@ -158,7 +158,7 @@ export default function VehicleTypeGallery({
                 
                 {/* Electric Badge */}
                 {vehicle.isElectric && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/90 text-primary-foreground text-xs font-medium rounded-full">
                     <Zap className="w-3 h-3" />
                     EV
                   </div>
@@ -166,7 +166,7 @@ export default function VehicleTypeGallery({
                 
                 {/* Info Overlay (bottom) */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="font-bold text-lg text-white mb-1 group-hover:text-violet-300 transition-all duration-200">
+                  <h3 className="font-bold text-lg text-primary-foreground mb-1 group-hover:text-violet-300 transition-all duration-200">
                     {vehicle.label}
                   </h3>
                   

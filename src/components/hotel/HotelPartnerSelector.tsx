@@ -96,7 +96,7 @@ export default function HotelPartnerSelector({
                 </div>
                 {selectedPartner === partner.id && (
                   <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
                   </div>
                 )}
               </div>
@@ -118,7 +118,7 @@ export default function HotelPartnerSelector({
                 className={cn(
                   "w-full h-7 sm:h-8 text-[10px] sm:text-xs gap-1 touch-manipulation active:scale-[0.98]",
                   partner.color,
-                  "hover:opacity-90 text-white"
+                  "hover:opacity-90 text-primary-foreground"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
