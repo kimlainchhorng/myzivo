@@ -109,6 +109,7 @@ const TravelConfirmationPage = lazy(() => import("./pages/TravelConfirmationPage
 const TravelTripsPage = lazy(() => import("./pages/TravelTripsPage"));
 const TravelOrderDetailPage = lazy(() => import("./pages/TravelOrderDetailPage"));
 const TravelerDashboard = lazy(() => import("./pages/TravelerDashboard"));
+const SavedSearchesPage = lazy(() => import("./pages/SavedSearchesPage"));
 
 // Legal pages
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
@@ -387,6 +388,7 @@ const App = () => (
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+                <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />
                 <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
 
                 {/* Account sub-pages */}
