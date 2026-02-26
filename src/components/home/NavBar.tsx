@@ -3,6 +3,7 @@
  * Clean white nav with centered service tabs + active route highlight
  */
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
@@ -46,7 +47,7 @@ const legalItems = [
   { label: "Cookies", href: "/cookies" },
 ];
 
-export default function NavBar() {
+const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -381,4 +382,8 @@ export default function NavBar() {
       )}
     </>
   );
-}
+});
+
+NavBar.displayName = "NavBar";
+
+export default NavBar;

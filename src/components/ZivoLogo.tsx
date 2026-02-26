@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ZivoLogoProps {
@@ -13,11 +14,11 @@ const sizeClasses = {
   xl: { container: "h-14", icon: "w-12 h-12", text: "text-3xl", z: "text-xl" },
 };
 
-const ZivoLogo = ({ size = "md", showText = true, className }: ZivoLogoProps) => {
+const ZivoLogo = forwardRef<HTMLDivElement, ZivoLogoProps>(({ size = "md", showText = true, className }, ref) => {
   const sizes = sizeClasses[size];
   
   return (
-    <div className={cn("flex items-center gap-2", sizes.container, className)}>
+    <div ref={ref} className={cn("flex items-center gap-2", sizes.container, className)}>
       {/* Z Icon - Clean, solid blue */}
       <div className={cn(
         "relative flex items-center justify-center rounded-xl bg-primary",
@@ -42,6 +43,8 @@ const ZivoLogo = ({ size = "md", showText = true, className }: ZivoLogoProps) =>
       )}
     </div>
   );
-};
+});
+
+ZivoLogo.displayName = "ZivoLogo";
 
 export default ZivoLogo;
