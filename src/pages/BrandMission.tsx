@@ -219,6 +219,72 @@ const BrandMission = () => {
             </div>
           </section>
 
+          {/* === WAVE 12: Rich Brand Content === */}
+
+          {/* Brand Impact Numbers */}
+          <section className="mb-20">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-8">
+                <h3 className="font-bold text-xl text-center mb-6">Our Impact</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+                  {[
+                    { stat: "2M+", label: "Travelers served", emoji: "🧳" },
+                    { stat: "$12M+", label: "Saved for users", emoji: "💰" },
+                    { stat: "98%", label: "Satisfaction rate", emoji: "⭐" },
+                    { stat: "150+", label: "Partner brands", emoji: "🤝" },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <span className="text-2xl">{s.emoji}</span>
+                      <p className="text-2xl font-bold text-primary mt-2">{s.stat}</p>
+                      <p className="text-xs text-muted-foreground">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Brand Commitments */}
+          <section className="mb-20">
+            <h2 className="text-3xl font-bold text-center mb-8">Our Commitments</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { title: "No Hidden Fees — Ever", desc: "The price you see is the price you pay. ZIVO never adds markup or surprise charges to bookings.", emoji: "💎" },
+                { title: "Data Privacy by Default", desc: "We collect only what's needed, encrypt everything, and never sell your personal data to third parties.", emoji: "🔒" },
+                { title: "Sustainable Travel Options", desc: "We highlight eco-friendly options and show carbon footprint data to help you make conscious choices.", emoji: "🌱" },
+                { title: "24/7 Support Access", desc: "Whether it's 3am or a holiday, our support channels are always available to help you.", emoji: "🛟" },
+              ].map(c => (
+                <Card key={c.title} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all">
+                  <CardContent className="p-6">
+                    <span className="text-2xl">{c.emoji}</span>
+                    <h4 className="font-bold mt-3 mb-2">{c.title}</h4>
+                    <p className="text-sm text-muted-foreground">{c.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          {/* Brand Voices */}
+          <section className="mb-20">
+            <h2 className="text-3xl font-bold text-center mb-8">What People Say About Us</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { quote: "ZIVO is redefining how people discover travel deals — transparent, fast, and refreshingly honest.", source: "TechCrunch", emoji: "📰" },
+                { quote: "Finally, a travel platform that doesn't add hidden fees. What you see is genuinely what you pay.", source: "Forbes Travel", emoji: "🏆" },
+                { quote: "The unified approach — flights, hotels, cars in one place — is exactly what travelers have been asking for.", source: "Skift", emoji: "✨" },
+              ].map(q => (
+                <Card key={q.source} className="border-border/50">
+                  <CardContent className="p-6">
+                    <span className="text-xl">{q.emoji}</span>
+                    <p className="text-sm text-muted-foreground italic mt-3 mb-3">"{q.quote}"</p>
+                    <p className="text-xs font-bold text-primary">— {q.source}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
           {/* Brand Promise */}
           <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 border border-primary/20">
             <Sparkles className="w-12 h-12 text-primary mx-auto mb-6" />

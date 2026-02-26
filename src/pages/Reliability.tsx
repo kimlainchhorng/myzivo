@@ -171,6 +171,80 @@ export default function Reliability() {
           </CardContent>
         </Card>
 
+        {/* === WAVE 12: Rich Reliability Content === */}
+
+        {/* Architecture Overview */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <h3 className="text-xl font-bold text-center mb-6">Platform Architecture</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { layer: "Edge Layer", items: ["CDN (200+ PoPs)", "DDoS Protection", "SSL/TLS Termination", "Rate Limiting"], color: "border-sky-500/20 bg-sky-500/5" },
+              { layer: "Application Layer", items: ["Auto-Scaling Nodes", "Load Balancer", "API Gateway", "Microservices"], color: "border-violet-500/20 bg-violet-500/5" },
+              { layer: "Data Layer", items: ["Primary DB (Multi-AZ)", "Read Replicas", "Redis Cache", "Encrypted Backups"], color: "border-emerald-500/20 bg-emerald-500/5" },
+            ].map(l => (
+              <Card key={l.layer} className={`border ${l.color}`}>
+                <CardContent className="p-5">
+                  <h4 className="font-bold text-sm mb-3">{l.layer}</h4>
+                  <ul className="space-y-2">
+                    {l.items.map(item => (
+                      <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* SLA Comparison */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <h3 className="text-xl font-bold text-center mb-6">Service Level Targets</h3>
+          <Card className="border-border/50 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="grid grid-cols-4 text-[10px] font-bold text-muted-foreground border-b border-border/30 p-3 bg-muted/30">
+                <span>Service</span><span>Uptime Target</span><span>Response Time</span><span>Recovery Time</span>
+              </div>
+              {[
+                { service: "Flight Search", uptime: "99.95%", response: "<200ms", recovery: "<30 min" },
+                { service: "Hotel Search", uptime: "99.95%", response: "<300ms", recovery: "<30 min" },
+                { service: "Car Rental Search", uptime: "99.9%", response: "<250ms", recovery: "<1 hour" },
+                { service: "Booking API", uptime: "99.99%", response: "<150ms", recovery: "<15 min" },
+                { service: "User Authentication", uptime: "99.99%", response: "<100ms", recovery: "<15 min" },
+              ].map(r => (
+                <div key={r.service} className="grid grid-cols-4 text-xs p-3 border-b border-border/20 hover:bg-muted/30 transition-colors">
+                  <span className="font-bold">{r.service}</span>
+                  <span className="text-emerald-500 font-bold">{r.uptime}</span>
+                  <span className="text-primary font-bold">{r.response}</span>
+                  <span className="text-muted-foreground">{r.recovery}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Incident Response Process */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <h3 className="text-xl font-bold text-center mb-6">Incident Response Process</h3>
+          <div className="grid sm:grid-cols-4 gap-3">
+            {[
+              { step: 1, title: "Detect", desc: "Automated monitoring detects anomalies within 30 seconds", emoji: "🔍" },
+              { step: 2, title: "Triage", desc: "On-call team classifies severity and begins investigation", emoji: "🚨" },
+              { step: 3, title: "Mitigate", desc: "Apply fix or failover to restore service immediately", emoji: "🔧" },
+              { step: 4, title: "Review", desc: "Post-incident review to prevent recurrence", emoji: "📋" },
+            ].map(s => (
+              <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-primary/20 transition-all bg-card/80">
+                <span className="text-2xl">{s.emoji}</span>
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center mx-auto my-3">{s.step}</div>
+                <p className="font-bold text-sm">{s.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Related Links */}
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-4">Related Resources</h3>
