@@ -203,6 +203,85 @@ const NotificationsPage = () => {
             </div>
           </ScrollArea>
         )}
+
+        {/* === WAVE 8: Notification Intelligence === */}
+        <div className="space-y-4 mt-6">
+          {/* Weekly Summary */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2">
+                <Bell className="w-3.5 h-3.5 text-primary" /> This Week's Summary
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Total", value: String(notifications.length), icon: "📬" },
+                  { label: "Unread", value: String(unreadCount), icon: "🔴" },
+                  { label: "Actions", value: String(notifications.filter(n => n.action_url).length), icon: "⚡" },
+                ].map(s => (
+                  <div key={s.label} className="text-center p-2 rounded-xl bg-card/60 border border-border/30">
+                    <p className="text-sm">{s.icon}</p>
+                    <p className="text-sm font-bold text-foreground">{s.value}</p>
+                    <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Preferences Quick Access */}
+          <Card className="border-border/40">
+            <CardContent className="p-4">
+              <p className="text-xs font-bold text-foreground mb-3">Quick Preferences</p>
+              <div className="space-y-2">
+                {[
+                  { pref: "Price drop alerts", desc: "Get notified when tracked prices drop", enabled: true },
+                  { pref: "Booking reminders", desc: "Upcoming trip & check-in reminders", enabled: true },
+                  { pref: "Promo notifications", desc: "Deals, discounts & member offers", enabled: false },
+                  { pref: "Weekly digest", desc: "Summary of activity every Monday", enabled: true },
+                ].map(p => (
+                  <div key={p.pref} className="flex items-center justify-between py-1">
+                    <div>
+                      <p className="text-[11px] font-bold text-foreground">{p.pref}</p>
+                      <p className="text-[9px] text-muted-foreground">{p.desc}</p>
+                    </div>
+                    <div className={cn("w-8 h-4 rounded-full transition-all", p.enabled ? "bg-primary" : "bg-muted/60")}>
+                      <div className={cn("w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform mt-[1px]", p.enabled ? "translate-x-[17px]" : "translate-x-[1px]")} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity Timeline */}
+          <Card className="border-border/40">
+            <CardContent className="p-4">
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Recent Activity
+              </p>
+              <div className="space-y-3">
+                {[
+                  { action: "Price alert triggered", detail: "NYC→Miami dropped $45", time: "2h ago", emoji: "📉" },
+                  { action: "Booking confirmed", detail: "Hotel in Paris, Mar 15-18", time: "5h ago", emoji: "✅" },
+                  { action: "Points earned", detail: "+250 ZIVO Points from flight", time: "1d ago", emoji: "⭐" },
+                  { action: "Review reminder", detail: "Rate your Miami trip", time: "2d ago", emoji: "📝" },
+                ].map((a, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm">{a.emoji}</span>
+                      {i < 3 && <div className="w-px h-6 bg-border/50 mt-1" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[11px] font-bold text-foreground">{a.action}</p>
+                      <p className="text-[10px] text-muted-foreground">{a.detail}</p>
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">{a.time}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <MobileBottomNav />

@@ -225,6 +225,100 @@ export default function ReferralProgram() {
           </section>
         )}
 
+        {/* === WAVE 8: Rich Referral Content === */}
+
+        {/* Referral Leaderboard */}
+        <section className="py-12">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-6">Top Referrers This Month</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { rank: "🥇", name: "Alex M.", referrals: 24, earnings: "$240", highlight: true },
+                { rank: "🥈", name: "Sarah K.", referrals: 18, earnings: "$180", highlight: false },
+                { rank: "🥉", name: "Mike R.", referrals: 15, earnings: "$150", highlight: false },
+              ].map(r => (
+                <div key={r.name} className={`text-center p-6 rounded-2xl border ${r.highlight ? "border-amber-500/30 bg-amber-500/5" : "border-border/40"}`}>
+                  <span className="text-3xl">{r.rank}</span>
+                  <p className="font-bold text-foreground mt-2">{r.name}</p>
+                  <p className="text-sm text-muted-foreground">{r.referrals} referrals</p>
+                  <p className="text-lg font-bold text-primary mt-1">{r.earnings}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Earnings Calculator */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-6">Earnings Potential</h2>
+            <div className="grid sm:grid-cols-4 gap-4">
+              {[
+                { friends: 5, monthly: "$50", yearly: "$600", tier: "Starter" },
+                { friends: 15, monthly: "$150", yearly: "$1,800", tier: "Ambassador" },
+                { friends: 30, monthly: "$300", yearly: "$3,600", tier: "Champion" },
+                { friends: 50, monthly: "$500", yearly: "$6,000", tier: "Legend" },
+              ].map(e => (
+                <div key={e.friends} className="text-center p-4 rounded-2xl border border-border/40 bg-card/60">
+                  <p className="text-2xl font-bold text-foreground">{e.friends}</p>
+                  <p className="text-xs text-muted-foreground">friends</p>
+                  <p className="text-lg font-bold text-primary mt-2">{e.monthly}/mo</p>
+                  <p className="text-[10px] text-muted-foreground">{e.yearly}/year</p>
+                  <span className="inline-block mt-2 text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">{e.tier}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Success Stories */}
+        <section className="py-12">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-6">Success Stories</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { name: "Jessica P.", quote: "I shared my link on Instagram and earned enough for a free trip to Miami in 2 months!", referrals: 32, earned: "$320" },
+                { name: "Tom W.", quote: "My whole office uses ZIVO now. The referral program basically pays for my membership!", referrals: 18, earned: "$180" },
+                { name: "Nina L.", quote: "I love that my friends also get rewards. It's a win-win for everyone!", referrals: 12, earned: "$120" },
+                { name: "David C.", quote: "The tier bonuses are amazing. Once I hit Ambassador, my earnings doubled!", referrals: 45, earned: "$540" },
+              ].map(s => (
+                <div key={s.name} className="p-5 rounded-2xl border border-border/40 bg-card/60">
+                  <p className="text-sm text-muted-foreground italic mb-3">"{s.quote}"</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">{s.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.referrals} referrals</p>
+                    </div>
+                    <span className="text-sm font-bold text-primary">{s.earned}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Tier Bonuses */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-6">Referral Tier Bonuses</h2>
+            <div className="grid sm:grid-cols-4 gap-3">
+              {[
+                { tier: "Starter", min: "1-4", bonus: "$10/ref", perk: "Basic rewards", color: "border-border/40" },
+                { tier: "Ambassador", min: "5-14", bonus: "$12/ref", perk: "+20% bonus", color: "border-sky-500/30" },
+                { tier: "Champion", min: "15-29", bonus: "$15/ref", perk: "+50% bonus", color: "border-violet-500/30" },
+                { tier: "Legend", min: "30+", bonus: "$20/ref", perk: "2x bonus + VIP", color: "border-amber-500/30" },
+              ].map(t => (
+                <div key={t.tier} className={`text-center p-4 rounded-2xl border ${t.color} bg-card/60`}>
+                  <p className="text-xs font-bold text-foreground">{t.tier}</p>
+                  <p className="text-[10px] text-muted-foreground">{t.min} referrals</p>
+                  <p className="text-lg font-bold text-primary mt-2">{t.bonus}</p>
+                  <p className="text-[9px] text-muted-foreground">{t.perk}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Terms */}
         <section className="py-12 bg-muted/30">
           <div className="container mx-auto px-4">
