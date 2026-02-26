@@ -313,6 +313,87 @@ export default function Roadmap() {
           </div>
         </section>
 
+        {/* === WAVE 9: Rich Roadmap Content === */}
+
+        {/* Development Stats */}
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-center mb-8">Development Velocity</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+              {[
+                { stat: "47", label: "Features Shipped", sub: "Last 6 months", emoji: "🚀" },
+                { stat: "12", label: "In Progress", sub: "Active sprint", emoji: "⚡" },
+                { stat: "98.5%", label: "Uptime", sub: "Last 90 days", emoji: "✅" },
+                { stat: "2.3s", label: "Avg Load Time", sub: "Global P95", emoji: "⏱️" },
+              ].map(s => (
+                <div key={s.label} className="text-center p-5 rounded-2xl border border-border/50 hover:border-primary/20 transition-all">
+                  <span className="text-2xl">{s.emoji}</span>
+                  <p className="text-2xl font-bold text-primary mt-2">{s.stat}</p>
+                  <p className="font-semibold text-sm">{s.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Community Requested Features */}
+        <section className="py-12 sm:py-16 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-8">Most Requested by Community</h2>
+            <div className="space-y-3">
+              {[
+                { feature: "Flexible date search across ±3 days", votes: 523, status: "Under Review", emoji: "📅" },
+                { feature: "Price alerts via WhatsApp", votes: 412, status: "Planned", emoji: "💬" },
+                { feature: "Dark mode improvements", votes: 387, status: "In Progress", emoji: "🌙" },
+                { feature: "Apple Pay & Google Pay for all services", votes: 356, status: "Coming Soon", emoji: "📱" },
+                { feature: "Saved itinerary sharing", votes: 298, status: "Under Review", emoji: "🔗" },
+                { feature: "Airport lounge access with ZIVO+", votes: 267, status: "Planned", emoji: "🛋️" },
+              ].map(f => (
+                <div key={f.feature} className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 hover:border-primary/20 transition-all">
+                  <span className="text-xl">{f.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{f.feature}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.votes} community votes</p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">{f.status}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Changelog Preview */}
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-8">Recent Changelog</h2>
+            <div className="space-y-4">
+              {[
+                { version: "v3.2.0", date: "Feb 20, 2025", changes: ["Multi-city flight search", "Hotel price comparison widget", "Improved mobile booking flow", "Bug fixes & performance improvements"] },
+                { version: "v3.1.0", date: "Feb 5, 2025", changes: ["ZIVO Rides real-time tracking", "New fare calendar for flights", "Push notification preferences", "Car rental insurance options"] },
+                { version: "v3.0.0", date: "Jan 15, 2025", changes: ["Complete UI redesign", "ZIVO Miles loyalty program", "AI Trip Planner beta", "Dark mode support"] },
+              ].map(v => (
+                <Card key={v.version} className="border-border/50 hover:border-primary/20 transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge className="bg-primary/10 text-primary border-primary/20">{v.version}</Badge>
+                      <span className="text-xs text-muted-foreground">{v.date}</span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {v.changes.map((c, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Feedback CTA */}
         <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4 text-center">
