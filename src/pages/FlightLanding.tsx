@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plane, Shield, Clock, Globe, ShieldCheck, Bell, TrendingDown, CalendarDays, Sparkles, Package, Hotel, Car, Star, CheckCircle, Zap, DollarSign, BadgePercent, Heart, ChevronRight } from "lucide-react";
+import { Plane, Shield, Clock, Globe, ShieldCheck, Bell, TrendingDown, CalendarDays, Sparkles, Package, Hotel, Car, Star, CheckCircle, Zap, DollarSign, BadgePercent, Heart, ChevronRight, Brain, BarChart3, Users, Award, Wifi, BaggageClaim, Armchair, TrendingUp, Eye, Percent, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -52,6 +52,78 @@ const FlightLanding = () => {
   const [showMemberDeals, setShowMemberDeals] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState<string[]>([]);
   const [showRecentSearches, setShowRecentSearches] = useState(false);
+
+  // === NEW Wave 2: AI/Prediction features ===
+  const [showPricePrediction, setShowPricePrediction] = useState(false);
+  const [showSeatMap, setShowSeatMap] = useState(false);
+  const [showFareClasses, setShowFareClasses] = useState(false);
+  const [showLoyaltyEstimate, setShowLoyaltyEstimate] = useState(false);
+  const [showCO2Calculator, setShowCO2Calculator] = useState(false);
+  const [showAmenities, setShowAmenities] = useState(false);
+  const [showTravelerReviews, setShowTravelerReviews] = useState(false);
+  const [selectedFareClass, setSelectedFareClass] = useState("economy");
+
+  // AI Price prediction
+  const pricePrediction = {
+    recommendation: "Buy now",
+    confidence: 87,
+    trend: "rising" as const,
+    prediction: "Prices expected to increase 12% in the next 7 days",
+    historicalLow: 134,
+    historicalAvg: 178,
+    currentPrice: 156,
+  };
+
+  // Fare class comparison
+  const fareClasses = [
+    { id: "basic-economy", name: "Basic Economy", price: 134, features: ["No carry-on", "No changes", "Last to board", "No seat selection"], color: "text-muted-foreground" },
+    { id: "economy", name: "Economy", price: 156, features: ["1 carry-on", "Changes for fee", "Standard boarding", "Seat selection $15"], color: "text-sky-500" },
+    { id: "premium-economy", name: "Premium Economy", price: 289, features: ["2 bags included", "Free changes", "Priority boarding", "Extra legroom"], color: "text-amber-500" },
+    { id: "business", name: "Business", price: 589, features: ["3 bags included", "Free changes/cancel", "Lounge access", "Lie-flat seat", "Premium meals"], color: "text-violet-500" },
+  ];
+
+  // Seat map preview
+  const seatMapSections = [
+    { name: "First Class", rows: 3, cols: 4, price: "$89+", available: 4, color: "bg-amber-500/30" },
+    { name: "Business", rows: 5, cols: 6, price: "$49+", available: 12, color: "bg-violet-500/30" },
+    { name: "Premium Economy", rows: 6, cols: 6, price: "$29+", available: 18, color: "bg-sky-500/30" },
+    { name: "Economy", rows: 20, cols: 6, price: "$15+", available: 45, color: "bg-emerald-500/20" },
+  ];
+
+  // Loyalty points estimate
+  const loyaltyEstimate = {
+    milesEarned: 2450,
+    statusMiles: 1225,
+    bonusMiles: 500,
+    cashValue: "$36.75",
+    nextTierMiles: 3000,
+    currentTier: "Silver",
+    nextTier: "Gold",
+  };
+
+  // CO2 calculator
+  const co2Data = {
+    emissions: "0.23 tons CO2",
+    comparison: "65% less than driving",
+    offsetCost: "$2.30",
+    treesEquivalent: "2 trees",
+  };
+
+  // Flight amenities comparison
+  const amenityComparison = [
+    { amenity: "Wi-Fi", economy: "Paid ($8)", premium: "Free", business: "Free high-speed" },
+    { amenity: "Meals", economy: "Snacks only", premium: "Hot meal", business: "Multi-course" },
+    { amenity: "Legroom", economy: "31\"", premium: "36\"", business: "78\" lie-flat" },
+    { amenity: "Power", economy: "USB only", premium: "USB + AC", business: "USB + AC" },
+    { amenity: "Entertainment", economy: "Personal device", premium: "Seatback screen", business: "15\" HD screen" },
+  ];
+
+  // Traveler reviews
+  const travelerReviews = [
+    { name: "Alex M.", route: "NYC → LAX", rating: 5, text: "Great price on ZIVO! Saved $40 vs booking direct.", date: "2 days ago", verified: true },
+    { name: "Sarah T.", route: "SFO → MIA", rating: 4, text: "Easy to compare fares. Fare alert actually worked!", date: "1 week ago", verified: true },
+    { name: "James K.", route: "CHI → LAS", rating: 5, text: "Price drop protection saved me $55. Worth every penny.", date: "3 days ago", verified: true },
+  ];
 
   // Mock price calendar data
   const priceCalendarData = [
@@ -371,6 +443,292 @@ const FlightLanding = () => {
               <Heart className={cn("w-4 h-4", savedRoutes.length > 0 ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
               {savedRoutes.length > 0 ? `${savedRoutes.length} Route(s) Saved` : "Save This Route"}
             </button>
+          </div>
+        </section>
+
+        {/* === WAVE 2: AI/Prediction Features === */}
+
+        {/* AI Price Prediction (Google Flights style) */}
+        <section className="py-8 border-b border-border/30 bg-gradient-to-r from-violet-500/5 to-purple-500/5">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <button onClick={() => setShowPricePrediction(!showPricePrediction)}
+                className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4 w-full">
+                <Brain className="w-5 h-5 text-violet-500" /> AI Price Prediction
+                <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[9px]">BETA</Badge>
+                <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showPricePrediction && "rotate-90")} />
+              </button>
+              <AnimatePresence>
+                {showPricePrediction && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    <div className="rounded-2xl bg-card border border-violet-500/20 p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={cn("px-4 py-2 rounded-xl text-sm font-bold",
+                          pricePrediction.recommendation === "Buy now" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                          {pricePrediction.recommendation === "Buy now" ? "✅" : "⏳"} {pricePrediction.recommendation}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <BarChart3 className="w-3.5 h-3.5" /> {pricePrediction.confidence}% confidence
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">{pricePrediction.prediction}</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center p-3 rounded-xl bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground">Historical Low</p>
+                          <p className="text-lg font-bold text-emerald-500">${pricePrediction.historicalLow}</p>
+                        </div>
+                        <div className="text-center p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                          <p className="text-[10px] text-muted-foreground">Current Price</p>
+                          <p className="text-lg font-bold text-foreground">${pricePrediction.currentPrice}</p>
+                        </div>
+                        <div className="text-center p-3 rounded-xl bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground">Average</p>
+                          <p className="text-lg font-bold text-muted-foreground">${pricePrediction.historicalAvg}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 h-2 rounded-full bg-muted/50 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${((pricePrediction.currentPrice - pricePrediction.historicalLow) / (pricePrediction.historicalAvg - pricePrediction.historicalLow)) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.3 }}
+                          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-violet-500" />
+                      </div>
+                      <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+                        <span>Lowest</span><span>Average</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </section>
+
+        {/* Fare Class Comparison (Expedia/Google Flights) */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowFareClasses(!showFareClasses)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Armchair className="w-5 h-5 text-sky-500" /> Compare Fare Classes
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showFareClasses && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showFareClasses && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="grid md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+                    {fareClasses.map(fc => (
+                      <button key={fc.id} onClick={() => setSelectedFareClass(fc.id)}
+                        className={cn("rounded-2xl p-4 text-left transition-all border",
+                          selectedFareClass === fc.id ? "border-sky-500 bg-sky-500/5 shadow-lg" : "border-border/40 bg-card hover:border-border")}>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className={cn("text-xs font-bold", fc.color)}>{fc.name}</h3>
+                          <span className="text-sm font-bold text-foreground">${fc.price}</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {fc.features.map(f => (
+                            <li key={f} className="text-[10px] text-muted-foreground flex items-start gap-1">
+                              <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" /> {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Seat Map Preview */}
+        <section className="py-8 border-b border-border/30 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowSeatMap(!showSeatMap)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Armchair className="w-5 h-5 text-amber-500" /> Seat Map & Availability
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showSeatMap && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showSeatMap && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-md mx-auto space-y-3">
+                    {seatMapSections.map(section => (
+                      <div key={section.name} className="rounded-xl bg-card border border-border/40 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-foreground">{section.name}</span>
+                          <span className="text-xs font-bold text-sky-500">{section.price}</span>
+                        </div>
+                        <div className="flex gap-1 flex-wrap mb-2">
+                          {Array.from({ length: Math.min(section.available, 12) }).map((_, i) => (
+                            <div key={i} className={cn("w-5 h-5 rounded", section.color)} />
+                          ))}
+                          {section.available > 12 && <span className="text-[9px] text-muted-foreground self-center ml-1">+{section.available - 12} more</span>}
+                        </div>
+                        <p className="text-[10px] text-emerald-500 font-bold">{section.available} seats available</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Amenity Comparison Table */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowAmenities(!showAmenities)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Wifi className="w-5 h-5 text-sky-500" /> In-Flight Amenities
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showAmenities && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showAmenities && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-3xl mx-auto rounded-2xl bg-card border border-border/40 overflow-hidden">
+                    <div className="grid grid-cols-4 gap-0 text-center text-[10px] font-bold border-b border-border/30 bg-muted/30">
+                      <div className="p-3">Amenity</div>
+                      <div className="p-3 text-sky-500">Economy</div>
+                      <div className="p-3 text-amber-500">Premium</div>
+                      <div className="p-3 text-violet-500">Business</div>
+                    </div>
+                    {amenityComparison.map(row => (
+                      <div key={row.amenity} className="grid grid-cols-4 gap-0 text-center text-[10px] border-b border-border/20 last:border-0">
+                        <div className="p-3 font-bold text-foreground text-left">{row.amenity}</div>
+                        <div className="p-3 text-muted-foreground">{row.economy}</div>
+                        <div className="p-3 text-muted-foreground">{row.premium}</div>
+                        <div className="p-3 text-muted-foreground">{row.business}</div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Loyalty Points Estimator */}
+        <section className="py-8 border-b border-border/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowLoyaltyEstimate(!showLoyaltyEstimate)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Award className="w-5 h-5 text-amber-500" /> Loyalty Miles Estimate
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[9px]">{loyaltyEstimate.currentTier}</Badge>
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showLoyaltyEstimate && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showLoyaltyEstimate && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-2xl mx-auto rounded-2xl bg-card border border-amber-500/20 p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-amber-500">{loyaltyEstimate.milesEarned.toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">Miles earned</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-foreground">{loyaltyEstimate.bonusMiles}</p>
+                        <p className="text-[10px] text-muted-foreground">Bonus miles</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-emerald-500">{loyaltyEstimate.cashValue}</p>
+                        <p className="text-[10px] text-muted-foreground">Cash value</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-violet-500">{loyaltyEstimate.nextTierMiles - loyaltyEstimate.milesEarned}</p>
+                        <p className="text-[10px] text-muted-foreground">To {loyaltyEstimate.nextTier}</p>
+                      </div>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${(loyaltyEstimate.milesEarned / loyaltyEstimate.nextTierMiles) * 100}%` }}
+                        transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* CO2 Calculator */}
+        <section className="py-6 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowCO2Calculator(!showCO2Calculator)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Globe className="w-5 h-5 text-emerald-500" /> Carbon Footprint Calculator
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showCO2Calculator && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showCO2Calculator && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-2xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                      <p className="text-lg font-bold text-foreground">{co2Data.emissions}</p>
+                      <p className="text-[10px] text-muted-foreground">Total emissions</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3 text-center">
+                      <p className="text-lg font-bold text-emerald-500">{co2Data.comparison}</p>
+                      <p className="text-[10px] text-muted-foreground">vs driving</p>
+                    </div>
+                    <div className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                      <p className="text-lg font-bold text-foreground">{co2Data.offsetCost}</p>
+                      <p className="text-[10px] text-muted-foreground">Offset cost</p>
+                    </div>
+                    <div className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                      <p className="text-lg font-bold text-foreground">{co2Data.treesEquivalent}</p>
+                      <p className="text-[10px] text-muted-foreground">Trees equivalent</p>
+                    </div>
+                  </div>
+                  <div className="max-w-2xl mx-auto mt-3 text-center">
+                    <button onClick={() => toast.success("🌱 Carbon offset added — $2.30")}
+                      className="px-5 py-2 rounded-xl bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-all">
+                      🌱 Offset this flight for {co2Data.offsetCost}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Traveler Reviews */}
+        <section className="py-8 border-b border-border/30 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowTravelerReviews(!showTravelerReviews)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Star className="w-5 h-5 text-amber-500" /> Traveler Reviews
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[9px]">4.8 ★</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showTravelerReviews && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showTravelerReviews && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-3xl mx-auto space-y-3">
+                    {travelerReviews.map(review => (
+                      <div key={review.name} className="rounded-2xl bg-card border border-border/40 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                              {review.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                {review.name}
+                                {review.verified && <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px]">✓ Verified</Badge>}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">{review.route} · {review.date}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: review.rating }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{review.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 

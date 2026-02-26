@@ -139,6 +139,47 @@ const CarRentalBooking = () => {
     { name: "James R.", rating: 4.7, trips: 98, responseTime: "< 3 hours", superhost: false, joined: "2023" },
   ];
 
+  // === NEW Wave 2: More Turo features ===
+  const [showDamageInspection, setShowDamageInspection] = useState(false);
+  const [showMileageCalc, setShowMileageCalc] = useState(false);
+  const [showRoadsideDetails, setShowRoadsideDetails] = useState(false);
+  const [showCarReviews, setShowCarReviews] = useState(false);
+  const [showInsuranceComparison, setShowInsuranceComparison] = useState(false);
+
+  // Damage inspection checklist
+  const inspectionItems = [
+    { id: "exterior", label: "Exterior body", icon: "🚗", checked: false },
+    { id: "tires", label: "Tires & wheels", icon: "🛞", checked: false },
+    { id: "interior", label: "Interior condition", icon: "💺", checked: false },
+    { id: "lights", label: "Lights & signals", icon: "💡", checked: false },
+    { id: "windshield", label: "Windshield", icon: "🪟", checked: false },
+    { id: "fuel", label: "Fuel level", icon: "⛽", checked: false },
+  ];
+
+  // Mileage calculator
+  const mileageOptions = [
+    { plan: "Standard", miles: "200 mi/day", extraCost: "$0.25/mi over", included: true },
+    { plan: "Extended", miles: "400 mi/day", extraCost: "$0.20/mi over", addOn: "+$8/day" },
+    { plan: "Unlimited", miles: "Unlimited", extraCost: "No extra charges", addOn: "+$15/day" },
+  ];
+
+  // Roadside assistance
+  const roadsideFeatures = [
+    { feature: "Flat tire change", icon: "🔧", included: true },
+    { feature: "Jump start", icon: "🔋", included: true },
+    { feature: "Lockout service", icon: "🔐", included: true },
+    { feature: "Fuel delivery", icon: "⛽", included: true },
+    { feature: "Towing (up to 50 mi)", icon: "🚛", included: true },
+    { feature: "Trip interruption", icon: "🏨", included: false, premium: true },
+  ];
+
+  // Car reviews
+  const carReviews = [
+    { name: "David M.", car: "Tesla Model 3", rating: 5, text: "Incredible car! Supercharger was free. Host was amazing.", date: "3 days ago" },
+    { name: "Lisa K.", car: "BMW X5", rating: 4, text: "Clean, well-maintained. Pickup was seamless.", date: "1 week ago" },
+    { name: "Tom R.", car: "Jeep Wrangler", rating: 5, text: "Perfect for our mountain trip. Would book again!", date: "5 days ago" },
+  ];
+
   // Handle airport selection from autocomplete
   const handleAirportChange = (airport: Airport | null, displayValue: string) => {
     setSelectedAirport(airport);
@@ -584,6 +625,120 @@ const CarRentalBooking = () => {
               <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">7+ days: 25% off</span>
               <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">30+ days: 40% off</span>
             </div>
+          </div>
+        </section>
+
+        {/* === WAVE 2: More Turo Features === */}
+
+        {/* Damage Inspection Checklist */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowDamageInspection(!showDamageInspection)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <CheckCircle className="w-5 h-5 text-violet-500" /> Pre-Pickup Inspection Checklist
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showDamageInspection && "rotate-90")} />
+            </button>
+            {showDamageInspection && (
+              <div className="max-w-md mx-auto space-y-2">
+                {inspectionItems.map(item => (
+                  <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-xs font-bold text-foreground flex-1">{item.label}</span>
+                    <div className="w-5 h-5 rounded border-2 border-border/40" />
+                  </div>
+                ))}
+                <p className="text-[10px] text-muted-foreground text-center mt-2">📸 Take photos before and after for damage protection</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Mileage Calculator */}
+        <section className="py-8 border-b border-border/30 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowMileageCalc(!showMileageCalc)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Fuel className="w-5 h-5 text-emerald-500" /> Mileage Plans
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showMileageCalc && "rotate-90")} />
+            </button>
+            {showMileageCalc && (
+              <div className="grid md:grid-cols-3 gap-3 max-w-4xl mx-auto">
+                {mileageOptions.map(opt => (
+                  <div key={opt.plan} className={cn("rounded-2xl p-4 border transition-all",
+                    opt.included ? "border-emerald-500 bg-emerald-500/5" : "border-border/40 bg-card")}>
+                    <h3 className="text-sm font-bold text-foreground mb-1">{opt.plan}</h3>
+                    <p className="text-lg font-bold text-primary">{opt.miles}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{opt.extraCost}</p>
+                    {opt.addOn && <Badge className="mt-2 bg-violet-500/10 text-violet-500 border-0 text-[9px]">{opt.addOn}</Badge>}
+                    {opt.included && <Badge className="mt-2 bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Included</Badge>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Roadside Assistance */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowRoadsideDetails(!showRoadsideDetails)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Truck className="w-5 h-5 text-sky-500" /> 24/7 Roadside Assistance
+              <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Included</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showRoadsideDetails && "rotate-90")} />
+            </button>
+            {showRoadsideDetails && (
+              <div className="max-w-md mx-auto space-y-2">
+                {roadsideFeatures.map(f => (
+                  <div key={f.feature} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <span className="text-lg">{f.icon}</span>
+                    <span className="text-xs font-bold text-foreground flex-1">{f.feature}</span>
+                    {f.included ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[8px]">Premium only</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Car Reviews */}
+        <section className="py-8 border-b border-border/30 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowCarReviews(!showCarReviews)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Star className="w-5 h-5 text-amber-500" /> Renter Reviews
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[9px]">4.8 ★</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showCarReviews && "rotate-90")} />
+            </button>
+            {showCarReviews && (
+              <div className="max-w-3xl mx-auto space-y-3">
+                {carReviews.map(review => (
+                  <div key={review.name} className="rounded-2xl bg-card border border-border/40 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-xs font-bold text-violet-500">
+                          {review.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">{review.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{review.car} · {review.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
