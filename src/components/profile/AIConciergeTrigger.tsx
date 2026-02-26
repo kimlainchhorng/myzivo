@@ -23,7 +23,7 @@ const quickReplies = [
 export function AIConciergeTrigger() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, type: "bot", text: "Hi! 👋 I'm your ZIVO Concierge. I see you're flying to London tomorrow. How can I help?" },
+    { id: 1, type: "bot", text: "Hi! I'm your ZIVO Concierge. I see you're flying to London tomorrow. How can I help?" },
   ]);
   const [input, setInput] = useState("");
 

@@ -176,12 +176,12 @@ export const popularSEORoutes = [
  * Generate popular destination cities for SEO
  */
 export const popularDestinations = [
-  { city: "London", code: "LHR", country: "United Kingdom", image: "🇬🇧" },
-  { city: "Paris", code: "CDG", country: "France", image: "🇫🇷" },
-  { city: "Tokyo", code: "NRT", country: "Japan", image: "🇯🇵" },
-  { city: "Dubai", code: "DXB", country: "UAE", image: "🇦🇪" },
-  { city: "Cancún", code: "CUN", country: "Mexico", image: "🇲🇽" },
-  { city: "Barcelona", code: "BCN", country: "Spain", image: "🇪🇸" },
-  { city: "Los Angeles", code: "LAX", country: "USA", image: "🇺🇸" },
-  { city: "Singapore", code: "SIN", country: "Singapore", image: "🇸🇬" },
+  { city: "London", code: "LHR", country: "United Kingdom", image: "GB" },
+  { city: "Paris", code: "CDG", country: "France", image: "FR" },
+  { city: "Tokyo", code: "NRT", country: "Japan", image: "JP" },
+  { city: "Dubai", code: "DXB", country: "UAE", image: "AE" },
+  { city: "Cancún", code: "CUN", country: "Mexico", image: "MX" },
+  { city: "Barcelona", code: "BCN", country: "Spain", image: "ES" },
+  { city: "Los Angeles", code: "LAX", country: "USA", image: "US" },
+  { city: "Singapore", code: "SIN", country: "Singapore", image: "SG" },
 ];

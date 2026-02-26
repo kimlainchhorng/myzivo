@@ -77,7 +77,7 @@ const AppTravel = () => {
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 touch-manipulation",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 touch-manipulation",
                   activeTab === tab.id 
                     ? "bg-card text-foreground shadow-sm" 
                     : "text-muted-foreground hover:text-foreground"

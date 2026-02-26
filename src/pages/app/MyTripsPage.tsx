@@ -175,7 +175,7 @@ export default function MyTripsPage() {
               <button
                 key={filter.id}
                 onClick={() => setStatusFilter(filter.id)}
-                className={`flex-1 text-[11px] font-bold py-2 rounded-lg transition-all duration-200 touch-manipulation ${
+                className={`flex-1 text-[11px] font-bold py-2 rounded-xl transition-all duration-200 touch-manipulation ${
                   statusFilter === filter.id
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

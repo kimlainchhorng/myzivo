@@ -32,7 +32,7 @@ export default function TravelerDashboard() {
           className="max-w-7xl mx-auto mb-6"
         >
           <h1 className="text-2xl sm:text-3xl font-bold">
-            Welcome back, <span className="text-primary">{firstName}</span> 👋
+            Welcome back, <span className="text-primary">{firstName}</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">Here's your travel overview.</p>
         </motion.div>

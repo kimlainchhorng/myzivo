@@ -170,7 +170,7 @@ export default function SupportCenterPage() {
             <button
               key={f.id}
               onClick={() => setStatusFilter(f.id)}
-              className={`flex-1 text-[11px] font-bold py-2.5 rounded-lg transition-all duration-200 touch-manipulation ${
+              className={`flex-1 text-[11px] font-bold py-2.5 rounded-xl transition-all duration-200 touch-manipulation ${
                 statusFilter === f.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >

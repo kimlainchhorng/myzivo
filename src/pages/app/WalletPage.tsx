@@ -165,7 +165,7 @@ export default function WalletPage() {
             <button
               key={section}
               onClick={() => setActiveSection(section)}
-              className={`flex-1 text-xs font-bold py-2.5 rounded-lg transition-all duration-200 touch-manipulation capitalize ${
+              className={`flex-1 text-xs font-bold py-2.5 rounded-xl transition-all duration-200 touch-manipulation capitalize ${
                 activeSection === section
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"

@@ -93,7 +93,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
             >
               {index === 0 && (
                 <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-1 text-xs font-medium">
-                  ⭐ Most Trusted
+                  Most Trusted
                 </div>
               )}
               
