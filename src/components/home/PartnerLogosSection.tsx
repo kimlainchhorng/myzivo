@@ -26,7 +26,7 @@ const certifications = [
 
 const PartnerLogosSection = () => {
   return (
-    <section className="py-12 md:py-16 border-y border-border/50 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-12 md:py-16 border-y border-border/50 bg-gradient-to-b from-background to-muted/20" aria-label="Trusted partners and certifications">
       <div className="container mx-auto px-4">
         {/* Partner Logos */}
         <div className="text-center mb-8">
@@ -40,7 +40,7 @@ const PartnerLogosSection = () => {
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
             
             {/* First row */}
-            <div className="flex gap-8 animate-marquee-left mb-3">
+            <div className="flex gap-8 animate-marquee-left motion-reduce:animate-none mb-3">
               {[...partners, ...partners].map((partner, index) => (
                 <div
                   key={`l-${index}`}
@@ -51,7 +51,7 @@ const PartnerLogosSection = () => {
               ))}
             </div>
             {/* Second row */}
-            <div className="flex gap-8 animate-marquee-right">
+            <div className="flex gap-8 animate-marquee-right motion-reduce:animate-none">
               {[...partners, ...partners].reverse().map((partner, index) => (
                 <div
                   key={`r-${index}`}

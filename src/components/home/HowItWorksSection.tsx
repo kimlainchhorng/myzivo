@@ -18,7 +18,7 @@ export default function HowItWorksSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden">
+    <section className="py-16 sm:py-24 relative overflow-hidden" aria-label="How ZIVO works">
       {/* Subtle dot pattern background */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
 
