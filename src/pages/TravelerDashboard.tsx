@@ -3,7 +3,7 @@
  * Premium 2026-era traveler profile with glassmorphism
  */
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { TripTimeline, AIConciergeTrigger } from "@/components/profile";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
@@ -11,10 +11,16 @@ import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSavedSearches } from "@/hooks/useSavedSearches";
+import { useBookingHistory } from "@/hooks/useBookingHistory";
+import { format } from "date-fns";
 import {
   Globe, MapPin, Plane, Star, Trophy, Bookmark, ChevronRight,
   Compass, Camera, Leaf, Award, TrendingUp, Heart, Package,
+  Search, Bell, BellOff, Trash2, ExternalLink, Clock, History,
+  Hotel, Car, Users,
 } from "lucide-react";
 
 export default function TravelerDashboard() {
@@ -22,6 +28,8 @@ export default function TravelerDashboard() {
   const [showBucketList, setShowBucketList] = useState(false);
   const [showTravelMap, setShowTravelMap] = useState(false);
   const [showPackingHelper, setShowPackingHelper] = useState(false);
+  const { searches, isLoading: searchesLoading, deleteSearch, toggleAlert } = useSavedSearches();
+  const { bookings, isLoading: bookingsLoading } = useBookingHistory();
 
   if (!isLoading && !user) {
     return <Navigate to="/login" replace />;
@@ -189,8 +197,143 @@ export default function TravelerDashboard() {
             </div>
           </motion.div>
 
-          <motion.div className="lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-            {/* SavedForLater removed */}
+          <motion.div className="lg:col-span-4 space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
+            {/* Saved Searches */}
+            <div>
+              <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <Search className="w-5 h-5 text-primary" /> Saved Searches
+              </h2>
+              {searchesLoading ? (
+                <Card className="border-border/40"><CardContent className="p-4"><p className="text-xs text-muted-foreground animate-pulse">Loading…</p></CardContent></Card>
+              ) : searches.length === 0 ? (
+                <Card className="border-border/40 border-dashed">
+                  <CardContent className="p-6 text-center">
+                    <Bookmark className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground">No saved searches yet.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Save a search from the results page to track prices.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {searches.slice(0, 5).map(s => {
+                    const serviceIcon = s.service_type === 'flights' ? Plane : s.service_type === 'hotels' ? Hotel : Car;
+                    const ServiceIcon = serviceIcon;
+                    return (
+                      <Card key={s.id} className="border-border/40 hover:border-primary/20 transition-all group">
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-2">
+                            <ServiceIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground truncate">{s.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {format(new Date(s.created_at), "MMM d, yyyy")}
+                                {s.current_price && <span className="ml-1">· ${s.current_price}</span>}
+                              </p>
+                              {s.price_alert_enabled && (
+                                <Badge className="mt-1 bg-primary/10 text-primary border-0 text-[8px]">
+                                  <Bell className="w-2.5 h-2.5 mr-0.5" /> Alert on
+                                  {s.target_price && ` ≤ $${s.target_price}`}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost" size="icon" className="h-6 w-6"
+                                onClick={() => toggleAlert({ id: s.id, enabled: !s.price_alert_enabled })}
+                              >
+                                {s.price_alert_enabled ? <BellOff className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
+                              </Button>
+                              <Button
+                                variant="ghost" size="icon" className="h-6 w-6 text-destructive/60 hover:text-destructive"
+                                onClick={() => deleteSearch(s.id)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Booking History */}
+            <div>
+              <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" /> Recent Bookings
+              </h2>
+              {bookingsLoading ? (
+                <Card className="border-border/40"><CardContent className="p-4"><p className="text-xs text-muted-foreground animate-pulse">Loading…</p></CardContent></Card>
+              ) : bookings.length === 0 ? (
+                <Card className="border-border/40 border-dashed">
+                  <CardContent className="p-6 text-center">
+                    <Clock className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground">No bookings yet.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Your travel bookings will appear here.</p>
+                    <Button variant="outline" size="sm" className="mt-3 text-xs" asChild>
+                      <Link to="/flights">Search Flights</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {bookings.slice(0, 5).map(b => {
+                    const statusColor = b.status === 'confirmed' ? 'text-emerald-500 bg-emerald-500/10' :
+                      b.status === 'pending' ? 'text-amber-500 bg-amber-500/10' :
+                      'text-muted-foreground bg-muted/50';
+                    const ServiceIcon = b.service_type === 'flight' ? Plane : b.service_type === 'hotel' ? Hotel : Car;
+                    return (
+                      <Card key={b.id} className="border-border/40 hover:border-primary/20 transition-all">
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-2">
+                            <ServiceIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground capitalize">{b.service_type} Booking</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {format(new Date(b.created_at), "MMM d, yyyy")}
+                                {b.partner_booking_ref && <span className="ml-1">· Ref: {b.partner_booking_ref}</span>}
+                              </p>
+                            </div>
+                            <Badge className={cn("text-[8px] border-0 capitalize", statusColor)}>
+                              {b.status}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Actions */}
+            <div>
+              <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <Compass className="w-5 h-5 text-primary" /> Quick Actions
+              </h2>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Search Flights", icon: Plane, to: "/flights" },
+                  { label: "My Trips", icon: MapPin, to: "/trips" },
+                  { label: "Travelers", icon: Users, to: "/account/travelers" },
+                  { label: "Preferences", icon: Award, to: "/account/preferences" },
+                ].map(a => (
+                  <Button
+                    key={a.label}
+                    variant="outline"
+                    className="h-auto py-3 flex-col gap-1.5 text-xs border-border/40 hover:border-primary/20"
+                    asChild
+                  >
+                    <Link to={a.to}>
+                      <a.icon className="w-4 h-4 text-primary" />
+                      {a.label}
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
