@@ -482,6 +482,75 @@ export default function Deals() {
           </div>
         </section>
 
+        {/* === WAVE 16: Additional Deals Content === */}
+
+        {/* Deal Alerts FAQ */}
+        <section className="container mx-auto px-4 mt-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 text-center">Deals FAQ</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { q: "How often are new deals added?", a: "New deals drop multiple times daily. Flash sales are typically live for 2-6 hours." },
+                { q: "Are deal prices guaranteed?", a: "Prices shown are real-time from partners. Final price is confirmed at checkout." },
+                { q: "Can I stack deals with ZIVO Plus?", a: "Yes! ZIVO Plus members get additional 5-10% on top of deal prices." },
+                { q: "How do price predictions work?", a: "Our ML models analyze 90 days of historical pricing, demand trends, and seasonality to predict fare movements." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/40">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-bold">{f.q}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Booking Tips */}
+        <section className="container mx-auto px-4 mt-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 text-center">Maximize Your Savings</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { tip: "Set Multiple Alerts", desc: "Create alerts for several routes to catch the best fare across destinations.", emoji: "🔔" },
+                { tip: "Book on Tuesdays", desc: "Data shows Tues-Wed consistently have the lowest average fares.", emoji: "📊" },
+                { tip: "Use Incognito Mode", desc: "Some partner sites may adjust prices based on search history.", emoji: "🕵️" },
+              ].map(t => (
+                <div key={t.tip} className="p-4 rounded-xl border border-border/40 text-center hover:border-primary/20 transition-all">
+                  <span className="text-2xl">{t.emoji}</span>
+                  <p className="font-bold text-sm mt-2">{t.tip}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Deal Categories Explained */}
+        <section className="container mx-auto px-4 mt-10">
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-primary/15 bg-gradient-to-br from-primary/5 to-emerald-500/5">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-center mb-4">Understanding Deal Types</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                  {[
+                    { type: "Flash", desc: "Limited time, deepest discounts", emoji: "⚡" },
+                    { type: "Early Bird", desc: "Book far ahead, save big", emoji: "🐦" },
+                    { type: "Last Minute", desc: "Departing within 7 days", emoji: "🏃" },
+                    { type: "Bundle", desc: "Flight + hotel together", emoji: "📦" },
+                  ].map(d => (
+                    <div key={d.type}>
+                      <span className="text-2xl">{d.emoji}</span>
+                      <p className="text-sm font-bold mt-2">{d.type}</p>
+                      <p className="text-[10px] text-muted-foreground">{d.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Disclaimer */}
         <section className="container mx-auto px-4 mt-12">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
