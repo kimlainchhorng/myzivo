@@ -18,7 +18,7 @@ export default function DownloadAppSection() {
   };
 
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden">
+    <section className="py-16 sm:py-24 relative overflow-hidden" aria-label="Download ZIVO app">
       {/* Background gradient accent */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,hsl(var(--primary)/0.04)_0%,transparent_70%)] pointer-events-none" />
 
