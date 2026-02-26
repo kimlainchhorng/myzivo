@@ -122,7 +122,7 @@ const Promotions = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl touch-manipulation active:scale-95">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl touch-manipulation active:scale-95" aria-label="Go back">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -308,14 +308,14 @@ const Promotions = () => {
                       </p>
                       <div className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-background/80 backdrop-blur-sm rounded-xl sm:rounded-2xl max-w-sm mx-auto">
                         <code className="text-base sm:text-xl font-mono font-bold">{referralStats.code}</code>
-                        <Button size="icon" onClick={() => copyCode(referralStats.code)} className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10">
+                        <Button size="icon" onClick={() => copyCode(referralStats.code)} className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10" aria-label="Copy referral code">
                           {copiedCode === referralStats.code ? (
                             <Check className="h-4 w-4" />
                           ) : (
                             <Copy className="h-4 w-4" />
                           )}
                         </Button>
-                        <Button size="icon" variant="outline" className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10">
+                        <Button size="icon" variant="outline" className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10" aria-label="Share referral code">
                           <Share2 className="h-4 w-4" />
                         </Button>
                       </div>

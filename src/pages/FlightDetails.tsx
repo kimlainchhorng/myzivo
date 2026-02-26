@@ -257,6 +257,7 @@ const FlightDetails = () => {
                   size="icon"
                   className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
                   onClick={() => setIsSaved(!isSaved)}
+                  aria-label={isSaved ? "Remove from saved" : "Save flight"}
                 >
                   <Heart className={cn("w-5 h-5", isSaved && "fill-red-500 text-red-500")} />
                 </Button>

@@ -237,6 +237,7 @@ export default function BookingReturnPage() {
                           size="icon"
                           className="h-8 w-8 shrink-0"
                           onClick={handleCopyRef}
+                          aria-label="Copy booking reference"
                         >
                           <Copy className={cn("w-4 h-4", copied && "text-green-500")} />
                         </Button>

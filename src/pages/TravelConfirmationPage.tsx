@@ -111,7 +111,7 @@ const TravelConfirmationPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go home">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Booking Confirmation</h1>
@@ -158,7 +158,7 @@ const TravelConfirmationPage = () => {
               </div>
               <div className="flex gap-2">
                 {getStatusBadge(order.status)}
-                <Button variant="outline" size="icon" onClick={copyOrderNumber}>
+                <Button variant="outline" size="icon" onClick={copyOrderNumber} aria-label="Copy order number">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
