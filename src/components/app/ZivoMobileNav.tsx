@@ -1,7 +1,7 @@
 /**
- * ZIVO Mobile Bottom Navigation
+ * ZIVO Mobile Bottom Navigation — Premium 2026
  * Travel-focused 5-tab nav: Home | Search | Trips | Alerts | Account
- * Matching top travel apps (Booking, Expedia, Skyscanner)
+ * Frosted glass, refined active states, haptic feedback
  */
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, Briefcase, Bell, User } from "lucide-react";
@@ -34,34 +34,31 @@ const ZivoMobileNav = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    
-    // Home
     if (path === "/" || path === "") return "home";
-    
-    // Search - includes all search-related paths
     if (path.startsWith("/search") || 
         path.startsWith("/flights") || 
         path.startsWith("/hotels") || 
         path.startsWith("/rent-car") ||
         path.startsWith("/car-rental")) return "search";
-    
-    // Trips
     if (path.startsWith("/trips") || path.startsWith("/my-trips") || path.startsWith("/my-orders")) return "trips";
-    
-    // Alerts
     if (path.startsWith("/alerts") || path.startsWith("/price-alerts")) return "alerts";
-    
-    // Account
     if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
-    
     return "home";
   };
 
   const activeTab = getActiveTab();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/98 backdrop-blur-xl border-t border-border/50 safe-area-bottom md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="flex items-stretch justify-around h-16 max-w-lg mx-auto">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      {/* Frosted glass background */}
+      <div className="absolute inset-0 bg-card/85 backdrop-blur-2xl border-t border-border/30" />
+      {/* Top highlight line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+
+      <div className="relative flex items-stretch justify-around h-[62px] max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           
@@ -69,48 +66,54 @@ const ZivoMobileNav = () => {
             <button
               key={tab.id}
               onClick={() => { impact('light'); navigate(tab.path); }}
-               className={cn(
-                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-all touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
-                isActive ? "text-primary" : "text-muted-foreground"
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 gap-1 transition-all touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
+                isActive ? "text-primary" : "text-muted-foreground/70"
               )}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
             >
               <motion.div 
                 className={cn(
-                  "w-12 h-8 rounded-full flex items-center justify-center transition-all relative",
-                  isActive && "bg-primary/10"
+                  "w-11 h-7 rounded-full flex items-center justify-center transition-all relative",
+                  isActive && "bg-primary/12"
                 )}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.85 }}
+                layout
               >
                 <tab.icon className={cn(
-                  "w-5 h-5 transition-transform",
-                  isActive && "scale-110"
-                )} strokeWidth={isActive ? 2.5 : 2} />
+                  "w-[20px] h-[20px] transition-all",
+                  isActive && "scale-105"
+                )} strokeWidth={isActive ? 2.5 : 1.8} />
                 
                 {/* Badge for alerts */}
                 {typeof tab.badge === 'number' && tab.badge > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm"
+                  >
                     {tab.badge > 9 ? '9+' : tab.badge}
-                  </span>
+                  </motion.span>
                 )}
               </motion.div>
               
               <span className={cn(
-                "text-[10px] transition-all",
-                isActive ? "font-bold" : "font-medium"
+                "text-[10px] leading-none transition-all",
+                isActive ? "font-bold text-primary" : "font-medium"
               )}>
                 {tab.label}
               </span>
               
-              {/* Active indicator dot */}
+              {/* Active indicator */}
               <AnimatePresence>
                 {isActive && (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    className="absolute bottom-1 w-1 h-1 bg-primary rounded-full"
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    animate={{ opacity: 1, scaleX: 1 }}
+                    exit={{ opacity: 0, scaleX: 0 }}
+                    className="absolute -bottom-0.5 w-5 h-[2px] bg-primary rounded-full"
+                    layoutId="nav-indicator"
                   />
                 )}
               </AnimatePresence>
