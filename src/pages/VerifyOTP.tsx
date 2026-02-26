@@ -16,7 +16,6 @@ const VerifyOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get email from navigation state (preferred), otherwise fall back to current auth user
   const navEmail = (location.state as { email?: string })?.email;
   const navUserId = (location.state as { userId?: string })?.userId;
 
@@ -37,7 +36,6 @@ const VerifyOTP = () => {
     void hydrateEmail();
   }, [email, navigate]);
 
-  // Resend cooldown timer
   useEffect(() => {
     if (resendCooldown > 0) {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
@@ -45,12 +43,10 @@ const VerifyOTP = () => {
     }
   }, [resendCooldown]);
 
-  // Start initial cooldown
   useEffect(() => {
     setResendCooldown(60);
   }, []);
 
-  // Mask email for display (j***@example.com)
   const maskedEmail = email
     ? email.replace(/^(.{1,2})(.*)(@.*)$/, (_, start, middle, end) => 
         start + "*".repeat(Math.min(middle.length, 5)) + end
@@ -83,8 +79,6 @@ const VerifyOTP = () => {
       }
 
       toast.success("Email verified successfully!");
-      
-      // Navigate to setup page
       navigate("/setup", { replace: true });
     } catch (err) {
       console.error("Verification error:", err);
@@ -93,7 +87,6 @@ const VerifyOTP = () => {
     }
   }, [email, navigate]);
 
-  // Auto-submit when 6 digits entered
   useEffect(() => {
     if (code.length === 6) {
       handleVerify(code);
@@ -114,7 +107,7 @@ const VerifyOTP = () => {
         toast.error(errorMessage);
         
         if (data?.retryAfter) {
-          setResendCooldown(Math.ceil(data.retryAfter / 60) * 60); // Round up to next minute
+          setResendCooldown(Math.ceil(data.retryAfter / 60) * 60);
         }
       } else {
         toast.success("New verification code sent!");
@@ -144,29 +137,29 @@ const VerifyOTP = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-black px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
       <div className="w-full max-w-md relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800 rounded-3xl shadow-2xl p-6 sm:p-8"
+          className="bg-card/80 backdrop-blur-2xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8"
         >
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
               ZIVO ID
             </h1>
-            <p className="text-zinc-400 mt-2 text-sm sm:text-base">
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
               Enter Verification Code
             </p>
           </div>
 
           {/* Email info */}
-          <div className="flex items-center justify-center gap-2 bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 mb-6">
-            <Mail className="w-4 h-4 text-zinc-500" />
-            <span className="text-zinc-400 text-sm">
-              Code sent to <span className="text-white font-medium">{maskedEmail}</span>
+          <div className="flex items-center justify-center gap-2 bg-muted border border-border rounded-xl py-3 px-4 mb-6">
+            <Mail className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground text-sm">
+              Code sent to <span className="text-foreground font-medium">{maskedEmail}</span>
             </span>
           </div>
 
@@ -182,30 +175,30 @@ const VerifyOTP = () => {
               <InputOTPGroup>
                 <InputOTPSlot 
                   index={0} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
                 <InputOTPSlot 
                   index={1} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
                 <InputOTPSlot 
                   index={2} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
               </InputOTPGroup>
-              <InputOTPSeparator className="text-zinc-600" />
+              <InputOTPSeparator className="text-muted-foreground" />
               <InputOTPGroup>
                 <InputOTPSlot 
                   index={3} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
                 <InputOTPSlot 
                   index={4} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
                 <InputOTPSlot 
                   index={5} 
-                  className="w-12 h-14 text-xl bg-zinc-950 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500"
+                  className="w-12 h-14 text-xl bg-muted border-border text-foreground focus:border-primary focus:ring-primary"
                 />
               </InputOTPGroup>
             </InputOTP>
@@ -224,7 +217,7 @@ const VerifyOTP = () => {
           <Button
             onClick={() => handleVerify(code)}
             disabled={code.length !== 6 || isVerifying}
-            className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl touch-manipulation active:scale-[0.98] transition-all"
+            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl touch-manipulation active:scale-[0.98] transition-all"
           >
             {isVerifying ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -238,11 +231,11 @@ const VerifyOTP = () => {
 
           {/* Resend section */}
           <div className="mt-6 text-center">
-            <p className="text-zinc-500 text-sm mb-2">Didn't receive the code?</p>
+            <p className="text-muted-foreground text-sm mb-2">Didn't receive the code?</p>
             <button
               onClick={handleResend}
               disabled={resendCooldown > 0 || isResending}
-              className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-400 disabled:text-zinc-600 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
               {isResending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,17 +250,17 @@ const VerifyOTP = () => {
           </div>
 
           {/* Back to signup */}
-          <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
+          <div className="mt-6 pt-4 border-t border-border space-y-3">
             <button
               onClick={handleBack}
-              className="w-full flex items-center justify-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Sign Up
             </button>
             <button
               onClick={handleGoHome}
-              className="w-full flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
             >
               <Home className="h-4 w-4" />
               Go to Home
@@ -276,7 +269,7 @@ const VerifyOTP = () => {
         </motion.div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-zinc-600">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Code expires in 10 minutes · Protected by enterprise-grade security
         </p>
       </div>
