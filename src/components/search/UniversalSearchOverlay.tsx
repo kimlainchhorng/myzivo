@@ -36,8 +36,9 @@ const POPULAR_SERVICES = [
   { label: "Flights", icon: Plane, href: "/flights", color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
   { label: "Hotels", icon: BedDouble, href: "/hotels", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   { label: "Rentals", icon: Car, href: "/rent-car", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  { label: "Activities", icon: Package, href: "/things-to-do", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
-  { label: "Insurance", icon: Car, href: "/travel-insurance", color: "bg-primary/10 text-primary border-primary/20" },
+  { label: "Rides", icon: Car, href: "/rides", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+  { label: "Eats", icon: Package, href: "/eats", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  { label: "Delivery", icon: Package, href: "/delivery", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
 ];
 
 // Help articles (static, could be pulled from DB)

@@ -5,7 +5,7 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Plane, Hotel, CarFront, Car, UtensilsCrossed,
+  Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle, ExternalLink,
   Sparkles, Users, Award, Crown
 } from "lucide-react";
@@ -33,6 +33,7 @@ const serviceNavItems = [
 ];
 
 const moreItems = [
+  { label: "Delivery", description: "Send packages anywhere", href: "/delivery", icon: Package, color: "text-violet-500" },
   { label: "Extras", description: "Transfers, eSIM, Tours & more", href: "/extras", icon: Sparkles, color: "text-primary" },
   { label: "Partners", description: "Our travel partners", href: "/partners", icon: Users, color: "text-muted-foreground" },
   { label: "Creators", description: "Creator program", href: "/creators", icon: Award, color: "text-muted-foreground" },

@@ -186,11 +186,9 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
 
             {/* Become a Driver Section */}
             <div className="mt-4 pt-4 border-t border-border">
-              <a
-                href="https://zivodriver.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-rides/10 to-teal-500/10 border border-rides/20 hover:bg-rides/20 transition-colors"
+              <button
+                onClick={() => { navigate("/drive"); onClose(); }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-rides/10 to-teal-500/10 border border-rides/20 hover:bg-rides/20 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl gradient-rides flex items-center justify-center">
                   <Car className="w-5 h-5 text-primary-foreground" />
@@ -200,7 +198,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
                   <span className="text-xs text-muted-foreground">Earn money on your schedule</span>
                 </div>
                 <ArrowRight className="w-5 h-5 text-rides" />
-              </a>
+              </button>
             </div>
 
             {/* Currency Selector */}

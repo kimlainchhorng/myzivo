@@ -31,8 +31,9 @@ const footerLinks = {
   ridesEats: [
     { name: "ZIVO Rides", href: "/rides" },
     { name: "ZIVO Eats", href: "/eats" },
+    { name: "ZIVO Delivery", href: "/delivery" },
     { name: "Travel Extras", href: "/extras" },
-    { name: "ZIVO Driver", href: "https://zivodriver.com", external: true },
+    { name: "Become a Driver", href: "/drive" },
   ],
   company: [
     { name: "About ZIVO", href: "/about" },

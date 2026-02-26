@@ -64,6 +64,16 @@ const services = [
     badge: null
   },
   { 
+    id: "delivery", 
+    label: "Delivery", 
+    icon: Package, 
+    href: "/delivery",
+    color: "from-violet-500 to-purple-500",
+    bgColor: "bg-violet-500/10",
+    textColor: "text-violet-500",
+    badge: null
+  },
+  { 
     id: "activities", 
     label: "Activities", 
     icon: Ticket, 
