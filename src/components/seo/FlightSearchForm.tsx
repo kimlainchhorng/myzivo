@@ -88,7 +88,7 @@ export default function FlightSearchForm({
               className={cn(
                 "px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 text-sm",
                 tripType === type.id
-                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-lg shadow-sky-500/30"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
@@ -247,7 +247,7 @@ export default function FlightSearchForm({
           onClick={handleSearch}
           disabled={!fromCity || !toCity || !departDate}
           size="lg"
-          className="w-full h-14 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white font-bold text-lg shadow-xl shadow-sky-500/30 transition-all hover:shadow-sky-500/50"
+          className="w-full h-14 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-primary-foreground font-bold text-lg shadow-xl shadow-sky-500/30 transition-all hover:shadow-sky-500/50"
         >
           <Search className="w-5 h-5 mr-2" />
           Search Flights

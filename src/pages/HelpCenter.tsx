@@ -110,7 +110,7 @@ const HelpCenter = () => {
           </Button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-md shadow-primary/30">
-              <HelpCircle className="h-4 w-4 text-white" />
+              <HelpCircle className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
               <h1 className="font-display font-bold text-base">Help Center</h1>
@@ -141,7 +141,7 @@ const HelpCenter = () => {
               className="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all touch-manipulation active:scale-95"
             >
               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center mb-2 shadow-lg`}>
-                <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <span className="text-xs sm:text-sm font-semibold">{cat.label}</span>
             </a>
@@ -152,13 +152,13 @@ const HelpCenter = () => {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Tabs defaultValue="faq" className="mb-8">
             <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 sm:p-1.5 rounded-xl h-auto">
-              <TabsTrigger value="faq" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="faq" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-primary-foreground font-semibold touch-manipulation">
                 FAQ
               </TabsTrigger>
-              <TabsTrigger value="contact" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="contact" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-primary-foreground font-semibold touch-manipulation">
                 Contact Us
               </TabsTrigger>
-              <TabsTrigger value="ticket" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+              <TabsTrigger value="ticket" className="rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-primary-foreground font-semibold touch-manipulation">
                 Ticket
               </TabsTrigger>
             </TabsList>
@@ -195,7 +195,7 @@ const HelpCenter = () => {
               <div id="rides">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                    <Car className="h-5 w-5 text-white" />
+                    <Car className="h-5 w-5 text-primary-foreground" />
                   </div>
                   ZIVO Rides
                 </h3>
@@ -217,7 +217,7 @@ const HelpCenter = () => {
               <div id="eats">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
-                    <UtensilsCrossed className="h-5 w-5 text-white" />
+                    <UtensilsCrossed className="h-5 w-5 text-primary-foreground" />
                   </div>
                   ZIVO Eats
                 </h3>
@@ -239,7 +239,7 @@ const HelpCenter = () => {
               <div id="account">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
-                    <User className="h-5 w-5 text-white" />
+                    <User className="h-5 w-5 text-primary-foreground" />
                   </div>
                   Account & Billing
                 </h3>
@@ -261,7 +261,7 @@ const HelpCenter = () => {
               <div id="flights">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
-                    <Plane className="h-5 w-5 text-white" />
+                    <Plane className="h-5 w-5 text-primary-foreground" />
                   </div>
                   Flights, Hotels & Car Rentals
                 </h3>
@@ -299,12 +299,12 @@ const HelpCenter = () => {
                   <Card key={contact.title} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all">
                     <CardContent className="p-4 sm:p-6 text-center">
                       <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${contact.gradient} flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg`}>
-                        <contact.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                        <contact.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
                       </div>
                       <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2">{contact.title}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{contact.desc}</p>
                       <Badge variant="outline" className="mb-3 sm:mb-4 font-semibold text-xs">{contact.badge}</Badge>
-                      <Button className={`w-full rounded-xl font-semibold touch-manipulation active:scale-[0.98] ${index === 0 ? "bg-gradient-to-r from-primary to-teal-400 text-white" : ""}`} variant={index === 0 ? "default" : "outline"}>
+                      <Button className={`w-full rounded-xl font-semibold touch-manipulation active:scale-[0.98] ${index === 0 ? "bg-gradient-to-r from-primary to-teal-400 text-primary-foreground" : ""}`} variant={index === 0 ? "default" : "outline"}>
                         {contact.action}
                       </Button>
                     </CardContent>

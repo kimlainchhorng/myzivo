@@ -379,7 +379,7 @@ export default function CarSearchFormPro({
         className={cn(
           "w-full h-12 sm:h-14 mt-5 font-bold text-base sm:text-lg rounded-xl",
           "bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 hover:from-violet-600 hover:via-purple-600 hover:to-violet-600",
-          "text-white shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40",
+          "text-primary-foreground shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40",
           "transition-all duration-300 active:scale-[0.98]",
           "disabled:opacity-50 disabled:cursor-not-allowed"
         )}
