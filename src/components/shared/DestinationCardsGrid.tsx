@@ -194,7 +194,7 @@ const serviceConfig = {
     priceLabel: "/person",
     icon: Plane,
     accentColor: "sky",
-    badgeColors: "bg-sky-500 text-white",
+    badgeColors: "bg-sky-500 text-primary-foreground",
     priceColor: "text-sky-500",
   },
   hotels: {
@@ -204,7 +204,7 @@ const serviceConfig = {
     priceLabel: "/night",
     icon: Hotel,
     accentColor: "amber",
-    badgeColors: "bg-amber-500 text-white",
+    badgeColors: "bg-amber-500 text-primary-foreground",
     priceColor: "text-amber-500",
   },
   cars: {
@@ -214,7 +214,7 @@ const serviceConfig = {
     priceLabel: "/day",
     icon: Car,
     accentColor: "violet",
-    badgeColors: "bg-violet-500 text-white",
+    badgeColors: "bg-violet-500 text-primary-foreground",
     priceColor: "text-violet-500",
   },
 };

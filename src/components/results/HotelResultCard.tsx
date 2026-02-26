@@ -64,12 +64,12 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
       {(hotel.isBestValue || hotel.isMostPopular) && (
         <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {hotel.isBestValue && (
-            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
               Best Value
             </Badge>
           )}
           {hotel.isMostPopular && !hotel.isBestValue && (
-            <Badge className="bg-amber-500 text-white text-[10px] gap-1">
+            <Badge className="bg-amber-500 text-primary-foreground text-[10px] gap-1">
               <Sparkles className="w-3 h-3" /> Popular Choice
             </Badge>
           )}
@@ -87,7 +87,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
               loading="lazy"
             />
             {hotel.freeCancellation && (
-              <Badge className="absolute top-2 left-2 bg-emerald-500/90 text-white text-[10px] gap-1">
+              <Badge className="absolute top-2 left-2 bg-emerald-500/90 text-primary-foreground text-[10px] gap-1">
                 <CheckCircle className="w-3 h-3" />
                 Free Cancellation
               </Badge>
@@ -170,7 +170,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
             </div>
             <Button
               onClick={() => onViewDeal(hotel)}
-              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-white rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
+              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-primary-foreground rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200"
             >
               Book with Provider
               <ExternalLink className="w-4 h-4" />
