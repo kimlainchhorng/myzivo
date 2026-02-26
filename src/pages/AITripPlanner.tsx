@@ -3,10 +3,14 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAITripSuggestions, type AIDestination } from "@/hooks/useAITripSuggestions";
+import { useCreateTrip, useCreateTripItem } from "@/hooks/useTripItineraries";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
@@ -53,27 +57,15 @@ const budgetLevels = [
   { value: "luxury", label: "Luxury", description: "$250+/day" },
 ];
 
-interface TripSuggestion {
-  id: string;
-  city: string;
-  country: string;
-  airportCode: string;
-  price: number;
-  rating: number;
-  matchScore: number;
-  tags: string[];
-  weather: string;
-  flightTime: string;
-  description: string;
-  hotelArea: string;
-  estimatedTotal: number;
-  tips: string[];
-}
+// Using AIDestination from useAITripSuggestions hook
 
 const AITripPlanner = () => {
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<TripSuggestion[]>([]);
+  const navigate = useNavigate();
+  const { destinations: suggestions, isLoading, fetchSuggestions } = useAITripSuggestions();
+  const createTrip = useCreateTrip();
+  const createItem = useCreateTripItem();
+  const [savingId, setSavingId] = useState<string | null>(null);
   
   // Form state
   const [destination, setDestination] = useState("");
@@ -92,14 +84,43 @@ const AITripPlanner = () => {
   };
 
   const handleGenerateSuggestions = async () => {
-    setIsLoading(true);
-    
-    // TODO: Replace with real AI API call
-    
-    // No hardcoded suggestions — will be populated by AI API
-    setSuggestions([]);
-    setIsLoading(false);
-    setStep(5);
+    const result = await fetchSuggestions({
+      budget: budget as 'budget' | 'mid' | 'luxury',
+      activities: interests,
+      travelers,
+      origin: destination || "New York",
+    });
+    if (result) {
+      setStep(5);
+    }
+  };
+
+  const handleSaveAsTrip = async (dest: AIDestination) => {
+    setSavingId(dest.id);
+    try {
+      const trip = await createTrip.mutateAsync({
+        title: `Trip to ${dest.city}`,
+        destination: `${dest.city}, ${dest.country}`,
+        start_date: departDate?.toISOString().split('T')[0] || null,
+        end_date: returnDate?.toISOString().split('T')[0] || null,
+        total_estimated_cost_cents: dest.price * 100,
+      });
+      // Add a flight item
+      await createItem.mutateAsync({
+        itinerary_id: trip.id,
+        item_type: "flight",
+        title: `Flight to ${dest.city} (${dest.airportCode})`,
+        location: dest.city,
+        estimated_cost_cents: dest.price * 100,
+        sort_order: 0,
+      });
+      toast.success("Trip saved! Redirecting...");
+      navigate(`/trip/${trip.id}`);
+    } catch {
+      toast.error("Failed to save trip");
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const renderStep = () => {
@@ -349,22 +370,25 @@ const AITripPlanner = () => {
                           <span>{suggestion.weather}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-violet-500" />
-                          <span>{suggestion.hotelArea}</span>
+                          <Star className="w-4 h-4 text-violet-500" />
+                          <span>{suggestion.rating} rating</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4 text-emerald-500" />
-                          <span>~${suggestion.estimatedTotal} total</span>
+                          <span>{suggestion.flightTime} flight</span>
                         </div>
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button className="flex-1 gap-2">
-                          <Plane className="w-4 h-4" />
-                          Search Flights
+                        <Button className="flex-1 gap-2" onClick={() => handleSaveAsTrip(suggestion)} disabled={savingId === suggestion.id}>
+                          {savingId === suggestion.id ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                          ) : (
+                            <><Bookmark className="w-4 h-4" /> Save as Trip</>
+                          )}
                         </Button>
-                        <Button variant="outline" size="icon">
-                          <Bookmark className="w-4 h-4" />
+                        <Button variant="outline" size="icon" onClick={() => navigate(`/flights?to=${suggestion.airportCode}`)}>
+                          <Plane className="w-4 h-4" />
                         </Button>
                         <Button variant="outline" size="icon">
                           <Share2 className="w-4 h-4" />
