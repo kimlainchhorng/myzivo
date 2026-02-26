@@ -80,8 +80,7 @@ export default function BusinessLandingPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // TODO: Submit to backend API
 
     toast.success("Thank you! Our business team will contact you within 24 hours.");
     setIsSubmitting(false);

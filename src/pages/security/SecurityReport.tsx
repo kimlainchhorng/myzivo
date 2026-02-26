@@ -71,8 +71,7 @@ export default function SecurityReport() {
     }
 
     setIsSubmitting(true);
-    // Simulate submission - in production this would go to a secure endpoint
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // TODO: Submit to secure reporting endpoint
     setSubmitted(true);
     toast.success("Report submitted successfully");
     setIsSubmitting(false);

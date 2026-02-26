@@ -110,8 +110,7 @@ export function PriceAlertModal({
     setIsSubmitting(true);
 
     try {
-      // In production, this would call an API to save the price alert
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // TODO: Save price alert to database
       
       setIsSuccess(true);
       

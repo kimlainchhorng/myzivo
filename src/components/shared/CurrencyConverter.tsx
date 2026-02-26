@@ -18,7 +18,8 @@ const currencies = [
   { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "IN" }
 ];
 
-// Mock exchange rates (relative to USD)
+// TODO: Fetch live exchange rates from API (e.g., Open Exchange Rates)
+// Fallback static rates used until API integration
 const rates: Record<string, number> = {
   USD: 1,
   EUR: 0.92,
@@ -57,7 +58,8 @@ export default function CurrencyConverter() {
   };
 
   const rate = rates[toCurrency] / rates[fromCurrency];
-  const isRateUp = Math.random() > 0.5; // Simulated trend
+  // TODO: Determine trend from historical rate data
+  const isRateUp = rate >= 1;
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">

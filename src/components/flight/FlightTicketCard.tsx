@@ -93,6 +93,7 @@ export default function FlightTicketCard({
                   src={`https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/${airlineCode}.svg`}
                   alt={airline || "Airline"}
                   className="w-10 h-10 object-contain bg-white rounded-lg p-1 border"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               )}

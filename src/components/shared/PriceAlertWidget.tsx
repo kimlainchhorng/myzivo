@@ -35,41 +35,8 @@ interface PriceAlertWidgetProps {
   className?: string;
 }
 
-const mockAlerts: PriceAlert[] = [
-  {
-    id: "1",
-    type: "flight",
-    route: "NYC → Paris",
-    currentPrice: 485,
-    targetPrice: 450,
-    lastPrice: 520,
-    trend: "down",
-    isActive: true,
-    notified: false,
-  },
-  {
-    id: "2",
-    type: "hotel",
-    route: "Grand Plaza, Paris",
-    currentPrice: 189,
-    targetPrice: 150,
-    lastPrice: 185,
-    trend: "up",
-    isActive: true,
-    notified: false,
-  },
-  {
-    id: "3",
-    type: "flight",
-    route: "LAX → Tokyo",
-    currentPrice: 720,
-    targetPrice: 800,
-    lastPrice: 780,
-    trend: "down",
-    isActive: true,
-    notified: true,
-  },
-];
+// TODO: Load price alerts from user's saved alerts in database
+const INITIAL_ALERTS: PriceAlert[] = [];
 
 const typeIcons = {
   flight: Plane,
@@ -84,7 +51,7 @@ const typeColors = {
 };
 
 const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
-  const [alerts, setAlerts] = useState<PriceAlert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<PriceAlert[]>(INITIAL_ALERTS);
   const [showAll, setShowAll] = useState(false);
 
   const toggleAlert = (id: string) => {

@@ -68,8 +68,7 @@ export default function CorporateTravel() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // TODO: Submit to backend API
     
     toast.success("Thanks for your interest! We'll be in touch soon.");
     setIsSubmitting(false);

@@ -85,8 +85,7 @@ export default function AccountSecurity() {
 
   const handleExportData = async () => {
     setIsExporting(true);
-    // Simulate export - in production this would trigger a backend job
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // TODO: Trigger backend data export job
     toast.success("Data export requested. You'll receive an email when it's ready.");
     setIsExporting(false);
   };

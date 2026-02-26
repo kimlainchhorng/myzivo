@@ -70,8 +70,7 @@ export default function Feedback() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // TODO: Submit feedback to backend API
 
 
     setIsSubmitted(true);

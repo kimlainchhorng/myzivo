@@ -95,7 +95,6 @@ const AITripPlanner = () => {
     setIsLoading(true);
     
     // TODO: Replace with real AI API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // No hardcoded suggestions — will be populated by AI API
     setSuggestions([]);

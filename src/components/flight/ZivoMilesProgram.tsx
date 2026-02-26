@@ -108,14 +108,8 @@ const TIERS: TierInfo[] = [
   },
 ];
 
-const MOCK_TRANSACTIONS: MilesTransaction[] = [
-  { id: '1', type: 'earn', amount: 2450, description: 'JFK → LHR Flight', category: 'flights', date: '2025-01-15', icon: Plane },
-  { id: '2', type: 'earn', amount: 150, description: 'Hotel Booking - Paris', category: 'hotels', date: '2025-01-14', icon: Hotel },
-  { id: '3', type: 'redeem', amount: -5000, description: 'Lounge Access Voucher', category: 'rewards', date: '2025-01-10', icon: Gift },
-  { id: '4', type: 'earn', amount: 320, description: 'Car Rental - Nice', category: 'cars', date: '2025-01-08', icon: Car },
-  { id: '5', type: 'earn', amount: 85, description: 'Restaurant - Airport', category: 'dining', date: '2025-01-05', icon: Utensils },
-  { id: '6', type: 'earn', amount: 1200, description: 'SFO → NRT Flight', category: 'flights', date: '2025-01-02', icon: Plane },
-];
+// TODO: Load transaction history from database
+const MOCK_TRANSACTIONS: MilesTransaction[] = [];
 
 const REDEMPTION_OPTIONS: RedemptionOption[] = [
   { id: '1', title: 'Flight Upgrade', description: 'Upgrade to Business Class', milesRequired: 25000, value: '$800', category: 'flights', icon: Plane, popular: true },

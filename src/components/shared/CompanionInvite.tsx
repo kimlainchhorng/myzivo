@@ -31,13 +31,11 @@ interface CompanionInviteProps {
   className?: string;
 }
 
-const mockCompanions: Companion[] = [
-  { id: "1", name: "Sarah M.", email: "sarah@email.com", status: "accepted" },
-  { id: "2", name: "John D.", email: "john@email.com", status: "pending" },
-];
+// TODO: Load companions from trip database
+const INITIAL_COMPANIONS: Companion[] = [];
 
 const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInviteProps) => {
-  const [companions, setCompanions] = useState<Companion[]>(mockCompanions);
+  const [companions, setCompanions] = useState<Companion[]>(INITIAL_COMPANIONS);
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
