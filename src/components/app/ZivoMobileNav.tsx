@@ -89,7 +89,7 @@ const ZivoMobileNav = () => {
                 )} strokeWidth={isActive ? 2.5 : 2} />
                 
                 {/* Badge for alerts */}
-                {tab.badge && tab.badge > 0 && (
+                {typeof tab.badge === 'number' && tab.badge > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                     {tab.badge > 9 ? '9+' : tab.badge}
                   </span>
