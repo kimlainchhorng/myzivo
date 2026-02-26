@@ -5,10 +5,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus, Thermometer, Lock as LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import RideMap from "@/components/maps/RideMap";
@@ -176,8 +177,8 @@ export default function DeliveryPage() {
   const [senderName, setSenderName] = useState("");
   const [senderPhone, setSenderPhone] = useState("");
   const [recipientName, setRecipientName] = useState("");
-  const [recipientPhone, setRecipientPhone] = useState("");
-  const [notifyRecipient, setNotifyRecipient] = useState(true);
+  const [recipientPhoneOld, setRecipientPhoneOld] = useState("");
+  const [notifyRecipientOld, setNotifyRecipientOld] = useState(true);
   const [showPreviousDeliveries, setShowPreviousDeliveries] = useState(false);
 
   // Package
@@ -197,7 +198,7 @@ export default function DeliveryPage() {
   const [photoAdded, setPhotoAdded] = useState(false);
   const [rateDelivery, setRateDelivery] = useState<number | null>(null);
   const [returnShipping, setReturnShipping] = useState(false);
-  const [declaredValue, setDeclaredValue] = useState("");
+  const [declaredValueOld, setDeclaredValueOld] = useState("");
   const [temperatureSensitive, setTemperatureSensitive] = useState(false);
   const [businessAccount, setBusinessAccount] = useState(false);
   const [multiStop, setMultiStop] = useState(false);
@@ -236,6 +237,31 @@ export default function DeliveryPage() {
   const [packageTrackerShared, setPackageTrackerShared] = useState(false);
   const [deliveryRating] = useState(4.8);
   const [totalShipments] = useState(47);
+  const [smartRouting, setSmartRouting] = useState(false);
+  const [packageLocker, setPackageLocker] = useState(false);
+  const [lockerLocation, setLockerLocation] = useState("");
+  const [deliveryCalendar, setDeliveryCalendar] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [tempControl, setTempControl] = useState<"none" | "cold" | "frozen" | "warm">("none");
+  const [multiAddress, setMultiAddress] = useState(false);
+  const [extraAddresses, setExtraAddresses] = useState<string[]>([""]);
+  const [packageContents, setPackageContents] = useState("");
+  const [declaredValue, setDeclaredValue] = useState("");
+  const [returnLabel, setReturnLabel] = useState(false);
+  const [showTrackingPreview, setShowTrackingPreview] = useState(false);
+  const [notifyRecipient, setNotifyRecipient] = useState(false);
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
+  const [pastDeliveries] = useState([
+    { id: "1", to: "123 Main St", status: "Delivered", date: "Yesterday", tracking: "ZD-A1B2C3" },
+    { id: "2", to: "456 Oak Ave", status: "Delivered", date: "3 days ago", tracking: "ZD-D4E5F6" },
+    { id: "3", to: "789 Pine Rd", status: "In Transit", date: "Today", tracking: "ZD-G7H8I9" },
+  ]);
+  const [expressPickup, setExpressPickup] = useState(false);
+  const [holdAtFacility, setHoldAtFacility] = useState(false);
+  const [saturdayDelivery, setSaturdayDelivery] = useState(false);
+  const [hazmatDeclare, setHazmatDeclare] = useState(false);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -914,6 +940,158 @@ export default function DeliveryPage() {
                   <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-emerald-500" /> Carbon neutral delivery</p>
                   <p className="text-[10px] text-muted-foreground">Offset emissions · +$0.50</p>
                 </div>
+              </div>
+
+              {/* Temperature Control */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Thermometer className="w-3.5 h-3.5 text-sky-500" /> Temperature control</p>
+                <div className="flex gap-2">
+                  {([
+                    { id: "none" as const, label: "None" },
+                    { id: "cold" as const, label: "❄️ Cold" },
+                    { id: "frozen" as const, label: "🧊 Frozen" },
+                    { id: "warm" as const, label: "🔥 Warm" },
+                  ]).map(t => (
+                    <button key={t.id} onClick={() => setTempControl(t.id)}
+                      className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                        tempControl === t.id ? "bg-sky-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                {tempControl !== "none" && <p className="text-[10px] text-sky-500 mt-2 font-medium">+$4.99 for temperature-controlled shipping</p>}
+              </div>
+
+              {/* Package Locker */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setPackageLocker(!packageLocker)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", packageLocker ? "bg-violet-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", packageLocker ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><LockIcon className="w-3.5 h-3.5 text-violet-500" /> Deliver to package locker</p>
+                    <p className="text-[10px] text-muted-foreground">Secure pickup at your convenience</p>
+                  </div>
+                </div>
+                {packageLocker && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
+                    <Input value={lockerLocation} onChange={e => setLockerLocation(e.target.value)} placeholder="Locker location or ID" className="h-9 text-xs" />
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Multi-Address Delivery */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setMultiAddress(!multiAddress)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", multiAddress ? "bg-violet-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiAddress ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Multi-address delivery</p>
+                    <p className="text-[10px] text-muted-foreground">Split package to multiple addresses</p>
+                  </div>
+                </div>
+                {multiAddress && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 mt-2">
+                    {extraAddresses.map((addr, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+                        <Input value={addr} onChange={(e) => { const na = [...extraAddresses]; na[i] = e.target.value; setExtraAddresses(na); }}
+                          placeholder={`Address ${i + 2}`} className="h-9 text-xs flex-1" />
+                      </div>
+                    ))}
+                    {extraAddresses.length < 4 && (
+                      <button onClick={() => setExtraAddresses([...extraAddresses, ""])}
+                        className="text-[10px] text-violet-500 font-bold flex items-center gap-1 touch-manipulation"><Plus className="w-3 h-3" /> Add address</button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Notify Recipient */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setNotifyRecipient(!notifyRecipient)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Notify recipient</p>
+                    <p className="text-[10px] text-muted-foreground">Send tracking updates to the receiver</p>
+                  </div>
+                </div>
+                {notifyRecipient && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 mt-2">
+                    <Input value={recipientPhone} onChange={e => setRecipientPhone(e.target.value)} placeholder="Recipient phone" className="h-9 text-xs" />
+                    <Input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} placeholder="Recipient email" className="h-9 text-xs" />
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Return Label */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setReturnLabel(!returnLabel); if (!returnLabel) toast.info("📦 Return label will be included!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", returnLabel ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnLabel ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-violet-500" /> Include return label</p>
+                  <p className="text-[10px] text-muted-foreground">Prepaid return shipping · +$5.99</p>
+                </div>
+              </div>
+
+              {/* Saturday Delivery & Express Pickup */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setSaturdayDelivery(!saturdayDelivery); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", saturdayDelivery ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", saturdayDelivery ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-violet-500" /> Saturday delivery</p>
+                  <p className="text-[10px] text-muted-foreground">Deliver on weekends · +$3.99</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setExpressPickup(!expressPickup); if (!expressPickup) toast.success("⚡ Express pickup — courier arrives in 15 min!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", expressPickup ? "bg-amber-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", expressPickup ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-amber-500" /> Express pickup</p>
+                  <p className="text-[10px] text-muted-foreground">Courier arrives in 15 min · +$4.99</p>
+                </div>
+              </div>
+
+              {/* Past Deliveries */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <button onClick={() => setShowDeliveryHistory(!showDeliveryHistory)} className="w-full flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-violet-500" /> Recent deliveries</p>
+                  <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showDeliveryHistory && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showDeliveryHistory && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="space-y-2 mt-3">
+                        {pastDeliveries.map(d => (
+                          <div key={d.id} className="rounded-xl bg-muted/30 p-3">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="text-xs font-bold text-foreground">{d.to}</p>
+                                <p className="text-[10px] text-muted-foreground">{d.tracking} · {d.date}</p>
+                              </div>
+                              <Badge className={d.status === "Delivered" ? "bg-emerald-500/20 text-emerald-500" : "bg-sky-500/20 text-sky-500"}>
+                                {d.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Delivery Window */}

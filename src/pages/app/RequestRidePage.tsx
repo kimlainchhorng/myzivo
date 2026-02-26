@@ -430,7 +430,7 @@ export default function RequestRidePage() {
   const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("fastest");
   const [billingProfile, setBillingProfile] = useState("personal");
-  const [shareETA, setShareETA] = useState(false);
+  const [shareETAOld, setShareETAOld] = useState(false);
   const [rideReminder, setRideReminder] = useState(false);
   const [rideRating, setRideRating] = useState<number | null>(null);
   const [showRouteOptions, setShowRouteOptions] = useState(false);
@@ -461,6 +461,28 @@ export default function RequestRidePage() {
   const [showRideStats, setShowRideStats] = useState(false);
   const [returnTrip, setReturnTrip] = useState(false);
   const [returnDelay, setReturnDelay] = useState("1hr");
+  const [multiStop, setMultiStop] = useState(false);
+  const [extraStops, setExtraStops] = useState<string[]>([""]);
+  const [favoriteDriver, setFavoriteDriver] = useState(false);
+  const [driverPlaylist, setDriverPlaylist] = useState<"none" | "spotify" | "apple" | "youtube">("none");
+  const [vehicleColorPref, setVehicleColorPref] = useState<"any" | "black" | "white" | "silver">("any");
+  const [childSeat, setChildSeat] = useState(false);
+  const [childSeatType, setChildSeatType] = useState<"infant" | "toddler" | "booster">("toddler");
+  const [shareETA, setShareETA] = useState(false);
+  const [etaRecipient, setEtaRecipient] = useState("");
+  const [rideNotes, setRideNotes] = useState("");
+  const [showRideHistory, setShowRideHistory] = useState(false);
+  const [recentRides] = useState([
+    { id: "1", from: "Home", to: "Downtown Office", price: "$14.50", date: "Yesterday" },
+    { id: "2", from: "Airport", to: "Hotel Grand", price: "$32.00", date: "2 days ago" },
+    { id: "3", from: "Mall", to: "Home", price: "$11.25", date: "Last week" },
+  ]);
+  const [showQuickRebook, setShowQuickRebook] = useState(false);
+  const [selectedVehicleAge, setSelectedVehicleAge] = useState<"any" | "new" | "2yr" | "5yr">("any");
+  const [airFreshener, setAirFreshener] = useState(false);
+  const [dashcamRequired, setDashcamRequired] = useState(false);
+  const [genderPreference, setGenderPreference] = useState<"any" | "female" | "male">("any");
+  const [showCostBreakdown, setShowCostBreakdown] = useState(false);
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -982,6 +1004,170 @@ export default function RequestRidePage() {
                             <p className="text-lg font-bold text-emerald-500">{rideStats.savedCO2}</p>
                             <p className="text-[9px] text-muted-foreground uppercase font-bold">CO₂ Saved</p>
                           </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Multi-Stop */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setMultiStop(!multiStop)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", multiStop ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiStop ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Route className="w-3.5 h-3.5 text-primary" /> Multi-stop trip</p>
+                      <p className="text-[10px] text-muted-foreground">Add up to 3 extra stops along the way</p>
+                    </div>
+                  </div>
+                  {multiStop && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 mt-2">
+                      {extraStops.map((stop, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                          <Input value={stop} onChange={(e) => { const ns = [...extraStops]; ns[i] = e.target.value; setExtraStops(ns); }}
+                            placeholder={`Stop ${i + 1}`} className="h-9 text-xs flex-1" />
+                          {extraStops.length > 1 && (
+                            <button onClick={() => setExtraStops(extraStops.filter((_, j) => j !== i))}
+                              className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground"><X className="w-3 h-3" /></button>
+                          )}
+                        </div>
+                      ))}
+                      {extraStops.length < 3 && (
+                        <button onClick={() => setExtraStops([...extraStops, ""])}
+                          className="text-[10px] text-primary font-bold flex items-center gap-1 touch-manipulation"><Plus className="w-3 h-3" /> Add stop</button>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Child Seat */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setChildSeat(!childSeat)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", childSeat ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", childSeat ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Baby className="w-3.5 h-3.5 text-primary" /> Child car seat</p>
+                      <p className="text-[10px] text-muted-foreground">Request a vehicle with child seat · +$3.99</p>
+                    </div>
+                  </div>
+                  {childSeat && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2 mt-2">
+                      {(["infant", "toddler", "booster"] as const).map(t => (
+                        <button key={t} onClick={() => setChildSeatType(t)}
+                          className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                            childSeatType === t ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                          {t === "infant" ? "👶 Infant" : t === "toddler" ? "🧒 Toddler" : "💺 Booster"}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Vehicle Preferences */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Car className="w-3.5 h-3.5 text-primary" /> Vehicle color preference</p>
+                  <div className="flex gap-2">
+                    {(["any", "black", "white", "silver"] as const).map(c => (
+                      <button key={c} onClick={() => setVehicleColorPref(c)}
+                        className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                          vehicleColorPref === c ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        {c === "any" ? "Any" : c === "black" ? "⬛ Black" : c === "white" ? "⬜ White" : "🩶 Silver"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Share ETA */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setShareETA(!shareETA)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", shareETA ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", shareETA ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5 text-primary" /> Share live ETA</p>
+                      <p className="text-[10px] text-muted-foreground">Send arrival time link to someone</p>
+                    </div>
+                  </div>
+                  {shareETA && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
+                      <Input value={etaRecipient} onChange={e => setEtaRecipient(e.target.value)}
+                        placeholder="Phone or email" className="h-9 text-xs" />
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Favorite Driver */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setFavoriteDriver(!favoriteDriver); if (!favoriteDriver) toast.info("⭐ We'll try to match you with your preferred drivers!"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", favoriteDriver ? "bg-amber-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", favoriteDriver ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> Request favorite driver</p>
+                    <p className="text-[10px] text-muted-foreground">Priority match with drivers you've rated 5★</p>
+                  </div>
+                </div>
+
+                {/* Dashcam & Air Freshener */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setDashcamRequired(!dashcamRequired)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", dashcamRequired ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", dashcamRequired ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Dashcam-equipped vehicle</p>
+                    <p className="text-[10px] text-muted-foreground">Vehicles with active dashcam only</p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setAirFreshener(!airFreshener); if (!airFreshener) toast.success("🌸 Air freshener requested!"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", airFreshener ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", airFreshener ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">🌸 Fresh air freshener</p>
+                    <p className="text-[10px] text-muted-foreground">Request a fresh-scented car</p>
+                  </div>
+                </div>
+
+                {/* Ride Notes */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><MessageSquare className="w-3.5 h-3.5 text-primary" /> Notes for driver</p>
+                  <Input value={rideNotes} onChange={e => setRideNotes(e.target.value)}
+                    placeholder="E.g., I'll be at the main entrance wearing a red jacket" className="h-9 text-xs" />
+                </div>
+
+                {/* Recent Rides */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <button onClick={() => setShowRideHistory(!showRideHistory)}
+                    className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-primary" /> Recent rides</p>
+                    <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showRideHistory && "rotate-90")} />
+                  </button>
+                  <AnimatePresence>
+                    {showRideHistory && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden">
+                        <div className="space-y-2 mt-3">
+                          {recentRides.map(ride => (
+                            <button key={ride.id} onClick={() => { toast.info(`Rebooking: ${ride.from} → ${ride.to}`); }}
+                              className="w-full rounded-xl bg-muted/30 p-3 text-left hover:bg-muted/50 transition-colors touch-manipulation">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-xs font-bold text-foreground">{ride.from} → {ride.to}</p>
+                                  <p className="text-[10px] text-muted-foreground">{ride.date}</p>
+                                </div>
+                                <span className="text-xs font-bold text-primary">{ride.price}</span>
+                              </div>
+                            </button>
+                          ))}
                         </div>
                       </motion.div>
                     )}
