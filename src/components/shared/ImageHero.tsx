@@ -23,7 +23,7 @@ const heroContent = {
     headline: "Compare Flights from 500+ Airlines — Book Securely with Partners",
     subheadline: "Find real-time prices, compare options, and complete your booking securely with licensed airline partners.",
     image: heroFlightsImg,
-    overlayGradient: "from-slate-950/90 via-blue-950/80 to-slate-950/70",
+    overlayGradient: "from-background/95 via-background/80 to-background/70",
     accentColor: "sky",
     textGradient: "from-sky-400 via-cyan-400 to-blue-400",
   },
@@ -31,7 +31,7 @@ const heroContent = {
     headline: "Find the Best Hotel Deals Anywhere",
     subheadline: "Compare hotels, resorts, and stays from trusted partners worldwide.",
     image: heroHotelsImg,
-    overlayGradient: "from-slate-950/90 via-amber-950/70 to-slate-950/60",
+    overlayGradient: "from-background/95 via-background/75 to-background/60",
     accentColor: "amber",
     textGradient: "from-amber-400 via-orange-400 to-yellow-400",
   },
@@ -39,7 +39,7 @@ const heroContent = {
     headline: "Compare & Rent Cars Worldwide",
     subheadline: "Find the right car at the best price from trusted rental partners.",
     image: heroCarsImg,
-    overlayGradient: "from-slate-950/90 via-violet-950/70 to-slate-950/60",
+    overlayGradient: "from-background/95 via-background/75 to-background/60",
     accentColor: "violet",
     textGradient: "from-violet-400 via-purple-400 to-fuchsia-400",
   },
@@ -47,7 +47,7 @@ const heroContent = {
     headline: "Your Ride, On Demand",
     subheadline: "Request a ride and we'll connect you with available drivers in your area.",
     image: heroRidesImg,
-    overlayGradient: "from-slate-950/90 via-emerald-950/70 to-slate-950/60",
+    overlayGradient: "from-background/95 via-background/75 to-background/60",
     accentColor: "emerald",
     textGradient: "from-emerald-400 via-teal-400 to-green-400",
   },
@@ -55,7 +55,7 @@ const heroContent = {
     headline: "Delicious Food, Delivered",
     subheadline: "Discover and order from local restaurants. Fast delivery to your door.",
     image: heroEatsImg,
-    overlayGradient: "from-slate-950/90 via-orange-950/70 to-slate-950/60",
+    overlayGradient: "from-background/95 via-background/75 to-background/60",
     accentColor: "orange",
     textGradient: "from-orange-400 via-amber-400 to-yellow-400",
   },
@@ -133,7 +133,7 @@ export default function ImageHero({
         />
         {/* Additional vignette for depth */}
         <div 
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" 
+          className="absolute inset-0" style={{ boxShadow: "inset 0 0 150px 60px hsl(var(--background) / 0.4)" }} 
           aria-hidden="true"
         />
         {/* Bottom fade to background */}
@@ -149,7 +149,7 @@ export default function ImageHero({
           {/* Service icon badge */}
           <div className="inline-flex items-center gap-2 mb-5">
             <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-xl border border-white/20",
+              "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-xl border border-foreground/20",
               content.accentColor === "sky" && "bg-sky-500/30 shadow-sky-500/30",
               content.accentColor === "amber" && "bg-amber-500/30 shadow-amber-500/30",
               content.accentColor === "violet" && "bg-violet-500/30 shadow-violet-500/30",
@@ -186,7 +186,7 @@ export default function ImageHero({
                 key={badge.text}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-full",
-                  "bg-white/10 backdrop-blur-xl border border-white/20",
+                  "bg-foreground/10 backdrop-blur-xl border border-foreground/20",
                   "text-xs sm:text-sm text-primary-foreground/90 shadow-lg"
                 )}
               >
