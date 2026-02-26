@@ -96,7 +96,7 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
         <div className="sm:w-56 h-44 sm:h-auto bg-muted/30 flex flex-col items-center justify-center p-6 relative">
           {/* Best Deal Badge */}
           {car.isBestDeal && (
-            <Badge className="absolute top-3 left-3 bg-emerald-500 text-white border-0 text-[10px] font-semibold shadow-sm">
+            <Badge className="absolute top-3 left-3 bg-emerald-500 text-primary-foreground border-0 text-[10px] font-semibold shadow-sm">
               Best Deal
             </Badge>
           )}

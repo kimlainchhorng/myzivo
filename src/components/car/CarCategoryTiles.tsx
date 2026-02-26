@@ -81,7 +81,7 @@ export default function CarCategoryTiles({
 
                   {/* Popular badge */}
                   {pricing.popular && (
-                    <Badge className="absolute top-2 left-2 text-[10px] font-semibold border-0 shadow-lg bg-violet-500 text-white">
+                    <Badge className="absolute top-2 left-2 text-[10px] font-semibold border-0 shadow-lg bg-violet-500 text-primary-foreground">
                       Popular
                     </Badge>
                   )}

@@ -74,7 +74,7 @@ export default function SecureCheckoutHeader({
                 )}>
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0",
-                    isComplete && "bg-emerald-500 text-white",
+                    isComplete && "bg-emerald-500 text-primary-foreground",
                     isCurrent && "bg-primary text-primary-foreground",
                     !isComplete && !isCurrent && "bg-muted text-muted-foreground"
                   )}>

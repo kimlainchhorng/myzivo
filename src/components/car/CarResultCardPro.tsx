@@ -140,7 +140,7 @@ export default function CarResultCardPro({
                 </div>
               </div>
             )}
-            <Badge className="absolute top-3 left-3 bg-violet-500/90 text-white text-[10px]">
+            <Badge className="absolute top-3 left-3 bg-violet-500/90 text-primary-foreground text-[10px]">
               {category}
             </Badge>
           </div>

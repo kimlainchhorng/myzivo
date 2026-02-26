@@ -49,14 +49,14 @@ export default function CrossSellBanner() {
                     "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-lg",
                     item.color
                   )}>
-                    <item.icon className="w-7 h-7 text-white" />
+                    <item.icon className="w-7 h-7 text-primary-foreground" />
                   </div>
                   <h3 className="font-bold mb-1">{item.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="gap-2 group-hover:bg-primary group-hover:text-white transition-colors"
+                    className="gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                   >
                     Explore
                     <ArrowRight className="w-4 h-4" />
