@@ -20,6 +20,9 @@ const testimonials = [
   { name: "Emily Thompson", location: "Los Angeles, USA", rating: 5, text: "Finally a travel site that doesn't hide fees. What I saw was what I paid. The hotel options were excellent and booking took less than 2 minutes.", avatar: "ET", service: "Hotels" },
   { name: "James Kim", location: "Chicago, USA", rating: 4, text: "Great selection of car rentals. The flexible search with nearby airports found me a deal I wouldn't have found elsewhere. Highly recommend ZIVO.", avatar: "JK", service: "Car Rentals" },
   { name: "Aisha Patel", location: "Houston, USA", rating: 5, text: "Customer support was phenomenal when I needed to make changes to my booking. They responded within minutes. This is what premium service looks like.", avatar: "AP", service: "Support" },
+  { name: "Marcus Johnson", location: "Atlanta, USA", rating: 5, text: "Switched from Kayak and haven't looked back. The interface is cleaner, results are faster, and the ZIVO Miles program is an amazing bonus.", avatar: "MJ", service: "Flights" },
+  { name: "Lisa Chen", location: "San Francisco, USA", rating: 5, text: "Booked a last-minute hotel in Barcelona through ZIVO and saved $150 compared to booking direct. The cancellation policy was clearly displayed too.", avatar: "LC", service: "Hotels" },
+  { name: "David Martinez", location: "Denver, USA", rating: 5, text: "The car rental comparison is unbeatable. Found a premium SUV for the price of a sedan. The partner checkout was smooth and transparent.", avatar: "DM", service: "Car Rentals" },
 ];
 
 export default function TestimonialsSection() {
