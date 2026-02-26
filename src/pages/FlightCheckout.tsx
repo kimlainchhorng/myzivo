@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SEOHead from '@/components/SEOHead';
@@ -300,7 +301,12 @@ const FlightCheckout = () => {
 
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="lg:col-span-3 space-y-6"
+            >
               {/* Flight Summary */}
               <Card>
                 <CardHeader>
@@ -463,7 +469,7 @@ const FlightCheckout = () => {
 
               {/* Important Booking Notice */}
               <ImportantBookingNotice variant="flights" />
-            </div>
+            </motion.div>
 
             {/* Sidebar - Price & Payment */}
             <div className="lg:col-span-2 space-y-6">

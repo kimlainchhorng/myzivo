@@ -3,8 +3,9 @@
   * Unified view of all travel bookings with tabs
   * Premium mobile experience with living timeline
   */
- import { useState } from "react";
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -32,7 +33,11 @@ export default function TravelTripsPage() {
    // Mobile and desktop use the same trips view
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-background pb-20"
+    >
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container px-4 py-4">
@@ -68,8 +73,15 @@ export default function TravelTripsPage() {
               </div>
             ) : trips && trips.length > 0 ? (
               <div className="space-y-3">
-                {trips.map((trip) => (
-                  <TripCard key={trip.id} order={trip} />
+                {trips.map((trip, i) => (
+                  <motion.div
+                    key={trip.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <TripCard order={trip} />
+                  </motion.div>
                 ))}
               </div>
             ) : (
@@ -106,6 +118,6 @@ export default function TravelTripsPage() {
       </div>
 
       <MobileBottomNav />
-    </div>
+    </motion.div>
   );
 }
