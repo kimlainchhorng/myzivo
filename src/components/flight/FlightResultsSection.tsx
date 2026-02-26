@@ -86,17 +86,17 @@ export default function FlightResultsSection({
   return (
     <section className="py-4 sm:py-8">
       <div className="container mx-auto px-3 sm:px-4">
-        {/* Affiliate Disclosure */}
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-start gap-2 sm:gap-3">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/20 flex items-center justify-center shrink-0">
-            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />
+        {/* MoR Disclosure */}
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2 sm:gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs sm:text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Book with our trusted partners:</span>{" "}
-              <span className="hidden sm:inline">When you select a flight, you'll be redirected to our partner site to complete your booking. </span>
-              ZIVO may earn a commission at no extra cost to you.{" "}
-              <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+              <span className="font-semibold text-foreground">Book directly with ZIVO:</span>{" "}
+              <span className="hidden sm:inline">Secure checkout, instant e-ticket, and full booking support — all handled by ZIVO. </span>
+              No hidden fees. No redirects.{" "}
+              <a href="/partner-disclosure" className="text-emerald-500 hover:underline">Learn more</a>
             </p>
           </div>
         </div>

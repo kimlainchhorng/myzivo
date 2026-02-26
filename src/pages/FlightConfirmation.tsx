@@ -38,6 +38,7 @@ import { format, parseISO } from 'date-fns';
 import { useFlightBooking, getTicketingStatusInfo } from '@/hooks/useFlightBooking';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import FlightTicketCard from '@/components/flight/FlightTicketCard';
 
 interface OfferDetails {
   airline?: string;
@@ -270,119 +271,29 @@ const FlightConfirmation = () => {
             </Alert>
           )}
 
-          {/* Airline & Flight Details */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plane className="w-5 h-5 text-primary" />
-                Flight Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Airline logo and name (from stored offer details) */}
-              {offerDetails?.airlineCode && (
-                <div className="flex items-center gap-4 mb-4 pb-4 border-b">
-                  <img
-                    src={`https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/${offerDetails.airlineCode}.svg`}
-                    alt={offerDetails?.airline || 'Airline'}
-                    className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
-                    loading="lazy"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                  <div>
-                    <h3 className="font-semibold">{offerDetails?.airline || 'Airline'}</h3>
-                    {offerDetails?.flightNumber && (
-                      <p className="text-sm text-muted-foreground">{offerDetails.flightNumber}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Route display */}
-              <div className="flex items-center justify-between py-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">{(booking as any).origin || 'Origin'}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(booking as any).departure_date ? format(parseISO((booking as any).departure_date), 'MMM d, yyyy') : 'Date TBD'}
-                  </p>
-                  {offerDetails?.departure && (
-                    <p className="text-xs text-muted-foreground mt-1">{offerDetails.departure}</p>
-                  )}
-                </div>
-                <div className="flex-1 px-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="h-px flex-1 bg-border" />
-                    <Plane className="w-5 h-5 text-primary -rotate-45" />
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  {offerDetails?.duration && (
-                    <p className="text-xs text-muted-foreground mt-2">{offerDetails.duration}</p>
-                  )}
-                  {typeof offerDetails?.stops === 'number' && (
-                    <p className="text-xs text-muted-foreground">
-                      {offerDetails.stops === 0 ? 'Direct' : `${offerDetails.stops} stop${offerDetails.stops > 1 ? 's' : ''}`}
-                    </p>
-                  )}
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">{(booking as any).destination || 'Destination'}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(booking as any).return_date ? format(parseISO((booking as any).return_date), 'MMM d, yyyy') : 'One way'}
-                  </p>
-                  {offerDetails?.arrival && (
-                    <p className="text-xs text-muted-foreground mt-1">{offerDetails.arrival}</p>
-                  )}
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Passengers</p>
-                  <p className="font-medium">{(booking as any).passengers || 1} adult{((booking as any).passengers || 1) > 1 ? 's' : ''}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Cabin</p>
-                  <p className="font-medium capitalize">{booking.cabin_class}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Total Paid</p>
-                  <p className="font-bold text-primary">
-                    ${booking.total_amount?.toFixed(2)} {(booking as any).currency || 'USD'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Payment Status</p>
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                    {booking.payment_status === 'paid' ? 'Paid' : booking.payment_status}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Ticket Numbers (if issued) */}
-          {isIssued && booking.ticket_numbers && (
-            <Card className="mb-6 border-emerald-500/30 bg-emerald-500/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-emerald-600">
-                  <Ticket className="w-5 h-5" />
-                  E-Tickets Issued
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {(booking.ticket_numbers as string[]).map((ticketNum, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-background">
-                      <span className="text-sm text-muted-foreground">Passenger {i + 1}</span>
-                      <span className="font-mono font-medium">{ticketNum}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Boarding Pass Style Ticket Card */}
+          <FlightTicketCard
+            bookingReference={booking.booking_reference}
+            pnr={booking.pnr}
+            airline={offerDetails?.airline}
+            airlineCode={offerDetails?.airlineCode}
+            flightNumber={offerDetails?.flightNumber}
+            origin={(booking as any).origin || 'Origin'}
+            destination={(booking as any).destination || 'Destination'}
+            departureDate={(booking as any).departure_date || ''}
+            returnDate={(booking as any).return_date}
+            departureTime={offerDetails?.departure}
+            arrivalTime={offerDetails?.arrival}
+            duration={offerDetails?.duration}
+            stops={offerDetails?.stops}
+            cabinClass={booking.cabin_class}
+            passengers={(booking as any).passengers || 1}
+            totalAmount={booking.total_amount}
+            currency={(booking as any).currency || 'USD'}
+            ticketNumbers={booking.ticket_numbers as string[] | undefined}
+            ticketingStatus={booking.ticketing_status}
+            className="mb-6"
+          />
 
           {/* Chargeback Prevention - Support Contact */}
           <Card className="mb-6 border-primary/30 bg-primary/5">
