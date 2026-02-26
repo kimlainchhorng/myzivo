@@ -114,13 +114,7 @@ export default function LoyaltyPage() {
           ) : (
             <>
               {/* Balance Card */}
-              <PointsBalanceCard
-                className="mb-6"
-                balance={points.points_balance}
-                lifetimePoints={points.lifetime_points}
-                tier={mapTier(points.tier)}
-                showActions={false}
-              />
+              <PointsBalanceCard className="mb-6" />
 
               {/* Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -149,10 +143,7 @@ export default function LoyaltyPage() {
 
                 {/* Overview Tab */}
                 <TabsContent value="overview" className="space-y-6">
-                  <TierProgressCard
-                    lifetimePoints={points.lifetime_points}
-                    currentTier={mapTier(points.tier)}
-                  />
+                  <TierProgressCard />
 
                   {/* Recent Activity */}
                   <Card>

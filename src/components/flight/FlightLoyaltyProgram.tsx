@@ -1,20 +1,27 @@
-import { Plane, Crown, Star, Gift, Zap, Globe, Award } from "lucide-react";
+import { Plane, Crown, Star, Gift, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const tiers = [
-  { name: "Explorer", miles: 0, color: "from-gray-400 to-gray-500", benefits: ["Basic rewards", "Price alerts", "Trip tracking"] },
-  { name: "Traveler", miles: 25000, color: "from-blue-400 to-cyan-500", benefits: ["5% bonus miles", "Priority support", "Seat selection"] },
-  { name: "Voyager", miles: 75000, color: "from-purple-400 to-purple-600", benefits: ["10% bonus miles", "Lounge access", "Free upgrades"] },
-  { name: "Elite", miles: 150000, color: "from-amber-400 to-yellow-500", benefits: ["20% bonus miles", "First class upgrades", "Concierge"] },
+const DISPLAY_TIERS = [
+  { key: "standard" as const, name: "Explorer", miles: 0, color: "from-gray-400 to-gray-500", benefits: ["Basic rewards", "Price alerts", "Trip tracking"] },
+  { key: "bronze" as const, name: "Traveler", miles: 1000, color: "from-blue-400 to-cyan-500", benefits: ["5% bonus miles", "Priority support", "Seat selection"] },
+  { key: "silver" as const, name: "Voyager", miles: 5000, color: "from-purple-400 to-purple-600", benefits: ["10% bonus miles", "Lounge access", "Free upgrades"] },
+  { key: "gold" as const, name: "Elite", miles: 10000, color: "from-amber-400 to-yellow-500", benefits: ["20% bonus miles", "First class upgrades", "Concierge"] },
 ];
 
 const FlightLoyaltyProgram = () => {
-  const currentMiles = 45000;
-  const currentTier = tiers[1];
-  const nextTier = tiers[2];
-  const progress = ((currentMiles - currentTier.miles) / (nextTier.miles - currentTier.miles)) * 100;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { points, getNextTierProgress } = useLoyaltyPoints();
+
+  const currentTierKey = points.tier;
+  const currentDisplay = DISPLAY_TIERS.find((t) => t.key === currentTierKey) ?? DISPLAY_TIERS[0];
+  const { nextTier, progress, pointsNeeded } = getNextTierProgress();
+  const nextDisplay = DISPLAY_TIERS.find((t) => t.key === nextTier) ?? DISPLAY_TIERS[DISPLAY_TIERS.length - 1];
 
   return (
     <section className="py-12 px-4">
@@ -31,35 +38,41 @@ const FlightLoyaltyProgram = () => {
           </p>
         </div>
 
+        {/* Current Status Card */}
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${currentTier.color} flex items-center justify-center`}>
+            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${currentDisplay.color} flex items-center justify-center`}>
               <Plane className="w-10 h-10 text-primary-foreground" />
             </div>
             <div className="flex-1 text-center md:text-left">
               <p className="text-sm text-muted-foreground">Your Status</p>
-              <h3 className="text-2xl font-bold">{currentTier.name}</h3>
-              <p className="text-sky-400 font-semibold">{currentMiles.toLocaleString()} miles</p>
+              <h3 className="text-2xl font-bold">{currentDisplay.name}</h3>
+              <p className="text-sky-400 font-semibold">
+                {user ? `${points.points_balance.toLocaleString()} miles` : "Sign in to track miles"}
+              </p>
             </div>
-            <div className="w-full md:w-64">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Next: {nextTier.name}</span>
-                <span className="text-sky-400">{(nextTier.miles - currentMiles).toLocaleString()} to go</span>
+            {user && pointsNeeded > 0 && (
+              <div className="w-full md:w-64">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Next: {nextDisplay.name}</span>
+                  <span className="text-sky-400">{pointsNeeded.toLocaleString()} to go</span>
+                </div>
+                <Progress value={progress} className="h-3" />
               </div>
-              <Progress value={progress} className="h-3" />
-            </div>
+            )}
           </div>
         </div>
 
+        {/* Tier Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {tiers.map((tier) => (
+          {DISPLAY_TIERS.map((tier) => (
             <div
-              key={tier.name}
+              key={tier.key}
               className={`relative p-4 rounded-xl border ${
-                tier.name === currentTier.name ? "border-sky-500 bg-sky-500/5" : "border-border/50 bg-card/30"
+                tier.key === currentTierKey ? "border-sky-500 bg-sky-500/5" : "border-border/50 bg-card/30"
               }`}
             >
-              {tier.name === currentTier.name && (
+              {tier.key === currentTierKey && (
                 <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-sky-500 text-xs">Current</Badge>
               )}
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tier.color} flex items-center justify-center mx-auto mb-3`}>
@@ -79,12 +92,17 @@ const FlightLoyaltyProgram = () => {
           ))}
         </div>
 
-        <div className="text-center mt-8">
-          <Button className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground font-semibold">
-            <Gift className="w-4 h-4 mr-2" />
-            Join SkyMiles Free
-          </Button>
-        </div>
+        {!user && (
+          <div className="text-center mt-8">
+            <Button
+              className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground font-semibold"
+              onClick={() => navigate("/login")}
+            >
+              <Gift className="w-4 h-4 mr-2" />
+              Join SkyMiles Free
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

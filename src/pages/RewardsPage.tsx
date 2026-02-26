@@ -77,11 +77,7 @@ export default function RewardsPage() {
       <div className="px-4 pt-5 space-y-6 max-w-4xl mx-auto">
         {/* Balance Card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <PointsBalanceCard 
-            balance={points.points_balance}
-            lifetimePoints={points.lifetime_points}
-            tier={mapTier(points.tier)}
-          />
+          <PointsBalanceCard />
         </motion.div>
         
         {/* Premium Tabs */}
@@ -110,10 +106,7 @@ export default function RewardsPage() {
             </div>
             
             <TabsContent value="overview" className="space-y-5">
-              <TierProgressCard 
-                lifetimePoints={points.lifetime_points}
-                currentTier={mapTier(points.tier)}
-              />
+              <TierProgressCard />
               <PointsEarningList completedActions={['account_creation']} />
             </TabsContent>
             
