@@ -40,7 +40,7 @@ export default function DestinationShowcase() {
   };
 
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-16 sm:py-20" aria-label="Popular destinations">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -77,7 +77,7 @@ export default function DestinationShowcase() {
               >
                 <img
                   src={dest.image}
-                  alt={`${dest.city}, ${dest.country}`}
+                  alt={`${dest.city}, ${dest.country} — ${dest.tagline}`}
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -91,7 +91,7 @@ export default function DestinationShowcase() {
                 )}
 
                 {/* Save + Explore buttons on hover */}
-                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+                <div className="absolute top-4 right-4 flex items-center gap-2 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 sm:translate-y-1 sm:group-hover:translate-y-0">
                   <button
                     onClick={(e) => toggleSave(e, dest.city)}
                     className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card active:scale-90 transition-all touch-manipulation"
