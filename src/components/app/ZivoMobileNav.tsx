@@ -26,10 +26,10 @@ const ZivoMobileNav = () => {
 
   const tabs: NavTab[] = [
     { id: "home", label: "Home", icon: Home, path: "/" },
-    { id: "search", label: "Search", icon: Search, path: "/search" },
-    { id: "trips", label: "Trips", icon: Briefcase, path: "/trips" },
-    { id: "alerts", label: "Alerts", icon: Bell, path: "/alerts", badge: activeAlertsCount },
-    { id: "account", label: "Account", icon: User, path: "/account" },
+    { id: "search", label: "Search", icon: Search, path: "/flights" },
+    { id: "trips", label: "Trips", icon: Briefcase, path: "/my-trips" },
+    { id: "alerts", label: "Alerts", icon: Bell, path: "/notifications", badge: activeAlertsCount },
+    { id: "account", label: "Account", icon: User, path: "/profile" },
   ];
 
   const getActiveTab = () => {
@@ -41,7 +41,7 @@ const ZivoMobileNav = () => {
         path.startsWith("/rent-car") ||
         path.startsWith("/car-rental")) return "search";
     if (path.startsWith("/trips") || path.startsWith("/my-trips") || path.startsWith("/my-orders")) return "trips";
-    if (path.startsWith("/alerts") || path.startsWith("/price-alerts")) return "alerts";
+    if (path.startsWith("/alerts") || path.startsWith("/price-alerts") || path.startsWith("/notifications")) return "alerts";
     if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
     return "home";
   };
