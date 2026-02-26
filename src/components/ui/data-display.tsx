@@ -296,6 +296,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
               size="icon"
               className="w-7 h-7 rounded-xl"
               onClick={handleCopy}
+              aria-label="Copy value"
             >
               {copied ? (
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -346,6 +347,7 @@ export const DataListItem: React.FC<DataListItemProps> = ({
             size="icon"
             className="w-7 h-7 rounded-xl hover:bg-muted/50"
             onClick={handleCopy}
+            aria-label="Copy value"
           >
             <AnimatePresence mode="wait">
               {copied ? (

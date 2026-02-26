@@ -148,13 +148,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         
         <div className="flex items-center gap-1">
           {showVoice && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50" aria-label="Voice search">
               <Mic className="w-4 h-4 text-muted-foreground" />
             </Button>
           )}
           
           {showCamera && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50" aria-label="Camera search">
               <Camera className="w-4 h-4 text-muted-foreground" />
             </Button>
           )}

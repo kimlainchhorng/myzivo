@@ -640,7 +640,7 @@ export function openAffiliateLink(type: keyof typeof AFFILIATE_LINKS): void {
     window.open(link.url, "_blank", "noopener,noreferrer");
   } catch (error) {
     if (link.fallbackUrl) {
-      console.warn(`[Affiliate] Primary link failed, using fallback for ${type}`);
+      // Fallback silently in production
       window.open(link.fallbackUrl, "_blank", "noopener,noreferrer");
     }
   }

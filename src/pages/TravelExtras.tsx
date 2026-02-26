@@ -342,6 +342,7 @@ export default function TravelExtras() {
                                     src={partner.thumbnail}
                                     alt={partner.category}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    loading="lazy"
                                   />
                                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                                   {/* Icon Badge */}

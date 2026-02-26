@@ -130,7 +130,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" role="button" tabIndex={0} aria-label="Close menu" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }} />
       
       {/* Menu Panel */}
       <div className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-card border-l border-border shadow-2xl animate-slide-in-right safe-area-inset">
