@@ -32,6 +32,8 @@ export default function HeroSection() {
   }, []);
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
     const interval = setInterval(nextSlide, SLIDE_DURATION);
     const progressInterval = setInterval(() => {
       setProgress((p) => Math.min(p + 100 / (SLIDE_DURATION / 50), 100));

@@ -44,7 +44,7 @@ function AnimatedCounter({ value, suffix, decimals = 0 }: { value: number; suffi
 
 export default function StatsSection() {
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden">
+    <section className="py-16 sm:py-24 relative overflow-hidden" aria-label="Platform statistics">
       {/* Background accent */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30 pointer-events-none" />
 
