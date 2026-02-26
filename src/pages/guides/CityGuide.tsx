@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import { destinationPhotos } from "@/config/photos";
 
 // City data - in production this would come from a CMS or API
 const CITY_DATA: Record<string, {
@@ -19,7 +20,7 @@ const CITY_DATA: Record<string, {
   country: string;
   tagline: string;
   description: string;
-  image: string;
+  imageKey: string;
   airports: Array<{ code: string; name: string }>;
   bestTimeToVisit: string;
   avgTemp: string;
@@ -32,7 +33,7 @@ const CITY_DATA: Record<string, {
     country: "United States",
     tagline: "The city that never sleeps",
     description: "New York City, the largest city in the United States, is an international hub of culture, fashion, finance, and the arts. From the bright lights of Times Square to the serenity of Central Park, NYC offers endless experiences.",
-    image: "/placeholder.svg",
+    imageKey: "new-york",
     airports: [
       { code: "JFK", name: "John F. Kennedy International" },
       { code: "LGA", name: "LaGuardia" },
@@ -56,7 +57,7 @@ const CITY_DATA: Record<string, {
     country: "United States",
     tagline: "The entertainment capital of the world",
     description: "Los Angeles, home to Hollywood and the entertainment industry, offers year-round sunshine, beautiful beaches, and world-class dining. From celebrity sightings to stunning coastal drives, LA has it all.",
-    image: "/placeholder.svg",
+    imageKey: "los-angeles",
     airports: [
       { code: "LAX", name: "Los Angeles International" },
       { code: "BUR", name: "Hollywood Burbank" },
@@ -79,7 +80,7 @@ const CITY_DATA: Record<string, {
     country: "United States",
     tagline: "Where the sun always shines",
     description: "Miami is a vibrant coastal metropolis known for its stunning beaches, Art Deco architecture, and thriving nightlife. The city blends Latin American culture with American glamour.",
-    image: "/placeholder.svg",
+    imageKey: "miami",
     airports: [
       { code: "MIA", name: "Miami International" },
       { code: "FLL", name: "Fort Lauderdale-Hollywood International" },
@@ -137,8 +138,22 @@ export default function CityGuide() {
 
       <main className="min-h-screen bg-background pt-20">
         {/* Hero */}
-        <section className="relative py-20 bg-gradient-to-b from-primary/10 to-background">
-          <div className="container mx-auto px-4">
+        <section className="relative py-20 overflow-hidden">
+          {/* Background destination image */}
+          {(() => {
+            const photo = destinationPhotos[city.imageKey as keyof typeof destinationPhotos];
+            return photo ? (
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="eager"
+              />
+            ) : null;
+          })()}
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/60" />
+          
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                 <Link to="/guides" className="hover:text-primary">Guides</Link>
