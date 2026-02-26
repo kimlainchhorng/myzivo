@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { motion } from "framer-motion";
 import { 
   Download, Smartphone, Share, Plus, Check, 
@@ -25,6 +26,12 @@ const Install = () => {
   const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
+    // Redirect to home if running inside native Capacitor app
+    if (Capacitor.isNativePlatform()) {
+      navigate("/", { replace: true });
+      return;
+    }
+
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);

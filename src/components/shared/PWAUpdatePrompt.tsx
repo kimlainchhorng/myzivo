@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { usePWAUpdate } from '@/hooks/usePWAUpdate';
 import { RefreshCw, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 export function PWAUpdatePrompt() {
   const { needRefresh, updateSW } = usePWAUpdate();
@@ -26,7 +27,8 @@ export function PWAUpdatePrompt() {
     };
   }, [needRefresh, updateSW]);
 
-  if (!needRefresh) return null;
+  // Don't show PWA update prompt inside native Capacitor app
+  if (!needRefresh || Capacitor.isNativePlatform()) return null;
 
   const handleUpdate = () => {
     if (autoUpdateTimer.current) clearTimeout(autoUpdateTimer.current);
