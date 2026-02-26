@@ -110,8 +110,115 @@ export default function DrivePage() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="py-16 lg:py-24 bg-muted/20">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-3">How to get started</h2>
+            <p className="text-muted-foreground">3 simple steps to start earning</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { step: "1", title: "Apply Online", desc: "Fill out the form in under 5 minutes. We'll verify your license and vehicle." },
+              { step: "2", title: "Get Approved", desc: "Background check and vehicle inspection. Most drivers are approved within 48 hours." },
+              { step: "3", title: "Start Earning", desc: "Go online whenever you want and start accepting ride requests immediately." },
+            ].map((s, i) => (
+              <motion.div
+                key={s.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="text-center"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">{s.step}</div>
+                <h3 className="font-bold text-lg mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Vehicle Requirements */}
+      <section className="py-16 lg:py-24">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-3">Vehicle requirements</h2>
+            <p className="text-muted-foreground">What you need to qualify</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            {[
+              "Vehicle year 2010 or newer",
+              "4-door vehicle in good condition",
+              "Valid driver's license (1+ year)",
+              "Clean driving record",
+              "Valid auto insurance",
+              "Pass background check",
+              "Smartphone with data plan",
+              "At least 21 years old",
+            ].map((req) => (
+              <div key={req} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Star className="w-3 h-3 text-primary" />
+                </div>
+                <span className="text-sm">{req}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Earnings Calculator */}
+      <section className="py-16 lg:py-24 bg-muted/20">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-3">Earnings potential</h2>
+            <p className="text-muted-foreground">How much you can earn per week</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { hours: "10 hrs/wk", earnings: "$250", label: "Part-Time" },
+              { hours: "25 hrs/wk", earnings: "$625", label: "Half-Time" },
+              { hours: "40 hrs/wk", earnings: "$1,000", label: "Full-Time" },
+            ].map((tier) => (
+              <Card key={tier.label} className="text-center border-border/40 hover:border-primary/20 hover:shadow-lg transition-all">
+                <CardContent className="p-6">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{tier.label}</p>
+                  <p className="text-3xl font-bold text-primary mb-1">{tier.earnings}</p>
+                  <p className="text-sm text-muted-foreground">{tier.hours}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            *Earnings vary by city, hours, and demand. Figures are estimates based on average driver data.
+          </p>
+        </div>
+      </section>
+
+      {/* Driver FAQ */}
+      <section className="py-16 lg:py-24">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <h2 className="text-3xl font-bold text-center mb-8">Driver FAQ</h2>
+          <div className="space-y-3">
+            {[
+              { q: "How do I get paid?", a: "Earnings are deposited weekly via direct deposit. You can also cash out instantly for a small fee." },
+              { q: "Can I drive for other platforms too?", a: "Yes! There are no exclusivity requirements. Drive for ZIVO and other platforms simultaneously." },
+              { q: "What about fuel costs?", a: "You're responsible for fuel, but ZIVO optimizes routes to minimize driving distance between rides." },
+              { q: "Is there a minimum number of rides?", a: "No minimums. Drive as much or as little as you want, with no penalties for inactivity." },
+            ].map((faq) => (
+              <div key={faq.q} className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                <p className="text-sm font-bold mb-1">{faq.q}</p>
+                <p className="text-xs text-muted-foreground">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
-      <section className="py-16 bg-gradient-to-br from-primary/10 to-emerald-500/5">
+      <section className="py-16 bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to start earning?</h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">

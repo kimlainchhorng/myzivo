@@ -263,6 +263,52 @@ export default function Help() {
             </Card>
           </section>
 
+          {/* Quick Help Topics */}
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Badge variant="outline" className="text-xs">Topics</Badge>
+              <h2 className="font-semibold text-lg">Popular Help Topics</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { topic: "How to search for flights", link: "/flights" },
+                { topic: "Understanding price estimates", link: "/how-it-works" },
+                { topic: "Booking with travel partners", link: "/partner-disclosure" },
+                { topic: "Payment and billing questions", link: "/support/travel-bookings" },
+                { topic: "Managing your account", link: "/account" },
+                { topic: "ZIVO+ membership benefits", link: "/membership" },
+                { topic: "Referral program details", link: "/referral" },
+                { topic: "Privacy and data settings", link: "/account/privacy" },
+              ].map((item) => (
+                <Link key={item.topic} to={item.link} className="flex items-center justify-between p-3 rounded-xl border border-border/50 hover:border-primary/30 hover:bg-muted/30 transition-all duration-200 group">
+                  <span className="text-sm font-medium">{item.topic}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* Emergency Contact */}
+          <section className="mb-12">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6 text-center">
+                <Shield className="w-8 h-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">Need urgent help?</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  For safety concerns or urgent booking issues, reach us immediately.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button asChild>
+                    <a href="mailto:support@hizivo.com" className="gap-2">
+                      <Mail className="w-4 h-4" />
+                      support@hizivo.com
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           {/* Partner Disclosure */}
           <div className="p-6 rounded-2xl bg-muted/50 border border-border/50 mb-8 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-4">
