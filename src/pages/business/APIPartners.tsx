@@ -239,13 +239,13 @@ export default function APIPartners() {
                 </ul>
               </div>
 
-              <div className="bg-zinc-950 rounded-xl p-6 font-mono text-sm overflow-x-auto">
+              <div className="bg-muted rounded-xl p-6 font-mono text-sm overflow-x-auto border border-border">
                 <div className="flex gap-2 mb-4">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
                 </div>
-                <pre className="text-green-400">
+                <pre className="text-emerald-500">
 {`// Search flights
 const response = await zivo.flights.search({
   origin: "JFK",

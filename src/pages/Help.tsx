@@ -96,8 +96,8 @@ const companyLinks = [
     title: "Legal & Policies",
     description: "Terms & privacy",
     href: "/terms",
-    color: "text-slate-500",
-    bgColor: "bg-slate-500/10",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
   },
 ];
 

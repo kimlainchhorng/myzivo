@@ -26,23 +26,19 @@ const Install = () => {
   const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Redirect to home if running inside native Capacitor app
     if (Capacitor.isNativePlatform()) {
       navigate("/", { replace: true });
       return;
     }
 
-    // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
     }
 
-    // Detect platform
     const ua = navigator.userAgent;
     setIsIOS(/iPad|iPhone|iPod/.test(ua));
     setIsAndroid(/Android/.test(ua));
 
-    // Listen for install prompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -81,7 +77,7 @@ const Install = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="px-6 pt-12 pb-8 text-center safe-area-top">
         <motion.div
@@ -89,11 +85,11 @@ const Install = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/30"
         >
-          <span className="text-3xl font-black text-white">Z</span>
+          <span className="text-3xl font-black text-primary-foreground">Z</span>
         </motion.div>
         
         <h1 className="text-3xl font-bold mb-2">Get the ZIVO App</h1>
-        <p className="text-zinc-400">One app for every journey</p>
+        <p className="text-muted-foreground">One app for every journey</p>
       </div>
 
       {/* Services Grid */}
@@ -105,11 +101,11 @@ const Install = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="p-4 rounded-2xl bg-white/5 border border-white/10"
+              className="p-4 rounded-2xl bg-muted/50 border border-border/50"
             >
               <feature.icon className="w-6 h-6 text-primary mb-2" />
               <div className="font-bold text-sm">{feature.label}</div>
-              <div className="text-xs text-zinc-500">{feature.desc}</div>
+              <div className="text-xs text-muted-foreground">{feature.desc}</div>
             </motion.div>
           ))}
         </div>
@@ -117,7 +113,7 @@ const Install = () => {
 
       {/* Benefits */}
       <div className="px-6 pb-8">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 mb-4">Why Install?</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Why Install?</h2>
         <div className="space-y-3">
           {benefits.map((benefit, i) => (
             <motion.div
@@ -125,14 +121,14 @@ const Install = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + i * 0.1 }}
-              className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10"
+              className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/50"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <benefit.icon className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <div className="font-bold text-sm">{benefit.label}</div>
-                <div className="text-xs text-zinc-500">{benefit.desc}</div>
+                <div className="text-xs text-muted-foreground">{benefit.desc}</div>
               </div>
             </motion.div>
           ))}
@@ -149,7 +145,7 @@ const Install = () => {
           >
             <Check className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
             <h3 className="font-bold text-lg mb-1">Already Installed!</h3>
-            <p className="text-sm text-zinc-400 mb-4">ZIVO is ready on your home screen</p>
+            <p className="text-sm text-muted-foreground mb-4">ZIVO is ready on your home screen</p>
             <Button onClick={() => navigate("/")} className="w-full">
               Open App
             </Button>
@@ -167,10 +163,10 @@ const Install = () => {
               <Download className="w-5 h-5 mr-2" />
               Install ZIVO
             </Button>
-            <p className="text-center text-xs text-zinc-500 mt-3">Free • No app store needed</p>
+            <p className="text-center text-xs text-muted-foreground mt-3">Free • No app store needed</p>
           </motion.div>
         ) : isIOS ? (
-          <div className="p-6 rounded-3xl bg-white/5 border border-white/10">
+          <div className="p-6 rounded-3xl bg-muted/50 border border-border/50">
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <Smartphone className="w-5 h-5 text-primary" />
               Install on iPhone
@@ -180,7 +176,7 @@ const Install = () => {
                 <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-primary">1</div>
                 <div>
                   <span className="font-medium">Tap the Share button</span>
-                  <div className="flex items-center gap-2 mt-1 text-zinc-400">
+                  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
                     <Share className="w-4 h-4" /> at the bottom of Safari
                   </div>
                 </div>
@@ -189,7 +185,7 @@ const Install = () => {
                 <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-primary">2</div>
                 <div>
                   <span className="font-medium">Scroll and tap "Add to Home Screen"</span>
-                  <div className="flex items-center gap-2 mt-1 text-zinc-400">
+                  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
                     <Plus className="w-4 h-4" /> Add to Home Screen
                   </div>
                 </div>
@@ -201,7 +197,7 @@ const Install = () => {
             </ol>
           </div>
         ) : isAndroid ? (
-          <div className="p-6 rounded-3xl bg-white/5 border border-white/10">
+          <div className="p-6 rounded-3xl bg-muted/50 border border-border/50">
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <Smartphone className="w-5 h-5 text-primary" />
               Install on Android
@@ -222,10 +218,10 @@ const Install = () => {
             </ol>
           </div>
         ) : (
-          <div className="text-center p-6 rounded-3xl bg-white/5 border border-white/10">
-            <Smartphone className="w-12 h-12 text-zinc-500 mx-auto mb-3" />
+          <div className="text-center p-6 rounded-3xl bg-muted/50 border border-border/50">
+            <Smartphone className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
             <h3 className="font-bold text-lg mb-1">Visit on Mobile</h3>
-            <p className="text-sm text-zinc-400">Open this page on your phone to install ZIVO</p>
+            <p className="text-sm text-muted-foreground">Open this page on your phone to install ZIVO</p>
           </div>
         )}
       </div>
@@ -234,7 +230,7 @@ const Install = () => {
       <div className="px-6 pb-8 text-center">
         <button 
           onClick={() => navigate("/")}
-          className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-1 mx-auto"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mx-auto"
         >
           Continue to website
           <ChevronRight className="w-4 h-4" />
