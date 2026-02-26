@@ -133,25 +133,27 @@ export default function HeroSection() {
 
       {/* ─── DESKTOP: Full-bleed cinematic hero ─── */}
       <div className="hidden lg:block relative min-h-[92vh]">
-        {/* Background image with Ken Burns */}
+        {/* Background image with Ken Burns slow zoom */}
         <AnimatePresence mode="wait">
           <motion.img
             key={currentSlide}
             src={heroSlides[currentSlide].src}
             alt={heroSlides[currentSlide].alt}
-            initial={{ opacity: 0, scale: 1.06 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1.02 }}
+            exit={{ opacity: 0, scale: 1 }}
+            transition={{ opacity: { duration: 1.5 }, scale: { duration: 7, ease: "linear" } }}
+            className="absolute inset-0 w-full h-full object-cover will-change-transform"
             loading="eager"
             fetchPriority="high"
           />
         </AnimatePresence>
 
-        {/* Cinematic dark gradient for text legibility */}
+        {/* Cinematic gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+        {/* Subtle vignette */}
+        <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 150px 60px hsl(var(--background) / 0.3)" }} />
 
         {/* Content */}
         <div className="relative z-10 h-full min-h-[92vh] flex items-center">
@@ -179,15 +181,16 @@ export default function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-5xl xl:text-7xl font-black text-foreground leading-[1.05] tracking-tighter mb-6"
+                style={{ textShadow: "0 2px 20px hsl(var(--background) / 0.5)" }}
               >
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={currentSlide}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4 }}
-                    className="block text-primary"
+                    initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
+                    transition={{ duration: 0.5 }}
+                    className="block text-primary drop-shadow-lg"
                   >
                     {heroSlides[currentSlide].tagline}
                   </motion.span>
