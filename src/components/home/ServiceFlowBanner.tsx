@@ -15,7 +15,7 @@ const flowSteps = [
 
 export default function ServiceFlowBanner() {
   return (
-    <section className="section-padding bg-muted/30">
+    <section className="section-padding bg-muted/30" aria-label="Connected travel services">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
