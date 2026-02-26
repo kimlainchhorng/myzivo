@@ -166,7 +166,7 @@ const AppHome = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
-  const { deals } = useRecommendedDeals(6);
+  const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
   const { points, getNextTierProgress } = useLoyaltyPoints();

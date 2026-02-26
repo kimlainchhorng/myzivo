@@ -1,6 +1,7 @@
 /**
  * Deals Hub Page — Premium 2026
  * Flash deals, last-minute offers, seasonal promos
+ * Now powered by live data from travel_deals table
  */
 
 import { useState } from "react";
@@ -40,26 +41,22 @@ import {
   Percent,
   Target,
   Leaf,
+  Loader2,
+  Package,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useRecommendedDeals, type DealCategory } from "@/hooks/useRecommendedDeals";
+import DealCard from "@/components/deals/DealCard";
 
-type DealCategoryType = 'all' | 'flights' | 'hotels' | 'cars' | 'last-minute';
-
-interface FlashDeal {
-  id: string;
-  title: string;
-  category: string;
-  expiresAt: string;
-}
-
-const liveDeals: FlashDeal[] = [];
+type DealCategoryType = DealCategory | 'last-minute';
 
 const categoryConfig: Record<DealCategoryType, { label: string; icon: typeof Plane; color: string }> = {
   all: { label: "All Deals", icon: Sparkles, color: "text-primary" },
   flights: { label: "Flights", icon: Plane, color: "text-sky-500" },
   hotels: { label: "Hotels", icon: BedDouble, color: "text-amber-500" },
   cars: { label: "Cars", icon: Car, color: "text-emerald-500" },
+  packages: { label: "Packages", icon: Package, color: "text-violet-500" },
   "last-minute": { label: "Last Min", icon: Timer, color: "text-destructive" },
 };
 
@@ -67,15 +64,14 @@ export default function Deals() {
   const [activeCategory, setActiveCategory] = useState<DealCategoryType>('all');
   const [email, setEmail] = useState("");
 
-  const filteredDeals = activeCategory === 'all' 
-    ? liveDeals 
-    : activeCategory === 'last-minute'
-      ? liveDeals.filter(d => new Date(d.expiresAt).getTime() - Date.now() < 4 * 60 * 60 * 1000)
-      : liveDeals.filter(d => d.category === activeCategory);
+  // Fetch live deals from Supabase
+  const apiCategory = activeCategory === 'last-minute' ? 'all' : activeCategory as DealCategory;
+  const { data: allDeals = [], isLoading } = useRecommendedDeals(apiCategory, 30);
 
-  const handleClaimDeal = (deal: FlashDeal) => {
-    toast.success(`Opening ${deal.title} deal...`);
-  };
+  // Client-side filter for last-minute (expiring within 7 days)
+  const filteredDeals = activeCategory === 'last-minute'
+    ? allDeals.filter(d => d.deal_type === 'last-minute' || d.deal_type === 'flash')
+    : allDeals;
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,15 +186,17 @@ export default function Deals() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-bold">{categoryConfig[activeCategory].label}</h2>
-                <p className="text-sm text-muted-foreground">{filteredDeals.length} deals available</p>
+                <p className="text-sm text-muted-foreground">
+                  {isLoading ? "Loading..." : `${filteredDeals.length} deals available`}
+                </p>
               </div>
-              <Button variant="outline" size="sm" className="gap-2 rounded-xl border-border/40 font-bold">
-                <Search className="w-4 h-4" />
-                Search
-              </Button>
             </div>
 
-            {filteredDeals.length > 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filteredDeals.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredDeals.map((deal, i) => (
                   <motion.div
@@ -207,19 +205,7 @@ export default function Deals() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                   >
-                    <Card className="border-border/40 hover:border-primary/20 hover:shadow-lg transition-all duration-300 group">
-                      <CardContent className="p-5">
-                        <h3 className="font-bold text-sm mb-2">{deal.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-4">{deal.title}</p>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleClaimDeal(deal)}
-                          className="rounded-xl font-bold gap-1 shadow-sm"
-                        >
-                          Claim Deal <ArrowRight className="w-3 h-3" />
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <DealCard deal={deal} />
                   </motion.div>
                 ))}
               </div>
