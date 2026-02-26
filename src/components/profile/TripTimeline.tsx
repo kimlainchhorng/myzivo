@@ -8,21 +8,10 @@ import { Link } from "react-router-dom";
 import { useMyTrips } from "@/hooks/useMyTrips";
 import { format, differenceInHours, differenceInMinutes, isTomorrow, isToday } from "date-fns";
 
-// Mock weather data by city
-const mockWeatherByCity: Record<string, { temp: string; condition: string; Icon: LucideIcon }> = {
-  london: { temp: "12°C", condition: "Rainy", Icon: CloudRain },
-  paris: { temp: "15°C", condition: "Cloudy", Icon: Cloud },
-  "new york": { temp: "18°C", condition: "Sunny", Icon: Sun },
-  tokyo: { temp: "22°C", condition: "Cloudy", Icon: Cloud },
-  dubai: { temp: "35°C", condition: "Sunny", Icon: Sun },
-  "los angeles": { temp: "24°C", condition: "Sunny", Icon: Sun },
-  miami: { temp: "28°C", condition: "Sunny", Icon: Sun },
-  default: { temp: "20°C", condition: "Clear", Icon: Sun },
-};
-
-function getWeatherForCity(city: string) {
-  const normalized = city.toLowerCase().trim();
-  return mockWeatherByCity[normalized] || mockWeatherByCity.default;
+// TODO: Fetch real weather data from weather API
+// Returns a generic placeholder until API integration
+function getWeatherForCity(_city: string) {
+  return { temp: "--", condition: "N/A", Icon: Sun };
 }
 
 function getDepartureLabel(date: Date): string {
@@ -173,16 +162,8 @@ export function TripTimeline() {
     }
   }
 
-  // Mock flight data for demo
-  const flightData: FlightCardProps | null = nextTrip ? {
-    origin: "New York",
-    destination: hotelData?.city || "London",
-    departureTime: "08:30",
-    flightNumber: "BA-112",
-    terminal: "7",
-    gate: undefined,
-    departureDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  } : null;
+  // TODO: Load flight data from travel_order_items of type "flight"
+  const flightData: FlightCardProps | null = null;
 
   if (isLoading) {
     return (

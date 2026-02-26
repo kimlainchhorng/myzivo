@@ -108,8 +108,7 @@ export default function APIPartners() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // TODO: Submit waitlist to backend API
 
     toast({
       title: "You're on the list!",
