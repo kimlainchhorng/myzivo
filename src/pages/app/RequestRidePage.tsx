@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePhoneVerificationGate } from "@/hooks/usePhoneVerificationGate";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
@@ -58,7 +59,6 @@ function PaymentForm({
       toast.error(error.message || "Payment authorization failed");
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === "requires_capture") {
-      // Manual capture — authorized successfully
       onSuccess();
     } else if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
       onSuccess();
@@ -71,11 +71,13 @@ function PaymentForm({
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
-        <div className="flex items-center gap-2 pb-3 border-b border-border mb-4">
-          <CreditCard className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Payment Details</span>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="p-5 rounded-2xl bg-card border border-border/40 hover:border-primary/20 hover:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-border/30 mb-4">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <CreditCard className="w-4 h-4 text-primary" />
+          </div>
+          <span className="text-sm font-bold text-foreground">Payment Details</span>
         </div>
         <PaymentElement 
           options={{
@@ -85,18 +87,18 @@ function PaymentForm({
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-        <Lock className="w-3 h-3" />
+        <Shield className="w-3.5 h-3.5 text-primary/60" />
         <span>Secured by Stripe · TLS 1.3 encrypted</span>
       </div>
 
       <Button
         type="submit"
         disabled={!stripe || isProcessing}
-        className="w-full h-14 text-base font-semibold gap-2"
+        className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
         size="lg"
       >
         {isProcessing ? (
-          <><Loader2 className="w-5 h-5 animate-spin" />Processing…</>
+          <><Loader2 className="w-5 h-5 animate-spin" />Processing...</>
         ) : (
           <><Lock className="w-5 h-5" />Authorize {formatUSD(totalCents)}</>
         )}
@@ -169,7 +171,7 @@ export default function RequestRidePage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${session?.access_token ?? ""}`,
-            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
           },
           body: JSON.stringify({ action: "geocode", address }),
         }
@@ -185,7 +187,6 @@ export default function RequestRidePage() {
     }
   };
 
-  // STEP 1: Get Price — create draft job + call pricing pipeline
   const handleGetPrice = async () => {
     if (!user) { toast.error("Please sign in first"); return; }
     if (!pickupAddress.trim()) { toast.error("Please enter a pickup address"); return; }
@@ -208,7 +209,6 @@ export default function RequestRidePage() {
         setDropoffCoords(finalDropoff);
       }
 
-      // 1) Create draft job (status='created')
       const { data: job, error } = await supabase
         .from("jobs")
         .insert({
@@ -229,7 +229,6 @@ export default function RequestRidePage() {
       const jobId = (job as any).id;
       setDraftJobId(jobId);
 
-      // 2) Call pricing pipeline
       const [estimateRes, zoneRes] = await Promise.all([
         supabase.functions.invoke("trip-estimate", { body: { job_id: jobId } }),
         supabase.rpc("assign_job_zone_and_surge_postgis" as any, { p_job_id: jobId }),
@@ -238,11 +237,9 @@ export default function RequestRidePage() {
       if (estimateRes.error) console.error("[GetPrice] trip-estimate error:", estimateRes.error);
       if (zoneRes.error) console.error("[GetPrice] zone/surge error:", zoneRes.error);
 
-      // 3) Apply pricing
       const { error: pricingError } = await supabase.rpc("apply_pricing_to_job" as any, { p_job_id: jobId });
       if (pricingError) console.error("[GetPrice] apply_pricing error:", pricingError);
 
-      // 4) Fetch the priced job
       const { data: pricedJob } = await supabase
         .from("jobs")
         .select("*")
@@ -269,7 +266,6 @@ export default function RequestRidePage() {
     }
   };
 
-  // STEP 2: Confirm Price → create PaymentIntent → show Stripe Elements
   const handleConfirmPrice = async () => {
     if (!draftJobId) return;
     setIsConfirming(true);
@@ -293,12 +289,10 @@ export default function RequestRidePage() {
     }
   };
 
-  // STEP 3: After Stripe payment succeeds → update status + dispatch
   const handlePaymentSuccess = async () => {
     if (!draftJobId) return;
 
     try {
-      // Update status to 'requested'
       const { error: updateError } = await supabase
         .from("jobs")
         .update({ status: "requested" } as any)
@@ -306,7 +300,6 @@ export default function RequestRidePage() {
 
       if (updateError) console.error("[RequestRide] status update error:", updateError);
 
-      // Dispatch
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
         body: { job_id: draftJobId, offer_ttl_seconds: 25 },
       });
@@ -315,18 +308,15 @@ export default function RequestRidePage() {
 
       navigate(`/trip-status/${draftJobId}`);
     } catch (err: any) {
-      // Payment succeeded even if dispatch fails, navigate anyway
       navigate(`/trip-status/${draftJobId}`);
     }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-  const stepTitle = step === "address" 
-    ? "Request a Ride" 
-    : step === "pricing" 
-      ? "Confirm Price" 
-      : "Payment";
+  const steps = ["address", "pricing", "payment"] as const;
+  const stepLabels = ["Route", "Price", "Pay"];
+  const currentStepIndex = steps.indexOf(step);
 
   const handleBack = () => {
     if (step === "payment") setStep("pricing");
@@ -336,29 +326,51 @@ export default function RequestRidePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={handleBack} className="p-1.5 rounded-full hover:bg-muted transition">
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
-        <div className="flex items-center gap-2">
-          <Car className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">{stepTitle}</h1>
+      {/* Premium Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+        <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
+            onClick={handleBack} 
+            className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation hover:border-primary/20 transition-all"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </motion.button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-primary/10 flex items-center justify-center">
+              <Car className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-foreground">Request a Ride</h1>
+              <p className="text-[10px] text-muted-foreground">Estimated pickup in ~4 min</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Step indicator */}
+      {/* Premium Step Indicator */}
       <div className="px-4 pt-4 max-w-lg mx-auto w-full">
-        <div className="flex gap-1.5">
-          {["address", "pricing", "payment"].map((s, i) => (
-            <div
-              key={s}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                i <= ["address", "pricing", "payment"].indexOf(step)
-                  ? "bg-primary"
-                  : "bg-muted"
-              }`}
-            />
+        <div className="flex items-center gap-2">
+          {steps.map((s, i) => (
+            <div key={s} className="flex-1 flex items-center gap-2">
+              <div className="flex-1 flex flex-col items-center gap-1.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  i <= currentStepIndex 
+                    ? "bg-gradient-to-br from-primary to-emerald-500 text-primary-foreground shadow-md shadow-primary/20" 
+                    : "bg-muted/50 text-muted-foreground border border-border/40"
+                }`}>
+                  {i < currentStepIndex ? <CheckCircle className="w-4 h-4" /> : i + 1}
+                </div>
+                <span className={`text-[10px] font-bold ${i <= currentStepIndex ? 'text-primary' : 'text-muted-foreground/50'}`}>
+                  {stepLabels[i]}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className={`h-[2px] flex-1 rounded-full transition-all duration-300 -mt-5 ${
+                  i < currentStepIndex ? "bg-primary" : "bg-border/40"
+                }`} />
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -375,10 +387,13 @@ export default function RequestRidePage() {
               className="space-y-5"
             >
               {/* Pickup */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Pickup Location</label>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  Pickup Location
+                </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                   <Input
                     placeholder="Enter pickup address"
                     value={pickupAddress}
@@ -389,35 +404,52 @@ export default function RequestRidePage() {
                       setActiveInput("pickup");
                     }}
                     onFocus={() => setActiveInput("pickup")}
-                    className="pl-10"
+                    className="pl-10 h-13 rounded-xl bg-card border-border/40 font-medium text-sm focus:border-primary/30 focus:shadow-md focus:shadow-primary/5 transition-all"
                   />
                 </div>
 
-                <Button variant="outline" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation} className="w-full gap-2">
-                  {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUseMyLocation} 
+                  disabled={isGettingLocation} 
+                  className="w-full gap-2 rounded-xl h-11 border-border/40 hover:border-primary/20 hover:bg-primary/5 font-bold text-xs transition-all"
+                >
+                  {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4 text-primary" />}
                   Use my location
                 </Button>
 
                 {activeInput === "pickup" && pickupGeocode.suggestions.length > 0 && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {pickupGeocode.suggestions.map((s) => (
-                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "pickup")} className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground">
-                        {s.placeName}
+                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "pickup")} className="w-full text-left px-4 py-3.5 hover:bg-muted/50 transition border-b border-border/20 last:border-b-0 text-sm text-foreground touch-manipulation active:bg-muted/80 flex items-center gap-3">
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{s.placeName}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
 
                 {pickupCoords && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3 text-primary" /> {pickupCoords.lat.toFixed(4)}, {pickupCoords.lng.toFixed(4)}</p>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 px-1">
+                    <CheckCircle className="w-3 h-3 text-emerald-500" /> Location confirmed
+                  </p>
                 )}
               </div>
 
+              {/* Route connector line */}
+              <div className="flex justify-center">
+                <div className="w-px h-6 bg-gradient-to-b from-primary/40 to-destructive/40" />
+              </div>
+
               {/* Dropoff */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Dropoff Location</label>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-destructive" />
+                  Dropoff Location
+                </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
                   <Input
                     placeholder="Enter dropoff address"
                     value={dropoffAddress}
@@ -428,26 +460,32 @@ export default function RequestRidePage() {
                       setActiveInput("dropoff");
                     }}
                     onFocus={() => setActiveInput("dropoff")}
-                    className="pl-10"
+                    className="pl-10 h-13 rounded-xl bg-card border-border/40 font-medium text-sm focus:border-destructive/30 focus:shadow-md focus:shadow-destructive/5 transition-all"
                   />
                 </div>
 
                 {activeInput === "dropoff" && dropoffGeocode.suggestions.length > 0 && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {dropoffGeocode.suggestions.map((s) => (
-                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "dropoff")} className="w-full text-left px-4 py-3 hover:bg-muted/50 transition border-b border-border last:border-b-0 text-sm text-foreground">
-                        {s.placeName}
+                      <button key={s.id} onClick={() => handleSelectSuggestion(s, "dropoff")} className="w-full text-left px-4 py-3.5 hover:bg-muted/50 transition border-b border-border/20 last:border-b-0 text-sm text-foreground touch-manipulation active:bg-muted/80 flex items-center gap-3">
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{s.placeName}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
               </div>
 
-              <Button onClick={handleGetPrice} disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} className="w-full h-14 text-base font-semibold gap-2" size="lg">
+              <Button 
+                onClick={handleGetPrice} 
+                disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} 
+                className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
+                size="lg"
+              >
                 {isLoadingPrice ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Calculating price…</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />Calculating price...</>
                 ) : (
-                  <><DollarSign className="w-5 h-5" />Get Price</>
+                  <><Zap className="w-5 h-5" />Get Price</>
                 )}
               </Button>
             </motion.div>
@@ -462,21 +500,21 @@ export default function RequestRidePage() {
               className="space-y-5"
             >
               {/* Route summary */}
-              <div className="space-y-2 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+              <div className="p-5 rounded-2xl bg-card border border-border/40 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center gap-1 pt-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                    <div className="w-0.5 h-8 bg-border" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-destructive" />
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-emerald-500 shadow-sm shadow-primary/30" />
+                    <div className="w-0.5 h-10 bg-gradient-to-b from-primary/40 to-destructive/40" />
+                    <div className="w-3 h-3 rounded-full bg-destructive shadow-sm shadow-destructive/30" />
                   </div>
-                  <div className="flex-1 space-y-3">
+                  <div className="flex-1 space-y-4">
                     <div>
-                      <p className="text-xs text-muted-foreground">Pickup</p>
-                      <p className="text-sm font-medium text-foreground truncate">{pickupAddress}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p>
+                      <p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Dropoff</p>
-                      <p className="text-sm font-medium text-foreground truncate">{dropoffAddress}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p>
+                      <p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p>
                     </div>
                   </div>
                 </div>
@@ -484,53 +522,63 @@ export default function RequestRidePage() {
 
               {/* Price breakdown */}
               {pricing && (
-                <div className="space-y-2 p-4 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
-                  <div className="flex items-center gap-2 pb-2 border-b border-border">
-                    <Receipt className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">Fare Breakdown</span>
+                <div className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-sm">
+                  <div className="flex items-center gap-2.5 p-4 border-b border-border/30 bg-muted/20">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Receipt className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-bold text-foreground">Fare Breakdown</span>
                   </div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="p-4 space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Base fare</span>
-                      <span className="text-foreground">{formatUSD(pricing.base_fare)}</span>
+                      <span className="font-bold text-foreground">{formatUSD(pricing.base_fare)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Distance charge</span>
-                      <span className="text-foreground">{formatUSD(pricing.per_mile)}</span>
+                      <span className="font-bold text-foreground">{formatUSD(pricing.per_mile)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Time charge</span>
-                      <span className="text-foreground">{formatUSD(pricing.per_minute)}</span>
+                      <span className="font-bold text-foreground">{formatUSD(pricing.per_minute)}</span>
                     </div>
                     {pricing.airport_fee > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Airport fee</span>
-                        <span className="text-foreground">{formatUSD(pricing.airport_fee)}</span>
+                        <span className="font-bold text-foreground">{formatUSD(pricing.airport_fee)}</span>
                       </div>
                     )}
                     {pricing.final_multiplier !== 1 && (
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Surge ({pricing.final_multiplier.toFixed(2)}×)</span>
-                        <span>applied</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-amber-600 font-bold flex items-center gap-1">
+                          <Zap className="w-3 h-3" /> Surge ({pricing.final_multiplier.toFixed(2)}x)
+                        </span>
+                        <span className="text-xs text-amber-600 font-bold">applied</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex justify-between pt-3 border-t border-border font-bold text-lg">
-                    <span className="text-foreground">Estimated Total</span>
-                    <span className="text-primary">{formatUSD(pricing.total)}</span>
+                  <div className="px-4 pb-4">
+                    <div className="flex justify-between pt-4 border-t border-border/30">
+                      <span className="font-bold text-lg text-foreground">Estimated Total</span>
+                      <span className="font-bold text-2xl text-primary">{formatUSD(pricing.total)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground pt-2">
+                      Final price may vary based on actual route, traffic, and wait time.
+                    </p>
                   </div>
-
-                  <p className="text-[10px] text-muted-foreground pt-1">
-                    Final price may vary based on actual route, traffic, and wait time.
-                  </p>
                 </div>
               )}
 
-              <Button onClick={handleConfirmPrice} disabled={isConfirming} className="w-full h-14 text-base font-semibold gap-2" size="lg">
+              <Button 
+                onClick={handleConfirmPrice} 
+                disabled={isConfirming} 
+                className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
+                size="lg"
+              >
                 {isConfirming ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment…</>
+                  <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment...</>
                 ) : (
                   <><CreditCard className="w-5 h-5" />Continue to Payment</>
                 )}
@@ -547,13 +595,19 @@ export default function RequestRidePage() {
               className="space-y-5"
             >
               {/* Compact route + price summary */}
-              <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-card border border-border/40 flex items-center justify-between shadow-sm">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground truncate">{pickupAddress}</p>
-                  <p className="text-xs text-muted-foreground truncate">→ {dropoffAddress}</p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    {pickupAddress}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                    {dropoffAddress}
+                  </p>
                 </div>
                 {pricing && (
-                  <span className="text-lg font-bold text-primary ml-3 shrink-0">
+                  <span className="text-xl font-bold text-primary ml-3 shrink-0">
                     {formatUSD(pricing.total)}
                   </span>
                 )}

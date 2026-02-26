@@ -147,8 +147,9 @@ export default function CarRentalLanding() {
         {/* Affiliate Disclaimer */}
         <section className="py-8 border-t border-border/50">
           <div className="container mx-auto px-4 text-center space-y-2">
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              ⚠️ {CAR_DISCLAIMERS.partnerBooking}
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+              {CAR_DISCLAIMERS.partnerBooking}
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               {CAR_DISCLAIMERS.price} {CAR_DISCLAIMERS.insurance}
