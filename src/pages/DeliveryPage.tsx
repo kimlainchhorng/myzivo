@@ -19,6 +19,24 @@ const packageSizes = [
   { id: "medium", name: "Medium Box", description: "Clothing, electronics", icon: "📦", maxWeight: "20 lbs", price: 14.99 },
   { id: "large", name: "Large Box", description: "Furniture, large boxes", icon: "📦", maxWeight: "50 lbs", price: 24.99 },
   { id: "custom", name: "Custom", description: "Oversized or unusual", icon: "📐", maxWeight: "100+ lbs", price: 39.99 },
+  { id: "pallet", name: "Pallet", description: "Bulk freight shipment", icon: "🏗️", maxWeight: "500+ lbs", price: 89.99 },
+];
+
+// Insurance tiers
+const insuranceTiers = [
+  { id: "none", label: "No Insurance", coverage: "$0", cost: 0 },
+  { id: "basic", label: "Basic", coverage: "Up to $100", cost: 1.99 },
+  { id: "standard", label: "Standard", coverage: "Up to $500", cost: 4.99 },
+  { id: "premium", label: "Premium", coverage: "Up to $2,000", cost: 9.99 },
+  { id: "full", label: "Full Value", coverage: "Declared value", cost: 14.99 },
+];
+
+// Delivery categories
+const deliveryCategories = [
+  { id: "standard", label: "Standard", icon: Package },
+  { id: "fragile", label: "Fragile", icon: AlertTriangle },
+  { id: "perishable", label: "Perishable", icon: Clock },
+  { id: "hazmat", label: "Hazmat", icon: Shield },
 ];
 
 const deliverySpeed = [
@@ -39,6 +57,17 @@ const scheduleTimes = [
 const previousDeliveries = [
   { id: "pd1", from: "123 Main St", to: "456 Oak Ave", pkg: "Small Box", date: "3 days ago", price: "$12.48" },
   { id: "pd2", from: "Office", to: "Home", pkg: "Envelope", date: "Last week", price: "$5.99" },
+  { id: "pd3", from: "Warehouse", to: "Client HQ", pkg: "Large Box", date: "2 weeks ago", price: "$28.50" },
+  { id: "pd4", from: "Home", to: "Post Office", pkg: "Medium Box", date: "3 weeks ago", price: "$16.99" },
+];
+
+// Recurring delivery schedules
+const recurringOptions = [
+  { id: "none", label: "One-time", description: "Single delivery" },
+  { id: "daily", label: "Daily", description: "Same time every day" },
+  { id: "weekly", label: "Weekly", description: "Same day each week" },
+  { id: "biweekly", label: "Bi-weekly", description: "Every 2 weeks" },
+  { id: "monthly", label: "Monthly", description: "Once a month" },
 ];
 
 // Live delivery tracking timeline
@@ -174,6 +203,13 @@ export default function DeliveryPage() {
   const [multiStop, setMultiStop] = useState(false);
   const [additionalStops, setAdditionalStops] = useState<string[]>([]);
   const [liveUpdates, setLiveUpdates] = useState(true);
+  const [selectedInsuranceTier, setSelectedInsuranceTier] = useState("basic");
+  const [recurringSchedule, setRecurringSchedule] = useState("none");
+  const [requirePhotoId, setRequirePhotoId] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("standard");
+  const [giftWrapping, setGiftWrapping] = useState(false);
+  const [carbonNeutral, setCarbonNeutral] = useState(false);
+  const [deliveryWindow, setDeliveryWindow] = useState("anytime");
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -641,6 +677,102 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", businessAccount ? "left-[18px]" : "left-0.5")} />
                 </div>
               </button>
+
+              {/* Insurance tiers */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Shield className="w-3 h-3" /> Insurance Coverage
+                </h3>
+                <div className="space-y-2">
+                  {insuranceTiers.map(tier => (
+                    <button key={tier.id} onClick={() => setSelectedInsuranceTier(tier.id)}
+                      className={cn("w-full flex items-center justify-between p-3 rounded-xl transition-all touch-manipulation active:scale-[0.98]",
+                        selectedInsuranceTier === tier.id ? "bg-violet-500/10 border border-violet-500/30" : "bg-muted/30 border border-border/30")}>
+                      <div>
+                        <span className="text-xs font-bold text-foreground">{tier.label}</span>
+                        <span className="text-[10px] text-muted-foreground ml-2">{tier.coverage}</span>
+                      </div>
+                      <span className="text-xs font-bold text-violet-500">{tier.cost === 0 ? "Free" : `+$${tier.cost.toFixed(2)}`}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recurring delivery */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <RefreshCw className="w-3 h-3" /> Delivery Schedule
+                </h3>
+                <div className="flex gap-2 flex-wrap">
+                  {recurringOptions.map(opt => (
+                    <button key={opt.id} onClick={() => setRecurringSchedule(opt.id)}
+                      className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                        recurringSchedule === opt.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {recurringSchedule !== "none" && (
+                  <p className="text-[10px] text-violet-500 mt-2 font-medium">📅 {recurringOptions.find(o => o.id === recurringSchedule)?.description}</p>
+                )}
+              </div>
+
+              {/* Require Photo ID */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setRequirePhotoId(!requirePhotoId)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", requirePhotoId ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", requirePhotoId ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Require photo ID on delivery</p>
+                  <p className="text-[10px] text-muted-foreground">Recipient must show valid ID · +$1.99</p>
+                </div>
+              </div>
+
+              {/* Gift Wrapping */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setGiftWrapping(!giftWrapping)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", giftWrapping ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", giftWrapping ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-violet-500" /> Gift wrapping</p>
+                  <p className="text-[10px] text-muted-foreground">Premium gift wrap & card · +$3.99</p>
+                </div>
+              </div>
+
+              {/* Carbon Neutral */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setCarbonNeutral(!carbonNeutral)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", carbonNeutral ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", carbonNeutral ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-emerald-500" /> Carbon neutral delivery</p>
+                  <p className="text-[10px] text-muted-foreground">Offset emissions · +$0.50</p>
+                </div>
+              </div>
+
+              {/* Delivery Window */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" /> Preferred delivery window
+                </h3>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { id: "anytime", label: "Anytime" },
+                    { id: "morning", label: "Morning (8-12)" },
+                    { id: "afternoon", label: "Afternoon (12-5)" },
+                    { id: "evening", label: "Evening (5-9)" },
+                  ].map(w => (
+                    <button key={w.id} onClick={() => setDeliveryWindow(w.id)}
+                      className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                        deliveryWindow === w.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Live price estimate */}
               {selectedSize && (

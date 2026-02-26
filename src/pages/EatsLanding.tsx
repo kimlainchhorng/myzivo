@@ -129,7 +129,40 @@ const mealDeals = [
 const previousOrders = [
   { id: "po1", restaurantId: "joes-grill", items: ["Classic Burger", "Crispy Fries"], total: 17.98, date: "2 days ago" },
   { id: "po2", restaurantId: "el-azteca", items: ["Chicken Tacos", "Chips & Guac"], total: 17.98, date: "Last week" },
+  { id: "po3", restaurantId: "sakura-sushi", items: ["Dragon Roll", "Miso Soup"], total: 21.98, date: "Last week" },
+  { id: "po4", restaurantId: "sweet-dreams", items: ["Red Velvet Cake", "Macarons Box"], total: 21.98, date: "2 weeks ago" },
 ];
+
+// Group ordering
+const groupOrderOptions = [
+  { id: "solo", label: "Just me", icon: "👤" },
+  { id: "couple", label: "2 people", icon: "👥" },
+  { id: "group", label: "Group (3-6)", icon: "👨‍👩‍👧‍👦" },
+  { id: "office", label: "Office catering", icon: "🏢" },
+];
+
+// Delivery speed options
+const eatsDeliveryOptions = [
+  { id: "standard", label: "Standard", time: "25-40 min", extraCost: 0 },
+  { id: "priority", label: "Priority", time: "15-25 min", extraCost: 2.99, badge: "Faster" },
+  { id: "scheduled", label: "Scheduled", time: "Pick a time", extraCost: 0 },
+];
+
+// Restaurant reviews inline
+const restaurantReviews: Record<string, Array<{ user: string; rating: number; text: string; date: string }>> = {
+  "joes-grill": [
+    { user: "Mike R.", rating: 5, text: "Best burger in town! Always fresh and juicy.", date: "3 days ago" },
+    { user: "Sarah L.", rating: 4, text: "Great food, delivery was a bit slow.", date: "1 week ago" },
+  ],
+  "sakura-sushi": [
+    { user: "Emily T.", rating: 5, text: "Authentic sushi, tastes like Tokyo!", date: "2 days ago" },
+    { user: "John K.", rating: 5, text: "Dragon roll is incredible. Must try.", date: "5 days ago" },
+  ],
+  "sweet-dreams": [
+    { user: "Lisa M.", rating: 5, text: "Red velvet cake is to die for!", date: "Yesterday" },
+    { user: "David P.", rating: 4, text: "Macarons are perfect, a bit pricey though.", date: "1 week ago" },
+  ],
+};
 
 // Step indicator
 function EatsStepIndicator({ currentStep }: { currentStep: string }) {
@@ -245,6 +278,14 @@ export default function EatsLanding() {
   const [showMealDeals, setShowMealDeals] = useState(false);
   const [giftOrder, setGiftOrder] = useState(false);
   const [giftMessage, setGiftMessage] = useState("");
+  const [groupSize, setGroupSize] = useState("solo");
+  const [selectedDeliverySpeed, setSelectedDeliverySpeed] = useState("standard");
+  const [showReviews, setShowReviews] = useState(false);
+  const [allergenAlert, setAllergenAlert] = useState(true);
+  const [ecoPackaging, setEcoPackaging] = useState(false);
+  const [driverTipSplit, setDriverTipSplit] = useState(false);
+  const [curbsidePickup, setCurbsidePickup] = useState(false);
+  const [reorderSuggestion, setReorderSuggestion] = useState(true);
   const totalCalories = cart.reduce((sum, item) => {
     const restaurant = restaurants.find(r => r.id === item.restaurantId);
     const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
@@ -580,6 +621,9 @@ export default function EatsLanding() {
                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {restaurant.rating}</span>
                                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {restaurant.time}</span>
+                                {restaurantReviews[restaurant.id] && (
+                                  <span className="flex items-center gap-1 text-primary"><MessageSquare className="w-3 h-3" /> {restaurantReviews[restaurant.id].length}</span>
+                                )}
                               </div>
                               <span className="text-primary text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">Order <ArrowRight className="w-3.5 h-3.5" /></span>
                             </div>
@@ -609,6 +653,30 @@ export default function EatsLanding() {
               </motion.button>
             )}
             <Footer />
+
+            {/* Reorder Suggestion Banner */}
+            {reorderSuggestion && previousOrders.length > 0 && step === "browse" && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }}
+                className="fixed bottom-36 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-md rounded-2xl bg-card border border-border/40 shadow-xl p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-foreground">Reorder your last meal?</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{previousOrders[0].items.join(", ")} · ${previousOrders[0].total.toFixed(2)}</p>
+                </div>
+                <button onClick={() => {
+                  const r = restaurants.find(res => res.id === previousOrders[0].restaurantId);
+                  if (r) { setSelectedRestaurant(r.id); setStep("restaurant"); }
+                  setReorderSuggestion(false);
+                }} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold touch-manipulation active:scale-95">
+                  Reorder
+                </button>
+                <button onClick={() => setReorderSuggestion(false)} className="text-muted-foreground touch-manipulation">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         )}
 
@@ -634,6 +702,38 @@ export default function EatsLanding() {
               </div>
               <EatsStepIndicator currentStep="restaurant" />
             </div>
+
+            {/* Inline Reviews Section */}
+            {restaurantReviews[currentRestaurant.id] && (
+              <div className="px-4 mt-2">
+                <button onClick={() => setShowReviews(!showReviews)}
+                  className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation mb-2">
+                  <MessageSquare className="w-3.5 h-3.5" /> Customer Reviews ({restaurantReviews[currentRestaurant.id].length})
+                  <ChevronRight className={cn("w-3 h-3 transition-transform", showReviews && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showReviews && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2 overflow-hidden">
+                      {restaurantReviews[currentRestaurant.id].map((review, i) => (
+                        <div key={i} className="rounded-xl bg-card border border-border/30 p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-foreground">{review.user}</span>
+                            <div className="flex items-center gap-0.5">
+                              {Array.from({ length: review.rating }).map((_, s) => (
+                                <Star key={s} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{review.text}</p>
+                          <p className="text-[9px] text-muted-foreground/60 mt-1">{review.date}</p>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             <div className="relative h-48 overflow-hidden">
               <img src={currentRestaurant.image} alt={currentRestaurant.name} className="w-full h-full object-cover" />
@@ -892,6 +992,69 @@ export default function EatsLanding() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Group ordering */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <UtensilsCrossed className="w-3 h-3" /> Who's eating?
+                </h3>
+                <div className="flex gap-2">
+                  {groupOrderOptions.map(opt => (
+                    <button key={opt.id} onClick={() => setGroupSize(opt.id)}
+                      className={cn("flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                        groupSize === opt.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      <span className="text-base">{opt.icon}</span>
+                      <span className="text-[10px]">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery speed */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Truck className="w-3 h-3" /> Delivery speed
+                </h3>
+                <div className="space-y-2">
+                  {eatsDeliveryOptions.map(opt => (
+                    <button key={opt.id} onClick={() => setSelectedDeliverySpeed(opt.id)}
+                      className={cn("w-full flex items-center justify-between p-3 rounded-xl transition-all touch-manipulation active:scale-[0.98]",
+                        selectedDeliverySpeed === opt.id ? "bg-primary/10 border border-primary/30" : "bg-muted/30 border border-border/30")}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">{opt.label}</span>
+                        {opt.badge && <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{opt.badge}</span>}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground">{opt.time}</span>
+                        {opt.extraCost > 0 && <span className="text-[10px] text-primary font-bold block">+${opt.extraCost.toFixed(2)}</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Eco packaging + curbside */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setEcoPackaging(!ecoPackaging)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", ecoPackaging ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", ecoPackaging ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-emerald-500" /> Eco-friendly packaging</p>
+                  <p className="text-[10px] text-muted-foreground">Biodegradable containers 🌱</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setCurbsidePickup(!curbsidePickup)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", curbsidePickup ? "bg-primary" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", curbsidePickup ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Curbside pickup instead</p>
+                  <p className="text-[10px] text-muted-foreground">Pick up at the restaurant · No delivery fee</p>
+                </div>
               </div>
 
               {/* Order summary */}

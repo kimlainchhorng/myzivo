@@ -33,6 +33,21 @@ const rideCategories = [
   { id: "economy", label: "Economy", icon: Car },
   { id: "premium", label: "Premium", icon: Sparkles },
   { id: "elite", label: "Elite", icon: Crown },
+  { id: "shared", label: "Shared", icon: Users },
+];
+
+// Route alternatives
+const routeAlternatives = [
+  { id: "fastest", label: "Fastest", time: "12 min", distance: "4.2 mi", toll: false },
+  { id: "cheapest", label: "Cheapest", time: "18 min", distance: "5.1 mi", toll: false },
+  { id: "scenic", label: "Scenic", time: "22 min", distance: "6.8 mi", toll: false },
+  { id: "toll", label: "Via Highway", time: "10 min", distance: "3.9 mi", toll: true },
+];
+
+// Corporate billing profiles
+const corporateProfiles = [
+  { id: "personal", label: "Personal", icon: CreditCard },
+  { id: "business", label: "Business Expense", icon: Building2 },
 ];
 
 const vehicleOptions: Record<string, Array<{
@@ -55,6 +70,10 @@ const vehicleOptions: Record<string, Array<{
   elite: [
     { id: "black-suv", name: "Black SUV", badge: "Luxury", badgeColor: "text-amber-500", eta: "8-15 min", capacity: 6, price: "$52.99", priceCents: 5299, multiplier: 3.2, description: "Premium SUV" },
     { id: "limo", name: "Limo", badge: "VIP", badgeColor: "text-violet-500", eta: "15-25 min", capacity: 4, price: "$89.99", priceCents: 8999, multiplier: 5.5, description: "Red-carpet experience" },
+  ],
+  shared: [
+    { id: "share-ride", name: "Share Ride", badge: "Save 40%", badgeColor: "text-emerald-500", eta: "5-12 min", capacity: 2, price: "$9.75", priceCents: 975, multiplier: 0.6, description: "Share with others going your way" },
+    { id: "share-xl", name: "Share XL", badge: "Save 30%", badgeColor: "text-emerald-500", eta: "8-15 min", capacity: 3, price: "$13.50", priceCents: 1350, multiplier: 0.7, description: "Larger shared vehicle" },
   ],
 };
 
@@ -409,6 +428,15 @@ export default function RequestRidePage() {
   const [surgeActive] = useState(Math.random() > 0.6);
   const [favoriteDrivers] = useState(["Marcus T.", "Sarah L.", "David K."]);
   const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState("fastest");
+  const [billingProfile, setBillingProfile] = useState("personal");
+  const [shareETA, setShareETA] = useState(false);
+  const [rideReminder, setRideReminder] = useState(false);
+  const [rideRating, setRideRating] = useState<number | null>(null);
+  const [showRouteOptions, setShowRouteOptions] = useState(false);
+  const [quietZone, setQuietZone] = useState(false);
+  const [autoPickupPin, setAutoPickupPin] = useState(true);
+  const [estimatedCO2, setEstimatedCO2] = useState(2.3); // lbs
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -648,10 +676,49 @@ export default function RequestRidePage() {
               <motion.div key="address" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-foreground">Where to?</h2>
-                  <span className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    Live pricing
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {/* Billing profile toggle */}
+                    <div className="flex items-center bg-muted/50 rounded-lg p-0.5">
+                      {corporateProfiles.map(cp => {
+                        const CPIcon = cp.icon;
+                        return (
+                          <button key={cp.id} onClick={() => { setBillingProfile(cp.id); toast.info(`${cp.label} billing selected`); }}
+                            className={cn("px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all",
+                              billingProfile === cp.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}>
+                            <CPIcon className="w-3 h-3" /> {cp.label.split(" ")[0]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                </div>
+
+                {/* Ride Reminder */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setRideReminder(!rideReminder)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", rideReminder ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", rideReminder ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Set departure reminder</p>
+                    <p className="text-[10px] text-muted-foreground">Get notified 15 min before scheduled ride</p>
+                  </div>
+                </div>
+
+                {/* Auto pickup pin */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setAutoPickupPin(!autoPickupPin)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", autoPickupPin ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", autoPickupPin ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Smart pickup pin</p>
+                    <p className="text-[10px] text-muted-foreground">Auto-adjust to nearest safe pickup spot</p>
+                  </div>
                 </div>
 
                 {/* Address inputs */}
@@ -1160,6 +1227,31 @@ export default function RequestRidePage() {
 
                 {/* Driver Preview Card */}
                 <DriverPreviewCard />
+
+                {/* Share ETA with contacts */}
+                <div className="w-full max-w-xs space-y-2">
+                  <button onClick={() => { setShareETA(true); toast.success("Live ETA shared with your contacts!"); }}
+                    className={cn("w-full flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold touch-manipulation active:scale-95 transition-all",
+                      shareETA ? "border-primary/40 bg-primary/10 text-primary" : "border-border/40 bg-card text-foreground hover:bg-muted/50")}>
+                    <Navigation className="w-4 h-4" /> {shareETA ? "ETA Shared ✓" : "Share Live ETA"}
+                  </button>
+                </div>
+
+                {/* Rate after ride found */}
+                {rideRating === null && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
+                    className="w-full max-w-xs text-center space-y-2">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Rate your last ride</p>
+                    <div className="flex justify-center gap-1.5">
+                      {[1,2,3,4,5].map(s => (
+                        <button key={s} onClick={() => { setRideRating(s); toast.success(`Rated ${s} stars!`); }}
+                          className="touch-manipulation active:scale-90 transition-transform">
+                          <Star className={cn("w-7 h-7", rideRating && s <= rideRating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Verified drivers</span>
