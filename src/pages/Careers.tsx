@@ -24,6 +24,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const cultureValues = [
   {
@@ -107,7 +108,7 @@ const Careers = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Hero Section */}
-          <div className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-16">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Briefcase className="w-3 h-3 mr-1" />
               Careers
@@ -119,7 +120,7 @@ const Careers = () => {
               Join a global team building the next generation of travel and 
               mobility experiences.
             </p>
-          </div>
+          </motion.div>
 
           {/* Mission Banner */}
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-sky-500/5 mb-16">

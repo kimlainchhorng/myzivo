@@ -4,6 +4,7 @@
  */
 
 import { Link, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { CheckCircle, ExternalLink, Car, Home, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -28,7 +29,7 @@ export default function CarConfirmationPage() {
       <Header />
 
       <main className="pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-2xl">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="container mx-auto px-4 max-w-2xl">
           {/* Success Card */}
           <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center mb-8">
             <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-6">
@@ -102,7 +103,7 @@ export default function CarConfirmationPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       <Footer />

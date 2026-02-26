@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,6 +11,7 @@ import { HelpCircle, Plane, Building2, Car, UtensilsCrossed, Truck, User, Shield
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import FAQSchema from "@/components/shared/FAQSchema";
+import SEOHead from "@/components/SEOHead";
 import { Link } from "react-router-dom";
 
 const faqSections = [
@@ -107,6 +109,7 @@ const allFaqs = faqSections.flatMap(section => section.faqs);
 export default function FAQPage() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="FAQ – Frequently Asked Questions | ZIVO" description="Find answers to common questions about using ZIVO for travel search, flights, hotels, car rentals, and bookings." canonical="https://hizivo.com/faq" />
       <FAQSchema faqs={allFaqs} pageType="general" />
       
       <NavBar />
@@ -114,7 +117,7 @@ export default function FAQPage() {
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-12">
             <Badge className="mb-4 px-4 py-2 bg-primary/10 text-primary border-primary/20">
               <HelpCircle className="w-4 h-4 mr-2" />
               Help Center
@@ -125,7 +128,7 @@ export default function FAQPage() {
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Find answers to common questions about using Hizivo for travel search and bookings.
             </p>
-          </div>
+          </motion.div>
 
           {/* FAQ Sections */}
           <div className="max-w-4xl mx-auto space-y-8">
