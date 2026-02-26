@@ -44,7 +44,7 @@ import {
   Briefcase,
   Package,
 } from "lucide-react";
-import { motion } from "framer-motion";
+
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getAirlineLogo } from "@/data/airlines";
@@ -210,11 +210,6 @@ const FlightDetails = () => {
       />
 
       <main className="pt-4 pb-32 lg:pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
         {/* Hero Banner */}
         <div className="relative bg-gradient-to-r from-sky-950 via-blue-900 to-slate-900 py-8 mb-8">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-500/20 via-transparent to-transparent" />

@@ -116,7 +116,7 @@ import AITravelAssistantWidget from "@/components/shared/AITravelAssistantWidget
 import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
-import { motion } from "framer-motion";
+
 
 type BookingStep = "search" | "select";
 
@@ -220,11 +220,6 @@ const FlightBooking = () => {
       <Header />
 
       <main className="pt-16 pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
         {/* Hero Section with Search */}
         <FlightSearchHero
           tripType={tripType}
@@ -384,8 +379,6 @@ const FlightBooking = () => {
 
             {/* Savings Stats */}
             <FlightSavingsStats />
-          </>
-        )}
 
             {/* Carbon Offset - Sustainability */}
             <FlightCarbonOffset />
@@ -752,7 +745,6 @@ const FlightBooking = () => {
         
         {/* Mobile Bottom Nav */}
         <MobileBottomNav />
-        </motion.div>
       </main>
 
       <Footer />
