@@ -209,9 +209,9 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30">
+    <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30" role="main">
       {/* Scrollable content */}
-      <div className="overflow-y-auto pb-24">
+      <div className="overflow-y-auto pb-24 scroll-momentum">
         {/* ─── PREMIUM HEADER ZONE ─── */}
         <div className="bg-gradient-to-b from-primary/10 via-primary/4 to-background relative overflow-hidden">
           {/* Animated decorative orbs */}
@@ -350,7 +350,7 @@ const AppHome = () => {
           </motion.button>
 
           {/* ─── QUICK ACTIONS GRID (3x2 Ultra Premium) ─── */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3" role="navigation" aria-label="Quick actions">
             {quickActions.map((action, i) => (
               <motion.button
                 key={action.label}

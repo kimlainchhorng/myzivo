@@ -50,7 +50,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-background">
+    <section className="relative overflow-hidden bg-background" aria-label="Hero banner with travel search">
       {/* ─── MOBILE ─── */}
       <div className="lg:hidden relative min-h-[85vh] flex flex-col justify-end">
         <AnimatePresence mode="wait">

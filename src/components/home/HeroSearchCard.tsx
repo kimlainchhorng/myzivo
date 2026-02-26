@@ -36,7 +36,7 @@ export default function HeroSearchCard() {
   };
 
   return (
-    <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12">
+    <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12" aria-label="Search flights, hotels, cars, rides, and restaurants">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -47,13 +47,16 @@ export default function HeroSearchCard() {
           {/* Gradient top accent */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--hotels))] to-[hsl(var(--rides))] opacity-60" />
           {/* Tabs */}
-          <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide relative">
+          <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide relative" role="tablist" aria-label="Service type">
              {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`search-panel-${tab.id}`}
                   className={cn(
                     "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation active:scale-[0.97] min-h-[48px]",
                     isActive
