@@ -15,6 +15,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
+import LiveChatWidget from "./components/shared/LiveChatWidget";
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
@@ -519,6 +520,7 @@ const App = () => (
           <PWAUpdatePrompt />
           <PWAInstallBanner />
           <ScrollToTopButton />
+          <LiveChatWidget />
           <SpatialCursor />
           <BrandThemeApplicator />
         </AuthProvider>

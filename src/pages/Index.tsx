@@ -26,6 +26,8 @@ const TestimonialsSection = lazy(() => import("@/components/home/TestimonialsSec
 const PartnerLogosSection = lazy(() => import("@/components/home/PartnerLogosSection"));
 const DownloadAppSection = lazy(() => import("@/components/home/DownloadAppSection"));
 const NewsletterSection = lazy(() => import("@/components/home/NewsletterSection"));
+const VideoAdsSection = lazy(() => import("@/components/home/VideoAdsSection"));
+const ServiceFlowBanner = lazy(() => import("@/components/home/ServiceFlowBanner"));
 
 // Mobile app home
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
@@ -57,6 +59,8 @@ const DesktopHomePage = () => {
         <StatsSection />
 
         {/* Below-fold: Lazy loaded with IntersectionObserver */}
+        <LazySection><Suspense fallback={<SectionFallback />}><VideoAdsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><ServiceFlowBanner /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><DestinationShowcase /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><FeaturedCarsSection /></Suspense></LazySection>
