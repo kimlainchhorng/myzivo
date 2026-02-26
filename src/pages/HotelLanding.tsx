@@ -74,6 +74,7 @@ export default function HotelLanding() {
               alt={heroImage.alt}
               className="absolute inset-0 w-full h-full object-cover"
               loading="eager"
+              fetchPriority="high"
             />
             {/* Gradient Overlay */}
             <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.hotels)} />
