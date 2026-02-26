@@ -161,6 +161,48 @@ export default function HotelsPage() {
     { category: "Service", score: 9.3, icon: "🛎️" },
   ];
 
+  // === NEW Wave 2: More Booking/Airbnb features ===
+  const [showNeighborhood, setShowNeighborhood] = useState(false);
+  const [showSustainability, setShowSustainability] = useState(false);
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
+  const [showRoomComparison, setShowRoomComparison] = useState(false);
+  const [showVirtualTour, setShowVirtualTour] = useState(false);
+  const [showWishlistShare, setShowWishlistShare] = useState(false);
+
+  // Neighborhood guides (Airbnb)
+  const neighborhoods = [
+    { name: "Downtown", walkScore: 95, safety: "Very Safe", nightlife: "★★★★★", restaurants: 342, transit: "Excellent" },
+    { name: "Midtown", walkScore: 88, safety: "Safe", nightlife: "★★★★", restaurants: 256, transit: "Good" },
+    { name: "Waterfront", walkScore: 72, safety: "Very Safe", nightlife: "★★★", restaurants: 128, transit: "Good" },
+  ];
+
+  // Room comparison (Booking.com)
+  const roomTypes = [
+    { type: "Standard", size: "250 sq ft", bed: "Queen", view: "City", price: 129, amenities: ["Wi-Fi", "TV", "Mini bar"], maxGuests: 2 },
+    { type: "Deluxe", size: "350 sq ft", bed: "King", view: "Garden", price: 179, amenities: ["Wi-Fi", "TV", "Mini bar", "Balcony", "Bathrobe"], maxGuests: 2, popular: true },
+    { type: "Suite", size: "550 sq ft", bed: "King + Sofa", view: "Ocean", price: 289, amenities: ["Wi-Fi", "TV", "Mini bar", "Balcony", "Bathrobe", "Living room", "Jacuzzi"], maxGuests: 4 },
+  ];
+
+  // Price history (Hopper/Booking)
+  const priceHistoryData = [
+    { month: "Oct", price: 189 },
+    { month: "Nov", price: 159 },
+    { month: "Dec", price: 219 },
+    { month: "Jan", price: 149 },
+    { month: "Feb", price: 139 },
+    { month: "Mar", price: 129, current: true },
+  ];
+
+  // Sustainability badges (Booking.com)
+  const sustainabilityFeatures = [
+    { label: "LED lighting", icon: "💡" },
+    { label: "Solar panels", icon: "☀️" },
+    { label: "No single-use plastics", icon: "♻️" },
+    { label: "Local food sourcing", icon: "🌿" },
+    { label: "Water conservation", icon: "💧" },
+    { label: "EV charging", icon: "🔌" },
+  ];
+
   useEffect(() => {
     if (city && !hasSearched) {
       const checkIn = addDays(new Date(), 7);
@@ -384,6 +426,137 @@ export default function HotelsPage() {
               className="inline-flex items-center gap-2 text-sm font-bold text-emerald-500">
               <Shield className="w-4 h-4" /> Price Match Guarantee — Find a lower price? We'll match it!
               {priceMatch && <CheckCircle className="w-4 h-4" />}
+            </button>
+          </div>
+        </section>
+
+        {/* Neighborhood Guide (Airbnb) */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowNeighborhood(!showNeighborhood)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <MapPin className="w-5 h-5 text-sky-500" /> Neighborhood Guide
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showNeighborhood && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showNeighborhood && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                    {neighborhoods.map(n => (
+                      <div key={n.name} className="rounded-2xl bg-card border border-border/40 p-4">
+                        <h4 className="text-sm font-bold text-foreground mb-3">{n.name}</h4>
+                        <div className="space-y-2 text-[10px]">
+                          <div className="flex justify-between"><span className="text-muted-foreground">Walk Score</span><span className="font-bold text-emerald-500">{n.walkScore}/100</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Safety</span><span className="font-bold text-foreground">{n.safety}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Restaurants</span><span className="font-bold">{n.restaurants}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Transit</span><span className="font-bold">{n.transit}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Room Comparison */}
+        <section className="py-8 border-b border-border/30 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowRoomComparison(!showRoomComparison)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Eye className="w-5 h-5 text-amber-500" /> Compare Room Types
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showRoomComparison && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showRoomComparison && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+                    {roomTypes.map(room => (
+                      <div key={room.type} className={cn("rounded-2xl p-5 text-left transition-all border relative",
+                        room.popular ? "border-amber-500 bg-amber-500/5 shadow-lg" : "border-border/40 bg-card")}>
+                        {room.popular && <span className="absolute -top-2 right-3 text-[8px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full">Most Popular</span>}
+                        <h3 className="text-sm font-bold text-foreground mb-1">{room.type}</h3>
+                        <p className="text-lg font-bold text-primary mb-3">${room.price}<span className="text-[10px] text-muted-foreground font-normal">/night</span></p>
+                        <div className="text-[10px] text-muted-foreground mb-3">
+                          <p>📐 {room.size} · 🛏 {room.bed} · 🌅 {room.view} · 👤 {room.maxGuests}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {room.amenities.map(a => (
+                            <span key={a} className="px-2 py-0.5 rounded-full bg-muted/50 text-[9px] text-muted-foreground">{a}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Price History */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowPriceHistory(!showPriceHistory)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <CalendarDays className="w-5 h-5 text-emerald-500" /> Price History
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showPriceHistory && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showPriceHistory && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="flex items-end gap-3 h-32">
+                      {priceHistoryData.map(d => (
+                        <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+                          <span className={cn("text-[10px] font-bold", d.current ? "text-emerald-500" : "text-muted-foreground")}>${d.price}</span>
+                          <motion.div initial={{ height: 0 }} animate={{ height: `${(d.price / 250) * 100}%` }}
+                            transition={{ duration: 0.5 }} className={cn("w-full rounded-t-lg", d.current ? "bg-emerald-500" : "bg-muted/50")} />
+                          <span className="text-[9px] text-muted-foreground">{d.month}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-center text-xs text-emerald-500 font-bold mt-3">✅ Current price is near the 6-month low!</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Sustainability (Booking.com) */}
+        <section className="py-6 border-b border-border/30 bg-emerald-500/5">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowSustainability(!showSustainability)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Globe className="w-5 h-5 text-emerald-500" /> Sustainability Practices
+              <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">🌿 Level 3</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showSustainability && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showSustainability && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="flex flex-wrap gap-2 max-w-3xl mx-auto justify-center">
+                    {sustainabilityFeatures.map(f => (
+                      <span key={f.label} className="px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-500 text-[10px] font-bold border border-emerald-500/20">
+                        {f.icon} {f.label}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Virtual Tour CTA */}
+        <section className="py-6 border-b border-border/30">
+          <div className="container mx-auto px-4 text-center">
+            <button onClick={() => toast.info("🏨 Virtual tour — coming soon!")}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-sm font-bold text-foreground hover:scale-105 transition-all">
+              <Eye className="w-5 h-5 text-amber-500" /> Take a Virtual Tour
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">360°</Badge>
             </button>
           </div>
         </section>
