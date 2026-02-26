@@ -49,6 +49,7 @@ export default function DestinationShowcase() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
         >
           <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-2">Explore the world</span>
             <h2 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">
               Popular <span className="text-primary">Destinations</span>
             </h2>
@@ -72,13 +73,13 @@ export default function DestinationShowcase() {
             >
               <Link
                 to={`/flights?to=${encodeURIComponent(dest.city)}`}
-                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30 block shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-200 touch-manipulation active:scale-[0.99]"
+                className="group relative rounded-2xl overflow-hidden aspect-[4/3] border border-border/30 block shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <img
                   src={dest.image}
                   alt={`${dest.city}, ${dest.country}`}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
                 
@@ -91,12 +92,12 @@ export default function DestinationShowcase() {
 
                 {/* Save + Explore buttons on hover */}
                 <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
-                   <button
+                  <button
                     onClick={(e) => toggleSave(e, dest.city)}
                     className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card active:scale-90 transition-all touch-manipulation"
                     aria-label={`Save ${dest.city}`}
                   >
-                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
+                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-destructive fill-current" : "text-foreground"}`} />
                   </button>
                   <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 shadow-md">
                     Explore <ArrowRight className="w-3 h-3" />

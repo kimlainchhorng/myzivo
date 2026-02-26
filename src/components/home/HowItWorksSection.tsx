@@ -1,5 +1,5 @@
 /**
- * How It Works - Premium step cards with animated connectors
+ * How It Works - Premium numbered steps with animated connectors
  */
 import { Search, CreditCard, Plane, CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,10 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const steps = [
-  { icon: Search, step: "01", title: "Search", description: "Compare flights, hotels, and car rentals from hundreds of providers in one search.", iconBg: "bg-[hsl(var(--flights-light))]", iconColor: "text-[hsl(var(--flights))]", accent: "border-[hsl(var(--flights)/0.3)]" },
-  { icon: CreditCard, step: "02", title: "Compare", description: "See all your options side-by-side with transparent pricing — no hidden fees.", iconBg: "bg-primary/10", iconColor: "text-primary", accent: "border-primary/30" },
-  { icon: Plane, step: "03", title: "Book", description: "Complete your booking securely through our trusted travel partners.", iconBg: "bg-[hsl(var(--cars-light))]", iconColor: "text-[hsl(var(--cars))]", accent: "border-[hsl(var(--cars)/0.3)]" },
-  { icon: CheckCircle, step: "04", title: "Travel", description: "Get instant confirmation, 24/7 support, and loyalty rewards on every trip.", iconBg: "bg-[hsl(var(--hotels-light))]", iconColor: "text-[hsl(var(--hotels))]", accent: "border-[hsl(var(--hotels)/0.3)]" },
+  { icon: Search, step: "01", title: "Search", description: "Compare flights, hotels, and car rentals from hundreds of providers in one search.", colorVar: "--flights" },
+  { icon: CreditCard, step: "02", title: "Compare", description: "See all your options side-by-side with transparent pricing — no hidden fees.", colorVar: "--primary" },
+  { icon: Plane, step: "03", title: "Book", description: "Complete your booking securely through our trusted travel partners.", colorVar: "--cars" },
+  { icon: CheckCircle, step: "04", title: "Travel", description: "Get instant confirmation, 24/7 support, and loyalty rewards on every trip.", colorVar: "--hotels" },
 ];
 
 export default function HowItWorksSection() {
@@ -56,25 +56,25 @@ export default function HowItWorksSection() {
                     whileInView={{ scaleX: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: i * 0.15 + 0.3 }}
-                    className="flex-1 h-[2px] bg-gradient-to-r from-primary/40 to-primary/10 origin-left"
+                    className="flex-1 h-[2px] origin-left"
+                    style={{ background: `linear-gradient(to right, hsl(var(${step.colorVar}) / 0.4), hsl(var(${step.colorVar}) / 0.1))` }}
                   />
-                  <ArrowRight className="w-4 h-4 text-primary/30 -ml-1" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground/30 -ml-1" />
                 </div>
               )}
               
-               <div className={cn(
-                "relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]",
-                step.accent
-              )}>
+              <div className="relative z-10 text-center p-6 sm:p-8 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]">
                 {/* Step number */}
                 <span className="absolute top-4 right-4 text-4xl font-black text-muted-foreground/[0.06] leading-none">{step.step}</span>
 
-                <div className={cn(
-                  "w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center relative",
-                  step.iconBg,
-                  "group-hover:scale-110 transition-transform duration-200"
-                )}>
-                  <step.icon className={cn("w-7 h-7", step.iconColor)} />
+                <div
+                  className="w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center relative group-hover:scale-110 transition-transform duration-200 border"
+                  style={{
+                    backgroundColor: `hsl(var(${step.colorVar}) / 0.1)`,
+                    borderColor: `hsl(var(${step.colorVar}) / 0.2)`,
+                  }}
+                >
+                  <step.icon className="w-7 h-7" style={{ color: `hsl(var(${step.colorVar}))` }} />
                 </div>
 
                 <h3 className="font-bold text-xl mb-2.5">{step.title}</h3>
@@ -92,7 +92,7 @@ export default function HowItWorksSection() {
           transition={{ delay: 0.5 }}
           className="text-center mt-12"
         >
-           <Button
+          <Button
             size="lg"
             className="rounded-full px-8 gap-2 font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-shadow touch-manipulation active:scale-[0.97] min-h-[48px]"
             onClick={() => navigate("/flights")}
