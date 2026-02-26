@@ -322,6 +322,78 @@ export default function HowItWorks() {
             </div>
           </div>
 
+          {/* === WAVE 16: Additional HowItWorks Content === */}
+
+          {/* Service Comparison */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-center mb-6">What You Can Book</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { service: "Flights", providers: "500+ airlines", coverage: "Global", speed: "Instant results", emoji: "✈️", features: ["Price alerts", "Fare calendar", "Multi-city"] },
+                { service: "Hotels", providers: "1M+ properties", coverage: "195 countries", speed: "Real-time rates", emoji: "🏨", features: ["Free cancellation filter", "Guest reviews", "Map view"] },
+                { service: "Car Rentals", providers: "50+ companies", coverage: "150+ countries", speed: "Compare in seconds", emoji: "🚗", features: ["Insurance options", "Fuel policy info", "Airport pickup"] },
+              ].map(s => (
+                <Card key={s.service} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all">
+                  <CardContent className="p-5">
+                    <span className="text-3xl">{s.emoji}</span>
+                    <h3 className="font-bold text-lg mt-3">{s.service}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{s.providers} · {s.coverage}</p>
+                    <p className="text-[10px] text-primary font-medium mt-1">{s.speed}</p>
+                    <ul className="mt-3 space-y-1">
+                      {s.features.map(f => (
+                        <li key={f} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Tips for Best Results */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-center mb-6">Tips for the Best Deals</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { tip: "Be Flexible with Dates", desc: "Shifting your trip by 1-2 days can save 20-30% on flights.", emoji: "📅" },
+                { tip: "Book 3 Weeks Ahead", desc: "Domestic flights are cheapest about 21 days before departure.", emoji: "⏰" },
+                { tip: "Use Price Alerts", desc: "Set alerts and we'll notify you when prices drop on your route.", emoji: "🔔" },
+                { tip: "Compare Across Services", desc: "Sometimes a flight+hotel bundle saves more than booking separately.", emoji: "💡" },
+              ].map(t => (
+                <div key={t.tip} className="p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">{t.emoji}</span>
+                    <span className="font-bold text-sm">{t.tip}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust Badges */}
+          <Card className="mb-12 border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-center mb-4">Why Travelers Trust ZIVO</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                {[
+                  { badge: "SSL Encrypted", emoji: "🔒" },
+                  { badge: "No Hidden Fees", emoji: "💎" },
+                  { badge: "24/7 Support", emoji: "🛟" },
+                  { badge: "Best Price Guarantee", emoji: "🏆" },
+                ].map(b => (
+                  <div key={b.badge}>
+                    <span className="text-2xl">{b.emoji}</span>
+                    <p className="text-xs font-bold mt-2">{b.badge}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* CTA */}
           <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">
             <h2 className="text-3xl font-bold mb-4">Ready to Start?</h2>
