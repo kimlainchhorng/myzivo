@@ -42,7 +42,7 @@ export default function FeaturedEatsSection() {
             </h2>
             <p className="text-muted-foreground">Delicious food from local restaurants, delivered fast.</p>
           </div>
-          <Link to="/eats" className="text-primary font-semibold text-sm inline-flex items-center gap-1 hover:gap-2 transition-all">
+          <Link to="/flights" className="text-primary font-semibold text-sm inline-flex items-center gap-1 hover:gap-2 transition-all">
             View all <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
@@ -69,7 +69,7 @@ export default function FeaturedEatsSection() {
               transition={{ duration: 0.4, delay: i * 0.08 }}
             >
               <Link
-                to="/eats"
+                to="/flights"
                  className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">

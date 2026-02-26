@@ -22,10 +22,9 @@ import { format } from "date-fns";
 const services = [
   { id: "flights", name: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600", link: "/flights" },
   { id: "hotels", name: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-500", link: "/hotels" },
-  { id: "cars", name: "Cars", icon: Car, gradient: "from-emerald-500 to-teal-600", link: "/cars" },
-  { id: "rides", name: "Rides", icon: MapPin, gradient: "from-primary to-emerald-500", link: "/rides" },
-  { id: "eats", name: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/eats" },
-  { id: "move", name: "Move", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/move" },
+  { id: "cars", name: "Cars", icon: Car, gradient: "from-emerald-500 to-teal-600", link: "/rent-car" },
+  { id: "activities", name: "Activities", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/things-to-do" },
+  { id: "extras", name: "Extras", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/extras" },
 ];
 
 // Map trip.icon string to Lucide icon component
