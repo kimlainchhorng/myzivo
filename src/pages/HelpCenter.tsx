@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2, Package, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -417,6 +417,143 @@ const HelpCenter = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* === WAVE 8: Smart Support Intelligence === */}
+          <div className="space-y-8 mt-10">
+            {/* Live Support Status */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="relative">
+                    <Headphones className="w-5 h-5 text-primary" />
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Support Team Online</p>
+                    <p className="text-[10px] text-muted-foreground">Average response: &lt;5 minutes</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: "Chat", time: "~2 min", status: "bg-emerald-500" },
+                    { label: "Email", time: "~4 hrs", status: "bg-amber-500" },
+                    { label: "Phone", time: "~8 min", status: "bg-emerald-500" },
+                  ].map(c => (
+                    <div key={c.label} className="p-2 rounded-xl bg-card/60 border border-border/30">
+                      <div className="flex items-center justify-center gap-1 mb-0.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${c.status}`} />
+                        <p className="text-[10px] font-bold text-foreground">{c.label}</p>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground">{c.time} wait</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Troubleshooter */}
+            <div>
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-500" /> Quick Troubleshooter
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { issue: "Can't log in", steps: ["Clear browser cache", "Try password reset", "Check email spam folder", "Try incognito mode"], icon: Key },
+                  { issue: "Payment failed", steps: ["Check card expiry date", "Ensure sufficient funds", "Try a different card", "Contact your bank"], icon: CreditCard },
+                  { issue: "Order not received", steps: ["Check delivery status", "Verify address", "Contact driver/restaurant", "Request refund if needed"], icon: Package },
+                  { issue: "App crashing", steps: ["Update to latest version", "Clear app cache", "Restart your device", "Reinstall if needed"], icon: AlertTriangle },
+                ].map(t => (
+                  <Card key={t.issue} className="border-border/40">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <t.icon className="w-4 h-4 text-primary" />
+                        <p className="text-xs font-bold text-foreground">{t.issue}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        {t.steps.map((s, i) => (
+                          <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                            <span className="w-4 h-4 rounded-full bg-primary/10 text-primary text-[9px] flex items-center justify-center flex-shrink-0 font-bold">{i + 1}</span>
+                            {s}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Support Stats */}
+            <Card className="border-border/40">
+              <CardContent className="p-5">
+                <p className="text-sm font-bold text-foreground mb-3">Support by the Numbers</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { stat: "98%", label: "Satisfaction", sub: "Last 30 days" },
+                    { stat: "<5min", label: "Avg Response", sub: "Chat support" },
+                    { stat: "24/7", label: "Availability", sub: "All channels" },
+                    { stat: "92%", label: "First Contact", sub: "Resolution rate" },
+                  ].map(s => (
+                    <div key={s.label} className="text-center p-2 rounded-xl bg-muted/30">
+                      <p className="text-lg font-bold text-primary">{s.stat}</p>
+                      <p className="text-[10px] font-bold text-foreground">{s.label}</p>
+                      <p className="text-[8px] text-muted-foreground">{s.sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Community Questions */}
+            <div>
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-sky-500" /> Trending Questions
+              </h2>
+              <div className="space-y-2">
+                {[
+                  { q: "How do I add TSA PreCheck to my booking?", answers: 12, votes: 45 },
+                  { q: "Can I split payment between two cards?", answers: 8, votes: 38 },
+                  { q: "How do ZIVO Points expire?", answers: 15, votes: 67 },
+                  { q: "What's the refund policy for hotels?", answers: 6, votes: 29 },
+                ].map(cq => (
+                  <Card key={cq.q} className="border-border/40 hover:border-primary/20 transition-all cursor-pointer">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="text-center min-w-[40px]">
+                        <p className="text-xs font-bold text-primary">{cq.votes}</p>
+                        <p className="text-[8px] text-muted-foreground">votes</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-foreground">{cq.q}</p>
+                      </div>
+                      <Badge className="bg-muted/50 text-muted-foreground border-0 text-[8px]">{cq.answers} answers</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Safety Tips */}
+            <Card className="border-amber-500/20 bg-amber-500/5">
+              <CardContent className="p-5">
+                <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-amber-500" /> Safety & Security Tips
+                </p>
+                <div className="space-y-2">
+                  {[
+                    "Never share your password or OTP with anyone — ZIVO will never ask for it",
+                    "Enable two-factor authentication for extra account security",
+                    "Verify driver identity and license plate before entering a ride",
+                    "Report suspicious emails claiming to be from ZIVO to security@hizivo.com",
+                  ].map((tip, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
