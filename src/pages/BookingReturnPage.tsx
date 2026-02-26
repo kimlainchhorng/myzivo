@@ -365,7 +365,7 @@ export default function BookingReturnPage() {
             {pageStatus === "unknown" && (
               <Card className="overflow-hidden">
                 {/* Unknown Header */}
-                <div className="bg-gradient-to-r from-gray-500 to-slate-500 p-6 sm:p-8 text-center text-white">
+                <div className="bg-gradient-to-r from-muted-foreground to-muted-foreground/80 p-6 sm:p-8 text-center text-primary-foreground">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>

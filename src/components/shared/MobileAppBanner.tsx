@@ -62,7 +62,7 @@ const MobileAppBanner = () => {
 
             <div className="relative flex justify-center">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-cyan-500/30 rounded-[3rem] blur-3xl" />
-              <div className="relative w-64 h-[500px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-[3rem] p-3 shadow-2xl">
+              <div className="relative w-64 h-[500px] bg-gradient-to-br from-card to-background rounded-[3rem] p-3 shadow-2xl border border-border">
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card to-cyan-500/20 rounded-[2.5rem] flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-8 h-8 text-primary" /></div>

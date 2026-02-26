@@ -19,7 +19,7 @@ interface LoyaltyTierWidgetProps {
 
 const tiers = [
   { name: "Bronze", minMiles: 0, color: "from-amber-700 to-amber-600", benefits: ["Basic seat selection"] },
-  { name: "Silver", minMiles: 25000, color: "from-gray-400 to-gray-300", benefits: ["Free seat selection", "Priority boarding", "1.5x miles"] },
+  { name: "Silver", minMiles: 25000, color: "from-muted-foreground/80 to-muted-foreground/60", benefits: ["Free seat selection", "Priority boarding", "1.5x miles"] },
   { name: "Gold", minMiles: 50000, color: "from-amber-500 to-yellow-400", benefits: ["Lounge access", "2x miles", "Free upgrades"] },
   { name: "Platinum", minMiles: 100000, color: "from-purple-500 to-pink-400", benefits: ["Unlimited lounge", "3x miles", "Companion passes"] },
 ];

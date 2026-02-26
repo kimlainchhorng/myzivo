@@ -10,7 +10,7 @@ const bundles = [
     savings: 35,
     popular: false,
     features: ["Checked bag (23kg)", "Seat selection", "Priority boarding"],
-    color: "from-slate-500 to-slate-600",
+    color: "from-muted-foreground to-muted-foreground/80",
   },
   {
     id: "comfort",

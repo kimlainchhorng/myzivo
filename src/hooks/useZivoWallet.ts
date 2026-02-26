@@ -229,5 +229,5 @@ export function getServiceMeta(service: string) {
     hotels: { icon: "building-2", color: "text-teal-600", label: "Hotels" },
     extras: { icon: "ticket", color: "text-pink-600", label: "Extras" },
   };
-  return meta[service] || { icon: "credit-card", color: "text-gray-600", label: service };
+  return meta[service] || { icon: "credit-card", color: "text-muted-foreground", label: service };
 }
