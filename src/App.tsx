@@ -249,13 +249,26 @@ const queryClient = new QueryClient({
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-60" />
-    <div className="flex flex-col items-center gap-4 relative z-10">
+    <div className="flex flex-col items-center gap-5 relative z-10 animate-fade-in">
       <div className="relative">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30 animate-pulse">
+        {/* Pulsing ring behind the icon */}
+        <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-ping" style={{ animationDuration: "1.5s" }} />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30 relative">
           <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
         </div>
       </div>
-      <p className="text-sm text-muted-foreground font-medium">Loading...</p>
+      <div className="flex flex-col items-center gap-1.5">
+        <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce"
+              style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.8s" }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 );
