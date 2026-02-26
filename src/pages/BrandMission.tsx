@@ -24,6 +24,7 @@ import {
   Target,
   Eye,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const brandValues = [
   {
@@ -107,7 +108,7 @@ const BrandMission = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Hero Section */}
-          <div className="text-center mb-20">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-20">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Sparkles className="w-3 h-3 mr-1" />
               Brand Identity
@@ -118,7 +119,7 @@ const BrandMission = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               One platform for global travel and local mobility—unified, intelligent, seamless.
             </p>
-          </div>
+          </motion.div>
 
           {/* Mission & Vision */}
           <div className="grid md:grid-cols-2 gap-8 mb-20">

@@ -4,6 +4,8 @@
  */
 
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -214,6 +216,7 @@ export default function Status() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="System Status | ZIVO" description="Check the real-time status of ZIVO services." canonical="https://hizovo.com/status" />
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -232,7 +235,9 @@ export default function Status() {
 
       <main className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
         {/* Overall Status */}
-        <OverallStatus />
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <OverallStatus />
+        </motion.div>
 
         {/* Active Incidents */}
         {activeIncidents.length > 0 && (

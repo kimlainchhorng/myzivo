@@ -24,6 +24,7 @@ import {
   Luggage
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 const About = () => {
@@ -38,7 +39,7 @@ const About = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Header */}
-          <div className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-16">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Globe className="w-3 h-3 mr-1" />
               About Us
@@ -50,7 +51,7 @@ const About = () => {
               ZIVO is a global travel search and comparison platform that helps users find and compare 
               flights, hotels, car rentals, and travel services from trusted partners worldwide.
             </p>
-          </div>
+          </motion.div>
 
           {/* What We Do - Hero Card */}
           <Card className="mb-12 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-teal-500/10 overflow-hidden">

@@ -38,6 +38,7 @@ import { format, parseISO } from 'date-fns';
 import { useFlightBooking, getTicketingStatusInfo } from '@/hooks/useFlightBooking';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import FlightTicketCard from '@/components/flight/FlightTicketCard';
 
 interface OfferDetails {
@@ -145,7 +146,7 @@ const FlightConfirmation = () => {
       <Header />
 
       <main className="pt-20 pb-20">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="container mx-auto px-4 max-w-3xl">
           {/* Success Header */}
           <div className="text-center mb-8">
             {isIssued ? (
@@ -387,7 +388,7 @@ const FlightConfirmation = () => {
 
           {/* Trust Footer */}
           <CheckoutTrustFooter className="mt-8" />
-        </div>
+        </motion.div>
       </main>
 
       <Footer />

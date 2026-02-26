@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, RefreshCw, ArrowLeft } from "lucide-react";
@@ -49,13 +51,14 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+      <SEOHead title="Verify Email | ZIVO" description="Verify your email to complete your ZIVO account." noIndex />
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-br from-primary/20 to-teal-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
         <Card className="border-0 bg-card/95 shadow-2xl backdrop-blur-xl overflow-hidden rounded-3xl">
           <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 pt-6 sm:pt-8">
             <div className="flex justify-center mb-3 sm:mb-4">
@@ -110,7 +113,7 @@ const VerifyEmail = () => {
         <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground/60">
           Protected by enterprise-grade security
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

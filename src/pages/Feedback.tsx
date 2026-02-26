@@ -3,7 +3,8 @@
  */
 
 import { useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
 import {
   Star,
@@ -80,9 +81,7 @@ export default function Feedback() {
   if (isSubmitted) {
     return (
       <>
-        <Helmet>
-          <title>Thank You | ZIVO Feedback</title>
-        </Helmet>
+        <SEOHead title="Thank You | ZIVO Feedback" description="Thanks for your feedback." noIndex />
         <Header />
         <main className="min-h-screen bg-background py-20">
           <div className="container mx-auto px-4 max-w-lg text-center">
@@ -104,21 +103,18 @@ export default function Feedback() {
 
   return (
     <>
-      <Helmet>
-        <title>Feedback | ZIVO</title>
-        <meta name="description" content="Share your feedback to help us improve ZIVO" />
-      </Helmet>
+      <SEOHead title="Feedback | ZIVO" description="Share your feedback to help us improve ZIVO." canonical="https://hizivo.com/feedback" />
 
       <Header />
 
       <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto px-4 max-w-3xl">
-          <div className="text-center mb-10">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-10">
             <h1 className="text-3xl font-bold mb-3">We Value Your Feedback</h1>
             <p className="text-muted-foreground">
               Help us make ZIVO better by sharing your experience
             </p>
-          </div>
+          </motion.div>
 
           {/* Feedback Type Selection */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
