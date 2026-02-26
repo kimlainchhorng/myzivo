@@ -613,17 +613,8 @@ export default function RequestRidePage() {
 
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/google-maps-proxy`,
-        { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token ?? ""}`, "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI" }, body: JSON.stringify({ action: "geocode", address }) }
-      );
-      const data = await res.json();
-      if (data.results?.[0]?.geometry?.location) {
-        const loc = data.results[0].geometry.location;
-        return { lat: loc.lat, lng: loc.lng };
-      }
-      return null;
+      const { forwardGeocode } = await import("@/services/mapsApi");
+      return await forwardGeocode(address);
     } catch { return null; }
   };
 

@@ -7,6 +7,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// ── Types ──────────────────────────────────────────────
+
 export interface PlaceSuggestion {
   description: string;
   place_id: string;
@@ -25,82 +27,59 @@ export interface RouteResult {
   duration_minutes: number;
   duration_in_traffic_minutes: number | null;
   traffic_level: "light" | "moderate" | "heavy" | null;
+  traffic_ratio: number | null;
   polyline: string | null;
   start_address?: string;
   end_address?: string;
+  eta_iso?: string;
+  legs?: RouteLeg[];
 }
 
-/**
- * Get address autocomplete suggestions
- */
+export interface RouteLeg {
+  distance_miles: number;
+  duration_minutes: number;
+  duration_in_traffic_minutes: number;
+  start_address: string;
+  end_address: string;
+}
+
+// ── Autocomplete ───────────────────────────────────────
+
 export async function getAutocompleteSuggestions(
   input: string,
   proximity?: { lat: number; lng: number }
 ): Promise<PlaceSuggestion[]> {
-  if (!input || input.trim().length < 2) {
-    return [];
-  }
+  if (!input || input.trim().length < 2) return [];
 
   try {
     const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
       body: { input: input.trim(), proximity },
     });
-
-    if (error) {
-      console.error("[mapsApi] Autocomplete invoke error:", error);
-      return [];
-    }
-
-    if (!data?.ok) {
-      console.warn("[mapsApi] Autocomplete returned error:", data?.error);
-      return [];
-    }
-
+    if (error || !data?.ok) return [];
     return data.suggestions ?? [];
-  } catch (e) {
-    console.error("[mapsApi] Autocomplete exception:", e);
+  } catch {
     return [];
   }
 }
 
-/**
- * Get place details (coordinates) from a place ID
- */
+// ── Place Details ──────────────────────────────────────
+
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-  if (!placeId) {
-    return null;
-  }
+  if (!placeId) return null;
 
   try {
     const { data, error } = await supabase.functions.invoke("maps-place-details", {
       body: { place_id: placeId },
     });
-
-    if (error) {
-      console.error("[mapsApi] Place details invoke error:", error);
-      return null;
-    }
-
-    if (!data?.ok) {
-      console.warn("[mapsApi] Place details returned error:", data?.error);
-      return null;
-    }
-
-    return {
-      address: data.address,
-      name: data.name,
-      lat: data.lat,
-      lng: data.lng,
-    };
-  } catch (e) {
-    console.error("[mapsApi] Place details exception:", e);
+    if (error || !data?.ok) return null;
+    return { address: data.address, name: data.name, lat: data.lat, lng: data.lng };
+  } catch {
     return null;
   }
 }
 
-/**
- * Get driving route between two coordinates
- */
+// ── Routing ────────────────────────────────────────────
+
 export async function getRoute(
   origin: { lat: number; lng: number },
   destination: { lat: number; lng: number },
@@ -113,97 +92,138 @@ export async function getRoute(
       dest_lat: destination.lat,
       dest_lng: destination.lng,
     };
-    if (waypoints && waypoints.length > 0) {
-      body.waypoints = waypoints;
-    }
-    const { data, error } = await supabase.functions.invoke("maps-route", {
-      body,
-    });
+    if (waypoints && waypoints.length > 0) body.waypoints = waypoints;
 
-    if (error) {
-      console.error("[mapsApi] Route invoke error:", error);
-      return null;
-    }
-
-    if (!data?.ok) {
-      console.warn("[mapsApi] Route returned error:", data?.error);
-      return null;
-    }
+    const { data, error } = await supabase.functions.invoke("maps-route", { body });
+    if (error || !data?.ok) return null;
 
     return {
       distance_miles: data.distance_miles,
       duration_minutes: data.duration_minutes,
       duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
       traffic_level: data.traffic_level ?? null,
+      traffic_ratio: data.traffic_ratio ?? null,
       polyline: data.polyline,
       start_address: data.start_address,
       end_address: data.end_address,
+      eta_iso: data.eta_iso,
+      legs: data.legs,
     };
-  } catch (e) {
-    console.error("[mapsApi] Route exception:", e);
+  } catch {
     return null;
   }
 }
 
-/**
- * Calculate distance between two coordinates using Haversine formula
- * Returns distance in miles
- */
-export function haversineMiles(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
-  const R = 3958.8; // Earth radius in miles
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lng2 - lng1);
-  
-  const a = 
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+// ── Reverse Geocode ────────────────────────────────────
 
-/**
- * Reverse geocode coordinates to a human-readable address
- */
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const fallback = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   try {
     const { data, error } = await supabase.functions.invoke("maps-reverse-geocode", {
       body: { lat, lng },
     });
-
-    if (error) {
-      console.error("[mapsApi] Reverse geocode invoke error:", error);
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    }
-
-    if (!data?.ok) {
-      console.warn("[mapsApi] Reverse geocode returned error:", data?.error);
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    }
-
-    return data.address ?? `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  } catch (e) {
-    console.error("[mapsApi] Reverse geocode exception:", e);
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    if (error || !data?.ok) return fallback;
+    return data.address ?? fallback;
+  } catch {
+    return fallback;
   }
 }
 
-/**
- * Check if driver is within arrival threshold of a location
- */
+// ── Forward Geocode (address → coordinates) ────────────
+
+export async function forwardGeocode(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (!address || address.trim().length < 3) return null;
+
+  try {
+    // Use autocomplete + place details as a two-step forward geocode
+    const suggestions = await getAutocompleteSuggestions(address);
+    if (suggestions.length === 0) return null;
+    
+    const details = await getPlaceDetails(suggestions[0].place_id);
+    if (!details) return null;
+    
+    return { lat: details.lat, lng: details.lng };
+  } catch {
+    return null;
+  }
+}
+
+// ── Haversine Distance ─────────────────────────────────
+
+export function haversineMiles(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
+): number {
+  const R = 3958.8;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Arrival Threshold Check ────────────────────────────
+
 export function isWithinArrivalThreshold(
-  driverLat: number,
-  driverLng: number,
-  targetLat: number,
-  targetLng: number,
+  driverLat: number, driverLng: number,
+  targetLat: number, targetLng: number,
   thresholdMiles: number = 0.10
 ): boolean {
-  const distance = haversineMiles(driverLat, driverLng, targetLat, targetLng);
-  return distance <= thresholdMiles;
+  return haversineMiles(driverLat, driverLng, targetLat, targetLng) <= thresholdMiles;
+}
+
+// ── Polyline Decoder ───────────────────────────────────
+
+/** Decode Google Maps encoded polyline into lat/lng array */
+export function decodePolyline(encoded: string): { lat: number; lng: number }[] {
+  const points: { lat: number; lng: number }[] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let b: number;
+    let shift = 0;
+    let result = 0;
+
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    lat += result & 1 ? ~(result >> 1) : result >> 1;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    lng += result & 1 ? ~(result >> 1) : result >> 1;
+
+    points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+
+  return points;
+}
+
+// ── ETA Formatting ─────────────────────────────────────
+
+/** Format duration in minutes to human-readable string */
+export function formatETA(minutes: number): string {
+  if (minutes < 1) return "< 1 min";
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
+/** Format distance in miles to human-readable string */
+export function formatDistance(miles: number): string {
+  if (miles < 0.1) return "< 0.1 mi";
+  if (miles < 10) return `${miles.toFixed(1)} mi`;
+  return `${Math.round(miles)} mi`;
 }
