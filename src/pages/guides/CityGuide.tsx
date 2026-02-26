@@ -5,6 +5,7 @@
 
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
+import { useEffect } from "react";
 import { 
   MapPin, Plane, Hotel, Car, Calendar, 
   Sun, Thermometer, DollarSign, ArrowRight, Star 
@@ -104,6 +105,26 @@ export default function CityGuide() {
   const { citySlug } = useParams<{ citySlug: string }>();
   const city = citySlug ? CITY_DATA[citySlug] : null;
 
+  // Inject BreadcrumbList JSON-LD (must be before any early returns)
+  useEffect(() => {
+    if (!city || !citySlug) return;
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://hizivo.com" },
+        { "@type": "ListItem", position: 2, name: "Guides", item: "https://hizivo.com/guides" },
+        { "@type": "ListItem", position: 3, name: city.name, item: `https://hizivo.com/guides/${citySlug}` },
+      ],
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-city-guide-breadcrumb", "true");
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+    return () => { script.remove(); };
+  }, [city, citySlug]);
+
   if (!city) {
     return (
       <>
@@ -132,6 +153,7 @@ export default function CityGuide() {
           name="description" 
           content={`Complete travel guide for ${city.name}. Find flights, hotels, attractions, and insider tips for your trip.`} 
         />
+        <link rel="canonical" href={`https://hizivo.com/guides/${citySlug}`} />
       </Helmet>
 
       <NavBar />
