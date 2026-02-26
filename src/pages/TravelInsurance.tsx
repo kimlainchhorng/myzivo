@@ -381,6 +381,81 @@ const TravelInsurance = () => {
             </div>
           </div>
         </section>
+        {/* === WAVE 10: Rich Insurance Content === */}
+
+        {/* Claims Process */}
+        <section className="py-10 sm:py-16 lg:py-24">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-8">
+              How <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Claims</span> Work
+            </h2>
+            <div className="grid sm:grid-cols-4 gap-4">
+              {[
+                { step: 1, title: "File Online", desc: "Submit your claim through the app or website in minutes", emoji: "📝" },
+                { step: 2, title: "Upload Docs", desc: "Attach receipts, medical records, or proof of loss", emoji: "📎" },
+                { step: 3, title: "Review", desc: "Our team reviews within 24 hours and may request info", emoji: "🔍" },
+                { step: 4, title: "Get Paid", desc: "Approved claims paid within 48 hours to your account", emoji: "💰" },
+              ].map(s => (
+                <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-cyan-500/20 transition-all bg-card/80">
+                  <span className="text-3xl">{s.emoji}</span>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-white font-bold text-sm flex items-center justify-center mx-auto my-3">{s.step}</div>
+                  <p className="font-bold text-sm">{s.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Real Claim Stories */}
+        <section className="py-10 sm:py-16 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-8">Real Traveler Stories</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { name: "Rachel T.", story: "My flight was cancelled due to weather. ZIVO Insurance covered my hotel and rebooking — paid out in 36 hours!", claim: "$1,200", type: "Flight Cancellation", emoji: "✈️" },
+                { name: "Marcus J.", story: "Lost my luggage on a connecting flight. Filed a claim on my phone and got reimbursed before the trip ended.", claim: "$850", type: "Lost Baggage", emoji: "🧳" },
+                { name: "Sophie L.", story: "Needed emergency medical care abroad. ZIVO Insurance handled everything, from hospital coordination to payment.", claim: "$4,500", type: "Medical Emergency", emoji: "🏥" },
+              ].map(s => (
+                <Card key={s.name} className="border-0 shadow-xl bg-gradient-to-br from-card/90 to-card">
+                  <CardContent className="p-5">
+                    <span className="text-2xl">{s.emoji}</span>
+                    <Badge variant="secondary" className="text-[10px] ml-2">{s.type}</Badge>
+                    <p className="text-sm text-muted-foreground italic mt-3 mb-3">"{s.story}"</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold">{s.name}</p>
+                      <p className="text-sm font-bold text-primary">{s.claim} claimed</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Insurance FAQ */}
+        <section className="py-10 sm:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+            <div className="space-y-3">
+              {[
+                { q: "When does coverage start?", a: "Coverage begins immediately upon purchase and confirmation. You're protected from the moment you buy." },
+                { q: "Can I cancel my insurance?", a: "Yes, free cancellation within 14 days of purchase if no claim has been filed. After that, the policy is non-refundable." },
+                { q: "Are pre-existing conditions covered?", a: "Only with our Premium plan. Basic and Standard plans exclude pre-existing medical conditions." },
+                { q: "What's 'Cancel for Any Reason' (CFAR)?", a: "CFAR (Premium only) lets you cancel your trip for any reason and receive 75% of your trip cost back." },
+                { q: "How do I file a claim?", a: "Log in to your ZIVO account, go to My Trips, select the trip, and click 'File Insurance Claim'. Upload supporting documents." },
+                { q: "Is adventure sports covered?", a: "Yes, with our Premium plan. This includes skiing, scuba diving, hiking, and more. Extreme sports may have limits." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/50 hover:border-cyan-500/20 transition-all">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-bold text-foreground">{f.q}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

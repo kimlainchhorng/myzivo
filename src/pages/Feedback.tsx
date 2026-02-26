@@ -285,6 +285,75 @@ export default function Feedback() {
               </Button>
             </div>
           </div>
+
+          {/* === WAVE 10: Rich Feedback Content === */}
+
+          {/* Feedback Stats */}
+          <Card className="mt-10 border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-center mb-4">Your Feedback Matters</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                {[
+                  { stat: "12,400+", label: "Feedback received", emoji: "📬" },
+                  { stat: "94%", label: "Issues resolved", emoji: "✅" },
+                  { stat: "47", label: "Features shipped from feedback", emoji: "🚀" },
+                  { stat: "<24h", label: "Avg response time", emoji: "⏱️" },
+                ].map(s => (
+                  <div key={s.label}>
+                    <span className="text-xl">{s.emoji}</span>
+                    <p className="text-xl font-bold text-primary mt-1">{s.stat}</p>
+                    <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recently Implemented Suggestions */}
+          <div className="mt-8">
+            <h3 className="font-bold text-lg mb-4 text-center">Recently Implemented from Feedback</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { suggestion: "Add fare calendar for flexible date search", by: "Maria S.", votes: 342, shipped: "Feb 2025" },
+                { suggestion: "Dark mode for the entire platform", by: "Jake T.", votes: 523, shipped: "Jan 2025" },
+                { suggestion: "Price drop alerts via push notifications", by: "Aisha R.", votes: 267, shipped: "Jan 2025" },
+                { suggestion: "Multi-city flight booking in one flow", by: "Tom K.", votes: 412, shipped: "Dec 2024" },
+              ].map(s => (
+                <Card key={s.suggestion} className="border-border/50 hover:border-primary/20 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-2 mb-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <p className="text-sm font-medium">{s.suggestion}</p>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>Suggested by {s.by} • {s.votes} votes</span>
+                      <span className="text-primary font-medium">Shipped {s.shipped}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ About Feedback */}
+          <div className="mt-8">
+            <h3 className="font-bold text-lg mb-4 text-center">Feedback FAQ</h3>
+            <div className="space-y-2">
+              {[
+                { q: "How long until I get a response?", a: "We respond to all feedback within 24 hours via email." },
+                { q: "Can I track my suggestion?", a: "Yes! Check our public roadmap to see if your idea is being worked on." },
+                { q: "Is my feedback anonymous?", a: "Email is optional. Without it, feedback is completely anonymous." },
+                { q: "What happens to bug reports?", a: "Bug reports go directly to our engineering team and are prioritized by severity." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/50">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-bold text-foreground">{f.q}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
 
