@@ -137,6 +137,7 @@ const FlightBaggageOptions = () => {
                         <Button
                           variant="outline"
                           size="icon"
+                          aria-label="Remove bag"
                           className="h-8 w-8"
                           onClick={() => updateBagCount(option.id, -1)}
                           disabled={count === 0}
@@ -147,6 +148,7 @@ const FlightBaggageOptions = () => {
                         <Button
                           variant="outline"
                           size="icon"
+                          aria-label="Add bag"
                           className="h-8 w-8"
                           onClick={() => updateBagCount(option.id, 1)}
                           disabled={count >= 3}

@@ -286,6 +286,7 @@ const FlightConfirmation = () => {
                     src={`https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/${offerDetails.airlineCode}.svg`}
                     alt={offerDetails?.airline || 'Airline'}
                     className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
+                    loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <div>

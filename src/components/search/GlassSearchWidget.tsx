@@ -367,6 +367,7 @@
                            <Button
                              variant="outline"
                              size="icon"
+                             aria-label="Fewer travelers"
                              className="h-8 w-8"
                              onClick={() => setPassengers(Math.max(1, passengers - 1))}
                              disabled={passengers <= 1}
@@ -377,6 +378,7 @@
                            <Button
                              variant="outline"
                              size="icon"
+                             aria-label="More travelers"
                              className="h-8 w-8"
                              onClick={() => setPassengers(Math.min(9, passengers + 1))}
                              disabled={passengers >= 9}

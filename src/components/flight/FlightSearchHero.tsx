@@ -435,11 +435,11 @@ export default function FlightSearchHero({
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}>
+                              <Button variant="outline" size="icon" aria-label="Fewer adults" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.max(1, adults - 1))} disabled={adults <= 1}>
                                 <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                               <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm">{adults}</span>
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.min(9, adults + 1))} disabled={adults >= 9}>
+                              <Button variant="outline" size="icon" aria-label="More adults" className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl" onClick={() => setAdults(Math.min(9, adults + 1))} disabled={adults >= 9}>
                                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                             </div>
@@ -457,11 +457,11 @@ export default function FlightSearchHero({
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}>
+                              <Button variant="outline" size="icon" aria-label="Fewer children" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setChildren(Math.max(0, children - 1))} disabled={children <= 0}>
                                 <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                               <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm">{children}</span>
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setChildren(Math.min(6, children + 1))} disabled={children >= 6}>
+                              <Button variant="outline" size="icon" aria-label="More children" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setChildren(Math.min(6, children + 1))} disabled={children >= 6}>
                                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                             </div>
@@ -479,11 +479,11 @@ export default function FlightSearchHero({
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setInfants(Math.max(0, infants - 1))} disabled={infants <= 0}>
+                              <Button variant="outline" size="icon" aria-label="Fewer infants" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setInfants(Math.max(0, infants - 1))} disabled={infants <= 0}>
                                 <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                               <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm">{infants}</span>
-                              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setInfants(Math.min(adults, infants + 1))} disabled={infants >= adults}>
+                              <Button variant="outline" size="icon" aria-label="More infants" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" onClick={() => setInfants(Math.min(adults, infants + 1))} disabled={infants >= adults}>
                                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                               </Button>
                             </div>

@@ -180,6 +180,7 @@ export const TripSharing = ({
             <Button 
               variant="outline" 
               size="icon"
+              aria-label="Generate QR code"
               onClick={() => toast.info("QR code generated! Share this with travel companions.")}
             >
               <QrCode className="w-4 h-4" />
@@ -330,6 +331,7 @@ export const TripSharing = ({
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Remove user"
                       className="h-8 w-8 text-red-400 hover:bg-red-500/10"
                       onClick={() => removeUser(user.id)}
                     >

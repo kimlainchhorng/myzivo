@@ -126,7 +126,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
                 {readyToBuy.length} ready!
               </Badge>
             )}
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Alert settings">
               <Settings className="w-4 h-4" />
             </Button>
           </div>

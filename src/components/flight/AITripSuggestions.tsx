@@ -611,6 +611,7 @@ export const AITripSuggestions = ({
                           <Button
                             variant={likedIds.has(dest.id) ? "default" : "ghost"}
                             size="icon"
+                            aria-label="Like destination"
                             className={cn(
                               "h-9 w-9 transition-transform hover:scale-110",
                               likedIds.has(dest.id) && "bg-pink-500 hover:bg-pink-600"
@@ -622,6 +623,7 @@ export const AITripSuggestions = ({
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label="Dislike destination"
                             className="h-9 w-9 hover:bg-red-500/20 hover:text-red-400"
                             onClick={(e) => dislikeDestination(e, dest.id)}
                           >
@@ -630,6 +632,7 @@ export const AITripSuggestions = ({
                           <Button 
                             variant="ghost" 
                             size="icon" 
+                            aria-label="View details"
                             className="h-9 w-9 group-hover:text-primary"
                           >
                             <ChevronRight className="w-4 h-4" />
