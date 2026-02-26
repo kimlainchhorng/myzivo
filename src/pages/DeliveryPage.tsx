@@ -2,10 +2,10 @@
  * DeliveryPage - Package delivery booking flow
  * Premium ZIVO super-app style with map, scheduling, and confirmation
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,51 @@ const scheduleTimes = [
   { id: "tomorrow-9am", label: "Tomorrow 9 AM", description: "Next day" },
 ];
 
+// Live delivery tracking timeline
+function DeliveryTrackingTimeline() {
+  const [activeStep, setActiveStep] = useState(0);
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setActiveStep(1), 2000),
+      setTimeout(() => setActiveStep(2), 5000),
+      setTimeout(() => setActiveStep(3), 8000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  const steps = [
+    { label: "Order confirmed", icon: CheckCircle, time: "Just now" },
+    { label: "Finding courier", icon: Navigation, time: "~2 min" },
+    { label: "Courier en route to pickup", icon: Truck, time: "~10 min" },
+    { label: "Package picked up & delivering", icon: Package, time: "~30 min" },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {steps.map((s, i) => {
+        const Icon = s.icon;
+        const isDone = i <= activeStep;
+        const isActive = i === activeStep;
+        return (
+          <motion.div key={s.label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 }}
+            className={cn("flex items-center gap-3 p-2.5 rounded-xl", isDone ? "opacity-100" : "opacity-40")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+              isDone ? "bg-violet-500/10" : "bg-muted/30")}>
+              <Icon className={cn("w-4 h-4", isDone ? "text-violet-500" : "text-muted-foreground", isActive && "animate-pulse")} />
+            </div>
+            <div className="flex-1">
+              <p className={cn("text-xs font-bold", isDone ? "text-foreground" : "text-muted-foreground")}>{s.label}</p>
+              <p className="text-[10px] text-muted-foreground">{s.time}</p>
+            </div>
+            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-violet-500" />}
+            {isActive && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function DeliveryPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<"address" | "package" | "review" | "confirmation">("address");
@@ -41,6 +86,7 @@ export default function DeliveryPage() {
   const [pickupAddress, setPickupAddress] = useState("");
   const [dropoffAddress, setDropoffAddress] = useState("");
   const [senderName, setSenderName] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
 
@@ -54,16 +100,21 @@ export default function DeliveryPage() {
   const [deliveryNote, setDeliveryNote] = useState("");
   const [includeInsurance, setIncludeInsurance] = useState(true);
   const [packageWeight, setPackageWeight] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [packageCount, setPackageCount] = useState(1);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
   const currentSpeed = deliverySpeed.find(s => s.id === selectedSpeed);
-  const basePrice = currentSize?.price ?? 0;
+  const basePrice = (currentSize?.price ?? 0) * packageCount;
   const speedMultiplier = currentSpeed?.multiplier ?? 1;
   const fragileFee = isFragile ? 2.99 : 0;
   const signatureFee = requireSignature ? 1.99 : 0;
-  const totalPrice = basePrice * speedMultiplier + fragileFee + signatureFee;
-  const insuranceFee = includeInsurance ? 1.99 : 0;
+  const insuranceFee = includeInsurance ? 1.99 * packageCount : 0;
+  const subtotal = basePrice * speedMultiplier + fragileFee + signatureFee + insuranceFee;
+  const promoDiscount = promoApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
+  const totalPrice = Math.round((subtotal - promoDiscount) * 100) / 100;
 
   const steps = ["address", "package", "review"] as const;
   const stepLabels = ["Route", "Package", "Review"];
@@ -91,6 +142,28 @@ export default function DeliveryPage() {
 
   const handlePlaceOrder = () => {
     setStep("confirmation");
+  };
+
+  const handleApplyPromo = () => {
+    if (promoCode.trim().toUpperCase() === "DELIVER15") {
+      setPromoApplied(true);
+      toast.success("15% off applied!");
+    } else {
+      toast.error("Invalid promo code");
+    }
+  };
+
+  const handleCopyTracking = () => {
+    navigator.clipboard.writeText(trackingId);
+    toast.success("Tracking ID copied!");
+  };
+
+  const handleShareTracking = () => {
+    if (navigator.share) {
+      navigator.share({ title: "ZIVO Delivery", text: `Track my package: ${trackingId}`, url: window.location.href });
+    } else {
+      handleCopyTracking();
+    }
   };
 
   return (
@@ -180,9 +253,14 @@ export default function DeliveryPage() {
 
               <div className="space-y-3">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-violet-500" /> Contact Details</h3>
-                <Input placeholder="Sender name" value={senderName} onChange={(e) => setSenderName(e.target.value)} className="h-12 rounded-xl" />
-                <Input placeholder="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="h-12 rounded-xl" />
-                <Input placeholder="Recipient phone" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} className="h-12 rounded-xl" type="tel" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Sender name" value={senderName} onChange={(e) => setSenderName(e.target.value)} className="h-12 rounded-xl" />
+                  <Input placeholder="Sender phone" value={senderPhone} onChange={(e) => setSenderPhone(e.target.value)} className="h-12 rounded-xl" type="tel" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="h-12 rounded-xl" />
+                  <Input placeholder="Recipient phone" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} className="h-12 rounded-xl" type="tel" />
+                </div>
               </div>
 
               <Button onClick={handleContinueToPackage} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
@@ -195,6 +273,23 @@ export default function DeliveryPage() {
           {step === "package" && (
             <motion.div key="package" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
               <h2 className="text-xl font-bold text-foreground">Package Details</h2>
+
+              {/* Package count */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Number of Packages</h3>
+                    <p className="text-[10px] text-muted-foreground">Same size & destination</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setPackageCount(Math.max(1, packageCount - 1))}
+                      className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground font-bold touch-manipulation active:scale-90">−</button>
+                    <span className="text-lg font-bold w-6 text-center">{packageCount}</span>
+                    <button onClick={() => setPackageCount(Math.min(10, packageCount + 1))}
+                      className="w-8 h-8 rounded-full bg-violet-500 text-white flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
+                  </div>
+                </div>
+              </div>
 
               {/* Sizes */}
               <div className="space-y-2">
@@ -211,7 +306,7 @@ export default function DeliveryPage() {
                       <p className="font-bold text-sm text-foreground">{size.name}</p>
                       <p className="text-xs text-muted-foreground">{size.description} · Up to {size.maxWeight}</p>
                     </div>
-                    <span className={cn("font-bold", selectedSize === size.id ? "text-violet-500" : "text-foreground")}>${size.price.toFixed(2)}</span>
+                    <span className={cn("font-bold", selectedSize === size.id ? "text-violet-500" : "text-foreground")}>${size.price.toFixed(2)}{packageCount > 1 && <span className="text-[10px] text-muted-foreground"> ×{packageCount}</span>}</span>
                   </motion.button>
                 ))}
               </div>
@@ -310,7 +405,7 @@ export default function DeliveryPage() {
                 </button>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-violet-500" /> Package Insurance</p>
-                  <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99</p>
+                  <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99{packageCount > 1 ? `/pkg` : ""}</p>
                 </div>
               </div>
 
@@ -337,7 +432,7 @@ export default function DeliveryPage() {
                     <div>
                       <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p>
                       <p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p>
-                      {senderName && <p className="text-xs text-muted-foreground">{senderName}</p>}
+                      {senderName && <p className="text-xs text-muted-foreground">{senderName}{senderPhone ? ` · ${senderPhone}` : ""}</p>}
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Delivery</p>
@@ -353,7 +448,7 @@ export default function DeliveryPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{currentSize?.icon}</span>
                   <div className="flex-1">
-                    <p className="font-bold text-sm">{currentSize?.name}</p>
+                    <p className="font-bold text-sm">{currentSize?.name}{packageCount > 1 ? ` × ${packageCount}` : ""}</p>
                     <p className="text-xs text-muted-foreground">{currentSize?.description}</p>
                   </div>
                 </div>
@@ -383,21 +478,42 @@ export default function DeliveryPage() {
                       <MessageSquare className="w-3 h-3" /> Note added
                     </span>
                   )}
+                  {packageCount > 1 && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <Package className="w-3 h-3" /> {packageCount} packages
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Promo code */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                  <Gift className="w-3 h-3" /> Promo Code
+                </h3>
+                <div className="flex gap-2">
+                  <Input placeholder="Enter code (try DELIVER15)" value={promoCode} onChange={(e) => setPromoCode(e.target.value)}
+                    disabled={promoApplied} className="h-10 rounded-xl flex-1 text-sm" />
+                  <Button variant={promoApplied ? "outline" : "default"} size="sm" onClick={handleApplyPromo}
+                    disabled={promoApplied || !promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
+                    {promoApplied ? <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Applied</> : "Apply"}
+                  </Button>
                 </div>
               </div>
 
               {/* Price breakdown */}
               <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Base price ({currentSize?.name})</span><span className="font-bold">${basePrice.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Base price ({currentSize?.name}{packageCount > 1 ? ` ×${packageCount}` : ""})</span><span className="font-bold">${basePrice.toFixed(2)}</span></div>
                 {speedMultiplier !== 1 && (
                   <div className="flex justify-between"><span className="text-muted-foreground">{currentSpeed?.name} speed ({speedMultiplier}x)</span><span className="font-bold">${(basePrice * speedMultiplier - basePrice).toFixed(2)}</span></div>
                 )}
                 {fragileFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Fragile handling</span><span className="font-bold">${fragileFee.toFixed(2)}</span></div>}
                 {signatureFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Signature required</span><span className="font-bold">${signatureFee.toFixed(2)}</span></div>}
-                {includeInsurance && <div className="flex justify-between"><span className="text-muted-foreground">Insurance</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>}
+                {includeInsurance && <div className="flex justify-between"><span className="text-muted-foreground">Insurance{packageCount > 1 ? ` (×${packageCount})` : ""}</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>}
+                {promoDiscount > 0 && <div className="flex justify-between text-violet-500"><span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> Promo</span><span className="font-bold">-${promoDiscount.toFixed(2)}</span></div>}
                 <div className="flex justify-between pt-3 border-t border-border/30">
                   <span className="font-bold text-base">Total</span>
-                  <span className="font-bold text-xl text-violet-500">${(totalPrice + insuranceFee).toFixed(2)}</span>
+                  <span className="font-bold text-xl text-violet-500">${totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -407,14 +523,14 @@ export default function DeliveryPage() {
               </div>
 
               <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
-                <CheckCircle className="w-5 h-5" /> Confirm Delivery · ${(totalPrice + insuranceFee).toFixed(2)}
+                <CheckCircle className="w-5 h-5" /> Confirm Delivery · ${totalPrice.toFixed(2)}
               </Button>
             </motion.div>
           )}
 
-          {/* CONFIRMATION */}
+          {/* CONFIRMATION - Enhanced with live tracking */}
           {step === "confirmation" && (
-            <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center justify-center min-h-[60vh]">
+            <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center min-h-[60vh]">
               <div className="max-w-md w-full text-center space-y-6">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
                   className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto shadow-2xl shadow-violet-500/30">
@@ -422,15 +538,25 @@ export default function DeliveryPage() {
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                   <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed! 📦</h1>
-                  <p className="text-muted-foreground">A courier will be assigned shortly. Track your package in real-time.</p>
-                  <p className="text-xs font-mono text-violet-500/80 mt-2 bg-violet-500/5 px-3 py-1.5 rounded-full inline-block">Tracking: {trackingId}</p>
+                  <p className="text-muted-foreground">A courier will be assigned shortly.</p>
+                  <button onClick={handleCopyTracking}
+                    className="text-xs font-mono text-violet-500/80 mt-2 bg-violet-500/5 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 hover:bg-violet-500/10 transition-all touch-manipulation">
+                    Tracking: {trackingId} <Copy className="w-3 h-3" />
+                  </button>
+                </motion.div>
+
+                {/* Live tracking */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                  className="rounded-2xl bg-card border border-border/40 p-4 text-left">
+                  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Navigation className="w-4 h-4 text-violet-500" /> Live Tracking</h3>
+                  <DeliveryTrackingTimeline />
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                   className="rounded-2xl bg-card border border-border/40 p-5 text-left space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center"><Package className="w-5 h-5 text-violet-500" /></div>
-                    <div><p className="text-xs text-muted-foreground">{currentSize?.name} Package</p><p className="text-sm font-bold text-foreground">{packageDescription || "Package delivery"}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{currentSize?.name}{packageCount > 1 ? ` × ${packageCount}` : ""}</p><p className="text-sm font-bold text-foreground">{packageDescription || "Package delivery"}</p></div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center"><Navigation className="w-5 h-5 text-orange-500" /></div>
@@ -438,16 +564,28 @@ export default function DeliveryPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-500" /></div>
-                    <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-bold text-violet-500">${(totalPrice + insuranceFee).toFixed(2)}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-bold text-violet-500">${totalPrice.toFixed(2)}</p></div>
+                  </div>
+                  {/* Proof of delivery placeholder */}
+                  <div className="pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Photo proof of delivery will appear here</span>
+                    </div>
                   </div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="flex gap-3">
-                  <Button variant="outline" onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold">Back to Home</Button>
-                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-white">
-                    Track Package
+                  <Button variant="outline" onClick={handleShareTracking} className="flex-1 h-12 rounded-xl font-bold gap-2">
+                    <Share2 className="w-4 h-4" /> Share
+                  </Button>
+                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-white gap-2">
+                    <Navigation className="w-4 h-4" /> Track Live
                   </Button>
                 </motion.div>
+                <Button variant="ghost" onClick={() => navigate("/")} className="text-sm text-muted-foreground">
+                  Back to Home
+                </Button>
               </div>
             </motion.div>
           )}

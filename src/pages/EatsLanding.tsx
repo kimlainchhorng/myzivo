@@ -2,8 +2,8 @@
  * EatsLanding - Food delivery hub page with full ordering flow
  * Premium glassmorphism style matching the ZIVO super-app
  */
-import { useState } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -17,52 +17,52 @@ import Footer from "@/components/Footer";
 const categories = ["All", "American", "Italian", "Asian", "Mexican", "Healthy", "Desserts"];
 
 const restaurants = [
-  { id: "joes-grill", name: "Joe's Grill", cuisine: "American", price: "$", rating: 4.7, time: "20-30 min", freeDelivery: true, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400", featured: "Classic Burger · $12.99",
+  { id: "joes-grill", name: "Joe's Grill", cuisine: "American", price: "$", rating: 4.7, time: "20-30 min", prepTime: 15, freeDelivery: true, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400", featured: "Classic Burger · $12.99", popular: true,
     menu: [
-      { id: "m1", name: "Classic Burger", price: 12.99, description: "Angus beef, lettuce, tomato, special sauce" },
-      { id: "m2", name: "Double Stack", price: 16.99, description: "Double patty with cheese and bacon" },
-      { id: "m3", name: "Crispy Fries", price: 4.99, description: "Golden fries with sea salt" },
-      { id: "m4", name: "Milkshake", price: 6.99, description: "Vanilla, chocolate, or strawberry" },
+      { id: "m1", name: "Classic Burger", price: 12.99, description: "Angus beef, lettuce, tomato, special sauce", calories: 650 },
+      { id: "m2", name: "Double Stack", price: 16.99, description: "Double patty with cheese and bacon", calories: 950 },
+      { id: "m3", name: "Crispy Fries", price: 4.99, description: "Golden fries with sea salt", calories: 320 },
+      { id: "m4", name: "Milkshake", price: 6.99, description: "Vanilla, chocolate, or strawberry", calories: 480 },
     ]
   },
-  { id: "bella-napoli", name: "Bella Napoli", cuisine: "Italian", price: "$$", rating: 4.9, time: "25-35 min", freeDelivery: false, image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400", featured: "Margherita Pizza · $14.99",
+  { id: "bella-napoli", name: "Bella Napoli", cuisine: "Italian", price: "$$", rating: 4.9, time: "25-35 min", prepTime: 20, freeDelivery: false, image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400", featured: "Margherita Pizza · $14.99", popular: true,
     menu: [
-      { id: "m5", name: "Margherita Pizza", price: 14.99, description: "Fresh mozzarella, basil, San Marzano" },
-      { id: "m6", name: "Pasta Carbonara", price: 16.99, description: "Guanciale, egg, pecorino" },
-      { id: "m7", name: "Bruschetta", price: 8.99, description: "Tomato, garlic, fresh basil" },
-      { id: "m8", name: "Tiramisu", price: 9.99, description: "Classic Italian dessert" },
+      { id: "m5", name: "Margherita Pizza", price: 14.99, description: "Fresh mozzarella, basil, San Marzano", calories: 780 },
+      { id: "m6", name: "Pasta Carbonara", price: 16.99, description: "Guanciale, egg, pecorino", calories: 820 },
+      { id: "m7", name: "Bruschetta", price: 8.99, description: "Tomato, garlic, fresh basil", calories: 280 },
+      { id: "m8", name: "Tiramisu", price: 9.99, description: "Classic Italian dessert", calories: 450 },
     ]
   },
-  { id: "thai-palace", name: "Thai Palace", cuisine: "Asian", price: "$$", rating: 4.6, time: "20-30 min", freeDelivery: true, image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&q=80&w=400", featured: "Pad Thai · $13.50",
+  { id: "thai-palace", name: "Thai Palace", cuisine: "Asian", price: "$$", rating: 4.6, time: "20-30 min", prepTime: 18, freeDelivery: true, image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&q=80&w=400", featured: "Pad Thai · $13.50", popular: false,
     menu: [
-      { id: "m9", name: "Pad Thai", price: 13.50, description: "Rice noodles, shrimp, peanuts" },
-      { id: "m10", name: "Green Curry", price: 14.99, description: "Coconut milk, Thai basil, vegetables" },
-      { id: "m11", name: "Spring Rolls", price: 7.99, description: "Crispy rolls with dipping sauce" },
-      { id: "m12", name: "Mango Sticky Rice", price: 8.99, description: "Sweet coconut sticky rice" },
+      { id: "m9", name: "Pad Thai", price: 13.50, description: "Rice noodles, shrimp, peanuts", calories: 620 },
+      { id: "m10", name: "Green Curry", price: 14.99, description: "Coconut milk, Thai basil, vegetables", calories: 550 },
+      { id: "m11", name: "Spring Rolls", price: 7.99, description: "Crispy rolls with dipping sauce", calories: 240 },
+      { id: "m12", name: "Mango Sticky Rice", price: 8.99, description: "Sweet coconut sticky rice", calories: 380 },
     ]
   },
-  { id: "el-azteca", name: "El Azteca", cuisine: "Mexican", price: "$", rating: 4.8, time: "15-25 min", freeDelivery: false, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400", featured: "Chicken Tacos · $10.99",
+  { id: "el-azteca", name: "El Azteca", cuisine: "Mexican", price: "$", rating: 4.8, time: "15-25 min", prepTime: 12, freeDelivery: false, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400", featured: "Chicken Tacos · $10.99", popular: true,
     menu: [
-      { id: "m13", name: "Chicken Tacos", price: 10.99, description: "Three tacos with salsa verde" },
-      { id: "m14", name: "Burrito Bowl", price: 12.99, description: "Rice, beans, guac, and protein" },
-      { id: "m15", name: "Chips & Guac", price: 6.99, description: "Fresh guacamole with tortilla chips" },
-      { id: "m16", name: "Churros", price: 5.99, description: "Cinnamon sugar with chocolate sauce" },
+      { id: "m13", name: "Chicken Tacos", price: 10.99, description: "Three tacos with salsa verde", calories: 420 },
+      { id: "m14", name: "Burrito Bowl", price: 12.99, description: "Rice, beans, guac, and protein", calories: 680 },
+      { id: "m15", name: "Chips & Guac", price: 6.99, description: "Fresh guacamole with tortilla chips", calories: 350 },
+      { id: "m16", name: "Churros", price: 5.99, description: "Cinnamon sugar with chocolate sauce", calories: 310 },
     ]
   },
-  { id: "green-bowl", name: "Green Bowl", cuisine: "Healthy", price: "$$", rating: 4.5, time: "15-25 min", freeDelivery: true, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=400", featured: "Acai Bowl · $11.99",
+  { id: "green-bowl", name: "Green Bowl", cuisine: "Healthy", price: "$$", rating: 4.5, time: "15-25 min", prepTime: 10, freeDelivery: true, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=400", featured: "Acai Bowl · $11.99", popular: false,
     menu: [
-      { id: "m17", name: "Acai Bowl", price: 11.99, description: "Acai, granola, banana, berries" },
-      { id: "m18", name: "Quinoa Salad", price: 13.99, description: "Mixed greens, avocado, feta" },
-      { id: "m19", name: "Green Smoothie", price: 8.99, description: "Spinach, banana, mango" },
-      { id: "m20", name: "Protein Wrap", price: 12.99, description: "Grilled chicken, hummus, veggies" },
+      { id: "m17", name: "Acai Bowl", price: 11.99, description: "Acai, granola, banana, berries", calories: 380 },
+      { id: "m18", name: "Quinoa Salad", price: 13.99, description: "Mixed greens, avocado, feta", calories: 420 },
+      { id: "m19", name: "Green Smoothie", price: 8.99, description: "Spinach, banana, mango", calories: 220 },
+      { id: "m20", name: "Protein Wrap", price: 12.99, description: "Grilled chicken, hummus, veggies", calories: 480 },
     ]
   },
-  { id: "sakura-sushi", name: "Sakura Sushi", cuisine: "Asian", price: "$$$", rating: 4.9, time: "30-40 min", freeDelivery: false, image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=400", featured: "Dragon Roll · $16.99",
+  { id: "sakura-sushi", name: "Sakura Sushi", cuisine: "Asian", price: "$$$", rating: 4.9, time: "30-40 min", prepTime: 25, freeDelivery: false, image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=400", featured: "Dragon Roll · $16.99", popular: true,
     menu: [
-      { id: "m21", name: "Dragon Roll", price: 16.99, description: "Shrimp tempura, avocado, eel sauce" },
-      { id: "m22", name: "Salmon Sashimi", price: 18.99, description: "8 pieces of fresh salmon" },
-      { id: "m23", name: "Miso Soup", price: 4.99, description: "Tofu, seaweed, green onion" },
-      { id: "m24", name: "Edamame", price: 5.99, description: "Steamed with sea salt" },
+      { id: "m21", name: "Dragon Roll", price: 16.99, description: "Shrimp tempura, avocado, eel sauce", calories: 520 },
+      { id: "m22", name: "Salmon Sashimi", price: 18.99, description: "8 pieces of fresh salmon", calories: 280 },
+      { id: "m23", name: "Miso Soup", price: 4.99, description: "Tofu, seaweed, green onion", calories: 80 },
+      { id: "m24", name: "Edamame", price: 5.99, description: "Steamed with sea salt", calories: 190 },
     ]
   },
 ];
@@ -107,6 +107,51 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
   );
 }
 
+// Live order tracking component for confirmation
+function OrderTrackingTimeline({ orderNumber }: { orderNumber: string }) {
+  const [activeStep, setActiveStep] = useState(0);
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setActiveStep(1), 2000),
+      setTimeout(() => setActiveStep(2), 5000),
+      setTimeout(() => setActiveStep(3), 9000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  const trackingSteps = [
+    { label: "Order placed", icon: CheckCircle, time: "Just now" },
+    { label: "Preparing your food", icon: Flame, time: "~10 min" },
+    { label: "Driver picking up", icon: Package, time: "~20 min" },
+    { label: "On the way!", icon: Truck, time: "~25 min" },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {trackingSteps.map((s, i) => {
+        const Icon = s.icon;
+        const isDone = i <= activeStep;
+        const isActive = i === activeStep;
+        return (
+          <motion.div key={s.label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 }}
+            className={cn("flex items-center gap-3 p-2.5 rounded-xl", isDone ? "opacity-100" : "opacity-40")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+              isDone ? "bg-primary/10" : "bg-muted/30")}>
+              <Icon className={cn("w-4 h-4", isDone ? "text-primary" : "text-muted-foreground", isActive && "animate-pulse")} />
+            </div>
+            <div className="flex-1">
+              <p className={cn("text-xs font-bold", isDone ? "text-foreground" : "text-muted-foreground")}>{s.label}</p>
+              <p className="text-[10px] text-muted-foreground">{s.time}</p>
+            </div>
+            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-primary" />}
+            {isActive && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function EatsLanding() {
   const navigate = useNavigate();
   const [active, setActive] = useState("All");
@@ -114,18 +159,27 @@ export default function EatsLanding() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [step, setStep] = useState<"browse" | "restaurant" | "cart" | "checkout" | "confirmation">("browse");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [contactlessDelivery, setContactlessDelivery] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   const [selectedTip, setSelectedTip] = useState("20");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [isFavorite, setIsFavorite] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"recommended" | "rating" | "time" | "price">("recommended");
 
   const filtered = restaurants.filter(r => {
     const matchesCategory = active === "All" || r.cuisine === active;
     const matchesSearch = !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) || r.menu.some(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === "rating") return b.rating - a.rating;
+    if (sortBy === "time") return a.prepTime - b.prepTime;
+    if (sortBy === "price") return a.price.length - b.price.length;
+    return (b.popular ? 1 : 0) - (a.popular ? 1 : 0);
   });
+
   const orderNumber = `ZE-${Date.now().toString(36).toUpperCase().slice(-6)}`;
   const currentRestaurant = restaurants.find(r => r.id === selectedRestaurant);
 
@@ -139,6 +193,11 @@ export default function EatsLanding() {
   const grandTotal = Math.round((cartTotal + deliveryFee + serviceFee + tipAmount - promoDiscount) * 100) / 100;
 
   const addToCart = (item: { id: string; name: string; price: number }, restaurantId: string) => {
+    // Check if cart has items from different restaurant
+    if (cart.length > 0 && cart[0].restaurantId !== restaurantId) {
+      toast.error("You can only order from one restaurant at a time. Clear your cart first.");
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(c => c.menuItemId === item.id);
       if (existing) return prev.map(c => c.menuItemId === item.id ? { ...c, quantity: c.quantity + 1 } : c);
@@ -170,6 +229,20 @@ export default function EatsLanding() {
   const toggleFavorite = (id: string) => {
     setIsFavorite(prev => ({ ...prev, [id]: !prev[id] }));
     toast.success(isFavorite[id] ? "Removed from favorites" : "Added to favorites");
+  };
+
+  const handleReorder = () => {
+    setCart([]); setStep("browse"); setSelectedRestaurant(null);
+    toast.success("Browse to place a new order!");
+  };
+
+  const handleShareOrder = () => {
+    if (navigator.share) {
+      navigator.share({ title: `ZIVO Eats Order #${orderNumber}`, text: `Check out my order from ${currentRestaurant?.name}!` });
+    } else {
+      navigator.clipboard.writeText(`ZIVO Eats Order #${orderNumber}`);
+      toast.success("Order details copied!");
+    }
   };
 
   return (
@@ -210,14 +283,48 @@ export default function EatsLanding() {
 
             <section className="py-12 sm:py-16">
               <div className="container mx-auto px-4">
-                <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
-                  {categories.map((c) => (
-                    <button key={c} onClick={() => setActive(c)} className={cn(
-                      "whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95",
-                      active === c ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
-                    )}>{c}</button>
+                {/* Category + Sort */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    {categories.map((c) => (
+                      <button key={c} onClick={() => setActive(c)} className={cn(
+                        "whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95",
+                        active === c ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
+                      )}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                {/* Sort options */}
+                <div className="flex gap-2 mb-6">
+                  {(["recommended", "rating", "time", "price"] as const).map(s => (
+                    <button key={s} onClick={() => setSortBy(s)}
+                      className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
+                        sortBy === s ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
+                      )}>{s === "recommended" ? "🔥 Recommended" : s === "rating" ? "⭐ Top Rated" : s === "time" ? "⚡ Fastest" : "💰 Price"}</button>
                   ))}
                 </div>
+
+                {/* Popular section */}
+                {active === "All" && !searchQuery && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Flame className="w-5 h-5 text-orange-500" /> Popular Near You</h2>
+                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                      {restaurants.filter(r => r.popular).map(r => (
+                        <button key={r.id} onClick={() => { setSelectedRestaurant(r.id); setStep("restaurant"); }}
+                          className="flex-shrink-0 w-36 rounded-xl bg-card border border-border/40 overflow-hidden hover:shadow-md transition-all touch-manipulation active:scale-[0.98]">
+                          <img src={r.image} alt={r.name} className="w-full h-20 object-cover" loading="lazy" />
+                          <div className="p-2.5">
+                            <p className="text-xs font-bold text-foreground truncate">{r.name}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {r.rating} · {r.time}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filtered.length === 0 && (
                     <div className="col-span-full text-center py-16">
@@ -238,6 +345,11 @@ export default function EatsLanding() {
                                 <Truck className="w-3 h-3" /> Free Delivery
                               </span>
                             )}
+                            {restaurant.popular && (
+                              <span className="absolute bottom-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white flex items-center gap-1">
+                                <Flame className="w-3 h-3" /> Popular
+                              </span>
+                            )}
                           </div>
                           <div className="p-5">
                             <div className="flex items-center justify-between mb-1">
@@ -249,12 +361,12 @@ export default function EatsLanding() {
                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {restaurant.rating}</span>
                                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {restaurant.time}</span>
+                                <span className="flex items-center gap-1 text-[10px]"><Timer className="w-3 h-3" /> {restaurant.prepTime}m prep</span>
                               </div>
                               <span className="text-primary text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">Order <ArrowRight className="w-3.5 h-3.5" /></span>
                             </div>
                           </div>
                         </button>
-                        {/* Favorite button */}
                         <button onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur flex items-center justify-center touch-manipulation active:scale-90 shadow-sm">
                           <Heart className={cn("w-4 h-4 transition-all", isFavorite[restaurant.id] ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
@@ -304,7 +416,23 @@ export default function EatsLanding() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 flex items-center gap-2">
                 {currentRestaurant.freeDelivery && <Badge className="bg-primary text-primary-foreground text-[10px] font-bold gap-1"><Truck className="w-3 h-3" /> Free Delivery</Badge>}
-                <Badge variant="outline" className="bg-card/80 backdrop-blur text-[10px] font-bold gap-1"><Timer className="w-3 h-3" /> {currentRestaurant.time}</Badge>
+                <Badge variant="outline" className="bg-card/80 backdrop-blur text-[10px] font-bold gap-1"><Timer className="w-3 h-3" /> {currentRestaurant.prepTime}m prep</Badge>
+              </div>
+            </div>
+
+            {/* Group order banner */}
+            <div className="px-4 pt-4 max-w-lg mx-auto">
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground">Group Order</p>
+                  <p className="text-[10px] text-muted-foreground">Invite friends to add items to this order</p>
+                </div>
+                <button onClick={() => toast.info("Group ordering coming soon!")} className="text-xs font-bold text-primary px-3 py-1.5 rounded-lg bg-primary/10 touch-manipulation active:scale-95">
+                  Start
+                </button>
               </div>
             </div>
 
@@ -320,7 +448,10 @@ export default function EatsLanding() {
                       <div className="flex-1">
                         <h3 className="font-bold text-sm text-foreground">{item.name}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                        <p className="text-sm font-bold text-primary mt-1.5">${item.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <p className="text-sm font-bold text-primary">${item.price.toFixed(2)}</p>
+                          {item.calories && <span className="text-[10px] text-muted-foreground/60">{item.calories} cal</span>}
+                        </div>
                       </div>
                       {inCart ? (
                         <div className="flex items-center gap-2">
@@ -334,7 +465,6 @@ export default function EatsLanding() {
                         </Button>
                       )}
                     </div>
-                    {/* Special instructions per item */}
                     {inCart && (
                       <div className="flex items-center gap-2">
                         <MessageSquare className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -381,6 +511,15 @@ export default function EatsLanding() {
                 </div>
               ) : (
                 <>
+                  {/* Restaurant name */}
+                  {currentRestaurant && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+                      <UtensilsCrossed className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-foreground">{currentRestaurant.name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">{currentRestaurant.time}</span>
+                    </div>
+                  )}
+
                   {cart.map(item => (
                     <div key={item.menuItemId} className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/40">
                       <div className="flex-1">
@@ -436,10 +575,22 @@ export default function EatsLanding() {
             </div>
 
             <div className="px-4 py-6 max-w-lg mx-auto space-y-5">
-              {/* Delivery address */}
+              {/* Delivery address + instructions */}
               <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3">
                 <h3 className="font-bold text-sm flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> Delivery Address</h3>
                 <Input placeholder="Enter delivery address" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className="h-12 rounded-xl" />
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <Input placeholder="Delivery instructions (e.g., buzz #204)" value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)} className="h-10 rounded-xl text-sm" />
+                </div>
+                {/* Contactless delivery toggle */}
+                <div className="flex items-center gap-3 pt-1">
+                  <button onClick={() => setContactlessDelivery(!contactlessDelivery)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", contactlessDelivery ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", contactlessDelivery ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <p className="text-xs font-medium text-foreground">Contactless delivery</p>
+                </div>
               </div>
 
               {/* Order summary */}
@@ -502,7 +653,7 @@ export default function EatsLanding() {
               <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex items-center gap-3">
                 <Timer className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="text-sm font-bold text-foreground">Estimated delivery: 25-35 min</p>
+                  <p className="text-sm font-bold text-foreground">Estimated delivery: {currentRestaurant ? `${currentRestaurant.prepTime + 10}-${currentRestaurant.prepTime + 20} min` : "25-35 min"}</p>
                   <p className="text-xs text-muted-foreground">Your order will be prepared fresh</p>
                 </div>
               </div>
@@ -514,9 +665,9 @@ export default function EatsLanding() {
           </motion.div>
         )}
 
-        {/* ORDER CONFIRMATION */}
+        {/* ORDER CONFIRMATION - Enhanced with live tracking */}
         {step === "confirmation" && (
-          <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="min-h-screen flex items-center justify-center px-4">
+          <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="min-h-screen flex items-center justify-center px-4 py-8">
             <div className="max-w-md w-full text-center space-y-6">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
                 className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto shadow-2xl shadow-primary/30">
@@ -524,8 +675,15 @@ export default function EatsLanding() {
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <h1 className="text-2xl font-bold text-foreground mb-2">Order Confirmed! 🎉</h1>
-                <p className="text-muted-foreground">Your food is being prepared and will arrive in 25-35 minutes.</p>
+                <p className="text-muted-foreground">Your food is being prepared</p>
                 <p className="text-xs font-mono text-primary/80 mt-2 bg-primary/5 px-3 py-1.5 rounded-full inline-block">Order #{orderNumber}</p>
+              </motion.div>
+
+              {/* Live order tracking */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                className="rounded-2xl bg-card border border-border/40 p-4 text-left">
+                <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Navigation className="w-4 h-4 text-primary" /> Live Tracking</h3>
+                <OrderTrackingTimeline orderNumber={orderNumber} />
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
@@ -534,10 +692,11 @@ export default function EatsLanding() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"><Navigation className="w-5 h-5 text-primary" /></div>
                   <div><p className="text-xs text-muted-foreground">Delivering to</p><p className="text-sm font-bold text-foreground">{deliveryAddress}</p></div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center"><Timer className="w-5 h-5 text-orange-500" /></div>
-                  <div><p className="text-xs text-muted-foreground">Estimated arrival</p><p className="text-sm font-bold text-foreground">25-35 minutes</p></div>
-                </div>
+                {contactlessDelivery && (
+                  <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 px-3 py-1.5 rounded-lg">
+                    <CheckCircle className="w-3 h-3" /> Contactless delivery
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-500" /></div>
                   <div><p className="text-xs text-muted-foreground">Total charged</p><p className="text-sm font-bold text-primary">${grandTotal.toFixed(2)}</p></div>
@@ -545,13 +704,16 @@ export default function EatsLanding() {
               </motion.div>
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="flex gap-3">
-                <Button variant="outline" onClick={() => { setCart([]); setStep("browse"); setSelectedRestaurant(null); }} className="flex-1 h-12 rounded-xl font-bold">
-                  Back to Home
+                <Button variant="outline" onClick={handleReorder} className="flex-1 h-12 rounded-xl font-bold gap-2">
+                  <RefreshCw className="w-4 h-4" /> Reorder
                 </Button>
-                <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground">
-                  Track Order
+                <Button onClick={handleShareOrder} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground gap-2">
+                  <Share2 className="w-4 h-4" /> Share
                 </Button>
               </motion.div>
+              <Button variant="ghost" onClick={() => navigate("/")} className="text-sm text-muted-foreground">
+                Back to Home
+              </Button>
             </div>
           </motion.div>
         )}
