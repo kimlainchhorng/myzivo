@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare, History, RotateCcw, Headphones, Baby, Briefcase, Home, Building2, Bookmark, Route, Info, X, Bell, ThumbsUp, ThumbsDown, Award, Plane } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare, History, RotateCcw, Headphones, Baby, Briefcase, Home, Building2, Bookmark, Route, Info, X, Bell, ThumbsUp, ThumbsDown, Award, Plane, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -510,6 +510,62 @@ export default function RequestRidePage() {
   const [packageInTrunk, setPackageInTrunk] = useState(false);
   const [meetAtCurb, setMeetAtCurb] = useState(true);
   const [verifiedDriver, setVerifiedDriver] = useState(true);
+
+  // === WAVE 3: Commute Intelligence & Analytics ===
+  const [showCommuteInsights, setShowCommuteInsights] = useState(false);
+  const [showFareHistory, setShowFareHistory] = useState(false);
+  const [showDriverMemory, setShowDriverMemory] = useState(false);
+  const [showRidePassCompare, setShowRidePassCompare] = useState(false);
+  const [showCarbonDashboard, setShowCarbonDashboard] = useState(false);
+  const [showSurgePredictor, setShowSurgePredictor] = useState(false);
+
+  // Commute insights data
+  const commuteInsights = {
+    weeklyRides: 8,
+    avgCost: "$16.20",
+    peakHours: "8-9 AM, 5-6 PM",
+    bestDay: "Tuesday",
+    worstDay: "Friday",
+    savingsTip: "Ride 10 min earlier to save 22% on avg",
+    monthlySpend: [
+      { month: "Oct", amount: 248 },
+      { month: "Nov", amount: 312 },
+      { month: "Dec", amount: 189 },
+      { month: "Jan", amount: 276 },
+      { month: "Feb", amount: 234 },
+    ],
+  };
+
+  // Fare history
+  const fareHistory = [
+    { route: "Home → Office", avgFare: "$14.50", rides: 24, bestTime: "7:30 AM", worstTime: "8:45 AM", savings: "$3.20" },
+    { route: "Office → Home", avgFare: "$15.80", rides: 22, bestTime: "4:30 PM", worstTime: "6:00 PM", savings: "$4.10" },
+    { route: "Home → Airport", avgFare: "$32.00", rides: 6, bestTime: "6:00 AM", worstTime: "4:00 PM", savings: "$8.50" },
+  ];
+
+  // Driver preference memory
+  const driverMemory = [
+    { name: "Marcus T.", rating: 4.97, rides: 18, preferences: ["Quiet ride", "Cool AC", "Direct route"], lastRide: "2 days ago", vehicle: "Tesla Model 3" },
+    { name: "Sarah L.", rating: 4.95, rides: 12, preferences: ["Music on", "Conversation OK"], lastRide: "1 week ago", vehicle: "BMW 3 Series" },
+    { name: "David K.", rating: 4.92, rides: 8, preferences: ["Pet friendly", "Extra trunk"], lastRide: "3 days ago", vehicle: "Honda Accord" },
+  ];
+
+  // Surge predictor
+  const surgePredictions = [
+    { time: "Now", surge: 1.0, label: "No surge", color: "text-emerald-500" },
+    { time: "30 min", surge: 1.2, label: "Low", color: "text-amber-500" },
+    { time: "1 hour", surge: 1.8, label: "High", color: "text-red-500" },
+    { time: "2 hours", surge: 1.0, label: "Normal", color: "text-emerald-500" },
+  ];
+
+  // Carbon dashboard
+  const carbonDashboard = {
+    totalOffset: "34 lbs CO2",
+    greenRides: 28,
+    greenPct: 19,
+    treesPlanted: 2,
+    rank: "Top 15%",
+  };
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -1901,6 +1957,121 @@ export default function RequestRidePage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* === WAVE 3: Intelligence Sections === */}
+      {step === "address" && (
+        <div className="px-4 pb-4 space-y-3">
+          {/* Commute Insights */}
+          <button onClick={() => setShowCommuteInsights(!showCommuteInsights)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Commute Insights
+            <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[8px] ml-auto">AI</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showCommuteInsights && "rotate-90")} />
+          </button>
+          {showCommuteInsights && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{commuteInsights.weeklyRides}</p><p className="text-[9px] text-muted-foreground">Rides/week</p></div>
+                <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{commuteInsights.avgCost}</p><p className="text-[9px] text-muted-foreground">Avg cost</p></div>
+                <div className="text-center p-2 rounded-xl bg-emerald-500/10"><p className="text-sm font-bold text-emerald-500">{commuteInsights.bestDay}</p><p className="text-[9px] text-muted-foreground">Best day</p></div>
+              </div>
+              <div className="flex items-end gap-1.5 h-16">
+                {commuteInsights.monthlySpend.map(m => (
+                  <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 350) * 100}%` }} className="w-full rounded-t bg-violet-500/30" />
+                    <span className="text-[8px] text-muted-foreground">{m.month}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-emerald-500 font-bold bg-emerald-500/5 p-2 rounded-lg">💡 {commuteInsights.savingsTip}</p>
+            </motion.div>
+          )}
+
+          {/* Surge Predictor */}
+          <button onClick={() => setShowSurgePredictor(!showSurgePredictor)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <TrendingUp className="w-3.5 h-3.5 text-amber-500" /> Surge Forecast
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showSurgePredictor && "rotate-90")} />
+          </button>
+          {showSurgePredictor && (
+            <div className="grid grid-cols-4 gap-2">
+              {surgePredictions.map(s => (
+                <div key={s.time} className="text-center p-2 rounded-xl bg-card border border-border/40">
+                  <p className="text-[10px] text-muted-foreground">{s.time}</p>
+                  <p className={cn("text-sm font-bold", s.color)}>{s.surge}x</p>
+                  <p className={cn("text-[8px] font-bold", s.color)}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fare History */}
+          <button onClick={() => setShowFareHistory(!showFareHistory)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Fare History by Route
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showFareHistory && "rotate-90")} />
+          </button>
+          {showFareHistory && (
+            <div className="space-y-2">
+              {fareHistory.map(f => (
+                <div key={f.route} className="rounded-xl bg-card border border-border/40 p-3">
+                  <p className="text-xs font-bold text-foreground">{f.route}</p>
+                  <div className="flex gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                    <span>Avg: <b className="text-foreground">{f.avgFare}</b></span>
+                    <span>{f.rides} rides</span>
+                    <span className="text-emerald-500">Best: {f.bestTime}</span>
+                    <span className="text-red-500">Worst: {f.worstTime}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Driver Memory */}
+          <button onClick={() => setShowDriverMemory(!showDriverMemory)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Heart className="w-3.5 h-3.5 text-rose-500" /> Favorite Drivers
+            <Badge className="bg-rose-500/10 text-rose-500 border-0 text-[8px] ml-auto">{driverMemory.length}</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showDriverMemory && "rotate-90")} />
+          </button>
+          {showDriverMemory && (
+            <div className="space-y-2">
+              {driverMemory.map(d => (
+                <div key={d.name} className="rounded-xl bg-card border border-border/40 p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{d.name.charAt(0)}</div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground">{d.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{d.vehicle} · ★ {d.rating} · {d.rides} rides</p>
+                    </div>
+                    <button onClick={() => toast.success(`Requesting ${d.name}...`)} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {d.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full bg-muted/50 text-[8px] text-muted-foreground">{p}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Carbon Dashboard */}
+          <button onClick={() => setShowCarbonDashboard(!showCarbonDashboard)}
+            className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Leaf className="w-3.5 h-3.5 text-emerald-500" /> Carbon Impact
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showCarbonDashboard && "rotate-90")} />
+          </button>
+          {showCarbonDashboard && (
+            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4">
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div className="text-center"><p className="text-sm font-bold text-emerald-500">{carbonDashboard.totalOffset}</p><p className="text-[9px] text-muted-foreground">Offset</p></div>
+                <div className="text-center"><p className="text-sm font-bold text-foreground">{carbonDashboard.greenRides}</p><p className="text-[9px] text-muted-foreground">Green rides</p></div>
+                <div className="text-center"><p className="text-sm font-bold text-emerald-500">{carbonDashboard.rank}</p><p className="text-[9px] text-muted-foreground">Eco rank</p></div>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">🌳 You've helped plant {carbonDashboard.treesPlanted} trees this month</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <ZivoMobileNav />
 
