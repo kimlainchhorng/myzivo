@@ -45,8 +45,8 @@ const allianceIcons = {
 };
 
 const tierColors = {
-  basic: "from-slate-500/20 to-slate-600/10 border-slate-500/40 text-slate-400",
-  silver: "from-slate-300/20 to-slate-400/10 border-slate-300/40 text-slate-300",
+  basic: "from-muted-foreground/20 to-muted-foreground/10 border-muted-foreground/40 text-muted-foreground",
+  silver: "from-muted-foreground/30 to-muted-foreground/15 border-muted-foreground/50 text-muted-foreground",
   gold: "from-amber-500/20 to-yellow-500/10 border-amber-500/40 text-amber-400",
   platinum: "from-purple-500/20 to-violet-500/10 border-purple-500/40 text-purple-400",
   diamond: "from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-400",
