@@ -285,17 +285,17 @@ export const moreServicesData: MegaMenuData = {
       items: [
         { icon: Car, label: "ZIVO Rides", description: "Request local rides", href: "/rides", color: "text-rides" },
         { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "/eats", color: "text-eats" },
-        { icon: Package, label: "ZIVO Delivery", description: "Package and courier delivery", href: "/extras", color: "text-primary" },
+        { icon: Package, label: "ZIVO Delivery", description: "Package and courier delivery", href: "/delivery", color: "text-primary" },
       ],
     },
     {
       title: "For Drivers",
       items: [
-        { icon: Car, label: "Become a Driver", description: "Earn on ZIVO Driver", href: "https://zivodriver.com/drive", color: "text-rides", badge: "External" },
+        { icon: Car, label: "Become a Driver", description: "Earn on ZIVO Driver", href: "/drive", color: "text-rides" },
       ],
     },
   ],
   policies: [
-    { icon: HelpCircle, label: "Legal Note", description: "Mobility services are provided by independent drivers using the ZIVO Driver platform.", href: "https://zivodriver.com/terms" },
+    { icon: HelpCircle, label: "Legal Note", description: "Mobility services are provided by independent drivers using the ZIVO Driver platform.", href: "/terms" },
   ],
 };

@@ -126,7 +126,7 @@ const Header = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-2" />
                       <DropdownMenuItem 
-                        onClick={() => window.open("https://zivodriver.com", "_blank")} 
+                        onClick={() => navigate("/drive")} 
                         className="cursor-pointer rounded-xl py-2.5 font-medium"
                       >
                         <Car className="w-4 h-4 mr-2 text-rides" />
@@ -150,7 +150,7 @@ const Header = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => window.open("https://zivodriver.com", "_blank")}
+                    onClick={() => navigate("/drive")}
                     className="rounded-xl font-semibold text-rides hover:text-rides/80 gap-1.5"
                   >
                     <Car className="w-4 h-4" />
