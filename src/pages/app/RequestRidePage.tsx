@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { cn } from "@/lib/utils";
 
 const stripePromise = getStripe();
 
@@ -25,6 +26,43 @@ interface PricingBreakdown {
   final_multiplier: number;
   total: number;
 }
+
+// Ride type categories
+const rideCategories = [
+  { id: "economy", label: "Economy", icon: Car },
+  { id: "premium", label: "Premium", icon: Sparkles },
+  { id: "elite", label: "Elite", icon: Crown },
+];
+
+// Vehicle options per category
+const vehicleOptions: Record<string, Array<{
+  id: string;
+  name: string;
+  badge?: string;
+  badgeColor?: string;
+  eta: string;
+  capacity: number;
+  price: string;
+  priceCents: number;
+  multiplier: number;
+}>> = {
+  economy: [
+    { id: "wait-save", name: "Wait & Save", badge: "Save", badgeColor: "text-primary", eta: "10-15 min", capacity: 4, price: "$13.55", priceCents: 1355, multiplier: 0.85 },
+    { id: "standard", name: "Standard", eta: "3-5 min", capacity: 4, price: "$16.29", priceCents: 1629, multiplier: 1.0 },
+    { id: "green", name: "Green", badge: "Eco", badgeColor: "text-emerald-500", eta: "5-8 min", capacity: 4, price: "$15.55", priceCents: 1555, multiplier: 0.95 },
+    { id: "priority", name: "Priority", badge: "Fast", badgeColor: "text-orange-500", eta: "1-3 min", capacity: 4, price: "$18.29", priceCents: 1829, multiplier: 1.15 },
+    { id: "xl", name: "XL", eta: "5-10 min", capacity: 6, price: "$22.99", priceCents: 2299, multiplier: 1.4 },
+  ],
+  premium: [
+    { id: "comfort", name: "Comfort", eta: "4-8 min", capacity: 4, price: "$24.99", priceCents: 2499, multiplier: 1.5 },
+    { id: "comfort-xl", name: "Comfort XL", eta: "6-10 min", capacity: 6, price: "$32.50", priceCents: 3250, multiplier: 2.0 },
+    { id: "black", name: "Black", badge: "Top Rated", badgeColor: "text-amber-500", eta: "5-10 min", capacity: 4, price: "$38.99", priceCents: 3899, multiplier: 2.4 },
+  ],
+  elite: [
+    { id: "black-suv", name: "Black SUV", badge: "Luxury", badgeColor: "text-amber-500", eta: "8-15 min", capacity: 6, price: "$52.99", priceCents: 5299, multiplier: 3.2 },
+    { id: "limo", name: "Limo", badge: "VIP", badgeColor: "text-violet-500", eta: "15-25 min", capacity: 4, price: "$89.99", priceCents: 8999, multiplier: 5.5 },
+  ],
+};
 
 // Inner payment form using Stripe Elements
 function PaymentForm({ 
@@ -79,11 +117,7 @@ function PaymentForm({
           </div>
           <span className="text-sm font-bold text-foreground">Payment Details</span>
         </div>
-        <PaymentElement 
-          options={{
-            layout: "tabs",
-          }}
-        />
+        <PaymentElement options={{ layout: "tabs" }} />
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
@@ -124,6 +158,10 @@ export default function RequestRidePage() {
   const dropoffGeocode = useGoogleMapsGeocode();
 
   const [activeInput, setActiveInput] = useState<"pickup" | "dropoff" | null>(null);
+
+  // Ride category & vehicle selection
+  const [activeCategory, setActiveCategory] = useState("economy");
+  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
 
   // Three-step flow state
   const [step, setStep] = useState<"address" | "pricing" | "payment">("address");
@@ -324,101 +362,109 @@ export default function RequestRidePage() {
     else navigate(-1);
   };
 
+  const currentVehicles = vehicleOptions[activeCategory] || [];
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Premium Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
-        <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
+      {/* Map placeholder area */}
+      <div className="relative h-[35vh] min-h-[220px] bg-gradient-to-b from-emerald-900/90 via-emerald-800/70 to-background">
+        {/* Top bar overlay */}
+        <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-3 safe-area-top flex items-center justify-between">
           <motion.button 
             whileTap={{ scale: 0.88 }}
             onClick={handleBack} 
-            className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation hover:border-primary/20 transition-all"
+            className="h-10 px-4 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center gap-2 touch-manipulation text-sm font-medium text-foreground shadow-lg"
           >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Tap map to set dropoff</span>
           </motion.button>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-primary/10 flex items-center justify-center">
-              <Car className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-foreground">Request a Ride</h1>
-              <p className="text-[10px] text-muted-foreground">Estimated pickup in ~4 min</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Premium Step Indicator */}
-      <div className="px-4 pt-4 max-w-lg mx-auto w-full">
-        <div className="flex items-center gap-2">
-          {steps.map((s, i) => (
-            <div key={s} className="flex-1 flex items-center gap-2">
-              <div className="flex-1 flex flex-col items-center gap-1.5">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                  i <= currentStepIndex 
-                    ? "bg-gradient-to-br from-primary to-emerald-500 text-primary-foreground shadow-md shadow-primary/20" 
-                    : "bg-muted/50 text-muted-foreground border border-border/40"
-                }`}>
-                  {i < currentStepIndex ? <CheckCircle className="w-4 h-4" /> : i + 1}
-                </div>
-                <span className={`text-[10px] font-bold ${i <= currentStepIndex ? 'text-primary' : 'text-muted-foreground/50'}`}>
-                  {stepLabels[i]}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className={`h-[2px] flex-1 rounded-full transition-all duration-300 -mt-5 ${
-                  i < currentStepIndex ? "bg-primary" : "bg-border/40"
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 px-4 py-6 space-y-5 max-w-lg mx-auto w-full">
-        <AnimatePresence mode="wait">
-          {step === "address" && (
-            <motion.div
-              key="address"
-              initial={{ opacity: 0, x: -20 }}
+          {pickupAddress && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-5"
+              className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 shadow-lg"
             >
-              {/* Pickup */}
-              <div className="space-y-2.5">
-                <label className="text-xs font-bold text-foreground flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  Pickup Location
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-                  <Input
-                    placeholder="Enter pickup address"
-                    value={pickupAddress}
-                    onChange={(e) => {
-                      setPickupAddress(e.target.value);
-                      setPickupCoords(null);
-                      pickupGeocode.fetchSuggestions(e.target.value);
-                      setActiveInput("pickup");
-                    }}
-                    onFocus={() => setActiveInput("pickup")}
-                    className="pl-10 h-13 rounded-xl bg-card border-border/40 font-medium text-sm focus:border-primary/30 focus:shadow-md focus:shadow-primary/5 transition-all"
-                  />
+              <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">5-10<br/>MIN</span>
+              <div className="text-right">
+                <p className="text-xs font-bold text-foreground truncate max-w-[120px]">{pickupAddress.split(",")[0]}</p>
+                <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{pickupAddress.split(",").slice(1).join(",").trim() || "Pickup"}</p>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            </motion.div>
+          )}
+        </div>
+        {/* Gradient fade to bottom sheet */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
+      </div>
+
+      {/* Bottom Sheet */}
+      <div className="flex-1 -mt-6 relative z-10">
+        {/* Pull indicator */}
+        <div className="flex justify-center pt-2 pb-3">
+          <div className="w-10 h-1 rounded-full bg-border/60" />
+        </div>
+
+        <div className="px-4 max-w-lg mx-auto w-full space-y-4 pb-28">
+          <AnimatePresence mode="wait">
+            {step === "address" && (
+              <motion.div
+                key="address"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-foreground">Where to?</h2>
+                  <span className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    No drivers nearby
+                  </span>
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleUseMyLocation} 
-                  disabled={isGettingLocation} 
-                  className="w-full gap-2 rounded-xl h-11 border-border/40 hover:border-primary/20 hover:bg-primary/5 font-bold text-xs transition-all"
-                >
-                  {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4 text-primary" />}
-                  Use my location
-                </Button>
+                {/* Address inputs */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3 shadow-sm">
+                  {/* Pickup */}
+                  <div className="relative flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full border-2 border-primary bg-primary/20 shrink-0" />
+                    <Input
+                      placeholder="Enter pickup location"
+                      value={pickupAddress}
+                      onChange={(e) => {
+                        setPickupAddress(e.target.value);
+                        setPickupCoords(null);
+                        pickupGeocode.fetchSuggestions(e.target.value);
+                        setActiveInput("pickup");
+                      }}
+                      onFocus={() => setActiveInput("pickup")}
+                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none"
+                    />
+                  </div>
 
+                  <div className="ml-1.5 border-l-2 border-dashed border-border/40 h-3" />
+
+                  {/* Dropoff */}
+                  <div className="relative flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full border-2 border-orange-500 bg-orange-500/20 shrink-0" />
+                    <Input
+                      placeholder="Enter destination"
+                      value={dropoffAddress}
+                      onChange={(e) => {
+                        setDropoffAddress(e.target.value);
+                        setDropoffCoords(null);
+                        dropoffGeocode.fetchSuggestions(e.target.value);
+                        setActiveInput("dropoff");
+                      }}
+                      onFocus={() => setActiveInput("dropoff")}
+                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none"
+                    />
+                    <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </div>
+                </div>
+
+                {/* Suggestions */}
                 {activeInput === "pickup" && pickupGeocode.suggestions.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {pickupGeocode.suggestions.map((s) => (
@@ -430,40 +476,6 @@ export default function RequestRidePage() {
                   </motion.div>
                 )}
 
-                {pickupCoords && (
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 px-1">
-                    <CheckCircle className="w-3 h-3 text-emerald-500" /> Location confirmed
-                  </p>
-                )}
-              </div>
-
-              {/* Route connector line */}
-              <div className="flex justify-center">
-                <div className="w-px h-6 bg-gradient-to-b from-primary/40 to-destructive/40" />
-              </div>
-
-              {/* Dropoff */}
-              <div className="space-y-2.5">
-                <label className="text-xs font-bold text-foreground flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-destructive" />
-                  Dropoff Location
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
-                  <Input
-                    placeholder="Enter dropoff address"
-                    value={dropoffAddress}
-                    onChange={(e) => {
-                      setDropoffAddress(e.target.value);
-                      setDropoffCoords(null);
-                      dropoffGeocode.fetchSuggestions(e.target.value);
-                      setActiveInput("dropoff");
-                    }}
-                    onFocus={() => setActiveInput("dropoff")}
-                    className="pl-10 h-13 rounded-xl bg-card border-border/40 font-medium text-sm focus:border-destructive/30 focus:shadow-md focus:shadow-destructive/5 transition-all"
-                  />
-                </div>
-
                 {activeInput === "dropoff" && dropoffGeocode.suggestions.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {dropoffGeocode.suggestions.map((s) => (
@@ -474,168 +486,259 @@ export default function RequestRidePage() {
                     ))}
                   </motion.div>
                 )}
-              </div>
 
-              <Button 
-                onClick={handleGetPrice} 
-                disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} 
-                className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
-                size="lg"
+                {/* Use my location */}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleUseMyLocation} 
+                  disabled={isGettingLocation} 
+                  className="gap-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/5"
+                >
+                  {isGettingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+                  Use my location
+                </Button>
+
+                {/* + Add stop */}
+                <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  Add stop
+                </button>
+
+                {/* Category Tabs */}
+                <div className="flex gap-2 pt-2">
+                  {rideCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => { setActiveCategory(cat.id); setSelectedVehicle(null); }}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1.5 touch-manipulation active:scale-95",
+                        activeCategory === cat.id
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                          : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
+                      )}
+                    >
+                      {cat.id === "premium" && <Sparkles className="w-3 h-3" />}
+                      {cat.id === "elite" && <Crown className="w-3 h-3" />}
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vehicle Options List */}
+                <div className="space-y-2">
+                  {currentVehicles.map((vehicle, i) => (
+                    <motion.button
+                      key={vehicle.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => setSelectedVehicle(vehicle.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 touch-manipulation active:scale-[0.98]",
+                        selectedVehicle === vehicle.id
+                          ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                          : "border-border/40 bg-card hover:border-primary/20 hover:bg-muted/30"
+                      )}
+                    >
+                      {/* Vehicle icon */}
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                        selectedVehicle === vehicle.id ? "bg-primary/15" : "bg-muted/50"
+                      )}>
+                        <Car className={cn("w-6 h-6", selectedVehicle === vehicle.id ? "text-primary" : "text-muted-foreground")} />
+                      </div>
+
+                      {/* Details */}
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-foreground">{vehicle.name}</span>
+                          {vehicle.badge && (
+                            <span className={cn("text-[10px] font-bold flex items-center gap-0.5", vehicle.badgeColor)}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                              {vehicle.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
+                          <Clock className="w-3 h-3" />
+                          <span>{vehicle.eta}</span>
+                        </div>
+                      </div>
+
+                      {/* Capacity */}
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                        <Users className="w-3.5 h-3.5" />
+                        <span>{vehicle.capacity}</span>
+                      </div>
+
+                      {/* Price */}
+                      <span className={cn(
+                        "text-base font-bold shrink-0",
+                        selectedVehicle === vehicle.id ? "text-primary" : "text-foreground"
+                      )}>
+                        {vehicle.price}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Get Price / Request button */}
+                <Button 
+                  onClick={handleGetPrice} 
+                  disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} 
+                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
+                  size="lg"
+                >
+                  {isLoadingPrice ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" />Calculating price...</>
+                  ) : (
+                    <><Zap className="w-5 h-5" />{selectedVehicle ? `Request ${currentVehicles.find(v => v.id === selectedVehicle)?.name || "Ride"}` : "Get Price"}</>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
+            {step === "pricing" && (
+              <motion.div
+                key="pricing"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-5"
               >
-                {isLoadingPrice ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Calculating price...</>
-                ) : (
-                  <><Zap className="w-5 h-5" />Get Price</>
-                )}
-              </Button>
-            </motion.div>
-          )}
-
-          {step === "pricing" && (
-            <motion.div
-              key="pricing"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-5"
-            >
-              {/* Route summary */}
-              <div className="p-5 rounded-2xl bg-card border border-border/40 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col items-center gap-1 pt-1">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-emerald-500 shadow-sm shadow-primary/30" />
-                    <div className="w-0.5 h-10 bg-gradient-to-b from-primary/40 to-destructive/40" />
-                    <div className="w-3 h-3 rounded-full bg-destructive shadow-sm shadow-destructive/30" />
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p>
-                      <p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p>
+                {/* Route summary */}
+                <div className="p-5 rounded-2xl bg-card border border-border/40 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center gap-1 pt-1">
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-emerald-500 shadow-sm shadow-primary/30" />
+                      <div className="w-0.5 h-10 bg-gradient-to-b from-primary/40 to-destructive/40" />
+                      <div className="w-3 h-3 rounded-full bg-destructive shadow-sm shadow-destructive/30" />
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p>
-                      <p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p>
+                        <p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p>
+                        <p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Price breakdown */}
-              {pricing && (
-                <div className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-sm">
-                  <div className="flex items-center gap-2.5 p-4 border-b border-border/30 bg-muted/20">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Receipt className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-bold text-foreground">Fare Breakdown</span>
+                {/* Selected vehicle badge */}
+                {selectedVehicle && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+                    <Car className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-primary">
+                      {currentVehicles.find(v => v.id === selectedVehicle)?.name || "Standard"}
+                    </span>
                   </div>
+                )}
 
-                  <div className="p-4 space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Base fare</span>
-                      <span className="font-bold text-foreground">{formatUSD(pricing.base_fare)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Distance charge</span>
-                      <span className="font-bold text-foreground">{formatUSD(pricing.per_mile)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Time charge</span>
-                      <span className="font-bold text-foreground">{formatUSD(pricing.per_minute)}</span>
-                    </div>
-                    {pricing.airport_fee > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Airport fee</span>
-                        <span className="font-bold text-foreground">{formatUSD(pricing.airport_fee)}</span>
+                {/* Price breakdown */}
+                {pricing && (
+                  <div className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-sm">
+                    <div className="flex items-center gap-2.5 p-4 border-b border-border/30 bg-muted/20">
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Receipt className="w-4 h-4 text-primary" />
                       </div>
-                    )}
-                    {pricing.final_multiplier !== 1 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-amber-600 font-bold flex items-center gap-1">
-                          <Zap className="w-3 h-3" /> Surge ({pricing.final_multiplier.toFixed(2)}x)
-                        </span>
-                        <span className="text-xs text-amber-600 font-bold">applied</span>
+                      <span className="text-sm font-bold text-foreground">Fare Breakdown</span>
+                    </div>
+
+                    <div className="p-4 space-y-3 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Base fare</span><span className="font-bold text-foreground">{formatUSD(pricing.base_fare)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Distance charge</span><span className="font-bold text-foreground">{formatUSD(pricing.per_mile)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Time charge</span><span className="font-bold text-foreground">{formatUSD(pricing.per_minute)}</span></div>
+                      {pricing.airport_fee > 0 && (
+                        <div className="flex justify-between"><span className="text-muted-foreground">Airport fee</span><span className="font-bold text-foreground">{formatUSD(pricing.airport_fee)}</span></div>
+                      )}
+                      {pricing.final_multiplier !== 1 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-amber-600 font-bold flex items-center gap-1"><Zap className="w-3 h-3" /> Surge ({pricing.final_multiplier.toFixed(2)}x)</span>
+                          <span className="text-xs text-amber-600 font-bold">applied</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4 pb-4">
+                      <div className="flex justify-between pt-4 border-t border-border/30">
+                        <span className="font-bold text-lg text-foreground">Estimated Total</span>
+                        <span className="font-bold text-2xl text-primary">{formatUSD(pricing.total)}</span>
                       </div>
-                    )}
+                      <p className="text-[10px] text-muted-foreground pt-2">Final price may vary based on actual route, traffic, and wait time.</p>
+                    </div>
                   </div>
+                )}
 
-                  <div className="px-4 pb-4">
-                    <div className="flex justify-between pt-4 border-t border-border/30">
-                      <span className="font-bold text-lg text-foreground">Estimated Total</span>
-                      <span className="font-bold text-2xl text-primary">{formatUSD(pricing.total)}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground pt-2">
-                      Final price may vary based on actual route, traffic, and wait time.
+                <Button 
+                  onClick={handleConfirmPrice} 
+                  disabled={isConfirming} 
+                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
+                  size="lg"
+                >
+                  {isConfirming ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment...</>
+                  ) : (
+                    <><CreditCard className="w-5 h-5" />Continue to Payment</>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
+            {step === "payment" && clientSecret && (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-5"
+              >
+                {/* Compact route + price summary */}
+                <div className="p-4 rounded-2xl bg-card border border-border/40 flex items-center justify-between shadow-sm">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                      {pickupAddress}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                      {dropoffAddress}
                     </p>
                   </div>
+                  {pricing && (
+                    <span className="text-xl font-bold text-primary ml-3 shrink-0">
+                      {formatUSD(pricing.total)}
+                    </span>
+                  )}
                 </div>
-              )}
 
-              <Button 
-                onClick={handleConfirmPrice} 
-                disabled={isConfirming} 
-                className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
-                size="lg"
-              >
-                {isConfirming ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment...</>
-                ) : (
-                  <><CreditCard className="w-5 h-5" />Continue to Payment</>
-                )}
-              </Button>
-            </motion.div>
-          )}
-
-          {step === "payment" && clientSecret && (
-            <motion.div
-              key="payment"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-5"
-            >
-              {/* Compact route + price summary */}
-              <div className="p-4 rounded-2xl bg-card border border-border/40 flex items-center justify-between shadow-sm">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                    {pickupAddress}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
-                    {dropoffAddress}
-                  </p>
-                </div>
-                {pricing && (
-                  <span className="text-xl font-bold text-primary ml-3 shrink-0">
-                    {formatUSD(pricing.total)}
-                  </span>
-                )}
-              </div>
-
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: "night",
-                    variables: {
-                      colorPrimary: "hsl(142, 76%, 36%)",
-                      borderRadius: "12px",
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: "night",
+                      variables: {
+                        colorPrimary: "hsl(142, 76%, 36%)",
+                        borderRadius: "12px",
+                      },
                     },
-                  },
-                }}
-              >
-                <PaymentForm
-                  onSuccess={handlePaymentSuccess}
-                  isProcessing={isProcessingPayment}
-                  setIsProcessing={setIsProcessingPayment}
-                  totalCents={pricing?.total ?? 0}
-                />
-              </Elements>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  }}
+                >
+                  <PaymentForm
+                    onSuccess={handlePaymentSuccess}
+                    isProcessing={isProcessingPayment}
+                    setIsProcessing={setIsProcessingPayment}
+                    totalCents={pricing?.total ?? 0}
+                  />
+                </Elements>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <ZivoMobileNav />

@@ -12,7 +12,7 @@ const quickActions = [
   { id: "flight", icon: Plane, label: "Book Flight", description: "500+ destinations", href: "/flights", color: "sky" as const },
   { id: "hotel", icon: Hotel, label: "Find Hotel", description: "Best rates guaranteed", href: "/hotels", color: "amber" as const },
   { id: "car", icon: Car, label: "Rent a Car", description: "Pickup anywhere", href: "/rent-car", color: "rides" as const },
-  { id: "extras", icon: Package, label: "Delivery", description: "Send packages", href: "/extras", color: "eats" as const },
+  { id: "extras", icon: Package, label: "Delivery", description: "Send packages", href: "/delivery", color: "eats" as const },
 ];
 
 const defaultRecentItems = [

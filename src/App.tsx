@@ -40,6 +40,7 @@ const WalletPage = lazy(() => import("./pages/app/WalletPage"));
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
+const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 
 // Auth & Account
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -305,7 +306,8 @@ const App = () => (
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/package-delivery" element={<PreserveQueryRedirect to="/extras" />} />
+                <Route path="/delivery" element={<DeliveryPage />} />
+                <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
