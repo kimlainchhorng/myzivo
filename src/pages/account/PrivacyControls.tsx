@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Link, Navigate } from "react-router-dom";
 import {
   ArrowLeft, Shield, Download, Trash2, Eye, Mail, Clock,
@@ -192,7 +193,12 @@ export default function PrivacyControls() {
       <Header />
 
       <main className="min-h-screen pt-20 pb-16 bg-background">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="container mx-auto px-4 max-w-4xl"
+        >
           {/* Back Link */}
           <div className="mb-6">
             <Link to="/profile" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -504,7 +510,7 @@ export default function PrivacyControls() {
               </Button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       {/* Request Dialog */}

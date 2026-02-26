@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
   LogOut, Download, Trash2, AlertTriangle, Key,
@@ -120,7 +121,12 @@ export default function AccountSecurity() {
       <Header />
 
       <main className="min-h-screen pt-20 pb-16 bg-muted/30">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="container mx-auto px-4 max-w-3xl"
+        >
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
@@ -446,7 +452,7 @@ export default function AccountSecurity() {
               </AlertDialog>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </main>
 
       <Footer />

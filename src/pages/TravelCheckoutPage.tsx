@@ -3,6 +3,7 @@
  * Unified checkout for hotels, activities, and transfers
  */
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Hotel, MapPin, Car, Loader2, CreditCard, AlertCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -166,7 +167,12 @@ const TravelCheckoutPage = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
+      <motion.main
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="container mx-auto px-4 py-6 max-w-4xl"
+      >
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -427,7 +433,7 @@ const TravelCheckoutPage = () => {
             </Card>
           </div>
         </div>
-      </main>
+      </motion.main>
     </div>
   );
 };
