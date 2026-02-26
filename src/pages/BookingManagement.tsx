@@ -312,8 +312,8 @@ const BookingManagement = () => {
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             {[
-              { icon: Phone, label: "Call Airline", action: () => window.open(`tel:${booking.providerPhone.replace(/-/g, "")}`) },
-              { icon: Mail, label: "Email Airline", action: () => window.open(`mailto:${booking.providerEmail}`) },
+              { icon: Phone, label: "Call Airline", action: () => window.open(`tel:${booking.providerPhone.replace(/-/g, "")}`, '_self') },
+              { icon: Mail, label: "Email Airline", action: () => window.open(`mailto:${booking.providerEmail}`, '_self') },
               { icon: FileText, label: "View Receipt", action: () => {} },
               { icon: ExternalLink, label: "Airline Website", action: () => {} },
             ].map((act) => (

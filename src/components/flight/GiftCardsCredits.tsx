@@ -210,6 +210,7 @@ export const GiftCardsCredits = ({
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    aria-label="Remove promo code"
                     onClick={() => setAppliedPromo(null)}
                   >
                     <Trash2 className="w-4 h-4 text-muted-foreground" />
@@ -270,6 +271,7 @@ export const GiftCardsCredits = ({
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      aria-label="Remove gift card"
                       onClick={() => removeGiftCard(gc.id)}
                     >
                       <Trash2 className="w-4 h-4 text-muted-foreground" />

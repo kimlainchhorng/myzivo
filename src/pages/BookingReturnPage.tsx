@@ -85,7 +85,7 @@ export default function BookingReturnPage() {
       // Parse URL params (handles various partner formats)
       const params = parseBookingReturnParams(searchParams);
       
-      console.log('[BookingReturn] URL params:', params);
+      console.debug('[BookingReturn] URL params:', params);
 
       // Process the return and update database
       const returnResult = await processBookingReturn(params);

@@ -126,6 +126,7 @@ export default function CarDetailPage() {
                       src={brandedCar.src}
                       alt={`${brandedCar.brand} ${brandedCar.model}`}
                       className="max-h-48 object-contain"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 flex items-center justify-center">

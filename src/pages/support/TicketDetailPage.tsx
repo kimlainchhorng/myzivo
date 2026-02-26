@@ -51,6 +51,7 @@ const TicketDetailPage = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/support/tickets")}
+              aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
