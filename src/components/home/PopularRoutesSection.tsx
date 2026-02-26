@@ -20,7 +20,7 @@ const POPULAR_ROUTES = [
 
 export default function PopularRoutesSection() {
   return (
-    <section className="py-16 bg-muted/20">
+    <section className="py-16 bg-muted/20" aria-label="Popular flight routes">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -61,7 +61,7 @@ export default function PopularRoutesSection() {
                 <p className="text-xs text-muted-foreground truncate">
                   {route.from} → {route.to}
                 </p>
-                <div className="mt-2 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                <div className="mt-2 text-xs font-medium text-primary sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-1">
                   Search flights <ArrowRight className="w-3 h-3" />
                 </div>
               </Link>
