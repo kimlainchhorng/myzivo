@@ -43,6 +43,8 @@ const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
+const TripsListPage = lazy(() => import("./pages/trips/TripsListPage"));
+const TripDetailPage = lazy(() => import("./pages/trips/TripDetailPage"));
 
 // Auth & Account
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -309,7 +311,7 @@ const App = () => (
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/trips" element={<PreserveQueryRedirect to="/my-trips" />} />
+                <Route path="/my-trips" element={<PreserveQueryRedirect to="/trips" />} />
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
@@ -401,6 +403,10 @@ const App = () => (
                 {/* removed: spending, business, verification, trust */}
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+
+                {/* Trip Itineraries */}
+                <Route path="/trips" element={<ProtectedRoute><TripsListPage /></ProtectedRoute>} />
+                <Route path="/trip/:id" element={<ProtectedRoute><TripDetailPage /></ProtectedRoute>} />
 
                 {/* Legal */}
                 <Route path="/terms-of-service" element={<TermsOfService />} />
