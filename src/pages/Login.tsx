@@ -11,6 +11,7 @@ import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home } from "lucide-reac
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 // Login schema
 const loginSchema = z.object({
@@ -210,6 +211,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+      <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/3 w-[80%] h-[80%] bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-[100px] animate-pulse" />

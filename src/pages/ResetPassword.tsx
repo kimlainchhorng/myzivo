@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Lock, Loader2, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 const resetPasswordSchema = z.object({
   password: z
@@ -137,7 +139,14 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
-      <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <SEOHead title="Set New Password – ZIVO" description="Create a new password for your ZIVO account." noIndex={true} />
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+      <Card>
         <CardHeader className="text-center">
           <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
             <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
@@ -243,6 +252,7 @@ const ResetPassword = () => {
           </Form>
         </CardContent>
       </Card>
+      </motion.div>
     </div>
   );
 };

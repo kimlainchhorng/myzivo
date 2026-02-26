@@ -1,5 +1,6 @@
 import { ArrowLeft, Shield, Mail, Database, Share2, Cookie, UserCheck, CreditCard, Plane, Building2, Car } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -26,7 +27,12 @@ const Privacy = () => {
         </Link>
 
         {/* Header */}
-        <div className="mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-12"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Shield className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">Legal</span>
@@ -35,7 +41,7 @@ const Privacy = () => {
           <p className="text-muted-foreground">
             Last updated: February 2, 2026
           </p>
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="space-y-8">
