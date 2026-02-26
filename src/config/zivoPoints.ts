@@ -66,9 +66,9 @@ export const ZIVO_TIERS: Record<ZivoTier, TierConfig> = {
     minPoints: 0,
     maxPoints: 4999,
     earningBonus: 0,
-    color: 'text-slate-500',
-    bgColor: 'bg-slate-500/10',
-    borderColor: 'border-slate-500/30',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+    borderColor: 'border-border',
     icon: 'compass',
     benefits: [
       'Earn points on all bookings',

@@ -113,7 +113,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
               "w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br border",
               currentTierData.bgGradient,
               currentTier === 'gold' ? 'border-amber-500/40' : 
-              currentTier === 'platinum' ? 'border-purple-500/40' : 'border-slate-500/40'
+              currentTier === 'platinum' ? 'border-purple-500/40' : 'border-border'
             )}>
               <currentTierData.icon className={cn("w-6 h-6", currentTierData.color)} />
             </div>
@@ -124,7 +124,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
                   "border-0",
                   currentTier === 'gold' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' :
                   currentTier === 'platinum' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' :
-                  'bg-gradient-to-r from-slate-400 to-slate-500 text-white'
+                  'bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-primary-foreground'
                 )}>
                   {currentTierData.name} Member
                 </Badge>

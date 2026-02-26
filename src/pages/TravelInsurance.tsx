@@ -43,8 +43,8 @@ const TravelInsurance = () => {
       price: 29,
       period: "per trip",
       description: "Essential coverage for peace of mind",
-      gradient: "from-slate-500 to-slate-600",
-      glow: "shadow-slate-500/20",
+      gradient: "from-muted-foreground to-muted-foreground/80",
+      glow: "shadow-muted-foreground/20",
       features: [
         "Trip cancellation up to $2,500",
         "Medical expenses up to $10,000",
