@@ -86,7 +86,7 @@ const QuickActionsSection = () => {
   const repeatOrders = repeatFoodOrders?.length ? repeatFoodOrders : defaultRepeatOrders;
   
   return (
-    <section className="py-10 sm:py-14 lg:py-24 relative overflow-hidden">
+    <section className="py-10 sm:py-14 lg:py-24 relative overflow-hidden" aria-label="Quick actions">
       {/* Enhanced Background */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
       <div className="absolute top-1/4 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
