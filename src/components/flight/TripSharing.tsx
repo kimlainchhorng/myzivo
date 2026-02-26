@@ -110,7 +110,7 @@ export const TripSharing = ({
         break;
     }
     
-    if (shareUrl) window.open(shareUrl, '_blank');
+    if (shareUrl) window.open(shareUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (

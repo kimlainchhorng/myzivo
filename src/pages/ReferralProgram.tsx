@@ -196,7 +196,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Join me on ZIVO and get $10 off your first trip! ${shareUrl}`)}`)}
+                    onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Join me on ZIVO and get $10 off your first trip! ${shareUrl}`)}`, '_blank', 'noopener,noreferrer')}
                   >
                     <Twitter className="w-5 h-5" />
                     Twitter
@@ -205,7 +205,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`mailto:?subject=Join ZIVO&body=${encodeURIComponent(`Hey! Check out ZIVO for amazing travel deals: ${shareUrl}`)}`)}
+                    onClick={() => window.open(`mailto:?subject=Join ZIVO&body=${encodeURIComponent(`Hey! Check out ZIVO for amazing travel deals: ${shareUrl}`)}`, '_blank', 'noopener,noreferrer')}
                   >
                     <Mail className="w-5 h-5" />
                     Email
@@ -214,7 +214,7 @@ export default function ReferralProgram() {
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Check out ZIVO for amazing travel deals! ${shareUrl}`)}`)}
+                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Check out ZIVO for amazing travel deals! ${shareUrl}`)}`, '_blank', 'noopener,noreferrer')}
                   >
                     <MessageCircle className="w-5 h-5" />
                     WhatsApp
