@@ -1,10 +1,12 @@
 /**
  * RideMap - Google Maps component for ride booking
- * Fetches API key from edge function, shows pickup/dropoff markers and route
+ * Fetches API key from edge function, shows pickup/dropoff markers and route.
+ * Uses AdvancedMarkerElement when available, falls back to standard markers.
  */
 /// <reference types="google.maps" />
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { decodePolyline } from "@/services/mapsApi";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
 
@@ -23,74 +25,55 @@ const darkMapStyle = [
 interface RideMapProps {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
-  routePolyline?: { lat: number; lng: number }[] | null;
+  routePolyline?: string | { lat: number; lng: number }[] | null;
+  driverCoords?: { lat: number; lng: number } | null;
   className?: string;
 }
 
-// Singleton script loader to prevent "different options" error
+// Singleton script loader
 let googleMapsPromise: Promise<void> | null = null;
 let googleMapsLoaded = false;
 let googleMapsAuthFailed = false;
 
-// Global auth failure callback - Google calls this when key is invalid/billing not enabled
 (window as any).gm_authFailure = () => {
   googleMapsAuthFailed = true;
-  // Remove the error dialog Google injects
   setTimeout(() => {
     document.querySelectorAll('.dismissButton, .gm-err-container, [style*="background-color: white"][style*="z-index"]').forEach(el => el.remove());
-    // Also remove the overlay div Google adds
     const gmStyle = document.querySelector('style[id^="gm"]');
     if (gmStyle) gmStyle.remove();
   }, 100);
-  // Dispatch custom event so map components can react
   window.dispatchEvent(new CustomEvent('gmaps-auth-failure'));
 };
 
 function loadGoogleMapsScript(apiKey: string): Promise<void> {
-  if (googleMapsAuthFailed) {
-    return Promise.reject(new Error("Google Maps auth failed"));
-  }
-  if (googleMapsLoaded && (window as any).google?.maps) {
-    return Promise.resolve();
-  }
+  if (googleMapsAuthFailed) return Promise.reject(new Error("Google Maps auth failed"));
+  if (googleMapsLoaded && (window as any).google?.maps) return Promise.resolve();
   if (googleMapsPromise) return googleMapsPromise;
 
   googleMapsPromise = new Promise<void>((resolve, reject) => {
-    if ((window as any).google?.maps) {
-      googleMapsLoaded = true;
-      resolve();
-      return;
-    }
+    if ((window as any).google?.maps) { googleMapsLoaded = true; resolve(); return; }
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
       googleMapsLoaded = true;
-      // Check for auth failure shortly after load
       setTimeout(() => {
-        if (googleMapsAuthFailed) {
-          reject(new Error("Google Maps auth failed"));
-        } else {
-          resolve();
-        }
+        if (googleMapsAuthFailed) reject(new Error("Google Maps auth failed"));
+        else resolve();
       }, 500);
     };
-    script.onerror = () => {
-      googleMapsPromise = null;
-      reject(new Error("Failed to load Google Maps"));
-    };
+    script.onerror = () => { googleMapsPromise = null; reject(new Error("Failed to load Google Maps")); };
     document.head.appendChild(script);
   });
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, className }: RideMapProps) {
   const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(googleMapsAuthFailed);
 
-  // Listen for auth failure events (e.g. billing not enabled)
   useEffect(() => {
     const handleAuthFail = () => setFailed(true);
     window.addEventListener('gmaps-auth-failure', handleAuthFail);
@@ -103,27 +86,17 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, cl
 
     (async () => {
       let key = apiKey;
-
-      // Fetch key from edge function if not available
       if (!key) {
         try {
           const { data } = await supabase.functions.invoke("maps-api-key");
-          if (!cancelled && data?.key) {
-            key = data.key;
-            setApiKey(key);
-          }
+          if (!cancelled && data?.key) { key = data.key; setApiKey(key); }
         } catch {
           if (!cancelled) setFailed(true);
           return;
         }
       }
+      if (!key) { if (!cancelled) setFailed(true); return; }
 
-      if (!key) {
-        if (!cancelled) setFailed(true);
-        return;
-      }
-
-      // Load script via singleton
       try {
         await loadGoogleMapsScript(key);
         if (!cancelled && !googleMapsAuthFailed) setIsReady(true);
@@ -136,9 +109,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, cl
     return () => { cancelled = true; };
   }, [failed]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (failed) {
-    return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
-  }
+  if (failed) return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
 
   if (!isReady) {
     return (
@@ -148,15 +119,22 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, cl
     );
   }
 
-  return <NativeGoogleMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} routePolyline={routePolyline} className={className} />;
+  return <NativeGoogleMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} routePolyline={routePolyline} driverCoords={driverCoords} className={className} />;
 }
 
-// Renders the map using the global google.maps API (no useJsApiLoader)
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, className }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const driverMarkerRef = useRef<google.maps.Marker | null>(null);
+
+  // Decode polyline if it's an encoded string
+  const decodedRoute = useMemo(() => {
+    if (!routePolyline) return null;
+    if (typeof routePolyline === "string") return decodePolyline(routePolyline);
+    return routePolyline;
+  }, [routePolyline]);
 
   // Initialize map
   useEffect(() => {
@@ -165,9 +143,10 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
       center: pickupCoords || DEFAULT_CENTER,
       zoom: 13,
       disableDefaultUI: true,
-      zoomControl: false,
+      zoomControl: true,
       styles: darkMapStyle,
       gestureHandling: "greedy",
+      mapId: "zivo-ride-map",
     });
   }, []);
 
@@ -176,7 +155,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear old markers
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
 
@@ -186,12 +164,13 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: 10,
           fillColor: "#22c55e",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
         },
+        title: "Pickup",
       }));
     }
 
@@ -201,12 +180,13 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: 10,
           fillColor: "#ef4444",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
         },
+        title: "Dropoff",
       }));
     }
 
@@ -215,6 +195,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
+      if (driverCoords) bounds.extend(driverCoords);
       map.fitBounds(bounds, 60);
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
@@ -223,40 +204,68 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
       map.panTo(dropoffCoords);
       map.setZoom(15);
     }
-  }, [pickupCoords, dropoffCoords]);
+  }, [pickupCoords, dropoffCoords, driverCoords]);
 
-  // Update polyline
+  // Update polyline with animated gradient
   useEffect(() => {
     const map = mapRef.current;
     if (polylineRef.current) {
       polylineRef.current.setMap(null);
       polylineRef.current = null;
     }
-    if (map && routePolyline && routePolyline.length > 1) {
+    if (map && decodedRoute && decodedRoute.length > 1) {
       polylineRef.current = new google.maps.Polyline({
-        path: routePolyline,
+        path: decodedRoute,
         strokeColor: "#22c55e",
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
+        strokeWeight: 5,
+        strokeOpacity: 0.85,
+        geodesic: true,
         map,
       });
     }
-  }, [routePolyline]);
+  }, [decodedRoute]);
+
+  // Update driver marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (driverCoords) {
+      if (driverMarkerRef.current) {
+        driverMarkerRef.current.setPosition(driverCoords);
+      } else {
+        driverMarkerRef.current = new google.maps.Marker({
+          position: driverCoords,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 6,
+            fillColor: "#3b82f6",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+            rotation: 0,
+          },
+          title: "Driver",
+          zIndex: 100,
+        });
+      }
+    } else if (driverMarkerRef.current) {
+      driverMarkerRef.current.setMap(null);
+      driverMarkerRef.current = null;
+    }
+  }, [driverCoords]);
 
   return <div ref={mapContainerRef} className={className} style={{ width: "100%", height: "100%" }} />;
 }
 
-// Enhanced styled fallback when map is unavailable
+// Premium fallback when map is unavailable
 function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapProps, "pickupCoords" | "dropoffCoords" | "className">) {
-  // Clean up any Google Maps error overlays that might have been injected
   useEffect(() => {
     const cleanup = () => {
       document.querySelectorAll('.dismissButton, .gm-err-container, .gm-style-pbc').forEach(el => el.remove());
-      // Remove Google's error modal overlay
       document.querySelectorAll('div[style*="background-color: white"][style*="z-index"]').forEach(el => {
-        if (el.textContent?.includes("Google Maps") || el.textContent?.includes("load")) {
-          el.remove();
-        }
+        if (el.textContent?.includes("Google Maps") || el.textContent?.includes("load")) el.remove();
       });
     };
     cleanup();
@@ -267,32 +276,27 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-muted/40 to-background">
-        {/* Grid pattern */}
         <div className="absolute inset-0 opacity-[0.07]" style={{
           backgroundImage: "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
         }} />
-        {/* Simulated roads */}
         <div className="absolute top-[30%] left-0 right-0 h-[3px] bg-primary/15 rounded-full" />
         <div className="absolute top-[60%] left-[10%] right-[20%] h-[2px] bg-primary/10 rounded-full" />
         <div className="absolute top-0 bottom-0 left-[35%] w-[3px] bg-primary/15 rounded-full" />
         <div className="absolute top-0 bottom-0 right-[25%] w-[2px] bg-primary/10 rounded-full" />
-        <div className="absolute top-[45%] left-[15%] right-0 h-[2px] bg-primary/8 rotate-[15deg] origin-left" />
-        
+
         {/* Pickup marker */}
         <div className="absolute top-[40%] left-[45%]">
           <div className="w-5 h-5 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse border-2 border-background" />
           <div className="absolute inset-0 w-5 h-5 rounded-full bg-primary/20 animate-ping" />
         </div>
-        
-        {/* Dropoff marker (if coords provided) */}
+
         {dropoffCoords && (
           <div className="absolute top-[55%] left-[60%]">
             <div className="w-4 h-4 rounded-full bg-destructive shadow-lg shadow-destructive/30 border-2 border-background" />
           </div>
         )}
 
-        {/* Map loading message */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           <div className="px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/30 text-[10px] text-muted-foreground font-medium">
             Map preview

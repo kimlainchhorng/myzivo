@@ -1,15 +1,12 @@
 /**
  * useGoogleMapsGeocode Hook
  * 
- * Provides address autocomplete suggestions using Google Places API via edge functions
+ * Provides address autocomplete suggestions using Google Places API via edge functions.
+ * No mock fallbacks — production-only.
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getAutocompleteSuggestions } from "@/services/mapsApi";
-
-import { MOCK_ADDRESS_STRINGS } from "@/data/mockLocations";
-
-const MOCK_SUGGESTIONS = MOCK_ADDRESS_STRINGS;
 
 export interface Suggestion {
   id: string;
@@ -48,65 +45,34 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
       clearTimeout(debounceRef.current);
     }
 
+    // Require minimum input
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
     // Debounce API calls
     debounceRef.current = setTimeout(async () => {
-      // Show popular suggestions immediately when query is empty/short
-      if (!query.trim() || query.length < 2) {
-        const popularSuggestions = MOCK_SUGGESTIONS.slice(0, 5).map((s, i) => ({
-          id: `popular-${i}`,
-          placeName: s,
-          text: s.split(",")[0],
-        }));
-        setSuggestions(popularSuggestions);
-        return;
-      }
-
       setIsLoading(true);
 
       try {
         const results = await getAutocompleteSuggestions(query, proximity);
         
-        if (results.length > 0) {
-          setSuggestions(
-            results.map((r) => ({
-              id: r.place_id,
-              placeName: r.description,
-              text: r.main_text,
-              placeId: r.place_id,
-            }))
-          );
-        } else {
-          // Fall back to mock suggestions if no results
-          const filtered = MOCK_SUGGESTIONS.filter((s) =>
-            s.toLowerCase().includes(query.toLowerCase())
-          ).slice(0, 6);
-          
-          setSuggestions(
-            filtered.map((s, i) => ({
-              id: `mock-${i}`,
-              placeName: s,
-              text: s.split(",")[0],
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Autocomplete error:", error);
-        // Fall back to mock suggestions
-        const filtered = MOCK_SUGGESTIONS.filter((s) =>
-          s.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 6);
-        
         setSuggestions(
-          filtered.map((s, i) => ({
-            id: `fallback-${i}`,
-            placeName: s,
-            text: s.split(",")[0],
+          results.map((r) => ({
+            id: r.place_id,
+            placeName: r.description,
+            text: r.main_text,
+            placeId: r.place_id,
           }))
         );
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+        setSuggestions([]);
       } finally {
         setIsLoading(false);
       }
-    }, 300); // 300ms debounce
+    }, 300);
   }, []);
 
   const clearSuggestions = useCallback(() => {

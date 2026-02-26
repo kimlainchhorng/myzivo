@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("authorization") ?? "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const client = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await client.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { origin_lat, origin_lng, dest_lat, dest_lng, waypoints } = await req.json();
     
     if (
@@ -26,7 +42,9 @@ Deno.serve(async (req) => {
     // Validate coordinate ranges
     if (
       Math.abs(origin_lat) > 90 || Math.abs(dest_lat) > 90 ||
-      Math.abs(origin_lng) > 180 || Math.abs(dest_lng) > 180
+      Math.abs(origin_lng) > 180 || Math.abs(dest_lng) > 180 ||
+      !isFinite(origin_lat) || !isFinite(origin_lng) ||
+      !isFinite(dest_lat) || !isFinite(dest_lng)
     ) {
       return new Response(JSON.stringify({ error: "Invalid coordinates" }), {
         status: 400,
@@ -62,7 +80,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[maps-route] Fetching route: (${origin_lat},${origin_lng}) → (${dest_lat},${dest_lng})`);
+    console.debug(`[maps-route] Fetching route for user: ${user.id}`);
 
     const res = await fetch(url);
     const data = await res.json();
@@ -90,10 +108,23 @@ Deno.serve(async (req) => {
     let totalDurationSeconds = 0;
     let totalDurationInTrafficSeconds = 0;
 
+    const legDetails = [];
     for (const leg of legs) {
-      totalDistanceMeters += leg.distance?.value ?? 0;
-      totalDurationSeconds += leg.duration?.value ?? 0;
-      totalDurationInTrafficSeconds += leg.duration_in_traffic?.value ?? totalDurationSeconds;
+      const legDistM = leg.distance?.value ?? 0;
+      const legDurS = leg.duration?.value ?? 0;
+      const legDurTrafficS = leg.duration_in_traffic?.value ?? legDurS;
+
+      totalDistanceMeters += legDistM;
+      totalDurationSeconds += legDurS;
+      totalDurationInTrafficSeconds += legDurTrafficS;
+
+      legDetails.push({
+        distance_miles: Number((legDistM / 1609.344).toFixed(2)),
+        duration_minutes: Math.max(1, Math.round(legDurS / 60)),
+        duration_in_traffic_minutes: Math.max(1, Math.round(legDurTrafficS / 60)),
+        start_address: leg.start_address,
+        end_address: leg.end_address,
+      });
     }
 
     const distanceMiles = totalDistanceMeters / 1609.344;
@@ -112,7 +143,9 @@ Deno.serve(async (req) => {
     const firstLeg = legs[0];
     const lastLeg = legs[legs.length - 1];
 
-    console.log(`[maps-route] Route found: ${distanceMiles.toFixed(2)} miles, ${Math.round(durationMinutes)} min (traffic: ${Math.round(durationInTrafficMinutes)} min, ${trafficLevel}, ${legs.length} leg(s))`);
+    // Compute ETA as ISO string
+    const etaMs = Date.now() + (totalDurationInTrafficSeconds * 1000);
+    const eta_iso = new Date(etaMs).toISOString();
 
     return new Response(JSON.stringify({
       ok: true,
@@ -121,9 +154,11 @@ Deno.serve(async (req) => {
       duration_in_traffic_minutes: Math.max(1, Math.round(durationInTrafficMinutes)),
       traffic_ratio: Number(trafficRatio.toFixed(2)),
       traffic_level: trafficLevel,
+      eta_iso,
       polyline: route.overview_polyline?.points ?? null,
       start_address: firstLeg.start_address,
       end_address: lastLeg.end_address,
+      legs: legDetails,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
