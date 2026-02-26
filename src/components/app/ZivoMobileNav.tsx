@@ -8,6 +8,7 @@ import { Home, Search, Briefcase, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface NavTab {
   id: string;
@@ -21,6 +22,7 @@ const ZivoMobileNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAlertsCount } = usePriceAlerts();
+  const { impact } = useHaptics();
 
   const tabs: NavTab[] = [
     { id: "home", label: "Home", icon: Home, path: "/" },
@@ -66,7 +68,7 @@ const ZivoMobileNav = () => {
           return (
             <button
               key={tab.id}
-              onClick={() => navigate(tab.path)}
+              onClick={() => { impact('light'); navigate(tab.path); }}
                className={cn(
                 "flex flex-col items-center justify-center flex-1 gap-0.5 transition-all touch-manipulation active:scale-90 relative min-w-[48px] min-h-[48px]",
                 isActive ? "text-primary" : "text-muted-foreground"

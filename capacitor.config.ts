@@ -24,7 +24,8 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'body',
       resizeOnFullScreen: true
-    }
+    },
+    Haptics: {}
   },
   ios: {
     backgroundColor: '#0D0D0F',
@@ -36,7 +37,8 @@ const config: CapacitorConfig = {
     backgroundColor: '#0D0D0F',
     allowMixedContent: true,
     captureInput: true,
-    webContentsDebuggingEnabled: false
+    webContentsDebuggingEnabled: false,
+    adjustMarginsForEdgeToEdge: 'auto'
   }
 };
 
