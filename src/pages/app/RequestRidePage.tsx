@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,24 +28,15 @@ interface PricingBreakdown {
   total: number;
 }
 
-// Ride type categories
 const rideCategories = [
   { id: "economy", label: "Economy", icon: Car },
   { id: "premium", label: "Premium", icon: Sparkles },
   { id: "elite", label: "Elite", icon: Crown },
 ];
 
-// Vehicle options per category
 const vehicleOptions: Record<string, Array<{
-  id: string;
-  name: string;
-  badge?: string;
-  badgeColor?: string;
-  eta: string;
-  capacity: number;
-  price: string;
-  priceCents: number;
-  multiplier: number;
+  id: string; name: string; badge?: string; badgeColor?: string;
+  eta: string; capacity: number; price: string; priceCents: number; multiplier: number;
 }>> = {
   economy: [
     { id: "wait-save", name: "Wait & Save", badge: "Save", badgeColor: "text-primary", eta: "10-15 min", capacity: 4, price: "$13.55", priceCents: 1355, multiplier: 0.85 },
@@ -65,17 +56,27 @@ const vehicleOptions: Record<string, Array<{
   ],
 };
 
+const ridePreferences = [
+  { id: "quiet", icon: VolumeX, label: "Quiet Ride", description: "Minimal conversation" },
+  { id: "ac", icon: Thermometer, label: "Cool AC", description: "Extra air conditioning" },
+  { id: "music", icon: Music, label: "Music On", description: "Driver plays music" },
+  { id: "pet", icon: Heart, label: "Pet Friendly", description: "Traveling with a pet" },
+];
+
+const tipOptions = [
+  { id: "none", label: "No tip", amount: 0 },
+  { id: "15", label: "15%", amount: 0.15 },
+  { id: "20", label: "20%", amount: 0.20 },
+  { id: "25", label: "25%", amount: 0.25 },
+  { id: "custom", label: "Custom", amount: 0 },
+];
+
 // Inner payment form using Stripe Elements
 function PaymentForm({ 
-  onSuccess, 
-  isProcessing, 
-  setIsProcessing,
-  totalCents,
+  onSuccess, isProcessing, setIsProcessing, totalCents,
 }: { 
-  onSuccess: () => void;
-  isProcessing: boolean;
-  setIsProcessing: (v: boolean) => void;
-  totalCents: number;
+  onSuccess: () => void; isProcessing: boolean;
+  setIsProcessing: (v: boolean) => void; totalCents: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -83,28 +84,13 @@ function PaymentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
-
     setIsProcessing(true);
-
     const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.href,
-      },
-      redirect: "if_required",
+      elements, confirmParams: { return_url: window.location.href }, redirect: "if_required",
     });
-
-    if (error) {
-      toast.error(error.message || "Payment authorization failed");
-      setIsProcessing(false);
-    } else if (paymentIntent && paymentIntent.status === "requires_capture") {
-      onSuccess();
-    } else if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
-      onSuccess();
-    } else {
-      toast.error("Unexpected payment status");
-      setIsProcessing(false);
-    }
+    if (error) { toast.error(error.message || "Payment authorization failed"); setIsProcessing(false); }
+    else if (paymentIntent && (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) { onSuccess(); }
+    else { toast.error("Unexpected payment status"); setIsProcessing(false); }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -120,25 +106,53 @@ function PaymentForm({
         </div>
         <PaymentElement options={{ layout: "tabs" }} />
       </div>
-
       <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
         <Shield className="w-3.5 h-3.5 text-primary/60" />
         <span>Secured by Stripe · TLS 1.3 encrypted</span>
       </div>
-
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
-        size="lg"
-      >
-        {isProcessing ? (
-          <><Loader2 className="w-5 h-5 animate-spin" />Processing...</>
-        ) : (
-          <><Lock className="w-5 h-5" />Authorize {formatUSD(totalCents)}</>
-        )}
+      <Button type="submit" disabled={!stripe || isProcessing}
+        className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200" size="lg">
+        {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" />Processing...</> : <><Lock className="w-5 h-5" />Authorize {formatUSD(totalCents)}</>}
       </Button>
     </form>
+  );
+}
+
+// Step progress indicator
+function RideStepIndicator({ currentStep }: { currentStep: "address" | "pricing" | "payment" }) {
+  const steps = [
+    { id: "address", label: "Route", icon: MapPin },
+    { id: "pricing", label: "Price", icon: DollarSign },
+    { id: "payment", label: "Pay", icon: CreditCard },
+  ] as const;
+  const idx = steps.findIndex(s => s.id === currentStep);
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-3">
+      {steps.map((s, i) => {
+        const Icon = s.icon;
+        return (
+          <div key={s.id} className="flex-1 flex items-center gap-2">
+            <div className="flex-1 flex flex-col items-center gap-1.5">
+              <div className={cn(
+                "w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300",
+                i <= idx
+                  ? "bg-gradient-to-br from-primary to-emerald-500 text-primary-foreground shadow-md shadow-primary/20"
+                  : "bg-muted/50 text-muted-foreground border border-border/40"
+              )}>
+                {i < idx ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+              </div>
+              <span className={cn("text-[10px] font-bold", i <= idx ? "text-primary" : "text-muted-foreground/50")}>
+                {s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div className={cn("h-[2px] flex-1 rounded-full transition-all duration-300 -mt-5", i < idx ? "bg-primary" : "bg-border/40")} />
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -148,23 +162,22 @@ export default function RequestRidePage() {
   const { isChecking: phoneChecking } = usePhoneVerificationGate();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
 
-  // Pickup state
   const [pickupAddress, setPickupAddress] = useState("");
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const pickupGeocode = useGoogleMapsGeocode();
-
-  // Dropoff state
   const [dropoffAddress, setDropoffAddress] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const dropoffGeocode = useGoogleMapsGeocode();
-
   const [activeInput, setActiveInput] = useState<"pickup" | "dropoff" | null>(null);
 
-  // Ride category & vehicle selection
   const [activeCategory, setActiveCategory] = useState("economy");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [selectedTip, setSelectedTip] = useState("none");
+  const [customTip, setCustomTip] = useState("");
 
-  // Three-step flow state
   const [step, setStep] = useState<"address" | "pricing" | "payment">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -173,7 +186,18 @@ export default function RequestRidePage() {
   const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  // Use current location for pickup
+  const togglePreference = (id: string) => {
+    setSelectedPreferences(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
+  };
+
+  const tipAmount = useMemo(() => {
+    if (!pricing) return 0;
+    const total = pricing.total / 100;
+    if (selectedTip === "custom") return parseFloat(customTip) || 0;
+    const opt = tipOptions.find(t => t.id === selectedTip);
+    return opt ? Math.round(total * opt.amount * 100) / 100 : 0;
+  }, [selectedTip, customTip, pricing]);
+
   const handleUseMyLocation = useCallback(async () => {
     try {
       const loc = await getCurrentLocation();
@@ -182,19 +206,15 @@ export default function RequestRidePage() {
       setPickupAddress(addr);
       pickupGeocode.clearSuggestions();
       setActiveInput(null);
-    } catch {
-      toast.error("Could not get your location");
-    }
+    } catch { toast.error("Could not get your location"); }
   }, [getCurrentLocation, reverseGeocode, pickupGeocode]);
 
   const handleSelectSuggestion = (suggestion: Suggestion, field: "pickup" | "dropoff") => {
     if (field === "pickup") {
-      setPickupAddress(suggestion.placeName);
-      setPickupCoords(null);
+      setPickupAddress(suggestion.placeName); setPickupCoords(null);
       pickupGeocode.clearSuggestions();
     } else {
-      setDropoffAddress(suggestion.placeName);
-      setDropoffCoords(null);
+      setDropoffAddress(suggestion.placeName); setDropoffCoords(null);
       dropoffGeocode.clearSuggestions();
     }
     setActiveInput(null);
@@ -205,15 +225,7 @@ export default function RequestRidePage() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(
         `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/google-maps-proxy`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token ?? ""}`,
-            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
-          },
-          body: JSON.stringify({ action: "geocode", address }),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token ?? ""}`, "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI" }, body: JSON.stringify({ action: "geocode", address }) }
       );
       const data = await res.json();
       if (data.results?.[0]?.geometry?.location) {
@@ -221,49 +233,25 @@ export default function RequestRidePage() {
         return { lat: loc.lat, lng: loc.lng };
       }
       return null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   };
 
   const handleGetPrice = async () => {
     if (!user) { toast.error("Please sign in first"); return; }
     if (!pickupAddress.trim()) { toast.error("Please enter a pickup address"); return; }
     if (!dropoffAddress.trim()) { toast.error("Please enter a dropoff address for pricing"); return; }
-
     setIsLoadingPrice(true);
-
     try {
       let finalPickup = pickupCoords;
-      if (!finalPickup) {
-        finalPickup = await geocodeAddress(pickupAddress);
-        if (!finalPickup) { toast.error("Could not resolve pickup location."); return; }
-        setPickupCoords(finalPickup);
-      }
-
+      if (!finalPickup) { finalPickup = await geocodeAddress(pickupAddress); if (!finalPickup) { toast.error("Could not resolve pickup location."); return; } setPickupCoords(finalPickup); }
       let finalDropoff = dropoffCoords;
-      if (!finalDropoff) {
-        finalDropoff = await geocodeAddress(dropoffAddress);
-        if (!finalDropoff) { toast.error("Could not resolve dropoff location."); return; }
-        setDropoffCoords(finalDropoff);
-      }
+      if (!finalDropoff) { finalDropoff = await geocodeAddress(dropoffAddress); if (!finalDropoff) { toast.error("Could not resolve dropoff location."); return; } setDropoffCoords(finalDropoff); }
 
-      const { data: job, error } = await supabase
-        .from("jobs")
-        .insert({
-          customer_id: user.id,
-          job_type: "ride",
-          status: "created",
-          pickup_address: pickupAddress,
-          pickup_lat: finalPickup.lat,
-          pickup_lng: finalPickup.lng,
-          dropoff_address: dropoffAddress,
-          dropoff_lat: finalDropoff.lat,
-          dropoff_lng: finalDropoff.lng,
-        } as any)
-        .select()
-        .single();
-
+      const { data: job, error } = await supabase.from("jobs").insert({
+        customer_id: user.id, job_type: "ride", status: "created",
+        pickup_address: pickupAddress, pickup_lat: finalPickup.lat, pickup_lng: finalPickup.lng,
+        dropoff_address: dropoffAddress, dropoff_lat: finalDropoff.lat, dropoff_lng: finalDropoff.lng,
+      } as any).select().single();
       if (error || !job) throw new Error(error?.message || "Failed to create draft job");
       const jobId = (job as any).id;
       setDraftJobId(jobId);
@@ -272,200 +260,121 @@ export default function RequestRidePage() {
         supabase.functions.invoke("trip-estimate", { body: { job_id: jobId } }),
         supabase.rpc("assign_job_zone_and_surge_postgis" as any, { p_job_id: jobId }),
       ]);
-
       if (estimateRes.error) console.error("[GetPrice] trip-estimate error:", estimateRes.error);
       if (zoneRes.error) console.error("[GetPrice] zone/surge error:", zoneRes.error);
 
       const { error: pricingError } = await supabase.rpc("apply_pricing_to_job" as any, { p_job_id: jobId });
       if (pricingError) console.error("[GetPrice] apply_pricing error:", pricingError);
 
-      const { data: pricedJob } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("id", jobId)
-        .single();
-
+      const { data: pricedJob } = await supabase.from("jobs").select("*").eq("id", jobId).single();
       if (pricedJob) {
         const j = pricedJob as any;
-        setPricing({
-          base_fare: j.pricing_base_fare ?? 0,
-          per_mile: j.pricing_per_mile ?? 0,
-          per_minute: j.pricing_per_minute ?? 0,
-          airport_fee: j.pricing_airport_fee ?? 0,
-          final_multiplier: j.pricing_final_multiplier ?? 1,
-          total: j.pricing_total_estimate ?? 0,
-        });
+        setPricing({ base_fare: j.pricing_base_fare ?? 0, per_mile: j.pricing_per_mile ?? 0, per_minute: j.pricing_per_minute ?? 0, airport_fee: j.pricing_airport_fee ?? 0, final_multiplier: j.pricing_final_multiplier ?? 1, total: j.pricing_total_estimate ?? 0 });
       }
-
       setStep("pricing");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
-    } finally {
-      setIsLoadingPrice(false);
-    }
+    } catch (err: any) { toast.error(err.message || "Something went wrong"); } finally { setIsLoadingPrice(false); }
   };
 
   const handleConfirmPrice = async () => {
     if (!draftJobId) return;
     setIsConfirming(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-        body: { job_id: draftJobId },
-      });
-
+      const { data, error } = await supabase.functions.invoke("create-payment-intent", { body: { job_id: draftJobId } });
       if (error) throw new Error(error.message || "Failed to create payment intent");
-
       const secret = data?.client_secret || data?.clientSecret;
       if (!secret) throw new Error("No client_secret returned");
-
-      setClientSecret(secret);
-      setStep("payment");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to initialize payment");
-    } finally {
-      setIsConfirming(false);
-    }
+      setClientSecret(secret); setStep("payment");
+    } catch (err: any) { toast.error(err.message || "Failed to initialize payment"); } finally { setIsConfirming(false); }
   };
 
   const handlePaymentSuccess = async () => {
     if (!draftJobId) return;
-
     try {
-      const { error: updateError } = await supabase
-        .from("jobs")
-        .update({ status: "requested" } as any)
-        .eq("id", draftJobId);
-
+      const { error: updateError } = await supabase.from("jobs").update({ status: "requested" } as any).eq("id", draftJobId);
       if (updateError) console.error("[RequestRide] status update error:", updateError);
-
-      const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", {
-        body: { job_id: draftJobId, offer_ttl_seconds: 25 },
-      });
-
+      const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", { body: { job_id: draftJobId, offer_ttl_seconds: 25 } });
       if (dispatchError) console.error("[RequestRide] dispatch-start error:", dispatchError);
-
       navigate(`/trip-status/${draftJobId}`);
-    } catch (err: any) {
-      navigate(`/trip-status/${draftJobId}`);
-    }
+    } catch { navigate(`/trip-status/${draftJobId}`); }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
-
-  const steps = ["address", "pricing", "payment"] as const;
-  const stepLabels = ["Route", "Price", "Pay"];
-  const currentStepIndex = steps.indexOf(step);
-
   const handleBack = () => {
     if (step === "payment") setStep("pricing");
     else if (step === "pricing") setStep("address");
     else navigate(-1);
   };
-
   const currentVehicles = vehicleOptions[activeCategory] || [];
+
+  const handleApplyPromo = () => {
+    if (promoCode.trim().toUpperCase() === "FIRST10") {
+      setPromoApplied(true); toast.success("Promo code applied! 10% off");
+    } else {
+      toast.error("Invalid promo code");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Map area */}
       <div className="relative h-[35vh] min-h-[220px]">
-        <RideMap
-          pickupCoords={pickupCoords}
-          dropoffCoords={dropoffCoords}
-          className="w-full h-full"
-        />
-        {/* Top bar overlay */}
+        <RideMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className="w-full h-full" />
         <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-3 safe-area-top flex items-center justify-between">
-          <motion.button 
-            whileTap={{ scale: 0.88 }}
-            onClick={handleBack} 
-            className="h-10 px-4 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center gap-2 touch-manipulation text-sm font-medium text-foreground shadow-lg"
-          >
+          <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack}
+            className="h-10 px-4 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center gap-2 touch-manipulation text-sm font-medium text-foreground shadow-lg">
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Tap map to set dropoff</span>
           </motion.button>
-
           {pickupAddress && (
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 shadow-lg"
-            >
-              <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">5-10<br/>MIN</span>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 shadow-lg">
+              <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">ETA</span>
               <div className="text-right">
                 <p className="text-xs font-bold text-foreground truncate max-w-[120px]">{pickupAddress.split(",")[0]}</p>
                 <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{pickupAddress.split(",").slice(1).join(",").trim() || "Pickup"}</p>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             </motion.div>
           )}
         </div>
-        {/* Gradient fade to bottom sheet */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       {/* Bottom Sheet */}
       <div className="flex-1 -mt-6 relative z-10">
-        {/* Pull indicator */}
-        <div className="flex justify-center pt-2 pb-3">
+        <div className="flex justify-center pt-2 pb-1">
           <div className="w-10 h-1 rounded-full bg-border/60" />
         </div>
+
+        {/* Step Progress */}
+        <RideStepIndicator currentStep={step} />
 
         <div className="px-4 max-w-lg mx-auto w-full space-y-4 pb-28">
           <AnimatePresence mode="wait">
             {step === "address" && (
-              <motion.div
-                key="address"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4"
-              >
-                {/* Header */}
+              <motion.div key="address" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-foreground">Where to?</h2>
                   <span className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    No drivers nearby
+                    Live pricing
                   </span>
                 </div>
 
                 {/* Address inputs */}
                 <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3 shadow-sm">
-                  {/* Pickup */}
                   <div className="relative flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full border-2 border-primary bg-primary/20 shrink-0" />
-                    <Input
-                      placeholder="Enter pickup location"
-                      value={pickupAddress}
-                      onChange={(e) => {
-                        setPickupAddress(e.target.value);
-                        setPickupCoords(null);
-                        pickupGeocode.fetchSuggestions(e.target.value);
-                        setActiveInput("pickup");
-                      }}
+                    <Input placeholder="Enter pickup location" value={pickupAddress}
+                      onChange={(e) => { setPickupAddress(e.target.value); setPickupCoords(null); pickupGeocode.fetchSuggestions(e.target.value); setActiveInput("pickup"); }}
                       onFocus={() => setActiveInput("pickup")}
-                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none"
-                    />
+                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none" />
                   </div>
-
                   <div className="ml-1.5 border-l-2 border-dashed border-border/40 h-3" />
-
-                  {/* Dropoff */}
                   <div className="relative flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full border-2 border-orange-500 bg-orange-500/20 shrink-0" />
-                    <Input
-                      placeholder="Enter destination"
-                      value={dropoffAddress}
-                      onChange={(e) => {
-                        setDropoffAddress(e.target.value);
-                        setDropoffCoords(null);
-                        dropoffGeocode.fetchSuggestions(e.target.value);
-                        setActiveInput("dropoff");
-                      }}
+                    <Input placeholder="Enter destination" value={dropoffAddress}
+                      onChange={(e) => { setDropoffAddress(e.target.value); setDropoffCoords(null); dropoffGeocode.fetchSuggestions(e.target.value); setActiveInput("dropoff"); }}
                       onFocus={() => setActiveInput("dropoff")}
-                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none"
-                    />
+                      className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none" />
                     <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
                 </div>
@@ -475,55 +384,41 @@ export default function RequestRidePage() {
                   <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {pickupGeocode.suggestions.map((s) => (
                       <button key={s.id} onClick={() => handleSelectSuggestion(s, "pickup")} className="w-full text-left px-4 py-3.5 hover:bg-muted/50 transition border-b border-border/20 last:border-b-0 text-sm text-foreground touch-manipulation active:bg-muted/80 flex items-center gap-3">
-                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="truncate">{s.placeName}</span>
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" /><span className="truncate">{s.placeName}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
-
                 {activeInput === "dropoff" && dropoffGeocode.suggestions.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
                     {dropoffGeocode.suggestions.map((s) => (
                       <button key={s.id} onClick={() => handleSelectSuggestion(s, "dropoff")} className="w-full text-left px-4 py-3.5 hover:bg-muted/50 transition border-b border-border/20 last:border-b-0 text-sm text-foreground touch-manipulation active:bg-muted/80 flex items-center gap-3">
-                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="truncate">{s.placeName}</span>
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" /><span className="truncate">{s.placeName}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
 
-                {/* Use my location */}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleUseMyLocation} 
-                  disabled={isGettingLocation} 
-                  className="gap-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/5"
-                >
-                  {isGettingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
-                  Use my location
-                </Button>
-
-                {/* + Add stop */}
-                <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
-                  <Plus className="w-3.5 h-3.5" />
-                  Add stop
-                </button>
+                {/* Quick actions row */}
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation}
+                    className="gap-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/5">
+                    {isGettingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+                    Use my location
+                  </Button>
+                  <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
+                    <Plus className="w-3.5 h-3.5" /> Add stop
+                  </button>
+                </div>
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 pt-2">
                   {rideCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => { setActiveCategory(cat.id); setSelectedVehicle(null); }}
+                    <button key={cat.id} onClick={() => { setActiveCategory(cat.id); setSelectedVehicle(null); }}
                       className={cn(
                         "px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1.5 touch-manipulation active:scale-95",
-                        activeCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                          : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
-                      )}
-                    >
+                        activeCategory === cat.id ? "bg-primary text-primary-foreground shadow-md shadow-primary/25" : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
+                      )}>
                       {cat.id === "premium" && <Sparkles className="w-3 h-3" />}
                       {cat.id === "elite" && <Crown className="w-3 h-3" />}
                       {cat.label}
@@ -531,88 +426,64 @@ export default function RequestRidePage() {
                   ))}
                 </div>
 
-                {/* Vehicle Options List */}
+                {/* Vehicle Options */}
                 <div className="space-y-2">
                   {currentVehicles.map((vehicle, i) => (
-                    <motion.button
-                      key={vehicle.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                    <motion.button key={vehicle.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedVehicle(vehicle.id)}
                       className={cn(
                         "w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 touch-manipulation active:scale-[0.98]",
-                        selectedVehicle === vehicle.id
-                          ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                          : "border-border/40 bg-card hover:border-primary/20 hover:bg-muted/30"
-                      )}
-                    >
-                      {/* Vehicle icon */}
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                        selectedVehicle === vehicle.id ? "bg-primary/15" : "bg-muted/50"
+                        selectedVehicle === vehicle.id ? "border-primary bg-primary/5 shadow-sm shadow-primary/10" : "border-border/40 bg-card hover:border-primary/20 hover:bg-muted/30"
                       )}>
+                      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", selectedVehicle === vehicle.id ? "bg-primary/15" : "bg-muted/50")}>
                         <Car className={cn("w-6 h-6", selectedVehicle === vehicle.id ? "text-primary" : "text-muted-foreground")} />
                       </div>
-
-                      {/* Details */}
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-sm text-foreground">{vehicle.name}</span>
-                          {vehicle.badge && (
-                            <span className={cn("text-[10px] font-bold flex items-center gap-0.5", vehicle.badgeColor)}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                              {vehicle.badge}
-                            </span>
-                          )}
+                          {vehicle.badge && <span className={cn("text-[10px] font-bold flex items-center gap-0.5", vehicle.badgeColor)}><span className="w-1.5 h-1.5 rounded-full bg-current" />{vehicle.badge}</span>}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          <span>{vehicle.eta}</span>
-                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5"><Clock className="w-3 h-3" /><span>{vehicle.eta}</span></div>
                       </div>
-
-                      {/* Capacity */}
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                        <Users className="w-3.5 h-3.5" />
-                        <span>{vehicle.capacity}</span>
-                      </div>
-
-                      {/* Price */}
-                      <span className={cn(
-                        "text-base font-bold shrink-0",
-                        selectedVehicle === vehicle.id ? "text-primary" : "text-foreground"
-                      )}>
-                        {vehicle.price}
-                      </span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0"><Users className="w-3.5 h-3.5" /><span>{vehicle.capacity}</span></div>
+                      <span className={cn("text-base font-bold shrink-0", selectedVehicle === vehicle.id ? "text-primary" : "text-foreground")}>{vehicle.price}</span>
                     </motion.button>
                   ))}
                 </div>
 
-                {/* Get Price / Request button */}
-                <Button 
-                  onClick={handleGetPrice} 
-                  disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()} 
-                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
-                  size="lg"
-                >
-                  {isLoadingPrice ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" />Calculating price...</>
-                  ) : (
-                    <><Zap className="w-5 h-5" />{selectedVehicle ? `Request ${currentVehicles.find(v => v.id === selectedVehicle)?.name || "Ride"}` : "Get Price"}</>
-                  )}
+                {/* Ride Preferences */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Star className="w-3 h-3" /> Ride Preferences
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {ridePreferences.map(pref => {
+                      const Icon = pref.icon;
+                      const isSelected = selectedPreferences.includes(pref.id);
+                      return (
+                        <button key={pref.id} onClick={() => togglePreference(pref.id)}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all touch-manipulation active:scale-95",
+                            isSelected ? "bg-primary/10 border border-primary/30 text-primary" : "bg-muted/50 border border-border/40 text-muted-foreground hover:bg-muted"
+                          )}>
+                          <Icon className="w-3.5 h-3.5" />
+                          {pref.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Get Price button */}
+                <Button onClick={handleGetPrice} disabled={isLoadingPrice || !pickupAddress.trim() || !dropoffAddress.trim()}
+                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200" size="lg">
+                  {isLoadingPrice ? <><Loader2 className="w-5 h-5 animate-spin" />Calculating price...</> : <><Zap className="w-5 h-5" />{selectedVehicle ? `Request ${currentVehicles.find(v => v.id === selectedVehicle)?.name || "Ride"}` : "Get Price"}</>}
                 </Button>
               </motion.div>
             )}
 
             {step === "pricing" && (
-              <motion.div
-                key="pricing"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-5"
-              >
+              <motion.div key="pricing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
                 {/* Route summary */}
                 <div className="p-5 rounded-2xl bg-card border border-border/40 shadow-sm">
                   <div className="flex items-start gap-3">
@@ -622,25 +493,29 @@ export default function RequestRidePage() {
                       <div className="w-3 h-3 rounded-full bg-destructive shadow-sm shadow-destructive/30" />
                     </div>
                     <div className="flex-1 space-y-4">
-                      <div>
-                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p>
-                        <p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p>
-                        <p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p>
-                      </div>
+                      <div><p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Pickup</p><p className="text-sm font-bold text-foreground truncate">{pickupAddress}</p></div>
+                      <div><p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p><p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p></div>
                     </div>
                   </div>
                 </div>
 
-                {/* Selected vehicle badge */}
+                {/* Selected vehicle + preferences */}
                 {selectedVehicle && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
-                    <Car className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-bold text-primary">
-                      {currentVehicles.find(v => v.id === selectedVehicle)?.name || "Standard"}
-                    </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+                      <Car className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-bold text-primary">{currentVehicles.find(v => v.id === selectedVehicle)?.name}</span>
+                    </div>
+                    {selectedPreferences.map(p => {
+                      const pref = ridePreferences.find(rp => rp.id === p);
+                      if (!pref) return null;
+                      const Icon = pref.icon;
+                      return (
+                        <div key={p} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border/40 text-xs text-muted-foreground">
+                          <Icon className="w-3 h-3" /> {pref.label}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -648,98 +523,97 @@ export default function RequestRidePage() {
                 {pricing && (
                   <div className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-sm">
                     <div className="flex items-center gap-2.5 p-4 border-b border-border/30 bg-muted/20">
-                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Receipt className="w-4 h-4 text-primary" />
-                      </div>
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center"><Receipt className="w-4 h-4 text-primary" /></div>
                       <span className="text-sm font-bold text-foreground">Fare Breakdown</span>
                     </div>
-
                     <div className="p-4 space-y-3 text-sm">
                       <div className="flex justify-between"><span className="text-muted-foreground">Base fare</span><span className="font-bold text-foreground">{formatUSD(pricing.base_fare)}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Distance charge</span><span className="font-bold text-foreground">{formatUSD(pricing.per_mile)}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Time charge</span><span className="font-bold text-foreground">{formatUSD(pricing.per_minute)}</span></div>
-                      {pricing.airport_fee > 0 && (
-                        <div className="flex justify-between"><span className="text-muted-foreground">Airport fee</span><span className="font-bold text-foreground">{formatUSD(pricing.airport_fee)}</span></div>
-                      )}
+                      {pricing.airport_fee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Airport fee</span><span className="font-bold text-foreground">{formatUSD(pricing.airport_fee)}</span></div>}
                       {pricing.final_multiplier !== 1 && (
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-amber-600 font-bold flex items-center gap-1"><Zap className="w-3 h-3" /> Surge ({pricing.final_multiplier.toFixed(2)}x)</span>
                           <span className="text-xs text-amber-600 font-bold">applied</span>
                         </div>
                       )}
+                      {promoApplied && (
+                        <div className="flex justify-between items-center text-primary">
+                          <span className="text-xs font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> Promo FIRST10</span>
+                          <span className="text-xs font-bold">-10%</span>
+                        </div>
+                      )}
                     </div>
-
                     <div className="px-4 pb-4">
                       <div className="flex justify-between pt-4 border-t border-border/30">
                         <span className="font-bold text-lg text-foreground">Estimated Total</span>
-                        <span className="font-bold text-2xl text-primary">{formatUSD(pricing.total)}</span>
+                        <span className="font-bold text-2xl text-primary">{formatUSD(promoApplied ? Math.round(pricing.total * 0.9) : pricing.total)}</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground pt-2">Final price may vary based on actual route, traffic, and wait time.</p>
                     </div>
                   </div>
                 )}
 
-                <Button 
-                  onClick={handleConfirmPrice} 
-                  disabled={isConfirming} 
-                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200"
-                  size="lg"
-                >
-                  {isConfirming ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment...</>
-                  ) : (
-                    <><CreditCard className="w-5 h-5" />Continue to Payment</>
-                  )}
+                {/* Promo Code */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                    <Gift className="w-3 h-3" /> Promo Code
+                  </h3>
+                  <div className="flex gap-2">
+                    <Input placeholder="Enter code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)}
+                      disabled={promoApplied} className="h-10 rounded-xl flex-1 text-sm" />
+                    <Button variant={promoApplied ? "outline" : "default"} size="sm" onClick={handleApplyPromo}
+                      disabled={promoApplied || !promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
+                      {promoApplied ? <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Applied</> : "Apply"}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button onClick={handleConfirmPrice} disabled={isConfirming}
+                  className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] transition-all duration-200" size="lg">
+                  {isConfirming ? <><Loader2 className="w-5 h-5 animate-spin" />Setting up payment...</> : <><CreditCard className="w-5 h-5" />Continue to Payment</>}
                 </Button>
               </motion.div>
             )}
 
             {step === "payment" && clientSecret && (
-              <motion.div
-                key="payment"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-5"
-              >
+              <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
                 {/* Compact route + price summary */}
                 <div className="p-4 rounded-2xl bg-card border border-border/40 flex items-center justify-between shadow-sm">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      {pickupAddress}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
-                      {dropoffAddress}
-                    </p>
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />{pickupAddress}</p>
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-1"><span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />{dropoffAddress}</p>
                   </div>
-                  {pricing && (
-                    <span className="text-xl font-bold text-primary ml-3 shrink-0">
-                      {formatUSD(pricing.total)}
-                    </span>
+                  {pricing && <span className="text-xl font-bold text-primary ml-3 shrink-0">{formatUSD(promoApplied ? Math.round(pricing.total * 0.9) : pricing.total)}</span>}
+                </div>
+
+                {/* Tip Selection */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                    <Heart className="w-3 h-3" /> Add a Tip
+                  </h3>
+                  <div className="flex gap-2 mb-2">
+                    {tipOptions.map(opt => (
+                      <button key={opt.id} onClick={() => setSelectedTip(opt.id)}
+                        className={cn(
+                          "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                          selectedTip === opt.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
+                        )}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedTip === "custom" && (
+                    <Input placeholder="Enter tip amount" type="number" value={customTip}
+                      onChange={(e) => setCustomTip(e.target.value)} className="h-10 rounded-xl text-sm mt-2" />
+                  )}
+                  {tipAmount > 0 && (
+                    <p className="text-xs text-primary font-medium mt-2">Tip: ${tipAmount.toFixed(2)} — Thank you for your generosity!</p>
                   )}
                 </div>
 
-                <Elements
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret,
-                    appearance: {
-                      theme: "night",
-                      variables: {
-                        colorPrimary: "hsl(142, 76%, 36%)",
-                        borderRadius: "12px",
-                      },
-                    },
-                  }}
-                >
-                  <PaymentForm
-                    onSuccess={handlePaymentSuccess}
-                    isProcessing={isProcessingPayment}
-                    setIsProcessing={setIsProcessingPayment}
-                    totalCents={pricing?.total ?? 0}
-                  />
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "night", variables: { colorPrimary: "hsl(142, 76%, 36%)", borderRadius: "12px" } } }}>
+                  <PaymentForm onSuccess={handlePaymentSuccess} isProcessing={isProcessingPayment} setIsProcessing={setIsProcessingPayment} totalCents={(pricing?.total ?? 0) + Math.round(tipAmount * 100)} />
                 </Elements>
               </motion.div>
             )}
