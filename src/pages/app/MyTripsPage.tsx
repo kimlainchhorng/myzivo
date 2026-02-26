@@ -8,7 +8,8 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Calendar, ChevronRight,
-  Plane, Car, UtensilsCrossed, Package, MapPin, BedDouble, Compass
+  Plane, Car, UtensilsCrossed, Package, MapPin, BedDouble, Compass,
+  CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,22 @@ const statusFilters = [
   { id: "cancelled", label: "Cancelled" },
 ];
 
+// Map trip.icon string to Lucide icon component
+const tripIconMap: Record<string, LucideIcon> = {
+  "plane": Plane,
+  "car": Car,
+  "car-front": CarFront,
+  "car-taxi-front": CarTaxiFront,
+  "utensils-crossed": UtensilsCrossed,
+  "package": Package,
+  "building-2": Building2,
+  "target": MapPin,
+  "credit-card": CreditCard,
+};
+
 function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
   const meta = getServiceMeta(trip.service);
+  const TripIcon = tripIconMap[trip.icon] || Plane;
   
   const statusStyles: Record<string, string> = {
     pending: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -68,7 +83,9 @@ function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
             {/* Left accent */}
             <div className="w-1 bg-gradient-to-b from-primary/60 to-primary/20 shrink-0" />
             <div className="flex items-start gap-4 p-4 flex-1">
-              <div className="text-3xl shrink-0 pt-0.5">{trip.icon}</div>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <TripIcon className="w-6 h-6 text-primary" />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div>
