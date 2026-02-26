@@ -39146,6 +39146,137 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_items: {
+        Row: {
+          booking_reference: string | null
+          booking_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          end_datetime: string | null
+          estimated_cost_cents: number | null
+          id: string
+          item_type: string
+          itinerary_id: string
+          location: string | null
+          metadata: Json | null
+          provider_name: string | null
+          sort_order: number
+          start_datetime: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_reference?: string | null
+          booking_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          end_datetime?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          item_type: string
+          itinerary_id: string
+          location?: string | null
+          metadata?: Json | null
+          provider_name?: string | null
+          sort_order?: number
+          start_datetime?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_reference?: string | null
+          booking_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          end_datetime?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          item_type?: string
+          itinerary_id?: string
+          location?: string | null
+          metadata?: Json | null
+          provider_name?: string | null
+          sort_order?: number
+          start_datetime?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_items_itinerary_id_fkey"
+            columns: ["itinerary_id"]
+            isOneToOne: false
+            referencedRelation: "trip_itineraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_itineraries: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          destination: string | null
+          end_date: string | null
+          id: string
+          is_public: boolean
+          notes: string | null
+          share_token: string | null
+          start_date: string | null
+          status: string
+          title: string
+          total_estimated_cost_cents: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination?: string | null
+          end_date?: string | null
+          id?: string
+          is_public?: boolean
+          notes?: string | null
+          share_token?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          total_estimated_cost_cents?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination?: string | null
+          end_date?: string | null
+          id?: string
+          is_public?: boolean
+          notes?: string | null
+          share_token?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          total_estimated_cost_cents?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trip_locations: {
         Row: {
           driver_id: string
