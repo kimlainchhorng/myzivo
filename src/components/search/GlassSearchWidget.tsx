@@ -148,7 +148,7 @@
        <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
  
        <motion.div 
-         className="relative z-10 bg-card/80 dark:bg-zinc-900/60 backdrop-blur-2xl border border-border/50 dark:border-white/10 rounded-[2rem] p-4 sm:p-6 shadow-2xl overflow-hidden"
+         className="relative z-10 bg-card/80 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-4 sm:p-6 shadow-2xl overflow-hidden"
          initial={{ y: 20, opacity: 0 }}
          animate={{ y: 0, opacity: 1 }}
          transition={{ duration: 0.6 }}

@@ -67,17 +67,17 @@ export function AIConciergeTrigger() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-white text-black rounded-full shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center z-50 group"
+          className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] flex items-center justify-center z-50 group"
         >
           {/* Notification Badge */}
           {alertCount > 0 && (
-            <span className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-black" />
+            <span className="absolute -top-2 -right-2 w-4 h-4 bg-destructive rounded-full border-2 border-background" />
           )}
           
           <ChatIcon className="w-6 h-6" />
           
           {/* Tooltip */}
-          <span className="absolute right-16 bg-zinc-900 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10">
+          <span className="absolute right-16 bg-popover text-popover-foreground text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-border/50">
             {alertCount > 0 ? "Flight delay alert (1)" : "Need help?"}
           </span>
         </motion.button>
@@ -90,25 +90,25 @@ export function AIConciergeTrigger() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="fixed bottom-6 right-6 z-50 w-[360px] h-[500px] bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[360px] h-[500px] bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-primary to-accent flex items-center justify-between">
               <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                <p className="font-bold text-white">ZIVO Concierge</p>
+                  <p className="font-bold text-primary-foreground">ZIVO Concierge</p>
                   <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-400 rounded-full" />
-                  <span className="text-xs text-white/80">Online</span>
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                    <span className="text-xs text-primary-foreground/80">Online</span>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-              className="text-white/80 hover:text-white transition-colors"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -122,19 +122,19 @@ export function AIConciergeTrigger() {
                   className={`flex gap-2 ${msg.type === "user" ? "flex-row-reverse" : ""}`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === "bot" ? "bg-blue-600/20" : "bg-zinc-800"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === "bot" ? "bg-primary/20" : "bg-muted"}`}
                   >
                     {msg.type === "bot" ? (
-                      <Bot className="w-4 h-4 text-blue-400" />
+                      <Bot className="w-4 h-4 text-primary" />
                     ) : (
-                      <User className="w-4 h-4 text-zinc-400" />
+                      <User className="w-4 h-4 text-muted-foreground" />
                     )}
                   </div>
                   <div
                     className={`max-w-[70%] p-3 rounded-2xl text-sm ${
                       msg.type === "bot"
-                        ? "bg-zinc-800 rounded-tl-sm text-white"
-                        : "bg-blue-600 text-white rounded-tr-sm"
+                        ? "bg-muted rounded-tl-sm text-foreground"
+                        : "bg-primary text-primary-foreground rounded-tr-sm"
                     }`}
                   >
                     {msg.text}
@@ -150,7 +150,7 @@ export function AIConciergeTrigger() {
                   <button
                     key={reply}
                     onClick={() => sendMessage(reply)}
-                    className="flex-shrink-0 px-3 py-1.5 text-xs bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors text-white"
+                    className="flex-shrink-0 px-3 py-1.5 text-xs bg-muted rounded-full hover:bg-muted/80 transition-colors text-foreground"
                   >
                     {reply}
                   </button>
@@ -159,7 +159,7 @@ export function AIConciergeTrigger() {
             </div>
 
             {/* Input */}
-          <div className="p-4 border-t border-white/10">
+            <div className="p-4 border-t border-border/50">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -167,14 +167,14 @@ export function AIConciergeTrigger() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && sendMessage(input)}
                   placeholder="Type a message..."
-                className="flex-1 px-4 py-2 bg-zinc-800 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder:text-zinc-500"
+                  className="flex-1 px-4 py-2 bg-muted rounded-full text-sm outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
                 />
-              <button
+                <button
                   onClick={() => sendMessage(input)}
-                className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                  className="w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
                 >
-                <Send className="w-4 h-4 text-white" />
-              </button>
+                  <Send className="w-4 h-4 text-primary-foreground" />
+                </button>
               </div>
             </div>
           </motion.div>
