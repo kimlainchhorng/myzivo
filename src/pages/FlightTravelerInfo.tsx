@@ -37,6 +37,7 @@ import {
   Loader2,
   CheckCircle,
   Info,
+  UserCheck,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from "@/hooks/useDuffelFlights";
@@ -72,20 +73,40 @@ const FlightTravelerInfo = () => {
   // Fetch offer details
   const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
 
-  // Initialize passenger forms
+  const [autoFilled, setAutoFilled] = useState(false);
+
+  // Initialize passenger forms & auto-fill from auth user
   useEffect(() => {
     if (passengerCount > 0 && passengers.length === 0) {
-      setPassengers(
-        Array(passengerCount).fill(null).map(() => ({
-          title: "",
-          given_name: "",
-          family_name: "",
-          born_on: "",
-          email: "",
-          phone_number: "",
-          gender: "",
-        }))
-      );
+      const emptyPassengers = Array(passengerCount).fill(null).map(() => ({
+        title: "",
+        given_name: "",
+        family_name: "",
+        born_on: "",
+        email: "",
+        phone_number: "",
+        gender: "",
+      }));
+      setPassengers(emptyPassengers);
+
+      // Auto-fill first passenger from logged-in user
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.email) {
+          const meta = user.user_metadata || {};
+          setPassengers(prev => {
+            const updated = [...prev];
+            updated[0] = {
+              ...updated[0],
+              email: user.email || "",
+              given_name: meta.first_name || meta.given_name || "",
+              family_name: meta.last_name || meta.family_name || "",
+              phone_number: meta.phone || user.phone || "",
+            };
+            return updated;
+          });
+          setAutoFilled(true);
+        }
+      });
     }
   }, [passengerCount, passengers.length]);
 
@@ -337,6 +358,18 @@ const FlightTravelerInfo = () => {
           <PassengerInfoHeader className="mb-6" />
 
           {/* Passenger Forms */}
+          {autoFilled && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4"
+            >
+              <UserCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                We pre-filled Passenger 1 from your account. Please verify all details.
+              </p>
+            </motion.div>
+          )}
           <div className="space-y-6">
             {passengers.map((passenger, index) => (
               <Card key={index}>
@@ -344,6 +377,9 @@ const FlightTravelerInfo = () => {
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <User className="w-5 h-5 text-primary" />
                     Passenger {index + 1}
+                    {index === 0 && autoFilled && (
+                      <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-500/30">Auto-filled</Badge>
+                    )}
                   </CardTitle>
                   <CardDescription>
                     Enter details exactly as they appear on the travel document

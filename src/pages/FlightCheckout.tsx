@@ -49,6 +49,35 @@ import { usePromotionValidation } from '@/hooks/usePromotionValidation';
 import { Tag, X, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
+/** Countdown timer for offer expiration (15 min) */
+function OfferCountdown() {
+  const [secsLeft, setSecsLeft] = useState(15 * 60);
+  useEffect(() => {
+    const t = setInterval(() => setSecsLeft(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const mins = Math.floor(secsLeft / 60);
+  const secs = secsLeft % 60;
+  const urgent = secsLeft < 300;
+  return (
+    <Card className={cn("border", urgent ? "border-destructive/50 bg-destructive/5" : "border-amber-500/30 bg-amber-500/5")}>
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", urgent ? "bg-destructive/20" : "bg-amber-500/20")}>
+          <Clock className={cn("w-5 h-5", urgent ? "text-destructive" : "text-amber-600")} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={cn("text-sm font-semibold", urgent ? "text-destructive" : "text-amber-700 dark:text-amber-400")}>
+            {secsLeft === 0 ? "Offer may have expired" : `Price held for ${mins}:${secs.toString().padStart(2, '0')}`}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {secsLeft > 0 ? "Complete checkout to lock in this price" : "Prices may have changed — please verify"}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const FlightCheckout = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -473,6 +502,9 @@ const FlightCheckout = () => {
 
             {/* Sidebar - Price & Payment */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Offer Countdown Timer */}
+              <OfferCountdown />
+
               {/* Price Breakdown */}
               <FlightPriceBreakdown
                 baseFare={baseFare}

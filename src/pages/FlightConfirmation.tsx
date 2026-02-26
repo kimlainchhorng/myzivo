@@ -40,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import FlightTicketCard from '@/components/flight/FlightTicketCard';
+import FlightReservationSchema from '@/components/seo/FlightReservationSchema';
 
 interface OfferDetails {
   airline?: string;
@@ -142,7 +143,23 @@ const FlightConfirmation = () => {
       <SEOHead 
         title="Booking Confirmed – ZIVO"
         description="Your flight booking has been confirmed."
+        noIndex={true}
       />
+      {/* Structured data for confirmed bookings */}
+      {isIssued && booking?.pnr && offerDetails?.flightNumber && (
+        <FlightReservationSchema
+          bookingReference={booking.pnr}
+          airline={offerDetails.airline || 'Airline'}
+          flightNumber={offerDetails.flightNumber}
+          departureAirport={booking.origin || ''}
+          departureTime={booking.departure_date || ''}
+          arrivalAirport={booking.destination || ''}
+          arrivalTime={booking.departure_date || ''}
+          passengerName={booking.flight_passengers?.[0]?.given_name ? `${booking.flight_passengers[0].given_name} ${booking.flight_passengers[0].family_name}` : 'Passenger'}
+          price={booking.total_amount}
+          currency={booking.currency}
+        />
+      )}
       <Header />
 
       <main className="pt-20 pb-20">
