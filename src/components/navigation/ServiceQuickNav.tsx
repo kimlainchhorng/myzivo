@@ -124,8 +124,8 @@ const ServiceQuickNav = () => {
                 <Badge className={cn(
                   "absolute -top-0.5 -right-0.5 text-[8px] px-1 py-0 h-3.5 font-semibold",
                   service.badge === "Hot" 
-                    ? "bg-rose-500 text-white border-0" 
-                    : "bg-emerald-500 text-white border-0"
+                    ? "bg-rose-500 text-primary-foreground border-0" 
+                    : "bg-emerald-500 text-primary-foreground border-0"
                 )}>
                   {service.badge}
                 </Badge>
@@ -140,7 +140,7 @@ const ServiceQuickNav = () => {
               )}>
                 <service.icon className={cn(
                   "w-4 h-4",
-                  active ? "text-white" : service.textColor
+                  active ? "text-primary-foreground" : service.textColor
                 )} />
               </div>
 

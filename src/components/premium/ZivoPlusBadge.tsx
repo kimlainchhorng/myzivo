@@ -27,7 +27,7 @@ export function ZivoPlusBadge({ variant = "default", className }: ZivoPlusBadgeP
               "w-5 h-5 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center cursor-pointer",
               className
             )}>
-              <Crown className="w-3 h-3 text-white" />
+              <Crown className="w-3 h-3 text-primary-foreground" />
             </div>
           </TooltipTrigger>
           <TooltipContent>

@@ -256,7 +256,7 @@ const ThingsToDo = () => {
                   </div>
                   <Button 
                     onClick={handleBookActivity}
-                    className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
+                    className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground shadow-lg shadow-purple-500/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
                   >
                     <Globe className="w-5 h-5 mr-2" />
                     Search Activities
@@ -304,25 +304,25 @@ const ThingsToDo = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
-                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-lg text-xs">
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground border-0 shadow-lg text-xs">
                         <Zap className="w-3 h-3 mr-1" />
                         {exp.badge}
                       </Badge>
                       {exp.instant && (
-                        <Badge className="bg-emerald-500/90 text-white border-0 shadow-lg text-xs">
+                        <Badge className="bg-emerald-500/90 text-primary-foreground border-0 shadow-lg text-xs">
                           Instant Confirm
                         </Badge>
                       )}
                     </div>
                     <button className="absolute top-3 right-3 p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all touch-manipulation">
-                      <Heart className="h-4 w-4 text-white" />
+                      <Heart className="h-4 w-4 text-primary-foreground" />
                     </button>
                     <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-xs text-white/80 flex items-center gap-1 mb-1">
+                      <p className="text-xs text-primary-foreground/80 flex items-center gap-1 mb-1">
                         <MapPin className="w-3 h-3" />
                         {exp.location}
                       </p>
-                      <h3 className="font-bold text-white text-base sm:text-lg line-clamp-2">{exp.title}</h3>
+                      <h3 className="font-bold text-primary-foreground text-base sm:text-lg line-clamp-2">{exp.title}</h3>
                     </div>
                   </div>
 
@@ -348,7 +348,7 @@ const ThingsToDo = () => {
                       </div>
                       <Button 
                         size="sm"
-                        className="gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl touch-manipulation"
+                        className="gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground rounded-xl touch-manipulation"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBookActivity();
@@ -379,7 +379,7 @@ const ThingsToDo = () => {
                     <TabsTrigger 
                       key={cat.id} 
                       value={cat.id} 
-                      className="gap-1.5 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white touch-manipulation"
+                      className="gap-1.5 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-primary-foreground touch-manipulation"
                     >
                       <cat.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">{cat.label}</span>
@@ -407,7 +407,7 @@ const ThingsToDo = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <button className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all touch-manipulation">
-                      <Heart className="h-3.5 w-3.5 text-white" />
+                      <Heart className="h-3.5 w-3.5 text-primary-foreground" />
                     </button>
                   </div>
 
@@ -460,7 +460,7 @@ const ThingsToDo = () => {
               <Button 
                 size="lg"
                 onClick={handleBookActivity}
-                className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 rounded-xl touch-manipulation"
+                className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground shadow-lg shadow-purple-500/30 rounded-xl touch-manipulation"
               >
                 <Globe className="w-5 h-5" />
                 Explore All Activities on Tiqets
@@ -498,7 +498,7 @@ const ThingsToDo = () => {
                   onClick={() => handlePartnerClick(partner)}
                 >
                   {index === 0 && (
-                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-center py-1 text-xs font-medium">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground text-center py-1 text-xs font-medium">
                       Most Popular
                     </div>
                   )}
@@ -534,7 +534,7 @@ const ThingsToDo = () => {
                     
                     <Button 
                       size="sm"
-                      className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 touch-manipulation"
+                      className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground hover:opacity-90 touch-manipulation"
                     >
                       <Ticket className="w-4 h-4" />
                       Browse Tickets

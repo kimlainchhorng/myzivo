@@ -471,7 +471,7 @@ export default function DeliveryPage() {
                   <div className={cn(
                     "w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300",
                     i <= currentStepIndex
-                      ? "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20"
+                      ? "bg-gradient-to-br from-violet-500 to-purple-600 text-primary-foreground shadow-md shadow-violet-500/20"
                       : "bg-muted/50 text-muted-foreground border border-border/40"
                   )}>
                     {i < currentStepIndex ? <CheckCircle className="w-4 h-4" /> : i + 1}
@@ -560,7 +560,7 @@ export default function DeliveryPage() {
                 </div>
               </div>
 
-              <Button onClick={handleContinueToPackage} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handleContinueToPackage} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
                 Continue <Zap className="w-5 h-5" />
               </Button>
             </motion.div>
@@ -583,7 +583,7 @@ export default function DeliveryPage() {
                       className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground font-bold touch-manipulation active:scale-90">−</button>
                     <span className="text-lg font-bold w-6 text-center">{packageCount}</span>
                     <button onClick={() => setPackageCount(Math.min(10, packageCount + 1))}
-                      className="w-8 h-8 rounded-full bg-violet-500 text-white flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
+                      className="w-8 h-8 rounded-full bg-violet-500 text-primary-foreground flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
                   </div>
                 </div>
               </div>
@@ -806,7 +806,7 @@ export default function DeliveryPage() {
               <button onClick={() => { setBusinessAccount(!businessAccount); toast.info(businessAccount ? "Switched to personal" : "Business receipts enabled"); }}
                 className="w-full rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
-                  <Award className="w-5 h-5 text-white" />
+                  <Award className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-xs font-bold text-foreground">{businessAccount ? "Business Account ✓" : "Business Account"}</p>
@@ -846,7 +846,7 @@ export default function DeliveryPage() {
                   {recurringOptions.map(opt => (
                     <button key={opt.id} onClick={() => setRecurringSchedule(opt.id)}
                       className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
-                        recurringSchedule === opt.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        recurringSchedule === opt.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {opt.label}
                     </button>
                   ))}
@@ -937,7 +937,7 @@ export default function DeliveryPage() {
                   {(["any", "sedan", "suv", "truck", "van"] as const).map(v => (
                     <button key={v} onClick={() => setVehicleTypeForDelivery(v)}
                       className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
-                        vehicleTypeForDelivery === v ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        vehicleTypeForDelivery === v ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {v === "any" ? "🚗 Any" : v === "sedan" ? "🚙 Sedan" : v === "suv" ? "🚐 SUV" : v === "truck" ? "🛻 Truck" : "🚐 Van"}
                     </button>
                   ))}
@@ -994,7 +994,7 @@ export default function DeliveryPage() {
                   {(["flexible", "morning", "afternoon", "evening"] as const).map(w => (
                     <button key={w} onClick={() => setScheduledPickupWindow(w)}
                       className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
-                        scheduledPickupWindow === w ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        scheduledPickupWindow === w ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {w === "flexible" ? "🕐 Flexible" : w === "morning" ? "🌅 Morning" : w === "afternoon" ? "☀️ Afternoon" : "🌙 Evening"}
                     </button>
                   ))}
@@ -1063,7 +1063,7 @@ export default function DeliveryPage() {
                   ]).map(h => (
                     <button key={h.id} onClick={() => setSpecialHandling(h.id)}
                       className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
-                        specialHandling === h.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        specialHandling === h.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {h.label}
                     </button>
                   ))}
@@ -1124,7 +1124,7 @@ export default function DeliveryPage() {
                   {[1, 2, 3].map(n => (
                     <button key={n} onClick={() => setDeliveryAttempts(n)}
                       className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation",
-                        deliveryAttempts === n ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        deliveryAttempts === n ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {n} {n === 1 ? "attempt" : "attempts"}
                     </button>
                   ))}
@@ -1188,7 +1188,7 @@ export default function DeliveryPage() {
                   ]).map(t => (
                     <button key={t.id} onClick={() => setTempControl(t.id)}
                       className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
-                        tempControl === t.id ? "bg-sky-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        tempControl === t.id ? "bg-sky-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {t.label}
                     </button>
                   ))}
@@ -1342,7 +1342,7 @@ export default function DeliveryPage() {
                   ].map(w => (
                     <button key={w.id} onClick={() => setDeliveryWindow(w.id)}
                       className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
-                        deliveryWindow === w.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        deliveryWindow === w.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {w.label}
                     </button>
                   ))}
@@ -1354,7 +1354,7 @@ export default function DeliveryPage() {
                 <PriceEstimate basePrice={currentSize?.price ?? 0} speed={speedMultiplier} fragile={isFragile} signature={requireSignature} insurance={includeInsurance} packages={packageCount} promo={promoApplied} />
               )}
 
-              <Button onClick={handleContinueToReview} disabled={!selectedSize} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handleContinueToReview} disabled={!selectedSize} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
                 Review Order <Zap className="w-5 h-5" />
               </Button>
             </motion.div>
@@ -1508,7 +1508,7 @@ export default function DeliveryPage() {
                 <span>{includeInsurance ? "Package insured up to $500" : "No insurance"} · Secured by ZIVO</span>
               </div>
 
-              <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
                 <CheckCircle className="w-5 h-5" /> Confirm Delivery · ${totalPrice.toFixed(2)}
               </Button>
             </motion.div>
@@ -1520,7 +1520,7 @@ export default function DeliveryPage() {
               <div className="max-w-md w-full text-center space-y-6">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
                   className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto shadow-2xl shadow-violet-500/30">
-                  <PartyPopper className="w-10 h-10 text-white" />
+                  <PartyPopper className="w-10 h-10 text-primary-foreground" />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                   <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed! 📦</h1>
@@ -1586,7 +1586,7 @@ export default function DeliveryPage() {
                   <Button variant="outline" onClick={handleShareTracking} className="flex-1 h-12 rounded-xl font-bold gap-2">
                     <Share2 className="w-4 h-4" /> Share
                   </Button>
-                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-white gap-2">
+                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-primary-foreground gap-2">
                     <Navigation className="w-4 h-4" /> Track Live
                   </Button>
                 </motion.div>

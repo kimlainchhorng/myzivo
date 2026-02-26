@@ -176,7 +176,7 @@ export default function CarDetailPage() {
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex gap-2">
                   {vehicle.instant_book && (
-                    <Badge className="bg-amber-500 text-white gap-1">
+                    <Badge className="bg-amber-500 text-primary-foreground gap-1">
                       <Zap className="w-3 h-3" />
                       Instant Book
                     </Badge>
