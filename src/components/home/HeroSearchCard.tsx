@@ -42,8 +42,10 @@ export default function HeroSearchCard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl border border-border/50 overflow-hidden border-glow"
+          className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl border border-border/50 overflow-hidden border-glow relative"
         >
+          {/* Gradient top accent */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--hotels))] to-[hsl(var(--rides))] opacity-60" />
           {/* Tabs */}
           <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide">
              {tabs.map((tab) => (

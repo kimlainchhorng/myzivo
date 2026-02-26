@@ -89,7 +89,7 @@ export default function StatsSection() {
                 )}>
                   <stat.icon className={cn("w-6 h-6", stat.iconColor)} />
                 </div>
-                <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-1.5">
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-1.5 tracking-tight">
                   <AnimatedCounter
                     value={stat.value}
                     suffix={stat.suffix}
