@@ -239,6 +239,74 @@ const About = () => {
             </CardContent>
           </Card>
 
+          {/* === WAVE 14: Rich About Content === */}
+
+          {/* Leadership Principles */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold mb-8 text-center">Our Principles</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { principle: "Traveler First", desc: "Every decision starts with: does this make the traveler's life easier?", emoji: "🧭" },
+                { principle: "Radical Transparency", desc: "No hidden fees, no dark patterns. We show you what you're getting.", emoji: "🔍" },
+                { principle: "Partner Integrity", desc: "We only work with licensed, trusted travel partners.", emoji: "🤝" },
+                { principle: "Build in Public", desc: "We share our progress, learnings, and roadmap openly.", emoji: "🏗️" },
+                { principle: "Speed & Craft", desc: "Move fast but never compromise on quality or user experience.", emoji: "⚡" },
+                { principle: "Global Mindset", desc: "Built for travelers everywhere, by a team from everywhere.", emoji: "🌏" },
+              ].map(p => (
+                <Card key={p.principle} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all">
+                  <CardContent className="p-5">
+                    <span className="text-2xl">{p.emoji}</span>
+                    <h3 className="font-bold mt-2">{p.principle}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{p.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold mb-8 text-center">Our Journey</h2>
+            <div className="space-y-3">
+              {[
+                { date: "Q1 2025", event: "Launched ZIVO Rides, Eats, and Move verticals", emoji: "🚀" },
+                { date: "Q4 2024", event: "ZIVO Miles loyalty program launched for all users", emoji: "⭐" },
+                { date: "Q3 2024", event: "Added hotel and car rental comparison", emoji: "🏨" },
+                { date: "Q2 2024", event: "ZIVO founded — flight search MVP launched", emoji: "✈️" },
+              ].map(t => (
+                <div key={t.date} className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-all">
+                  <span className="text-xl">{t.emoji}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">{t.event}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px]">{t.date}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust & Security */}
+          <div className="mb-16">
+            <Card className="border-emerald-500/20 bg-emerald-500/5">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold text-center mb-6">Trust & Security</h2>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {[
+                    { title: "SSL Encrypted", desc: "All data transmitted with 256-bit encryption", icon: Shield },
+                    { title: "GDPR Compliant", desc: "Full data privacy compliance for all users", icon: CheckCircle },
+                    { title: "SOC 2 Type II", desc: "Enterprise-grade security controls and audits", icon: Shield },
+                  ].map(s => (
+                    <div key={s.title} className="text-center p-4 rounded-xl bg-card/60 border border-emerald-500/10">
+                      <s.icon className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+                      <p className="font-bold text-sm">{s.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* CTA */}
           <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">
             <h2 className="text-3xl font-bold mb-4">Start Your Journey</h2>
