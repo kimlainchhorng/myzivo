@@ -312,6 +312,80 @@ const Careers = () => {
             </Card>
           </section>
 
+          {/* === WAVE 14: Additional Career Content === */}
+
+          {/* Day in the Life */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">A Day at ZIVO</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { time: "9:00 AM", activity: "Async standup via Slack — share progress, flag blockers", emoji: "☕" },
+                { time: "10:30 AM", activity: "Deep work block — no meetings, full focus on building", emoji: "💻" },
+                { time: "1:00 PM", activity: "Cross-team sync — product, design & engineering align", emoji: "🤝" },
+                { time: "3:00 PM", activity: "Ship it! — deploy to prod, celebrate small wins", emoji: "🚀" },
+              ].map(d => (
+                <div key={d.time} className="p-4 rounded-xl bg-muted/30 border border-border/50 text-center hover:border-primary/20 transition-all">
+                  <span className="text-2xl">{d.emoji}</span>
+                  <p className="text-xs font-bold text-primary mt-2">{d.time}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{d.activity}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Growth Paths */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">Growth Paths</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { track: "Individual Contributor", levels: ["IC1 → Junior", "IC2 → Mid", "IC3 → Senior", "IC4 → Staff", "IC5 → Principal"], emoji: "🧑‍💻" },
+                { track: "Management", levels: ["M1 → Team Lead", "M2 → Engineering Manager", "M3 → Director", "M4 → VP"], emoji: "👔" },
+              ].map(t => (
+                <Card key={t.track} className="border-border/50 hover:border-primary/20 transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">{t.emoji}</span>
+                      <h3 className="font-bold text-sm">{t.track}</h3>
+                    </div>
+                    <div className="space-y-1">
+                      {t.levels.map(l => (
+                        <div key={l} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <ArrowRight className="w-3 h-3 text-primary" />
+                          <span>{l}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          {/* DEI Commitment */}
+          <section className="mb-16">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
+              <CardContent className="p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">Diversity & Inclusion</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+                  ZIVO is committed to building a diverse team. We believe different perspectives lead to better products for travelers worldwide.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { stat: "12+", label: "Countries represented" },
+                    { stat: "44%", label: "Women in engineering" },
+                    { stat: "30+", label: "Languages spoken" },
+                    { stat: "100%", label: "Pay equity audited" },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <p className="text-xl font-bold text-primary">{s.stat}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           {/* Contact Section */}
           <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 border border-primary/20">
             <Mail className="w-12 h-12 text-primary mx-auto mb-6" />

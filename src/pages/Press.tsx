@@ -320,6 +320,70 @@ const Press = () => {
                   </CardContent>
                 </Card>
               </section>
+
+              {/* === WAVE 14: Rich Press Content === */}
+
+              {/* Media Coverage Stats */}
+              <section className="mt-12">
+                <Card className="border-sky-500/20 bg-sky-500/5">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg text-center mb-4">Media Coverage</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                      {[
+                        { stat: "50+", label: "Press mentions", emoji: "📰" },
+                        { stat: "25+", label: "Interviews given", emoji: "🎙️" },
+                        { stat: "10+", label: "Awards & lists", emoji: "🏆" },
+                        { stat: "15M+", label: "Media impressions", emoji: "👁️" },
+                      ].map(s => (
+                        <div key={s.label}>
+                          <span className="text-xl">{s.emoji}</span>
+                          <p className="text-xl font-bold text-sky-500 mt-1">{s.stat}</p>
+                          <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
+
+              {/* Speaking & Events */}
+              <section className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 text-center">Speaking & Events</h2>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {[
+                    { event: "Skift Global Forum", topic: "The Future of Multi-Modal Travel", date: "Mar 2025", location: "New York", emoji: "🎤" },
+                    { event: "Phocuswright Conference", topic: "AI-Powered Travel Personalization", date: "Nov 2024", location: "Los Angeles", emoji: "🤖" },
+                    { event: "TravelTech Show", topic: "Building a Unified Travel Platform", date: "Jun 2024", location: "London", emoji: "🌍" },
+                  ].map(e => (
+                    <Card key={e.event} className="border-border/50 hover:border-sky-500/20 transition-all">
+                      <CardContent className="p-4">
+                        <span className="text-lg">{e.emoji}</span>
+                        <p className="font-bold text-sm mt-2">{e.event}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{e.topic}</p>
+                        <div className="flex items-center justify-between mt-3">
+                          <Badge variant="secondary" className="text-[9px]">{e.location}</Badge>
+                          <span className="text-[10px] text-muted-foreground">{e.date}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              {/* Boilerplate */}
+              <section className="mt-12">
+                <Card className="border-border/50 bg-muted/20">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold mb-3">About ZIVO (Boilerplate)</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      ZIVO (hizivo.com) is a travel search and comparison platform that helps users find and compare flights, hotels, car rentals, and travel services from trusted partners worldwide. Founded in 2024, ZIVO's mission is to connect how the world moves by building a unified platform for travel and mobility. ZIVO does not sell tickets or process payments — when users select an option, they are redirected to trusted travel partners to complete their booking. ZIVO is free for users and earns revenue through affiliate commissions from travel partners. For more information, visit hizivo.com.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-3 italic">
+                      Copy-paste ready for publications. For custom quotes, contact press@hizivo.com.
+                    </p>
+                  </CardContent>
+                </Card>
+              </section>
             </TabsContent>
 
             {/* Press Kit Tab */}
