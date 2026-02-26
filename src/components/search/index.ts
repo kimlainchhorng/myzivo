@@ -10,6 +10,7 @@ export { default as FlightSearchFormPro } from './FlightSearchFormPro';
 export { default as HotelSearchFormPro } from './HotelSearchFormPro';
 export type { HotelSearchParams } from './HotelSearchFormPro';
 export { default as CarSearchFormPro } from './CarSearchFormPro';
+export { default as MultiCityLegs } from './MultiCityLegs';
 
 export { default as PremiumSearchOverlay } from './PremiumSearchOverlay';
 
