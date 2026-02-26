@@ -47,6 +47,8 @@ export default function TestimonialsSection() {
   }, [totalPages]);
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
   }, [next]);
@@ -54,7 +56,7 @@ export default function TestimonialsSection() {
   const currentItems = testimonials.slice(page * itemsPerPage, page * itemsPerPage + itemsPerPage);
 
   return (
-    <section className="py-16 sm:py-24 bg-muted/20 overflow-hidden">
+    <section className="py-16 sm:py-24 bg-muted/20 overflow-hidden" aria-label="Customer testimonials">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

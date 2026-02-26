@@ -29,7 +29,7 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="py-16 sm:py-24">
+    <section className="py-16 sm:py-24" aria-label="Newsletter signup">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -88,6 +88,7 @@ export default function NewsletterSection() {
                     <Button
                       type="submit"
                       size="lg"
+                      aria-live="polite"
                       className={cn(
                         "w-full h-13 rounded-xl font-semibold gap-2 transition-all duration-200 active:scale-[0.97] touch-manipulation min-h-[48px] text-base",
                         subscribed ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]" : ""
