@@ -13,16 +13,16 @@ export interface CurrencyConfig {
 }
 
 export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
-  { code: "USD", symbol: "$", name: "US Dollar", decimals: 2, locale: "en-US", flag: "🇺🇸" },
-  { code: "EUR", symbol: "€", name: "Euro", decimals: 2, locale: "de-DE", flag: "🇪🇺" },
-  { code: "GBP", symbol: "£", name: "British Pound", decimals: 2, locale: "en-GB", flag: "🇬🇧" },
-  { code: "CAD", symbol: "C$", name: "Canadian Dollar", decimals: 2, locale: "en-CA", flag: "🇨🇦" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar", decimals: 2, locale: "en-AU", flag: "🇦🇺" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen", decimals: 0, locale: "ja-JP", flag: "🇯🇵" },
-  { code: "KRW", symbol: "₩", name: "South Korean Won", decimals: 0, locale: "ko-KR", flag: "🇰🇷" },
-  { code: "SGD", symbol: "S$", name: "Singapore Dollar", decimals: 2, locale: "en-SG", flag: "🇸🇬" },
-  { code: "THB", symbol: "฿", name: "Thai Baht", decimals: 2, locale: "th-TH", flag: "🇹🇭" },
-  { code: "KHR", symbol: "៛", name: "Cambodian Riel", decimals: 0, locale: "km-KH", flag: "🇰🇭" },
+  { code: "USD", symbol: "$", name: "US Dollar", decimals: 2, locale: "en-US", flag: "US" },
+  { code: "EUR", symbol: "€", name: "Euro", decimals: 2, locale: "de-DE", flag: "EU" },
+  { code: "GBP", symbol: "£", name: "British Pound", decimals: 2, locale: "en-GB", flag: "GB" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar", decimals: 2, locale: "en-CA", flag: "CA" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar", decimals: 2, locale: "en-AU", flag: "AU" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen", decimals: 0, locale: "ja-JP", flag: "JP" },
+  { code: "KRW", symbol: "₩", name: "South Korean Won", decimals: 0, locale: "ko-KR", flag: "KR" },
+  { code: "SGD", symbol: "S$", name: "Singapore Dollar", decimals: 2, locale: "en-SG", flag: "SG" },
+  { code: "THB", symbol: "฿", name: "Thai Baht", decimals: 2, locale: "th-TH", flag: "TH" },
+  { code: "KHR", symbol: "៛", name: "Cambodian Riel", decimals: 0, locale: "km-KH", flag: "KH" },
 ];
 
 export const DEFAULT_CURRENCY = "USD";

@@ -167,9 +167,9 @@ export function useUpdateLaunchPhase() {
     onSuccess: (_, { phase }) => {
       queryClient.invalidateQueries({ queryKey: ["flights-launch-settings"] });
       const messages: Record<FlightsLaunchPhase, string> = {
-        internal_test: "🔒 Switched to Internal Test mode",
-        private_beta: "🧪 Switched to Private Beta mode",
-        public_live: "🚀 ZIVO Flights is now PUBLIC LIVE!",
+        internal_test: "Switched to Internal Test mode",
+        private_beta: "Switched to Private Beta mode",
+        public_live: "ZIVO Flights is now PUBLIC LIVE!",
       };
       toast.success(messages[phase]);
     },
@@ -262,7 +262,7 @@ export function useEmergencyPause() {
     onSuccess: (_, { pause }) => {
       queryClient.invalidateQueries({ queryKey: ["flights-launch-settings"] });
       toast[pause ? 'warning' : 'success'](
-        pause ? "⚠️ Flight bookings paused" : "✅ Flight bookings resumed"
+        pause ? "Flight bookings paused" : "Flight bookings resumed"
       );
     },
     onError: (error: Error) => {

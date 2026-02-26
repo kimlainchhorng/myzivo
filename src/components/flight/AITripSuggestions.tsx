@@ -38,7 +38,8 @@ import {
   History,
   Flame,
   TrendingUp,
-  Compass
+  Compass,
+  Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAITripSuggestions, type AIDestination } from "@/hooks/useAITripSuggestions";
@@ -157,17 +158,17 @@ const DESTINATION_IMAGES: Record<string, string> = {
   'Barcelona': 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=250&fit=crop',
 };
 
-const getCountryEmoji = (country: string): string => {
-  const emojiMap: Record<string, string> = {
-    'Portugal': '🇵🇹', 'Japan': '🇯🇵', 'Colombia': '🇨🇴', 'South Africa': '🇿🇦',
-    'Indonesia': '🇮🇩', 'Thailand': '🇹🇭', 'Italy': '🇮🇹', 'France': '🇫🇷',
-    'Spain': '🇪🇸', 'Greece': '🇬🇷', 'Mexico': '🇲🇽', 'Brazil': '🇧🇷',
-    'Australia': '🇦🇺', 'New Zealand': '🇳🇿', 'United Kingdom': '🇬🇧',
-    'Germany': '🇩🇪', 'Netherlands': '🇳🇱', 'Switzerland': '🇨🇭',
-    'United States': '🇺🇸', 'Canada': '🇨🇦', 'Morocco': '🇲🇦',
-    'Egypt': '🇪🇬', 'Kenya': '🇰🇪', 'India': '🇮🇳', 'Vietnam': '🇻🇳',
+const getCountryCode = (country: string): string => {
+  const codeMap: Record<string, string> = {
+    'Portugal': 'PT', 'Japan': 'JP', 'Colombia': 'CO', 'South Africa': 'ZA',
+    'Indonesia': 'ID', 'Thailand': 'TH', 'Italy': 'IT', 'France': 'FR',
+    'Spain': 'ES', 'Greece': 'GR', 'Mexico': 'MX', 'Brazil': 'BR',
+    'Australia': 'AU', 'New Zealand': 'NZ', 'United Kingdom': 'GB',
+    'Germany': 'DE', 'Netherlands': 'NL', 'Switzerland': 'CH',
+    'United States': 'US', 'Canada': 'CA', 'Morocco': 'MA',
+    'Egypt': 'EG', 'Kenya': 'KE', 'India': 'IN', 'Vietnam': 'VN',
   };
-  return emojiMap[country] || '🌍';
+  return codeMap[country] || 'INT';
 };
 
 export const AITripSuggestions = ({
@@ -547,7 +548,7 @@ export const AITripSuggestions = ({
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center">
-                              <span className="text-5xl">{getCountryEmoji(dest.country)}</span>
+                              <span className="text-5xl font-bold text-muted-foreground/30">{getCountryCode(dest.country)}</span>
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -562,7 +563,7 @@ export const AITripSuggestions = ({
                             <div>
                               <h4 className="font-semibold text-lg flex items-center gap-2">
                                 {dest.city}
-                                <span className="text-lg">{getCountryEmoji(dest.country)}</span>
+                                <span className="text-xs font-bold text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{getCountryCode(dest.country)}</span>
                               </h4>
                               <p className="text-sm text-muted-foreground">{dest.country}</p>
                             </div>
@@ -592,7 +593,8 @@ export const AITripSuggestions = ({
                               {dest.flightTime}
                             </span>
                             <span className="flex items-center gap-1 text-amber-400">
-                              ★ {dest.rating}
+                              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                              <span>{dest.rating}</span>
                             </span>
                           </div>
 
@@ -648,7 +650,7 @@ export const AITripSuggestions = ({
             <span className="text-sm font-medium text-orange-400">Trending Now</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {['Tokyo 🇯🇵', 'Bali 🇮🇩', 'Barcelona 🇪🇸', 'Marrakech 🇲🇦'].map(dest => (
+            {['Tokyo · JP', 'Bali · ID', 'Barcelona · ES', 'Marrakech · MA'].map(dest => (
               <Badge 
                 key={dest} 
                 variant="outline" 

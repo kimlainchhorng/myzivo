@@ -268,7 +268,7 @@ export function useVerifyPhoneOTP() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
-      toast.success("Phone number verified successfully! 🎉");
+      toast.success("Phone number verified successfully!");
     },
     onError: (error: Error) => {
       toast.error(error.message);

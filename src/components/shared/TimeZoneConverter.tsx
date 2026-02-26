@@ -5,14 +5,14 @@ import { Clock, Sun, Moon, Sunrise, Sunset, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const timeZones = [
-  { id: "America/New_York", name: "New York", abbr: "EST", offset: -5, flag: "🇺🇸" },
-  { id: "America/Los_Angeles", name: "Los Angeles", abbr: "PST", offset: -8, flag: "🇺🇸" },
-  { id: "Europe/London", name: "London", abbr: "GMT", offset: 0, flag: "🇬🇧" },
-  { id: "Europe/Paris", name: "Paris", abbr: "CET", offset: 1, flag: "🇫🇷" },
-  { id: "Asia/Tokyo", name: "Tokyo", abbr: "JST", offset: 9, flag: "🇯🇵" },
-  { id: "Asia/Dubai", name: "Dubai", abbr: "GST", offset: 4, flag: "🇦🇪" },
-  { id: "Asia/Singapore", name: "Singapore", abbr: "SGT", offset: 8, flag: "🇸🇬" },
-  { id: "Australia/Sydney", name: "Sydney", abbr: "AEST", offset: 10, flag: "🇦🇺" }
+  { id: "America/New_York", name: "New York", abbr: "EST", offset: -5, code: "US" },
+  { id: "America/Los_Angeles", name: "Los Angeles", abbr: "PST", offset: -8, code: "US" },
+  { id: "Europe/London", name: "London", abbr: "GMT", offset: 0, code: "GB" },
+  { id: "Europe/Paris", name: "Paris", abbr: "CET", offset: 1, code: "FR" },
+  { id: "Asia/Tokyo", name: "Tokyo", abbr: "JST", offset: 9, code: "JP" },
+  { id: "Asia/Dubai", name: "Dubai", abbr: "GST", offset: 4, code: "AE" },
+  { id: "Asia/Singapore", name: "Singapore", abbr: "SGT", offset: 8, code: "SG" },
+  { id: "Australia/Sydney", name: "Sydney", abbr: "AEST", offset: 10, code: "AU" }
 ];
 
 export default function TimeZoneConverter() {
@@ -72,7 +72,7 @@ export default function TimeZoneConverter() {
               <SelectContent>
                 {timeZones.map((tz) => (
                   <SelectItem key={tz.id} value={tz.id}>
-                    {tz.flag} {tz.name}
+                    {tz.code} · {tz.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -101,7 +101,7 @@ export default function TimeZoneConverter() {
               <SelectContent>
                 {timeZones.map((tz) => (
                   <SelectItem key={tz.id} value={tz.id}>
-                    {tz.flag} {tz.name}
+                    {tz.code} · {tz.name}
                   </SelectItem>
                 ))}
               </SelectContent>

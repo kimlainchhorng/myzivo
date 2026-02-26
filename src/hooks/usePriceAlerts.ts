@@ -114,7 +114,7 @@ export function usePriceAlerts() {
       
       if (isTriggered && !alert.triggered) {
         toast.success(
-          `🔔 Price may have dropped! ${alert.route.fromCode} → ${alert.route.toCode} - Check partner sites for current prices`,
+          `Price may have dropped! ${alert.route.fromCode} → ${alert.route.toCode} - Check partner sites for current prices`,
           {
             action: {
               label: 'Compare Prices',

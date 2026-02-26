@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Wifi, Coffee, Utensils, Armchair, ShowerHead, Newspaper, Wine } from "lucide-react";
+import { Crown, Wifi, Coffee, Utensils, Armchair, ShowerHead, Newspaper, Wine, Plane, Building2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const lounges = [
@@ -12,7 +12,7 @@ const lounges = [
     rating: 4.9,
     price: 59,
     amenities: ["Premium Bar", "Hot Meals", "Shower Suites", "Spa Services"],
-    image: "🏛️",
+    icon: "premier" as const,
     isPremium: true
   },
   {
@@ -22,7 +22,7 @@ const lounges = [
     rating: 4.7,
     price: 45,
     amenities: ["Buffet", "WiFi", "Quiet Zone", "Workstations"],
-    image: "✈️",
+    icon: "sky" as const,
     isPremium: false
   },
   {
@@ -32,7 +32,7 @@ const lounges = [
     rating: 4.8,
     price: 79,
     amenities: ["Fine Dining", "Champagne Bar", "Private Suites", "Concierge"],
-    image: "👑",
+    icon: "first" as const,
     isPremium: true
   }
 ];
@@ -84,7 +84,9 @@ export default function FlightLoungeAccess() {
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{lounge.image}</span>
+                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", lounge.isPremium ? "bg-amber-500/15" : "bg-sky-500/15")}>
+                  {lounge.icon === "premier" ? <Building2 className="w-5 h-5 text-amber-400" /> : lounge.icon === "first" ? <Crown className="w-5 h-5 text-amber-400" /> : <Plane className="w-5 h-5 text-sky-400" />}
+                </div>
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     {lounge.name}
@@ -116,7 +118,7 @@ export default function FlightLoungeAccess() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-                <span className="text-amber-400">★</span>
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                 <span className="text-sm font-medium">{lounge.rating}</span>
               </div>
               <Button size="sm" variant={lounge.isPremium ? "default" : "outline"}>

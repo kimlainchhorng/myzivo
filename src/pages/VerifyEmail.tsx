@@ -108,7 +108,7 @@ const VerifyEmail = () => {
         </Card>
 
         <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground/60">
-          Protected by enterprise-grade security 🔒
+          Protected by enterprise-grade security
         </p>
       </div>
     </div>

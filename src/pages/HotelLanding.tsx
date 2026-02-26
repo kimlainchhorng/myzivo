@@ -249,7 +249,7 @@ export default function HotelLanding() {
         <section className="py-8 border-t border-border/50">
           <div className="container mx-auto px-4 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              ⚠️ {HOTEL_DISCLAIMERS.partnerBooking}
+              {HOTEL_DISCLAIMERS.partnerBooking}
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               {HOTEL_DISCLAIMERS.price} ZIVO may earn a commission when you book through partner links.

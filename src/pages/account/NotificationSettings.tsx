@@ -225,7 +225,7 @@ export default function NotificationSettings() {
   const handleEnableNotifications = async () => {
     const result = await subscribe();
     if (result) {
-      toast.success("Push notifications enabled! 🔔");
+      toast.success("Push notifications enabled!");
       updatePrefs.mutate({ inAppEnabled: true });
     }
   };

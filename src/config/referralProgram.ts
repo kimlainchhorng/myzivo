@@ -72,7 +72,7 @@ export const SHARE_MESSAGES = {
     body: "Hey! I've been using ZIVO to find great travel deals. Sign up with my link and you'll get 500 bonus ZIVO Points to start!",
   },
   twitter: "I just discovered @ZIVOtravel - amazing deals on flights, hotels & more! Earn points on your first trip:",
-  whatsapp: "Check out ZIVO for amazing travel deals! Sign up with my link and get 500 bonus points 🎉",
+  whatsapp: "Check out ZIVO for amazing travel deals! Sign up with my link and get 500 bonus points!",
 };
 
 // Compliance copy

@@ -503,7 +503,7 @@ const Login = () => {
         </motion.div>
 
         <p className="mt-4 sm:mt-6 text-center text-xs text-zinc-500">
-          {isLogin ? "Protected by enterprise-grade security 🔒" : "By signing up, you agree to our Terms of Service 📋"}
+          {isLogin ? "Protected by enterprise-grade security" : "By signing up, you agree to our Terms of Service"}
         </p>
 
         {/* Go to Home */}

@@ -93,7 +93,7 @@ export default function MembershipPage() {
   // Handle success/cancel from Stripe redirect
   useEffect(() => {
     if (searchParams.get("success") === "true") {
-      toast.success("Welcome to ZIVO+! 🎉 Your membership is now active.");
+      toast.success("Welcome to ZIVO+! Your membership is now active.");
       refetch();
     } else if (searchParams.get("cancelled") === "true") {
       toast.info("Checkout cancelled. No charges were made.");

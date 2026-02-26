@@ -108,7 +108,7 @@ const PartnerDisclosure = () => {
                 </div>
                 <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
                   <p className="text-foreground font-medium">
-                    ⚠️ Hizivo does NOT issue airline tickets.
+                    Hizivo does NOT issue airline tickets.
                   </p>
                 </div>
                 <p className="text-foreground leading-relaxed">
