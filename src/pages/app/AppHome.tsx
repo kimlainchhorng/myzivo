@@ -774,6 +774,75 @@ const AppHome = () => {
             </motion.div>
           )}
 
+          {/* ─── WAVE 5: Smart Home Widgets ─── */}
+          <div className="space-y-3">
+            <h2 className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> SMART INSIGHTS
+            </h2>
+
+            {/* Weekly Spending */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4">
+              <p className="text-xs font-bold text-foreground mb-3">This Week's Spending</p>
+              <div className="flex items-end gap-1.5 h-14">
+                {[32, 18, 45, 12, 28, 52, 8].map((val, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 60) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
+                      className={`w-full rounded-t ${i === new Date().getDay() ? "bg-primary" : "bg-primary/20"}`} />
+                    <span className="text-[8px] text-muted-foreground">{["S","M","T","W","T","F","S"][i]}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+                <span>Total: <b className="text-foreground">$195</b></span>
+                <span className="text-emerald-500">↓ 12% vs last week</span>
+              </div>
+            </motion.div>
+
+            {/* Travel Streak */}
+            <div className="rounded-2xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-amber-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground">7-Day Booking Streak! 🔥</p>
+                  <p className="text-[10px] text-muted-foreground">Keep it going for bonus ZIVO points</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-amber-500">7</p>
+                  <p className="text-[8px] text-muted-foreground">days</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nearby Attractions */}
+            <div className="rounded-2xl bg-card border border-border/40 p-4">
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Nearby Attractions</p>
+              <div className="space-y-2">
+                {[
+                  { name: "Central Park", distance: "0.5 mi", rating: 4.8, type: "Park" },
+                  { name: "Museum of Art", distance: "1.2 mi", rating: 4.9, type: "Museum" },
+                  { name: "Broadway District", distance: "0.8 mi", rating: 4.7, type: "Entertainment" },
+                ].map(a => (
+                  <div key={a.name} className="flex items-center gap-2 p-2 rounded-xl hover:bg-muted/30 transition-colors">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.distance} · {a.type}</p></div>
+                    <span className="text-[10px] font-bold text-amber-500">★ {a.rating}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Smart Suggestions */}
+            <div className="rounded-2xl bg-sky-500/5 border border-sky-500/20 p-4">
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-sky-500" /> Smart Suggestions</p>
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-muted-foreground">💡 Flights to Miami are 23% cheaper next Tuesday</p>
+                <p className="text-[11px] text-muted-foreground">🏨 Hotel prices drop 15% for mid-week stays</p>
+                <p className="text-[11px] text-muted-foreground">🚗 Book rental cars 3 weeks ahead to save $40+</p>
+              </div>
+            </div>
+          </div>
+
           {/* ─── TRUST BAR ─── */}
           <div className="flex items-center justify-center gap-6 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">

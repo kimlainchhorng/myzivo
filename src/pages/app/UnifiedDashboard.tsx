@@ -3,12 +3,14 @@
  * Super-App home with access to all services
  */
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Plane, Car, UtensilsCrossed, Package, MapPin, Hotel,
   Wallet, Clock, ChevronRight, HelpCircle, User, Settings, Shield, Star,
-  CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon
+  CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon,
+  DollarSign, Globe, Zap, BarChart3, Leaf, CloudSun, AlertTriangle
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRecentActivity, useActiveTrips, type UnifiedTrip } from "@/hooks/useUnifiedTrips";
 import { useWalletSummary, getServiceMeta } from "@/hooks/useZivoWallet";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 const services = [
@@ -28,28 +31,16 @@ const services = [
   { id: "rentals", name: "Rentals", icon: Car, gradient: "from-teal-500 to-cyan-600", link: "/rent-car" },
 ];
 
-// Map trip.icon string to Lucide icon component
 const tripIconMap: Record<string, LucideIcon> = {
-  "plane": Plane,
-  "car": Car,
-  "car-front": CarFront,
-  "car-taxi-front": CarTaxiFront,
-  "utensils-crossed": UtensilsCrossed,
-  "package": Package,
-  "building-2": Building2,
-  "target": MapPin,
-  "credit-card": CreditCard,
+  "plane": Plane, "car": Car, "car-front": CarFront, "car-taxi-front": CarTaxiFront,
+  "utensils-crossed": UtensilsCrossed, "package": Package, "building-2": Building2,
+  "target": MapPin, "credit-card": CreditCard,
 };
 
 function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
-  const meta = getServiceMeta(trip.service);
   const TripIcon = tripIconMap[trip.icon] || Plane;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
       <Card className="hover:shadow-lg transition-all duration-300 border-border/40 hover:border-primary/15 group">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
@@ -79,6 +70,47 @@ export default function UnifiedDashboard() {
   const { data: walletSummary } = useWalletSummary();
   const firstName = user?.email?.split("@")[0] || "there";
 
+  // === WAVE 5: Smart Dashboard Widgets ===
+  const [showSpendingBreakdown, setShowSpendingBreakdown] = useState(false);
+  const [showTravelStats, setShowTravelStats] = useState(false);
+  const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
+  const [showWeatherWidget, setShowWeatherWidget] = useState(false);
+  const [showSafetyAlerts, setShowSafetyAlerts] = useState(false);
+  const [showCarbonTracker, setShowCarbonTracker] = useState(false);
+
+  const spendingByService = [
+    { service: "Flights", amount: 1245, pct: 42, color: "bg-sky-500" },
+    { service: "Hotels", amount: 890, pct: 30, color: "bg-amber-500" },
+    { service: "Rides", amount: 420, pct: 14, color: "bg-emerald-500" },
+    { service: "Eats", amount: 280, pct: 9, color: "bg-orange-500" },
+    { service: "Other", amount: 145, pct: 5, color: "bg-violet-500" },
+  ];
+
+  const travelStats = { countriesVisited: 8, citiesVisited: 14, totalFlights: 22, totalNights: 34, totalMiles: 28450, avgTripCost: "$342" };
+
+  const currencies = [
+    { code: "EUR", rate: 0.92, flag: "🇪🇺", name: "Euro" },
+    { code: "GBP", rate: 0.79, flag: "🇬🇧", name: "British Pound" },
+    { code: "JPY", rate: 149.5, flag: "🇯🇵", name: "Japanese Yen" },
+    { code: "CAD", rate: 1.36, flag: "🇨🇦", name: "Canadian Dollar" },
+    { code: "MXN", rate: 17.2, flag: "🇲🇽", name: "Mexican Peso" },
+  ];
+
+  const weatherData = [
+    { city: "Miami", temp: "82°F", condition: "Sunny", icon: "☀️", humidity: "65%" },
+    { city: "New York", temp: "45°F", condition: "Cloudy", icon: "☁️", humidity: "55%" },
+    { city: "Los Angeles", temp: "72°F", condition: "Clear", icon: "🌤️", humidity: "40%" },
+    { city: "London", temp: "48°F", condition: "Rain", icon: "🌧️", humidity: "80%" },
+  ];
+
+  const safetyAlerts = [
+    { location: "Paris", level: "Low", type: "Protests planned Mar 8", color: "text-amber-500" },
+    { location: "Tokyo", level: "None", type: "All clear", color: "text-emerald-500" },
+    { location: "Cancún", level: "Low", type: "Weather advisory", color: "text-amber-500" },
+  ];
+
+  const carbonData = { totalCO2: "1.2 tons", offsetPct: 45, treesPlanted: 6, greenTrips: 12, rank: "Top 20%" };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -90,12 +122,8 @@ export default function UnifiedDashboard() {
               <h1 className="text-xl font-bold">Hello, {firstName}</h1>
             </div>
             <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" asChild className="rounded-xl">
-                <Link to="/support"><HelpCircle className="w-5 h-5" /></Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild className="rounded-xl">
-                <Link to="/profile"><User className="w-5 h-5" /></Link>
-              </Button>
+              <Button variant="ghost" size="icon" asChild className="rounded-xl"><Link to="/support"><HelpCircle className="w-5 h-5" /></Link></Button>
+              <Button variant="ghost" size="icon" asChild className="rounded-xl"><Link to="/profile"><User className="w-5 h-5" /></Link></Button>
             </div>
           </div>
         </div>
@@ -104,26 +132,15 @@ export default function UnifiedDashboard() {
       <div className="px-4 py-5 space-y-6">
         {/* Wallet */}
         <Link to="/wallet">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground p-5 relative overflow-hidden shadow-xl shadow-primary/20"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground p-5 relative overflow-hidden shadow-xl shadow-primary/20">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-12 translate-x-12 blur-2xl" />
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-                  <Wallet className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs opacity-80">ZIVO Wallet</p>
-                  <p className="text-2xl font-bold">${walletSummary?.availableCredits?.toFixed(2) || "0.00"}</p>
-                </div>
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"><Wallet className="w-5 h-5" /></div>
+                <div><p className="text-xs opacity-80">ZIVO Wallet</p><p className="text-2xl font-bold">${walletSummary?.availableCredits?.toFixed(2) || "0.00"}</p></div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] opacity-60">Total Spent</p>
-                <p className="font-bold">${walletSummary?.totalSpent?.toFixed(2) || "0.00"}</p>
-              </div>
+              <div className="text-right"><p className="text-[10px] opacity-60">Total Spent</p><p className="font-bold">${walletSummary?.totalSpent?.toFixed(2) || "0.00"}</p></div>
             </div>
           </motion.div>
         </Link>
@@ -149,15 +166,130 @@ export default function UnifiedDashboard() {
           </div>
         </div>
 
+        {/* === WAVE 5: Smart Widgets === */}
+        <div className="space-y-3">
+          <h2 className="font-bold text-sm flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> Intelligence</h2>
+
+          {/* Spending Breakdown */}
+          <button onClick={() => setShowSpendingBreakdown(!showSpendingBreakdown)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Spending Breakdown
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showSpendingBreakdown && "rotate-90")} />
+          </button>
+          {showSpendingBreakdown && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl bg-card border border-border/40 p-4 space-y-3">
+              {spendingByService.map(s => (
+                <div key={s.service} className="flex items-center gap-3">
+                  <div className={cn("w-2 h-2 rounded-full", s.color)} />
+                  <span className="text-xs text-muted-foreground w-16">{s.service}</span>
+                  <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${s.pct}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", s.color)} />
+                  </div>
+                  <span className="text-xs font-bold text-foreground w-14 text-right">${s.amount}</span>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Travel Stats */}
+          <button onClick={() => setShowTravelStats(!showTravelStats)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Globe className="w-3.5 h-3.5 text-sky-500" /> Travel Stats
+            <Badge className="bg-sky-500/10 text-sky-500 border-0 text-[8px] ml-auto">{travelStats.countriesVisited} countries</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showTravelStats && "rotate-90")} />
+          </button>
+          {showTravelStats && (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { val: travelStats.countriesVisited, label: "Countries" },
+                { val: travelStats.citiesVisited, label: "Cities" },
+                { val: travelStats.totalFlights, label: "Flights" },
+                { val: travelStats.totalNights, label: "Nights" },
+                { val: `${(travelStats.totalMiles / 1000).toFixed(1)}k`, label: "Miles" },
+                { val: travelStats.avgTripCost, label: "Avg Trip" },
+              ].map(s => (
+                <div key={s.label} className="text-center p-3 rounded-xl bg-card border border-border/40">
+                  <p className="text-sm font-bold text-foreground">{s.val}</p><p className="text-[9px] text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Currency Converter */}
+          <button onClick={() => setShowCurrencyConverter(!showCurrencyConverter)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Currency Rates (vs USD)
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showCurrencyConverter && "rotate-90")} />
+          </button>
+          {showCurrencyConverter && (
+            <div className="space-y-2">
+              {currencies.map(c => (
+                <div key={c.code} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <span className="text-lg">{c.flag}</span>
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{c.name}</p><p className="text-[10px] text-muted-foreground">{c.code}</p></div>
+                  <span className="text-sm font-bold text-foreground">$1 = {c.rate} {c.code}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Weather Widget */}
+          <button onClick={() => setShowWeatherWidget(!showWeatherWidget)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <CloudSun className="w-3.5 h-3.5 text-amber-500" /> Destination Weather
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showWeatherWidget && "rotate-90")} />
+          </button>
+          {showWeatherWidget && (
+            <div className="grid grid-cols-2 gap-2">
+              {weatherData.map(w => (
+                <div key={w.city} className="p-3 rounded-xl bg-card border border-border/40 text-center">
+                  <span className="text-2xl">{w.icon}</span>
+                  <p className="text-xs font-bold text-foreground mt-1">{w.city}</p>
+                  <p className="text-sm font-bold text-foreground">{w.temp}</p>
+                  <p className="text-[9px] text-muted-foreground">{w.condition} · {w.humidity}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Safety Alerts */}
+          <button onClick={() => setShowSafetyAlerts(!showSafetyAlerts)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Travel Safety Alerts
+            <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showSafetyAlerts && "rotate-90")} />
+          </button>
+          {showSafetyAlerts && (
+            <div className="space-y-2">
+              {safetyAlerts.map(a => (
+                <div key={a.location} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <div className="flex-1"><p className="text-xs font-bold text-foreground">{a.location}</p><p className="text-[10px] text-muted-foreground">{a.type}</p></div>
+                  <span className={cn("text-xs font-bold", a.color)}>{a.level}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Carbon Tracker */}
+          <button onClick={() => setShowCarbonTracker(!showCarbonTracker)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+            <Leaf className="w-3.5 h-3.5 text-emerald-500" /> Carbon Footprint
+            <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px] ml-auto">{carbonData.rank}</Badge>
+            <ChevronRight className={cn("w-3 h-3 transition-transform", showCarbonTracker && "rotate-90")} />
+          </button>
+          {showCarbonTracker && (
+            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4">
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="text-center"><p className="text-sm font-bold text-emerald-500">{carbonData.totalCO2}</p><p className="text-[9px] text-muted-foreground">Total CO2</p></div>
+                <div className="text-center"><p className="text-sm font-bold text-foreground">{carbonData.offsetPct}%</p><p className="text-[9px] text-muted-foreground">Offset</p></div>
+                <div className="text-center"><p className="text-sm font-bold text-emerald-500">{carbonData.treesPlanted}</p><p className="text-[9px] text-muted-foreground">Trees</p></div>
+              </div>
+              <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                <motion.div initial={{ width: 0 }} animate={{ width: `${carbonData.offsetPct}%` }} transition={{ duration: 1.2 }} className="h-full rounded-full bg-emerald-500" />
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">🌳 {carbonData.greenTrips} green trips this year</p>
+            </div>
+          )}
+        </div>
+
         {/* Active Trips */}
         {activeTrips && activeTrips.length > 0 && (
           <div>
-            <h2 className="font-bold text-sm mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />Active Now
-            </h2>
-            <div className="space-y-2">
-              {activeTrips.slice(0, 3).map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}
-            </div>
+            <h2 className="font-bold text-sm mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-primary" />Active Now</h2>
+            <div className="space-y-2">{activeTrips.slice(0, 3).map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}</div>
           </div>
         )}
 
@@ -165,25 +297,14 @@ export default function UnifiedDashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-sm">Recent Activity</h2>
-            <Button variant="ghost" size="sm" asChild className="text-xs font-bold text-primary">
-              <Link to="/my-trips">View All</Link>
-            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-xs font-bold text-primary"><Link to="/my-trips">View All</Link></Button>
           </div>
           {loadingRecent ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-muted/50 animate-pulse rounded-2xl" />)}
-            </div>
+            <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-20 bg-muted/50 animate-pulse rounded-2xl" />)}</div>
           ) : recentActivity && recentActivity.length > 0 ? (
-            <div className="space-y-2">
-              {recentActivity.map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}
-            </div>
+            <div className="space-y-2">{recentActivity.map((trip, i) => <TripCard key={trip.id} trip={trip} index={i} />)}</div>
           ) : (
-            <Card className="border-border/30">
-              <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground text-sm">No recent activity</p>
-                <p className="text-xs text-muted-foreground mt-1">Book a service to get started!</p>
-              </CardContent>
-            </Card>
+            <Card className="border-border/30"><CardContent className="p-8 text-center"><p className="text-muted-foreground text-sm">No recent activity</p><p className="text-xs text-muted-foreground mt-1">Book a service to get started!</p></CardContent></Card>
           )}
         </div>
 
@@ -198,10 +319,7 @@ export default function UnifiedDashboard() {
               { to: "/profile/settings", icon: Settings, label: "Settings" },
             ].map((link) => (
               <Button key={link.to} variant="outline" asChild className="justify-start rounded-xl border-border/40 hover:border-primary/15 font-bold">
-                <Link to={link.to}>
-                  <link.icon className="w-4 h-4 mr-2" />
-                  {link.label}
-                </Link>
+                <Link to={link.to}><link.icon className="w-4 h-4 mr-2" />{link.label}</Link>
               </Button>
             ))}
           </div>
