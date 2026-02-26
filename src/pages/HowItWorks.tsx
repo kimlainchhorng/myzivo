@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -101,7 +102,12 @@ export default function HowItWorks() {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Header */}
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center mb-16"
+          >
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Zap className="w-3 h-3 mr-1" />
               Simple Process
@@ -112,7 +118,7 @@ export default function HowItWorks() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Finding and comparing travel options is easy. Just search, compare, and book with our trusted partners.
             </p>
-          </div>
+          </motion.div>
 
           {/* 3-Step Process */}
           <div className="mb-20">

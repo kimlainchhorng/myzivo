@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useReferrals } from "@/hooks/useReferrals";
 import { REFERRAL_REWARDS, REFERRAL_TERMS } from "@/config/referralProgram";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 const STEPS = [
   {
@@ -70,7 +71,12 @@ export default function ReferralProgram() {
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl mx-auto text-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-3xl mx-auto text-center"
+            >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm mb-6">
                 <Sparkles className="w-4 h-4" />
                 Referral Program
@@ -110,7 +116,7 @@ export default function ReferralProgram() {
                   </Link>
                 </Button>
               )}
-            </div>
+            </motion.div>
           </div>
         </section>
 

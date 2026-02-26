@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   ArrowRight
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,7 +84,12 @@ export default function Reliability() {
       
       <main className="container mx-auto px-4 py-12">
         {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center max-w-3xl mx-auto mb-12"
+        >
           <Badge variant="secondary" className="mb-4">
             <Server className="w-3 h-3 mr-1" />
             Platform Reliability
@@ -95,7 +101,7 @@ export default function Reliability() {
             We continuously monitor partner availability to ensure reliable service. 
             If one provider experiences issues, our system automatically routes to alternatives.
           </p>
-        </div>
+        </motion.div>
 
         {/* Uptime Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">

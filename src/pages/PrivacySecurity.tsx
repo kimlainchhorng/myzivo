@@ -4,6 +4,7 @@
  */
 
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   Shield, Database, Clock, Download, Trash2, 
   Eye, Lock, ArrowLeft, CheckCircle2, Mail
@@ -96,7 +97,12 @@ export default function PrivacySecurity() {
           </div>
 
           {/* Hero */}
-          <div className="text-center py-8 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center py-8 mb-8"
+          >
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Lock className="w-7 h-7 text-primary" />
             </div>
@@ -104,7 +110,7 @@ export default function PrivacySecurity() {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Transparency about your data: what we collect, why, and how we keep it safe.
             </p>
-          </div>
+          </motion.div>
 
           {/* Data We Collect */}
           <section className="mb-12">

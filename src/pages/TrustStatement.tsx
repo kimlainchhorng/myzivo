@@ -4,6 +4,7 @@
  */
 
 import Header from "@/components/Header";
+import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +107,12 @@ const TrustStatement = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Hero Section */}
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center mb-16"
+          >
             <Badge className="mb-4 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
               <Shield className="w-3 h-3 mr-1" />
               Trust Statement
@@ -118,7 +124,7 @@ const TrustStatement = () => {
               ZIVO is built on trust. This document outlines our commitments 
               to transparency, fairness, and user protection.
             </p>
-          </div>
+          </motion.div>
 
           {/* Trust Pillars */}
           <section className="mb-16">

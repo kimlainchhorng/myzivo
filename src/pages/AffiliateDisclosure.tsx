@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +25,12 @@ const AffiliateDisclosure = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-3xl">
           {/* Header */}
-          <div className="text-center mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center mb-12"
+          >
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Scale className="w-3 h-3 mr-1" />
               Transparency
@@ -35,7 +41,7 @@ const AffiliateDisclosure = () => {
             <p className="text-sm text-muted-foreground">
               Effective Date: February 1, 2026
             </p>
-          </div>
+          </motion.div>
 
           {/* Main Content */}
           <div className="space-y-8">
