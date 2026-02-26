@@ -28,8 +28,8 @@ export default function HeroSearchCard() {
       flights: "/flights",
       hotels: "/hotels",
       cars: "/rent-car",
-      rides: "/flights",
-      eats: "/flights",
+      rides: "/rides",
+      eats: "/eats",
     };
     toast.success(`Searching ${activeTab}...`, { duration: 1500 });
     navigate(routes[activeTab] || "/flights");

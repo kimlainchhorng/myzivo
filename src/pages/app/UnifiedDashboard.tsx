@@ -20,11 +20,12 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { format } from "date-fns";
 
 const services = [
+  { id: "ride", name: "Ride", icon: Car, gradient: "from-emerald-500 to-green-600", link: "/rides" },
+  { id: "eats", name: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/eats" },
+  { id: "delivery", name: "Delivery", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/extras" },
   { id: "flights", name: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600", link: "/flights" },
   { id: "hotels", name: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-500", link: "/hotels" },
-  { id: "cars", name: "Cars", icon: Car, gradient: "from-emerald-500 to-teal-600", link: "/rent-car" },
-  { id: "activities", name: "Activities", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/things-to-do" },
-  { id: "extras", name: "Extras", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/extras" },
+  { id: "rentals", name: "Rentals", icon: Car, gradient: "from-teal-500 to-cyan-600", link: "/rent-car" },
 ];
 
 // Map trip.icon string to Lucide icon component
