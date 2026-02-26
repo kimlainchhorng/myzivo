@@ -262,6 +262,37 @@ export default function DeliveryPage() {
   const [holdAtFacility, setHoldAtFacility] = useState(false);
   const [saturdayDelivery, setSaturdayDelivery] = useState(false);
   const [hazmatDeclare, setHazmatDeclare] = useState(false);
+
+  // === NEW: Roadie-inspired features ===
+  const [peerDelivery, setPeerDelivery] = useState(false);
+  const [showDriverBids, setShowDriverBids] = useState(false);
+  const [driverBids] = useState([
+    { id: "b1", name: "Alex M.", rating: 4.9, vehicle: "SUV", price: 18.99, eta: "45 min", trips: 342 },
+    { id: "b2", name: "Jordan K.", rating: 4.7, vehicle: "Sedan", price: 15.99, eta: "55 min", trips: 128 },
+    { id: "b3", name: "Sam R.", rating: 4.8, vehicle: "Truck", price: 22.99, eta: "35 min", trips: 567 },
+  ]);
+  const [selectedBid, setSelectedBid] = useState<string | null>(null);
+  const [vehicleTypeForDelivery, setVehicleTypeForDelivery] = useState<"any" | "sedan" | "suv" | "truck" | "van">("any");
+  const [itemPhotos, setItemPhotos] = useState<string[]>([]);
+  const [communityDriverRating, setCommunityDriverRating] = useState(true);
+  const [largeItemDelivery, setLargeItemDelivery] = useState(false);
+  const [assemblyRequired, setAssemblyRequired] = useState(false);
+  const [twoPersonLift, setTwoPersonLift] = useState(false);
+  const [stairDelivery, setStairDelivery] = useState(false);
+  const [floorNumber, setFloorNumber] = useState("");
+  const [curbsideOnly, setCurbsideOnly] = useState(false);
+  const [deliveryBudget, setDeliveryBudget] = useState("");
+  const [showPriceNegotiation, setShowPriceNegotiation] = useState(false);
+  const [bidExpiry] = useState(15);
+  const [showItemMarketplace, setShowItemMarketplace] = useState(false);
+  const [returnPickup, setReturnPickup] = useState(false);
+  const [specialVehicleNeeded, setSpecialVehicleNeeded] = useState(false);
+  const [showDeliveryBudgetCalc, setShowDeliveryBudgetCalc] = useState(false);
+  const [scheduledPickupWindow, setScheduledPickupWindow] = useState<"flexible" | "morning" | "afternoon" | "evening">("flexible");
+  const [backgroundCheckedDriver, setBackgroundCheckedDriver] = useState(true);
+  const [photoOnPickup, setPhotoOnPickup] = useState(true);
+  const [photoOnDelivery, setPhotoOnDeliveryNew] = useState(true);
+
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -794,6 +825,153 @@ export default function DeliveryPage() {
               </div>
 
               {/* Carbon Neutral */}
+
+              {/* === ROADIE-INSPIRED FEATURES === */}
+
+              {/* Peer Delivery / Driver Bids */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setPeerDelivery(!peerDelivery); if (!peerDelivery) { setShowDriverBids(true); toast.info("🚗 Finding nearby drivers for your delivery..."); } }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", peerDelivery ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", peerDelivery ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Peer Delivery (Roadie-style)</p>
+                  <p className="text-[10px] text-muted-foreground">Match with nearby drivers already going your way</p>
+                </div>
+              </div>
+
+              {/* Driver Bids */}
+              <AnimatePresence>
+                {peerDelivery && showDriverBids && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-foreground">🚗 Driver Offers ({driverBids.length})</p>
+                      <span className="text-[10px] text-amber-500 font-bold animate-pulse">Expires in {bidExpiry} min</span>
+                    </div>
+                    {driverBids.map(bid => (
+                      <button key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
+                        className={cn("w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-[0.98] text-left",
+                          selectedBid === bid.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card")}>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-violet-500">
+                          {bid.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">{bid.name}</p>
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-0.5"><Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {bid.rating}</span>
+                            <span>· {bid.vehicle}</span>
+                            <span>· {bid.trips} trips</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-violet-500">${bid.price.toFixed(2)}</p>
+                          <p className="text-[10px] text-muted-foreground">{bid.eta}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Vehicle Type for Delivery (Roadie) */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Truck className="w-3.5 h-3.5 text-violet-500" /> Vehicle Type Needed</p>
+                <div className="flex gap-2 flex-wrap">
+                  {(["any", "sedan", "suv", "truck", "van"] as const).map(v => (
+                    <button key={v} onClick={() => setVehicleTypeForDelivery(v)}
+                      className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
+                        vehicleTypeForDelivery === v ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {v === "any" ? "🚗 Any" : v === "sedan" ? "🚙 Sedan" : v === "suv" ? "🚐 SUV" : v === "truck" ? "🛻 Truck" : "🚐 Van"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Large Item Options (Roadie) */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setLargeItemDelivery(!largeItemDelivery); if (!largeItemDelivery) toast.info("📦 Large item mode — we'll match you with drivers who can handle big deliveries"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", largeItemDelivery ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", largeItemDelivery ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground">📦 Large / Heavy Item</p>
+                  <p className="text-[10px] text-muted-foreground">Furniture, appliances, bulky items</p>
+                </div>
+              </div>
+              {largeItemDelivery && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                  <div className="flex gap-2">
+                    <button onClick={() => setTwoPersonLift(!twoPersonLift)}
+                      className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                        twoPersonLift ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      👥 2-Person Lift (+$15)
+                    </button>
+                    <button onClick={() => setAssemblyRequired(!assemblyRequired)}
+                      className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                        assemblyRequired ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      🔧 Assembly (+$25)
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setStairDelivery(!stairDelivery)}
+                      className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                        stairDelivery ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      🪜 Stair Delivery (+$10)
+                    </button>
+                    <button onClick={() => setCurbsideOnly(!curbsideOnly)}
+                      className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                        curbsideOnly ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      🏠 Curbside Only (Free)
+                    </button>
+                  </div>
+                  {stairDelivery && (
+                    <Input placeholder="Floor number" value={floorNumber} onChange={(e) => setFloorNumber(e.target.value)} className="h-10 rounded-xl text-sm" type="number" />
+                  )}
+                </motion.div>
+              )}
+
+              {/* Pickup Window (Roadie) */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Clock className="w-3.5 h-3.5 text-violet-500" /> Pickup Window</p>
+                <div className="flex gap-2 flex-wrap">
+                  {(["flexible", "morning", "afternoon", "evening"] as const).map(w => (
+                    <button key={w} onClick={() => setScheduledPickupWindow(w)}
+                      className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
+                        scheduledPickupWindow === w ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {w === "flexible" ? "🕐 Flexible" : w === "morning" ? "🌅 Morning" : w === "afternoon" ? "☀️ Afternoon" : "🌙 Evening"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Photo Verification (Roadie) */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-2">
+                <p className="text-xs font-bold text-foreground">📸 Photo Verification</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setPhotoOnPickup(!photoOnPickup)}
+                    className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                      photoOnPickup ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                    📷 Photo on Pickup
+                  </button>
+                  <button onClick={() => setPhotoOnDeliveryNew(!photoOnDelivery)}
+                    className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
+                      photoOnDelivery ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                    📷 Photo on Delivery
+                  </button>
+                </div>
+              </div>
+
+              {/* Background Checked Badge */}
+              <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground">Background-Checked Drivers</p>
+                  <p className="text-[10px] text-muted-foreground">All ZIVO couriers pass background checks & vehicle inspections</p>
+                </div>
+              </div>
 
               {/* Package Dimensions */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">

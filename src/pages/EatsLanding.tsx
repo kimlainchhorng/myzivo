@@ -284,6 +284,40 @@ export default function EatsLanding() {
   const [allergenAlert, setAllergenAlert] = useState(true);
   const [ecoPackaging, setEcoPackaging] = useState(false);
   const [driverTipSplit, setDriverTipSplit] = useState(false);
+
+  // === NEW: DoorDash-inspired features ===
+  const [dashPassActive, setDashPassActive] = useState(false);
+  const [showDashPass, setShowDashPass] = useState(false);
+  const [pickupOrder, setPickupOrder] = useState(false);
+  const [alcoholDelivery, setAlcoholDelivery] = useState(false);
+  const [ageVerified, setAgeVerified] = useState(false);
+  const [livePhotoUpdates, setLivePhotoUpdates] = useState(true);
+  const [recurringOrder, setRecurringOrder] = useState<"none" | "daily" | "weekly" | "biweekly">("none");
+  const [showRecurringSetup, setShowRecurringSetup] = useState(false);
+  const [doubleDashItems, setDoubleDashItems] = useState(false);
+  const [convenienceItems] = useState([
+    { id: "water", name: "Water 6-Pack", price: 4.99, icon: "💧" },
+    { id: "snacks", name: "Chip Variety Pack", price: 6.99, icon: "🍿" },
+    { id: "ice-cream", name: "Ice Cream Pint", price: 5.99, icon: "🍨" },
+    { id: "medicine", name: "Pain Reliever", price: 8.99, icon: "💊" },
+  ]);
+  const [doubleDashCart, setDoubleDashCart] = useState<string[]>([]);
+  const [expressDelivery, setExpressDelivery] = useState(false);
+  const [priorityFee] = useState(2.99);
+  const [showDriverMap, setShowDriverMap] = useState(false);
+  const [estimatedArrival, setEstimatedArrival] = useState("18 min");
+  const [restaurantOpen, setRestaurantOpen] = useState(true);
+  const [happyHour, setHappyHour] = useState(Math.random() > 0.5);
+  const [dashPassSavings] = useState(47.50);
+  const [monthlyOrders] = useState(8);
+  const [freeDeliveryThreshold] = useState(12);
+  const [showSurpriseMe, setShowSurpriseMe] = useState(false);
+  const [itemPhotoView, setItemPhotoView] = useState(true);
+  const [orderNotes, setOrderNotes] = useState("");
+  const [leaveAtDoor, setLeaveAtDoor] = useState(true);
+  const [handItToMe, setHandItToMe] = useState(false);
+  const [sendAsGiftNew, setSendAsGiftNew] = useState(false);
+  const [giftWrap, setGiftWrap] = useState(false);
   const [curbsidePickup, setCurbsidePickup] = useState(false);
   const [reorderSuggestion, setReorderSuggestion] = useState(true);
   const [splitBill, setSplitBill] = useState(false);
@@ -508,6 +542,35 @@ export default function EatsLanding() {
 
             <section className="py-12 sm:py-16">
               <div className="container mx-auto px-4">
+                {/* === DOORDASH-INSPIRED FEATURES === */}
+
+                {/* DashPass Membership Banner */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4 mb-6">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+                      <Award className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-foreground">{dashPassActive ? "ZIVO Eats Pass ✓" : "ZIVO Eats Pass"}</p>
+                      <p className="text-[10px] text-muted-foreground">{dashPassActive ? `Saved $${dashPassSavings.toFixed(2)} this month` : "$0 delivery fee on orders $12+"}</p>
+                    </div>
+                    {!dashPassActive && (
+                      <button onClick={() => { setDashPassActive(true); toast.success("🎉 ZIVO Eats Pass activated! $0 delivery fee on orders $12+"); }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold touch-manipulation active:scale-95 shadow-md">
+                        Try Free
+                      </button>
+                    )}
+                  </div>
+                  {dashPassActive && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg bg-card/60 p-2 text-center"><p className="text-sm font-bold text-primary">{monthlyOrders}</p><p className="text-[9px] text-muted-foreground">Orders</p></div>
+                      <div className="rounded-lg bg-card/60 p-2 text-center"><p className="text-sm font-bold text-emerald-500">${dashPassSavings.toFixed(0)}</p><p className="text-[9px] text-muted-foreground">Saved</p></div>
+                      <div className="rounded-lg bg-card/60 p-2 text-center"><p className="text-sm font-bold text-amber-500">{loyaltyInfo.currentPoints}</p><p className="text-[9px] text-muted-foreground">Points</p></div>
+                    </div>
+                  )}
+                </motion.div>
+
                 {/* Loyalty Points Banner */}
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4 flex items-center gap-4 mb-6">
@@ -524,6 +587,105 @@ export default function EatsLanding() {
                     </div>
                   </div>
                 </motion.div>
+
+                {/* Pickup vs Delivery Toggle (DoorDash) */}
+                <div className="flex gap-2 mb-6">
+                  <button onClick={() => { setPickupOrder(false); }}
+                    className={cn("flex-1 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 flex items-center justify-center gap-2",
+                      !pickupOrder ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                    <Truck className="w-4 h-4" /> Delivery
+                  </button>
+                  <button onClick={() => { setPickupOrder(true); toast.info("🏃 Pickup — save on delivery fees!"); }}
+                    className={cn("flex-1 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 flex items-center justify-center gap-2",
+                      pickupOrder ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                    <Package className="w-4 h-4" /> Pickup
+                  </button>
+                </div>
+
+                {/* Happy Hour / Flash Deal */}
+                {happyHour && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 p-4 flex items-center gap-3 mb-6">
+                    <span className="text-2xl">⚡</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-orange-500">Happy Hour! 25% off select restaurants</p>
+                      <p className="text-[10px] text-muted-foreground">Ends in 47 min — order now</p>
+                    </div>
+                    <span className="text-[10px] font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full animate-pulse">LIVE</span>
+                  </motion.div>
+                )}
+
+                {/* DoubleDash — Add convenience items (DoorDash) */}
+                <div className="mb-6">
+                  <button onClick={() => setDoubleDashItems(!doubleDashItems)}
+                    className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all touch-manipulation mb-3">
+                    <Sparkles className="w-4 h-4 text-primary" /> DoubleDash™ — Add Essentials
+                    <ChevronRight className={cn("w-3 h-3 transition-transform", doubleDashItems && "rotate-90")} />
+                  </button>
+                  <AnimatePresence>
+                    {doubleDashItems && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden">
+                        <p className="text-[10px] text-muted-foreground mb-2">Add convenience store items — delivered with your food, no extra fee!</p>
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                          {convenienceItems.map(item => (
+                            <button key={item.id} onClick={() => {
+                              setDoubleDashCart(prev => prev.includes(item.id) ? prev.filter(i => i !== item.id) : [...prev, item.id]);
+                              toast.success(`${doubleDashCart.includes(item.id) ? "Removed" : "Added"} ${item.name}`);
+                            }}
+                              className={cn("flex-shrink-0 w-28 p-3 rounded-xl border text-center transition-all touch-manipulation active:scale-95",
+                                doubleDashCart.includes(item.id) ? "border-primary bg-primary/5" : "border-border/40 bg-card")}>
+                              <span className="text-xl">{item.icon}</span>
+                              <p className="text-[10px] font-bold text-foreground mt-1">{item.name}</p>
+                              <p className="text-[10px] text-primary font-bold">${item.price.toFixed(2)}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Recurring Order Setup (DoorDash) */}
+                <div className="mb-6">
+                  <button onClick={() => setShowRecurringSetup(!showRecurringSetup)}
+                    className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all touch-manipulation mb-3">
+                    <RefreshCw className="w-4 h-4 text-primary" /> Schedule Recurring Order
+                    <ChevronRight className={cn("w-3 h-3 transition-transform", showRecurringSetup && "rotate-90")} />
+                  </button>
+                  <AnimatePresence>
+                    {showRecurringSetup && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden flex gap-2 flex-wrap">
+                        {(["none", "daily", "weekly", "biweekly"] as const).map(opt => (
+                          <button key={opt} onClick={() => { setRecurringOrder(opt); if (opt !== "none") toast.success(`📅 Order will repeat ${opt}`); }}
+                            className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
+                              recurringOrder === opt ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                            {opt === "none" ? "One-time" : opt}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Delivery Instructions (DoorDash) */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4 mb-6 space-y-3">
+                  <p className="text-xs font-bold text-foreground">Delivery Instructions</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setLeaveAtDoor(true); setHandItToMe(false); }}
+                      className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation",
+                        leaveAtDoor ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                      🚪 Leave at door
+                    </button>
+                    <button onClick={() => { setHandItToMe(true); setLeaveAtDoor(false); }}
+                      className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation",
+                        handItToMe ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                      🤝 Hand it to me
+                    </button>
+                  </div>
+                  <Input placeholder="Add delivery note (e.g., gate code #1234)" value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} className="h-10 rounded-xl text-sm" />
+                </div>
 
                 {/* Meal Deals */}
                 <div className="mb-6">

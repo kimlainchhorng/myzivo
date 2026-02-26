@@ -484,6 +484,33 @@ export default function RequestRidePage() {
   const [genderPreference, setGenderPreference] = useState<"any" | "female" | "male">("any");
   const [showCostBreakdown, setShowCostBreakdown] = useState(false);
 
+  // === NEW: Uber/Lyft/Blacklane-inspired features ===
+  const [airportMeetGreet, setAirportMeetGreet] = useState(false);
+  const [driverLanguage, setDriverLanguage] = useState<"any" | "english" | "spanish" | "french" | "mandarin" | "arabic">("any");
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [recurringRide, setRecurringRide] = useState<"none" | "daily" | "weekdays" | "weekly">("none");
+  const [showRecurringOptions, setShowRecurringOptions] = useState(false);
+  const [womenSafetyMode, setWomenSafetyMode] = useState(false);
+  const [rideSubscription, setRideSubscription] = useState<"none" | "basic" | "premium">("none");
+  const [showSubscriptionWidget, setShowSubscriptionWidget] = useState(false);
+  const [executiveChauffeur, setExecutiveChauffeur] = useState(false);
+  const [flightTracking, setFlightTracking] = useState(false);
+  const [flightNumber, setFlightNumber] = useState("");
+  const [poolCountdown] = useState(Math.floor(Math.random() * 4) + 1);
+  const [upfrontPrice, setUpfrontPrice] = useState(true);
+  const [rewardPoints] = useState(1247);
+  const [showRewards, setShowRewards] = useState(false);
+  const [postRideTip, setPostRideTip] = useState(false);
+  const [commuteSchedule, setCommuteSchedule] = useState(false);
+  const [commuteTime, setCommuteTime] = useState("08:00");
+  const [groupRide, setGroupRide] = useState(false);
+  const [groupSize, setGroupSize] = useState(2);
+  const [carSeatCount, setCarSeatCount] = useState(0);
+  const [stopDuration, setStopDuration] = useState(5);
+  const [packageInTrunk, setPackageInTrunk] = useState(false);
+  const [meetAtCurb, setMeetAtCurb] = useState(true);
+  const [verifiedDriver, setVerifiedDriver] = useState(true);
+
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -1005,6 +1032,146 @@ export default function RequestRidePage() {
                             <p className="text-[9px] text-muted-foreground uppercase font-bold">CO₂ Saved</p>
                           </div>
                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* === UBER/LYFT/BLACKLANE FEATURES === */}
+
+                {/* Airport Meet & Greet */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setAirportMeetGreet(!airportMeetGreet); if (!airportMeetGreet) toast.success("✈️ Chauffeur will meet you at arrivals with name sign"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", airportMeetGreet ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", airportMeetGreet ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Plane className="w-3.5 h-3.5 text-sky-500" /> Airport Meet & Greet</p>
+                    <p className="text-[10px] text-muted-foreground">Driver waits at arrivals with name sign · +$9.99</p>
+                  </div>
+                </div>
+
+                {/* Driver Language Preference */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <button onClick={() => setShowLanguagePicker(!showLanguagePicker)} className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground">🌐 Driver Language</p>
+                    <span className="text-[10px] text-muted-foreground capitalize">{driverLanguage === "any" ? "Any" : driverLanguage}</span>
+                  </button>
+                  <AnimatePresence>
+                    {showLanguagePicker && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <div className="flex gap-2 flex-wrap mt-3">
+                          {(["any", "english", "spanish", "french", "mandarin", "arabic"] as const).map(lang => (
+                            <button key={lang} onClick={() => setDriverLanguage(lang)}
+                              className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                                driverLanguage === lang ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                              {lang === "any" ? "🌐 Any" : lang === "english" ? "🇺🇸 EN" : lang === "spanish" ? "🇪🇸 ES" : lang === "french" ? "🇫🇷 FR" : lang === "mandarin" ? "🇨🇳 ZH" : "🇸🇦 AR"}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Women Safety Mode */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setWomenSafetyMode(!womenSafetyMode); if (!womenSafetyMode) toast.success("🛡️ Women's safety mode — prefer female driver, auto-share trip"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", womenSafetyMode ? "bg-pink-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", womenSafetyMode ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground">🛡️ Women's Safety Mode</p>
+                    <p className="text-[10px] text-muted-foreground">Prefer female driver, auto-share trip with contacts</p>
+                  </div>
+                </div>
+
+                {/* Recurring Ride */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <button onClick={() => setShowRecurringOptions(!showRecurringOptions)} className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Recurring Ride</p>
+                    <span className="text-[10px] text-muted-foreground capitalize">{recurringRide === "none" ? "One-time" : recurringRide}</span>
+                  </button>
+                  <AnimatePresence>
+                    {showRecurringOptions && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <div className="flex gap-2 flex-wrap mt-3">
+                          {(["none", "daily", "weekdays", "weekly"] as const).map(opt => (
+                            <button key={opt} onClick={() => setRecurringRide(opt)}
+                              className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all capitalize",
+                                recurringRide === opt ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                              {opt === "none" ? "One-time" : opt}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Executive Chauffeur */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setExecutiveChauffeur(!executiveChauffeur); if (!executiveChauffeur) toast.success("👔 Executive chauffeur booked"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", executiveChauffeur ? "bg-amber-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", executiveChauffeur ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-amber-500" /> Executive Chauffeur</p>
+                    <p className="text-[10px] text-muted-foreground">Professional driver, business attire, door-to-door · +$15</p>
+                  </div>
+                </div>
+
+                {/* Upfront Pricing */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setUpfrontPrice(!upfrontPrice)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", upfrontPrice ? "bg-emerald-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", upfrontPrice ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Upfront pricing</p>
+                    <p className="text-[10px] text-muted-foreground">Know exact fare before you ride — no surprises</p>
+                  </div>
+                  {upfrontPrice && <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Active</Badge>}
+                </div>
+
+                {/* ZIVO Rewards */}
+                <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
+                  <button onClick={() => setShowRewards(!showRewards)} className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> ZIVO Rewards</p>
+                    <span className="text-xs font-bold text-amber-500">{rewardPoints} pts</span>
+                  </button>
+                  <AnimatePresence>
+                    {showRewards && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-3 space-y-2">
+                        <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: `${Math.min(100, (rewardPoints / 2000) * 100)}%` }} />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">{2000 - rewardPoints} pts to next free ride</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Ride Pass Subscription */}
+                <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-emerald-500/10 border border-primary/20 p-4">
+                  <button onClick={() => setShowSubscriptionWidget(!showSubscriptionWidget)} className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /> ZIVO Ride Pass</p>
+                    <span className="text-[10px] font-bold text-primary">{rideSubscription === "none" ? "Join" : rideSubscription}</span>
+                  </button>
+                  <AnimatePresence>
+                    {showSubscriptionWidget && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-3 space-y-2">
+                        {ridePassTiers.map(tier => (
+                          <button key={tier.id} onClick={() => { setRideSubscription(tier.id as any); toast.success(`🎉 ${tier.name} activated!`); }}
+                            className={cn("w-full p-3 rounded-xl text-left transition-all",
+                              rideSubscription === tier.id ? "bg-primary/10 border border-primary/30" : "bg-card border border-border/40")}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-bold">{tier.name}</span>
+                              <span className="text-xs font-bold text-primary">{tier.price}</span>
+                            </div>
+                            <p className="text-[10px] text-emerald-500 font-bold">{tier.savings}</p>
+                          </button>
+                        ))}
                       </motion.div>
                     )}
                   </AnimatePresence>
