@@ -60,7 +60,7 @@ const services = [
 
 export default function ServicesShowcase() {
   return (
-    <section id="services-showcase" className="section-padding relative">
+    <section id="services-showcase" className="section-padding relative" aria-label="ZIVO travel services">
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
