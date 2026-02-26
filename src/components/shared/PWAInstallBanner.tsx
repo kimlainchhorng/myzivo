@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, Smartphone, Zap, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Capacitor } from "@capacitor/core";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,6 +20,8 @@ export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
+    // Don't show inside native Capacitor app
+    if (Capacitor.isNativePlatform()) return;
     // Don't show if already installed (standalone mode)
     if (window.matchMedia("(display-mode: standalone)").matches) return;
     // Don't show on desktop
