@@ -332,7 +332,7 @@ const HotelBooking = () => {
                 {/* Price Disclaimer - LOCKED TEXT */}
                 <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                   <p className="text-xs text-muted-foreground text-center font-medium mb-1">
-                    ⚠️ {HOTEL_DISCLAIMERS.partnerBooking}
+                    {HOTEL_DISCLAIMERS.partnerBooking}
                   </p>
                   <p className="text-xs text-muted-foreground text-center">
                     {HOTEL_DISCLAIMERS.price} ZIVO may earn a commission when you book through partner links.

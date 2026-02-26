@@ -4,7 +4,7 @@
  * Legally compliant with partner disclosures
  */
 
-import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Shield, Fuel } from "lucide-react";
+import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Shield, Fuel, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -110,8 +110,8 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
               loading="lazy"
             />
           ) : (
-            <div className="w-28 h-28 rounded-2xl bg-muted flex items-center justify-center">
-              <span className="text-5xl">🚗</span>
+            <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 flex items-center justify-center">
+              <Car className="w-12 h-12 text-emerald-500" />
             </div>
           )}
           

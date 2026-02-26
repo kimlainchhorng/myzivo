@@ -409,7 +409,7 @@ export default function RequestRidePage() {
                 )}
 
                 {pickupCoords && (
-                  <p className="text-xs text-muted-foreground">📍 {pickupCoords.lat.toFixed(4)}, {pickupCoords.lng.toFixed(4)}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3 text-primary" /> {pickupCoords.lat.toFixed(4)}, {pickupCoords.lng.toFixed(4)}</p>
                 )}
               </div>
 

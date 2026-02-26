@@ -74,7 +74,7 @@ export function FlightMultiProviderCard({
           )}
           {flight.isBestPrice && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              💰 Cheapest Option
+              <Zap className="w-3 h-3" /> Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (

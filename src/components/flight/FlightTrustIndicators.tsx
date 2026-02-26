@@ -48,11 +48,11 @@ export default function FlightTrustIndicators({ className }: FlightTrustIndicato
   ];
 
   const paymentMethods = [
-    { name: "Visa", icon: "💳" },
-    { name: "Mastercard", icon: "💳" },
-    { name: "Amex", icon: "💳" },
-    { name: "PayPal", icon: "🅿️" },
-    { name: "Apple Pay", icon: "🍎" },
+    { name: "Visa", icon: "V" },
+    { name: "Mastercard", icon: "M" },
+    { name: "Amex", icon: "A" },
+    { name: "PayPal", icon: "P" },
+    { name: "Apple Pay", icon: "AP" },
     { name: "Google Pay", icon: "G" },
   ];
 

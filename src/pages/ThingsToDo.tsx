@@ -499,7 +499,7 @@ const ThingsToDo = () => {
                 >
                   {index === 0 && (
                     <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-center py-1 text-xs font-medium">
-                      ⭐ Most Popular
+                      Most Popular
                     </div>
                   )}
                   

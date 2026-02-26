@@ -100,7 +100,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
           )}
           {flight.isBestPrice && !flight.priceUpdated && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              💰 Cheapest Option
+              <Zap className="w-3 h-3" /> Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (

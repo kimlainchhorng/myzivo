@@ -131,9 +131,9 @@ export default function Partners() {
             <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <p className="text-sm text-muted-foreground font-medium mb-2">We do NOT use:</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>❌ Incentivized traffic</li>
-                <li>❌ Trademark bidding</li>
-                <li>❌ Spam or pop-ups</li>
+                <li>- Incentivized traffic</li>
+                <li>- Trademark bidding</li>
+                <li>- Spam or pop-ups</li>
               </ul>
             </div>
           </div>

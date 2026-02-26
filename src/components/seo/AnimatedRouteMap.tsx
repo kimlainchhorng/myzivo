@@ -124,7 +124,7 @@
              animate={isInView ? { opacity: 1 } : {}}
              transition={{ delay: 0.6 }}
            >
-             ✈️
+             F
            </motion.text>
          </motion.g>
  
