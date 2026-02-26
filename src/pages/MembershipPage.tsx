@@ -560,11 +560,55 @@ export default function MembershipPage() {
             </div>
           </motion.div>
 
+          {/* === WAVE 13: Extra Membership Content === */}
+
+          {/* Member Milestones */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <h2 className="text-xl font-bold mb-4">Member Milestones</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { milestone: "1 Month", reward: "Welcome: 500 points", emoji: "🎉", unlocked: true },
+                { milestone: "3 Months", reward: "Free lounge pass", emoji: "✈️", unlocked: true },
+                { milestone: "6 Months", reward: "Birthday $25 credit", emoji: "🎂", unlocked: false },
+                { milestone: "1 Year", reward: "Free hotel night", emoji: "🏆", unlocked: false },
+              ].map(m => (
+                <Card key={m.milestone} className={`border-border/40 ${m.unlocked ? "border-amber-500/20 bg-amber-500/5" : "opacity-60"}`}>
+                  <CardContent className="p-3 text-center">
+                    <span className="text-xl">{m.emoji}</span>
+                    <p className="text-xs font-bold mt-1">{m.milestone}</p>
+                    <p className="text-[9px] text-muted-foreground mt-1">{m.reward}</p>
+                    {m.unlocked && <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[7px] mt-1">Unlocked</Badge>}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Membership FAQ */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+            <h2 className="text-xl font-bold mb-4">Membership FAQ</h2>
+            <div className="space-y-2">
+              {[
+                { q: "When does my membership start?", a: "Immediately after payment. Benefits apply to all orders after activation." },
+                { q: "Can I switch monthly to annual?", a: "Yes! Go to Manage Billing and switch. You'll get prorated credit." },
+                { q: "What happens when I cancel?", a: "Benefits continue until end of current billing period." },
+                { q: "Do benefits apply to all services?", a: "Yes — flights, hotels, cars, rides, and food delivery." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/40">
+                  <CardContent className="p-3">
+                    <p className="text-xs font-bold">{f.q}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Savings Calculator */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
+            transition={{ delay: 0.5 }}
           >
             <Card>
               <CardContent className="p-6">

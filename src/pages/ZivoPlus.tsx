@@ -284,6 +284,86 @@ const ZivoPlus = () => {
           </div>
         </section>
 
+        {/* === WAVE 13: Rich ZivoPlus Content === */}
+
+        {/* Member Savings Calculator */}
+        <section className="container mx-auto px-4 mb-16">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-6">How Much Can You Save?</h2>
+            <Card className="border-amber-500/20 bg-amber-500/5">
+              <CardContent className="p-6">
+                <div className="grid sm:grid-cols-3 gap-4 text-center">
+                  {[
+                    { trips: "2 trips/mo", monthly: "$18", yearly: "$216", emoji: "🧳" },
+                    { trips: "4 trips/mo", monthly: "$42", yearly: "$504", emoji: "✈️" },
+                    { trips: "8+ trips/mo", monthly: "$95", yearly: "$1,140", emoji: "🌍" },
+                  ].map(s => (
+                    <div key={s.trips} className="p-4 rounded-xl border border-amber-500/20 bg-card/80">
+                      <span className="text-2xl">{s.emoji}</span>
+                      <p className="text-xs font-bold mt-2">{s.trips}</p>
+                      <p className="text-lg font-bold text-amber-500 mt-1">{s.monthly}/mo</p>
+                      <p className="text-[10px] text-muted-foreground">{s.yearly}/year saved</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Plus Exclusive Deals */}
+        <section className="container mx-auto px-4 mb-16">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-6">This Week's Plus Exclusives</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { deal: "35% off Miami flights", normal: "$289", plus: "$188", tag: "Flights", emoji: "🏖️" },
+                { deal: "Free room upgrade — Hilton", normal: "N/A", plus: "Free", tag: "Hotels", emoji: "🏨" },
+                { deal: "Extra driver free on rentals", normal: "$15/day", plus: "$0", tag: "Cars", emoji: "🚗" },
+                { deal: "3x miles on Tokyo routes", normal: "1x", plus: "3x miles", tag: "Miles", emoji: "🎌" },
+              ].map(d => (
+                <Card key={d.deal} className="border-amber-500/15 hover:border-amber-500/30 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span>{d.emoji}</span>
+                      <span className="text-xs font-bold">{d.deal}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px]">
+                        <span className="text-muted-foreground line-through mr-2">{d.normal}</span>
+                        <span className="text-amber-500 font-bold">{d.plus}</span>
+                      </div>
+                      <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">{d.tag}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Plus FAQ */}
+        <section className="container mx-auto px-4 mb-16">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-2">
+              {[
+                { q: "Can I cancel anytime?", a: "Yes. Cancel with one click. No cancellation fees, ever." },
+                { q: "Do my miles expire?", a: "No. ZIVO miles never expire as long as your account is active." },
+                { q: "Is Plus available worldwide?", a: "Yes. Benefits apply to all bookings globally." },
+                { q: "Can I share with family?", a: "Currently per-account. Family plans coming Q3 2025." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/50 hover:border-amber-500/20 transition-all">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-bold">{f.q}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
