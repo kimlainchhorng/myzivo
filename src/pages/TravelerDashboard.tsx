@@ -7,6 +7,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { TripTimeline, AIConciergeTrigger } from "@/components/profile";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,8 @@ export default function TravelerDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(142_71%_45%/0.04)_0%,transparent_70%)] pointer-events-none" />
+      <SEOHead title="My Dashboard – ZIVO" description="View your travel overview, achievements, and upcoming trips on ZIVO." noIndex={true} />
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(var(--primary)/0.04)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="pt-20 px-4 sm:px-6 pb-32 relative z-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="max-w-7xl mx-auto mb-6">

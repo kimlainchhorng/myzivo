@@ -147,15 +147,15 @@ const FlightBookings = () => {
               <motion.div key={booking.id} variants={item}>
                 <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusConfig.dot}`} />
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4 flex-1">
-                        <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                          <Plane className="h-7 w-7 text-primary-foreground" />
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="flex gap-3 sm:gap-4 flex-1">
+                        <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <Plane className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-bold text-xl">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                            <span className="font-bold text-base sm:text-xl">
                               {flight?.departure_city} → {flight?.arrival_city}
                             </span>
                             <Badge className={`${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}>
@@ -163,29 +163,29 @@ const FlightBookings = () => {
                               {booking.status}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-3">
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 truncate">
                             {flight?.airlines?.name} • {flight?.flight_number} • {booking.cabin_class} • Ref: <span className="font-mono font-medium text-foreground">{booking.booking_reference}</span>
                           </p>
-                          <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                            <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-muted/50">
+                              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                               <span className="font-medium">
                                 {flight?.departure_time ? format(new Date(flight.departure_time), "MMM d, yyyy • HH:mm") : "TBD"}
                               </span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-muted/50">
+                              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                               <span className="font-medium">{flight?.duration_minutes ? formatDuration(flight.duration_minutes) : "TBD"}</span>
                             </span>
-                            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">{booking.total_passengers} passenger{booking.total_passengers > 1 ? 's' : ''}</span>
+                            <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-muted/50">
+                              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                              <span className="font-medium">{booking.total_passengers} pax</span>
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right flex flex-col items-end gap-3">
-                        <p className="font-bold text-2xl">${booking.total_amount?.toFixed(2) || "0.00"}</p>
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+                        <p className="font-bold text-xl sm:text-2xl">${booking.total_amount?.toFixed(2) || "0.00"}</p>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" className="gap-1.5">
                             <Eye className="h-4 w-4" />

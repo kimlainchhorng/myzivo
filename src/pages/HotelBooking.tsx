@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -258,7 +259,12 @@ const HotelBooking = () => {
 
         {/* Search Results */}
         {hasSearched && (
-          <section className="container mx-auto px-4 py-8">
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="container mx-auto px-4 py-8"
+          >
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
@@ -346,7 +352,7 @@ const HotelBooking = () => {
                 <p className="text-muted-foreground mb-4">Try searching for a different destination</p>
               </div>
             )}
-          </section>
+          </motion.section>
         )}
 
         {/* Discovery Sections (shown when no search) */}
