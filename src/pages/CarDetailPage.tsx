@@ -16,7 +16,8 @@ import {
   Calendar,
   MapPin,
   Clock,
-  ExternalLink
+  ExternalLink,
+  CarFront
 } from "lucide-react";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
@@ -127,8 +128,8 @@ export default function CarDetailPage() {
                       className="max-h-48 object-contain"
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-2xl bg-muted flex items-center justify-center">
-                      <span className="text-6xl">🚗</span>
+                    <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 flex items-center justify-center">
+                      <CarFront className="w-14 h-14 text-emerald-500" />
                     </div>
                   )}
                 </div>

@@ -162,7 +162,7 @@ const FlightConfirmation = () => {
             ) : null}
 
             <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-              {isIssued ? `${CHECKOUT_CONFIRMATION.success} ✈️` : isProcessing ? 'Processing Your Booking' : 'Booking Status'}
+              {isIssued ? CHECKOUT_CONFIRMATION.success : isProcessing ? 'Processing Your Booking' : 'Booking Status'}
             </h1>
             <p className="text-muted-foreground">
               {isIssued ? CHECKOUT_CONFIRMATION.received : statusInfo.description}
@@ -212,7 +212,7 @@ const FlightConfirmation = () => {
             <Card className="mb-6 border-emerald-500/30 bg-emerald-500/5">
               <CardContent className="p-6 text-center">
                 <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                <h2 className="text-xl font-bold mb-2">Booking Confirmed ✅</h2>
+                <h2 className="text-xl font-bold mb-2">Booking Confirmed</h2>
                 <p className="text-muted-foreground mb-4">
                   Your ticket has been issued. Your e-ticket and itinerary have been sent to your email.
                 </p>

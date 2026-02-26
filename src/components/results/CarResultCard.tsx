@@ -4,7 +4,7 @@
  * Mobile-first with clear visual hierarchy
  */
 
-import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Zap, Fuel } from "lucide-react";
+import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Zap, Fuel, Car } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,8 +125,8 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                 loading="lazy"
               />
             ) : (
-              <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
-                <span className="text-5xl">🚗</span>
+              <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 flex items-center justify-center">
+                <Car className="w-10 h-10 text-emerald-500" />
               </div>
             )}
             {/* Brand badge */}

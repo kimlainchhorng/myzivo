@@ -108,13 +108,13 @@ export function useFlightStatus({
       // Check for status changes and notify
       if (status && notificationsEnabled && newStatus.status !== status.status) {
         const statusMessages: Record<string, string> = {
-          'boarding': `🛫 ${flightNumber} is now boarding at gate ${newStatus.gate}`,
-          'delayed': `⚠️ ${flightNumber} is delayed by ${newStatus.delayMinutes} minutes`,
-          'departed': `✈️ ${flightNumber} has departed`,
-          'in-flight': `🌍 ${flightNumber} is now in flight`,
-          'landed': `🎉 ${flightNumber} has landed`,
-          'cancelled': `❌ ${flightNumber} has been cancelled`,
-          'diverted': `🔄 ${flightNumber} has been diverted`,
+          'boarding': `${flightNumber} is now boarding at gate ${newStatus.gate}`,
+          'delayed': `${flightNumber} is delayed by ${newStatus.delayMinutes} minutes`,
+          'departed': `${flightNumber} has departed`,
+          'in-flight': `${flightNumber} is now in flight`,
+          'landed': `${flightNumber} has landed`,
+          'cancelled': `${flightNumber} has been cancelled`,
+          'diverted': `${flightNumber} has been diverted`,
         };
         
         const message = statusMessages[newStatus.status];

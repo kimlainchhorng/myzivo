@@ -269,7 +269,7 @@ export default function Feedback() {
                 variant="outline"
                 className="gap-2"
                 onClick={() => {
-                  toast({ title: "Thanks for the thumbs up! 👍" });
+                  toast({ title: "Thanks for the thumbs up!" });
                 }}
               >
                 <ThumbsUp className="w-4 h-4" />

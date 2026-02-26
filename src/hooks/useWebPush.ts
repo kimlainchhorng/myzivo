@@ -224,7 +224,7 @@ export function useWebPush() {
       if (Notification.permission === "granted") {
         const registration = await navigator.serviceWorker.ready;
         await registration.showNotification("hiZIVO Test", {
-          body: "Push notifications are working! 🎉",
+          body: "Push notifications are working!",
           icon: "/pwa-icons/icon-192x192.png",
           badge: "/pwa-icons/icon-192x192.png",
           tag: "test",
@@ -239,7 +239,7 @@ export function useWebPush() {
         body: {
           user_id: user.id,
           notification_type: "test",
-          title: "hiZIVO Push Test 🔔",
+          title: "hiZIVO Push Test",
           body: "Push notifications are working end-to-end!",
           data: { type: "test", url: "/account" },
         },
@@ -250,7 +250,7 @@ export function useWebPush() {
         // Fallback to local
         const registration = await navigator.serviceWorker.ready;
         await registration.showNotification("hiZIVO Test", {
-          body: "Push notifications are working locally! 🎉",
+          body: "Push notifications are working locally!",
           icon: "/pwa-icons/icon-192x192.png",
           badge: "/pwa-icons/icon-192x192.png",
           tag: "test",

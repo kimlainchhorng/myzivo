@@ -125,7 +125,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
           <Progress value={progressPercent} className="h-2" />
           <p className="text-xs text-muted-foreground mt-1">
             {progressPercent === 100 
-              ? "All set! You're ready to go! 🎉" 
+              ? "All set! You're ready to go!" 
               : `${Math.round(progressPercent)}% complete`
             }
           </p>

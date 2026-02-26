@@ -107,7 +107,7 @@ const CookieConsent = () => {
                       <Cookie className="h-7 w-7 text-primary" />
                     </motion.div>
                     <div className="flex-1">
-                      <h3 className="font-display font-bold text-xl mb-2">We Value Your Privacy 🍪</h3>
+                      <h3 className="font-display font-bold text-xl mb-2 flex items-center gap-2">We Value Your Privacy <Cookie className="w-5 h-5 text-amber-500" /></h3>
                       <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                         We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
                         By clicking "Accept All", you consent to our use of cookies. 

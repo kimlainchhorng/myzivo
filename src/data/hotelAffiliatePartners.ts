@@ -23,7 +23,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'booking',
     name: 'Booking.com',
-    logo: '🏨',
+    logo: 'B',
     baseUrl: 'https://www.booking.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests, rooms }) => {
       const params = new URLSearchParams();
@@ -42,7 +42,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'hotels',
     name: 'Hotels.com',
-    logo: '🛏️',
+    logo: 'H',
     baseUrl: 'https://www.hotels.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests }) => {
       const params = new URLSearchParams();
@@ -60,7 +60,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'expedia',
     name: 'Expedia',
-    logo: '🌐',
+    logo: 'E',
     baseUrl: 'https://www.expedia.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests, rooms }) => {
       const params = new URLSearchParams();
@@ -79,7 +79,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'agoda',
     name: 'Agoda',
-    logo: '🔴',
+    logo: 'A',
     baseUrl: 'https://www.agoda.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests, rooms }) => {
       const params = new URLSearchParams();
@@ -98,7 +98,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'priceline',
     name: 'Priceline',
-    logo: '💰',
+    logo: 'P',
     baseUrl: 'https://www.priceline.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests, rooms }) => {
       const params = new URLSearchParams();
@@ -117,7 +117,7 @@ export const hotelAffiliatePartners: HotelAffiliatePartner[] = [
   {
     id: 'trivago',
     name: 'Trivago',
-    logo: '🔍',
+    logo: 'T',
     baseUrl: 'https://www.trivago.com',
     urlTemplate: ({ destination, checkIn, checkOut, guests, rooms }) => {
       const params = new URLSearchParams();
