@@ -301,6 +301,7 @@ const ThingsToDo = () => {
                       src={exp.image}
                       alt={exp.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
@@ -404,9 +405,10 @@ const ThingsToDo = () => {
                       src={activity.image}
                       alt={activity.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <button className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all touch-manipulation">
+                    <button aria-label="Save to favorites" className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all touch-manipulation">
                       <Heart className="h-3.5 w-3.5 text-primary-foreground" />
                     </button>
                   </div>

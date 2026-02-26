@@ -132,6 +132,7 @@ export default function CarResultCardPro({
                 src={image} 
                 alt={name || category}
                 className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover:scale-110"
+                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
