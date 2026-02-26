@@ -29,7 +29,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-c
 const LiveChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, role: "assistant", content: "Hi! 👋 I'm ZIVO AI Assistant. How can I help you today?" },
+    { id: 1, role: "assistant", content: "Hi! I'm ZIVO AI Assistant. How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);

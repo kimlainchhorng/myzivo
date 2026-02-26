@@ -427,7 +427,7 @@ export function useAddTicketMessage() {
               body: {
                 user_id: ticket.user_id,
                 notification_type: 'support_reply',
-                title: 'Support Team Replied 💬',
+                title: 'Support Team Replied',
                 body: `Re: ${ticket.subject?.substring(0, 50) || 'Your ticket'}`,
                 data: { 
                   type: 'support_reply', 

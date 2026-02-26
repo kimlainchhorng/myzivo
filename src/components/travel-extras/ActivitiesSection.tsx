@@ -89,7 +89,7 @@ export default function ActivitiesSection({ className = '', destination }: Activ
             >
               {index === 0 && (
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-center py-1 text-xs font-medium">
-                  ⭐ Recommended
+                  Recommended
                 </div>
               )}
               

@@ -72,7 +72,7 @@ const FlightAirportGuide = () => {
               </div>
 
               <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 mb-4">
-                <p className="text-sm">💡 {airport.tips}</p>
+                <p className="text-sm font-medium">Tip: {airport.tips}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
