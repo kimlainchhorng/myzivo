@@ -1,5 +1,5 @@
 /**
- * Footer - Premium dark navy footer with multi-column service layout
+ * Footer - Premium dark navy footer with refined layout
  */
 import { Link } from "react-router-dom";
 import {
@@ -7,53 +7,70 @@ import {
   Heart,
   ChevronUp,
   CheckCircle2,
+  Plane,
+  Building2,
+  Car,
+  MapPin,
 } from "lucide-react";
 import ZivoLogo from "./ZivoLogo";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-const footerLinks = {
-  flights: [
-    { name: "Search Flights", href: "/flights" },
-    { name: "Popular Destinations", href: "/flights" },
-    { name: "Price Alerts", href: "/flights" },
-    { name: "Deals", href: "/deals" },
-  ],
-  hotels: [
-    { name: "Find Hotels", href: "/hotels" },
-    { name: "Top Cities", href: "/hotels" },
-    { name: "Hotel Deals", href: "/hotels" },
-  ],
-  cars: [
-    { name: "Car Rentals", href: "/rent-car" },
-    { name: "P2P Rentals", href: "/rent-car" },
-    { name: "Insurance & Protection", href: "/insurance" },
-  ],
-  ridesEats: [
-    { name: "ZIVO Rides", href: "/rides" },
-    { name: "ZIVO Eats", href: "/eats" },
-    { name: "ZIVO Delivery", href: "/delivery" },
-    { name: "Travel Extras", href: "/extras" },
-    { name: "Become a Driver", href: "/drive" },
-  ],
-  company: [
-    { name: "About ZIVO", href: "/about" },
-    { name: "How It Works", href: "/how-it-works" },
-    { name: "Press & Media", href: "/press" },
-    { name: "Careers", href: "/careers" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Contact", href: "/contact" },
-  ],
-  legal: [
-    { name: "Terms & Conditions", href: "/terms" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Cookie Policy", href: "/cookies" },
-    { name: "Partner Disclosure", href: "/partner-disclosure" },
-    { name: "Refund Policy", href: "/refunds" },
-    { name: "Seller of Travel", href: "/legal/seller-of-travel" },
-    { name: "Accessibility", href: "/accessibility" },
-    { name: "Do Not Sell My Info", href: "/do-not-sell" },
-  ],
-};
+const footerSections = [
+  {
+    title: "Flights",
+    icon: Plane,
+    links: [
+      { name: "Search Flights", href: "/flights" },
+      { name: "Popular Destinations", href: "/flights" },
+      { name: "Price Alerts", href: "/flights" },
+      { name: "Deals", href: "/deals" },
+    ],
+  },
+  {
+    title: "Hotels",
+    icon: Building2,
+    links: [
+      { name: "Find Hotels", href: "/hotels" },
+      { name: "Top Cities", href: "/hotels" },
+      { name: "Hotel Deals", href: "/hotels" },
+    ],
+  },
+  {
+    title: "Cars & More",
+    icon: Car,
+    links: [
+      { name: "Car Rentals", href: "/rent-car" },
+      { name: "P2P Rentals", href: "/rent-car" },
+      { name: "ZIVO Rides", href: "/rides" },
+      { name: "ZIVO Eats", href: "/eats" },
+      { name: "Become a Driver", href: "/drive" },
+    ],
+  },
+  {
+    title: "Company",
+    icon: MapPin,
+    links: [
+      { name: "About ZIVO", href: "/about" },
+      { name: "How It Works", href: "/how-it-works" },
+      { name: "Careers", href: "/careers" },
+      { name: "Press", href: "/press" },
+      { name: "FAQ", href: "/faq" },
+      { name: "Contact", href: "/contact" },
+    ],
+  },
+];
+
+const legalLinks = [
+  { name: "Terms", href: "/terms" },
+  { name: "Privacy", href: "/privacy" },
+  { name: "Cookies", href: "/cookies" },
+  { name: "Partner Disclosure", href: "/partner-disclosure" },
+  { name: "Refund Policy", href: "/refunds" },
+  { name: "Seller of Travel", href: "/legal/seller-of-travel" },
+  { name: "Accessibility", href: "/accessibility" },
+  { name: "Do Not Sell My Info", href: "/do-not-sell" },
+];
 
 const socialLinks = [
   { label: "X", href: "https://x.com/hizovo", icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
@@ -61,28 +78,6 @@ const socialLinks = [
   { label: "Facebook", href: "https://facebook.com/hizovo", icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
   { label: "LinkedIn", href: "https://linkedin.com/company/hizovo", icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg> },
 ];
-
-const FooterLinkCol = ({ title, links }: { title: string; links: typeof footerLinks.flights }) => (
-  <div>
-    <h4 className="font-semibold text-sm mb-4 text-primary-foreground/90 flex items-center gap-2">
-      <span className="w-4 h-0.5 bg-primary rounded-full" />
-      {title}
-    </h4>
-    <ul className="space-y-2.5">
-      {links.map((link) => (
-        <li key={link.name}>
-          {'external' in link && (link as any).external ? (
-            <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-foreground/50 hover:text-primary-foreground hover:translate-x-0.5 transition-all inline-flex items-center gap-1">
-              {link.name} <ExternalLink className="w-3 h-3 opacity-50" />
-            </a>
-          ) : (
-            <Link to={link.href} className="text-sm text-primary-foreground/50 hover:text-primary-foreground hover:translate-x-0.5 transition-all inline-block">{link.name}</Link>
-          )}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
 
 const Footer = ({ className }: { className?: string }) => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -92,90 +87,121 @@ const Footer = ({ className }: { className?: string }) => {
   };
 
   return (
-    <footer className={`relative z-30 bg-[#0f1629] text-primary-foreground ${className || ""}`}>
-      <div className="container mx-auto px-4">
-        {/* Main Footer Grid */}
-        <div className="py-14">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-8">
-            {/* Brand Column */}
-            <div className="col-span-2 md:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
-              <Link to="/" className="inline-block mb-4">
-                <ZivoLogo size="md" />
-              </Link>
-              <p className="text-sm text-primary-foreground/40 max-w-xs mb-5">
-                ZIVO is an online travel agency. Book flights, hotels, and car rentals with secure checkout.
-              </p>
-              
-              {/* App Store Badges */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                <button
-                  onClick={() => handleAppStore("App Store")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-[0.97] transition-all text-xs font-medium text-primary-foreground/80 touch-manipulation min-h-[44px]"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-                  App Store
-                </button>
-                <button
-                  onClick={() => handleAppStore("Google Play")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 active:scale-[0.97] transition-all text-xs font-medium text-primary-foreground/80 touch-manipulation min-h-[44px]"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3.609 1.814L13.792 12 3.609 22.186a.996.996 0 01-.609-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.707l2.386 1.381c.906.525.906 1.713 0 2.238l-2.386 1.38-2.538-2.538 2.538-2.461zM5.864 3.457L16.8 9.79l-2.302 2.302L5.864 3.457z"/></svg>
-                  Google Play
-                </button>
-              </div>
+    <footer className={cn("relative z-30 bg-[#0f1629] text-primary-foreground", className)}>
+      {/* Top accent line */}
+      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-              {/* Social */}
-              <div className="flex items-center gap-2.5">
-                {socialLinks.map((social) => (
-                   <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-white/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
-                    aria-label={social.label}
-                  >
-                    {social.icon}
-                  </a>
-                ))}
-              </div>
+      <div className="container mx-auto px-4">
+        {/* Main grid */}
+        <div className="py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Brand column */}
+          <div className="lg:col-span-4 space-y-5">
+            <Link to="/" className="inline-block">
+              <ZivoLogo size="md" />
+            </Link>
+            <p className="text-sm text-primary-foreground/40 max-w-xs leading-relaxed">
+              Book flights, hotels, and car rentals with transparent pricing and secure checkout. Your next adventure starts here.
+            </p>
+
+            {/* App Store */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleAppStore("App Store")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-foreground/10 hover:bg-primary-foreground/15 active:scale-[0.97] transition-all text-xs font-medium text-primary-foreground/80 touch-manipulation min-h-[44px]"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                App Store
+              </button>
+              <button
+                onClick={() => handleAppStore("Google Play")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-foreground/10 hover:bg-primary-foreground/15 active:scale-[0.97] transition-all text-xs font-medium text-primary-foreground/80 touch-manipulation min-h-[44px]"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3.609 1.814L13.792 12 3.609 22.186a.996.996 0 01-.609-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.707l2.386 1.381c.906.525.906 1.713 0 2.238l-2.386 1.38-2.538-2.538 2.538-2.461zM5.864 3.457L16.8 9.79l-2.302 2.302L5.864 3.457z"/></svg>
+                Google Play
+              </button>
             </div>
 
-            <FooterLinkCol title="Flights" links={footerLinks.flights} />
-            <FooterLinkCol title="Hotels" links={footerLinks.hotels} />
-            <FooterLinkCol title="Cars" links={footerLinks.cars} />
-            <FooterLinkCol title="Rides & Eats" links={footerLinks.ridesEats} />
-            <FooterLinkCol title="Company" links={footerLinks.company} />
-            <FooterLinkCol title="Legal" links={footerLinks.legal} />
+            {/* Social */}
+            <div className="flex items-center gap-2">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
+                  aria-label={social.label}
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Link columns */}
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
+            {footerSections.map((section) => (
+              <div key={section.title}>
+                <h4 className="font-semibold text-sm mb-4 text-primary-foreground/80 flex items-center gap-2">
+                  <section.icon className="w-3.5 h-3.5 text-primary/70" />
+                  {section.title}
+                </h4>
+                <ul className="space-y-2.5">
+                  {section.links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        to={link.href}
+                        className="text-sm text-primary-foreground/40 hover:text-primary-foreground hover:translate-x-0.5 transition-all inline-block"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="py-8 border-t border-white/10">
+        {/* Legal links bar */}
+        <div className="py-5 border-t border-primary-foreground/10">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                className="text-xs text-primary-foreground/30 hover:text-primary-foreground/60 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="py-8 border-t border-primary-foreground/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-primary-foreground/40 flex items-center gap-1.5">
-              © {new Date().getFullYear()} ZIVO LLC. Made with <Heart className="w-3.5 h-3.5 text-primary fill-primary" /> for travelers.
+              © {new Date().getFullYear()} ZIVO LLC. Made with{" "}
+              <Heart className="w-3.5 h-3.5 text-primary fill-primary" /> for travelers.
             </p>
 
-            {/* Back to top */}
-             <button
+            <button
               onClick={scrollToTop}
-              className="group/top inline-flex items-center gap-1.5 text-xs text-primary-foreground/40 hover:text-primary px-3 py-1.5 rounded-full border border-white/10 hover:border-primary/30 active:scale-95 transition-all touch-manipulation min-h-[36px]"
+              className="group/top inline-flex items-center gap-1.5 text-xs text-primary-foreground/40 hover:text-primary px-3 py-1.5 rounded-full border border-primary-foreground/10 hover:border-primary/30 active:scale-95 transition-all touch-manipulation min-h-[36px]"
             >
-              <ChevronUp className="w-4 h-4 group-hover/top:-translate-y-0.5 transition-transform" /> Back to Top
+              <ChevronUp className="w-4 h-4 group-hover/top:-translate-y-0.5 transition-transform" />{" "}
+              Back to Top
             </button>
           </div>
-          
+
           {/* OTA Disclosure */}
-          <div className="mt-6 pt-6 border-t border-white/5 text-center space-y-2">
-            <p className="text-xs text-primary-foreground/30 max-w-2xl mx-auto">
+          <div className="mt-6 pt-6 border-t border-primary-foreground/5 text-center space-y-2">
+            <p className="text-xs text-primary-foreground/25 max-w-2xl mx-auto">
               ZIVO is an online travel agency. ZIVO processes payments and issues travel services using authorized suppliers.
             </p>
             <p className="text-xs text-primary-foreground/20 max-w-2xl mx-auto flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-3 h-3 text-primary/60" /> Registered Seller of Travel where required. CA SOT: pending · FL SOT: pending
-            </p>
-            <p className="text-xs text-primary-foreground/20 max-w-2xl mx-auto">
-              Payments are processed securely. Airline and supplier rules apply to all bookings.
             </p>
           </div>
         </div>
