@@ -1,0 +1,86 @@
+/**
+ * ServiceFlowBanner - Cross-service connection banner
+ * Shows how ZIVO services connect together in a seamless flow
+ */
+import { motion } from "framer-motion";
+import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+const flowSteps = [
+  { icon: Plane, label: "Flights", href: "/flights", color: "text-[hsl(var(--flights))]" },
+  { icon: Hotel, label: "Hotels", href: "/hotels", color: "text-[hsl(var(--hotels))]" },
+  { icon: CarFront, label: "Rentals", href: "/rent-car", color: "text-[hsl(var(--cars))]" },
+  { icon: Car, label: "Rides", href: "/rides", color: "text-[hsl(var(--rides))]" },
+  { icon: UtensilsCrossed, label: "Eats", href: "/eats", color: "text-[hsl(var(--eats))]" },
+];
+
+export default function ServiceFlowBanner() {
+  return (
+    <section className="section-padding bg-muted/30">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold text-primary">Connected Experience</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+            One trip, <span className="text-primary">all services</span>
+          </h2>
+          <p className="text-muted-foreground max-w-md mx-auto text-sm">
+            Book your flight, hotel, rental car, ride, and food — all in one seamless flow.
+          </p>
+        </motion.div>
+
+        {/* Flow visualization */}
+        <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap max-w-3xl mx-auto">
+          {flowSteps.map((step, i) => (
+            <motion.div
+              key={step.label}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="flex items-center gap-2 sm:gap-4"
+            >
+              <Link
+                to={step.href}
+                className="group flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl bg-card/80 border border-border/50 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 touch-manipulation active:scale-[0.97]"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <step.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", step.color)} />
+                </div>
+                <span className="text-[11px] sm:text-xs font-semibold">{step.label}</span>
+              </Link>
+              {i < flowSteps.length - 1 && (
+                <ArrowRight className="w-4 h-4 text-muted-foreground/40 hidden sm:block" />
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-8"
+        >
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.97] touch-manipulation"
+          >
+            Start Planning Your Trip
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
