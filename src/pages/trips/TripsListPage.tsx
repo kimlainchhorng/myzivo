@@ -5,13 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal,
+  Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal, Ticket, Clock, CheckCircle, AlertCircle, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
+import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import { format } from "date-fns";
 
 const statusColors: Record<string, string> = {
@@ -23,12 +25,14 @@ const statusColors: Record<string, string> = {
 
 export default function TripsListPage() {
   const { data: trips = [], isLoading } = useTripItineraries();
+  const { data: flightBookings = [], isLoading: bookingsLoading } = useFlightBookings();
   const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
   const navigate = useNavigate();
   const [newTitle, setNewTitle] = useState("");
   const [newDestination, setNewDestination] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("bookings");
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -45,10 +49,10 @@ export default function TripsListPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">My Trips</h1>
-            <p className="text-muted-foreground mt-1">Plan and organize your travel itineraries</p>
+            <p className="text-muted-foreground mt-1">Your bookings and travel plans</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -91,6 +95,90 @@ export default function TripsListPage() {
           </Dialog>
         </div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="bookings" className="gap-2">
+              <Ticket className="w-4 h-4" />
+              Bookings {flightBookings.length > 0 && `(${flightBookings.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="itineraries" className="gap-2">
+              <MapPin className="w-4 h-4" />
+              Itineraries {trips.length > 0 && `(${trips.length})`}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Flight Bookings Tab */}
+          <TabsContent value="bookings">
+            {bookingsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : flightBookings.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                    <Plane className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+                    Search and book flights to see your reservations here.
+                  </p>
+                  <Button onClick={() => navigate('/flights')} className="gap-2">
+                    <Plane className="w-4 h-4" /> Search Flights
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {flightBookings.map((booking: any) => {
+                  const status = getTicketingStatusInfo(booking.ticketing_status);
+                  return (
+                    <motion.div key={booking.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <Card 
+                        className="cursor-pointer hover:border-primary/40 transition-all"
+                        onClick={() => navigate(`/flights/confirmation/${booking.id}?success=true`)}
+                      >
+                        <CardContent className="p-4 sm:p-5">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                <Plane className="w-5 h-5 text-primary" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold truncate">
+                                  {booking.origin || '???'} → {booking.destination || '???'}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {booking.departure_date ? format(new Date(booking.departure_date), "MMM d, yyyy") : 'Date pending'}
+                                  {booking.pnr && ` • PNR: ${booking.pnr}`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <Badge variant="outline" className={cn("text-xs mb-1", 
+                                status.color === 'green' && "border-emerald-500/30 text-emerald-600",
+                                status.color === 'yellow' && "border-amber-500/30 text-amber-600",
+                                status.color === 'blue' && "border-primary/30 text-primary",
+                                status.color === 'red' && "border-destructive/30 text-destructive",
+                              )}>
+                                {status.label}
+                              </Badge>
+                              <p className="text-sm font-bold">
+                                {booking.currency} {Number(booking.total_amount).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Trip Itineraries Tab */}
+          <TabsContent value="itineraries">
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {[1, 2, 3].map((i) => (
@@ -126,6 +214,8 @@ export default function TripsListPage() {
             </AnimatePresence>
           </div>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -631,6 +631,25 @@ const FlightCheckout = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Sticky CTA - visible only on mobile when sidebar is not in view */}
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-lg font-bold">{formatDuffelPrice(finalTotal, offer.currency)}</p>
+            </div>
+            <SecureCheckoutButton
+              onClick={handlePayment}
+              isLoading={createCheckout.isPending}
+              disabled={!termsAccepted || !sotDisclosureAccepted || passengersData.length === 0}
+              variant="flights"
+              buttonText="Pay Now"
+              showSubtext={false}
+              className="flex-1 max-w-[200px]"
+            />
+          </div>
+        </div>
       </main>
 
       <Footer />
