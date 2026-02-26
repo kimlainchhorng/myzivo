@@ -8,6 +8,14 @@ import { OGImageMeta } from "@/components/marketing";
 import { WinBackBanner } from "@/components/home/WinBackBanner";
 import LazySection from "@/components/shared/LazySection";
 import { OrganizationSchema, WebsiteSearchSchema } from "@/components/seo/StructuredData";
+import {
+  CardGridSkeleton,
+  RoutesSkeleton,
+  StepsSkeleton,
+  TestimonialsSkeleton,
+  BannerSkeleton,
+  LogosSkeleton,
+} from "@/components/shared/SectionSkeleton";
 
 // Above-fold components (eager loaded for fast LCP)
 import NavBar from "@/components/home/NavBar";
@@ -33,12 +41,6 @@ const ServiceFlowBanner = lazy(() => import("@/components/home/ServiceFlowBanner
 // Mobile app home
 const AppHome = lazy(() => import("@/pages/app/AppHome"));
 
-const SectionFallback = () => (
-  <div className="min-h-[250px] flex items-center justify-center">
-    <div className="w-7 h-7 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-  </div>
-);
-
 // Desktop version - Premium layout with lazy-loaded below-fold sections
 const DesktopHomePage = () => {
   const { user } = useAuth();
@@ -59,19 +61,19 @@ const DesktopHomePage = () => {
         <ServicesShowcase />
         <StatsSection />
 
-        {/* Below-fold: Lazy loaded with IntersectionObserver */}
-        <LazySection><Suspense fallback={<SectionFallback />}><VideoAdsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><PopularRoutesSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><ServiceFlowBanner /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><DestinationShowcase /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedCarsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedHotelsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><FeaturedEatsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><HowItWorksSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><TestimonialsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><DownloadAppSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<SectionFallback />}><NewsletterSection /></Suspense></LazySection>
+        {/* Below-fold: Lazy loaded with content-aware skeletons */}
+        <LazySection><Suspense fallback={<BannerSkeleton />}><VideoAdsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<RoutesSkeleton />}><PopularRoutesSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<BannerSkeleton />}><ServiceFlowBanner /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<LogosSkeleton />}><PartnerLogosSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<CardGridSkeleton />}><DestinationShowcase /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedCarsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedHotelsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedEatsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<StepsSkeleton />}><HowItWorksSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<TestimonialsSkeleton />}><TestimonialsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<BannerSkeleton />}><DownloadAppSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<BannerSkeleton />}><NewsletterSection /></Suspense></LazySection>
       </main>
 
       <Footer />
