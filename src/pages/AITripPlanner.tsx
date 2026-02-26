@@ -29,6 +29,7 @@ import {
   Sun,
   Cloud,
   Umbrella,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -493,6 +494,128 @@ const AITripPlanner = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* === WAVE 7: AI Trip Planning Intelligence === */}
+          <div className="max-w-3xl mx-auto mt-12 space-y-8">
+            {/* Travel Personality */}
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-500" /> Your Travel Personality</h2>
+              <Card className="border-violet-500/20 bg-violet-500/5">
+                <CardContent className="p-6 text-center">
+                  <div className="text-4xl mb-2">🌍</div>
+                  <p className="text-lg font-bold text-foreground">The Explorer</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">You love discovering new cultures and off-the-beaten-path destinations. You prefer authentic local experiences over tourist hotspots.</p>
+                  <div className="flex flex-wrap gap-2 justify-center mt-3">
+                    {["Culture","Adventure","Foodie","Budget-savvy"].map(t => (
+                      <Badge key={t} className="bg-violet-500/10 text-violet-400 border-0 text-[9px]">{t}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Visa Requirements */}
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-sky-500" /> Visa Quick Check</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { country: "Japan", flag: "🇯🇵", status: "Visa-free", duration: "90 days", color: "text-emerald-500" },
+                  { country: "Thailand", flag: "🇹🇭", status: "Visa on arrival", duration: "30 days", color: "text-amber-500" },
+                  { country: "Brazil", flag: "🇧🇷", status: "E-Visa required", duration: "90 days", color: "text-sky-500" },
+                  { country: "India", flag: "🇮🇳", status: "E-Visa required", duration: "60 days", color: "text-sky-500" },
+                ].map(v => (
+                  <Card key={v.country} className="border-border/40">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <span className="text-xl">{v.flag}</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-foreground">{v.country}</p>
+                        <p className="text-[10px] text-muted-foreground">Stay: {v.duration}</p>
+                      </div>
+                      <Badge className={cn("border-0 text-[8px]", v.color === "text-emerald-500" ? "bg-emerald-500/10 text-emerald-500" : v.color === "text-amber-500" ? "bg-amber-500/10 text-amber-500" : "bg-sky-500/10 text-sky-500")}>{v.status}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-2">* For US passport holders. Verify with embassy before travel.</p>
+            </div>
+
+            {/* Trip Cost Breakdown */}
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><DollarSign className="w-5 h-5 text-emerald-500" /> Average Trip Costs</h2>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {[
+                  { dest: "Paris, France", daily: "$150-250", flight: "$450", hotel: "$120/nt", total: "$1,800", level: "Mid-Range" },
+                  { dest: "Bangkok, Thailand", daily: "$40-80", flight: "$650", hotel: "$35/nt", total: "$1,200", level: "Budget" },
+                  { dest: "Tokyo, Japan", daily: "$100-200", flight: "$800", hotel: "$90/nt", total: "$2,100", level: "Mid-Range" },
+                ].map(c => (
+                  <Card key={c.dest} className="border-border/40">
+                    <CardContent className="p-4">
+                      <p className="text-xs font-bold text-foreground mb-2">{c.dest}</p>
+                      <div className="space-y-1 text-[10px] text-muted-foreground">
+                        <div className="flex justify-between"><span>Daily budget</span><span className="font-bold text-foreground">{c.daily}</span></div>
+                        <div className="flex justify-between"><span>Round-trip flight</span><span>{c.flight}</span></div>
+                        <div className="flex justify-between"><span>Hotel avg</span><span>{c.hotel}</span></div>
+                        <div className="border-t border-border/30 pt-1 mt-1 flex justify-between font-bold text-foreground"><span>7-day total</span><span className="text-primary">{c.total}</span></div>
+                      </div>
+                      <Badge className="mt-2 bg-muted/50 text-foreground border-0 text-[8px]">{c.level}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Travel Tips by Season */}
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Sun className="w-5 h-5 text-amber-500" /> Seasonal Travel Tips</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { season: "Spring (Mar-May)", tip: "Cherry blossoms in Japan, shoulder season in Europe. Book 6 weeks ahead for best prices.", emoji: "🌸" },
+                  { season: "Summer (Jun-Aug)", tip: "Peak prices everywhere. Consider Southeast Asia (low season = fewer crowds + lower prices).", emoji: "☀️" },
+                  { season: "Fall (Sep-Nov)", tip: "Best value for Europe. Fewer crowds, warm weather, harvest festivals.", emoji: "🍂" },
+                  { season: "Winter (Dec-Feb)", tip: "Tropical escapes are hot deals. Ski resorts book 3+ months ahead.", emoji: "❄️" },
+                ].map(s => (
+                  <Card key={s.season} className="border-border/40">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">{s.emoji}</span>
+                        <p className="text-xs font-bold text-foreground">{s.season}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">{s.tip}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Packing Suggestions by Destination Type */}
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Bookmark className="w-5 h-5 text-primary" /> Smart Packing by Trip Type</h2>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {[
+                  { type: "Beach Vacation", must: ["Reef-safe sunscreen","Quick-dry towel","Waterproof phone case","Flip flops"], emoji: "🏖️" },
+                  { type: "City Break", must: ["Comfortable walking shoes","Portable charger","Crossbody bag","Rain jacket"], emoji: "🏙️" },
+                  { type: "Adventure Trip", must: ["First aid kit","Headlamp","Moisture-wicking layers","Water purifier"], emoji: "🏔️" },
+                ].map(p => (
+                  <Card key={p.type} className="border-border/40">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>{p.emoji}</span>
+                        <p className="text-xs font-bold text-foreground">{p.type}</p>
+                      </div>
+                      <div className="space-y-1">
+                        {p.must.map(item => (
+                          <div key={item} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </main>
       

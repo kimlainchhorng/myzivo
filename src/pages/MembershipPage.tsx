@@ -23,6 +23,10 @@ import {
   AlertCircle,
   Loader2,
   ExternalLink,
+  Star,
+  Users,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -455,11 +459,112 @@ export default function MembershipPage() {
             </div>
           </motion.div>
 
+          {/* === WAVE 7: Premium Membership Content === */}
+
+          {/* Member Testimonials */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <h2 className="text-xl font-bold mb-4">What Members Say</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { name: "Jessica R.", quote: "ZIVO+ paid for itself in the first week. Free delivery is a game changer!", rating: 5, savings: "$47/mo" },
+                { name: "David M.", quote: "Priority support saved me during a flight change. Worth every penny.", rating: 5, savings: "$32/mo" },
+                { name: "Aisha K.", quote: "The exclusive deals alone make it worth it. Got 40% off a resort!", rating: 5, savings: "$89/mo" },
+                { name: "Carlos T.", quote: "Reduced service fees add up fast when you travel often.", rating: 4, savings: "$28/mo" },
+              ].map(t => (
+                <Card key={t.name} className="border-border/40">
+                  <CardContent className="p-4">
+                    <div className="flex gap-0.5 mb-2">
+                      {Array.from({ length: t.rating }).map((_, i) => <Star key={i} className="w-3 h-3 text-amber-500 fill-amber-500" />)}
+                    </div>
+                    <p className="text-xs text-muted-foreground italic mb-2">"{t.quote}"</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-foreground">{t.name}</p>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px]">Saves {t.savings}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Membership Comparison */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <h2 className="text-xl font-bold mb-4">Free vs ZIVO+</h2>
+            <Card className="border-border/40 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-3 text-xs">
+                  <div className="p-3 border-b border-r border-border/30 font-bold text-foreground">Feature</div>
+                  <div className="p-3 border-b border-r border-border/30 text-center text-muted-foreground">Free</div>
+                  <div className="p-3 border-b border-border/30 text-center font-bold text-amber-500">ZIVO+</div>
+                  {[
+                    { feature: "Delivery Fee", free: "$2.99-$5.99", plus: "Free" },
+                    { feature: "Service Fee", free: "Full", plus: "50% off" },
+                    { feature: "Support", free: "Standard", plus: "Priority" },
+                    { feature: "Deals", free: "Public", plus: "Exclusive" },
+                    { feature: "Points Bonus", free: "1x", plus: "2x" },
+                    { feature: "Cancel/Change", free: "Standard", plus: "Free" },
+                  ].map(row => (
+                    <>
+                      <div key={row.feature} className="p-2.5 border-b border-r border-border/20 text-[11px] text-foreground">{row.feature}</div>
+                      <div className="p-2.5 border-b border-r border-border/20 text-center text-[11px] text-muted-foreground">{row.free}</div>
+                      <div className="p-2.5 border-b border-border/20 text-center text-[11px] font-bold text-emerald-500">{row.plus}</div>
+                    </>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Usage Stats */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <h2 className="text-xl font-bold mb-4">ZIVO+ by the Numbers</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { stat: "50K+", label: "Active Members", icon: Users },
+                { stat: "$2.4M", label: "Total Saved", icon: DollarSign },
+                { stat: "4.9★", label: "Avg Rating", icon: Star },
+                { stat: "92%", label: "Renewal Rate", icon: TrendingUp },
+              ].map(s => (
+                <Card key={s.label} className="border-border/40">
+                  <CardContent className="p-3 text-center">
+                    <s.icon className="w-5 h-5 mx-auto mb-1 text-amber-500" />
+                    <p className="text-lg font-bold text-foreground">{s.stat}</p>
+                    <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Exclusive Perks Preview */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <h2 className="text-xl font-bold mb-4">This Month's Exclusive Perks</h2>
+            <div className="space-y-2">
+              {[
+                { perk: "30% off Cancún flights", expiry: "Ends Mar 5", tag: "Flights" },
+                { perk: "Free room upgrade at Marriott", expiry: "Ends Mar 10", tag: "Hotels" },
+                { perk: "2x points on all rentals", expiry: "All month", tag: "Cars" },
+                { perk: "Early access: Summer deals", expiry: "Members only", tag: "Deals" },
+              ].map(p => (
+                <Card key={p.perk} className="border-amber-500/15 hover:border-amber-500/25 transition-all">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <Crown className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground">{p.perk}</p>
+                      <p className="text-[10px] text-muted-foreground">{p.expiry}</p>
+                    </div>
+                    <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">{p.tag}</Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Savings Calculator */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.35 }}
           >
             <Card>
               <CardContent className="p-6">
