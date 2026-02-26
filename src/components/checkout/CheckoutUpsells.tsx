@@ -3,6 +3,7 @@
  * Block displaying available add-ons during checkout
  */
 
+import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { FLIGHT_UPSELLS, HOTEL_UPSELLS, CAR_UPSELLS, type UpsellProduct } from "@/config/checkoutUpsells";
 import { cn } from "@/lib/utils";
@@ -33,8 +34,14 @@ export default function CheckoutUpsells({ serviceType, selectedIds, onToggle, cl
         <Sparkles className="h-4 w-4 text-primary" />
         Enhance Your Trip
       </div>
-      {upsells.map((item) => (
-        <label key={item.id} className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+      {upsells.map((item, i) => (
+        <motion.label
+          key={item.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.05 }}
+          className="flex items-start gap-3 p-3 rounded-xl border border-border/50 cursor-pointer hover:bg-muted/50 hover:border-primary/30 transition-all duration-200"
+        >
           <Checkbox
             checked={selectedIds.includes(item.id)}
             onCheckedChange={() => onToggle(item.id)}
@@ -46,7 +53,7 @@ export default function CheckoutUpsells({ serviceType, selectedIds, onToggle, cl
           <span className="text-sm font-semibold whitespace-nowrap">
             +${item.price.toFixed(2)}
           </span>
-        </label>
+        </motion.label>
       ))}
     </div>
   );
