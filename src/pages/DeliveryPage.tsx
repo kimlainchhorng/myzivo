@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -167,6 +167,13 @@ export default function DeliveryPage() {
   const [priorityHandling, setPriorityHandling] = useState(false);
   const [photoAdded, setPhotoAdded] = useState(false);
   const [rateDelivery, setRateDelivery] = useState<number | null>(null);
+  const [returnShipping, setReturnShipping] = useState(false);
+  const [declaredValue, setDeclaredValue] = useState("");
+  const [temperatureSensitive, setTemperatureSensitive] = useState(false);
+  const [businessAccount, setBusinessAccount] = useState(false);
+  const [multiStop, setMultiStop] = useState(false);
+  const [additionalStops, setAdditionalStops] = useState<string[]>([]);
+  const [liveUpdates, setLiveUpdates] = useState(true);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -541,6 +548,99 @@ export default function DeliveryPage() {
                   <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99{packageCount > 1 ? `/pkg` : ""}</p>
                 </div>
               </div>
+
+              {/* Return Shipping */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setReturnShipping(!returnShipping)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", returnShipping ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnShipping ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-violet-500" /> Return shipping label</p>
+                  <p className="text-[10px] text-muted-foreground">Include prepaid return label · +$3.99</p>
+                </div>
+              </div>
+
+              {/* Temperature Sensitive */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setTemperatureSensitive(!temperatureSensitive)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", temperatureSensitive ? "bg-amber-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", temperatureSensitive ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Temperature sensitive</p>
+                  <p className="text-[10px] text-muted-foreground">Keep cool/frozen during transit · +$4.99</p>
+                </div>
+              </div>
+
+              {/* Declared Value */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 space-y-2">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-violet-500" /> Declared value (optional)</p>
+                <Input placeholder="Enter package value in USD" type="number" value={declaredValue} onChange={(e) => setDeclaredValue(e.target.value)} className="h-10 rounded-xl text-sm" />
+                <p className="text-[10px] text-muted-foreground">Higher declared value may increase insurance coverage</p>
+              </div>
+
+              {/* Multi-Stop Delivery */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setMultiStop(!multiStop)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", multiStop ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiStop ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Multi-stop delivery</p>
+                  <p className="text-[10px] text-muted-foreground">Add multiple drop-off locations</p>
+                </div>
+              </div>
+              <AnimatePresence>
+                {multiStop && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden">
+                    {additionalStops.map((stop, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <Input placeholder={`Stop ${i + 2} address`} value={stop}
+                          onChange={(e) => setAdditionalStops(prev => prev.map((s, idx) => idx === i ? e.target.value : s))}
+                          className="h-10 rounded-xl text-sm flex-1" />
+                        <button onClick={() => setAdditionalStops(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-destructive hover:text-destructive/80 touch-manipulation active:scale-90">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <Button variant="outline" size="sm" onClick={() => setAdditionalStops(prev => [...prev, ""])}
+                      className="w-full rounded-xl text-xs font-bold gap-1.5" disabled={additionalStops.length >= 4}>
+                      <Plus className="w-3.5 h-3.5" /> Add stop ({additionalStops.length}/4)
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Live Updates Toggle */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setLiveUpdates(!liveUpdates)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", liveUpdates ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", liveUpdates ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Live tracking updates</p>
+                  <p className="text-[10px] text-muted-foreground">Real-time SMS & push notifications</p>
+                </div>
+              </div>
+
+              {/* Business Account Banner */}
+              <button onClick={() => { setBusinessAccount(!businessAccount); toast.info(businessAccount ? "Switched to personal" : "Business receipts enabled"); }}
+                className="w-full rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-xs font-bold text-foreground">{businessAccount ? "Business Account ✓" : "Business Account"}</p>
+                  <p className="text-[10px] text-muted-foreground">Get itemized receipts & tax invoices</p>
+                </div>
+                <div className={cn("w-10 h-6 rounded-full transition-all relative", businessAccount ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", businessAccount ? "left-[18px]" : "left-0.5")} />
+                </div>
+              </button>
 
               {/* Live price estimate */}
               {selectedSize && (
