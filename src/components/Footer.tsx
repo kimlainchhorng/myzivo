@@ -29,9 +29,9 @@ const footerLinks = {
     { name: "Insurance & Protection", href: "/insurance" },
   ],
   ridesEats: [
-    { name: "ZIVO Rides", href: "https://zivodriver.com/rides", external: true },
-    { name: "ZIVO Eats", href: "https://zivodriver.com/eats", external: true },
-    { name: "ZIVO Move", href: "https://zivodriver.com/move", external: true },
+    { name: "ZIVO Rides", href: "/rides" },
+    { name: "ZIVO Eats", href: "/eats" },
+    { name: "Travel Extras", href: "/extras" },
     { name: "ZIVO Driver", href: "https://zivodriver.com", external: true },
   ],
   company: [

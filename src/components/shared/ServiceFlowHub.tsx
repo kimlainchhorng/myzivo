@@ -37,6 +37,8 @@ const allServices: ServiceStep[] = [
   { id: "flight", label: "Flights", icon: Plane, href: "/flights", color: "text-sky-500", bgColor: "bg-sky-500/10" },
   { id: "hotel", label: "Hotels", icon: Hotel, href: "/hotels", color: "text-amber-500", bgColor: "bg-amber-500/10" },
   { id: "car", label: "Cars", icon: Car, href: "/rent-car", color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
+  { id: "ride", label: "Rides", icon: Car, href: "/rides", color: "text-green-500", bgColor: "bg-green-500/10" },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "text-orange-500", bgColor: "bg-orange-500/10" },
   { id: "activities", label: "Things To Do", icon: Ticket, href: "/things-to-do", color: "text-purple-500", bgColor: "bg-purple-500/10" },
   { id: "insurance", label: "Insurance", icon: Shield, href: "/travel-insurance", color: "text-blue-500", bgColor: "bg-blue-500/10" },
 ];
