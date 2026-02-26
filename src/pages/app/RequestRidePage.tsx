@@ -436,7 +436,17 @@ export default function RequestRidePage() {
   const [showRouteOptions, setShowRouteOptions] = useState(false);
   const [quietZone, setQuietZone] = useState(false);
   const [autoPickupPin, setAutoPickupPin] = useState(true);
-  const [estimatedCO2, setEstimatedCO2] = useState(2.3); // lbs
+  const [estimatedCO2, setEstimatedCO2] = useState(2.3);
+  const [petFriendly, setPetFriendly] = useState(false);
+  const [musicPreference, setMusicPreference] = useState<"none" | "chill" | "pop" | "jazz" | "classical">("none");
+  const [splitFare, setSplitFare] = useState(false);
+  const [splitWith, setSplitWith] = useState(1);
+  const [weatherAlert] = useState(Math.random() > 0.7);
+  const [accessibilityMode, setAccessibilityMode] = useState(false);
+  const [safetyRecording, setSafetyRecording] = useState(false);
+  const [waitTimeGuarantee, setWaitTimeGuarantee] = useState(false);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [rideInsurance, setRideInsurance] = useState(false);
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -718,6 +728,133 @@ export default function RequestRidePage() {
                   <div className="flex-1">
                     <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Smart pickup pin</p>
                     <p className="text-[10px] text-muted-foreground">Auto-adjust to nearest safe pickup spot</p>
+                  </div>
+                </div>
+
+                {/* Weather Alert Banner */}
+                {weatherAlert && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-amber-500">Weather Advisory</p>
+                      <p className="text-[10px] text-muted-foreground">Rain expected — ETAs may be slightly longer</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Pet Friendly */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setPetFriendly(!petFriendly); if (!petFriendly) toast.info("🐾 Pet-friendly ride selected"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", petFriendly ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", petFriendly ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground">🐾 Pet-friendly ride</p>
+                    <p className="text-[10px] text-muted-foreground">Bring your furry friend along · +$3.00</p>
+                  </div>
+                </div>
+
+                {/* Accessibility */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setAccessibilityMode(!accessibilityMode); if (!accessibilityMode) toast.info("♿ Wheelchair-accessible vehicle requested"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", accessibilityMode ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", accessibilityMode ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground">♿ Wheelchair accessible</p>
+                    <p className="text-[10px] text-muted-foreground">Vehicle with ramp or lift</p>
+                  </div>
+                </div>
+
+                {/* Music Preference */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <button onClick={() => setShowMusicPicker(!showMusicPicker)}
+                    className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Music className="w-3.5 h-3.5 text-primary" /> Ride Music</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground capitalize">{musicPreference === "none" ? "No preference" : musicPreference}</span>
+                      <ChevronRight className={cn("w-3 h-3 text-muted-foreground transition-transform", showMusicPicker && "rotate-90")} />
+                    </div>
+                  </button>
+                  <AnimatePresence>
+                    {showMusicPicker && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden">
+                        <div className="flex gap-2 flex-wrap mt-3">
+                          {(["none", "chill", "pop", "jazz", "classical"] as const).map(genre => (
+                            <button key={genre} onClick={() => setMusicPreference(genre)}
+                              className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                                musicPreference === genre ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                              {genre === "none" ? "🔇 Silent" : genre === "chill" ? "🎵 Chill" : genre === "pop" ? "🎤 Pop" : genre === "jazz" ? "🎷 Jazz" : "🎻 Classical"}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Split Fare */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setSplitFare(!splitFare)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", splitFare ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", splitFare ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-primary" /> Split fare</p>
+                      <p className="text-[10px] text-muted-foreground">Split the cost with fellow riders</p>
+                    </div>
+                  </div>
+                  {splitFare && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] text-muted-foreground">Split with:</span>
+                      {[1, 2, 3, 4].map(n => (
+                        <button key={n} onClick={() => setSplitWith(n)}
+                          className={cn("w-8 h-8 rounded-full text-xs font-bold transition-all touch-manipulation",
+                            splitWith === n ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                          {n + 1}
+                        </button>
+                      ))}
+                      <span className="text-[10px] text-muted-foreground ml-1">people</span>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Safety Recording */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setSafetyRecording(!safetyRecording); if (!safetyRecording) toast.success("🛡️ Trip recording enabled for safety"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", safetyRecording ? "bg-emerald-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", safetyRecording ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-500" /> Safety audio recording</p>
+                    <p className="text-[10px] text-muted-foreground">Record trip audio for safety verification</p>
+                  </div>
+                </div>
+
+                {/* Ride Insurance */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setRideInsurance(!rideInsurance)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", rideInsurance ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", rideInsurance ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-sky-500" /> Trip protection</p>
+                    <p className="text-[10px] text-muted-foreground">Personal accident cover · +$1.99</p>
+                  </div>
+                </div>
+
+                {/* Wait Time Guarantee */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setWaitTimeGuarantee(!waitTimeGuarantee); if (!waitTimeGuarantee) toast.info("⏱️ Driver will wait up to 5 min free"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", waitTimeGuarantee ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", waitTimeGuarantee ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Extended wait guarantee</p>
+                    <p className="text-[10px] text-muted-foreground">5 min free wait at pickup · +$0.99</p>
                   </div>
                 </div>
 

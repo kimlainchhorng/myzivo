@@ -3,7 +3,7 @@
  * Premium glassmorphism style matching the ZIVO super-app
  */
 import { useState, useEffect } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight } from "lucide-react";
+import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight, Users, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -286,6 +286,16 @@ export default function EatsLanding() {
   const [driverTipSplit, setDriverTipSplit] = useState(false);
   const [curbsidePickup, setCurbsidePickup] = useState(false);
   const [reorderSuggestion, setReorderSuggestion] = useState(true);
+  const [splitBill, setSplitBill] = useState(false);
+  const [splitBillCount, setSplitBillCount] = useState(2);
+  const [mealCombo, setMealCombo] = useState(false);
+  const [loyaltyStamps, setLoyaltyStamps] = useState(7); // out of 10
+  const [showQA, setShowQA] = useState(false);
+  const [liveTrackingStep, setLiveTrackingStep] = useState(0);
+  const [substitutePreference, setSubstitutePreference] = useState<"contact" | "similar" | "refund">("contact");
+  const [tableReservation, setTableReservation] = useState(false);
+  const [mealPlanActive, setMealPlanActive] = useState(false);
+  const [nutritionMode, setNutritionMode] = useState(false);
   const totalCalories = cart.reduce((sum, item) => {
     const restaurant = restaurants.find(r => r.id === item.restaurantId);
     const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
@@ -1038,6 +1048,95 @@ export default function EatsLanding() {
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
                 <button onClick={() => setEcoPackaging(!ecoPackaging)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", ecoPackaging ? "bg-emerald-500" : "bg-muted/60")}>
+
+              {/* Split Bill */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setSplitBill(!splitBill)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", splitBill ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", splitBill ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-primary" /> Split the bill</p>
+                    <p className="text-[10px] text-muted-foreground">Divide equally among friends</p>
+                  </div>
+                </div>
+                {splitBill && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] text-muted-foreground">Split with:</span>
+                    {[2, 3, 4, 5].map(n => (
+                      <button key={n} onClick={() => setSplitBillCount(n)}
+                        className={cn("w-8 h-8 rounded-full text-xs font-bold transition-all touch-manipulation",
+                          splitBillCount === n ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                        {n}
+                      </button>
+                    ))}
+                    <span className="text-[10px] text-primary font-bold ml-auto">${(cartTotal / splitBillCount).toFixed(2)} each</span>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Loyalty Stamps */}
+              <div className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-500" /> Loyalty Stamps</p>
+                  <span className="text-[10px] text-primary font-bold">{loyaltyStamps}/10</span>
+                </div>
+                <div className="flex gap-1.5">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all",
+                      i < loyaltyStamps ? "bg-amber-500 text-white" : "bg-muted/40 text-muted-foreground/40")}>
+                      {i < loyaltyStamps ? "★" : "☆"}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">{10 - loyaltyStamps} more orders for a free meal! 🎉</p>
+              </div>
+
+              {/* Substitute Preference */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <RefreshCw className="w-3 h-3" /> If item unavailable
+                </h3>
+                <div className="flex gap-2">
+                  {([
+                    { id: "contact" as const, label: "Contact me", icon: "📱" },
+                    { id: "similar" as const, label: "Similar item", icon: "🔄" },
+                    { id: "refund" as const, label: "Refund", icon: "💰" },
+                  ]).map(opt => (
+                    <button key={opt.id} onClick={() => setSubstitutePreference(opt.id)}
+                      className={cn("flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                        substitutePreference === opt.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      <span>{opt.icon}</span>
+                      <span className="text-[10px]">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nutrition Mode */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setNutritionMode(!nutritionMode)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", nutritionMode ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", nutritionMode ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">🥗 Nutrition tracking mode</p>
+                  <p className="text-[10px] text-muted-foreground">Show detailed macros & vitamins for each item</p>
+                </div>
+              </div>
+
+              {/* Meal Plan */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setMealPlanActive(!mealPlanActive); if (!mealPlanActive) toast.success("📋 Meal plan activated! Save 15% on weekly orders"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", mealPlanActive ? "bg-primary" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", mealPlanActive ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> Weekly meal plan</p>
+                  <p className="text-[10px] text-muted-foreground">Subscribe & save 15% on 5+ orders/week</p>
+                </div>
+              </div>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", ecoPackaging ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">

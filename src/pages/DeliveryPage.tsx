@@ -210,6 +210,19 @@ export default function DeliveryPage() {
   const [giftWrapping, setGiftWrapping] = useState(false);
   const [carbonNeutral, setCarbonNeutral] = useState(false);
   const [deliveryWindow, setDeliveryWindow] = useState("anytime");
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchPackages, setBatchPackages] = useState<Array<{size: string; weight: string}>>([]);
+  const [deliveryProofRequired, setDeliveryProofRequired] = useState(false);
+  const [qrTracking, setQrTracking] = useState(true);
+  const [customsDeclaration, setCustomsDeclaration] = useState(false);
+  const [contentDescription, setContentDescription] = useState("");
+  const [contactlessDelivery, setContactlessDelivery] = useState(false);
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [signatureType, setSignatureType] = useState<"any" | "recipient" | "adult">("any");
+  const [showDeliveryAnalytics, setShowDeliveryAnalytics] = useState(false);
+  const [deliveryCount] = useState(12); // total past deliveries
+  const [avgDeliveryTime] = useState("2.4 hrs");
+  const [onTimeRate] = useState(96);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -861,6 +874,31 @@ export default function DeliveryPage() {
                   {deliveryNote && (
                     <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
                       <MessageSquare className="w-3 h-3" /> Note
+                    </span>
+                  )}
+                  {requirePhotoId && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <Users className="w-3 h-3" /> Photo ID
+                    </span>
+                  )}
+                  {giftWrapping && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <Gift className="w-3 h-3" /> Gift Wrapped
+                    </span>
+                  )}
+                  {carbonNeutral && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                      <Zap className="w-3 h-3" /> Carbon Neutral
+                    </span>
+                  )}
+                  {contactlessDelivery && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-full">
+                      <Shield className="w-3 h-3" /> Contactless
+                    </span>
+                  )}
+                  {recurringSchedule !== "none" && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <RefreshCw className="w-3 h-3" /> {recurringSchedule}
                     </span>
                   )}
                   {packageCount > 1 && (
