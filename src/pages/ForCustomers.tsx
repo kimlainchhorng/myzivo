@@ -32,10 +32,10 @@ const fadeIn = {
 const services = [
   { icon: Plane, label: "Search Flights", desc: "Compare fares from 500+ airlines worldwide", link: "/flights" },
   { icon: Hotel, label: "Compare Hotels", desc: "Find the best stay at the best price", link: "/hotels" },
-  { icon: Car, label: "Rent Cars", desc: "Pick up and drop off anywhere", link: "/cars" },
-  { icon: UtensilsCrossed, label: "Order Food", desc: "Delivery from restaurants near you", link: "/eats" },
-  { icon: Package, label: "Send Packages", desc: "Fast same-day package delivery", link: "/package-delivery" },
-  { icon: Search, label: "Book Rides", desc: "Get where you need to go, affordably", link: "/rides" },
+  { icon: Car, label: "Rent Cars", desc: "Pick up and drop off anywhere", link: "/rent-car" },
+  { icon: UtensilsCrossed, label: "Activities", desc: "Discover things to do at your destination", link: "/things-to-do" },
+  { icon: Package, label: "Travel Extras", desc: "Insurance, transfers & more", link: "/extras" },
+  { icon: Search, label: "Travel Insurance", desc: "Protect your trip from the unexpected", link: "/travel-insurance" },
 ];
 
 const benefits = [

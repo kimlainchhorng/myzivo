@@ -14,30 +14,10 @@ import { Badge } from "@/components/ui/badge";
 
 const services = [
   { 
-    id: "rides", 
-    label: "Rides", 
-    icon: Car, 
-    href: "/ride",
-    color: "from-emerald-500 to-teal-500",
-    bgColor: "bg-emerald-500/10",
-    textColor: "text-emerald-500",
-    badge: null
-  },
-  { 
-    id: "food", 
-    label: "Food", 
-    icon: Utensils, 
-    href: "/food",
-    color: "from-orange-500 to-amber-500",
-    bgColor: "bg-orange-500/10",
-    textColor: "text-orange-500",
-    badge: null
-  },
-  { 
     id: "flights", 
     label: "Flights", 
     icon: Plane, 
-    href: "/book-flight",
+    href: "/flights",
     color: "from-sky-500 to-blue-500",
     bgColor: "bg-sky-500/10",
     textColor: "text-sky-500",
@@ -47,7 +27,7 @@ const services = [
     id: "hotels", 
     label: "Hotels", 
     icon: Building2, 
-    href: "/book-hotel",
+    href: "/hotels",
     color: "from-amber-500 to-yellow-500",
     bgColor: "bg-amber-500/10",
     textColor: "text-amber-500",
@@ -64,30 +44,10 @@ const services = [
     badge: null
   },
   { 
-    id: "packages", 
-    label: "Packages", 
-    icon: Package, 
-    href: "/package-delivery",
-    color: "from-rose-500 to-pink-500",
-    bgColor: "bg-rose-500/10",
-    textColor: "text-rose-500",
-    badge: "New"
-  },
-  { 
-    id: "transport", 
-    label: "Transport", 
-    icon: Train, 
-    href: "/ground-transport",
-    color: "from-indigo-500 to-blue-500",
-    bgColor: "bg-indigo-500/10",
-    textColor: "text-indigo-500",
-    badge: null
-  },
-  { 
-    id: "events", 
-    label: "Events", 
+    id: "activities", 
+    label: "Activities", 
     icon: Ticket, 
-    href: "/events",
+    href: "/things-to-do",
     color: "from-fuchsia-500 to-pink-500",
     bgColor: "bg-fuchsia-500/10",
     textColor: "text-fuchsia-500",

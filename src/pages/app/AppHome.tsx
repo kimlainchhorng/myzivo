@@ -105,12 +105,12 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, onSeeAll }: { icon
 
 // ─── Quick Actions Grid (3x2 - Ultra Premium) ───
 const quickActions = [
-  { label: "Ride", icon: Car, href: "/rides", gradient: "from-emerald-500 to-teal-600", bg: "bg-emerald-500/8", iconBg: "bg-gradient-to-br from-emerald-400/25 to-emerald-600/15", color: "text-emerald-600 dark:text-emerald-400", accent: "bg-emerald-500", tagline: "Get there fast" },
-  { label: "Eats", icon: UtensilsCrossed, href: "/eats", gradient: "from-orange-500 to-red-500", bg: "bg-orange-500/8", iconBg: "bg-gradient-to-br from-orange-400/25 to-orange-600/15", color: "text-orange-600 dark:text-orange-400", accent: "bg-orange-500", tagline: "Crave. Tap. Eat." },
-  { label: "Delivery", icon: Package, href: "/move", gradient: "from-violet-500 to-purple-600", bg: "bg-violet-500/8", iconBg: "bg-gradient-to-br from-violet-400/25 to-violet-600/15", color: "text-violet-600 dark:text-violet-400", accent: "bg-violet-500", tagline: "Send anything" },
-  { label: "Flights", icon: Plane, href: "/search?tab=flights", gradient: "from-sky-500 to-blue-600", bg: "bg-sky-500/8", iconBg: "bg-gradient-to-br from-sky-400/25 to-sky-600/15", color: "text-sky-600 dark:text-sky-400", accent: "bg-sky-500", tagline: "Best deals" },
-  { label: "Hotels", icon: BedDouble, href: "/search?tab=hotels", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-500/8", iconBg: "bg-gradient-to-br from-amber-400/25 to-amber-600/15", color: "text-amber-600 dark:text-amber-400", accent: "bg-amber-500", tagline: "Stay in style" },
+  { label: "Flights", icon: Plane, href: "/flights", gradient: "from-sky-500 to-blue-600", bg: "bg-sky-500/8", iconBg: "bg-gradient-to-br from-sky-400/25 to-sky-600/15", color: "text-sky-600 dark:text-sky-400", accent: "bg-sky-500", tagline: "Best deals" },
+  { label: "Hotels", icon: BedDouble, href: "/hotels", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-500/8", iconBg: "bg-gradient-to-br from-amber-400/25 to-amber-600/15", color: "text-amber-600 dark:text-amber-400", accent: "bg-amber-500", tagline: "Stay in style" },
   { label: "Rentals", icon: Car, href: "/rent-car", gradient: "from-teal-500 to-cyan-600", bg: "bg-teal-500/8", iconBg: "bg-gradient-to-br from-teal-400/25 to-teal-600/15", color: "text-teal-600 dark:text-teal-400", accent: "bg-teal-500", tagline: "Drive free" },
+  { label: "Activities", icon: UtensilsCrossed, href: "/things-to-do", gradient: "from-orange-500 to-red-500", bg: "bg-orange-500/8", iconBg: "bg-gradient-to-br from-orange-400/25 to-orange-600/15", color: "text-orange-600 dark:text-orange-400", accent: "bg-orange-500", tagline: "Explore more" },
+  { label: "Extras", icon: Package, href: "/extras", gradient: "from-violet-500 to-purple-600", bg: "bg-violet-500/8", iconBg: "bg-gradient-to-br from-violet-400/25 to-violet-600/15", color: "text-violet-600 dark:text-violet-400", accent: "bg-violet-500", tagline: "Travel extras" },
+  { label: "Insurance", icon: Car, href: "/travel-insurance", gradient: "from-emerald-500 to-teal-600", bg: "bg-emerald-500/8", iconBg: "bg-gradient-to-br from-emerald-400/25 to-emerald-600/15", color: "text-emerald-600 dark:text-emerald-400", accent: "bg-emerald-500", tagline: "Stay protected" },
 ];
 
 // ─── Promo banners ───

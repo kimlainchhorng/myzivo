@@ -296,6 +296,16 @@ const App = () => (
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
+                <Route path="/ride" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/rides" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/food" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/eats" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/move" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/package-delivery" element={<PreserveQueryRedirect to="/extras" />} />
+                <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
+                <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
+                <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
 
                 {/* Flights */}
                 <Route path="/flights" element={<FlightLanding />} />
