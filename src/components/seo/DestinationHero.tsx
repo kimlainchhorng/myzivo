@@ -80,7 +80,7 @@ export default function DestinationHero({
           <div className="absolute inset-0">
             <img
               src={backgroundImage}
-              alt=""
+              alt={`${title} destination`}
               className="w-full h-full object-cover"
               loading="eager"
             />
