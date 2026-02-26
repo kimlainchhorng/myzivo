@@ -36,7 +36,7 @@ export default function FeaturedHotelsSection() {
   };
 
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-16 sm:py-20" aria-label="Featured hotels">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -70,14 +70,14 @@ export default function FeaturedHotelsSection() {
                 className="group block rounded-2xl bg-card border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                  <img src={hotel.image} alt={`${hotel.name} — ${hotel.location}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
                   <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg">
                     ${hotel.price}<span className="text-xs font-normal opacity-80">/night</span>
                   </div>
                   <button
                     onClick={(e) => toggleSave(e, hotel.name)}
-                    className="absolute top-3 left-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
+                    className="absolute top-3 left-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
                     aria-label={`Save ${hotel.name}`}
                   >
                     <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-destructive fill-current" : "text-foreground"}`} />
