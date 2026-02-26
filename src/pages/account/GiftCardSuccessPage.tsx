@@ -50,9 +50,9 @@ export default function GiftCardSuccessPage() {
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <p className="text-zinc-400">Invalid session. Please try again.</p>
+          <p className="text-muted-foreground">Invalid session. Please try again.</p>
           <Button variant="ghost" onClick={() => navigate("/account/gift-cards")} className="mt-4 text-primary">
             Go to Gift Cards
           </Button>
@@ -62,15 +62,15 @@ export default function GiftCardSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="Gift Card Purchased — ZIVO" description="Your ZIVO gift card is ready" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate("/account/gift-cards")}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -83,11 +83,11 @@ export default function GiftCardSuccessPage() {
         {verifyPurchase.isPending ? (
           <div className="text-center py-20">
             <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-zinc-400">Verifying your purchase...</p>
+            <p className="text-muted-foreground">Verifying your purchase...</p>
           </div>
         ) : verifyPurchase.isError ? (
           <div className="text-center py-20">
-            <p className="text-red-400 mb-4">Something went wrong verifying your purchase.</p>
+            <p className="text-destructive mb-4">Something went wrong verifying your purchase.</p>
             <Button variant="ghost" onClick={() => navigate("/account/gift-cards")} className="text-primary">
               Go to Gift Cards
             </Button>
@@ -106,10 +106,10 @@ export default function GiftCardSuccessPage() {
                 transition={{ type: "spring", delay: 0.2 }}
                 className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4"
               >
-                <Check className="w-10 h-10 text-emerald-400" />
+                <Check className="w-10 h-10 text-emerald-500" />
               </motion.div>
               <h2 className="text-2xl font-bold mb-1">Gift Card Ready!</h2>
-              <p className="text-zinc-400">
+              <p className="text-muted-foreground">
                 {giftCard.recipient_email
                   ? `Sent to ${giftCard.recipient_name || giftCard.recipient_email}`
                   : "Your gift card is ready to use"}
@@ -117,43 +117,43 @@ export default function GiftCardSuccessPage() {
             </div>
 
             {/* Gift Card Display */}
-            <div className="bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/30 rounded-3xl p-6">
+            <div className="bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/30 rounded-3xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Gift className="w-6 h-6 text-primary" />
-                <span className="text-sm text-zinc-400">ZIVO Gift Card</span>
+                <span className="text-sm text-muted-foreground">ZIVO Gift Card</span>
               </div>
               <p className="text-4xl font-bold text-center mb-4">
                 ${giftCard.amount.toFixed(2)}
               </p>
 
               {/* Code */}
-              <div className="bg-zinc-900/80 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-muted/50 rounded-xl p-4 flex items-center justify-between">
                 <span className="font-mono text-lg tracking-wider">{giftCard.code}</span>
                 <button
                   onClick={copyCode}
-                  className="p-2 rounded-xl hover:bg-zinc-800 transition-colors"
+                  className="p-2 rounded-xl hover:bg-muted transition-colors"
                 >
                   {copied ? (
-                    <Check className="w-5 h-5 text-emerald-400" />
+                    <Check className="w-5 h-5 text-emerald-500" />
                   ) : (
-                    <Copy className="w-5 h-5 text-zinc-400" />
+                    <Copy className="w-5 h-5 text-muted-foreground" />
                   )}
                 </button>
               </div>
 
               {giftCard.message && (
-                <p className="text-sm text-zinc-300 mt-4 italic text-center">"{giftCard.message}"</p>
+                <p className="text-sm text-muted-foreground mt-4 italic text-center">"{giftCard.message}"</p>
               )}
             </div>
 
             {/* Actions */}
             <div className="space-y-3">
               {giftCard.recipient_email ? (
-                <div className="bg-zinc-900/80 border border-white/5 rounded-xl p-4 flex items-center gap-3">
+                <div className="bg-card border border-border/50 rounded-xl p-4 flex items-center gap-3">
                   <Send className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium text-sm">Gift card sent!</p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       The recipient will receive the code at {giftCard.recipient_email}
                     </p>
                   </div>
@@ -161,7 +161,7 @@ export default function GiftCardSuccessPage() {
               ) : (
                 <Button
                   onClick={() => navigate("/account/gift-cards?tab=redeem")}
-                  className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold"
+                  className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-primary-foreground"
                 >
                   <Ticket className="w-5 h-5 mr-2" />
                   Redeem Now
@@ -180,7 +180,7 @@ export default function GiftCardSuccessPage() {
               <Button
                 variant="ghost"
                 onClick={() => navigate("/account/gift-cards")}
-                className="w-full text-zinc-400"
+                className="w-full text-muted-foreground"
               >
                 Buy Another Gift Card
               </Button>

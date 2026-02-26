@@ -89,10 +89,10 @@ export default function GiftCardsPage() {
   };
 
   const getCardStatus = (card: GiftCard): { label: string; color: string } => {
-    if (card.current_balance <= 0) return { label: "Redeemed", color: "text-zinc-500" };
-    if (card.expires_at && new Date(card.expires_at) < new Date()) return { label: "Expired", color: "text-red-400" };
-    if (card.is_active) return { label: "Active", color: "text-emerald-400" };
-    return { label: "Pending", color: "text-amber-400" };
+    if (card.current_balance <= 0) return { label: "Redeemed", color: "text-muted-foreground" };
+    if (card.expires_at && new Date(card.expires_at) < new Date()) return { label: "Expired", color: "text-destructive" };
+    if (card.is_active) return { label: "Active", color: "text-emerald-500" };
+    return { label: "Pending", color: "text-amber-500" };
   };
 
   const AmountSelector = () => (
@@ -104,7 +104,7 @@ export default function GiftCardsPage() {
           className={`py-3 rounded-xl font-bold text-lg transition-all ${
             selectedAmount === amt.cents
               ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-              : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
           {amt.label}
@@ -119,35 +119,35 @@ export default function GiftCardsPage() {
         placeholder="Recipient's name"
         value={recipientName}
         onChange={(e) => setRecipientName(e.target.value)}
-        className="h-12 rounded-xl bg-zinc-800 border-zinc-700"
+        className="h-12 rounded-xl bg-muted border-border"
       />
       <Input
         placeholder={`Recipient's email${required ? " *" : " (optional)"}`}
         type="email"
         value={recipientEmail}
         onChange={(e) => setRecipientEmail(e.target.value)}
-        className="h-12 rounded-xl bg-zinc-800 border-zinc-700"
+        className="h-12 rounded-xl bg-muted border-border"
       />
       <textarea
         placeholder="Add a personal message (optional)"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         rows={3}
-        className="w-full rounded-xl bg-zinc-800 border border-zinc-700 p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="w-full rounded-xl bg-muted border border-border p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
       />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="Gift Cards — ZIVO" description="Buy, send, and redeem ZIVO gift cards" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -161,18 +161,18 @@ export default function GiftCardsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-primary/20 to-zinc-900 border border-primary/30 rounded-3xl p-6 text-center"
+          className="bg-gradient-to-br from-primary/20 to-card border border-primary/30 rounded-3xl p-6 text-center"
         >
           <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
             <Gift className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-xl font-bold mb-1">ZIVO Gift Cards</h2>
-          <p className="text-sm text-zinc-400">Give the gift of travel. Redeemable for wallet credits.</p>
+          <p className="text-sm text-muted-foreground">Give the gift of travel. Redeemable for wallet credits.</p>
         </motion.div>
 
         {/* Tabs */}
         <Tabs defaultValue="buy" className="space-y-4">
-          <TabsList className="w-full bg-zinc-900 border border-white/5 rounded-xl h-12 p-1">
+          <TabsList className="w-full bg-muted border border-border/50 rounded-xl h-12 p-1">
             <TabsTrigger value="buy" className="flex-1 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5">
               <CreditCard className="w-4 h-4" />
               Buy
@@ -189,14 +189,14 @@ export default function GiftCardsPage() {
 
           {/* Buy Tab */}
           <TabsContent value="buy" className="space-y-4">
-            <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-5 space-y-5">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-5">
               <h3 className="font-bold">Select Amount</h3>
               <AmountSelector />
               <RecipientFields required={false} />
               <Button
                 onClick={() => handlePurchase(false)}
                 disabled={purchaseGiftCard.isPending}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white font-bold"
+                className="w-full h-12 rounded-xl font-bold"
               >
                 {purchaseGiftCard.isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -205,7 +205,7 @@ export default function GiftCardsPage() {
                 )}
                 Purchase ${(selectedAmount / 100).toFixed(0)} Gift Card
               </Button>
-              <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="w-4 h-4" />
                 Secure payment powered by Stripe
               </div>
@@ -214,20 +214,20 @@ export default function GiftCardsPage() {
 
           {/* Send Tab */}
           <TabsContent value="send" className="space-y-4">
-            <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-5 space-y-5">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-5">
               <h3 className="font-bold">Send a Gift Card</h3>
               <AmountSelector />
               <RecipientFields required={true} />
 
               {/* Preview */}
               {(recipientName || recipientEmail) && (
-                <div className="bg-zinc-800/50 border border-white/5 rounded-xl p-4">
-                  <p className="text-xs text-zinc-500 mb-2">Preview</p>
-                  <div className="bg-gradient-to-br from-primary/10 to-teal-500/10 rounded-xl p-4 border border-primary/20">
+                <div className="bg-muted/50 border border-border/50 rounded-xl p-4">
+                  <p className="text-xs text-muted-foreground mb-2">Preview</p>
+                  <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-4 border border-primary/20">
                     <Gift className="w-6 h-6 text-primary mb-2" />
                     <p className="font-bold">${(selectedAmount / 100).toFixed(0)} ZIVO Gift Card</p>
-                    {recipientName && <p className="text-sm text-zinc-300">To: {recipientName}</p>}
-                    {message && <p className="text-sm text-zinc-400 mt-2 italic">"{message}"</p>}
+                    {recipientName && <p className="text-sm text-muted-foreground">To: {recipientName}</p>}
+                    {message && <p className="text-sm text-muted-foreground mt-2 italic">"{message}"</p>}
                   </div>
                 </div>
               )}
@@ -235,7 +235,7 @@ export default function GiftCardsPage() {
               <Button
                 onClick={() => handlePurchase(true)}
                 disabled={purchaseGiftCard.isPending}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white font-bold"
+                className="w-full h-12 rounded-xl font-bold"
               >
                 {purchaseGiftCard.isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -249,7 +249,7 @@ export default function GiftCardsPage() {
 
           {/* Redeem Tab */}
           <TabsContent value="redeem" className="space-y-4">
-            <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-5 space-y-5">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-5">
               <h3 className="font-bold">Redeem a Gift Card</h3>
               <Input
                 placeholder="ZIVO-XXXX-XXXX"
@@ -258,13 +258,13 @@ export default function GiftCardsPage() {
                   setRedeemCode(e.target.value.toUpperCase());
                   setRedeemResult(null);
                 }}
-                className="h-12 rounded-xl bg-zinc-800 border-zinc-700 text-center font-mono text-lg tracking-wider"
+                className="h-12 rounded-xl bg-muted border-border text-center font-mono text-lg tracking-wider"
                 maxLength={14}
               />
               <Button
                 onClick={handleRedeem}
                 disabled={redeemGiftCard.isPending || !redeemCode.trim()}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold"
+                className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-primary-foreground"
               >
                 {redeemGiftCard.isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -282,12 +282,12 @@ export default function GiftCardsPage() {
                   className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 text-center"
                 >
                   <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                    <Check className="w-6 h-6 text-emerald-400" />
+                    <Check className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <p className="text-lg font-bold text-emerald-400">
+                  <p className="text-lg font-bold text-emerald-500">
                     ${redeemResult.credited.toFixed(2)} Added!
                   </p>
-                  <p className="text-sm text-zinc-400 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     New wallet balance: ${redeemResult.newBalance.toFixed(2)}
                   </p>
                   <Button
@@ -314,14 +314,14 @@ export default function GiftCardsPage() {
           {cardsLoading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
-                <div key={i} className="h-20 bg-zinc-900/80 rounded-xl animate-pulse" />
+                <div key={i} className="h-20 bg-muted/50 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : myGiftCards.length === 0 ? (
-            <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-8 text-center">
-              <Gift className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500">No gift cards yet</p>
-              <p className="text-sm text-zinc-600 mt-1">Buy or redeem a gift card to get started</p>
+            <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
+              <Gift className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+              <p className="text-muted-foreground">No gift cards yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Buy or redeem a gift card to get started</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -330,7 +330,7 @@ export default function GiftCardsPage() {
                 return (
                   <div
                     key={card.id}
-                    className="bg-zinc-900/80 border border-white/5 rounded-xl p-4"
+                    className="bg-card border border-border/50 rounded-xl p-4"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -338,19 +338,19 @@ export default function GiftCardsPage() {
                         <span className="font-mono text-sm">{card.code}</span>
                         <button
                           onClick={() => copyCode(card.code, card.id)}
-                          className="p-1 rounded hover:bg-zinc-800"
+                          className="p-1 rounded hover:bg-muted"
                         >
                           {copiedId === card.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5 text-zinc-500" />
+                            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                           )}
                         </button>
                       </div>
                       <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">
+                      <span className="text-muted-foreground">
                         ${card.initial_balance.toFixed(2)} card
                         {card.recipient_email ? ` → ${card.recipient_email}` : ""}
                       </span>
@@ -358,7 +358,7 @@ export default function GiftCardsPage() {
                         ${card.current_balance.toFixed(2)} left
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-600 mt-1">
+                    <p className="text-xs text-muted-foreground/60 mt-1">
                       {format(new Date(card.created_at), "MMM d, yyyy")}
                     </p>
                   </div>
