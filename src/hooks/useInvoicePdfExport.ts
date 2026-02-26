@@ -242,7 +242,7 @@ export function useInvoicePdfExport() {
   const exportToPDF = (data: InvoicePdfData) => {
     try {
       const htmlContent = generateInvoiceHTML(data);
-      const printWindow = window.open("", "_blank");
+      const printWindow = window.open("", "_blank", "noopener,noreferrer");
       if (printWindow) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();

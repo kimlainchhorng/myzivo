@@ -18,15 +18,16 @@ const SocialProofTicker = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    let fadeTimeout: ReturnType<typeof setTimeout>;
     const interval = setInterval(() => {
       setIsVisible(false);
-      setTimeout(() => {
+      fadeTimeout = setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % bookingActivities.length);
         setIsVisible(true);
       }, 300);
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); clearTimeout(fadeTimeout); };
   }, []);
 
   const activity = bookingActivities[currentIndex];
