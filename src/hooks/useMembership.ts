@@ -261,7 +261,7 @@ export function useOpenCustomerPortal() {
       return data as { url: string };
     },
     onSuccess: (data) => {
-      window.open(data.url, "_blank");
+      window.open(data.url, "_blank", "noopener,noreferrer");
     },
     onError: (error: Error) => {
       toast.error(error.message);

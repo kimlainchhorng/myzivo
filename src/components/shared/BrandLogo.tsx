@@ -43,6 +43,7 @@ export function BrandLogo({ size = "md", showText = true, className }: BrandLogo
           src={brand.logoUrl}
           alt={brand.name}
           className={cn("object-contain rounded-xl", sizes.icon)}
+          loading="lazy"
         />
         {showText && (
           <span className={cn("font-bold tracking-tight text-foreground", sizes.text)}>
