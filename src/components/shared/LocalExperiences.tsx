@@ -1,4 +1,4 @@
-import { Calendar, Sparkles, ArrowRight, Star, ExternalLink } from "lucide-react";
+import { Calendar, Sparkles, ArrowRight, Star, ExternalLink, ChefHat, Footprints, Wine, Camera } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT, openAffiliateLink } from "@/config/affiliateLinks";
@@ -10,7 +10,9 @@ const experiences = [
     duration: "3 hours",
     rating: 4.9,
     price: 89,
-    image: "🍳",
+    icon: ChefHat,
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
   },
   {
     title: "City Walking Tour",
@@ -18,7 +20,9 @@ const experiences = [
     duration: "4 hours",
     rating: 4.8,
     price: 45,
-    image: "🚶",
+    icon: Footprints,
+    color: "text-sky-500",
+    bg: "bg-sky-500/10",
   },
   {
     title: "Wine Tasting",
@@ -26,7 +30,9 @@ const experiences = [
     duration: "2 hours",
     rating: 4.7,
     price: 65,
-    image: "🍷",
+    icon: Wine,
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
   },
   {
     title: "Photography Tour",
@@ -34,7 +40,9 @@ const experiences = [
     duration: "3 hours",
     rating: 4.9,
     price: 75,
-    image: "📸",
+    icon: Camera,
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
   },
 ];
 
@@ -65,8 +73,8 @@ const LocalExperiences = () => {
               onClick={handleBookExperience}
               className="group p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-pink-500/50 transition-all cursor-pointer"
             >
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
-                {exp.image}
+              <div className={`w-14 h-14 rounded-2xl ${exp.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <exp.icon className={`w-7 h-7 ${exp.color}`} />
               </div>
               <Badge className="mb-2 text-xs" variant="secondary">{exp.category}</Badge>
               <h3 className="font-bold mb-1">{exp.title}</h3>

@@ -7,7 +7,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Plane, Car, UtensilsCrossed, Package, MapPin, Hotel,
-  Wallet, Clock, ChevronRight, HelpCircle, User, Settings, Shield, Star
+  Wallet, Clock, ChevronRight, HelpCircle, User, Settings, Shield, Star,
+  CarFront, CarTaxiFront, Building2, CreditCard, type LucideIcon
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,22 @@ const services = [
   { id: "move", name: "Move", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/move" },
 ];
 
+// Map trip.icon string to Lucide icon component
+const tripIconMap: Record<string, LucideIcon> = {
+  "plane": Plane,
+  "car": Car,
+  "car-front": CarFront,
+  "car-taxi-front": CarTaxiFront,
+  "utensils-crossed": UtensilsCrossed,
+  "package": Package,
+  "building-2": Building2,
+  "target": MapPin,
+  "credit-card": CreditCard,
+};
+
 function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
   const meta = getServiceMeta(trip.service);
+  const TripIcon = tripIconMap[trip.icon] || Plane;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -38,7 +53,9 @@ function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
       <Card className="hover:shadow-lg transition-all duration-300 border-border/40 hover:border-primary/15 group">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="text-2xl">{trip.icon}</div>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <TripIcon className="w-5 h-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm truncate">{trip.title}</p>
               <p className="text-[11px] text-muted-foreground truncate">{trip.subtitle}</p>

@@ -115,10 +115,10 @@ const quickActions = [
 
 // ─── Promo banners ───
 const promos = [
-  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-emerald-500 to-teal-600", emoji: "🚗", cta: "Claim Now" },
-  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-500 to-amber-600", emoji: "📦", cta: "Order Now" },
-  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-500 to-blue-600", emoji: "✈️", cta: "Explore" },
-  { title: "Hotel flash sale", subtitle: "Up to 60% off", gradient: "from-violet-500 to-purple-600", emoji: "🏨", cta: "Book Now" },
+  { title: "50% off first ride", subtitle: "Use code ZIVO50", gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Claim Now" },
+  { title: "Free delivery", subtitle: "On orders over $25", gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Order Now" },
+  { title: "Flight deals from $49", subtitle: "Book by this weekend", gradient: "from-sky-500 to-blue-600", icon: Plane, cta: "Explore" },
+  { title: "Hotel flash sale", subtitle: "Up to 60% off", gradient: "from-violet-500 to-purple-600", icon: BedDouble, cta: "Book Now" },
 ];
 
 // ─── Trending Rides (static) ───
@@ -396,7 +396,7 @@ const AppHome = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-                        <span className="text-[9px] font-bold text-white">⚡ Reorder</span>
+                        <span className="text-[9px] font-bold text-white flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> Reorder</span>
                       </div>
                     </div>
                     <div className="p-3">
@@ -425,7 +425,7 @@ const AppHome = () => {
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
-            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title="Popular Near You" badge="🔥" onSeeAll={() => navigate("/eats")} />
+            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title="Popular Near You" badge="Hot" onSeeAll={() => navigate("/eats")} />
 
             {/* Popular Restaurants */}
             {recommended.length > 0 && (
@@ -515,7 +515,9 @@ const AppHome = () => {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-12 translate-x-12 blur-xl" />
                       <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-8 -translate-x-8 blur-xl" />
                       <div className="relative z-10">
-                        <div className="text-3xl mb-2">{promo.emoji}</div>
+                        <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-2">
+                          <promo.icon className="w-5 h-5 text-white" />
+                        </div>
                         <h3 className="text-lg font-bold mb-0.5">{promo.title}</h3>
                         <p className="text-sm opacity-90">{promo.subtitle}</p>
                       </div>
@@ -574,7 +576,7 @@ const AppHome = () => {
                 </p>
                 <Progress value={progress} className="h-2.5 mb-2 relative z-10" />
                 <p className="text-xs text-muted-foreground mb-5 relative z-10">
-                  {nextTier ? `${pointsNeeded.toLocaleString()} pts to ${ZIVO_TIERS[nextTier].displayName}` : "🎉 Max tier reached!"}
+                  {nextTier ? `${pointsNeeded.toLocaleString()} pts to ${ZIVO_TIERS[nextTier].displayName}` : "Max tier reached!"}
                 </p>
 
                 {recentRewards.length > 0 && (

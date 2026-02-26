@@ -36,14 +36,14 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
 const interestOptions = [
-  { id: "beach", label: "Beach & Relaxation", emoji: "🏖️" },
-  { id: "culture", label: "Culture & History", emoji: "🏛️" },
-  { id: "adventure", label: "Adventure", emoji: "🏔️" },
-  { id: "food", label: "Food & Dining", emoji: "🍽️" },
-  { id: "nightlife", label: "Nightlife", emoji: "🎉" },
-  { id: "nature", label: "Nature & Wildlife", emoji: "🦁" },
-  { id: "shopping", label: "Shopping", emoji: "🛍️" },
-  { id: "romantic", label: "Romantic", emoji: "❤️" },
+  { id: "beach", label: "Beach & Relaxation", icon: Sun },
+  { id: "culture", label: "Culture & History", icon: Building2 },
+  { id: "adventure", label: "Adventure", icon: Compass },
+  { id: "food", label: "Food & Dining", icon: Sparkles },
+  { id: "nightlife", label: "Nightlife", icon: Sparkles },
+  { id: "nature", label: "Nature & Wildlife", icon: Compass },
+  { id: "shopping", label: "Shopping", icon: Sparkles },
+  { id: "romantic", label: "Romantic", icon: Sparkles },
 ];
 
 const budgetLevels = [
@@ -282,7 +282,7 @@ const AITripPlanner = () => {
                     interests.includes(interest.id) && "ring-2 ring-primary scale-105"
                   )}
                 >
-                  <span className="text-2xl">{interest.emoji}</span>
+                  <interest.icon className="w-6 h-6" />
                   <span className="text-xs font-medium">{interest.label}</span>
                 </Button>
               ))}
