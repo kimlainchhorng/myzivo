@@ -86,10 +86,10 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
   };
 
   const shareOptions = [
-    { name: 'Twitter', icon: Twitter, color: 'bg-sky-500', action: () => window.open(`https://twitter.com/intent/tweet?text=Join ZIVO and get exclusive travel rewards! Use my code: ${referralCode}`) },
-    { name: 'Facebook', icon: Facebook, color: 'bg-blue-600', action: () => window.open(`https://facebook.com/sharer/sharer.php?u=${referralLink}`) },
-    { name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700', action: () => window.open(`https://linkedin.com/shareArticle?url=${referralLink}`) },
-    { name: 'WhatsApp', icon: MessageSquare, color: 'bg-emerald-500', action: () => window.open(`https://wa.me/?text=Join ZIVO with my code ${referralCode} and earn travel rewards!`) },
+    { name: 'Twitter', icon: Twitter, color: 'bg-sky-500', action: () => window.open(`https://twitter.com/intent/tweet?text=Join ZIVO and get exclusive travel rewards! Use my code: ${referralCode}`, '_blank', 'noopener,noreferrer') },
+    { name: 'Facebook', icon: Facebook, color: 'bg-blue-600', action: () => window.open(`https://facebook.com/sharer/sharer.php?u=${referralLink}`, '_blank', 'noopener,noreferrer') },
+    { name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700', action: () => window.open(`https://linkedin.com/shareArticle?url=${referralLink}`, '_blank', 'noopener,noreferrer') },
+    { name: 'WhatsApp', icon: MessageSquare, color: 'bg-emerald-500', action: () => window.open(`https://wa.me/?text=Join ZIVO with my code ${referralCode} and earn travel rewards!`, '_blank', 'noopener,noreferrer') },
   ];
 
   const getStatusColor = (status: Referral['status']) => {
