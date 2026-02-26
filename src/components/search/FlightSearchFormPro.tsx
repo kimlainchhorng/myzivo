@@ -288,6 +288,7 @@ export default function FlightSearchFormPro({
             size="icon"
             onClick={handleSwap}
             className="h-11 sm:h-12 w-11 sm:w-12 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex"
+            aria-label="Swap cities"
           >
             <ArrowLeftRight className="w-4 h-4" />
           </Button>
@@ -521,6 +522,7 @@ export default function FlightSearchFormPro({
                           className="h-8 w-8"
                           onClick={() => setPassengers(Math.max(1, passengers - 1))}
                           disabled={passengers <= 1}
+                          aria-label="Fewer passengers"
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -531,6 +533,7 @@ export default function FlightSearchFormPro({
                           className="h-8 w-8"
                           onClick={() => setPassengers(Math.min(9, passengers + 1))}
                           disabled={passengers >= 9}
+                          aria-label="More passengers"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>

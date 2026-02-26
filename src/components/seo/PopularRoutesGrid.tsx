@@ -62,6 +62,7 @@ export default function PopularRoutesGrid({
                         src={getAirlineLogo(route.airline, 32)}
                         alt="Airline logo"
                         className="w-8 h-8 object-contain"
+                        loading="lazy"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

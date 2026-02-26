@@ -208,6 +208,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
                   />
                   <button
                     onClick={() => removeAlert(alert.id)}
+                    aria-label="Remove alert"
                     className="p-1 rounded hover:bg-destructive/10 transition-colors"
                   >
                     <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />

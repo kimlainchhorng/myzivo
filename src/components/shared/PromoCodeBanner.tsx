@@ -65,6 +65,7 @@ const PromoCodeBanner = () => {
                     variant="outline"
                     onClick={() => handleCopy(promo.code)}
                     className="flex-shrink-0"
+                    aria-label="Copy promo code"
                   >
                     {copiedCode === promo.code ? (
                       <Check className="w-4 h-4 text-green-400" />

@@ -25,15 +25,15 @@ export function usePWAUpdate(): PWAUpdateState {
           immediate: true,
           onNeedRefresh() {
             if (!cancelled) {
-              console.log('[PWA] New content available, update ready');
+              console.debug('[PWA] New content available, update ready');
               setNeedRefresh(true);
             }
           },
           onOfflineReady() {
-            console.log('[PWA] App ready to work offline');
+            console.debug('[PWA] App ready to work offline');
           },
           onRegisteredSW(swUrl, registration) {
-            console.log('[PWA] Service worker registered:', swUrl);
+            console.debug('[PWA] Service worker registered:', swUrl);
             // Check for updates every 60 seconds
             if (registration) {
               setInterval(() => {
@@ -49,7 +49,7 @@ export function usePWAUpdate(): PWAUpdateState {
         updateSWRef.current = updateFn;
       } catch (e) {
         // In dev mode or if PWA plugin isn't active, this is expected
-        console.log('[PWA] Service worker registration skipped:', e);
+        console.debug('[PWA] Service worker registration skipped:', e);
       }
     };
 

@@ -60,7 +60,7 @@ const AirportTransferBridge = ({
 
   const handleBook = () => {
     if (selectedTransfer) {
-      console.log("Booking transfer:", selectedTransfer);
+      // TODO: integrate with partner transfer API
     }
   };
 

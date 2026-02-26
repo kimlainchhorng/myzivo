@@ -23,6 +23,8 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
           src={hotelLuxuryPool}
           alt="Luxury resort pool"
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
         />
         
         {/* Gradient Overlays */}
