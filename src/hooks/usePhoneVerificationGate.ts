@@ -4,8 +4,7 @@
  * If not verified, redirects to /verify-phone.
  */
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +16,6 @@ interface PhoneGateResult {
 
 export function usePhoneVerificationGate(enabled = true): PhoneGateResult {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
     queryKey: ["phone-verification-gate", user?.id],
@@ -39,13 +37,6 @@ export function usePhoneVerificationGate(enabled = true): PhoneGateResult {
   });
 
   const isVerified = data?.phone_status === "verified";
-
-  useEffect(() => {
-    if (!enabled || isLoading || !user?.id) return;
-    if (!isVerified) {
-      navigate("/verify-phone", { replace: true });
-    }
-  }, [enabled, isLoading, isVerified, navigate, user?.id]);
 
   return {
     isChecking: isLoading,
