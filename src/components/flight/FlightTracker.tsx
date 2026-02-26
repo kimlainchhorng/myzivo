@@ -38,7 +38,7 @@ interface FlightTrackerProps {
 }
 
 const statusConfig: Record<FlightStatusData['status'], { label: string; color: string; icon: typeof CheckCircle2; textColor: string }> = {
-  'scheduled': { label: 'Scheduled', color: 'bg-slate-500', icon: Clock, textColor: 'text-slate-400' },
+  'scheduled': { label: 'Scheduled', color: 'bg-muted-foreground', icon: Clock, textColor: 'text-muted-foreground' },
   'on-time': { label: 'On Time', color: 'bg-emerald-500', icon: CheckCircle2, textColor: 'text-emerald-400' },
   'delayed': { label: 'Delayed', color: 'bg-amber-500', icon: AlertTriangle, textColor: 'text-amber-400' },
   'boarding': { label: 'Boarding', color: 'bg-sky-500', icon: Plane, textColor: 'text-sky-400' },
