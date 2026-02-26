@@ -23,7 +23,7 @@ const WeatherWidget = () => {
               {/* Current Weather */}
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <CurrentIcon className="w-10 h-10 text-white" />
+                  <CurrentIcon className="w-10 h-10 text-primary-foreground" />
                 </div>
                 <div>
                   <Badge className="mb-1 bg-sky-500/20 text-sky-400 border-sky-500/30">

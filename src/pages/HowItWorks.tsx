@@ -126,7 +126,7 @@ export default function HowItWorks() {
                         "w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-6 shadow-lg",
                         item.color
                       )}>
-                        <item.icon className="w-8 h-8 text-white" />
+                        <item.icon className="w-8 h-8 text-primary-foreground" />
                       </div>
                       
                       {/* Step Badge */}

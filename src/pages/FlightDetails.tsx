@@ -219,7 +219,7 @@ const FlightDetails = () => {
             <Button
               variant="ghost"
               onClick={() => navigate(-1)}
-              className="mb-4 text-white/80 hover:text-white hover:bg-white/10 gap-2"
+              className="mb-4 text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10 gap-2"
             >
               <ChevronLeft className="w-4 h-4" />
               Back to Results
@@ -235,8 +235,8 @@ const FlightDetails = () => {
                   />
                 </div>
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-white">{flight.airline}</h1>
-                  <p className="text-white/70">Flight {flight.flightNumber}</p>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-primary-foreground">{flight.airline}</h1>
+                  <p className="text-primary-foreground/70">Flight {flight.flightNumber}</p>
                   <div className="flex items-center gap-2 mt-2">
                     {flight.isRealPrice && (
                       <Badge className="bg-emerald-500/30 text-emerald-300 border-emerald-500/50">
@@ -255,7 +255,7 @@ const FlightDetails = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
                   onClick={() => setIsSaved(!isSaved)}
                 >
                   <Heart className={cn("w-5 h-5", isSaved && "fill-red-500 text-red-500")} />
@@ -263,14 +263,14 @@ const FlightDetails = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
                 >
                   <Share2 className="w-5 h-5" />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
                 >
                   <Bell className="w-5 h-5" />
                 </Button>
@@ -281,9 +281,9 @@ const FlightDetails = () => {
             <div className="mt-8 p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="text-center md:text-left">
-                  <p className="text-5xl lg:text-6xl font-bold text-white">{flight.departure.time}</p>
+                  <p className="text-5xl lg:text-6xl font-bold text-primary-foreground">{flight.departure.time}</p>
                   <p className="text-2xl font-semibold text-sky-400">{flight.departure.code}</p>
-                  <p className="text-white/70">{flight.departure.city}</p>
+                  <p className="text-primary-foreground/70">{flight.departure.city}</p>
                 </div>
 
                 <div className="flex-1 max-w-md">
@@ -296,7 +296,7 @@ const FlightDetails = () => {
                     </div>
                   </div>
                   <div className="flex justify-center items-center gap-4 mt-4">
-                    <Badge className="bg-white/10 text-white border-white/20">
+                    <Badge className="bg-white/10 text-primary-foreground border-white/20">
                       <Clock className="w-3 h-3 mr-1" />
                       {flight.duration}
                     </Badge>
@@ -310,9 +310,9 @@ const FlightDetails = () => {
                 </div>
 
                 <div className="text-center md:text-right">
-                  <p className="text-5xl lg:text-6xl font-bold text-white">{flight.arrival.time}</p>
+                  <p className="text-5xl lg:text-6xl font-bold text-primary-foreground">{flight.arrival.time}</p>
                   <p className="text-2xl font-semibold text-sky-400">{flight.arrival.code}</p>
-                  <p className="text-white/70">{flight.arrival.city}</p>
+                  <p className="text-primary-foreground/70">{flight.arrival.city}</p>
                 </div>
               </div>
 
@@ -555,7 +555,7 @@ const FlightDetails = () => {
                               <p className="text-xs text-muted-foreground">Small bag under seat</p>
                             </div>
                           </div>
-                          <Badge className="bg-emerald-500 text-white">
+                          <Badge className="bg-emerald-500 text-primary-foreground">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Free
                           </Badge>
@@ -578,7 +578,7 @@ const FlightDetails = () => {
                               <p className="text-xs text-muted-foreground">Overhead bin</p>
                             </div>
                           </div>
-                          <Badge className="bg-emerald-500 text-white">
+                          <Badge className="bg-emerald-500 text-primary-foreground">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Included
                           </Badge>
@@ -613,7 +613,7 @@ const FlightDetails = () => {
                             </div>
                           </div>
                           <Badge className={baggageInfo.checked.allowed 
-                            ? "bg-emerald-500 text-white" 
+                            ? "bg-emerald-500 text-primary-foreground" 
                             : "bg-muted text-muted-foreground"
                           }>
                             {baggageInfo.checked.allowed ? (

@@ -40,11 +40,11 @@ const MobileAppBanner = () => {
               </ul>
 
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" className="bg-black text-white hover:bg-black/80 rounded-xl h-12 px-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 touch-manipulation">
+                <Button size="lg" className="bg-black text-primary-foreground hover:bg-black/80 rounded-xl h-12 px-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 touch-manipulation">
                   <Apple className="w-5 h-5 mr-2" />
                   App Store
                 </Button>
-                <Button size="lg" className="bg-black text-white hover:bg-black/80 rounded-xl h-12 px-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 touch-manipulation">
+                <Button size="lg" className="bg-black text-primary-foreground hover:bg-black/80 rounded-xl h-12 px-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 touch-manipulation">
                   <Download className="w-5 h-5 mr-2" />
                   Google Play
                 </Button>

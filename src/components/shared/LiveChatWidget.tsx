@@ -252,7 +252,7 @@ const LiveChatWidget = () => {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-xl shadow-primary/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform touch-manipulation"
           >
-            <MessageCircle className="w-6 h-6 text-white" />
+            <MessageCircle className="w-6 h-6 text-primary-foreground" />
             {/* Online dot */}
             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
             {/* Pulse ring */}
@@ -278,13 +278,13 @@ const LiveChatWidget = () => {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                   {chatMode === "ai" ? (
-                    <Bot className="w-5 h-5 text-white" />
+                    <Bot className="w-5 h-5 text-primary-foreground" />
                   ) : (
-                    <Headphones className="w-5 h-5 text-white" />
+                    <Headphones className="w-5 h-5 text-primary-foreground" />
                   )}
                 </div>
                 <div>
-                  <p className="font-bold text-white text-sm">
+                  <p className="font-bold text-primary-foreground text-sm">
                     {chatMode === "ai" ? "ZIVO AI Support" : "Human Support"}
                   </p>
                   <div className="flex items-center gap-1">
@@ -302,7 +302,7 @@ const LiveChatWidget = () => {
                   className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
                   title={chatMode === "ai" ? "Switch to human" : "Switch to AI"}
                 >
-                  <ArrowLeftRight className="w-4 h-4 text-white" />
+                  <ArrowLeftRight className="w-4 h-4 text-primary-foreground" />
                 </button>
                 <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
                   <X className="w-5 h-5" />

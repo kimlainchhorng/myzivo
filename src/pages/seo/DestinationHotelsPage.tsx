@@ -157,38 +157,38 @@ export default function DestinationHotelsPage() {
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
               {/* Breadcrumb */}
-              <nav className="flex items-center justify-center gap-2 text-sm text-white/70 mb-6">
-                <Link to="/" className="hover:text-white">Home</Link>
+              <nav className="flex items-center justify-center gap-2 text-sm text-primary-foreground/70 mb-6">
+                <Link to="/" className="hover:text-primary-foreground">Home</Link>
                 <span>/</span>
-                <Link to="/hotels" className="hover:text-white">Hotels</Link>
+                <Link to="/hotels" className="hover:text-primary-foreground">Hotels</Link>
                 <span>/</span>
-                <span className="text-white">{displayName}</span>
+                <span className="text-primary-foreground">{displayName}</span>
               </nav>
               
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-primary-foreground">
                 <Hotel className="w-4 h-4 text-amber-400" />
-                <span className="text-white/80">
+                <span className="text-primary-foreground/80">
                   {cityInfo?.hotelCount?.toLocaleString() || "1,000+"} hotels available
                 </span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 Hotels in <span className="text-amber-400">{displayName}</span>
-                {countryName && <span className="text-white/80 text-2xl sm:text-3xl block mt-2">{countryName}</span>}
+                {countryName && <span className="text-primary-foreground/80 text-2xl sm:text-3xl block mt-2">{countryName}</span>}
               </h1>
               
-              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+              <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
                 {pageDescription}
               </p>
 
               {/* Stats */}
               {cityInfo && (
                 <div className="flex flex-wrap items-center justify-center gap-6 mb-8">
-                  <div className="flex items-center gap-2 text-white/80">
+                  <div className="flex items-center gap-2 text-primary-foreground/80">
                     <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                     <span><strong>{cityInfo.rating}</strong> avg. rating</span>
                   </div>
-                  <div className="flex items-center gap-2 text-white/80">
+                  <div className="flex items-center gap-2 text-primary-foreground/80">
                     <TrendingUp className="w-5 h-5 text-emerald-400" />
                     <span>From <strong>${cityInfo.avgPrice}</strong>/night</span>
                   </div>

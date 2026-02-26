@@ -108,8 +108,8 @@ export const StatusTracker: React.FC<StatusTrackerProps> = ({
                   transition={{ delay: index * 0.1, type: "spring", stiffness: 300 }}
                   className={cn(
                     "w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 relative",
-                    isCompleted && cn("bg-gradient-to-br", colors.gradient, "text-white", colors.glow),
-                    isCurrent && cn("bg-gradient-to-br", colors.gradient, "text-white", colors.glow, "ring-4", colors.ring),
+                    isCompleted && cn("bg-gradient-to-br", colors.gradient, "text-primary-foreground", colors.glow),
+                    isCurrent && cn("bg-gradient-to-br", colors.gradient, "text-primary-foreground", colors.glow, "ring-4", colors.ring),
                     isPending && "bg-muted/50 text-muted-foreground border border-border/50"
                   )}
                 >
@@ -201,8 +201,8 @@ export const StatusTracker: React.FC<StatusTrackerProps> = ({
                 className={cn(
                   "rounded-2xl flex items-center justify-center transition-all duration-500 relative",
                   compact ? "w-10 h-10" : "w-12 h-12 sm:w-14 sm:h-14",
-                  isCompleted && cn("bg-gradient-to-br", colors.gradient, "text-white", colors.glow),
-                  isCurrent && cn("bg-gradient-to-br", colors.gradient, "text-white", colors.glow, "ring-4", colors.ring),
+                  isCompleted && cn("bg-gradient-to-br", colors.gradient, "text-primary-foreground", colors.glow),
+                  isCurrent && cn("bg-gradient-to-br", colors.gradient, "text-primary-foreground", colors.glow, "ring-4", colors.ring),
                   isPending && "bg-muted/50 text-muted-foreground border border-border/50"
                 )}
               >
@@ -421,7 +421,7 @@ export const ETADisplay: React.FC<ETADisplayProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={cn("w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg", colors.gradient, colors.glow)}>
-                <Clock className="w-6 h-6 text-white" />
+                <Clock className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <span className="text-sm text-muted-foreground font-medium">{label}</span>

@@ -66,11 +66,11 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
       {restaurant.rating && (
         <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-xl rounded-full px-2 py-0.5">
           <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-          <span className="text-[10px] font-bold text-white">{restaurant.rating.toFixed(1)}</span>
+          <span className="text-[10px] font-bold text-primary-foreground">{restaurant.rating.toFixed(1)}</span>
         </div>
       )}
       <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <Heart className="w-3.5 h-3.5 text-white" />
+        <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
     </div>
     <div className="p-3">
@@ -396,7 +396,7 @@ const AppHome = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-                        <span className="text-[9px] font-bold text-white flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> Reorder</span>
+                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> Reorder</span>
                       </div>
                     </div>
                     <div className="p-3">
@@ -457,11 +457,11 @@ const AppHome = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                            <span className="text-[8px] font-bold text-white uppercase tracking-wider">Trending</span>
+                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">Trending</span>
                           </div>
                         )}
                         <div className="absolute bottom-3 left-3 right-3">
-                          <div className="text-xs font-bold text-white">{dest.city}</div>
+                          <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
                           <div className="text-[10px] text-white/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
                             from {popularDestPrices[key]}
@@ -511,12 +511,12 @@ const AppHome = () => {
               <div className="flex">
                 {promos.map((promo, i) => (
                   <div key={i} className="flex-[0_0_100%] min-w-0 px-0.5">
-                    <div className={`bg-gradient-to-br ${promo.gradient} rounded-2xl p-6 text-white relative overflow-hidden min-h-[130px] flex flex-col justify-between`}>
+                    <div className={`bg-gradient-to-br ${promo.gradient} rounded-2xl p-6 text-primary-foreground relative overflow-hidden min-h-[130px] flex flex-col justify-between`}>
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-12 translate-x-12 blur-xl" />
                       <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-8 -translate-x-8 blur-xl" />
                       <div className="relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-2">
-                          <promo.icon className="w-5 h-5 text-white" />
+                          <promo.icon className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <h3 className="text-lg font-bold mb-0.5">{promo.title}</h3>
                         <p className="text-sm opacity-90">{promo.subtitle}</p>
