@@ -318,6 +318,7 @@ const GroundTransportBooking = ({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Fewer rental days"
                       className="h-8 w-8"
                       onClick={() => setRentalDays(Math.max(1, rentalDays - 1))}
                     >
@@ -327,6 +328,7 @@ const GroundTransportBooking = ({
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="More rental days"
                       className="h-8 w-8"
                       onClick={() => setRentalDays(Math.min(30, rentalDays + 1))}
                     >

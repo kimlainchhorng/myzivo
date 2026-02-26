@@ -203,6 +203,7 @@ const AITripPlanner = () => {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Fewer travelers"
                   onClick={() => setTravelers(Math.max(1, travelers - 1))}
                   className="rounded-full"
                 >
@@ -215,6 +216,7 @@ const AITripPlanner = () => {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="More travelers"
                   onClick={() => setTravelers(Math.min(10, travelers + 1))}
                   className="rounded-full"
                 >

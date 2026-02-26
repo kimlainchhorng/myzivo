@@ -168,6 +168,7 @@ const ResetPassword = () => {
                           type="button"
                           variant="ghost"
                           size="icon"
+                          aria-label="Toggle password visibility"
                           className="absolute right-0 top-0 h-full px-3 touch-manipulation"
                           onClick={() => setShowPassword(!showPassword)}
                         >
@@ -202,6 +203,7 @@ const ResetPassword = () => {
                           type="button"
                           variant="ghost"
                           size="icon"
+                          aria-label="Toggle password visibility"
                           className="absolute right-0 top-0 h-full px-3 touch-manipulation"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >

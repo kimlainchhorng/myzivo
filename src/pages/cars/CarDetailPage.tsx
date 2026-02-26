@@ -139,6 +139,7 @@ export default function CarDetailPage() {
                         <Button
                           variant="secondary"
                           size="icon"
+                          aria-label="Previous image"
                           className="absolute left-3 top-1/2 -translate-y-1/2"
                           onClick={() => setCurrentImageIndex((i) => (i === 0 ? images.length - 1 : i - 1))}
                         >
@@ -147,6 +148,7 @@ export default function CarDetailPage() {
                         <Button
                           variant="secondary"
                           size="icon"
+                          aria-label="Next image"
                           className="absolute right-3 top-1/2 -translate-y-1/2"
                           onClick={() => setCurrentImageIndex((i) => (i === images.length - 1 ? 0 : i + 1))}
                         >
@@ -156,6 +158,7 @@ export default function CarDetailPage() {
                           {images.map((_, idx) => (
                             <button
                               key={idx}
+                              aria-label={`Go to image ${idx + 1}`}
                               onClick={() => setCurrentImageIndex(idx)}
                               className={cn(
                                 "w-2 h-2 rounded-full transition-colors",

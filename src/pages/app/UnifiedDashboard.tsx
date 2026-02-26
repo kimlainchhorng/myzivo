@@ -122,8 +122,8 @@ export default function UnifiedDashboard() {
               <h1 className="text-xl font-bold">Hello, {firstName}</h1>
             </div>
             <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" asChild className="rounded-xl"><Link to="/support"><HelpCircle className="w-5 h-5" /></Link></Button>
-              <Button variant="ghost" size="icon" asChild className="rounded-xl"><Link to="/profile"><User className="w-5 h-5" /></Link></Button>
+              <Button variant="ghost" size="icon" aria-label="Help" asChild className="rounded-xl"><Link to="/support"><HelpCircle className="w-5 h-5" /></Link></Button>
+              <Button variant="ghost" size="icon" aria-label="Profile" asChild className="rounded-xl"><Link to="/profile"><User className="w-5 h-5" /></Link></Button>
             </div>
           </div>
         </div>

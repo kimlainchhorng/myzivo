@@ -65,6 +65,7 @@ export function TicketChatInput({
         onClick={handleSubmit}
         disabled={!message.trim() || disabled || isPending}
         size="icon"
+        aria-label="Send message"
         className="shrink-0 h-11 w-11"
       >
         {isPending ? (

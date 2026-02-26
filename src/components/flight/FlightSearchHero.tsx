@@ -138,6 +138,8 @@ export default function FlightSearchHero({
           src={flightHeroImage}
           alt="Airplane window view at sunset"
           className="w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-background/80" />

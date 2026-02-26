@@ -166,6 +166,7 @@ const MultiCityPlanner = ({ className }: MultiCityPlannerProps) => {
           <Button 
             variant="outline" 
             size="icon"
+            aria-label="Add city"
             onClick={addCity}
             disabled={!newCity.trim()}
           >

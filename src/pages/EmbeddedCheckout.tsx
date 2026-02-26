@@ -209,7 +209,7 @@ const EmbeddedCheckout = () => {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               SSL Encrypted
             </Badge>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/help")}>
+            <Button variant="ghost" size="icon" aria-label="Help" onClick={() => navigate("/help")}>
               <HelpCircle className="w-5 h-5" />
             </Button>
           </div>

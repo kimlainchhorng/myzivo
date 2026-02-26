@@ -117,6 +117,7 @@ const UserTestimonials = () => {
             <Button
               variant="outline"
               size="icon"
+              aria-label="Previous testimonial"
               className="rounded-full bg-background/80 backdrop-blur-sm"
               onClick={prevTestimonial}
             >
@@ -127,6 +128,7 @@ const UserTestimonials = () => {
             <Button
               variant="outline"
               size="icon"
+              aria-label="Next testimonial"
               className="rounded-full bg-background/80 backdrop-blur-sm"
               onClick={nextTestimonial}
             >
@@ -145,6 +147,7 @@ const UserTestimonials = () => {
           {testimonials.map((_, index) => (
             <button
               key={index}
+              aria-label={`Go to testimonial ${index + 1}`}
               onClick={() => setActiveIndex(index)}
               className={cn(
                 "w-2 h-2 rounded-full transition-all",

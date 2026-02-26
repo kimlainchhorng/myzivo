@@ -361,15 +361,16 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
 
                       {/* Actions */}
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" aria-label="View document" className="h-8 w-8">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" aria-label="Download document" className="h-8 w-8">
                           <Download className="w-4 h-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
+                          aria-label="Delete document"
                           className="h-8 w-8 text-red-400 hover:bg-red-500/10"
                           onClick={(e) => {
                             e.stopPropagation();
