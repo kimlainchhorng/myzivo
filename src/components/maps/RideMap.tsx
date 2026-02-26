@@ -30,8 +30,26 @@ interface RideMapProps {
 // Singleton script loader to prevent "different options" error
 let googleMapsPromise: Promise<void> | null = null;
 let googleMapsLoaded = false;
+let googleMapsAuthFailed = false;
+
+// Global auth failure callback - Google calls this when key is invalid/billing not enabled
+(window as any).gm_authFailure = () => {
+  googleMapsAuthFailed = true;
+  // Remove the error dialog Google injects
+  setTimeout(() => {
+    document.querySelectorAll('.dismissButton, .gm-err-container, [style*="background-color: white"][style*="z-index"]').forEach(el => el.remove());
+    // Also remove the overlay div Google adds
+    const gmStyle = document.querySelector('style[id^="gm"]');
+    if (gmStyle) gmStyle.remove();
+  }, 100);
+  // Dispatch custom event so map components can react
+  window.dispatchEvent(new CustomEvent('gmaps-auth-failure'));
+};
 
 function loadGoogleMapsScript(apiKey: string): Promise<void> {
+  if (googleMapsAuthFailed) {
+    return Promise.reject(new Error("Google Maps auth failed"));
+  }
   if (googleMapsLoaded && (window as any).google?.maps) {
     return Promise.resolve();
   }
@@ -49,7 +67,14 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
     script.defer = true;
     script.onload = () => {
       googleMapsLoaded = true;
-      resolve();
+      // Check for auth failure shortly after load
+      setTimeout(() => {
+        if (googleMapsAuthFailed) {
+          reject(new Error("Google Maps auth failed"));
+        } else {
+          resolve();
+        }
+      }, 500);
     };
     script.onerror = () => {
       googleMapsPromise = null;
@@ -63,9 +88,17 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
 export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps) {
   const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
   const [isReady, setIsReady] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(googleMapsAuthFailed);
+
+  // Listen for auth failure events (e.g. billing not enabled)
+  useEffect(() => {
+    const handleAuthFail = () => setFailed(true);
+    window.addEventListener('gmaps-auth-failure', handleAuthFail);
+    return () => window.removeEventListener('gmaps-auth-failure', handleAuthFail);
+  }, []);
 
   useEffect(() => {
+    if (failed) return;
     let cancelled = false;
 
     (async () => {
@@ -93,14 +126,15 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, cl
       // Load script via singleton
       try {
         await loadGoogleMapsScript(key);
-        if (!cancelled) setIsReady(true);
+        if (!cancelled && !googleMapsAuthFailed) setIsReady(true);
+        else if (!cancelled) setFailed(true);
       } catch {
         if (!cancelled) setFailed(true);
       }
     })();
 
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [failed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (failed) {
     return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
@@ -212,22 +246,57 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className
   return <div ref={mapContainerRef} className={className} style={{ width: "100%", height: "100%" }} />;
 }
 
-// Styled fallback when map is unavailable
+// Enhanced styled fallback when map is unavailable
 function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapProps, "pickupCoords" | "dropoffCoords" | "className">) {
+  // Clean up any Google Maps error overlays that might have been injected
+  useEffect(() => {
+    const cleanup = () => {
+      document.querySelectorAll('.dismissButton, .gm-err-container, .gm-style-pbc').forEach(el => el.remove());
+      // Remove Google's error modal overlay
+      document.querySelectorAll('div[style*="background-color: white"][style*="z-index"]').forEach(el => {
+        if (el.textContent?.includes("Google Maps") || el.textContent?.includes("load")) {
+          el.remove();
+        }
+      });
+    };
+    cleanup();
+    const timer = setTimeout(cleanup, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary)/0.15)] via-[hsl(var(--muted)/0.5)] to-background">
-        <div className="absolute inset-0 opacity-10" style={{
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-muted/40 to-background">
+        {/* Grid pattern */}
+        <div className="absolute inset-0 opacity-[0.07]" style={{
           backgroundImage: "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+          backgroundSize: "32px 32px",
         }} />
-        <div className="absolute top-1/3 left-0 right-0 h-[2px] bg-primary/20" />
-        <div className="absolute top-0 bottom-0 left-1/3 w-[2px] bg-primary/20" />
-        <div className="absolute top-0 bottom-0 right-1/4 w-[2px] bg-primary/15" />
-        <div className="absolute bottom-1/4 left-0 right-0 h-[2px] bg-primary/15" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse" />
-          <div className="absolute inset-0 w-4 h-4 rounded-full bg-primary/30 animate-ping" />
+        {/* Simulated roads */}
+        <div className="absolute top-[30%] left-0 right-0 h-[3px] bg-primary/15 rounded-full" />
+        <div className="absolute top-[60%] left-[10%] right-[20%] h-[2px] bg-primary/10 rounded-full" />
+        <div className="absolute top-0 bottom-0 left-[35%] w-[3px] bg-primary/15 rounded-full" />
+        <div className="absolute top-0 bottom-0 right-[25%] w-[2px] bg-primary/10 rounded-full" />
+        <div className="absolute top-[45%] left-[15%] right-0 h-[2px] bg-primary/8 rotate-[15deg] origin-left" />
+        
+        {/* Pickup marker */}
+        <div className="absolute top-[40%] left-[45%]">
+          <div className="w-5 h-5 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse border-2 border-background" />
+          <div className="absolute inset-0 w-5 h-5 rounded-full bg-primary/20 animate-ping" />
+        </div>
+        
+        {/* Dropoff marker (if coords provided) */}
+        {dropoffCoords && (
+          <div className="absolute top-[55%] left-[60%]">
+            <div className="w-4 h-4 rounded-full bg-destructive shadow-lg shadow-destructive/30 border-2 border-background" />
+          </div>
+        )}
+
+        {/* Map loading message */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <div className="px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/30 text-[10px] text-muted-foreground font-medium">
+            Map preview
+          </div>
         </div>
       </div>
     </div>
