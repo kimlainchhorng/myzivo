@@ -172,11 +172,11 @@ export default function PartnerConsentModal({
               <p className="text-xs text-muted-foreground">
                 {consentText.description}{" "}
                 View our{" "}
-                <a href="/privacy" target="_blank" className="underline hover:text-primary">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
                   Privacy Policy
                 </a>{" "}
                 and{" "}
-                <a href="/partner-disclosure" target="_blank" className="underline hover:text-primary">
+                <a href="/partner-disclosure" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
                   Partner Disclosure
                 </a>.
               </p>

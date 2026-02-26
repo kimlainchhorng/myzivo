@@ -449,6 +449,7 @@ const FlightCheckout = () => {
                       <a 
                         href="/legal/seller-of-travel" 
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
                       >
                         View full Seller of Travel disclosure
