@@ -1,5 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
 import { Home, Search, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
@@ -19,23 +20,42 @@ const NotFound = () => {
       <div className="absolute top-1/4 right-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 left-1/4 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
 
-      <div className="text-center px-4 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center px-4 relative z-10"
+      >
         {/* Animated 404 */}
-        <div className="mb-6 sm:mb-8 animate-in fade-in zoom-in-95 duration-500">
-          <h1 className="font-display text-[100px] sm:text-[150px] lg:text-[200px] font-bold leading-none bg-gradient-to-r from-primary via-eats to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+        <div className="mb-6 sm:mb-8">
+          <motion.h1
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, type: "spring" }}
+            className="font-display text-[100px] sm:text-[150px] lg:text-[200px] font-bold leading-none bg-gradient-to-r from-primary via-flights to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient"
+          >
             404
-          </h1>
+          </motion.h1>
         </div>
 
         {/* Icon */}
-        <div className="flex justify-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+          className="flex justify-center mb-6"
+        >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/30">
             <Compass className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Message */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
             Lost in the{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
@@ -45,7 +65,7 @@ const NotFound = () => {
           <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-8 sm:mb-10">
             The page you're looking for has taken a detour. Let's get you back on track!
           </p>
-        </div>
+        </motion.div>
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
@@ -64,7 +84,12 @@ const NotFound = () => {
         </div>
 
         {/* Quick Links */}
-        <div className="mt-12 sm:mt-16 animate-in fade-in duration-500 delay-500">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-12 sm:mt-16"
+        >
           <p className="text-sm text-muted-foreground mb-4 flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
             Popular destinations
@@ -85,8 +110,8 @@ const NotFound = () => {
               </Link>
             ))}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* CSS for gradient animation */}
       <style>{`
