@@ -1,4 +1,7 @@
-import { Plane, Hotel, Car, CreditCard, Shield, Award } from "lucide-react";
+/**
+ * PartnerLogosSection - Trust badges with token-based colors
+ */
+import { Shield, CreditCard, Award } from "lucide-react";
 
 const partners = [
   { name: "United Airlines", category: "Airlines" },
@@ -36,7 +39,7 @@ const PartnerLogosSection = () => {
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
             
-            {/* First row - slides left */}
+            {/* First row */}
             <div className="flex gap-8 animate-marquee-left mb-3">
               {[...partners, ...partners].map((partner, index) => (
                 <div
@@ -47,7 +50,7 @@ const PartnerLogosSection = () => {
                 </div>
               ))}
             </div>
-            {/* Second row - slides right for visual depth */}
+            {/* Second row */}
             <div className="flex gap-8 animate-marquee-right">
               {[...partners, ...partners].reverse().map((partner, index) => (
                 <div
@@ -68,9 +71,14 @@ const PartnerLogosSection = () => {
             return (
               <div
                 key={index}
-                className="flex items-center gap-3 px-4 py-2 rounded-xl bg-card/30 border border-border/30"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-card/50 border border-border/30 hover:border-primary/20 transition-colors duration-200"
               >
-                <Icon className="w-5 h-5 text-primary" />
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }}
+                >
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
                 <div className="text-left">
                   <div className="text-sm font-medium">{cert.label}</div>
                   <div className="text-xs text-muted-foreground">{cert.description}</div>

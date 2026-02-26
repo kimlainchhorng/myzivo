@@ -1,6 +1,5 @@
 /**
- * VideoAdsSection - Promotional video/visual ads carousel for homepage
- * Premium auto-rotating promo cards with CTA overlays
+ * VideoAdsSection - Promotional carousel with design-token colors
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,8 +15,7 @@ const promos = [
     cta: "Search Flights",
     href: "/flights",
     icon: Plane,
-    gradient: "from-blue-600/90 to-indigo-900/90",
-    accent: "bg-blue-500",
+    colorVar: "--flights",
   },
   {
     id: "hotels",
@@ -26,8 +24,7 @@ const promos = [
     cta: "Find Hotels",
     href: "/hotels",
     icon: Hotel,
-    gradient: "from-amber-600/90 to-orange-900/90",
-    accent: "bg-amber-500",
+    colorVar: "--hotels",
   },
   {
     id: "rides",
@@ -36,8 +33,7 @@ const promos = [
     cta: "Book a Ride",
     href: "/rides",
     icon: Car,
-    gradient: "from-emerald-600/90 to-teal-900/90",
-    accent: "bg-emerald-500",
+    colorVar: "--rides",
   },
   {
     id: "eats",
@@ -46,8 +42,7 @@ const promos = [
     cta: "Order Now",
     href: "/eats",
     icon: UtensilsCrossed,
-    gradient: "from-rose-600/90 to-pink-900/90",
-    accent: "bg-rose-500",
+    colorVar: "--eats",
   },
   {
     id: "cars",
@@ -56,8 +51,7 @@ const promos = [
     cta: "Rent a Car",
     href: "/rent-car",
     icon: CarFront,
-    gradient: "from-violet-600/90 to-purple-900/90",
-    accent: "bg-violet-500",
+    colorVar: "--cars",
   },
 ];
 
@@ -83,6 +77,7 @@ export default function VideoAdsSection() {
           viewport={{ once: true }}
           className="text-center mb-8"
         >
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-3">Don't miss out</span>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             Featured <span className="text-primary">Promotions</span>
           </h2>
@@ -93,7 +88,7 @@ export default function VideoAdsSection() {
 
         {/* Main promo card */}
         <div className="max-w-4xl mx-auto">
-          <div className="relative rounded-2xl overflow-hidden h-[280px] sm:h-[340px]">
+          <div className="relative rounded-2xl overflow-hidden h-[280px] sm:h-[340px] border border-border/30">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active.id}
@@ -101,10 +96,10 @@ export default function VideoAdsSection() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6 }}
-                className={cn(
-                  "absolute inset-0 bg-gradient-to-br flex items-center",
-                  active.gradient
-                )}
+                className="absolute inset-0 flex items-center"
+                style={{
+                  background: `linear-gradient(135deg, hsl(var(${active.colorVar}) / 0.9), hsl(var(${active.colorVar}) / 0.6))`,
+                }}
               >
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10" style={{
@@ -120,7 +115,10 @@ export default function VideoAdsSection() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4", active.accent)}>
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                        style={{ backgroundColor: `hsl(var(${active.colorVar}))` }}
+                      >
                         <Icon className="w-6 h-6 text-primary-foreground" />
                       </div>
                       <h3 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-2">{active.title}</h3>
@@ -137,7 +135,7 @@ export default function VideoAdsSection() {
 
                   {/* Right side decorative icon */}
                   <div className="hidden sm:flex items-center justify-center">
-                    <div className="w-32 h-32 rounded-full bg-foreground/10 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-full bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center">
                       <Icon className="w-16 h-16 text-primary-foreground/40" />
                     </div>
                   </div>
@@ -161,9 +159,10 @@ export default function VideoAdsSection() {
                 className={cn(
                   "rounded-full transition-all duration-300 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center",
                   i === activeIndex
-                    ? "bg-primary w-8 h-3"
+                    ? "w-8 h-3"
                     : "bg-muted-foreground/20 hover:bg-muted-foreground/40 w-3 h-3"
                 )}
+                style={i === activeIndex ? { backgroundColor: `hsl(var(${promo.colorVar}))` } : undefined}
                 aria-label={`View ${promo.title}`}
               />
             ))}
@@ -180,9 +179,14 @@ export default function VideoAdsSection() {
                   className={cn(
                     "flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-200 touch-manipulation active:scale-[0.97]",
                     i === activeIndex
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "bg-card/80 text-foreground"
                       : "border-border/50 bg-card/60 text-muted-foreground hover:border-border"
                   )}
+                  style={i === activeIndex ? {
+                    borderColor: `hsl(var(${promo.colorVar}) / 0.5)`,
+                    color: `hsl(var(${promo.colorVar}))`,
+                    backgroundColor: `hsl(var(${promo.colorVar}) / 0.08)`,
+                  } : undefined}
                 >
                   <PIcon className="w-4 h-4" />
                   <span className="text-sm font-medium whitespace-nowrap">{promo.title}</span>
