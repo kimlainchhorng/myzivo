@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -18,12 +18,14 @@ const packageSizes = [
   { id: "small", name: "Small Box", description: "Books, small items", icon: "📦", maxWeight: "5 lbs", price: 8.99 },
   { id: "medium", name: "Medium Box", description: "Clothing, electronics", icon: "📦", maxWeight: "20 lbs", price: 14.99 },
   { id: "large", name: "Large Box", description: "Furniture, large boxes", icon: "📦", maxWeight: "50 lbs", price: 24.99 },
+  { id: "custom", name: "Custom", description: "Oversized or unusual", icon: "📐", maxWeight: "100+ lbs", price: 39.99 },
 ];
 
 const deliverySpeed = [
   { id: "standard", name: "Standard", time: "2-4 hours", multiplier: 1.0, badge: null, icon: Truck },
   { id: "express", name: "Express", time: "60-90 min", multiplier: 1.5, badge: "Fast", icon: Zap },
   { id: "rush", name: "Rush", time: "30-45 min", multiplier: 2.2, badge: "Fastest", icon: AlertTriangle },
+  { id: "same-day", name: "Same Day", time: "By 9 PM", multiplier: 1.2, badge: "Value", icon: Clock },
 ];
 
 const scheduleTimes = [
@@ -31,6 +33,12 @@ const scheduleTimes = [
   { id: "today-2pm", label: "Today 2 PM", description: "Scheduled" },
   { id: "today-5pm", label: "Today 5 PM", description: "Scheduled" },
   { id: "tomorrow-9am", label: "Tomorrow 9 AM", description: "Next day" },
+  { id: "tomorrow-2pm", label: "Tomorrow 2 PM", description: "Next day" },
+];
+
+const previousDeliveries = [
+  { id: "pd1", from: "123 Main St", to: "456 Oak Ave", pkg: "Small Box", date: "3 days ago", price: "$12.48" },
+  { id: "pd2", from: "Office", to: "Home", pkg: "Envelope", date: "Last week", price: "$5.99" },
 ];
 
 // Live delivery tracking timeline
@@ -78,6 +86,57 @@ function DeliveryTrackingTimeline() {
   );
 }
 
+// Courier preview card
+function CourierPreviewCard() {
+  const [show, setShow] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setShow(true), 3000); return () => clearTimeout(t); }, []);
+  if (!show) return null;
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3 shadow-lg shadow-violet-500/10">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-lg font-bold text-violet-500">J</div>
+        <div className="flex-1">
+          <p className="text-sm font-bold text-foreground">Jamie R.</p>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> 4.95 · 1,204 deliveries
+          </div>
+        </div>
+        <span className="text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2 py-1 rounded-full animate-pulse">Assigning...</span>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
+          <p className="text-[10px] text-muted-foreground">On-time</p>
+          <p className="text-xs font-bold text-foreground">98%</p>
+        </div>
+        <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
+          <p className="text-[10px] text-muted-foreground">Careful</p>
+          <p className="text-xs font-bold text-foreground flex items-center justify-center gap-0.5"><ThumbsUp className="w-3 h-3 text-emerald-500" /> 99%</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Price estimate preview
+function PriceEstimate({ basePrice, speed, fragile, signature, insurance, packages, promo }: {
+  basePrice: number; speed: number; fragile: boolean; signature: boolean; insurance: boolean; packages: number; promo: boolean;
+}) {
+  const total = (basePrice * packages * speed) + (fragile ? 2.99 : 0) + (signature ? 1.99 : 0) + (insurance ? 1.99 * packages : 0);
+  const discount = promo ? total * 0.1 : 0;
+  const final = total - discount;
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      className="rounded-xl bg-violet-500/5 border border-violet-500/20 p-3 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <DollarSign className="w-4 h-4 text-violet-500" />
+        <span className="text-xs font-bold text-foreground">Estimated total</span>
+      </div>
+      <span className="text-base font-bold text-violet-500">${final.toFixed(2)}</span>
+    </motion.div>
+  );
+}
+
 export default function DeliveryPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<"address" | "package" | "review" | "confirmation">("address");
@@ -89,6 +148,8 @@ export default function DeliveryPage() {
   const [senderPhone, setSenderPhone] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
+  const [notifyRecipient, setNotifyRecipient] = useState(true);
+  const [showPreviousDeliveries, setShowPreviousDeliveries] = useState(false);
 
   // Package
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -103,6 +164,9 @@ export default function DeliveryPage() {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [packageCount, setPackageCount] = useState(1);
+  const [priorityHandling, setPriorityHandling] = useState(false);
+  const [photoAdded, setPhotoAdded] = useState(false);
+  const [rateDelivery, setRateDelivery] = useState<number | null>(null);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -112,8 +176,9 @@ export default function DeliveryPage() {
   const fragileFee = isFragile ? 2.99 : 0;
   const signatureFee = requireSignature ? 1.99 : 0;
   const insuranceFee = includeInsurance ? 1.99 * packageCount : 0;
-  const subtotal = basePrice * speedMultiplier + fragileFee + signatureFee + insuranceFee;
-  const promoDiscount = promoApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
+  const priorityFee = priorityHandling ? 4.99 : 0;
+  const subtotal = basePrice * speedMultiplier + fragileFee + signatureFee + insuranceFee + priorityFee;
+  const promoDiscount = promoApplied ? Math.round(subtotal * 0.15 * 100) / 100 : 0;
   const totalPrice = Math.round((subtotal - promoDiscount) * 100) / 100;
 
   const steps = ["address", "package", "review"] as const;
@@ -166,9 +231,20 @@ export default function DeliveryPage() {
     }
   };
 
+  const handleLoadPrevious = (d: typeof previousDeliveries[0]) => {
+    setPickupAddress(d.from);
+    setDropoffAddress(d.to);
+    toast.success("Previous route loaded");
+  };
+
+  const handlePhotoUpload = () => {
+    setPhotoAdded(true);
+    toast.success("Photo added to package");
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Map Preview (visible during address step) */}
+      {/* Map Preview */}
       {step === "address" && (
         <div className="relative h-[25vh] min-h-[180px]">
           <RideMap pickupCoords={null} dropoffCoords={null} className="w-full h-full" />
@@ -182,7 +258,7 @@ export default function DeliveryPage() {
         </div>
       )}
 
-      {/* Header (for non-address steps) */}
+      {/* Header */}
       {step !== "address" && step !== "confirmation" && (
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
           <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
@@ -251,6 +327,33 @@ export default function DeliveryPage() {
                 </div>
               </div>
 
+              {/* Previous deliveries */}
+              <div className="space-y-2">
+                <button onClick={() => setShowPreviousDeliveries(!showPreviousDeliveries)}
+                  className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+                  <History className="w-3.5 h-3.5" /> Recent Deliveries
+                  <ChevronRight className={cn("w-3 h-3 transition-transform", showPreviousDeliveries && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showPreviousDeliveries && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="space-y-1.5 overflow-hidden">
+                      {previousDeliveries.map(d => (
+                        <button key={d.id} onClick={() => handleLoadPrevious(d)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-violet-500/20 transition-all touch-manipulation active:scale-[0.98] text-left">
+                          <RotateCcw className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-foreground truncate">{d.from} → {d.to}</p>
+                            <p className="text-[10px] text-muted-foreground">{d.date} · {d.pkg}</p>
+                          </div>
+                          <span className="text-xs font-bold text-foreground shrink-0">{d.price}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <div className="space-y-3">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-violet-500" /> Contact Details</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -260,6 +363,18 @@ export default function DeliveryPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} className="h-12 rounded-xl" />
                   <Input placeholder="Recipient phone" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} className="h-12 rounded-xl" type="tel" />
+                </div>
+              </div>
+
+              {/* Notify recipient toggle */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setNotifyRecipient(!notifyRecipient)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Notify recipient</p>
+                  <p className="text-[10px] text-muted-foreground">Send SMS updates to recipient</p>
                 </div>
               </div>
 
@@ -314,13 +429,13 @@ export default function DeliveryPage() {
               {/* Speed */}
               <div className="space-y-2">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock className="w-4 h-4 text-violet-500" /> Delivery Speed</h3>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {deliverySpeed.map(speed => {
                     const Icon = speed.icon;
                     return (
                       <button key={speed.id} onClick={() => setSelectedSpeed(speed.id)}
                         className={cn(
-                          "flex-1 p-3 rounded-xl border text-center transition-all touch-manipulation active:scale-95",
+                          "p-3 rounded-xl border text-center transition-all touch-manipulation active:scale-95",
                           selectedSpeed === speed.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card hover:border-violet-500/20"
                         )}>
                         <Icon className={cn("w-4 h-4 mx-auto mb-1", selectedSpeed === speed.id ? "text-violet-500" : "text-muted-foreground")} />
@@ -377,9 +492,24 @@ export default function DeliveryPage() {
                     </div>
                   </button>
                 </div>
+                {/* Priority handling */}
+                <button onClick={() => setPriorityHandling(!priorityHandling)}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-95",
+                    priorityHandling ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card"
+                  )}>
+                  <Award className={cn("w-4 h-4", priorityHandling ? "text-violet-500" : "text-muted-foreground")} />
+                  <div className="text-left flex-1">
+                    <p className="font-bold text-xs">Priority Handling</p>
+                    <p className="text-[10px] text-muted-foreground">Dedicated courier, real-time updates · +$4.99</p>
+                  </div>
+                  <div className={cn("w-10 h-6 rounded-full transition-all relative", priorityHandling ? "bg-violet-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", priorityHandling ? "left-[18px]" : "left-0.5")} />
+                  </div>
+                </button>
               </div>
 
-              {/* Description, weight, delivery note */}
+              {/* Description, weight, photo, note */}
               <div className="space-y-3">
                 <Input placeholder="What's inside? (optional)" value={packageDescription} onChange={(e) => setPackageDescription(e.target.value)} className="h-12 rounded-xl" />
                 <div className="flex gap-2">
@@ -387,8 +517,11 @@ export default function DeliveryPage() {
                     <Scale className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Weight (lbs)" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} className="h-12 rounded-xl pl-10" />
                   </div>
-                  <button className="h-12 px-4 rounded-xl border border-dashed border-border/60 bg-card text-muted-foreground hover:border-violet-500/40 hover:text-violet-500 transition-all flex items-center gap-2 text-xs font-medium touch-manipulation active:scale-95">
-                    <Camera className="w-4 h-4" /> Add Photo
+                  <button onClick={handlePhotoUpload}
+                    className={cn("h-12 px-4 rounded-xl border flex items-center gap-2 text-xs font-medium touch-manipulation active:scale-95 transition-all",
+                      photoAdded ? "border-violet-500 bg-violet-500/5 text-violet-500" : "border-dashed border-border/60 bg-card text-muted-foreground hover:border-violet-500/40 hover:text-violet-500"
+                    )}>
+                    <Camera className="w-4 h-4" /> {photoAdded ? "Photo ✓" : "Add Photo"}
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -408,6 +541,11 @@ export default function DeliveryPage() {
                   <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99{packageCount > 1 ? `/pkg` : ""}</p>
                 </div>
               </div>
+
+              {/* Live price estimate */}
+              {selectedSize && (
+                <PriceEstimate basePrice={currentSize?.price ?? 0} speed={speedMultiplier} fragile={isFragile} signature={requireSignature} insurance={includeInsurance} packages={packageCount} promo={promoApplied} />
+              )}
 
               <Button onClick={handleContinueToReview} disabled={!selectedSize} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
                 Review Order <Zap className="w-5 h-5" />
@@ -441,6 +579,11 @@ export default function DeliveryPage() {
                     </div>
                   </div>
                 </div>
+                {notifyRecipient && (
+                  <div className="mt-3 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-violet-500">
+                    <Bell className="w-3 h-3" /> Recipient will receive SMS updates
+                  </div>
+                )}
               </div>
 
               {/* Package info */}
@@ -461,7 +604,7 @@ export default function DeliveryPage() {
                     </p>
                   </div>
                 </div>
-                {/* Special handling badges */}
+                {/* Badges */}
                 <div className="flex gap-2 flex-wrap">
                   {isFragile && (
                     <span className="flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full">
@@ -470,12 +613,22 @@ export default function DeliveryPage() {
                   )}
                   {requireSignature && (
                     <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
-                      <CheckCircle className="w-3 h-3" /> Signature Required
+                      <CheckCircle className="w-3 h-3" /> Signature
+                    </span>
+                  )}
+                  {priorityHandling && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <Award className="w-3 h-3" /> Priority
+                    </span>
+                  )}
+                  {photoAdded && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                      <Camera className="w-3 h-3" /> Photo
                     </span>
                   )}
                   {deliveryNote && (
                     <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
-                      <MessageSquare className="w-3 h-3" /> Note added
+                      <MessageSquare className="w-3 h-3" /> Note
                     </span>
                   )}
                   {packageCount > 1 && (
@@ -510,7 +663,8 @@ export default function DeliveryPage() {
                 {fragileFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Fragile handling</span><span className="font-bold">${fragileFee.toFixed(2)}</span></div>}
                 {signatureFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Signature required</span><span className="font-bold">${signatureFee.toFixed(2)}</span></div>}
                 {includeInsurance && <div className="flex justify-between"><span className="text-muted-foreground">Insurance{packageCount > 1 ? ` (×${packageCount})` : ""}</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>}
-                {promoDiscount > 0 && <div className="flex justify-between text-violet-500"><span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> Promo</span><span className="font-bold">-${promoDiscount.toFixed(2)}</span></div>}
+                {priorityFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Priority handling</span><span className="font-bold">${priorityFee.toFixed(2)}</span></div>}
+                {promoDiscount > 0 && <div className="flex justify-between text-violet-500"><span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> DELIVER15</span><span className="font-bold">-${promoDiscount.toFixed(2)}</span></div>}
                 <div className="flex justify-between pt-3 border-t border-border/30">
                   <span className="font-bold text-base">Total</span>
                   <span className="font-bold text-xl text-violet-500">${totalPrice.toFixed(2)}</span>
@@ -528,7 +682,7 @@ export default function DeliveryPage() {
             </motion.div>
           )}
 
-          {/* CONFIRMATION - Enhanced with live tracking */}
+          {/* CONFIRMATION */}
           {step === "confirmation" && (
             <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center min-h-[60vh]">
               <div className="max-w-md w-full text-center space-y-6">
@@ -552,6 +706,9 @@ export default function DeliveryPage() {
                   <DeliveryTrackingTimeline />
                 </motion.div>
 
+                {/* Courier preview */}
+                <CourierPreviewCard />
+
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                   className="rounded-2xl bg-card border border-border/40 p-5 text-left space-y-3">
                   <div className="flex items-center gap-3">
@@ -566,12 +723,30 @@ export default function DeliveryPage() {
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-500" /></div>
                     <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-bold text-violet-500">${totalPrice.toFixed(2)}</p></div>
                   </div>
-                  {/* Proof of delivery placeholder */}
+                  {notifyRecipient && (
+                    <div className="pt-2 border-t border-border/30 flex items-center gap-2 text-xs text-violet-500">
+                      <Bell className="w-3 h-3" /> Recipient notified via SMS
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-border/30">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Camera className="w-3.5 h-3.5" />
                       <span>Photo proof of delivery will appear here</span>
                     </div>
+                  </div>
+                </motion.div>
+
+                {/* Rate delivery */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                  className="rounded-2xl bg-card border border-border/40 p-4">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Rate this delivery</p>
+                  <div className="flex justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <button key={s} onClick={() => { setRateDelivery(s); toast.success(`Rated ${s} stars!`); }}
+                        className="touch-manipulation active:scale-90 transition-transform">
+                        <Star className={cn("w-8 h-8 transition-all", rateDelivery && s <= rateDelivery ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
+                      </button>
+                    ))}
                   </div>
                 </motion.div>
 
