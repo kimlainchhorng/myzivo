@@ -59,6 +59,8 @@ export default function VideoAdsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % promos.length);
     }, 5000);
@@ -69,7 +71,7 @@ export default function VideoAdsSection() {
   const Icon = active.icon;
 
   return (
-    <section className="section-padding">
+    <section className="section-padding" aria-label="Featured promotions">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
