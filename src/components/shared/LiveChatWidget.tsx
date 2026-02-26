@@ -449,6 +449,7 @@ const LiveChatWidget = () => {
                   className="rounded-full w-10 h-10"
                   onClick={() => sendMessage(input)}
                   disabled={isStreaming || !input.trim() || showEscalation}
+                  aria-label="Send message"
                 >
                   <Send className="w-4 h-4" />
                 </Button>

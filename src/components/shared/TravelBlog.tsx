@@ -114,7 +114,7 @@ const TravelBlog = () => {
                       <MessageCircle className="w-3 h-3" /> {post.comments}
                     </span>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share article">
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </div>

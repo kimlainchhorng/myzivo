@@ -195,7 +195,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         // Use fallback rates silently
-        console.log("Using fallback exchange rates");
+        console.debug("Using fallback exchange rates");
       } finally {
         setRatesLoading(false);
       }
