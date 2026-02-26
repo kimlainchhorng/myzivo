@@ -97,7 +97,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             </motion.div>
 
             {/* Center: Service Tabs */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1" role="tablist" aria-label="Travel services">
               {serviceNavItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
