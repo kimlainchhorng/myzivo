@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +82,12 @@ export default function DeleteAccountPage() {
         </div>
       </header>
 
-      <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <motion.main
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="container max-w-2xl mx-auto px-4 py-6 space-y-6"
+      >
         {hasPendingDeletion ? (
           // Pending deletion view
           <Card className="border-amber-500/50 bg-amber-500/5">
@@ -310,7 +316,7 @@ export default function DeleteAccountPage() {
             </p>
           </>
         )}
-      </main>
+      </motion.main>
     </div>
   );
 }

@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, User, Mail, Phone, Shield, CheckCircle } from "lucide-react";
 import Header from "@/components/Header";
@@ -72,7 +73,12 @@ export default function CarTravelerInfoPage() {
       <Header />
 
       <main className="pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="container mx-auto px-4 max-w-2xl"
+        >
           {/* Back Link */}
           <Link 
             to={`/rent-car/detail?${searchParams.toString()}`}
@@ -219,7 +225,7 @@ export default function CarTravelerInfoPage() {
           </div>
 
           <RampGlobalDisclaimer className="mt-6" />
-        </div>
+        </motion.div>
       </main>
 
       <Footer />

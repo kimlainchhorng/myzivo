@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Link, Navigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -82,7 +83,12 @@ export default function LoyaltyPage() {
       <Header />
 
       <main className="pt-20 pb-24">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="container mx-auto px-4 max-w-4xl"
+        >
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
             <Button variant="ghost" size="icon" asChild aria-label="Go back">
@@ -322,7 +328,7 @@ export default function LoyaltyPage() {
               </p>
             </>
           )}
-        </div>
+        </motion.div>
       </main>
 
       <MobileBottomNav />
