@@ -80,8 +80,8 @@ const TIERS: TierInfo[] = [
   { 
     name: 'Silver', 
     icon: Star, 
-    color: 'text-slate-300',
-    bgGradient: 'from-slate-300/20 to-slate-500/10',
+    color: 'text-muted-foreground',
+    bgGradient: 'from-muted-foreground/20 to-muted-foreground/10',
     minMiles: 25000, 
     nextTier: 'Gold',
     benefits: ['1.25x miles', 'Priority booking', 'Free seat selection'],
@@ -197,7 +197,7 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                 <Badge className={cn(
                   "border-0",
                   currentTier.name === 'Gold' && "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
-                  currentTier.name === 'Silver' && "bg-gradient-to-r from-slate-400 to-slate-500 text-white",
+                  currentTier.name === 'Silver' && "bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-primary-foreground",
                   currentTier.name === 'Platinum' && "bg-gradient-to-r from-cyan-400 to-blue-500 text-white",
                   currentTier.name === 'Bronze' && "bg-gradient-to-r from-orange-400 to-amber-500 text-white"
                 )}>

@@ -26,7 +26,7 @@ const priceColors: Record<string, string> = {
 
 const weatherIcons: Record<string, React.ReactNode> = {
   cold: <Snowflake className="w-4 h-4 text-sky-400" />,
-  mild: <Cloud className="w-4 h-4 text-slate-400" />,
+  mild: <Cloud className="w-4 h-4 text-muted-foreground" />,
   warm: <Leaf className="w-4 h-4 text-emerald-400" />,
   hot: <Sun className="w-4 h-4 text-amber-400" />,
 };

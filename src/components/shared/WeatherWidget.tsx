@@ -71,7 +71,7 @@ const WeatherWidget = () => {
                     <p className="text-xs font-medium mb-2">{day.day}</p>
                     <Icon className={`w-6 h-6 mx-auto mb-2 ${
                       day.condition === 'Sunny' ? 'text-yellow-400' :
-                      day.condition === 'Cloudy' ? 'text-gray-400' : 'text-blue-400'
+                      day.condition === 'Cloudy' ? 'text-muted-foreground' : 'text-blue-400'
                     }`} />
                     <p className="font-bold text-sm">{day.high}°</p>
                     <p className="text-xs text-muted-foreground">{day.low}°</p>

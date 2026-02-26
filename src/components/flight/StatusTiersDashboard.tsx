@@ -46,8 +46,8 @@ const TIERS: StatusTier[] = [
     id: 'silver',
     name: 'Silver',
     icon: Shield,
-    color: 'text-slate-300',
-    bgGradient: 'from-slate-400/20 to-slate-600/10',
+    color: 'text-muted-foreground',
+    bgGradient: 'from-muted-foreground/20 to-muted-foreground/10',
     milesRequired: 25000,
     flightsRequired: 10
   },
@@ -151,7 +151,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
               className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center",
                 currentTier === 'gold' ? 'bg-amber-500/20' :
-                currentTier === 'platinum' ? 'bg-purple-500/20' : 'bg-slate-500/20'
+                currentTier === 'platinum' ? 'bg-purple-500/20' : 'bg-muted'
               )}
             >
               <currentTierData.icon className={cn("w-8 h-8", currentTierData.color)} />
@@ -203,7 +203,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
                   selectedTier === tier.id
                     ? tier.id === 'gold' ? 'bg-amber-500/20 border-amber-500/40' :
                       tier.id === 'platinum' ? 'bg-purple-500/20 border-purple-500/40' :
-                      'bg-slate-500/20 border-slate-500/40'
+                      'bg-muted border-border'
                     : 'bg-muted/30 border-border/50 hover:border-border'
                 )}
               >

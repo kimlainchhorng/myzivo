@@ -267,11 +267,11 @@ const tierConfig = {
     textColor: "text-amber-600"
   },
   silver: { 
-    gradient: "from-gray-300 via-gray-400 to-gray-500", 
-    glow: "shadow-gray-400/30",
+    gradient: "from-muted-foreground/60 via-muted-foreground/80 to-muted-foreground", 
+    glow: "shadow-muted-foreground/30",
     icon: Award, 
     label: "Silver",
-    textColor: "text-gray-400"
+    textColor: "text-muted-foreground"
   },
   gold: { 
     gradient: "from-amber-400 via-yellow-500 to-amber-600", 

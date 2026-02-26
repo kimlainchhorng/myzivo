@@ -58,7 +58,7 @@ const statusConfig: Record<RoadmapStatus, { label: string; color: string }> = {
   },
   planned: {
     label: "Planned",
-    color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    color: "bg-muted text-muted-foreground",
   },
 };
 
@@ -272,8 +272,8 @@ export default function Roadmap() {
             {/* Future - Planned */}
             <div className="mb-16">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <Lightbulb className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <Lightbulb className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">Future</h2>
