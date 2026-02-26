@@ -183,12 +183,12 @@ export default function BookingReturnPage() {
             {pageStatus === "converted" && (
               <Card className="overflow-hidden">
                 {/* Neutral Header - Not claiming ticket issuance */}
-                <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 sm:p-8 text-center text-white">
+                <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 sm:p-8 text-center text-primary-foreground">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
                   <h1 className="text-xl sm:text-2xl font-bold mb-2">You're booking with our airline partner</h1>
-                  <p className="text-white/90 text-sm sm:text-base">
+                  <p className="text-primary-foreground/90 text-sm sm:text-base">
                     Booking status will be confirmed by the airline partner
                   </p>
                 </div>
@@ -280,12 +280,12 @@ export default function BookingReturnPage() {
             {pageStatus === "failed" && (
               <Card className="overflow-hidden">
                 {/* Error Header */}
-                <div className="bg-gradient-to-r from-red-500 to-rose-500 p-8 text-center text-white">
+                <div className="bg-gradient-to-r from-red-500 to-rose-500 p-8 text-center text-primary-foreground">
                   <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <XCircle className="w-12 h-12" />
                   </div>
                   <h1 className="text-2xl font-bold mb-2">Booking Failed</h1>
-                  <p className="text-white/90">
+                  <p className="text-primary-foreground/90">
                     There was an issue processing your booking
                   </p>
                 </div>
@@ -318,12 +318,12 @@ export default function BookingReturnPage() {
             {pageStatus === "pending" && (
               <Card className="overflow-hidden">
                 {/* Pending Header */}
-                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 sm:p-8 text-center text-white">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 sm:p-8 text-center text-primary-foreground">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <Clock className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
                   <h1 className="text-xl sm:text-2xl font-bold mb-2">Booking in progress</h1>
-                  <p className="text-white/90 text-sm sm:text-base">
+                  <p className="text-primary-foreground/90 text-sm sm:text-base">
                     Waiting for confirmation from airline partner
                   </p>
                 </div>
@@ -370,7 +370,7 @@ export default function BookingReturnPage() {
                     <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
                   <h1 className="text-xl sm:text-2xl font-bold mb-2">Redirect complete</h1>
-                  <p className="text-white/90 text-sm sm:text-base">
+                  <p className="text-primary-foreground/90 text-sm sm:text-base">
                     Please check your email for booking confirmation
                   </p>
                 </div>

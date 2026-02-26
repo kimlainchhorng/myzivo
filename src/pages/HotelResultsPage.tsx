@@ -355,7 +355,7 @@ export default function HotelResultsPage() {
                       <SortSelect value={sortBy} onValueChange={setSortBy} options={hotelSortOptions} />
                       <Button
                         onClick={handleViewAllOnPartner}
-                        className="hidden sm:flex bg-amber-500 hover:bg-amber-600 text-white gap-2"
+                        className="hidden sm:flex bg-amber-500 hover:bg-amber-600 text-primary-foreground gap-2"
                       >
                         View on Booking.com
                         <ExternalLink className="w-4 h-4" />

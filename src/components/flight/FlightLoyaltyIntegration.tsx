@@ -345,7 +345,7 @@ export const FlightLoyaltyIntegration = ({
                 <Button
                   onClick={handleAddProgram}
                   disabled={!selectedProgram || !newMemberNumber}
-                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
+                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Link Program

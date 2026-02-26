@@ -285,11 +285,11 @@ export const FilterChip: React.FC<FilterChipProps> = ({
   onRemove,
 }) => {
   const activeColors = {
-    rides: "bg-gradient-to-r from-rides to-green-400 text-white shadow-lg shadow-rides/30",
-    eats: "bg-gradient-to-r from-eats to-orange-400 text-white shadow-lg shadow-eats/30",
-    sky: "bg-gradient-to-r from-sky-500 to-blue-500 text-white shadow-lg shadow-sky-500/30",
-    amber: "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30",
-    default: "bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30",
+    rides: "bg-gradient-to-r from-rides to-green-400 text-primary-foreground shadow-lg shadow-rides/30",
+    eats: "bg-gradient-to-r from-eats to-orange-400 text-primary-foreground shadow-lg shadow-eats/30",
+    sky: "bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground shadow-lg shadow-sky-500/30",
+    amber: "bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground shadow-lg shadow-amber-500/30",
+    default: "bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30",
   };
 
   return (

@@ -119,7 +119,7 @@ export default function PhotoDestinationGrid({
                   )}>
                     {destination.city}
                   </h3>
-                  <p className="text-xs text-white/70">{destination.country}</p>
+                  <p className="text-xs text-primary-foreground/70">{destination.country}</p>
                 </div>
               </button>
             );

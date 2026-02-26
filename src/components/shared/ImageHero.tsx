@@ -175,7 +175,7 @@ export default function ImageHero({
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg lg:text-xl text-white/80 max-w-2xl mx-auto mb-6 drop-shadow-md">
+          <p className="text-base sm:text-lg lg:text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-6 drop-shadow-md">
             {content.subheadline}
           </p>
 
@@ -187,7 +187,7 @@ export default function ImageHero({
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-full",
                   "bg-white/10 backdrop-blur-xl border border-white/20",
-                  "text-xs sm:text-sm text-white/90 shadow-lg"
+                  "text-xs sm:text-sm text-primary-foreground/90 shadow-lg"
                 )}
               >
                 <badge.icon className={cn(

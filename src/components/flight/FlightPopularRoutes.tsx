@@ -97,7 +97,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                     </div>
                   </div>
                   {route.trending && (
-                    <Badge className="bg-gradient-to-r from-sky-500 to-blue-500 text-white text-xs">
+                    <Badge className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground text-xs">
                       <TrendingUp className="w-3 h-3 mr-1" />
                       Hot
                     </Badge>

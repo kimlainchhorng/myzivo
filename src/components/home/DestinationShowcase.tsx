@@ -103,7 +103,7 @@ export default function DestinationShowcase() {
                       <p className="text-primary-foreground/70 text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-white/60 text-xs flex items-center gap-1">
+                      <p className="text-primary-foreground/60 text-xs flex items-center gap-1">
                         <Plane className="w-3 h-3" /> Flights from
                       </p>
                       <p className="text-primary-foreground font-bold text-xl">{dest.from}</p>

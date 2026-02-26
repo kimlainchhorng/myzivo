@@ -171,7 +171,7 @@ export default function VehicleTypeGallery({
                   </h3>
                   
                   {/* Specs Row */}
-                  <div className="flex items-center gap-3 text-xs text-white/80">
+                  <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
                     <div className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5" />
                       <span>{vehicle.passengers}</span>

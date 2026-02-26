@@ -145,7 +145,7 @@ export const FeatureHighlight = ({
           <motion.div 
             whileHover={{ scale: 1.1, rotate: 5 }}
             className={cn(
-              "rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-lg bg-gradient-to-br",
+              "rounded-xl flex items-center justify-center flex-shrink-0 text-primary-foreground shadow-lg bg-gradient-to-br",
               colors.gradient,
               colors.glow,
               sizes.icon
@@ -262,7 +262,7 @@ export const InfoCard = ({
         className={cn(
           "flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg",
           config.iconBg,
-          isPremium && "text-white"
+          isPremium && "text-primary-foreground"
         )}
       >
         {icon}
@@ -404,7 +404,7 @@ export const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({
           transition={{ delay: 0.2 }}
           className="absolute top-4 right-4"
         >
-          <Badge className={cn("bg-gradient-to-r text-white border-0 font-bold shadow-lg", config.accent, config.glow)}>
+          <Badge className={cn("bg-gradient-to-r text-primary-foreground border-0 font-bold shadow-lg", config.accent, config.glow)}>
             <Sparkles className="w-3 h-3 mr-1" />
             {config.badge}
           </Badge>
@@ -426,9 +426,9 @@ export const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({
           {emoji ? (
             <span className={cn("text-2xl", size === "lg" && "text-3xl")}>{emoji}</span>
           ) : icon ? (
-            <div className="text-white">{icon}</div>
+            <div className="text-primary-foreground">{icon}</div>
           ) : (
-            <IconComponent className={cn("text-white", sizes.iconInner)} />
+            <IconComponent className={cn("text-primary-foreground", sizes.iconInner)} />
           )}
         </motion.div>
 
@@ -447,7 +447,7 @@ export const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({
               <Button 
                 onClick={cta.onClick}
                 className={cn(
-                  "bg-gradient-to-r text-white border-0 rounded-xl font-bold gap-2",
+                  "bg-gradient-to-r text-primary-foreground border-0 rounded-xl font-bold gap-2",
                   config.accent,
                   config.glow,
                   sizes.button
@@ -624,7 +624,7 @@ export const SocialProof: React.FC<SocialProofProps> = ({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4 }}
-              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold border-2 border-background shadow-lg"
+              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold border-2 border-background shadow-lg"
             >
               +{(userCount - 4).toLocaleString()}
             </motion.div>

@@ -16,8 +16,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-muted hover:text-foreground active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
         // ZIVO Custom Variants
-        rides: "gradient-rides text-white glow-rides hover:opacity-90 active:scale-[0.98] font-bold",
-        eats: "gradient-eats text-white glow-eats hover:opacity-90 active:scale-[0.98] font-bold",
+        rides: "gradient-rides text-primary-foreground glow-rides hover:opacity-90 active:scale-[0.98] font-bold",
+        eats: "gradient-eats text-primary-foreground glow-eats hover:opacity-90 active:scale-[0.98] font-bold",
         glass: "glass-card text-foreground hover:bg-white/10",
         hero: "bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] font-bold text-base",
       },

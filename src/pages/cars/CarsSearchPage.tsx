@@ -462,7 +462,7 @@ function VehicleCard({ vehicle }: { vehicle: P2PVehicleWithOwner }) {
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-wrap gap-1">
             {vehicle.instant_book && (
-              <Badge className="bg-amber-500 text-white gap-1">
+              <Badge className="bg-amber-500 text-primary-foreground gap-1">
                 <Zap className="w-3 h-3" />
                 Instant
               </Badge>
@@ -471,7 +471,7 @@ function VehicleCard({ vehicle }: { vehicle: P2PVehicleWithOwner }) {
 
           {/* Owner rating */}
           {vehicle.owner?.rating && (
-            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               {vehicle.owner.rating.toFixed(1)}
             </div>

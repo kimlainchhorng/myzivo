@@ -126,7 +126,7 @@ export default function AnimatedCityHero({
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-white/80 max-w-xl mb-6">
+          <p className="text-lg sm:text-xl text-primary-foreground/80 max-w-xl mb-6">
             {subtitle || defaultSubtitle}
           </p>
 
@@ -135,7 +135,7 @@ export default function AnimatedCityHero({
             {badges.map((badge) => (
               <div
                 key={badge.text}
-                className="flex items-center gap-2 text-sm text-white/70"
+                className="flex items-center gap-2 text-sm text-primary-foreground/70"
               >
                 <badge.icon className={cn("w-4 h-4", config.color)} />
                 <span>{badge.text}</span>

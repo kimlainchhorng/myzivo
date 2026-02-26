@@ -140,7 +140,7 @@ export default function HotelExperienceGallery({ onCategorySelect, className }: 
                   <h3 className="font-display text-base sm:text-lg lg:text-xl font-bold text-primary-foreground mb-0.5">
                     {exp.title}
                   </h3>
-                  <p className="text-white/70 text-xs sm:text-sm mb-2 hidden sm:block">
+                  <p className="text-primary-foreground/70 text-xs sm:text-sm mb-2 hidden sm:block">
                     {exp.subtitle}
                   </p>
                   

@@ -138,7 +138,7 @@ export default function VideoAdsSection() {
                   {/* Right side decorative icon */}
                   <div className="hidden sm:flex items-center justify-center">
                     <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                      <Icon className="w-16 h-16 text-white/40" />
+                      <Icon className="w-16 h-16 text-primary-foreground/40" />
                     </div>
                   </div>
                 </div>

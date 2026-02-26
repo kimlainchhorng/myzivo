@@ -309,7 +309,7 @@ export default function DestinationCardsGrid({
                   <h3 className="font-bold text-primary-foreground text-sm sm:text-base drop-shadow-lg">
                     {dest.city}
                   </h3>
-                  <p className="text-white/80 text-xs">
+                  <p className="text-primary-foreground/80 text-xs">
                     {dest.country}
                   </p>
                 </div>

@@ -20,7 +20,7 @@ const spinnerSizes = {
 
 const spinnerColors = {
   primary: "text-primary",
-  white: "text-white",
+  white: "text-primary-foreground",
   muted: "text-muted-foreground",
 };
 

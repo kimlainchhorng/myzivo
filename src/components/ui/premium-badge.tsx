@@ -42,8 +42,8 @@ const badgeConfig: Record<BadgeVariant, {
   "best-value": {
     icon: Sparkles,
     label: "Best Value",
-    colors: "from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30",
-    iconColors: "text-white"
+    colors: "from-emerald-500 to-emerald-600 text-primary-foreground shadow-emerald-500/30",
+    iconColors: "text-primary-foreground"
   },
   "popular": {
     icon: TrendingUp,

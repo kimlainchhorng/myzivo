@@ -52,8 +52,8 @@ export default function PopularHotelDestinations() {
                 
                 {/* Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-white font-bold text-lg">{city}</h3>
-                  <p className="text-white/70 text-sm">{photo?.country || 'Explore hotels'}</p>
+                  <h3 className="text-primary-foreground font-bold text-lg">{city}</h3>
+                  <p className="text-primary-foreground/70 text-sm">{photo?.country || 'Explore hotels'}</p>
                 </div>
               </Link>
             );

@@ -248,7 +248,7 @@ const GroundTransportBooking = ({
           </p>
         </div>
         {bundleDiscount && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500 text-white">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500 text-primary-foreground">
               <Package className="h-3 w-3" />
               15% Bundle Discount
             </span>
@@ -501,7 +501,7 @@ const GroundTransportBooking = ({
             exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
           >
-            <Card className="bg-emerald-500 text-white border-0 shadow-2xl">
+            <Card className="bg-emerald-500 text-primary-foreground border-0 shadow-2xl">
               <CardContent className="p-4 flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5" />
                 <span className="font-medium">
