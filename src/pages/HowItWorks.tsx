@@ -252,6 +252,76 @@ export default function HowItWorks() {
             </CardContent>
           </Card>
 
+          {/* === WAVE 11: Rich HowItWorks Content === */}
+
+          {/* User Satisfaction Stats */}
+          <Card className="mb-12 border-primary/20 bg-primary/5">
+            <CardContent className="p-8">
+              <h3 className="font-bold text-xl text-center mb-6">ZIVO by the Numbers</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+                {[
+                  { stat: "2M+", label: "Searches per month", emoji: "🔍" },
+                  { stat: "500+", label: "Partner airlines", emoji: "✈️" },
+                  { stat: "4.8★", label: "User rating", emoji: "⭐" },
+                  { stat: "<2s", label: "Average search time", emoji: "⚡" },
+                ].map(s => (
+                  <div key={s.label}>
+                    <span className="text-2xl">{s.emoji}</span>
+                    <p className="text-2xl font-bold text-primary mt-2">{s.stat}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Common Questions */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-center mb-6">Common Questions</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { q: "Is ZIVO free to use?", a: "Yes! ZIVO is completely free. We earn a small referral commission from partners — you never pay extra." },
+                { q: "Do I book directly on ZIVO?", a: "ZIVO redirects you to the partner's checkout. Some bookings may be completed via embedded partner checkout on our site." },
+                { q: "Are the prices accurate?", a: "Prices are fetched in real-time from partners. Final price is confirmed on the partner's checkout page." },
+                { q: "Can I cancel or change my booking?", a: "Cancellations and changes are handled by the booking partner. ZIVO provides links and guidance to their support." },
+                { q: "How does ZIVO make money?", a: "We earn referral commissions from travel partners when you book through our links. This never affects the price you pay." },
+                { q: "Is my payment secure?", a: "All payments are processed by licensed, PCI-compliant travel partners. ZIVO never stores your payment information." },
+              ].map(f => (
+                <Card key={f.q} className="border-border/50 hover:border-primary/20 transition-all">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-bold">{f.q}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Traveler Testimonials */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-center mb-6">What Travelers Say</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { name: "Sarah K.", quote: "Found a flight $200 cheaper than booking direct. ZIVO is my go-to now!", rating: 5, from: "New York" },
+                { name: "Tom B.", quote: "The comparison feature saved me hours of checking different hotel sites.", rating: 5, from: "Chicago" },
+                { name: "Mei L.", quote: "Super easy to use. Booked flights and a rental car in under 10 minutes.", rating: 5, from: "San Francisco" },
+              ].map(t => (
+                <Card key={t.name} className="border-border/50 hover:shadow-md transition-all">
+                  <CardContent className="p-5">
+                    <div className="flex gap-0.5 mb-3">
+                      {Array(t.rating).fill(0).map((_, i) => (
+                        <span key={i} className="text-amber-400 text-sm">★</span>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground italic mb-3">"{t.quote}"</p>
+                    <p className="text-xs font-bold">{t.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{t.from}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
           {/* CTA */}
           <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">
             <h2 className="text-3xl font-bold mb-4">Ready to Start?</h2>
