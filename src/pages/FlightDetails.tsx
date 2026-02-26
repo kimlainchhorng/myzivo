@@ -175,12 +175,9 @@ const FlightDetails = () => {
   const serviceFee = 0;
   const grandTotal = totalPrice + taxes + serviceFee;
 
-  const airlineFeatures = [
-    { label: "On-time Performance", value: "87%", icon: Clock },
-    { label: "Customer Rating", value: "4.5/5", icon: Star },
-    { label: "Fleet Age", value: "5.2 yrs", icon: Plane },
-    { label: "Skytrax Rating", value: "4★", icon: Award },
-  ];
+  // Airline performance data will be fetched from backend when available
+  // TODO: Connect to airline performance API
+  const airlineFeatures: { label: string; value: string; icon: typeof Clock }[] = [];
 
   // Build itinerary segment
   const itinerarySegments = [{
@@ -388,10 +385,10 @@ const FlightDetails = () => {
                           <div>
                             <p className="font-semibold">This flight has {flight.stops} stop{flight.stops > 1 ? "s" : ""}</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Estimated layover: {Math.floor(Math.random() * 3) + 1}h {Math.floor(Math.random() * 50) + 10}m
+                              {flight.stopCities?.length ? `Via ${flight.stopCities.join(", ")}` : "Connection airport details provided at booking"}
                             </p>
                             <p className="text-sm text-muted-foreground mt-2">
-                              Connection details and gate information will be provided in your booking confirmation.
+                              Layover duration and gate information will be confirmed in your booking.
                             </p>
                           </div>
                         </div>
@@ -399,7 +396,8 @@ const FlightDetails = () => {
                     </Card>
                   )}
 
-                  {/* Airline Stats */}
+                  {/* Airline Stats - Only show when data available */}
+                  {airlineFeatures.length > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -419,6 +417,7 @@ const FlightDetails = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  )}
 
                   {/* Quick Amenities Preview */}
                   <Card>
