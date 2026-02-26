@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { Hotel, Shield, CheckCircle, Clock, ExternalLink, Search as SearchIcon, Star, Globe, Users, BadgeDollarSign } from "lucide-react";
+import { Hotel, Shield, CheckCircle, Clock, ExternalLink, Search as SearchIcon, Star, Globe, Users, BadgeDollarSign, Heart, MapPin, Crown, Sparkles, Bell, Award, ChevronRight, DollarSign, Zap, BadgePercent, CalendarDays, Eye } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -27,6 +27,9 @@ import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch"
 import { getCityBySlug, cityNameToSlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { AnimatePresence } from "framer-motion";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 import HotelFeaturesGrid from "@/components/hotel/HotelFeaturesGrid";
 import HotelComplianceFooter from "@/components/hotel/HotelComplianceFooter";
@@ -114,6 +117,50 @@ export default function HotelsPage() {
   
   const { isLoading, results, searchParams: currentSearch, search, applyFilters, whitelabelUrl } = useRealHotelSearch();
 
+  // === NEW: Booking.com/Airbnb-inspired state ===
+  const [showMapView, setShowMapView] = useState(false);
+  const [geniusLevel, setGeniusLevel] = useState(2);
+  const [showGeniusBanner, setShowGeniusBanner] = useState(true);
+  const [savedProperties, setSavedProperties] = useState<string[]>([]);
+  const [showLastMinuteDeals, setShowLastMinuteDeals] = useState(false);
+  const [priceMatch, setPriceMatch] = useState(false);
+  const [showPropertyTypes, setShowPropertyTypes] = useState(false);
+  const [showLoyaltyWidget, setShowLoyaltyWidget] = useState(false);
+  const [nightsStayed] = useState(12);
+  const [showPhotoGallery, setShowPhotoGallery] = useState(false);
+  const [showGuestReviews, setShowGuestReviews] = useState(false);
+  const [showHostInfo, setShowHostInfo] = useState(false);
+  const [flexibleCancellation, setFlexibleCancellation] = useState(true);
+  const [payAtHotel, setPayAtHotel] = useState(false);
+  const [showSecretDeals, setShowSecretDeals] = useState(false);
+
+  // Property types (Airbnb-style)
+  const propertyTypes = [
+    { id: "hotel", label: "Hotels", icon: "🏨", count: 1245 },
+    { id: "apartment", label: "Apartments", icon: "🏢", count: 876 },
+    { id: "villa", label: "Villas", icon: "🏡", count: 342 },
+    { id: "resort", label: "Resorts", icon: "🏖️", count: 198 },
+    { id: "hostel", label: "Hostels", icon: "🛏️", count: 567 },
+    { id: "cabin", label: "Cabins", icon: "🏔️", count: 123 },
+    { id: "boutique", label: "Boutique", icon: "✨", count: 234 },
+    { id: "bnb", label: "B&Bs", icon: "🏠", count: 456 },
+  ];
+
+  // Last-minute deals mock
+  const lastMinuteDeals = [
+    { name: "The Grand Plaza", city: "New York", originalPrice: 289, dealPrice: 189, discount: 35, stars: 5, rating: 9.2 },
+    { name: "Seaside Resort & Spa", city: "Miami", originalPrice: 199, dealPrice: 129, discount: 35, stars: 4, rating: 8.8 },
+    { name: "Urban Loft Hotel", city: "Chicago", originalPrice: 159, dealPrice: 99, discount: 38, stars: 3, rating: 8.5 },
+  ];
+
+  // Guest review highlights mock
+  const reviewHighlights = [
+    { category: "Cleanliness", score: 9.4, icon: "🧹" },
+    { category: "Location", score: 9.1, icon: "📍" },
+    { category: "Value", score: 8.7, icon: "💰" },
+    { category: "Service", score: 9.3, icon: "🛎️" },
+  ];
+
   useEffect(() => {
     if (city && !hasSearched) {
       const checkIn = addDays(new Date(), 7);
@@ -194,6 +241,150 @@ export default function HotelsPage() {
                 <p className="text-center text-xs text-white/50">Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* === BOOKING/AIRBNB FEATURES === */}
+
+        {/* Genius Loyalty Banner (Booking.com) */}
+        {showGeniusBanner && (
+          <section className="py-4 bg-gradient-to-r from-sky-500/10 to-blue-500/10 border-b border-sky-500/20">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center justify-between max-w-4xl mx-auto">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
+                    <Crown className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      ZIVO Genius Level {geniusLevel}
+                      <Badge className="bg-sky-500/20 text-sky-500 border-0 text-[9px]">10% off select stays</Badge>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{nightsStayed} nights stayed · {20 - nightsStayed} more for Level 3</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowGeniusBanner(false)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Property Type Filters (Airbnb) */}
+        <section className="py-4 border-b border-border/30 bg-muted/5">
+          <div className="container mx-auto px-4">
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {propertyTypes.map(pt => (
+                <button key={pt.id} onClick={() => navigate(`/hotels?type=${pt.id}`)}
+                  className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border border-border/40 bg-card hover:border-primary/40 transition-all hover:scale-105">
+                  <span className="text-xl">{pt.icon}</span>
+                  <span className="text-[10px] font-bold text-foreground">{pt.label}</span>
+                  <span className="text-[9px] text-muted-foreground">{pt.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Map / List Toggle + Filters */}
+        <section className="py-3 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between max-w-4xl mx-auto">
+              <div className="flex gap-2">
+                <button onClick={() => setShowMapView(false)}
+                  className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all",
+                    !showMapView ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                  📋 List
+                </button>
+                <button onClick={() => { setShowMapView(true); toast.info("🗺️ Map view — see hotels on the map"); }}
+                  className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all",
+                    showMapView ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                  🗺️ Map
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setFlexibleCancellation(!flexibleCancellation); }}
+                  className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all",
+                    flexibleCancellation ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                  ✓ Free Cancellation
+                </button>
+                <button onClick={() => { setPayAtHotel(!payAtHotel); }}
+                  className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all",
+                    payAtHotel ? "bg-sky-500/10 text-sky-500 border border-sky-500/30" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                  🏨 Pay at Hotel
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Secret Deals / Last-Minute (Booking.com) */}
+        <section className="py-6 border-b border-border/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowLastMinuteDeals(!showLastMinuteDeals)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Zap className="w-4 h-4 text-amber-500" /> Last-Minute Deals — Up to 40% Off Tonight
+              <Badge className="bg-red-500/10 text-red-500 border-0 text-[9px] animate-pulse">LIVE</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showLastMinuteDeals && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showLastMinuteDeals && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {lastMinuteDeals.map(deal => (
+                      <motion.div key={deal.name} whileHover={{ scale: 1.02 }}
+                        className="rounded-2xl bg-card border border-border/40 p-4 hover:border-amber-500/40 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1">{Array.from({ length: deal.stars }).map((_, i) => <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />)}</div>
+                          <Badge className="bg-red-500/10 text-red-500 border-0 text-[9px]">-{deal.discount}%</Badge>
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{deal.name}</p>
+                        <p className="text-xs text-muted-foreground mb-2">{deal.city}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground line-through">${deal.originalPrice}</span>
+                          <span className="text-lg font-bold text-emerald-500">${deal.dealPrice}</span>
+                          <span className="text-[10px] text-muted-foreground">/night</span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1">
+                          <span className="text-[10px] bg-sky-500/10 text-sky-500 px-1.5 py-0.5 rounded font-bold">{deal.rating}</span>
+                          <span className="text-[10px] text-muted-foreground">Excellent</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Guest Review Highlights (Booking.com/Airbnb) */}
+        <section className="py-6 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
+                <Star className="w-4 h-4 text-amber-500" /> Guest Review Highlights
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {reviewHighlights.map(r => (
+                  <div key={r.category} className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                    <span className="text-lg">{r.icon}</span>
+                    <p className="text-sm font-bold text-foreground mt-1">{r.score}</p>
+                    <p className="text-[10px] text-muted-foreground">{r.category}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Price Match Guarantee (Booking.com) */}
+        <section className="py-4 border-b border-border/30 bg-emerald-500/5">
+          <div className="container mx-auto px-4 text-center">
+            <button onClick={() => { setPriceMatch(true); toast.success("✅ Price Match Guarantee activated!"); }}
+              className="inline-flex items-center gap-2 text-sm font-bold text-emerald-500">
+              <Shield className="w-4 h-4" /> Price Match Guarantee — Find a lower price? We'll match it!
+              {priceMatch && <CheckCircle className="w-4 h-4" />}
+            </button>
           </div>
         </section>
 

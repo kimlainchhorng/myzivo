@@ -4,8 +4,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 import { 
   Car,
   Search,
@@ -16,6 +18,20 @@ import {
   Users,
   ArrowRight,
   Sparkles,
+  Star,
+  Heart,
+  MapPin,
+  Shield,
+  CheckCircle,
+  Crown,
+  Zap,
+  ChevronRight,
+  DollarSign,
+  Award,
+  Bell,
+  Truck,
+  Key,
+  Fuel,
 } from "lucide-react";
 import { useP2PVehicleCount } from "@/hooks/useP2PBooking";
 import P2PDiscoveryBanner from "@/components/car/P2PDiscoveryBanner";
@@ -77,6 +93,51 @@ const CarRentalBooking = () => {
   const [driverAge, setDriverAge] = useState("25");
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // === NEW: Turo-inspired features ===
+  const [deliveryToYou, setDeliveryToYou] = useState(false);
+  const [instantBook, setInstantBook] = useState(true);
+  const [longTermDiscount, setLongTermDiscount] = useState(false);
+  const [showTripProtection, setShowTripProtection] = useState(false);
+  const [selectedProtection, setSelectedProtection] = useState<"none" | "basic" | "standard" | "premium">("standard");
+  const [showHostProfile, setShowHostProfile] = useState(false);
+  const [savedCars, setSavedCars] = useState<string[]>([]);
+  const [showCarFeatureFilter, setShowCarFeatureFilter] = useState(false);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [unlimitedMileage, setUnlimitedMileage] = useState(true);
+  const [showElectricOnly, setShowElectricOnly] = useState(false);
+  const [freeDelivery] = useState(true);
+  const [hostRating] = useState(4.9);
+  const [hostTrips] = useState(342);
+  const [responseRate] = useState("99%");
+  const [responseTime] = useState("< 1 hour");
+
+  // Trip protection tiers (Turo)
+  const protectionTiers = [
+    { id: "none" as const, name: "Decline", price: "$0", features: ["No coverage", "You're responsible for all damage"] },
+    { id: "basic" as const, name: "Basic", price: "$9/day", features: ["$2,500 deductible", "Liability coverage", "24/7 roadside"] },
+    { id: "standard" as const, name: "Standard", price: "$19/day", features: ["$500 deductible", "Liability coverage", "24/7 roadside", "Lost key replacement"], badge: "Popular" },
+    { id: "premium" as const, name: "Premium", price: "$35/day", features: ["$0 deductible", "Full liability", "24/7 concierge", "Lost key", "Tire & windshield"], badge: "Best Value" },
+  ];
+
+  // Car feature filters (Turo)
+  const carFeatures = [
+    { id: "bluetooth", label: "Bluetooth", icon: "📱" },
+    { id: "gps", label: "GPS", icon: "📍" },
+    { id: "backup-camera", label: "Backup Camera", icon: "📷" },
+    { id: "heated-seats", label: "Heated Seats", icon: "🔥" },
+    { id: "sunroof", label: "Sunroof", icon: "☀️" },
+    { id: "apple-carplay", label: "Apple CarPlay", icon: "🍎" },
+    { id: "android-auto", label: "Android Auto", icon: "🤖" },
+    { id: "keyless", label: "Keyless Entry", icon: "🔑" },
+  ];
+
+  // Mock host profiles (Turo)
+  const hostProfiles = [
+    { name: "Michael S.", rating: 4.9, trips: 342, responseTime: "< 1 hour", superhost: true, joined: "2021" },
+    { name: "Sarah K.", rating: 4.8, trips: 189, responseTime: "< 2 hours", superhost: true, joined: "2022" },
+    { name: "James R.", rating: 4.7, trips: 98, responseTime: "< 3 hours", superhost: false, joined: "2023" },
+  ];
 
   // Handle airport selection from autocomplete
   const handleAirportChange = (airport: Airport | null, displayValue: string) => {
@@ -386,30 +447,156 @@ const CarRentalBooking = () => {
         {/* P2P Discovery Banner */}
         <P2PDiscoveryBanner city={selectedAirport?.city || pickupDisplayValue} />
 
+        {/* === TURO-INSPIRED FEATURES === */}
+
+        {/* Delivery & Instant Book Toggles */}
+        <section className="py-6 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
+                <button onClick={() => { setDeliveryToYou(!deliveryToYou); if (!deliveryToYou) toast.success("🚗 Car will be delivered to your location!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", deliveryToYou ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", deliveryToYou ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-emerald-500" /> Delivery to You</p>
+                  <p className="text-[10px] text-muted-foreground">{freeDelivery ? "Free delivery!" : "From $15"}</p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
+                <button onClick={() => setInstantBook(!instantBook)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", instantBook ? "bg-primary" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", instantBook ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Instant Book</p>
+                  <p className="text-[10px] text-muted-foreground">Skip approval, book instantly</p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
+                <button onClick={() => setShowElectricOnly(!showElectricOnly)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", showElectricOnly ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", showElectricOnly ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Fuel className="w-3.5 h-3.5 text-emerald-500" /> Electric Only</p>
+                  <p className="text-[10px] text-muted-foreground">Tesla, Rivian, Lucid & more</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Car Feature Filters (Turo) */}
+        <section className="py-6 border-b border-border/30 bg-muted/5">
+          <div className="container mx-auto px-4">
+            <button onClick={() => setShowCarFeatureFilter(!showCarFeatureFilter)}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
+              <Key className="w-4 h-4 text-violet-500" /> Car Features
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showCarFeatureFilter && "rotate-90")} />
+            </button>
+            {showCarFeatureFilter && (
+              <div className="flex gap-2 flex-wrap">
+                {carFeatures.map(f => (
+                  <button key={f.id} onClick={() => setSelectedFeatures(prev => prev.includes(f.id) ? prev.filter(x => x !== f.id) : [...prev, f.id])}
+                    className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all",
+                      selectedFeatures.includes(f.id) ? "bg-violet-500/10 text-violet-500 border border-violet-500/30" : "bg-card text-muted-foreground border border-border/40")}>
+                    {f.icon} {f.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Trip Protection Plans (Turo) */}
+        <section className="py-8 border-b border-border/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-foreground flex items-center justify-center gap-2">
+                <Shield className="w-5 h-5 text-violet-500" /> Trip Protection Plans
+              </h2>
+              <p className="text-sm text-muted-foreground">Choose your coverage level</p>
+            </div>
+            <div className="grid md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+              {protectionTiers.map(tier => (
+                <button key={tier.id} onClick={() => setSelectedProtection(tier.id)}
+                  className={cn("rounded-2xl p-4 text-left transition-all border relative",
+                    selectedProtection === tier.id ? "border-violet-500 bg-violet-500/5 shadow-lg" : "border-border/40 bg-card hover:border-border")}>
+                  {"badge" in tier && tier.badge && (
+                    <span className="absolute -top-2 right-3 text-[8px] font-bold bg-violet-500 text-white px-2 py-0.5 rounded-full">{tier.badge}</span>
+                  )}
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-foreground">{tier.name}</h3>
+                    <span className="text-xs font-bold text-violet-500">{tier.price}</span>
+                  </div>
+                  <ul className="space-y-1">
+                    {tier.features.map(f => (
+                      <li key={f} className="text-[10px] text-muted-foreground flex items-start gap-1">
+                        <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Host Profiles (Turo) */}
+        <section className="py-8 border-b border-border/30 bg-muted/5">
+          <div className="container mx-auto px-4">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-6">
+              <Users className="w-5 h-5 text-violet-500" /> Top-Rated Hosts
+            </h2>
+            <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {hostProfiles.map(host => (
+                <div key={host.name} className="rounded-2xl bg-card border border-border/40 p-5 text-center hover:border-violet-500/30 transition-all">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-2xl font-bold text-violet-500">
+                    {host.name.charAt(0)}
+                  </div>
+                  <p className="text-sm font-bold text-foreground flex items-center justify-center gap-1">
+                    {host.name}
+                    {host.superhost && <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px] ml-1">⭐ Superhost</Badge>}
+                  </p>
+                  <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5"><Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {host.rating}</span>
+                    <span>{host.trips} trips</span>
+                    <span>Since {host.joined}</span>
+                  </div>
+                  <p className="text-[10px] text-emerald-500 font-bold mt-1">Responds {host.responseTime}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Long-Term Discount Banner (Turo) */}
+        <section className="py-6 border-b border-border/30 bg-gradient-to-r from-violet-500/5 to-purple-500/5">
+          <div className="container mx-auto px-4 text-center">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <DollarSign className="w-5 h-5 text-emerald-500" />
+              <h3 className="text-sm font-bold text-foreground">Long-Term Discounts Available</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">Save up to 25% on weekly rentals and 40% on monthly rentals</p>
+            <div className="flex justify-center gap-3">
+              <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">3+ days: 10% off</span>
+              <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">7+ days: 25% off</span>
+              <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold">30+ days: 40% off</span>
+            </div>
+          </div>
+        </section>
+
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
-            {/* Car Category Photo Tiles */}
-            <CarCategoryTiles 
-              onSelect={handleCategoryTileSelect}
-              selectedCategory={null}
-            />
-            
-            {/* SEO Content Block */}
+            <CarCategoryTiles onSelect={handleCategoryTileSelect} selectedCategory={null} />
             <SEOContentBlock serviceType="cars" className="bg-muted/5" />
-            
-            <DestinationCardsGrid 
-              service="cars" 
-              onSelect={handleLocationSelect}
-            />
-            
+            <DestinationCardsGrid service="cars" onSelect={handleLocationSelect} />
             <TrustFeatureCards columns={4} />
             <TrustSection service="cars" />
             <EnhanceYourTrip currentService="cars" destination={selectedAirport?.city || pickupDisplayValue} />
-            
-            {/* Internal Linking */}
             <InternalLinkGrid currentService="cars" />
-            
             <TravelFAQ serviceType="cars" className="bg-muted/20" />
           </>
         )}
