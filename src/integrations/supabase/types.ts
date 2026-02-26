@@ -38586,6 +38586,75 @@ export type Database = {
           },
         ]
       }
+      travel_deals: {
+        Row: {
+          category: string
+          created_at: string
+          cta_url: string | null
+          currency: string
+          deal_type: string
+          description: string | null
+          destination: string
+          destination_country: string | null
+          destination_flag: string | null
+          discount_percent: number | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          origin: string | null
+          price_from: number | null
+          priority: number
+          search_count: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          cta_url?: string | null
+          currency?: string
+          deal_type?: string
+          description?: string | null
+          destination: string
+          destination_country?: string | null
+          destination_flag?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          origin?: string | null
+          price_from?: number | null
+          priority?: number
+          search_count?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          cta_url?: string | null
+          currency?: string
+          deal_type?: string
+          description?: string | null
+          destination?: string
+          destination_country?: string | null
+          destination_flag?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          origin?: string | null
+          price_from?: number | null
+          priority?: number
+          search_count?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       travel_email_logs: {
         Row: {
           created_at: string | null

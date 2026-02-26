@@ -455,7 +455,7 @@ const App = () => (
                 <Route path="/membership" element={<MembershipPage />} />
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/rewards/redeem" element={<RewardsPage />} />
-                <Route path="/deals" element={<DealsPage />} />
+                <Route path="/deals" element={<Deals />} />
                 <Route path="/deals/:slug" element={<SeasonalDealPage />} />
                 <Route path="/brand" element={<BrandMission />} />
                 <Route path="/mission" element={<BrandMission />} />
