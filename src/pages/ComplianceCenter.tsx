@@ -22,6 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
@@ -134,7 +135,12 @@ export default function ComplianceCenter() {
       
       <main className="container mx-auto px-4 py-12">
         {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center max-w-3xl mx-auto mb-12"
+        >
           <Badge variant="secondary" className="mb-4">
             <Shield className="w-3 h-3 mr-1" />
             Compliance Center
@@ -158,7 +164,7 @@ export default function ComplianceCenter() {
               className="pl-10 h-12"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Trust Badges */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">

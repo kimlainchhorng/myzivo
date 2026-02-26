@@ -15,6 +15,7 @@ import {
   Search, FileCheck, Car, Shield, CreditCard, Star,
   CheckCircle, ArrowRight, Clock, Zap, Lock, Users, Phone
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -109,24 +110,30 @@ export default function HowToRent() {
         {/* Hero */}
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 text-center">
-            <Badge variant="secondary" className="mb-4">How It Works</Badge>
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Renting Made <span className="text-primary">Simple</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Skip the rental counter. Book cars directly from local owners with better prices, 
-              unique vehicles, and a personal touch.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate("/cars")} className="gap-2">
-                <Search className="w-5 h-5" />
-                Browse Cars
-              </Button>
-              <Button size="lg" variant="outline" onClick={handleCTA} className="gap-2">
-                {user ? "Go to Dashboard" : "Sign Up Free"}
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Badge variant="secondary" className="mb-4">How It Works</Badge>
+              <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+                Renting Made <span className="text-primary">Simple</span>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                Skip the rental counter. Book cars directly from local owners with better prices, 
+                unique vehicles, and a personal touch.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" onClick={() => navigate("/cars")} className="gap-2">
+                  <Search className="w-5 h-5" />
+                  Browse Cars
+                </Button>
+                <Button size="lg" variant="outline" onClick={handleCTA} className="gap-2">
+                  {user ? "Go to Dashboard" : "Sign Up Free"}
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </div>
+            </motion.div>
           </div>
         </section>
 

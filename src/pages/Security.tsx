@@ -4,6 +4,7 @@
  */
 
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   Shield, Lock, Eye, CreditCard, AlertTriangle, 
   Mail, CheckCircle2, Server, Users, FileSearch
@@ -60,7 +61,12 @@ export default function Security() {
       <main className="min-h-screen pt-20 pb-16 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Hero */}
-          <div className="text-center py-12 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center py-12 mb-8"
+          >
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Shield className="w-8 h-8 text-primary" />
             </div>
@@ -68,7 +74,7 @@ export default function Security() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               At ZIVO, protecting your data and transactions is a top priority. We use industry-leading security standards to safeguard personal information, payments, and bookings.
             </p>
-          </div>
+          </motion.div>
 
           {/* Trust Indicators */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
