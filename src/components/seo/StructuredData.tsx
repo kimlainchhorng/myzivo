@@ -2,7 +2,7 @@
  * JSON-LD Structured Data Components
  * Adds schema.org markup for better SEO using useEffect + DOM injection
  */
-import { useEffect } from "react";
+import { useEffect, forwardRef } from "react";
 
 function useJsonLd(schema: Record<string, unknown>, id: string) {
   useEffect(() => {
@@ -28,96 +28,104 @@ interface OrganizationSchemaProps {
   logo?: string;
 }
 
-export function OrganizationSchema({
-  name = "ZIVO",
-  url = "https://hizovo.com",
-  logo = "https://hizovo.com/og-image.png",
-}: OrganizationSchemaProps) {
-  useJsonLd(
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name,
-      url,
-      logo,
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        url: `${url}/help`,
+export const OrganizationSchema = forwardRef<HTMLElement, OrganizationSchemaProps>(
+  function OrganizationSchema({
+    name = "ZIVO",
+    url = "https://hizovo.com",
+    logo = "https://hizovo.com/og-image.png",
+  }, _ref) {
+    useJsonLd(
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name,
+        url,
+        logo,
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          url: `${url}/help`,
+        },
       },
-    },
-    "ld-organization"
-  );
-  return null;
-}
+      "ld-organization"
+    );
+    return null;
+  }
+);
 
 interface WebsiteSearchSchemaProps {
   url?: string;
 }
 
-export function WebsiteSearchSchema({ url = "https://hizovo.com" }: WebsiteSearchSchemaProps) {
-  useJsonLd(
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "ZIVO",
-      url,
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${url}/flights?search={search_term_string}`,
+export const WebsiteSearchSchema = forwardRef<HTMLElement, WebsiteSearchSchemaProps>(
+  function WebsiteSearchSchema({ url = "https://hizovo.com" }, _ref) {
+    useJsonLd(
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "ZIVO",
+        url,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${url}/flights?search={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
         },
-        "query-input": "required name=search_term_string",
       },
-    },
-    "ld-website"
-  );
-  return null;
-}
+      "ld-website"
+    );
+    return null;
+  }
+);
 
 interface BreadcrumbSchemaItem {
   name: string;
   url: string;
 }
 
-export function BreadcrumbStructuredData({ items }: { items: BreadcrumbSchemaItem[] }) {
-  useJsonLd(
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: items.map((item, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: item.name,
-        item: item.url,
-      })),
-    },
-    "ld-breadcrumb"
-  );
-  return null;
-}
+export const BreadcrumbStructuredData = forwardRef<HTMLElement, { items: BreadcrumbSchemaItem[] }>(
+  function BreadcrumbStructuredData({ items }, _ref) {
+    useJsonLd(
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      },
+      "ld-breadcrumb"
+    );
+    return null;
+  }
+);
 
 interface FAQSchemaItem {
   question: string;
   answer: string;
 }
 
-export function FAQStructuredData({ faqs }: { faqs: FAQSchemaItem[] }) {
-  useJsonLd(
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqs.map((faq) => ({
-        "@type": "Question",
-        name: faq.question,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: faq.answer,
-        },
-      })),
-    },
-    "ld-faq"
-  );
-  return null;
-}
+export const FAQStructuredData = forwardRef<HTMLElement, { faqs: FAQSchemaItem[] }>(
+  function FAQStructuredData({ faqs }, _ref) {
+    useJsonLd(
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
+      },
+      "ld-faq"
+    );
+    return null;
+  }
+);
