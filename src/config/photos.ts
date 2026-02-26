@@ -29,6 +29,20 @@ import heroCityParis from "@/assets/hero-city-paris.jpg";
 import heroCityTokyo from "@/assets/hero-city-tokyo.jpg";
 import heroCityDubai from "@/assets/hero-city-dubai.jpg";
 import heroCityLosAngeles from "@/assets/hero-city-losangeles.jpg";
+import heroCityLasVegas from "@/assets/hero-city-lasvegas.jpg";
+import heroCityChicago from "@/assets/hero-city-chicago.jpg";
+import heroCityLondon from "@/assets/hero-city-london.jpg";
+import heroCityBarcelona from "@/assets/hero-city-barcelona.jpg";
+import heroCitySanFrancisco from "@/assets/hero-city-sanfrancisco.jpg";
+import heroCityOrlando from "@/assets/hero-city-orlando.jpg";
+import heroCitySingapore from "@/assets/hero-city-singapore.jpg";
+import heroCitySydney from "@/assets/hero-city-sydney.jpg";
+import heroCityAmsterdam from "@/assets/hero-city-amsterdam.jpg";
+import heroCityCancun from "@/assets/hero-city-cancun.jpg";
+import heroCityPhoenix from "@/assets/hero-city-phoenix.jpg";
+import heroCitySanDiego from "@/assets/hero-city-sandiego.jpg";
+import heroCityDallas from "@/assets/hero-city-dallas.jpg";
+import heroCityAtlanta from "@/assets/hero-city-atlanta.jpg";
 
 // Import service card assets
 import serviceFlights from "@/assets/service-flights.jpg";
@@ -222,6 +236,62 @@ export const wideCityHeroPhotos: Partial<Record<DestinationCity, { src: string; 
   "los-angeles": {
     src: heroCityLosAngeles,
     alt: "Los Angeles skyline with Hollywood Hills at golden hour",
+  },
+  "las-vegas": {
+    src: heroCityLasVegas,
+    alt: "Las Vegas Strip at night with neon casino lights",
+  },
+  chicago: {
+    src: heroCityChicago,
+    alt: "Chicago skyline with river and Cloud Gate at golden hour",
+  },
+  london: {
+    src: heroCityLondon,
+    alt: "London Tower Bridge and Thames River at sunset",
+  },
+  barcelona: {
+    src: heroCityBarcelona,
+    alt: "Barcelona Sagrada Familia and city panorama at golden hour",
+  },
+  "san-francisco": {
+    src: heroCitySanFrancisco,
+    alt: "San Francisco Golden Gate Bridge with fog and bay view",
+  },
+  orlando: {
+    src: heroCityOrlando,
+    alt: "Orlando Florida theme park area skyline at sunset",
+  },
+  singapore: {
+    src: heroCitySingapore,
+    alt: "Singapore Marina Bay Sands and Supertree Grove at night",
+  },
+  sydney: {
+    src: heroCitySydney,
+    alt: "Sydney Opera House and Harbour Bridge at sunset",
+  },
+  amsterdam: {
+    src: heroCityAmsterdam,
+    alt: "Amsterdam canal houses and bridge at golden hour",
+  },
+  cancun: {
+    src: heroCityCancun,
+    alt: "Cancún Caribbean turquoise waters and white sand beach",
+  },
+  phoenix: {
+    src: heroCityPhoenix,
+    alt: "Phoenix Arizona desert landscape with Sonoran cacti at sunset",
+  },
+  "san-diego": {
+    src: heroCitySanDiego,
+    alt: "San Diego harbor with sailboats and skyline at golden hour",
+  },
+  dallas: {
+    src: heroCityDallas,
+    alt: "Dallas Texas downtown skyline at night",
+  },
+  atlanta: {
+    src: heroCityAtlanta,
+    alt: "Atlanta Georgia downtown skyline with park at sunset",
   },
 };
 
