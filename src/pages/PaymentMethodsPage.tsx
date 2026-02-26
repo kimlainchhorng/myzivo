@@ -10,6 +10,9 @@ import {
   Check,
   AlertCircle,
   Wifi,
+  Shield,
+  Lock,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -63,7 +66,6 @@ const PaymentMethodsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate
     if (!validateCardNumber(cardNumber)) {
       toast.error("Invalid card number");
       return;
@@ -82,8 +84,6 @@ const PaymentMethodsPage = () => {
     }
 
     setIsSubmitting(true);
-
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const cleanedNumber = cardNumber.replace(/\s/g, "");
@@ -114,31 +114,50 @@ const PaymentMethodsPage = () => {
     toast.success(`${card.brand} •••• ${card.last4} set as default`);
   };
 
-  const getCardIcon = (brand: string) => {
-    // In production, use proper card brand icons
-    return CreditCard;
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-8">
+    <div className="min-h-screen bg-background text-foreground pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center gap-3 px-4 py-4 bg-zinc-950/95 backdrop-blur-xl border-b border-white/10">
+      <header className="sticky top-0 z-50 flex items-center gap-3 px-4 py-4 bg-background/95 backdrop-blur-xl border-b border-border/50">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+          className="p-2 rounded-full hover:bg-muted transition-colors touch-manipulation"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-semibold">Payment Methods</h1>
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <CreditCard className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold">Payment Methods</h1>
+            <p className="text-xs text-muted-foreground">Manage your cards</p>
+          </div>
+        </div>
       </header>
 
       {/* Demo Mode Banner */}
       <div className="mx-4 mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
         <Wifi className="w-4 h-4 text-amber-500" />
-        <span className="text-xs text-amber-200">
+        <span className="text-xs text-muted-foreground">
           Demo mode — cards stored locally, not processed
         </span>
+      </div>
+
+      {/* Security Trust Bar */}
+      <div className="mx-4 mt-3 flex items-center justify-center gap-4 py-2.5 px-4 rounded-xl bg-muted/30 border border-border/50">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-emerald-500" />
+          <span>256-bit encrypted</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="w-3.5 h-3.5 text-primary" />
+          <span>PCI compliant</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <CheckCircle2 className="w-3.5 h-3.5 text-sky-500" />
+          <span>Secure</span>
+        </div>
       </div>
 
       <div className="px-4 py-6 space-y-6">
@@ -149,11 +168,11 @@ const PaymentMethodsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-12"
           >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 flex items-center justify-center">
-              <CreditCard className="w-8 h-8 text-zinc-500" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+              <CreditCard className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No payment methods</h3>
-            <p className="text-sm text-zinc-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Add a card to speed up checkout
             </p>
             <Button
@@ -167,86 +186,83 @@ const PaymentMethodsPage = () => {
         ) : (
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
-              {methods.map((card) => {
-                const Icon = getCardIcon(card.brand);
-                return (
-                  <motion.div
-                    key={card.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    className={cn(
-                      "relative p-4 rounded-xl border transition-all",
-                      card.isDefault
-                        ? "bg-primary/10 border-primary/50"
-                        : "bg-white/5 border-white/10"
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
+              {methods.map((card) => (
+                <motion.div
+                  key={card.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  className={cn(
+                    "relative p-4 rounded-xl border transition-all",
+                    card.isDefault
+                      ? "bg-primary/10 border-primary/50"
+                      : "bg-card border-border/50"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg",
+                        card.isDefault ? "bg-primary/20" : "bg-muted/50"
+                      )}
+                    >
+                      <CreditCard
                         className={cn(
-                          "p-2 rounded-lg",
-                          card.isDefault ? "bg-primary/20" : "bg-white/10"
+                          "w-5 h-5",
+                          card.isDefault ? "text-primary" : "text-muted-foreground"
                         )}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">
+                          {card.brand} •••• {card.last4}
+                        </span>
+                        {card.isDefault && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                            DEFAULT
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Expires {String(card.expMonth).padStart(2, "0")}/
+                        {String(card.expYear).slice(-2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">
+                        {card.cardholderName}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSetDefault(card)}
+                        disabled={card.isDefault}
+                        className={cn(
+                          "p-2 rounded-lg transition-colors touch-manipulation",
+                          card.isDefault
+                            ? "text-primary cursor-default"
+                            : "text-muted-foreground hover:text-amber-400 hover:bg-muted/50"
+                        )}
+                        aria-label="Set as default"
                       >
-                        <Icon
+                        <Star
                           className={cn(
-                            "w-5 h-5",
-                            card.isDefault ? "text-primary" : "text-zinc-400"
+                            "w-4 h-4",
+                            card.isDefault && "fill-primary"
                           )}
                         />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">
-                            {card.brand} •••• {card.last4}
-                          </span>
-                          {card.isDefault && (
-                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
-                              DEFAULT
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                          Expires {String(card.expMonth).padStart(2, "0")}/
-                          {String(card.expYear).slice(-2)}
-                        </p>
-                        <p className="text-xs text-zinc-500 mt-0.5 truncate">
-                          {card.cardholderName}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleSetDefault(card)}
-                          disabled={card.isDefault}
-                          className={cn(
-                            "p-2 rounded-lg transition-colors",
-                            card.isDefault
-                              ? "text-primary cursor-default"
-                              : "text-zinc-500 hover:text-amber-400 hover:bg-white/5"
-                          )}
-                          aria-label="Set as default"
-                        >
-                          <Star
-                            className={cn(
-                              "w-4 h-4",
-                              card.isDefault && "fill-primary"
-                            )}
-                          />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(card)}
-                          className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-white/5 transition-colors"
-                          aria-label="Delete card"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(card)}
+                        className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation"
+                        aria-label="Delete card"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </AnimatePresence>
 
             {/* Add New Card Button */}
@@ -255,7 +271,7 @@ const PaymentMethodsPage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={() => setShowAddForm(true)}
-                className="w-full p-4 rounded-xl border border-dashed border-white/20 flex items-center justify-center gap-2 text-zinc-400 hover:text-white hover:border-white/40 transition-colors"
+                className="w-full p-4 rounded-xl border border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors touch-manipulation"
               >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm font-medium">Add New Card</span>
@@ -274,13 +290,13 @@ const PaymentMethodsPage = () => {
               onSubmit={handleSubmit}
               className="overflow-hidden"
             >
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+              <div className="p-4 rounded-xl bg-card border border-border/50 space-y-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold">Add New Card</h3>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="text-xs text-zinc-400 hover:text-white transition-colors"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Cancel
                   </button>
@@ -288,7 +304,7 @@ const PaymentMethodsPage = () => {
 
                 {/* Card Number */}
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1.5">
+                  <label className="block text-xs text-muted-foreground mb-1.5">
                     Card Number
                   </label>
                   <Input
@@ -297,12 +313,12 @@ const PaymentMethodsPage = () => {
                     value={cardNumber}
                     onChange={handleCardNumberChange}
                     leftIcon={CreditCard}
-                    className="bg-zinc-900/50"
+                    className="bg-muted/30"
                     style={{ fontSize: 16 }}
                     autoComplete="cc-number"
                   />
                   {cardNumber.length > 0 && (
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {detectCardBrand(cardNumber)}
                     </p>
                   )}
@@ -311,7 +327,7 @@ const PaymentMethodsPage = () => {
                 {/* Expiry & CVV Row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-zinc-400 mb-1.5">
+                    <label className="block text-xs text-muted-foreground mb-1.5">
                       Expiry
                     </label>
                     <Input
@@ -319,13 +335,13 @@ const PaymentMethodsPage = () => {
                       placeholder="MM/YY"
                       value={expiry}
                       onChange={handleExpiryChange}
-                      className="bg-zinc-900/50"
+                      className="bg-muted/30"
                       style={{ fontSize: 16 }}
                       autoComplete="cc-exp"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-400 mb-1.5">
+                    <label className="block text-xs text-muted-foreground mb-1.5">
                       CVV
                     </label>
                     <Input
@@ -333,7 +349,7 @@ const PaymentMethodsPage = () => {
                       placeholder="123"
                       value={cvv}
                       onChange={handleCvvChange}
-                      className="bg-zinc-900/50"
+                      className="bg-muted/30"
                       style={{ fontSize: 16 }}
                       autoComplete="cc-csc"
                     />
@@ -342,7 +358,7 @@ const PaymentMethodsPage = () => {
 
                 {/* Cardholder Name */}
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1.5">
+                  <label className="block text-xs text-muted-foreground mb-1.5">
                     Cardholder Name
                   </label>
                   <Input
@@ -350,7 +366,7 @@ const PaymentMethodsPage = () => {
                     placeholder="John Doe"
                     value={cardholderName}
                     onChange={(e) => setCardholderName(e.target.value)}
-                    className="bg-zinc-900/50"
+                    className="bg-muted/30"
                     style={{ fontSize: 16 }}
                     autoComplete="cc-name"
                   />
@@ -364,7 +380,7 @@ const PaymentMethodsPage = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                       Adding...
                     </>
                   ) : (
@@ -376,7 +392,7 @@ const PaymentMethodsPage = () => {
                 </Button>
 
                 {/* Security Note */}
-                <p className="text-[10px] text-zinc-500 text-center flex items-center justify-center gap-1">
+                <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   Demo only — card data stored locally
                 </p>

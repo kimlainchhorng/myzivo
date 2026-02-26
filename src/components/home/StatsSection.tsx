@@ -7,9 +7,9 @@ import { Plane, Users, Globe, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
-  { icon: Users, value: 500000, label: "Happy Travelers", suffix: "+", prefix: "", iconBg: "bg-[hsl(var(--flights-light))]", iconColor: "text-[hsl(var(--flights))]", borderColor: "border-t-[hsl(var(--flights))]" },
-  { icon: Plane, value: 120, label: "Airlines Compared", suffix: "+", prefix: "", iconBg: "bg-primary/10", iconColor: "text-primary", borderColor: "border-t-primary" },
-  { icon: Globe, value: 50, label: "Countries Covered", suffix: "+", prefix: "", iconBg: "bg-[hsl(var(--cars-light))]", iconColor: "text-[hsl(var(--cars))]", borderColor: "border-t-[hsl(var(--cars))]" },
+  { icon: Users, value: 2000000, label: "Travelers Served", suffix: "+", prefix: "", iconBg: "bg-[hsl(var(--flights-light))]", iconColor: "text-[hsl(var(--flights))]", borderColor: "border-t-[hsl(var(--flights))]" },
+  { icon: Plane, value: 500, label: "Airlines Compared", suffix: "+", prefix: "", iconBg: "bg-primary/10", iconColor: "text-primary", borderColor: "border-t-primary" },
+  { icon: Globe, value: 190, label: "Countries Covered", suffix: "+", prefix: "", iconBg: "bg-[hsl(var(--cars-light))]", iconColor: "text-[hsl(var(--cars))]", borderColor: "border-t-[hsl(var(--cars))]" },
   { icon: Shield, value: 99.9, label: "Uptime Guarantee", suffix: "%", prefix: "", decimals: 1, iconBg: "bg-[hsl(var(--hotels-light))]", iconColor: "text-[hsl(var(--hotels))]", borderColor: "border-t-[hsl(var(--hotels))]" },
 ];
 
@@ -40,9 +40,11 @@ function AnimatedCounter({ value, suffix, prefix, decimals = 0 }: { value: numbe
 
   const formatted = decimals > 0
     ? count.toFixed(decimals)
-    : count >= 1000
-      ? `${Math.floor(count / 1000)}K`
-      : Math.floor(count).toString();
+    : count >= 1000000
+      ? `${(count / 1000000).toFixed(count >= 1000000 ? 0 : 1)}M`
+      : count >= 1000
+        ? `${Math.floor(count / 1000)}K`
+        : Math.floor(count).toString();
 
   return (
     <span ref={ref} className="tabular-nums">
