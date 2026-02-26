@@ -1057,9 +1057,9 @@ export default function EatsLanding() {
                       </div>
                       {inCart ? (
                         <div className="flex items-center gap-2">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
+                          <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
                           <span className="text-sm font-bold w-5 text-center">{inCart.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
+                          <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
                         </div>
                       ) : (
                         <Button size="sm" variant="outline" onClick={() => addToCart(item, currentRestaurant.id)} className="rounded-xl h-9 px-4 gap-1.5 font-bold text-xs border-primary/30 text-primary hover:bg-primary/5">
@@ -1131,9 +1131,9 @@ export default function EatsLanding() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
+                        <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
                         <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
+                        <button aria-label="Increase quantity" onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
                       </div>
                       <span className="font-bold text-sm text-foreground w-16 text-right">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>

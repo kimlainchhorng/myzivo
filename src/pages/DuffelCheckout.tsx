@@ -176,6 +176,7 @@ const DuffelCheckout = () => {
                   src={getDuffelAirlineLogo(offer.airlineCode)}
                   alt={offer.airline}
                   className="w-14 h-14 object-contain bg-white rounded-lg p-2 border"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
                 />
                 <div>
