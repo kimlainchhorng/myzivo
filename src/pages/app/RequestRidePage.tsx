@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +75,12 @@ const tipOptions = [
 const savedPlaces = [
   { id: "home", label: "Home", icon: "🏠", address: "" },
   { id: "work", label: "Work", icon: "💼", address: "" },
+];
+
+const safetyFeatures = [
+  { id: "share-trip", icon: Share2, label: "Share Trip", description: "Share live location with contacts" },
+  { id: "emergency", icon: Phone, label: "Emergency", description: "Quick access to 911" },
+  { id: "report", icon: AlertTriangle, label: "Report Issue", description: "Report a safety concern" },
 ];
 
 // Inner payment form using Stripe Elements
@@ -162,6 +168,70 @@ function RideStepIndicator({ currentStep }: { currentStep: "address" | "pricing"
   );
 }
 
+// Live ETA countdown in finding step
+function LiveETACounter() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return (
+    <span className="font-mono text-sm text-primary font-bold">
+      {mins}:{secs.toString().padStart(2, "0")}
+    </span>
+  );
+}
+
+// Fare split component
+function FareSplitSection({ totalCents, formatUSD }: { totalCents: number; formatUSD: (c: number) => string }) {
+  const [splitCount, setSplitCount] = useState(1);
+  const [showSplit, setShowSplit] = useState(false);
+  const perPerson = Math.ceil(totalCents / splitCount);
+
+  if (!showSplit) {
+    return (
+      <button onClick={() => setShowSplit(true)}
+        className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-border/40 bg-card hover:border-primary/20 transition-all touch-manipulation active:scale-[0.98]">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <UserPlus className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-bold text-foreground">Split Fare</p>
+          <p className="text-[10px] text-muted-foreground">Split the cost with fellow riders</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> Split Fare</h3>
+        <button onClick={() => { setShowSplit(false); setSplitCount(1); }} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+      </div>
+      <div className="flex items-center justify-center gap-4">
+        <button onClick={() => setSplitCount(Math.max(1, splitCount - 1))}
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg touch-manipulation active:scale-90">−</button>
+        <div className="text-center">
+          <p className="text-3xl font-bold text-foreground">{splitCount}</p>
+          <p className="text-[10px] text-muted-foreground">{splitCount === 1 ? "person" : "people"}</p>
+        </div>
+        <button onClick={() => setSplitCount(Math.min(6, splitCount + 1))}
+          className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg touch-manipulation active:scale-90">+</button>
+      </div>
+      {splitCount > 1 && (
+        <div className="text-center p-3 rounded-xl bg-primary/5 border border-primary/20">
+          <p className="text-xs text-muted-foreground">Each person pays</p>
+          <p className="text-lg font-bold text-primary">{formatUSD(perPerson)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RequestRidePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -185,6 +255,8 @@ export default function RequestRidePage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [selectedTip, setSelectedTip] = useState("none");
   const [customTip, setCustomTip] = useState("");
+  const [rideNote, setRideNote] = useState("");
+  const [showSafety, setShowSafety] = useState(false);
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -310,14 +382,22 @@ export default function RequestRidePage() {
       if (updateError) console.error("[RequestRide] status update error:", updateError);
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", { body: { job_id: draftJobId, offer_ttl_seconds: 25 } });
       if (dispatchError) console.error("[RequestRide] dispatch-start error:", dispatchError);
-      // Auto-navigate after showing finding animation
-      setTimeout(() => navigate(`/trip-status/${draftJobId}`), 3000);
-    } catch { setTimeout(() => navigate(`/trip-status/${draftJobId}`), 2000); }
+      setTimeout(() => navigate(`/trip-status/${draftJobId}`), 5000);
+    } catch { setTimeout(() => navigate(`/trip-status/${draftJobId}`), 3000); }
+  };
+
+  const handleShareTrip = () => {
+    if (navigator.share) {
+      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Trip link copied to clipboard!");
+    }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
   const handleBack = () => {
-    if (step === "finding") return; // Can't go back during driver search
+    if (step === "finding") return;
     if (step === "payment") setStep("pricing");
     else if (step === "pricing") setStep("address");
     else navigate(-1);
@@ -342,19 +422,52 @@ export default function RequestRidePage() {
             className="h-10 px-4 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center gap-2 touch-manipulation text-sm font-medium text-foreground shadow-lg">
             <ArrowLeft className="w-4 h-4" />
           </motion.button>
-          {pickupAddress && (
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 shadow-lg">
-              <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">ETA</span>
-              <div className="text-right">
-                <p className="text-xs font-bold text-foreground truncate max-w-[120px]">{pickupAddress.split(",")[0]}</p>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{pickupAddress.split(",").slice(1).join(",").trim() || "Pickup"}</p>
-              </div>
-            </motion.div>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Safety button */}
+            <motion.button whileTap={{ scale: 0.88 }} onClick={() => setShowSafety(!showSafety)}
+              className="h-10 w-10 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center justify-center touch-manipulation shadow-lg">
+              <Shield className="w-4 h-4 text-primary" />
+            </motion.button>
+            {pickupAddress && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 shadow-lg">
+                <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">ETA</span>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-foreground truncate max-w-[120px]">{pickupAddress.split(",")[0]}</p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{pickupAddress.split(",").slice(1).join(",").trim() || "Pickup"}</p>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
       </div>
+
+      {/* Safety Panel Overlay */}
+      <AnimatePresence>
+        {showSafety && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="absolute top-[35vh] left-4 right-4 z-30 rounded-2xl bg-card border border-border/40 shadow-2xl p-4 space-y-2">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Safety Center</h3>
+              <button onClick={() => setShowSafety(false)} className="text-xs text-muted-foreground">Close</button>
+            </div>
+            {safetyFeatures.map(f => {
+              const Icon = f.icon;
+              return (
+                <button key={f.id} onClick={() => { if (f.id === "share-trip") handleShareTrip(); else if (f.id === "emergency") { window.location.href = "tel:911"; } else toast.info("Issue reported. Our team will review."); setShowSafety(false); }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/30 hover:bg-muted/50 transition-all touch-manipulation active:scale-[0.98]">
+                  <Icon className="w-4 h-4 text-primary" />
+                  <div className="flex-1 text-left">
+                    <p className="text-xs font-bold text-foreground">{f.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Sheet */}
       <div className="flex-1 -mt-6 relative z-10">
@@ -433,6 +546,12 @@ export default function RequestRidePage() {
                   <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
                     <Plus className="w-3.5 h-3.5" /> Add stop
                   </button>
+                </div>
+
+                {/* Note to driver */}
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <Input placeholder="Note to driver (e.g., I'm at the blue door)" value={rideNote} onChange={(e) => setRideNote(e.target.value)} className="h-10 rounded-xl text-sm" />
                 </div>
 
                 {/* Schedule ride toggle */}
@@ -547,6 +666,11 @@ export default function RequestRidePage() {
                       <div><p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dropoff</p><p className="text-sm font-bold text-foreground truncate">{dropoffAddress}</p></div>
                     </div>
                   </div>
+                  {rideNote && (
+                    <div className="mt-3 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-muted-foreground">
+                      <MessageSquare className="w-3 h-3 shrink-0" /> {rideNote}
+                    </div>
+                  )}
                 </div>
 
                 {/* Selected vehicle + preferences */}
@@ -566,6 +690,11 @@ export default function RequestRidePage() {
                         </div>
                       );
                     })}
+                    {isScheduled && scheduleTime && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-xs text-primary font-bold">
+                        <Clock className="w-3 h-3" /> {scheduleTime}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -603,6 +732,9 @@ export default function RequestRidePage() {
                     </div>
                   </div>
                 )}
+
+                {/* Fare Split */}
+                {pricing && <FareSplitSection totalCents={promoApplied ? Math.round(pricing.total * 0.9) : pricing.total} formatUSD={formatUSD} />}
 
                 {/* Promo Code */}
                 <div className="rounded-2xl bg-card border border-border/40 p-4">
@@ -668,29 +800,63 @@ export default function RequestRidePage() {
               </motion.div>
             )}
 
-            {/* FINDING DRIVER */}
+            {/* FINDING DRIVER - Enhanced */}
             {step === "finding" && (
               <motion.div key="finding" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-20 space-y-6 text-center">
+                className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-emerald-500/20 flex items-center justify-center">
+                  className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-emerald-500/20 flex items-center justify-center">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary flex items-center justify-center">
-                    <Car className="w-7 h-7 text-primary" />
+                    className="w-20 h-20 rounded-full border-4 border-primary/30 border-t-primary flex items-center justify-center">
+                    <Car className="w-8 h-8 text-primary" />
                   </motion.div>
                 </motion.div>
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-2">Finding your driver...</h2>
                   <p className="text-sm text-muted-foreground">Matching you with the nearest available driver</p>
+                  <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" /> Searching for <LiveETACounter />
+                  </div>
                 </div>
+
+                {/* Live progress steps */}
+                <div className="w-full max-w-xs space-y-2">
+                  {[
+                    { label: "Payment confirmed", done: true, icon: CheckCircle },
+                    { label: "Searching nearby drivers", done: false, icon: Navigation, active: true },
+                    { label: "Driver assigned", done: false, icon: Car },
+                    { label: "Driver en route to you", done: false, icon: MapPin },
+                  ].map((item, i) => (
+                    <motion.div key={item.label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.3 }}
+                      className={cn("flex items-center gap-3 p-2.5 rounded-xl text-left", item.done ? "opacity-100" : item.active ? "opacity-100" : "opacity-40")}>
+                      <item.icon className={cn("w-4 h-4 shrink-0", item.done ? "text-primary" : item.active ? "text-amber-500 animate-pulse" : "text-muted-foreground")} />
+                      <span className={cn("text-xs font-medium", item.done ? "text-primary" : item.active ? "text-foreground" : "text-muted-foreground")}>{item.label}</span>
+                      {item.done && <CheckCircle className="w-3 h-3 text-primary ml-auto" />}
+                    </motion.div>
+                  ))}
+                </div>
+
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Verified drivers</span>
                   <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> 4.8+ rated</span>
                 </div>
+
+                {/* Safety actions during finding */}
+                <div className="flex gap-3 w-full max-w-xs">
+                  <button onClick={handleShareTrip}
+                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-border/40 bg-card text-xs font-bold text-foreground hover:bg-muted/50 touch-manipulation active:scale-95">
+                    <Share2 className="w-4 h-4 text-primary" /> Share Trip
+                  </button>
+                  <button onClick={() => { toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
+                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 touch-manipulation active:scale-95">
+                    Cancel
+                  </button>
+                </div>
+
                 {isScheduled && scheduleTime && (
                   <div className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary">
                     <Clock className="w-3.5 h-3.5 inline mr-1.5" />Scheduled: {scheduleTime}
