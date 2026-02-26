@@ -124,7 +124,7 @@ const TravelConfirmationPage = () => {
           {isSuccess ? (
             <>
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">{CHECKOUT_CONFIRMATION.success} 🎉</h1>
+              <h1 className="text-2xl font-bold mb-2">{CHECKOUT_CONFIRMATION.success}</h1>
               <p className="text-muted-foreground">
                 {CHECKOUT_CONFIRMATION.received}
               </p>

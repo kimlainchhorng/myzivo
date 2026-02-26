@@ -100,7 +100,7 @@ export default function VerifyPhonePage() {
         console.error("Sync error (non-fatal):", syncError);
       }
 
-      toast.success("Phone verified successfully! 🎉");
+      toast.success("Phone verified successfully!");
       navigate("/", { replace: true });
     } catch (err: any) {
       console.error("Verify error:", err);

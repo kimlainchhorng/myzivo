@@ -16,12 +16,12 @@ const visaRequirements: Record<string, { status: string; type: string; duration:
 };
 
 const countries = [
-  { code: "UK", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "CN", name: "China", flag: "🇨🇳" },
-  { code: "IN", name: "India", flag: "🇮🇳" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "UK", name: "United Kingdom" },
+  { code: "JP", name: "Japan" },
+  { code: "CN", name: "China" },
+  { code: "IN", name: "India" },
+  { code: "BR", name: "Brazil" },
+  { code: "AU", name: "Australia" },
 ];
 
 export default function FlightVisaChecker() {
@@ -52,9 +52,9 @@ export default function FlightVisaChecker() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="US">🇺🇸 United States</SelectItem>
-                <SelectItem value="UK">🇬🇧 United Kingdom</SelectItem>
-                <SelectItem value="CA">🇨🇦 Canada</SelectItem>
+                <SelectItem value="US">US · United States</SelectItem>
+                <SelectItem value="UK">GB · United Kingdom</SelectItem>
+                <SelectItem value="CA">CA · Canada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -67,7 +67,7 @@ export default function FlightVisaChecker() {
               <SelectContent>
                 {countries.map((country) => (
                   <SelectItem key={country.code} value={country.code}>
-                    {country.flag} {country.name}
+                    {country.code} · {country.name}
                   </SelectItem>
                 ))}
               </SelectContent>

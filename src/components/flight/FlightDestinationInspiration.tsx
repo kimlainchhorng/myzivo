@@ -1,69 +1,24 @@
 import { useNavigate } from "react-router-dom";
-import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar } from "lucide-react";
+import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar, Building2, Mountain, Palmtree, Landmark, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+const destinationIcons: Record<string, typeof Building2> = {
+  Barcelona: Landmark,
+  Reykjavik: Mountain,
+  Santorini: Palmtree,
+  Kyoto: Landmark,
+  Marrakech: MapPin,
+  "Cape Town": Mountain,
+};
+
 const destinations = [
-  {
-    id: 1,
-    city: "Barcelona",
-    country: "Spain",
-    image: "🏛️",
-    fromPrice: 289,
-    season: "Mar-May",
-    highlight: "Architecture & Beaches",
-    trending: true,
-  },
-  {
-    id: 2,
-    city: "Reykjavik",
-    country: "Iceland",
-    image: "🌋",
-    fromPrice: 449,
-    season: "Sep-Mar",
-    highlight: "Northern Lights",
-    trending: true,
-  },
-  {
-    id: 3,
-    city: "Santorini",
-    country: "Greece",
-    image: "🏝️",
-    fromPrice: 399,
-    season: "Apr-Oct",
-    highlight: "Sunset Views",
-    trending: false,
-  },
-  {
-    id: 4,
-    city: "Kyoto",
-    country: "Japan",
-    image: "⛩️",
-    fromPrice: 699,
-    season: "Mar-May, Oct-Nov",
-    highlight: "Cherry Blossoms",
-    trending: true,
-  },
-  {
-    id: 5,
-    city: "Marrakech",
-    country: "Morocco",
-    image: "🕌",
-    fromPrice: 349,
-    season: "Mar-May, Sep-Nov",
-    highlight: "Souks & Riads",
-    trending: false,
-  },
-  {
-    id: 6,
-    city: "Cape Town",
-    country: "South Africa",
-    image: "🏔️",
-    fromPrice: 599,
-    season: "Nov-Feb",
-    highlight: "Safari & Wine",
-    trending: false,
-  },
+  { id: 1, city: "Barcelona", country: "Spain", fromPrice: 289, season: "Mar-May", highlight: "Architecture & Beaches", trending: true },
+  { id: 2, city: "Reykjavik", country: "Iceland", fromPrice: 449, season: "Sep-Mar", highlight: "Northern Lights", trending: true },
+  { id: 3, city: "Santorini", country: "Greece", fromPrice: 399, season: "Apr-Oct", highlight: "Sunset Views", trending: false },
+  { id: 4, city: "Kyoto", country: "Japan", fromPrice: 699, season: "Mar-May, Oct-Nov", highlight: "Cherry Blossoms", trending: true },
+  { id: 5, city: "Marrakech", country: "Morocco", fromPrice: 349, season: "Mar-May, Sep-Nov", highlight: "Souks & Riads", trending: false },
+  { id: 6, city: "Cape Town", country: "South Africa", fromPrice: 599, season: "Nov-Feb", highlight: "Safari & Wine", trending: false },
 ];
 
 const FlightDestinationInspiration = () => {
@@ -108,8 +63,8 @@ const FlightDestinationInspiration = () => {
               )}
 
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 flex items-center justify-center text-3xl">
-                  {dest.image}
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 flex items-center justify-center">
+                  {(() => { const Icon = destinationIcons[dest.city] || MapPin; return <Icon className="w-7 h-7 text-sky-400" />; })()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg group-hover:text-sky-400 transition-colors">

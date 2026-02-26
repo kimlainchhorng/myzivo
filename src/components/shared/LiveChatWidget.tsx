@@ -200,7 +200,7 @@ const LiveChatWidget = () => {
         {
           id: Date.now(),
           role: "assistant",
-          content: `✅ Ticket **${ticketNumber}** created! A human agent will get back to you shortly. You can continue chatting with me in the meantime.`,
+          content: `Ticket **${ticketNumber}** created! A human agent will get back to you shortly. You can continue chatting with me in the meantime.`,
         },
       ]);
       setShowEscalation(false);

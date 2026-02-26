@@ -21,7 +21,7 @@ export interface CountryConfig {
 }
 
 export const COUNTRIES: CountryConfig[] = [
-  { code: "US", name: "United States", currency: "USD", language: "en", timezone: "America/New_York", primaryAirport: "JFK", flag: "🇺🇸", isLaunched: true, popularRoutes: [] },
+  { code: "US", name: "United States", currency: "USD", language: "en", timezone: "America/New_York", primaryAirport: "JFK", flag: "US", isLaunched: true, popularRoutes: [] },
 ];
 
 export function getCountryByCode(code: string): CountryConfig | undefined {

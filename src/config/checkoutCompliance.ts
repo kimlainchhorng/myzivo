@@ -5,7 +5,7 @@
 
 export const CHECKOUT_HEADER = {
   title: "Secure Checkout",
-  icon: "🔒",
+  icon: "lock",
   subtitle: "Your booking is processed securely by ZIVO.",
 };
 
@@ -65,7 +65,7 @@ export const CHECKOUT_CTA = {
 
 export const CHECKOUT_CONFIRMATION = {
   success: "Thank You for Your Booking",
-  icon: "✈️",
+  icon: "plane",
   received: "Your booking has been confirmed.",
   email: "A confirmation email with your ticket has been sent.",
   buttons: {

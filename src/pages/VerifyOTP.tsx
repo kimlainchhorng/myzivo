@@ -277,7 +277,7 @@ const VerifyOTP = () => {
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs text-zinc-600">
-          Code expires in 10 minutes • Protected by enterprise-grade security 🔒
+          Code expires in 10 minutes · Protected by enterprise-grade security
         </p>
       </div>
     </div>

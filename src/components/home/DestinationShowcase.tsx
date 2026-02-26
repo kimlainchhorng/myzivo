@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const destinations = [
-  { city: "New York", country: "USA", flag: "🇺🇸", tagline: "The city that never sleeps", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", from: "$89", trending: true },
-  { city: "Paris", country: "France", flag: "🇫🇷", tagline: "Romance and culture", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800", from: "$299", trending: true },
-  { city: "Tokyo", country: "Japan", flag: "🇯🇵", tagline: "Where tradition meets future", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800", from: "$449" },
-  { city: "Dubai", country: "UAE", flag: "🇦🇪", tagline: "Luxury beyond limits", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800", from: "$379" },
-  { city: "Cancún", country: "Mexico", flag: "🇲🇽", tagline: "Paradise beaches await", image: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?auto=format&fit=crop&q=80&w=800", from: "$199" },
-  { city: "London", country: "UK", flag: "🇬🇧", tagline: "History and charm", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80&w=800", from: "$279" },
+  { city: "New York", country: "USA", code: "US", tagline: "The city that never sleeps", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", from: "$89", trending: true },
+  { city: "Paris", country: "France", code: "FR", tagline: "Romance and culture", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800", from: "$299", trending: true },
+  { city: "Tokyo", country: "Japan", code: "JP", tagline: "Where tradition meets future", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800", from: "$449" },
+  { city: "Dubai", country: "UAE", code: "AE", tagline: "Luxury beyond limits", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800", from: "$379" },
+  { city: "Cancún", country: "Mexico", code: "MX", tagline: "Paradise beaches await", image: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?auto=format&fit=crop&q=80&w=800", from: "$199" },
+  { city: "London", country: "UK", code: "GB", tagline: "History and charm", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80&w=800", from: "$279" },
 ];
 
 export default function DestinationShowcase() {
@@ -100,7 +100,7 @@ export default function DestinationShowcase() {
                   <div className="flex items-end justify-between">
                     <div>
                       <h3 className="text-white font-bold text-xl tracking-tight">{dest.city}</h3>
-                      <p className="text-white/70 text-sm">{dest.flag} {dest.country} · {dest.tagline}</p>
+                      <p className="text-white/70 text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-white/60 text-xs flex items-center gap-1">

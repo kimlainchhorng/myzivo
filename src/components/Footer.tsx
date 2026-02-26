@@ -174,7 +174,7 @@ const Footer = ({ className }: { className?: string }) => {
               <CheckCircle2 className="w-3 h-3 text-primary/60" /> Registered Seller of Travel where required. CA SOT: pending · FL SOT: pending
             </p>
             <p className="text-xs text-white/20 max-w-2xl mx-auto">
-              🔒 Payments are processed securely. Airline and supplier rules apply to all bookings.
+              Payments are processed securely. Airline and supplier rules apply to all bookings.
             </p>
           </div>
         </div>

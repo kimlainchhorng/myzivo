@@ -374,7 +374,7 @@ const CarRentalBooking = () => {
             {/* Price Disclaimer - LOCKED TEXT */}
             <div className="mt-6 p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
               <p className="text-xs text-muted-foreground text-center font-medium mb-1">
-                ⚠️ {CAR_DISCLAIMERS.partnerBooking}
+                {CAR_DISCLAIMERS.partnerBooking}
               </p>
               <p className="text-xs text-muted-foreground text-center">
                 {CAR_DISCLAIMERS.price} {CAR_DISCLAIMERS.insurance}

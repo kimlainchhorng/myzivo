@@ -7,7 +7,7 @@ const bookingActivities = [
   { user: "James L.", action: "reserved", destination: "Grand Hyatt NYC", type: "hotel", time: "30s ago" },
   { user: "Emily C.", action: "rented a", destination: "BMW 3 Series", type: "car", time: "1 min ago" },
   { user: "Michael R.", action: "saved $450 on", destination: "Tokyo flights", type: "flight", time: "2 min ago" },
-  { user: "Anna K.", action: "left a 5★ review for", destination: "Marriott Dubai", type: "hotel", time: "3 min ago" },
+  { user: "Anna K.", action: "left a 5-star review for", destination: "Marriott Dubai", type: "hotel", time: "3 min ago" },
   { user: "David W.", action: "booked a flight", destination: "London", type: "flight", time: "4 min ago" },
   { user: "Lisa T.", action: "reserved", destination: "Tesla Model 3", type: "car", time: "5 min ago" },
   { user: "Chris P.", action: "found a deal on", destination: "Bali resorts", type: "hotel", time: "6 min ago" },

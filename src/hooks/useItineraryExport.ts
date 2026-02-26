@@ -62,7 +62,7 @@ DTSTART:${startDate}
 DTEND:${endDateStr}
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}
 UID:${flight.confirmationNumber}@zivo.travel
-SUMMARY:✈️ ${flight.airline} ${flight.flightNumber} - ${flight.departure.code} → ${flight.arrival.code}
+SUMMARY:${flight.airline} ${flight.flightNumber} - ${flight.departure.code} → ${flight.arrival.code}
 DESCRIPTION:Flight: ${flight.flightNumber}\\nConfirmation: ${flight.confirmationNumber}\\nPassengers: ${passengerNames}\\nTerminal: ${flight.departure.terminal || 'TBD'}\\nGate: ${flight.departure.gate || 'TBD'}${flight.seat ? `\\nSeat: ${flight.seat}` : ''}
 LOCATION:${flight.departure.city} (${flight.departure.code}) - Terminal ${flight.departure.terminal || 'TBD'}
 STATUS:CONFIRMED
@@ -104,7 +104,7 @@ END:VCALENDAR`;
     
     const params = new URLSearchParams({
       action: 'TEMPLATE',
-      text: `✈️ ${flight.airline} ${flight.flightNumber} - ${flight.departure.code} → ${flight.arrival.code}`,
+      text: `${flight.airline} ${flight.flightNumber} - ${flight.departure.code} → ${flight.arrival.code}`,
       dates: `${startDate}/${endDateStr}`,
       details: `Flight: ${flight.flightNumber}\nConfirmation: ${flight.confirmationNumber}\nPassengers: ${passengerNames}\nTerminal: ${flight.departure.terminal || 'TBD'}\nGate: ${flight.departure.gate || 'TBD'}${flight.seat ? `\nSeat: ${flight.seat}` : ''}`,
       location: `${flight.departure.city} (${flight.departure.code}) - Terminal ${flight.departure.terminal || 'TBD'}`,
@@ -154,7 +154,7 @@ END:VCALENDAR`;
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">✈️ ZIVO Travel</div>
+      <div class="logo">ZIVO Travel</div>
       <div class="confirmation">Confirmation Number<br/><strong>${flight.confirmationNumber}</strong></div>
     </div>
     
@@ -167,7 +167,7 @@ END:VCALENDAR`;
         </div>
         <div class="flight-line">
           <div class="flight-line-inner">
-            <span class="plane-icon">✈️</span>
+            <span class="plane-icon">—</span>
           </div>
         </div>
         <div class="airport">
@@ -264,7 +264,7 @@ END:VCALENDAR`;
   const shareItinerary = async (flight: FlightData) => {
     const shareData = {
       title: `Flight ${flight.flightNumber} - ${flight.departure.code} → ${flight.arrival.code}`,
-      text: `✈️ ${flight.airline} ${flight.flightNumber}\n📅 ${format(flight.departure.date, 'MMM d, yyyy')}\n🛫 ${flight.departure.code} ${flight.departure.time} → ${flight.arrival.code} ${flight.arrival.time}\n📋 Confirmation: ${flight.confirmationNumber}`,
+      text: `${flight.airline} ${flight.flightNumber}\n${format(flight.departure.date, 'MMM d, yyyy')}\n${flight.departure.code} ${flight.departure.time} → ${flight.arrival.code} ${flight.arrival.time}\nConfirmation: ${flight.confirmationNumber}`,
     };
 
     if (navigator.share) {

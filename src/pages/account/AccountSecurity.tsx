@@ -255,7 +255,7 @@ export default function AccountSecurity() {
               </div>
               {!twoFactorEnabled && (
                 <p className="mt-4 text-sm text-muted-foreground p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                  ⚠️ Two-factor authentication significantly reduces the risk of unauthorized access.
+                  Two-factor authentication significantly reduces the risk of unauthorized access.
                 </p>
               )}
             </CardContent>

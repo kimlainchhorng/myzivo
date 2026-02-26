@@ -30,7 +30,7 @@ const FlightMobileAppPromo = () => {
                   <h3 className="font-display font-bold text-xl text-white mb-2">ZIVO Flights</h3>
                   <p className="text-sm text-white/70 text-center px-6 mb-4">Your next adventure starts here</p>
                   <div className="flex gap-2">
-                    <Badge className="bg-white/20 text-white text-xs">4.9 ★</Badge>
+                    <Badge className="bg-white/20 text-white text-xs">4.9</Badge>
                     <Badge className="bg-white/20 text-white text-xs">10M+ Downloads</Badge>
                   </div>
                 </div>
