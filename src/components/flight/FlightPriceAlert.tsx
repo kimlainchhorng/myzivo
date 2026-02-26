@@ -390,7 +390,7 @@ export const FlightPriceAlert = ({
               {/* Create Alert Button */}
               <Button
                 onClick={handleCreateAlert}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 active:scale-[0.97] transition-all duration-200 touch-manipulation"
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-primary-foreground font-semibold shadow-lg shadow-sky-500/30 active:scale-[0.97] transition-all duration-200 touch-manipulation"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create Price Alert

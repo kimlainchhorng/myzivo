@@ -159,7 +159,7 @@ export const GiftCardsCredits = ({
                 "w-6 h-6 rounded-full border-2 flex items-center justify-center",
                 useCredits ? "border-emerald-500 bg-emerald-500" : "border-muted-foreground"
               )}>
-                {useCredits && <CheckCircle className="w-4 h-4 text-white" />}
+                {useCredits && <CheckCircle className="w-4 h-4 text-primary-foreground" />}
               </div>
             </button>
           </div>

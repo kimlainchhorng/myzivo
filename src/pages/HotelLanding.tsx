@@ -85,13 +85,13 @@ export default function HotelLanding() {
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-primary-foreground">
                 <Hotel className="w-4 h-4 text-amber-400" />
-                <span className="text-white/80">Compare hotel prices</span>
+                <span className="text-primary-foreground/80">Compare hotel prices</span>
               </div>
               
               {/* UPDATED HEADLINE */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 {formattedCity ? (
                   <>Hotels in <span className="text-amber-400">{formattedCity}</span></>
                 ) : (
@@ -100,7 +100,7 @@ export default function HotelLanding() {
               </h1>
               
               {/* UPDATED SUBHEADLINE */}
-              <p className="text-lg text-white/80 mb-8">
+              <p className="text-lg text-primary-foreground/80 mb-8">
                 Search real-time hotel prices and complete booking securely with licensed partners.
               </p>
 
@@ -119,7 +119,7 @@ export default function HotelLanding() {
                 <Button 
                   onClick={handleSearch}
                   size="lg" 
-                  className="h-14 px-8 rounded-xl bg-hotels hover:bg-hotels/90 text-white font-semibold"
+                  className="h-14 px-8 rounded-xl bg-hotels hover:bg-hotels/90 text-primary-foreground font-semibold"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Hotels
@@ -127,7 +127,7 @@ export default function HotelLanding() {
               </div>
               
               {/* Helper text under CTA */}
-              <p className="text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+              <p className="text-sm text-primary-foreground/60 mt-4 flex items-center justify-center gap-2">
                 <ExternalLink className="w-4 h-4" />
                 Final booking completed on partner site.
               </p>
@@ -136,7 +136,7 @@ export default function HotelLanding() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
-                <div key={badge.text} className="flex items-center gap-2 text-sm text-white/70">
+                <div key={badge.text} className="flex items-center gap-2 text-sm text-primary-foreground/70">
                   <badge.icon className="w-4 h-4 text-amber-400" />
                   <span>{badge.text}</span>
                 </div>
@@ -145,7 +145,7 @@ export default function HotelLanding() {
             
             {/* Visible disclaimer near search */}
             <div className="mt-6 max-w-2xl mx-auto">
-              <p className="text-center text-xs text-white/50">
+              <p className="text-center text-xs text-primary-foreground/50">
                 Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.
               </p>
             </div>
@@ -184,8 +184,8 @@ export default function HotelLanding() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute bottom-3 left-3 right-3">
-                        <h3 className="font-bold text-white group-hover:text-amber-300 transition-colors">{dest.city}</h3>
-                        <p className="text-xs text-white/70">{dest.country}</p>
+                        <h3 className="font-bold text-primary-foreground group-hover:text-amber-300 transition-colors">{dest.city}</h3>
+                        <p className="text-xs text-primary-foreground/70">{dest.country}</p>
                       </div>
                     </div>
                     {/* Info */}
@@ -213,7 +213,7 @@ export default function HotelLanding() {
                 { step: "3", title: "Book", desc: "Complete booking on partner site" },
               ].map((item) => (
                 <div key={item.step} className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground font-bold text-xl flex items-center justify-center mx-auto mb-4">
                     {item.step}
                   </div>
                   <h3 className="font-bold mb-2">{item.title}</h3>

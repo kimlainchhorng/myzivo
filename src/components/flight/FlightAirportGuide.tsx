@@ -63,7 +63,7 @@ const FlightAirportGuide = () => {
             >
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{airport.code}</span>
+                  <span className="text-lg font-bold text-primary-foreground">{airport.code}</span>
                 </div>
                 <div>
                   <h3 className="font-bold text-lg">{airport.name}</h3>

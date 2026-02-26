@@ -270,7 +270,7 @@ export default function SeasonalDealPage() {
               Compare real-time prices from trusted travel partners and book securely on ZIVO.
             </p>
             <Link to="/flights">
-              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg">
+              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-amber-500 to-orange-600 text-primary-foreground shadow-lg">
                 <Plane className="h-5 w-5 mr-2" />
                 Start Searching
               </Button>

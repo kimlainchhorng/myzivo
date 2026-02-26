@@ -530,7 +530,7 @@ export const AITripSuggestions = ({
                     >
                       {/* Match Score Badge */}
                       <div className="absolute top-3 right-3 z-10">
-                        <Badge className="bg-violet-500 text-white font-bold shadow-lg">
+                        <Badge className="bg-violet-500 text-primary-foreground font-bold shadow-lg">
                           {dest.matchScore}% match
                         </Badge>
                       </div>
@@ -552,7 +552,7 @@ export const AITripSuggestions = ({
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                          <div className="absolute bottom-2 left-2 text-white text-sm font-bold">
+                          <div className="absolute bottom-2 left-2 text-primary-foreground text-sm font-bold">
                             {dest.airportCode}
                           </div>
                         </div>

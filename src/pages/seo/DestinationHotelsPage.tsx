@@ -201,7 +201,7 @@ export default function DestinationHotelsPage() {
               <Link to={`/hotels?destination=${encodeURIComponent(displayName)}`}>
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto h-14 px-8 rounded-xl bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2"
+                  className="w-full sm:w-auto h-14 px-8 rounded-xl bg-hotels hover:bg-hotels/90 text-primary-foreground font-semibold gap-2"
                 >
                   <Hotel className="w-5 h-5" />
                   Search Hotels in {displayName}
@@ -211,7 +211,7 @@ export default function DestinationHotelsPage() {
             </div>
             
             {/* Disclaimer */}
-            <p className="text-center text-xs text-white/50 mt-4">
+            <p className="text-center text-xs text-primary-foreground/50 mt-4">
               Prices shown are indicative. Final price confirmed on partner checkout.
             </p>
           </div>

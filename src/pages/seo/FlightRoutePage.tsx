@@ -150,7 +150,7 @@ export default function FlightRoutePage() {
 
             <ScrollReveal animation="scale" delay={0.3}>
               <Link to={searchUrl}>
-                <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
+                <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-lg">
                   <Plane className="h-5 w-5 mr-2" />
                   Search {originCity} to {destCity}
                 </Button>
@@ -319,7 +319,7 @@ export default function FlightRoutePage() {
               Compare real-time prices from trusted travel partners and book securely on ZIVO.
             </p>
             <Link to={searchUrl}>
-              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
+              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-lg">
                 <Plane className="h-5 w-5 mr-2" />
                 Search Flights Now
               </Button>

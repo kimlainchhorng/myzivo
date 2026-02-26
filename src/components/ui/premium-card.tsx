@@ -358,7 +358,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
           )}
           whileHover={{ rotate: 5, scale: 1.1 }}
         >
-          <div className="text-white">{icon}</div>
+          <div className="text-primary-foreground">{icon}</div>
         </motion.div>
         
         <div className="relative">
@@ -371,7 +371,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
         </div>
         
         {badge && (
-          <span className="absolute top-3 right-3 px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg">
+          <span className="absolute top-3 right-3 px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-primary-foreground rounded-full shadow-lg">
             {badge}
           </span>
         )}

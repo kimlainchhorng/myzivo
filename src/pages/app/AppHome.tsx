@@ -462,7 +462,7 @@ const AppHome = () => {
                         )}
                         <div className="absolute bottom-3 left-3 right-3">
                           <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
-                          <div className="text-[10px] text-white/80 font-semibold flex items-center gap-1">
+                          <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
                             <Plane className="w-2.5 h-2.5" />
                             from {popularDestPrices[key]}
                           </div>

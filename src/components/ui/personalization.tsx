@@ -364,7 +364,7 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
           transition={{ type: "spring", delay: 0.2 }}
         >
           <Badge className={cn(
-            "bg-gradient-to-r text-white border-0 px-4 py-2 text-sm font-bold shadow-xl",
+            "bg-gradient-to-r text-primary-foreground border-0 px-4 py-2 text-sm font-bold shadow-xl",
             config.gradient,
             config.glow
           )}>
@@ -512,7 +512,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
               whileHover={{ scale: 1.1, rotate: 5 }}
               className={`p-4 rounded-2xl bg-gradient-to-br ${config.accent} shadow-xl`}
             >
-              <PromoIcon className="w-7 h-7 text-white" />
+              <PromoIcon className="w-7 h-7 text-primary-foreground" />
             </motion.div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
@@ -526,7 +526,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", delay: 0.2 }}
                   >
-                    <Badge className={`bg-gradient-to-r ${config.accent} text-white border-0 text-xl font-bold px-4 py-2 shadow-lg`}>
+                    <Badge className={`bg-gradient-to-r ${config.accent} text-primary-foreground border-0 text-xl font-bold px-4 py-2 shadow-lg`}>
                       {discount}
                     </Badge>
                   </motion.div>
@@ -661,7 +661,7 @@ export const RecommendationCard: React.FC<RecommendationProps> = ({
         <motion.span 
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute top-4 left-4 px-3 py-1 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg"
+          className="absolute top-4 left-4 px-3 py-1 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-primary-foreground rounded-full shadow-lg"
         >
           {badge}
         </motion.span>

@@ -213,7 +213,7 @@ export default function MembershipPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                      <Crown className="w-7 h-7 text-white" />
+                      <Crown className="w-7 h-7 text-primary-foreground" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export default function MembershipPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-6 h-6 text-white" />
+                      <Sparkles className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-muted-foreground">Your savings this month</p>

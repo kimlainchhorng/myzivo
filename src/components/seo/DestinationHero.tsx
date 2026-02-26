@@ -112,7 +112,7 @@ export default function DestinationHero({
             "border backdrop-blur-sm"
           )}>
             <Icon className={cn("w-4 h-4", config.color)} />
-            <span className={backgroundImage ? "text-white/80" : "text-muted-foreground"}>
+            <span className={backgroundImage ? "text-primary-foreground/80" : "text-muted-foreground"}>
               {config.badge}
             </span>
           </div>
@@ -126,7 +126,7 @@ export default function DestinationHero({
           
           <p className={cn(
             "text-body-lg mb-8",
-            backgroundImage ? "text-white/70" : "text-muted-foreground"
+            backgroundImage ? "text-primary-foreground/70" : "text-muted-foreground"
           )}>
             {subtitle}
           </p>
@@ -138,7 +138,7 @@ export default function DestinationHero({
                 key={badge.text}
                 className={cn(
                   "flex items-center gap-2 text-sm",
-                  backgroundImage ? "text-white/70" : "text-muted-foreground"
+                  backgroundImage ? "text-primary-foreground/70" : "text-muted-foreground"
                 )}
               >
                 <badge.icon className={cn("w-4 h-4", config.color)} />

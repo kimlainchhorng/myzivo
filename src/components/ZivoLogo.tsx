@@ -25,7 +25,7 @@ const ZivoLogo = forwardRef<HTMLDivElement, ZivoLogoProps>(({ size = "md", showT
         sizes.icon
       )}>
         <span className={cn(
-          "font-bold text-white leading-none",
+          "font-bold text-primary-foreground leading-none",
           sizes.z
         )}>
           Z

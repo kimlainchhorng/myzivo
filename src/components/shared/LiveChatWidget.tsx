@@ -289,7 +289,7 @@ const LiveChatWidget = () => {
                   </p>
                   <div className="flex items-center gap-1">
                     <span className="w-2 h-2 bg-green-400 rounded-full" />
-                    <span className="text-xs text-white/80">
+                    <span className="text-xs text-primary-foreground/80">
                       {chatMode === "ai" ? "AI Online" : "Agent Available"}
                     </span>
                   </div>

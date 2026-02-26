@@ -318,7 +318,7 @@ export default function FlightSearchHero({
                   </button>
                   <button
                     onClick={swapCities}
-                    className="hidden md:flex absolute left-1/2 top-[36px] -translate-x-1/2 w-9 h-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600 text-white transition-all z-20 shadow-lg shadow-sky-500/40 hover:scale-110 active:scale-95 border-2 border-white/30 ring-2 ring-background"
+                    className="hidden md:flex absolute left-1/2 top-[36px] -translate-x-1/2 w-9 h-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600 text-primary-foreground transition-all z-20 shadow-lg shadow-sky-500/40 hover:scale-110 active:scale-95 border-2 border-white/30 ring-2 ring-background"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                   </button>
@@ -520,7 +520,7 @@ export default function FlightSearchHero({
                   <Button
                     onClick={onSearch}
                     disabled={isSearching}
-                    className="col-span-2 sm:col-span-1 h-11 sm:h-11 px-6 sm:px-8 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-white font-bold text-sm shadow-lg shadow-sky-500/40 transition-all active:scale-[0.98] rounded-lg relative overflow-hidden touch-manipulation"
+                    className="col-span-2 sm:col-span-1 h-11 sm:h-11 px-6 sm:px-8 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-primary-foreground font-bold text-sm shadow-lg shadow-sky-500/40 transition-all active:scale-[0.98] rounded-lg relative overflow-hidden touch-manipulation"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     {isSearching ? (

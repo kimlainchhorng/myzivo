@@ -135,38 +135,38 @@ export default function DestinationActivitiesPage() {
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <nav className="flex items-center justify-center gap-2 text-sm text-white/70 mb-6">
-                <Link to="/" className="hover:text-white">Home</Link>
+              <nav className="flex items-center justify-center gap-2 text-sm text-primary-foreground/70 mb-6">
+                <Link to="/" className="hover:text-primary-foreground">Home</Link>
                 <span>/</span>
-                <Link to="/things-to-do" className="hover:text-white">Activities</Link>
+                <Link to="/things-to-do" className="hover:text-primary-foreground">Activities</Link>
                 <span>/</span>
-                <span className="text-white">{displayName}</span>
+                <span className="text-primary-foreground">{displayName}</span>
               </nav>
               
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-primary-foreground">
                 <Compass className="w-4 h-4 text-purple-400" />
-                <span className="text-white/80">Tours & Experiences</span>
+                <span className="text-primary-foreground/80">Tours & Experiences</span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 Things to Do in <span className="text-purple-400">{displayName}</span>
               </h1>
               
-              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+              <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
                 {pageDescription}
               </p>
               
               <Button 
                 onClick={handleSearchActivities}
                 size="lg"
-                className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:opacity-90"
+                className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground rounded-xl hover:opacity-90"
               >
                 <Compass className="w-5 h-5" />
                 Browse All Activities
                 <ExternalLink className="w-4 h-4" />
               </Button>
               
-              <p className="text-xs text-white/50 mt-4">
+              <p className="text-xs text-primary-foreground/50 mt-4">
                 {AFFILIATE_DISCLOSURE_TEXT.short}
               </p>
             </div>
