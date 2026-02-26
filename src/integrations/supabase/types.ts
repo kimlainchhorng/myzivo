@@ -39002,6 +39002,87 @@ export type Database = {
         }
         Relationships: []
       }
+      traveler_profiles: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          dietary_preferences: string[] | null
+          email: string | null
+          first_name: string
+          frequent_flyer_airline: string | null
+          frequent_flyer_number: string | null
+          gender: string | null
+          id: string
+          is_primary: boolean
+          known_traveler_number: string | null
+          label: string
+          last_name: string
+          nationality: string | null
+          passport_country: string | null
+          passport_expiry: string | null
+          passport_number: string | null
+          phone: string | null
+          redress_number: string | null
+          seat_preference: string | null
+          special_assistance: string | null
+          tsa_precheck_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          dietary_preferences?: string[] | null
+          email?: string | null
+          first_name: string
+          frequent_flyer_airline?: string | null
+          frequent_flyer_number?: string | null
+          gender?: string | null
+          id?: string
+          is_primary?: boolean
+          known_traveler_number?: string | null
+          label?: string
+          last_name: string
+          nationality?: string | null
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone?: string | null
+          redress_number?: string | null
+          seat_preference?: string | null
+          special_assistance?: string | null
+          tsa_precheck_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          dietary_preferences?: string[] | null
+          email?: string | null
+          first_name?: string
+          frequent_flyer_airline?: string | null
+          frequent_flyer_number?: string | null
+          gender?: string | null
+          id?: string
+          is_primary?: boolean
+          known_traveler_number?: string | null
+          label?: string
+          last_name?: string
+          nationality?: string | null
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone?: string | null
+          redress_number?: string | null
+          seat_preference?: string | null
+          special_assistance?: string | null
+          tsa_precheck_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       travelers: {
         Row: {
           consent_given: boolean
