@@ -2,7 +2,7 @@
  * Offline Fallback Page
  * Shown when PWA is offline and page is not cached
  */
-import { WifiOff, RefreshCw, Home, Plane, Hotel, Car } from "lucide-react";
+import { WifiOff, RefreshCw, Home, Plane, Hotel, Car, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -35,42 +35,26 @@ const Offline = () => {
       {/* Cached Pages Hint */}
       <div className="bg-muted/30 rounded-2xl p-6 max-w-sm">
         <p className="text-sm font-medium mb-4">Previously visited pages may still be available:</p>
-        <div className="flex justify-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-col h-auto py-3 px-4 rounded-xl"
-            onClick={() => navigate("/")}
-          >
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/")}>
             <Home className="w-5 h-5 mb-1" />
             <span className="text-xs">Home</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-col h-auto py-3 px-4 rounded-xl"
-            onClick={() => navigate("/flights")}
-          >
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/rides")}>
+            <Car className="w-5 h-5 mb-1 text-rides" />
+            <span className="text-xs">Rides</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/eats")}>
+            <UtensilsCrossed className="w-5 h-5 mb-1 text-eats" />
+            <span className="text-xs">Eats</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/flights")}>
             <Plane className="w-5 h-5 mb-1 text-flights" />
             <span className="text-xs">Flights</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-col h-auto py-3 px-4 rounded-xl"
-            onClick={() => navigate("/hotels")}
-          >
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/hotels")}>
             <Hotel className="w-5 h-5 mb-1 text-hotels" />
             <span className="text-xs">Hotels</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-col h-auto py-3 px-4 rounded-xl"
-            onClick={() => navigate("/cars")}
-          >
-            <Car className="w-5 h-5 mb-1 text-cars" />
-            <span className="text-xs">Cars</span>
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Car, Plane, Hotel, Zap } from "lucide-react";
+import { Car, Plane, Hotel, Zap, UtensilsCrossed, Package } from "lucide-react";
 import { QuickAction } from "@/components/ui/premium-card";
 import { QuickRepeatOrders, RecentlyViewed } from "@/components/ui/personalization";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,10 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const quickActions = [
+  { id: "ride", icon: Car, label: "Book a Ride", description: "Go anywhere", href: "/rides", color: "rides" as const },
+  { id: "eats", icon: UtensilsCrossed, label: "Order Food", description: "Delivered fast", href: "/eats", color: "eats" as const },
   { id: "flight", icon: Plane, label: "Book Flight", description: "500+ destinations", href: "/flights", color: "sky" as const },
   { id: "hotel", icon: Hotel, label: "Find Hotel", description: "Best rates guaranteed", href: "/hotels", color: "amber" as const },
-  { id: "car", icon: Car, label: "Rent a Car", description: "Pickup anywhere", href: "/car-rental", color: "rides" as const },
-  { id: "extras", icon: Zap, label: "Travel Extras", description: "Insurance & more", href: "/extras", color: "eats" as const },
+  { id: "car", icon: Car, label: "Rent a Car", description: "Pickup anywhere", href: "/rent-car", color: "rides" as const },
+  { id: "extras", icon: Package, label: "Delivery", description: "Send packages", href: "/extras", color: "eats" as const },
 ];
 
 const defaultRecentItems = [

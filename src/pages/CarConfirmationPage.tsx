@@ -81,20 +81,24 @@ export default function CarConfirmationPage() {
                 <Car className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1">Need a ride or delivery?</h3>
+                <h3 className="font-semibold text-lg mb-1">Need a ride or food delivery?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Continue with ZIVO Driver for airport transfers, food delivery, and more.
+                  Book a ride or order food delivery right from ZIVO.
                 </p>
-                <a 
-                  href="https://zivodriver.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <Button className="gap-2">
-                    Explore ZIVO Driver
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </a>
+                <div className="flex gap-3">
+                  <a href="/rides">
+                    <Button variant="outline" className="gap-2">
+                      Book a Ride
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </a>
+                  <a href="/eats">
+                    <Button className="gap-2">
+                      Order Food
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
