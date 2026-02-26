@@ -116,7 +116,7 @@ const CookieConsent = () => {
                       </p>
                       <div className="flex flex-wrap gap-3">
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
+                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-primary-foreground font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                             Accept All
                           </Button>
                         </motion.div>
@@ -188,7 +188,7 @@ const CookieConsent = () => {
 
                   <div className="flex gap-3">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
-                      <Button onClick={handleSavePreferences} className="w-full bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
+                      <Button onClick={handleSavePreferences} className="w-full bg-gradient-to-r from-primary to-teal-400 text-primary-foreground font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
                         Save Preferences
                       </Button>
                     </motion.div>

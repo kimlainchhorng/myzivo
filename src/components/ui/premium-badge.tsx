@@ -172,7 +172,7 @@ export const DiscountBadge = ({ percentage, className, size = "md" }: DiscountBa
       transition={{ type: "spring", stiffness: 500, damping: 25 }}
       className={cn(
         "inline-flex items-center font-bold rounded-xl",
-        "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30",
+        "bg-gradient-to-r from-red-500 to-rose-600 text-primary-foreground shadow-lg shadow-red-500/30",
         sizeClasses[size],
         className
       )}

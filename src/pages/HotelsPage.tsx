@@ -305,20 +305,20 @@ export default function HotelsPage() {
               <div className="max-w-3xl mx-auto text-center mb-8">
                 <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-hotels/20 border border-hotels/30 text-sm font-medium mb-6">
                   <Hotel className="w-4 h-4 text-hotels" />
-                  <span className="text-white/80">Compare hotel prices</span>
+                  <span className="text-primary-foreground/80">Compare hotel prices</span>
                 </motion.div>
                 
-                <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+                <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                   Compare Hotels Worldwide — <span className="text-hotels">Book Securely with Partners</span>
                 </motion.h1>
                 
-                <motion.p initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-lg text-white/70 mb-8">
+                <motion.p initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-lg text-primary-foreground/70 mb-8">
                   Search real-time hotel prices and complete booking securely with licensed partners.
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-wrap justify-center gap-4 mb-8">
                   {trustBadges.map((badge) => (
-                    <div key={badge.text} className="flex items-center gap-2 text-sm text-white/70 shimmer-chip px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                    <div key={badge.text} className="flex items-center gap-2 text-sm text-primary-foreground/70 shimmer-chip px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
                       <badge.icon className="w-4 h-4 text-hotels" />
                       <span>{badge.text}</span>
                     </div>
@@ -330,11 +330,11 @@ export default function HotelsPage() {
                 <HotelSearchFormPro initialCity={city?.slug || ""} initialCityDisplay={city?.name || ""} className="max-w-5xl mx-auto" onSearch={handleSearch} navigateOnSearch={false} />
               </motion.div>
               
-              <p className="text-center text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+              <p className="text-center text-sm text-primary-foreground/60 mt-4 flex items-center justify-center gap-2">
                 <ExternalLink className="w-4 h-4" /> Final booking completed on partner site.
               </p>
               <div className="mt-6 max-w-2xl mx-auto">
-                <p className="text-center text-xs text-white/50">Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.</p>
+                <p className="text-center text-xs text-primary-foreground/50">Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.</p>
               </div>
             </div>
           </div>
@@ -349,7 +349,7 @@ export default function HotelsPage() {
               <div className="flex items-center justify-between max-w-4xl mx-auto">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
-                    <Crown className="w-5 h-5 text-white" />
+                    <Crown className="w-5 h-5 text-primary-foreground" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -529,7 +529,7 @@ export default function HotelsPage() {
                     {roomTypes.map(room => (
                       <div key={room.type} className={cn("rounded-2xl p-5 text-left transition-all border relative",
                         room.popular ? "border-amber-500 bg-amber-500/5 shadow-lg" : "border-border/40 bg-card")}>
-                        {room.popular && <span className="absolute -top-2 right-3 text-[8px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full">Most Popular</span>}
+                        {room.popular && <span className="absolute -top-2 right-3 text-[8px] font-bold bg-amber-500 text-primary-foreground px-2 py-0.5 rounded-full">Most Popular</span>}
                         <h3 className="text-sm font-bold text-foreground mb-1">{room.type}</h3>
                         <p className="text-lg font-bold text-primary mb-3">${room.price}<span className="text-[10px] text-muted-foreground font-normal">/night</span></p>
                         <div className="text-[10px] text-muted-foreground mb-3">

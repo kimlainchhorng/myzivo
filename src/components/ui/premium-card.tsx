@@ -391,7 +391,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
       >
-        <div className={cn("w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 text-white", actionGradients[color])}>
+        <div className={cn("w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 text-primary-foreground", actionGradients[color])}>
           {icon}
         </div>
         <span className="font-medium text-sm group-hover:text-primary transition-colors">{label}</span>
@@ -414,7 +414,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
     >
       <motion.div 
         className={cn(
-          "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-lg text-white",
+          "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-lg text-primary-foreground",
           actionGradients[color]
         )}
         whileHover={{ scale: 1.1, rotate: 5 }}
@@ -430,7 +430,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
         )}
       </div>
       {badge && (
-        <span className="px-2.5 py-1 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-md">
+        <span className="px-2.5 py-1 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-primary-foreground rounded-full shadow-md">
           {badge}
         </span>
       )}
@@ -478,7 +478,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
       
       {badge && (
         <span className={cn(
-          "absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white rounded-full shadow-lg",
+          "absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-primary-foreground rounded-full shadow-lg",
           `bg-gradient-to-r ${badgeConfig[badge].gradient}`
         )}>
           {React.createElement(badgeConfig[badge].icon, { className: "w-3 h-3" })}
@@ -487,7 +487,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
       )}
       
       <motion.div 
-        className={cn("relative w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg text-white mb-5", actionGradients[color])}
+        className={cn("relative w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg text-primary-foreground mb-5", actionGradients[color])}
         whileHover={{ rotate: 5, scale: 1.1 }}
       >
         {icon}

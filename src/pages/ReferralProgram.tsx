@@ -170,7 +170,7 @@ export default function ReferralProgram() {
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {REFERRAL_REWARDS.referrer.tierBonuses.map((tier) => (
                 <div key={tier.title} className="p-6 rounded-2xl bg-card border border-border text-center hover:border-primary/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 mx-auto mb-4 flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 mx-auto mb-4 flex items-center justify-center text-primary-foreground font-bold">
                     {tier.count}
                   </div>
                   <h3 className="font-semibold text-lg mb-1">{tier.title}</h3>

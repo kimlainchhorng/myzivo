@@ -61,7 +61,7 @@ export default function SessionTimeoutWarning({
           <Button
             onClick={() => onStaySignedIn()}
             disabled={isRefreshing}
-            className="w-full sm:w-auto bg-gradient-to-r from-primary to-teal-400 text-white rounded-xl h-11 shadow-md active:scale-95 transition-all duration-200 touch-manipulation"
+            className="w-full sm:w-auto bg-gradient-to-r from-primary to-teal-400 text-primary-foreground rounded-xl h-11 shadow-md active:scale-95 transition-all duration-200 touch-manipulation"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             {isRefreshing ? "Refreshing..." : "Stay Signed In"}
