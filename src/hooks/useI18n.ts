@@ -9,6 +9,9 @@ export function useTranslation(_ns?: string) {
         "flights.to": "To",
         "flights.departure": "Departure",
         "flights.return": "Return",
+        "flights.passengers": "Passengers",
+        "flights.class": "Cabin Class",
+        "flights.search_title": "Search Flights",
       };
       return map[key] || key;
     },
