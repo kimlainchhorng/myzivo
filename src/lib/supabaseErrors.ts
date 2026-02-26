@@ -157,7 +157,7 @@ export async function withRetry<T>(
     } catch (err) {
       const errorInfo = categorizeError(err);
 
-      console.log(
+      console.debug(
         `[withRetry] Attempt ${attempt}/${maxAttempts} failed:`,
         errorInfo.type,
         errorInfo.message
@@ -173,7 +173,7 @@ export async function withRetry<T>(
 
       // Wait with exponential backoff
       const delay = baseDelayMs * Math.pow(2, attempt - 1);
-      console.log(`[withRetry] Waiting ${delay}ms before retry...`);
+      console.debug(`[withRetry] Waiting ${delay}ms before retry...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }

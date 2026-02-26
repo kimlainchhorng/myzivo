@@ -435,7 +435,7 @@ export function useAddTicketMessage() {
                 },
               },
             });
-            console.log('[useAddTicketMessage] Push sent to ticket owner');
+            
           } catch (pushErr) {
             console.warn('[useAddTicketMessage] Failed to send push:', pushErr);
           }

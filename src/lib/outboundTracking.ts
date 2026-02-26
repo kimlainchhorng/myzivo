@@ -116,13 +116,6 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
     return { success: false, finalUrl, subid, error: error.message };
   }
   
-  console.log('[Hizovo Tracking] Click logged:', {
-    logId: insertedLog?.id,
-    partner: data.partnerId,
-    product: data.product,
-    subid: searchSessionId,
-    trackingParams: `utm_source=${HIZOVO_TRACKING_PARAMS.utm_source}&utm_medium=${HIZOVO_TRACKING_PARAMS.utm_medium}&utm_campaign=${HIZOVO_TRACKING_PARAMS.utm_campaign}&subid=${searchSessionId}`,
-  });
   
   return { 
     success: true, 

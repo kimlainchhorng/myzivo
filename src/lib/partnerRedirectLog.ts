@@ -73,12 +73,6 @@ export async function logPartnerRedirect(data: PartnerRedirectData): Promise<Log
     const result = insertResult.data;
     if (!result) return null;
 
-    console.log('[PartnerRedirect] Logged redirect:', {
-      id: result.id,
-      partner: data.partnerName,
-      subid: searchSessionId,
-    });
-
     return {
       id: result.id,
       sessionId: result.session_id,
@@ -142,13 +136,6 @@ export async function logSearchSession(data: {
 
     if (insertResult.error) {
       console.error('[SearchSession] Failed to log session:', insertResult.error);
-    } else {
-      console.log('[SearchSession] Logged session:', {
-        sessionId: searchSessionId,
-        type: data.type,
-        origin: data.origin,
-        destination: data.destination,
-      });
     }
   } catch (e) {
     console.error('[SearchSession] Exception logging session:', e);

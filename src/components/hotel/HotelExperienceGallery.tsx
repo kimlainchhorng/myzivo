@@ -118,6 +118,7 @@ export default function HotelExperienceGallery({ onCategorySelect, className }: 
                   src={exp.image}
                   alt={exp.title}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  loading="lazy"
                 />
                 
                 {/* Overlay */}

@@ -156,7 +156,7 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
           setCity(matched);
         } else {
           // No match - use first city as default
-          console.log(`No match for detected city: ${detectedCityName}, using default`);
+          
           if (cities.length > 0) {
             setCity(cities[0]);
           }

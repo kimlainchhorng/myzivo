@@ -275,6 +275,7 @@ const FlightTravelerInfo = () => {
                   src={getDuffelAirlineLogo(offer.airlineCode)}
                   alt={offer.airline}
                   className="w-12 h-12 object-contain bg-white rounded-xl p-1"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
                 />
                 <div>

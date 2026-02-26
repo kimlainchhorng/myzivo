@@ -232,6 +232,7 @@ const FlightDetails = () => {
                     src={getAirlineLogo(flight.airlineCode)}
                     alt={flight.airline}
                     className="w-14 h-14 object-contain"
+                    loading="lazy"
                   />
                 </div>
                 <div>

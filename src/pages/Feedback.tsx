@@ -73,12 +73,6 @@ export default function Feedback() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    console.log("Feedback submitted:", {
-      type: selectedType,
-      rating: selectedType === "rating" ? rating : null,
-      feedback,
-      email,
-    });
 
     setIsSubmitted(true);
     setIsSubmitting(false);

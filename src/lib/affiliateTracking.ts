@@ -101,17 +101,6 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
     }
   }
 
-  // Log for analytics with CTA type and A/B variants
-  console.log("[Affiliate Tracking]", {
-    ctaType: click.ctaType,
-    serviceType: click.serviceType,
-    partner: click.affiliatePartner,
-    source: click.source,
-    device: click.device,
-    route: click.route,
-    abExperiments: click.abExperiments,
-  });
-
   // In production, you would send to your analytics endpoint:
   // await fetch('/api/track-affiliate', { method: 'POST', body: JSON.stringify(click) });
 

@@ -104,7 +104,7 @@ export const usePushNotifications = () => {
     const registrationListener = PushNotifications.addListener(
       "registration",
       (token: Token) => {
-        console.log("[Push] Registration token:", token.value);
+        
         saveToken(token.value);
       }
     );
@@ -120,7 +120,7 @@ export const usePushNotifications = () => {
     const notificationReceivedListener = PushNotifications.addListener(
       "pushNotificationReceived",
       (notification: PushNotificationSchema) => {
-        console.log("[Push] Notification received:", notification);
+        
         setNotifications(prev => [notification, ...prev].slice(0, 50));
         
         // Show in-app toast for foreground notifications
@@ -133,7 +133,7 @@ export const usePushNotifications = () => {
     const notificationActionListener = PushNotifications.addListener(
       "pushNotificationActionPerformed",
       (action: ActionPerformed) => {
-        console.log("[Push] Action performed:", action);
+        
         handleNotificationAction(action);
       }
     );
@@ -190,7 +190,7 @@ export const usePushNotifications = () => {
       // });
       
       setState(prev => ({ ...prev, isRegistered: false, token: null }));
-      console.log("[Push] Token unregistered");
+      
     } catch (error) {
       console.error("[Push] Error unregistering:", error);
     }
