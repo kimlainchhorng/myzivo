@@ -185,7 +185,7 @@ const FlightConfirmation = () => {
                       {booking.pnr || booking.booking_reference}
                     </p>
                     {booking.pnr && (
-                      <Button size="icon" variant="ghost" onClick={handleCopyPNR}>
+                      <Button size="icon" variant="ghost" onClick={handleCopyPNR} aria-label="Copy booking reference">
                         <Copy className="w-4 h-4" />
                       </Button>
                     )}

@@ -164,7 +164,7 @@ export default function BusinessDashboard() {
                           className="pl-9"
                         />
                       </div>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" aria-label="Filter">
                         <Filter className="w-4 h-4" />
                       </Button>
                     </div>
@@ -191,7 +191,7 @@ export default function BusinessDashboard() {
                         <div className="flex items-center gap-4">
                           <p className="font-semibold">${booking.amount}</p>
                           {getStatusBadge(booking.status)}
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" aria-label="More options">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </div>

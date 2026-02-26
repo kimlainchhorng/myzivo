@@ -17,7 +17,7 @@ export default function DisasterRecovery() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link to="/security">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Go back">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>

@@ -85,7 +85,7 @@ export default function LoyaltyPage() {
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild aria-label="Go back">
               <Link to="/account">
                 <ArrowLeft className="w-5 h-5" />
               </Link>

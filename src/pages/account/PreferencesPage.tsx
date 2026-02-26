@@ -47,6 +47,7 @@ const PreferencesPage = () => {
             size="icon"
             onClick={() => navigate("/profile")}
             className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
+            aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

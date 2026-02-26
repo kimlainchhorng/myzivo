@@ -73,6 +73,7 @@ export default function DeleteAccountPage() {
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
+            aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>

@@ -144,7 +144,7 @@ export default function SupportCenterPage() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" asChild className="rounded-xl -ml-1">
+              <Button variant="ghost" size="icon" asChild className="rounded-xl -ml-1" aria-label="Go back">
                 <Link to="/app"><ArrowLeft className="w-5 h-5" /></Link>
               </Button>
               <div>
