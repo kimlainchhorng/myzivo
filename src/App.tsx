@@ -38,6 +38,8 @@ const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const WalletPage = lazy(() => import("./pages/app/WalletPage"));
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
+const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
+const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 
 // Auth & Account
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -296,11 +298,12 @@ const App = () => (
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
-                <Route path="/ride" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/rides" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/food" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/eats" element={<PreserveQueryRedirect to="/flights" />} />
-                <Route path="/move" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/rides" element={<RequestRidePage />} />
+                <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
+                <Route path="/eats" element={<EatsLanding />} />
+                <Route path="/eats/restaurant/:id" element={<EatsLanding />} />
+                <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
+                <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/extras" />} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />

@@ -14,6 +14,26 @@ import { Badge } from "@/components/ui/badge";
 
 const services = [
   { 
+    id: "rides", 
+    label: "Rides", 
+    icon: Car, 
+    href: "/rides",
+    color: "from-emerald-500 to-green-500",
+    bgColor: "bg-emerald-500/10",
+    textColor: "text-emerald-500",
+    badge: null
+  },
+  { 
+    id: "eats", 
+    label: "Eats", 
+    icon: Utensils, 
+    href: "/eats",
+    color: "from-orange-500 to-red-500",
+    bgColor: "bg-orange-500/10",
+    textColor: "text-orange-500",
+    badge: null
+  },
+  { 
     id: "flights", 
     label: "Flights", 
     icon: Plane, 
