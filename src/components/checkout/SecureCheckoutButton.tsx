@@ -3,6 +3,7 @@
  * Unified CTA with trust signals and subtext
  */
 
+import { motion } from "framer-motion";
 import { Lock, Shield, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,32 +39,38 @@ export default function SecureCheckoutButton({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <Button
-        onClick={onClick}
-        disabled={disabled || isLoading}
-        className={cn(
-          "w-full h-12 md:h-14 text-base font-bold gap-2 text-primary-foreground rounded-2xl touch-manipulation active:scale-[0.98] transition-all duration-200 shadow-lg min-h-[48px]",
-          variantColors[variant]
-        )}
-        size="lg"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            {showIcon && <Lock className="w-5 h-5" />}
-            {buttonText || CHECKOUT_CTA.button}
-          </>
-        )}
-      </Button>
+      <motion.div whileTap={{ scale: 0.97 }}>
+        <Button
+          onClick={onClick}
+          disabled={disabled || isLoading}
+          className={cn(
+            "w-full h-12 md:h-14 text-base font-bold gap-2 text-primary-foreground rounded-2xl touch-manipulation transition-all duration-200 shadow-lg min-h-[48px]",
+            variantColors[variant]
+          )}
+          size="lg"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              {showIcon && <Lock className="w-5 h-5" />}
+              {buttonText || CHECKOUT_CTA.button}
+            </>
+          )}
+        </Button>
+      </motion.div>
       
       {showSubtext && !isLoading && (
-        <p className="text-xs text-center text-muted-foreground">
+        <motion.p
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs text-center text-muted-foreground"
+        >
           {CHECKOUT_CTA.subtext}
-        </p>
+        </motion.p>
       )}
     </div>
   );

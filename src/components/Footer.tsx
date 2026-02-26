@@ -1,7 +1,8 @@
 /**
- * Footer - Premium dark navy footer with refined layout
+ * Footer - Premium dark navy footer with refined layout & motion
  */
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ExternalLink,
   Heart,
@@ -87,11 +88,15 @@ const Footer = ({ className }: { className?: string }) => {
   };
 
   return (
-    <footer className={cn("relative z-30 bg-[#0f1629] text-primary-foreground", className)}>
+    <footer className={cn("relative z-30 bg-[#0f1629] text-primary-foreground overflow-hidden", className)}>
+      {/* Decorative orbs */}
+      <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none" />
+      
       {/* Top accent line */}
       <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 relative z-10">
         {/* Main grid */}
         <div className="py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Brand column */}

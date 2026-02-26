@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Info, CheckCircle2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -90,8 +91,15 @@ export function PriceBreakdown({
         </div>
       </button>
       
-      {/* Expanded content */}
+      <AnimatePresence>
       {isExpanded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden"
+        >
         <div className="px-4 pb-4 space-y-2">
           {/* Line items */}
           {regularItems.map((item) => (
@@ -157,7 +165,9 @@ export function PriceBreakdown({
             {FEE_DISCLOSURE[productType]}
           </p>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
