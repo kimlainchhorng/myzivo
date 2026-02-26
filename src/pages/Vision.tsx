@@ -214,6 +214,81 @@ const Vision = () => {
           </div>
         </section>
 
+        {/* === WAVE 15: Rich Vision Content === */}
+
+        {/* Vision Metrics */}
+        <section className="container mx-auto px-4 mb-20">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-8">Our 2026 Goals</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { goal: "10M+", label: "Monthly searches", emoji: "🔍" },
+                { goal: "50+", label: "Partner airlines", emoji: "✈️" },
+                { goal: "30+", label: "Countries live", emoji: "🌍" },
+                { goal: "4.8★", label: "App Store rating", emoji: "⭐" },
+              ].map(g => (
+                <div key={g.label} className="text-center p-5 rounded-2xl border border-violet-500/20 bg-violet-500/5">
+                  <span className="text-2xl">{g.emoji}</span>
+                  <p className="text-xl font-bold text-violet-500 mt-2">{g.goal}</p>
+                  <p className="text-[10px] text-muted-foreground">{g.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Innovation Pipeline */}
+        <section className="container mx-auto px-4 mb-20">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-8">Innovation Pipeline</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { innovation: "Voice Search", desc: "Book flights and hotels using natural voice commands", timeline: "2025", emoji: "🎙️" },
+                { innovation: "AR Navigation", desc: "Augmented reality wayfinding in airports and cities", timeline: "2026", emoji: "👓" },
+                { innovation: "Predictive Pricing", desc: "ML models that predict optimal booking windows", timeline: "2025", emoji: "📈" },
+                { innovation: "Travel Wallet", desc: "Unified payment wallet with multi-currency support", timeline: "2025", emoji: "💳" },
+                { innovation: "Social Trips", desc: "Plan and book group trips with friends in real-time", timeline: "2026", emoji: "👥" },
+                { innovation: "Carbon Dashboard", desc: "Track and offset your travel carbon footprint", timeline: "2025", emoji: "🌱" },
+              ].map(i => (
+                <Card key={i.innovation} className="border-border/50 hover:border-violet-500/20 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span>{i.emoji}</span>
+                      <span className="font-bold text-sm">{i.innovation}</span>
+                      <Badge variant="secondary" className="text-[9px] ml-auto">{i.timeline}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{i.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Core Beliefs */}
+        <section className="container mx-auto px-4 mb-20">
+          <div className="max-w-3xl mx-auto">
+            <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-purple-500/5">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold text-center mb-6">What We Believe</h2>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { belief: "Travel should be accessible to everyone", emoji: "🌏" },
+                    { belief: "Technology should simplify, not complicate", emoji: "✨" },
+                    { belief: "Transparency builds lasting trust", emoji: "🤝" },
+                    { belief: "Sustainability is not optional", emoji: "🌱" },
+                  ].map(b => (
+                    <div key={b.belief} className="flex items-center gap-3 p-3 rounded-xl bg-card/60 border border-violet-500/10">
+                      <span className="text-xl">{b.emoji}</span>
+                      <p className="text-sm font-medium">{b.belief}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Join the Journey */}
         <section className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-purple-500/10">

@@ -297,22 +297,43 @@ export default function ReferralProgram() {
           </div>
         </section>
 
-        {/* Tier Bonuses */}
+        {/* === WAVE 15: Additional Referral Content === */}
+
+        {/* Referral FAQ */}
         <section className="py-12 bg-muted/20">
           <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-2xl font-bold text-center mb-6">Referral Tier Bonuses</h2>
-            <div className="grid sm:grid-cols-4 gap-3">
+            <h2 className="text-2xl font-bold text-center mb-6">Referral FAQ</h2>
+            <div className="space-y-2">
               {[
-                { tier: "Starter", min: "1-4", bonus: "$10/ref", perk: "Basic rewards", color: "border-border/40" },
-                { tier: "Ambassador", min: "5-14", bonus: "$12/ref", perk: "+20% bonus", color: "border-sky-500/30" },
-                { tier: "Champion", min: "15-29", bonus: "$15/ref", perk: "+50% bonus", color: "border-violet-500/30" },
-                { tier: "Legend", min: "30+", bonus: "$20/ref", perk: "2x bonus + VIP", color: "border-amber-500/30" },
+                { q: "When do I receive my reward?", a: "Rewards are credited within 24 hours after your friend completes their first booking." },
+                { q: "Is there a limit on referrals?", a: "No limit! Refer as many friends as you want. The more you refer, the higher your tier and bonus rate." },
+                { q: "Can I refer someone who already has an account?", a: "No, referral rewards only apply to new ZIVO users who sign up through your link." },
+                { q: "Do rewards expire?", a: "ZIVO Points from referrals never expire as long as your account is active." },
+                { q: "Can I use rewards on any service?", a: "Yes — referral rewards can be applied to flights, hotels, car rentals, and all ZIVO services." },
+              ].map(f => (
+                <div key={f.q} className="p-4 rounded-xl border border-border/40 bg-card/60">
+                  <p className="text-sm font-bold">{f.q}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Sharing Tips */}
+        <section className="py-12">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-6">Pro Tips for More Referrals</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { tip: "Share After a Great Trip", desc: "Post about your trip and include your referral link — authentic recommendations convert best.", emoji: "📸" },
+                { tip: "Target Frequent Travelers", desc: "Friends who travel often are more likely to book quickly and become repeat users.", emoji: "🎯" },
+                { tip: "Use Group Chats", desc: "Share your link in travel planning group chats when friends are deciding where to go.", emoji: "💬" },
               ].map(t => (
-                <div key={t.tier} className={`text-center p-4 rounded-2xl border ${t.color} bg-card/60`}>
-                  <p className="text-xs font-bold text-foreground">{t.tier}</p>
-                  <p className="text-[10px] text-muted-foreground">{t.min} referrals</p>
-                  <p className="text-lg font-bold text-primary mt-2">{t.bonus}</p>
-                  <p className="text-[9px] text-muted-foreground">{t.perk}</p>
+                <div key={t.tip} className="p-4 rounded-xl border border-border/40 bg-card/60 text-center">
+                  <span className="text-2xl">{t.emoji}</span>
+                  <p className="font-bold text-sm mt-2">{t.tip}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
                 </div>
               ))}
             </div>

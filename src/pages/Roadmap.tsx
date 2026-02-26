@@ -394,6 +394,74 @@ export default function Roadmap() {
           </div>
         </section>
 
+        {/* === WAVE 15: Additional Roadmap Content === */}
+
+        {/* Tech Architecture Preview */}
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-8">Behind the Build</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { metric: "99.9%", label: "Target Uptime SLA", detail: "Multi-region failover", emoji: "🛡️" },
+                { metric: "<200ms", label: "API Response Time", detail: "Edge-cached globally", emoji: "⚡" },
+                { metric: "CI/CD", label: "Continuous Delivery", detail: "Ship multiple times/day", emoji: "🔄" },
+              ].map(m => (
+                <div key={m.label} className="text-center p-5 rounded-2xl border border-border/50 hover:border-primary/20 transition-all">
+                  <span className="text-2xl">{m.emoji}</span>
+                  <p className="text-xl font-bold text-primary mt-2">{m.metric}</p>
+                  <p className="font-semibold text-sm">{m.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{m.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Platform Principles */}
+        <section className="py-12 sm:py-16 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-8">How We Decide What to Build</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { principle: "User Impact First", desc: "We prioritize features that directly improve the traveler experience over internal tooling.", emoji: "👤" },
+                { principle: "Data-Driven Decisions", desc: "Every feature is validated with usage analytics and A/B testing before full rollout.", emoji: "📊" },
+                { principle: "Community Voted", desc: "Top community-requested features get prioritized in our quarterly planning.", emoji: "🗳️" },
+                { principle: "Security by Default", desc: "Every new feature undergoes security review before shipping to production.", emoji: "🔒" },
+              ].map(p => (
+                <div key={p.principle} className="p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>{p.emoji}</span>
+                    <span className="font-bold text-sm">{p.principle}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Quarterly Themes */}
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-bold text-center mb-8">2025 Quarterly Themes</h2>
+            <div className="grid sm:grid-cols-4 gap-3">
+              {[
+                { quarter: "Q1", theme: "Foundation", focus: "Performance, reliability, search accuracy", emoji: "🏗️", active: true },
+                { quarter: "Q2", theme: "Expansion", focus: "Mobile apps, new markets, partner growth", emoji: "🌱", active: false },
+                { quarter: "Q3", theme: "Intelligence", focus: "AI trip planning v2, price predictions", emoji: "🧠", active: false },
+                { quarter: "Q4", theme: "Enterprise", focus: "Corporate portal, group tools, API", emoji: "🏢", active: false },
+              ].map(q => (
+                <div key={q.quarter} className={`text-center p-4 rounded-xl border ${q.active ? "border-primary/30 bg-primary/5" : "border-border/50"} transition-all`}>
+                  <Badge variant={q.active ? "default" : "secondary"} className="text-[9px] mb-2">{q.quarter}</Badge>
+                  <p className="font-bold text-sm">{q.theme}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{q.focus}</p>
+                  <span className="text-xl mt-2 block">{q.emoji}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Feedback CTA */}
         <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4 text-center">
