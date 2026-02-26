@@ -1,15 +1,15 @@
 /**
- * Download App Section - Premium phone mockup with gradient accents
+ * Download App Section - Premium phone mockup with token-based colors
  */
 import { motion } from "framer-motion";
 import { Plane, Bell, Shield, Star, Download, Hotel, CarFront, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 
 const features = [
-  { icon: Plane, text: "Book flights, hotels & cars on the go", color: "text-[hsl(var(--flights))]", bg: "bg-[hsl(var(--flights-light))]" },
-  { icon: Bell, text: "Real-time price alerts & notifications", color: "text-primary", bg: "bg-primary/10" },
-  { icon: Shield, text: "Secure checkout with biometric auth", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { icon: Star, text: "Exclusive app-only deals & rewards", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Plane, text: "Book flights, hotels & cars on the go", colorVar: "--flights" },
+  { icon: Bell, text: "Real-time price alerts & notifications", colorVar: "--primary" },
+  { icon: Shield, text: "Secure checkout with biometric auth", colorVar: "--rides" },
+  { icon: Star, text: "Exclusive app-only deals & rewards", colorVar: "--hotels" },
 ];
 
 export default function DownloadAppSection() {
@@ -53,8 +53,14 @@ export default function DownloadAppSection() {
                   transition={{ duration: 0.3, delay: i * 0.08 }}
                   className="flex items-center gap-3 p-2 -ml-2 rounded-xl hover:bg-muted/40 transition-colors duration-200"
                 >
-                  <div className={`w-9 h-9 rounded-xl ${feat.bg} flex items-center justify-center shrink-0`}>
-                    <feat.icon className={`w-[18px] h-[18px] ${feat.color}`} />
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
+                    style={{
+                      backgroundColor: `hsl(var(${feat.colorVar}) / 0.1)`,
+                      borderColor: `hsl(var(${feat.colorVar}) / 0.2)`,
+                    }}
+                  >
+                    <feat.icon className="w-[18px] h-[18px]" style={{ color: `hsl(var(${feat.colorVar}))` }} />
                   </div>
                   <span className="text-sm font-medium text-foreground/80">{feat.text}</span>
                 </motion.div>
@@ -62,14 +68,14 @@ export default function DownloadAppSection() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-               <button
+              <button
                 onClick={() => handleAppStore("App Store")}
                 className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 active:scale-[0.97] transition-all touch-manipulation min-h-[48px]"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                 App Store
               </button>
-               <button
+              <button
                 onClick={() => handleAppStore("Google Play")}
                 className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 active:scale-[0.97] transition-all touch-manipulation min-h-[48px]"
               >
@@ -107,13 +113,13 @@ export default function DownloadAppSection() {
                     {/* Service icons */}
                     <div className="grid grid-cols-4 gap-2 mt-2">
                       {[
-                        { icon: Plane, color: "text-[hsl(var(--flights))]" },
-                        { icon: Hotel, color: "text-[hsl(var(--hotels))]" },
-                        { icon: CarFront, color: "text-[hsl(var(--cars))]" },
-                        { icon: UtensilsCrossed, color: "text-[hsl(var(--eats))]" },
+                        { icon: Plane, colorVar: "--flights" },
+                        { icon: Hotel, colorVar: "--hotels" },
+                        { icon: CarFront, colorVar: "--cars" },
+                        { icon: UtensilsCrossed, colorVar: "--eats" },
                       ].map((s, i) => (
                         <div key={i} className="h-14 rounded-xl bg-muted/30 flex items-center justify-center">
-                          <s.icon className={`w-5 h-5 ${s.color} opacity-50`} />
+                          <s.icon className="w-5 h-5 opacity-50" style={{ color: `hsl(var(${s.colorVar}))` }} />
                         </div>
                       ))}
                     </div>

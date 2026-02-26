@@ -1,18 +1,16 @@
 /**
- * ServiceFlowBanner - Cross-service connection banner
- * Shows how ZIVO services connect together in a seamless flow
+ * ServiceFlowBanner - Cross-service connection with accent-colored icons
  */
 import { motion } from "framer-motion";
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 const flowSteps = [
-  { icon: Plane, label: "Flights", href: "/flights", color: "text-[hsl(var(--flights))]" },
-  { icon: Hotel, label: "Hotels", href: "/hotels", color: "text-[hsl(var(--hotels))]" },
-  { icon: CarFront, label: "Rentals", href: "/rent-car", color: "text-[hsl(var(--cars))]" },
-  { icon: Car, label: "Rides", href: "/rides", color: "text-[hsl(var(--rides))]" },
-  { icon: UtensilsCrossed, label: "Eats", href: "/eats", color: "text-[hsl(var(--eats))]" },
+  { icon: Plane, label: "Flights", href: "/flights", colorVar: "--flights" },
+  { icon: Hotel, label: "Hotels", href: "/hotels", colorVar: "--hotels" },
+  { icon: CarFront, label: "Rentals", href: "/rent-car", colorVar: "--cars" },
+  { icon: Car, label: "Rides", href: "/rides", colorVar: "--rides" },
+  { icon: UtensilsCrossed, label: "Eats", href: "/eats", colorVar: "--eats" },
 ];
 
 export default function ServiceFlowBanner() {
@@ -50,10 +48,17 @@ export default function ServiceFlowBanner() {
             >
               <Link
                 to={step.href}
-                className="group flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl bg-card/80 border border-border/50 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 touch-manipulation active:scale-[0.97]"
+                className="group flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl bg-card/80 border border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 touch-manipulation active:scale-[0.97]"
+                style={{ "--step-color": `hsl(var(${step.colorVar}))` } as React.CSSProperties}
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <step.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", step.color)} />
+                <div
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border transition-colors group-hover:scale-110 transition-transform duration-200"
+                  style={{
+                    backgroundColor: `hsl(var(${step.colorVar}) / 0.1)`,
+                    borderColor: `hsl(var(${step.colorVar}) / 0.2)`,
+                  }}
+                >
+                  <step.icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: `hsl(var(${step.colorVar}))` }} />
                 </div>
                 <span className="text-[11px] sm:text-xs font-semibold">{step.label}</span>
               </Link>
@@ -73,8 +78,8 @@ export default function ServiceFlowBanner() {
           className="text-center mt-8"
         >
           <Link
-            to="/search"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.97] touch-manipulation"
+            to="/flights"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.97] touch-manipulation"
           >
             Start Planning Your Trip
             <ArrowRight className="w-4 h-4" />
