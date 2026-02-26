@@ -57,7 +57,9 @@ const footerSections = [
       { name: "Careers", href: "/careers" },
       { name: "Press", href: "/press" },
       { name: "FAQ", href: "/faq" },
-      { name: "Contact", href: "/contact" },
+      { name: "Help Center", href: "/help" },
+      { name: "Support Tickets", href: "/support/tickets" },
+      { name: "System Status", href: "/status" },
     ],
   },
 ];
