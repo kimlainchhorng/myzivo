@@ -139,7 +139,7 @@ export default function WalletPage() {
             <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
               <Wallet className="w-6 h-6" />
             </div>
-            <Badge className="bg-white/20 text-white border-0 font-bold text-[10px]">
+            <Badge className="bg-white/20 text-primary-foreground border-0 font-bold text-[10px]">
               <Shield className="w-3 h-3 mr-1" />
               Secure
             </Badge>

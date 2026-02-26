@@ -349,7 +349,7 @@ const FlightLanding = () => {
                       onChange={(e) => setFareAlertEmail(e.target.value)}
                       className="flex-1 h-10 rounded-xl border border-border/40 bg-card px-3 text-sm" />
                     <button onClick={handleSetFareAlert}
-                      className="px-4 h-10 rounded-xl bg-sky-500 text-white text-xs font-bold hover:bg-sky-600 transition-all active:scale-95">
+                      className="px-4 h-10 rounded-xl bg-sky-500 text-primary-foreground text-xs font-bold hover:bg-sky-600 transition-all active:scale-95">
                       Set Alert
                     </button>
                   </div>
@@ -370,7 +370,7 @@ const FlightLanding = () => {
                 <p className="text-xs text-muted-foreground mb-3">Book now — if price drops, get the difference as ZIVO credit</p>
                 <button onClick={() => { setPriceDropProtection(!priceDropProtection); if (!priceDropProtection) toast.success("✅ Price drop protection enabled!"); }}
                   className={cn("w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95",
-                    priceDropProtection ? "bg-emerald-500 text-white" : "bg-card border border-border/40 text-foreground hover:bg-muted/50")}>
+                    priceDropProtection ? "bg-emerald-500 text-primary-foreground" : "bg-card border border-border/40 text-foreground hover:bg-muted/50")}>
                   {priceDropProtection ? "✓ Protection Active — +$4.99" : "Enable for $4.99"}
                 </button>
               </div>

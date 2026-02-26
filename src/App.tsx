@@ -247,7 +247,7 @@ const PageLoader = () => (
     <div className="flex flex-col items-center gap-4 relative z-10">
       <div className="relative">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30 animate-pulse">
-          <Loader2 className="w-8 h-8 text-white animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
         </div>
       </div>
       <p className="text-sm text-muted-foreground font-medium">Loading...</p>

@@ -103,7 +103,7 @@ const Header = () => {
                       <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-br from-primary/10 to-teal-400/5 border border-primary/20">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
-                            <User className="h-5 w-5 text-white" />
+                            <User className="h-5 w-5 text-primary-foreground" />
                           </div>
                           <div>
                             <p className="font-bold text-foreground">Welcome back!</p>
@@ -162,7 +162,7 @@ const Header = () => {
                   <Button 
                     size="sm" 
                     onClick={() => navigate("/signup")}
-                    className="rounded-xl font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
+                    className="rounded-xl font-bold bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
                   >
                     Sign up free
                   </Button>

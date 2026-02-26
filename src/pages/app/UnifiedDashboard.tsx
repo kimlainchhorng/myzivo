@@ -155,7 +155,7 @@ export default function UnifiedDashboard() {
                   <Card className="hover:shadow-lg transition-all duration-300 active:scale-95 border-border/40 hover:border-primary/15">
                     <CardContent className="p-4 flex flex-col items-center gap-2">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.gradient} flex items-center justify-center shadow-md`}>
-                        <service.icon className="w-6 h-6 text-white" />
+                        <service.icon className="w-6 h-6 text-primary-foreground" />
                       </div>
                       <span className="text-xs font-bold">{service.name}</span>
                     </CardContent>

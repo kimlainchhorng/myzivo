@@ -127,7 +127,7 @@ const Promotions = () => {
           </Button>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
-              <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
               <h1 className="font-display font-bold text-base sm:text-xl">Promotions & Rewards</h1>
@@ -153,7 +153,7 @@ const Promotions = () => {
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 className="flex-1 h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50"
               />
-              <Button className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30 touch-manipulation active:scale-95">
+              <Button className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-primary-foreground font-bold shadow-lg shadow-eats/30 touch-manipulation active:scale-95">
                 Apply
               </Button>
             </div>
@@ -164,19 +164,19 @@ const Promotions = () => {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Tabs defaultValue="coupons" className="mb-6 sm:mb-8">
             <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 sm:p-1.5 rounded-xl h-auto">
-              <TabsTrigger value="coupons" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
+              <TabsTrigger value="coupons" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-primary-foreground touch-manipulation">
                 <Ticket className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Coupons
               </TabsTrigger>
-              <TabsTrigger value="offers" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
+              <TabsTrigger value="offers" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-primary-foreground touch-manipulation">
                 <Gift className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Offers
               </TabsTrigger>
-              <TabsTrigger value="referral" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
+              <TabsTrigger value="referral" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-primary-foreground touch-manipulation">
                 <Users className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Refer
               </TabsTrigger>
-              <TabsTrigger value="loyalty" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
+              <TabsTrigger value="loyalty" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-primary-foreground touch-manipulation">
                 <Star className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Points
               </TabsTrigger>
@@ -262,7 +262,7 @@ const Promotions = () => {
                         <CardContent className="p-4 sm:p-5">
                           <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
                             <h4 className="font-bold text-base sm:text-lg">{offer.title}</h4>
-                            <Badge className={`bg-gradient-to-r ${offer.gradient} text-white border-0 font-semibold px-2 sm:px-3 text-xs`}>
+                            <Badge className={`bg-gradient-to-r ${offer.gradient} text-primary-foreground border-0 font-semibold px-2 sm:px-3 text-xs`}>
                               {offer.discount}
                             </Badge>
                           </div>
@@ -359,7 +359,7 @@ const Promotions = () => {
                       ].map((item) => (
                         <div key={item.step} className="text-center">
                           <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-primary/30">
-                            <span className="font-bold text-base sm:text-xl text-white">{item.step}</span>
+                            <span className="font-bold text-base sm:text-xl text-primary-foreground">{item.step}</span>
                           </div>
                           <h4 className="font-bold text-sm sm:text-base mb-1 sm:mb-2">{item.title}</h4>
                           <p className="text-xs sm:text-sm text-muted-foreground">{item.desc}</p>
@@ -385,7 +385,7 @@ const Promotions = () => {
                           <p className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{loyaltyPoints.current.toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <Badge className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 font-bold shadow-lg shadow-amber-500/30">
+                          <Badge className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground border-0 font-bold shadow-lg shadow-amber-500/30">
                             <Award className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                             {loyaltyPoints.tier}
                           </Badge>

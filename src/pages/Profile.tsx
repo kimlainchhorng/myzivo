@@ -183,14 +183,14 @@ const Profile = () => {
                         src={avatarPreview || profile?.avatar_url || undefined} 
                         alt="Profile"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-teal-400 text-white text-2xl sm:text-3xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-teal-400 text-primary-foreground text-2xl sm:text-3xl font-bold">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <button
                       onClick={handleAvatarClick}
                       disabled={uploadAvatar.isPending}
-                      className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-gradient-to-br from-primary to-teal-400 text-white rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation active:scale-95"
+                      className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-gradient-to-br from-primary to-teal-400 text-primary-foreground rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation active:scale-95"
                     >
                       {uploadAvatar.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -281,7 +281,7 @@ const Profile = () => {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
+                      className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
                       disabled={updateProfile.isPending || !form.formState.isDirty}
                     >
                       {updateProfile.isPending ? (
@@ -338,7 +338,7 @@ const Profile = () => {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 sm:gap-4">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                          <Store className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                          <Store className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                         </div>
                         <div>
                           <p className="font-semibold text-sm sm:text-base">Merchant Dashboard</p>
@@ -366,7 +366,7 @@ const Profile = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                     </div>
                     <div>
                       <p className="font-semibold text-sm sm:text-base">Account Status</p>
@@ -390,7 +390,7 @@ const Profile = () => {
                 <CardContent className="p-4 sm:p-5 relative">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                     </div>
                     <div>
                       <p className="font-semibold text-sm sm:text-base">Referred by Partner</p>
