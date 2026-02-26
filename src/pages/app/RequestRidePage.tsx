@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown } from "lucide-react";
@@ -15,6 +15,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
+import RideMap from "@/components/maps/RideMap";
 
 const stripePromise = getStripe();
 
@@ -366,8 +367,13 @@ export default function RequestRidePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Map placeholder area */}
-      <div className="relative h-[35vh] min-h-[220px] bg-gradient-to-b from-emerald-900/90 via-emerald-800/70 to-background">
+      {/* Map area */}
+      <div className="relative h-[35vh] min-h-[220px]">
+        <RideMap
+          pickupCoords={pickupCoords}
+          dropoffCoords={dropoffCoords}
+          className="w-full h-full"
+        />
         {/* Top bar overlay */}
         <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-3 safe-area-top flex items-center justify-between">
           <motion.button 
