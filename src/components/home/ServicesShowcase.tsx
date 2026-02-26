@@ -1,61 +1,65 @@
 /**
- * ServicesShowcase - 5 premium service cards for the ZIVO super app
+ * ServicesShowcase - Premium service cards with image backgrounds
  */
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
+import imgFlights from "@/assets/service-flights.jpg";
+import imgHotels from "@/assets/service-hotels.jpg";
+import imgCars from "@/assets/service-cars.jpg";
+import imgRides from "@/assets/service-rides.jpg";
+import imgEats from "@/assets/service-eats.jpg";
+
 const services = [
   {
     icon: Plane,
     title: "Flights",
-    description: "Compare hundreds of airlines and find the best fares for your next trip.",
+    description: "500+ airlines, real-time prices",
     href: "/flights",
-    iconBg: "bg-gradient-to-br from-[hsl(var(--flights-light))] to-[hsl(var(--flights)/0.15)]",
-    iconColor: "text-[hsl(var(--flights))]",
+    image: imgFlights,
+    accent: "from-[hsl(var(--flights))]",
     badge: "Popular",
+    span: "sm:col-span-2 lg:col-span-2",
   },
   {
     icon: Hotel,
     title: "Hotels",
-    description: "Book rooms at the best hotels worldwide with instant confirmation.",
+    description: "Best rates worldwide",
     href: "/hotels",
-    iconBg: "bg-gradient-to-br from-[hsl(var(--hotels-light))] to-[hsl(var(--hotels)/0.15)]",
-    iconColor: "text-[hsl(var(--hotels))]",
+    image: imgHotels,
+    accent: "from-[hsl(var(--hotels))]",
   },
   {
     icon: CarFront,
     title: "Car Rentals",
-    description: "Rent cars from top providers with flexible pickup and return options.",
+    description: "Flexible pickup & return",
     href: "/rent-car",
-    iconBg: "bg-gradient-to-br from-[hsl(var(--cars-light))] to-[hsl(var(--cars)/0.15)]",
-    iconColor: "text-[hsl(var(--cars))]",
+    image: imgCars,
+    accent: "from-[hsl(var(--cars))]",
   },
   {
     icon: Car,
     title: "Rides",
-    description: "Get a ride anywhere, anytime. Fast pickups and upfront pricing.",
+    description: "Fast pickups, upfront pricing",
     href: "/rides",
-    iconBg: "bg-gradient-to-br from-[hsl(var(--rides-light))] to-[hsl(var(--rides)/0.15)]",
-    iconColor: "text-[hsl(var(--rides))]",
+    image: imgRides,
+    accent: "from-[hsl(var(--rides))]",
   },
   {
     icon: UtensilsCrossed,
     title: "Eats",
-    description: "Order food from your favorite restaurants delivered to your door.",
+    description: "Local restaurants delivered",
     href: "/eats",
-    iconBg: "bg-gradient-to-br from-[hsl(var(--eats-light))] to-[hsl(var(--eats)/0.15)]",
-    iconColor: "text-[hsl(var(--eats))]",
+    image: imgEats,
+    accent: "from-[hsl(var(--eats))]",
   },
 ];
 
 export default function ServicesShowcase() {
   return (
     <section id="services-showcase" className="section-padding relative">
-      {/* Subtle dot pattern bg */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -72,7 +76,8 @@ export default function ServicesShowcase() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 max-w-6xl mx-auto">
+        {/* Bento grid layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" style={{ gridAutoRows: "220px" }}>
           {services.map((service, i) => (
             <motion.div
               key={service.title}
@@ -80,30 +85,45 @@ export default function ServicesShowcase() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
+              className={cn(service.span)}
             >
               <Link
                 to={service.href}
-                 className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-2 transition-all duration-300 touch-manipulation active:scale-[0.98]"
+                className="group relative block h-full rounded-2xl overflow-hidden touch-manipulation active:scale-[0.98] transition-transform duration-200"
               >
+                {/* Background image */}
+                <img
+                  src={service.image}
+                  alt={service.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+
+                {/* Dark gradient overlay for text */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+
                 {/* Badge */}
-                {'badge' in service && service.badge && (
-                  <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                {"badge" in service && service.badge && (
+                  <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground z-10">
                     {service.badge}
                   </span>
                 )}
 
-                <div className={cn(
-                  "w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4",
-                  service.iconBg,
-                  "group-hover:scale-110 transition-transform duration-200"
-                )}>
-                  <service.icon className={cn("w-7 h-7", service.iconColor)} />
+                {/* Content */}
+                <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-xl bg-background/20 backdrop-blur-sm flex items-center justify-center border border-foreground/10">
+                      <service.icon className="w-5 h-5 text-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-foreground leading-tight">{service.title}</h3>
+                      <p className="text-sm text-muted-foreground">{service.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                    Explore <ArrowRight className="w-4 h-4" />
+                  </div>
                 </div>
-                <h3 className="font-bold text-lg mb-2">{service.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{service.description}</p>
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
-                  Book Now <ArrowRight className="w-4 h-4" />
-                </span>
               </Link>
             </motion.div>
           ))}
