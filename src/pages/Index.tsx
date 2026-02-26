@@ -18,6 +18,7 @@ import StatsSection from "@/components/home/StatsSection";
 
 // Below-fold components (lazy loaded for performance)
 const DestinationShowcase = lazy(() => import("@/components/home/DestinationShowcase"));
+const PopularRoutesSection = lazy(() => import("@/components/home/PopularRoutesSection"));
 const FeaturedCarsSection = lazy(() => import("@/components/home/FeaturedCarsSection"));
 const FeaturedHotelsSection = lazy(() => import("@/components/home/FeaturedHotelsSection"));
 const FeaturedEatsSection = lazy(() => import("@/components/home/FeaturedEatsSection"));
@@ -60,6 +61,7 @@ const DesktopHomePage = () => {
 
         {/* Below-fold: Lazy loaded with IntersectionObserver */}
         <LazySection><Suspense fallback={<SectionFallback />}><VideoAdsSection /></Suspense></LazySection>
+        <LazySection><Suspense fallback={<SectionFallback />}><PopularRoutesSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><ServiceFlowBanner /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><PartnerLogosSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<SectionFallback />}><DestinationShowcase /></Suspense></LazySection>

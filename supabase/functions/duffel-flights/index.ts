@@ -702,7 +702,7 @@ const VALID_PAX_TYPE = new Set(['adult', 'child', 'infant_without_seat']);
 
 function validateCreateOfferRequest(p: Record<string, unknown>): string | null {
   const slices = p.slices as unknown[];
-  if (!Array.isArray(slices) || slices.length < 1 || slices.length > 2) return 'slices must be an array of 1-2 items';
+  if (!Array.isArray(slices) || slices.length < 1 || slices.length > 6) return 'slices must be an array of 1-6 items (supports multi-city)';
   for (const s of slices) {
     const sl = s as Record<string, string>;
     if (!sl.origin || !IATA_RE.test(sl.origin)) return 'Invalid origin IATA code';
