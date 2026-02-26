@@ -160,7 +160,7 @@ export default function Partners() {
           </div>
 
           {/* Contact CTA */}
-          <div className="p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-background to-teal-500/10 border border-primary/20 text-center">
+          <div className="p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-background to-teal-500/10 border border-primary/20 text-center mb-12">
             <p className="text-lg text-foreground mb-6">
               If you're interested in partnering with ZIVO, please contact us:
             </p>
@@ -172,6 +172,85 @@ export default function Partners() {
               <Mail className="w-5 h-5" />
               kimlain@hizivo.com
             </Button>
+          </div>
+
+          {/* === WAVE 13: Rich Partner Content === */}
+
+          {/* Partner Network Stats */}
+          <div className="mb-12 p-6 rounded-2xl bg-primary/5 border border-primary/20">
+            <h3 className="font-bold text-lg text-center mb-6">Our Partner Network</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+              {[
+                { stat: "500+", label: "Airline partners", emoji: "✈️" },
+                { stat: "1M+", label: "Hotel properties", emoji: "🏨" },
+                { stat: "80+", label: "Car rental brands", emoji: "🚗" },
+                { stat: "45+", label: "Countries covered", emoji: "🌍" },
+              ].map(s => (
+                <div key={s.label}>
+                  <span className="text-xl">{s.emoji}</span>
+                  <p className="text-xl font-bold text-primary mt-1">{s.stat}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Integration Types */}
+          <div className="mb-12">
+            <h3 className="text-lg font-bold mb-4">Integration Options</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { type: "API Integration", desc: "Direct API connection for real-time availability and pricing.", badge: "Most Popular", emoji: "⚡" },
+                { type: "Affiliate Network", desc: "Connect through major networks (CJ, Impact, Partnerize).", badge: "Easy Setup", emoji: "🔗" },
+                { type: "White Label", desc: "Embedded booking widgets on ZIVO with your branding.", badge: "Premium", emoji: "🏷️" },
+                { type: "Data Feed", desc: "Automated inventory feeds via XML/JSON for OTAs.", badge: "Flexible", emoji: "📊" },
+              ].map(i => (
+                <div key={i.type} className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>{i.emoji}</span>
+                    <span className="font-bold text-sm">{i.type}</span>
+                    <Badge variant="secondary" className="text-[9px] ml-auto">{i.badge}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{i.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Why Partner with ZIVO */}
+          <div className="mb-12">
+            <h3 className="text-lg font-bold mb-4">Why Partner with ZIVO?</h3>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { benefit: "High-Intent Traffic", desc: "Users actively searching and ready to book", icon: TrendingUp },
+                { benefit: "Transparent Reporting", desc: "Real-time dashboards with conversions", icon: CheckCircle2 },
+                { benefit: "Compliance First", desc: "Full FTC disclosure, clean traffic only", icon: Shield },
+              ].map(b => (
+                <div key={b.benefit} className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 transition-all text-center">
+                  <b.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+                  <p className="font-bold text-sm">{b.benefit}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{b.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Partner FAQ */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Partner FAQ</h3>
+            <div className="space-y-2">
+              {[
+                { q: "What commission model does ZIVO use?", a: "CPA and CPC models depending on vertical and partner preference." },
+                { q: "How quickly can we get set up?", a: "Affiliate networks: 24-48 hours. Direct API: 1-2 weeks." },
+                { q: "Does ZIVO do trademark bidding?", a: "No. We never bid on partner brand names in paid search." },
+                { q: "What reporting do you provide?", a: "Real-time dashboard with CTR, conversion metrics, and revenue breakdowns." },
+              ].map(f => (
+                <div key={f.q} className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <p className="text-sm font-bold">{f.q}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
