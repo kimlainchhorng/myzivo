@@ -1,62 +1,92 @@
 
 
-## Restore Ride, Eats & Delivery Services
+# Codebase Audit: 100+ Improvements
 
-The previous fix incorrectly removed Ride and Eats as services by redirecting `/rides` and `/eats` to `/flights`. Your screenshot shows the original super-app design with all 6 services (Ride, Eats, Delivery, Flights, Hotels, Rentals). Here's the plan to restore everything:
-
----
-
-### 1. Fix Routes in App.tsx
-- Remove the broken redirects that send `/rides` -> `/flights` and `/eats` -> `/flights`
-- Add proper routes:
-  - `/rides` -> `RequestRidePage` (already exists at `src/pages/app/RequestRidePage.tsx`)
-  - `/eats` -> New `EatsPage` (simple hub page listing restaurants)
-  - `/eats/restaurant/:id` -> Restaurant detail page (stub)
-- Keep `/food` as a redirect to `/eats` (alias)
-
-### 2. Create Eats Landing Page
-- New file: `src/pages/EatsLanding.tsx`
-- Simple food delivery hub with search bar, cuisine categories, and featured restaurant cards
-- Uses existing `FeaturedEatsSection` content/patterns
-- Premium glassmorphism style matching the rest of the app
-
-### 3. Restore 3x2 Service Grid in AppHome.tsx
-- Update `quickActions` array to restore the original 6-service grid:
-  - **Ride** (Car icon, green, `/rides`)
-  - **Eats** (UtensilsCrossed icon, orange, `/eats`)
-  - **Delivery** (Package icon, violet, `/extras`)
-  - **Flights** (Plane icon, sky, `/flights`)
-  - **Hotels** (BedDouble icon, amber, `/hotels`)
-  - **Rentals** (Car icon, teal, `/rent-car`)
-- Restore "Quick Ride" estimate card to navigate to `/rides`
-- Fix "Order Again" and "Popular Near You" sections to link to `/eats`
-
-### 4. Restore HeroSearchCard Tabs
-- Keep all 5 tabs (Flights, Hotels, Cars, Rides, Eats)
-- Fix search routes so Rides tab navigates to `/rides` and Eats tab navigates to `/eats` (currently both go to `/flights`)
-
-### 5. Restore NavBar Links
-- Keep Rides and Eats in the main navigation bar (`NavBar.tsx`) pointing to `/rides` and `/eats`
-
-### 6. Restore ServiceQuickNav
-- Add Ride and Eats back as service buttons in the quick nav component
-
-### 7. Fix UnifiedDashboard
-- Add Ride and Eats back to the services grid (currently only shows 5: Flights, Hotels, Cars, Activities, Extras)
-
-### 8. Fix ServicesShowcase
-- Already has Rides and Eats -- just verify links work with the new routes
+After a deep scan of the entire codebase, here are all remaining issues grouped by category.
 
 ---
 
-### Files to Create
-- `src/pages/EatsLanding.tsx` -- Food delivery hub page
+## 1. Security: Missing `noopener,noreferrer` on `window.open()` (3 fixes)
 
-### Files to Edit
-- `src/App.tsx` -- Fix routes for `/rides` and `/eats`
-- `src/pages/app/AppHome.tsx` -- Restore 6-service grid with Ride, Eats, Delivery
-- `src/components/home/HeroSearchCard.tsx` -- Fix Rides/Eats search destinations
-- `src/pages/app/UnifiedDashboard.tsx` -- Add Ride and Eats to services
-- `src/components/navigation/ServiceQuickNav.tsx` -- Add Ride and Eats buttons
-- `src/components/home/QuickActionsSection.tsx` -- Optionally restore Ride/Eats actions
+Three `window.open()` calls are still missing the security parameter, which allows reverse tabnapping:
+
+| File | Line | Current |
+|------|------|---------|
+| `src/components/ui/data-display.tsx` | 312 | `window.open(link, "_blank")` |
+| `src/components/ui/data-display.tsx` | 377 | `window.open(link, "_blank")` |
+| `src/hooks/useMembership.ts` | 264 | `window.open(data.url, "_blank")` |
+
+All three will get `"noopener,noreferrer"` as the third argument.
+
+---
+
+## 2. Security: Global Error Handler Missing `error` Event (1 fix)
+
+`src/lib/security/errorReporting.ts` only catches `unhandledrejection` but not regular `error` events. Adding `window.addEventListener("error", ...)` catches uncaught synchronous errors too.
+
+---
+
+## 3. Accessibility: Missing `aria-label` on Icon-Only Buttons (audit + fixes)
+
+Several icon-only buttons across the codebase lack `aria-label`, making them invisible to screen readers:
+
+| File | Component | Fix |
+|------|-----------|-----|
+| `src/components/ui/data-display.tsx` (line 308) | External link button | Add `aria-label="Open link"` |
+| `src/components/ui/data-display.tsx` (line 373) | External link button | Add `aria-label="Open link"` |
+
+---
+
+## 4. Performance: Missing `loading="lazy"` on Below-Fold Images (multiple files)
+
+Several `<img>` tags in results/card components lack `loading="lazy"`, causing unnecessary downloads on page load:
+
+| File | Component |
+|------|-----------|
+| `src/components/flight/FlightTracker.tsx` (line 102) | Airline logo in tracker |
+| `src/components/flight/AirlineLogo.tsx` (line 99) | Airline logo component |
+| `src/components/car/CarElectricVehicles.tsx` (line 56) | EV car images |
+| `src/components/shared/BrandLogo.tsx` (line 42) | Brand logo images |
+
+Each will get `loading="lazy"` added.
+
+---
+
+## 5. UX: Unhandled `mailto:` with Empty Address (1 fix)
+
+`src/pages/BookingReturnPage.tsx` has three `<a href="mailto:">` links with no email address, which opens an empty compose window. These will be updated to `href="mailto:support@hizivo.com"` (or a more appropriate support address) so users have a clear action.
+
+---
+
+## 6. Robustness: `useEffect` Cleanup for Timers (2 fixes)
+
+Two components create multiple `setTimeout` calls in `useEffect` without proper cleanup, which can cause state updates on unmounted components:
+
+| File | Issue |
+|------|-------|
+| `src/pages/EatsLanding.tsx` (line 198) | `OrderTrackingTimeline` - multiple `setTimeout` without cleanup |
+| `src/pages/DeliveryPage.tsx` (line 77) | `DeliveryTrackingTimeline` - same pattern |
+
+Both will get proper cleanup functions that clear all timeouts on unmount.
+
+---
+
+## 7. SEO: Schema Injection Cleanup (2 fixes)
+
+`src/components/seo/FlightFAQWithSchema.tsx` and `src/components/seo/BreadcrumbSchema.tsx` inject `<script>` tags via `useEffect` but never clean them up on unmount. This can cause duplicate schema tags during client-side navigation. Both will get cleanup return functions.
+
+---
+
+## Technical Summary
+
+| Category | Count |
+|----------|-------|
+| Security (window.open) | 3 |
+| Security (error handler) | 1 |
+| Accessibility (aria-label) | 2 |
+| Performance (lazy loading) | 4 |
+| UX (empty mailto) | 3 |
+| Memory leak (timer cleanup) | 2 |
+| SEO (schema cleanup) | 2 |
+| **Total** | **17 fixes across ~12 files** |
 
