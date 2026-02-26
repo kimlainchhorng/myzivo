@@ -359,6 +359,103 @@ const FlightConfirmation = () => {
             </CardContent>
           </Card>
 
+          {/* Share & Save Itinerary */}
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Download className="w-5 h-5 text-primary" />
+                Save Your Itinerary
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const text = `✈️ Flight Booked!\n${offerDetails?.airline || 'Flight'} ${offerDetails?.flightNumber || ''}\n${(booking as any).origin || ''} → ${(booking as any).destination || ''}\nRef: ${booking.pnr || booking.booking_reference}\nBooked on ZIVO`;
+                    navigator.clipboard.writeText(text);
+                    toast({ title: 'Copied!', description: 'Itinerary copied to clipboard.' });
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const text = `✈️ Flight Booked! ${offerDetails?.airline || ''} ${(booking as any).origin || ''} → ${(booking as any).destination || ''} | Ref: ${booking.pnr || booking.booking_reference}`;
+                    if (navigator.share) {
+                      navigator.share({ title: 'My Flight Booking', text }).catch(() => {});
+                    } else {
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                    }
+                  }}
+                >
+                  <Send className="w-4 h-4" />
+                  Share
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const depDate = (booking as any).departure_date;
+                    if (depDate) {
+                      const d = new Date(depDate);
+                      const end = new Date(d);
+                      end.setHours(end.getHours() + 6);
+                      const fmt = (dt: Date) => dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                      const title = `Flight ${(booking as any).origin || ''} → ${(booking as any).destination || ''}`;
+                      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmt(d)}/${fmt(end)}&details=${encodeURIComponent(`Booking: ${booking.pnr || booking.booking_reference}\nAirline: ${offerDetails?.airline || ''}`)}`;
+                      window.open(url, '_blank');
+                    }
+                  }}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Calendar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const subject = `Flight Booking ${booking.pnr || booking.booking_reference}`;
+                    const body = `Hi,\n\nHere are my flight details:\n\nAirline: ${offerDetails?.airline || ''}\nFlight: ${offerDetails?.flightNumber || ''}\nRoute: ${(booking as any).origin || ''} → ${(booking as any).destination || ''}\nDate: ${(booking as any).departure_date || ''}\nBooking Reference: ${booking.pnr || booking.booking_reference}\n\nBooked on ZIVO (hizovo.com)`;
+                    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  }}
+                >
+                  <Mail className="w-4 h-4" />
+                  Email
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cross-sell: Add Hotel / Car */}
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-3">Complete Your Trip</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="gap-2 justify-start"
+                  onClick={() => navigate(`/hotels?destination=${encodeURIComponent((booking as any).destination || '')}`)}
+                >
+                  🏨 Find Hotels in {(booking as any).destination || 'your destination'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 justify-start"
+                  onClick={() => navigate(`/cars?location=${encodeURIComponent((booking as any).destination || '')}`)}
+                >
+                  🚗 Rent a Car at {(booking as any).destination || 'your destination'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Button

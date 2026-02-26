@@ -89,7 +89,7 @@ export default function FlightRoutePage() {
       <SEOHead 
         title={pageTitle} 
         description={pageDescription}
-        canonical={`https://hizivo.com/flights/${originSlug}-to-${destSlug}`}
+        canonical={`https://hizovo.com/flights/${originSlug}-to-${destSlug}`}
       />
       <FlightSearchSchema origin={originCity} destination={destCity} />
       
