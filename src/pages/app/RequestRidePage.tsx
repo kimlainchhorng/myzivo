@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare, History, RotateCcw, Headphones, Baby, Briefcase, Home, Building2, Bookmark, Route, Info, X, Bell, ThumbsUp, ThumbsDown, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,22 +38,23 @@ const rideCategories = [
 const vehicleOptions: Record<string, Array<{
   id: string; name: string; badge?: string; badgeColor?: string;
   eta: string; capacity: number; price: string; priceCents: number; multiplier: number;
+  description?: string;
 }>> = {
   economy: [
-    { id: "wait-save", name: "Wait & Save", badge: "Save", badgeColor: "text-primary", eta: "10-15 min", capacity: 4, price: "$13.55", priceCents: 1355, multiplier: 0.85 },
-    { id: "standard", name: "Standard", eta: "3-5 min", capacity: 4, price: "$16.29", priceCents: 1629, multiplier: 1.0 },
-    { id: "green", name: "Green", badge: "Eco", badgeColor: "text-emerald-500", eta: "5-8 min", capacity: 4, price: "$15.55", priceCents: 1555, multiplier: 0.95 },
-    { id: "priority", name: "Priority", badge: "Fast", badgeColor: "text-orange-500", eta: "1-3 min", capacity: 4, price: "$18.29", priceCents: 1829, multiplier: 1.15 },
-    { id: "xl", name: "XL", eta: "5-10 min", capacity: 6, price: "$22.99", priceCents: 2299, multiplier: 1.4 },
+    { id: "wait-save", name: "Wait & Save", badge: "Save", badgeColor: "text-primary", eta: "10-15 min", capacity: 4, price: "$13.55", priceCents: 1355, multiplier: 0.85, description: "Cheaper, longer wait" },
+    { id: "standard", name: "Standard", eta: "3-5 min", capacity: 4, price: "$16.29", priceCents: 1629, multiplier: 1.0, description: "Everyday rides" },
+    { id: "green", name: "Green", badge: "Eco", badgeColor: "text-emerald-500", eta: "5-8 min", capacity: 4, price: "$15.55", priceCents: 1555, multiplier: 0.95, description: "Electric & hybrid" },
+    { id: "priority", name: "Priority", badge: "Fast", badgeColor: "text-orange-500", eta: "1-3 min", capacity: 4, price: "$18.29", priceCents: 1829, multiplier: 1.15, description: "Nearest driver" },
+    { id: "xl", name: "XL", eta: "5-10 min", capacity: 6, price: "$22.99", priceCents: 2299, multiplier: 1.4, description: "Extra seats" },
   ],
   premium: [
-    { id: "comfort", name: "Comfort", eta: "4-8 min", capacity: 4, price: "$24.99", priceCents: 2499, multiplier: 1.5 },
-    { id: "comfort-xl", name: "Comfort XL", eta: "6-10 min", capacity: 6, price: "$32.50", priceCents: 3250, multiplier: 2.0 },
-    { id: "black", name: "Black", badge: "Top Rated", badgeColor: "text-amber-500", eta: "5-10 min", capacity: 4, price: "$38.99", priceCents: 3899, multiplier: 2.4 },
+    { id: "comfort", name: "Comfort", eta: "4-8 min", capacity: 4, price: "$24.99", priceCents: 2499, multiplier: 1.5, description: "Newer cars, top drivers" },
+    { id: "comfort-xl", name: "Comfort XL", eta: "6-10 min", capacity: 6, price: "$32.50", priceCents: 3250, multiplier: 2.0, description: "Spacious premium" },
+    { id: "black", name: "Black", badge: "Top Rated", badgeColor: "text-amber-500", eta: "5-10 min", capacity: 4, price: "$38.99", priceCents: 3899, multiplier: 2.4, description: "Professional drivers" },
   ],
   elite: [
-    { id: "black-suv", name: "Black SUV", badge: "Luxury", badgeColor: "text-amber-500", eta: "8-15 min", capacity: 6, price: "$52.99", priceCents: 5299, multiplier: 3.2 },
-    { id: "limo", name: "Limo", badge: "VIP", badgeColor: "text-violet-500", eta: "15-25 min", capacity: 4, price: "$89.99", priceCents: 8999, multiplier: 5.5 },
+    { id: "black-suv", name: "Black SUV", badge: "Luxury", badgeColor: "text-amber-500", eta: "8-15 min", capacity: 6, price: "$52.99", priceCents: 5299, multiplier: 3.2, description: "Premium SUV" },
+    { id: "limo", name: "Limo", badge: "VIP", badgeColor: "text-violet-500", eta: "15-25 min", capacity: 4, price: "$89.99", priceCents: 8999, multiplier: 5.5, description: "Red-carpet experience" },
   ],
 };
 
@@ -62,6 +63,9 @@ const ridePreferences = [
   { id: "ac", icon: Thermometer, label: "Cool AC", description: "Extra air conditioning" },
   { id: "music", icon: Music, label: "Music On", description: "Driver plays music" },
   { id: "pet", icon: Heart, label: "Pet Friendly", description: "Traveling with a pet" },
+  { id: "child-seat", icon: Baby, label: "Child Seat", description: "Car seat needed" },
+  { id: "luggage", icon: Briefcase, label: "Luggage", description: "Extra trunk space" },
+  { id: "accessibility", icon: Users, label: "Accessible", description: "Wheelchair accessible" },
 ];
 
 const tipOptions = [
@@ -73,14 +77,21 @@ const tipOptions = [
 ];
 
 const savedPlaces = [
-  { id: "home", label: "Home", icon: "🏠", address: "" },
-  { id: "work", label: "Work", icon: "💼", address: "" },
+  { id: "home", label: "Home", icon: Home, address: "" },
+  { id: "work", label: "Work", icon: Building2, address: "" },
 ];
 
 const safetyFeatures = [
   { id: "share-trip", icon: Share2, label: "Share Trip", description: "Share live location with contacts" },
   { id: "emergency", icon: Phone, label: "Emergency", description: "Quick access to 911" },
   { id: "report", icon: AlertTriangle, label: "Report Issue", description: "Report a safety concern" },
+  { id: "audio-record", icon: Headphones, label: "Audio Recording", description: "Record ride audio for safety" },
+];
+
+const recentRides = [
+  { id: "r1", from: "123 Main St", to: "Airport Terminal B", time: "Yesterday", price: "$28.50", vehicle: "Black" },
+  { id: "r2", from: "Home", to: "Downtown Office", time: "2 days ago", price: "$14.20", vehicle: "Standard" },
+  { id: "r3", from: "Whole Foods", to: "Home", time: "Last week", price: "$9.80", vehicle: "Green" },
 ];
 
 // Inner payment form using Stripe Elements
@@ -232,6 +243,120 @@ function FareSplitSection({ totalCents, formatUSD }: { totalCents: number; forma
   );
 }
 
+// Driver preview card shown during finding
+function DriverPreviewCard() {
+  const [showDriver, setShowDriver] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShowDriver(true), 3500);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!showDriver) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-xs rounded-2xl bg-card border border-primary/20 p-4 space-y-3 shadow-lg shadow-primary/10">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-emerald-500/20 flex items-center justify-center text-lg font-bold text-primary">M</div>
+        <div className="flex-1">
+          <p className="text-sm font-bold text-foreground">Marcus T.</p>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> 4.92 · 2,341 trips
+          </div>
+        </div>
+        <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[10px] font-bold">Matching...</Badge>
+      </div>
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        <span className="flex items-center gap-1"><Car className="w-3 h-3" /> Toyota Camry · White</span>
+        <span>· ABC 1234</span>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
+          <p className="text-[10px] text-muted-foreground">Rating</p>
+          <p className="text-xs font-bold text-foreground flex items-center justify-center gap-1"><Star className="w-3 h-3 fill-amber-400 text-amber-400" /> 4.92</p>
+        </div>
+        <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
+          <p className="text-[10px] text-muted-foreground">Trips</p>
+          <p className="text-xs font-bold text-foreground">2,341</p>
+        </div>
+        <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
+          <p className="text-[10px] text-muted-foreground">Years</p>
+          <p className="text-xs font-bold text-foreground">3+</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Ride estimate card
+function RideEstimateCard({ pickup, dropoff }: { pickup: string; dropoff: string }) {
+  if (!pickup || !dropoff) return null;
+  return (
+    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+      className="rounded-2xl bg-primary/5 border border-primary/20 p-3 flex items-center gap-3">
+      <Route className="w-5 h-5 text-primary shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold text-foreground">Estimated trip</p>
+        <p className="text-[10px] text-muted-foreground">~12 min · 4.2 miles · via Highway 101</p>
+      </div>
+      <Info className="w-4 h-4 text-muted-foreground" />
+    </motion.div>
+  );
+}
+
+// Recent rides section
+function RecentRidesSection({ onSelect }: { onSelect: (from: string, to: string) => void }) {
+  const [showRecent, setShowRecent] = useState(false);
+
+  return (
+    <div className="space-y-2">
+      <button onClick={() => setShowRecent(!showRecent)}
+        className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+        <History className="w-3.5 h-3.5" /> Recent Rides
+        <ChevronRight className={cn("w-3 h-3 transition-transform", showRecent && "rotate-90")} />
+      </button>
+      <AnimatePresence>
+        {showRecent && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="space-y-1.5 overflow-hidden">
+            {recentRides.map((ride, i) => (
+              <motion.button key={ride.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                onClick={() => onSelect(ride.from, ride.to)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-primary/20 transition-all touch-manipulation active:scale-[0.98] text-left">
+                <RotateCcw className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">{ride.from} → {ride.to}</p>
+                  <p className="text-[10px] text-muted-foreground">{ride.time} · {ride.vehicle}</p>
+                </div>
+                <span className="text-xs font-bold text-foreground shrink-0">{ride.price}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Multi-stop manager
+function MultiStopManager({ stops, onAddStop, onRemoveStop }: { stops: string[]; onAddStop: () => void; onRemoveStop: (i: number) => void }) {
+  if (stops.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      {stops.map((stop, i) => (
+        <motion.div key={i} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+          className="flex items-center gap-3 pl-6">
+          <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-500 bg-amber-500/20 shrink-0" />
+          <span className="text-xs text-foreground flex-1 truncate">Stop {i + 1}: {stop || "Enter stop"}</span>
+          <button onClick={() => onRemoveStop(i)} className="text-destructive hover:text-destructive/80 touch-manipulation active:scale-90">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export default function RequestRidePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -247,6 +372,7 @@ export default function RequestRidePage() {
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const dropoffGeocode = useGoogleMapsGeocode();
   const [activeInput, setActiveInput] = useState<"pickup" | "dropoff" | null>(null);
+  const [additionalStops, setAdditionalStops] = useState<string[]>([]);
 
   const [activeCategory, setActiveCategory] = useState("economy");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
@@ -257,6 +383,8 @@ export default function RequestRidePage() {
   const [customTip, setCustomTip] = useState("");
   const [rideNote, setRideNote] = useState("");
   const [showSafety, setShowSafety] = useState(false);
+  const [roundTrip, setRoundTrip] = useState(false);
+  const [notifyOnArrival, setNotifyOnArrival] = useState(true);
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -382,8 +510,8 @@ export default function RequestRidePage() {
       if (updateError) console.error("[RequestRide] status update error:", updateError);
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", { body: { job_id: draftJobId, offer_ttl_seconds: 25 } });
       if (dispatchError) console.error("[RequestRide] dispatch-start error:", dispatchError);
-      setTimeout(() => navigate(`/trip-status/${draftJobId}`), 5000);
-    } catch { setTimeout(() => navigate(`/trip-status/${draftJobId}`), 3000); }
+      setTimeout(() => navigate(`/trip-status/${draftJobId}`), 7000);
+    } catch { setTimeout(() => navigate(`/trip-status/${draftJobId}`), 5000); }
   };
 
   const handleShareTrip = () => {
@@ -412,6 +540,14 @@ export default function RequestRidePage() {
     }
   };
 
+  const handleSelectRecentRide = (from: string, to: string) => {
+    setPickupAddress(from);
+    setDropoffAddress(to);
+    setPickupCoords(null);
+    setDropoffCoords(null);
+    toast.success("Route loaded from history");
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Map area */}
@@ -423,7 +559,6 @@ export default function RequestRidePage() {
             <ArrowLeft className="w-4 h-4" />
           </motion.button>
           <div className="flex items-center gap-2">
-            {/* Safety button */}
             <motion.button whileTap={{ scale: 0.88 }} onClick={() => setShowSafety(!showSafety)}
               className="h-10 w-10 rounded-full bg-card/90 backdrop-blur-lg border border-border/40 flex items-center justify-center touch-manipulation shadow-lg">
               <Shield className="w-4 h-4 text-primary" />
@@ -455,7 +590,13 @@ export default function RequestRidePage() {
             {safetyFeatures.map(f => {
               const Icon = f.icon;
               return (
-                <button key={f.id} onClick={() => { if (f.id === "share-trip") handleShareTrip(); else if (f.id === "emergency") { window.location.href = "tel:911"; } else toast.info("Issue reported. Our team will review."); setShowSafety(false); }}
+                <button key={f.id} onClick={() => {
+                  if (f.id === "share-trip") handleShareTrip();
+                  else if (f.id === "emergency") { window.location.href = "tel:911"; }
+                  else if (f.id === "audio-record") toast.info("Audio recording started for this ride");
+                  else toast.info("Issue reported. Our team will review.");
+                  setShowSafety(false);
+                }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/30 hover:bg-muted/50 transition-all touch-manipulation active:scale-[0.98]">
                   <Icon className="w-4 h-4 text-primary" />
                   <div className="flex-1 text-left">
@@ -475,7 +616,6 @@ export default function RequestRidePage() {
           <div className="w-10 h-1 rounded-full bg-border/60" />
         </div>
 
-        {/* Step Progress */}
         <RideStepIndicator currentStep={step} />
 
         <div className="px-4 max-w-lg mx-auto w-full space-y-4 pb-28">
@@ -500,6 +640,12 @@ export default function RequestRidePage() {
                       className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none" />
                   </div>
                   <div className="ml-1.5 border-l-2 border-dashed border-border/40 h-3" />
+
+                  {/* Multi-stops */}
+                  <MultiStopManager stops={additionalStops}
+                    onAddStop={() => setAdditionalStops(prev => [...prev, ""])}
+                    onRemoveStop={(i) => setAdditionalStops(prev => prev.filter((_, idx) => idx !== i))} />
+
                   <div className="relative flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full border-2 border-orange-500 bg-orange-500/20 shrink-0" />
                     <Input placeholder="Enter destination" value={dropoffAddress}
@@ -537,16 +683,26 @@ export default function RequestRidePage() {
                     {isGettingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
                     Use my location
                   </Button>
-                  {savedPlaces.map(place => (
-                    <button key={place.id} onClick={() => { if (place.address) { setPickupAddress(place.address); } else { toast.info(`Set your ${place.label} address in Settings`); } }}
-                      className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition px-2 py-1.5 rounded-lg bg-muted/30 border border-border/30 touch-manipulation active:scale-95">
-                      <span>{place.icon}</span> {place.label}
-                    </button>
-                  ))}
-                  <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
+                  {savedPlaces.map(place => {
+                    const PlaceIcon = place.icon;
+                    return (
+                      <button key={place.id} onClick={() => { if (place.address) { setPickupAddress(place.address); } else { toast.info(`Set your ${place.label} address in Settings`); } }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition px-2 py-1.5 rounded-lg bg-muted/30 border border-border/30 touch-manipulation active:scale-95">
+                        <PlaceIcon className="w-3 h-3" /> {place.label}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => setAdditionalStops(prev => [...prev, ""])}
+                    className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition px-2 py-1.5 rounded-lg bg-muted/30 border border-border/30 touch-manipulation active:scale-95">
                     <Plus className="w-3.5 h-3.5" /> Add stop
                   </button>
                 </div>
+
+                {/* Ride estimate card */}
+                <RideEstimateCard pickup={pickupAddress} dropoff={dropoffAddress} />
+
+                {/* Recent rides */}
+                <RecentRidesSection onSelect={handleSelectRecentRide} />
 
                 {/* Note to driver */}
                 <div className="flex items-center gap-2">
@@ -554,10 +710,22 @@ export default function RequestRidePage() {
                   <Input placeholder="Note to driver (e.g., I'm at the blue door)" value={rideNote} onChange={(e) => setRideNote(e.target.value)} className="h-10 rounded-xl text-sm" />
                 </div>
 
+                {/* Round trip toggle */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setRoundTrip(!roundTrip)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", roundTrip ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", roundTrip ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-primary" /> Round trip</p>
+                    <p className="text-[10px] text-muted-foreground">Book return ride at 10% discount</p>
+                  </div>
+                </div>
+
                 {/* Schedule ride toggle */}
                 <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
                   <button onClick={() => setIsScheduled(!isScheduled)}
-                    className={cn("w-10 h-6 rounded-full transition-all relative", isScheduled ? "bg-primary" : "bg-muted/60")}>
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", isScheduled ? "bg-primary" : "bg-muted/60")}>
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", isScheduled ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
@@ -579,6 +747,18 @@ export default function RequestRidePage() {
                     ))}
                   </motion.div>
                 )}
+
+                {/* Notify on arrival */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setNotifyOnArrival(!notifyOnArrival)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyOnArrival ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyOnArrival ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-primary" /> Notify on arrival</p>
+                    <p className="text-[10px] text-muted-foreground">Get a push notification when driver arrives</p>
+                  </div>
+                </div>
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 pt-2">
@@ -612,7 +792,10 @@ export default function RequestRidePage() {
                           <span className="font-bold text-sm text-foreground">{vehicle.name}</span>
                           {vehicle.badge && <span className={cn("text-[10px] font-bold flex items-center gap-0.5", vehicle.badgeColor)}><span className="w-1.5 h-1.5 rounded-full bg-current" />{vehicle.badge}</span>}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5"><Clock className="w-3 h-3" /><span>{vehicle.eta}</span></div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
+                          <Clock className="w-3 h-3" /><span>{vehicle.eta}</span>
+                          {vehicle.description && <span className="text-muted-foreground/60">· {vehicle.description}</span>}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0"><Users className="w-3.5 h-3.5" /><span>{vehicle.capacity}</span></div>
                       <span className={cn("text-base font-bold shrink-0", selectedVehicle === vehicle.id ? "text-primary" : "text-foreground")}>{vehicle.price}</span>
@@ -671,6 +854,11 @@ export default function RequestRidePage() {
                       <MessageSquare className="w-3 h-3 shrink-0" /> {rideNote}
                     </div>
                   )}
+                  {roundTrip && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-primary font-bold">
+                      <RotateCcw className="w-3 h-3" /> Round trip · 10% off return
+                    </div>
+                  )}
                 </div>
 
                 {/* Selected vehicle + preferences */}
@@ -714,6 +902,12 @@ export default function RequestRidePage() {
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-amber-600 font-bold flex items-center gap-1"><Zap className="w-3 h-3" /> Surge ({pricing.final_multiplier.toFixed(2)}x)</span>
                           <span className="text-xs text-amber-600 font-bold">applied</span>
+                        </div>
+                      )}
+                      {roundTrip && (
+                        <div className="flex justify-between items-center text-primary">
+                          <span className="text-xs font-bold flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Round trip discount</span>
+                          <span className="text-xs font-bold">-10%</span>
                         </div>
                       )}
                       {promoApplied && (
@@ -760,7 +954,6 @@ export default function RequestRidePage() {
 
             {step === "payment" && clientSecret && (
               <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
-                {/* Compact route + price summary */}
                 <div className="p-4 rounded-2xl bg-card border border-border/40 flex items-center justify-between shadow-sm">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />{pickupAddress}</p>
@@ -800,10 +993,10 @@ export default function RequestRidePage() {
               </motion.div>
             )}
 
-            {/* FINDING DRIVER - Enhanced */}
+            {/* FINDING DRIVER - Enhanced with driver preview */}
             {step === "finding" && (
               <motion.div key="finding" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-16 space-y-6 text-center">
+                className="flex flex-col items-center justify-center py-12 space-y-6 text-center">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -840,9 +1033,13 @@ export default function RequestRidePage() {
                   ))}
                 </div>
 
+                {/* Driver Preview Card */}
+                <DriverPreviewCard />
+
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Verified drivers</span>
                   <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> 4.8+ rated</span>
+                  <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-emerald-500" /> Insured</span>
                 </div>
 
                 {/* Safety actions during finding */}
