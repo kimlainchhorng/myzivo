@@ -296,7 +296,7 @@ const BookingManagement = () => {
           </Card>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mb-6">
             <Button className="gap-2">
               <Download className="w-4 h-4" />
               Download E-Ticket
@@ -309,8 +309,89 @@ const BookingManagement = () => {
             </Button>
           </div>
 
+          {/* Quick Actions Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {[
+              { icon: Phone, label: "Call Airline", action: () => window.open(`tel:${booking.providerPhone.replace(/-/g, "")}`) },
+              { icon: Mail, label: "Email Airline", action: () => window.open(`mailto:${booking.providerEmail}`) },
+              { icon: FileText, label: "View Receipt", action: () => {} },
+              { icon: ExternalLink, label: "Airline Website", action: () => {} },
+            ].map((act) => (
+              <button
+                key={act.label}
+                onClick={act.action}
+                className="flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:border-primary/30 hover:bg-muted/30 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+              >
+                <act.icon className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium">{act.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Booking Timeline */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="w-5 h-5 text-primary" />
+                Booking Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { time: "Dec 15, 2025", event: "Booking created on ZIVO", status: "complete" },
+                  { time: "Dec 15, 2025", event: "Redirected to partner checkout", status: "complete" },
+                  { time: "Dec 15, 2025", event: "Payment processed by partner", status: "complete" },
+                  { time: "Dec 15, 2025", event: "E-ticket issued", status: "complete" },
+                  { time: "Feb 10, 2026", event: "Departure day", status: "upcoming" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                      item.status === "complete" ? "bg-primary/10" : "bg-muted"
+                    )}>
+                      {item.status === "complete" ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      ) : (
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{item.event}</p>
+                      <p className="text-xs text-muted-foreground">{item.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Travel Tips */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Pre-Flight Checklist</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  "Check passport validity (6+ months)",
+                  "Review baggage allowance",
+                  "Online check-in (24hrs before)",
+                  "Download airline app",
+                  "Confirm seat selection",
+                  "Review travel insurance",
+                ].map((tip) => (
+                  <div key={tip} className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                    {tip}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Important Notice */}
-          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+          <div className="p-4 rounded-xl bg-muted/50 border border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div className="space-y-2 text-sm">

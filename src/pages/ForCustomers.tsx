@@ -126,6 +126,43 @@ const ForCustomers = () => {
           </div>
         </motion.section>
 
+        {/* How ZIVO Works Flow */}
+        <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-4xl">
+          <h2 className="text-3xl font-bold text-center mb-10">How it works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { step: "1", title: "Search & Compare", desc: "Enter your travel details and instantly compare prices from hundreds of providers.", icon: Search },
+              { step: "2", title: "Choose Your Option", desc: "Pick the best deal — we show you transparent pricing with no hidden fees.", icon: Star },
+              { step: "3", title: "Book with Partner", desc: "Complete your booking securely on the partner's site. Your trip is confirmed instantly.", icon: CheckCircle },
+            ].map((s) => (
+              <div key={s.step} className="text-center p-6 rounded-2xl bg-muted/30 border border-border/50">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <s.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Trust Stats */}
+        <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-4xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { value: "500+", label: "Airline Partners" },
+              { value: "1M+", label: "Hotel Options" },
+              { value: "80+", label: "Rental Brands" },
+              { value: "4.9/5", label: "User Rating" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center p-4 rounded-xl bg-muted/30 border border-border/50">
+                <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
         {/* App Screenshot Placeholder */}
         <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-3xl text-center">
           <div className="rounded-2xl border border-border/50 bg-muted/30 p-12 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
@@ -135,6 +172,30 @@ const ForCustomers = () => {
             <Button asChild variant="default">
               <Link to="/install">Download App</Link>
             </Button>
+          </div>
+        </motion.section>
+
+        {/* Customer Testimonials */}
+        <motion.section {...fadeIn} className="container mx-auto px-4 mb-20 max-w-4xl">
+          <h2 className="text-3xl font-bold text-center mb-10">What travelers say</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { name: "Sarah M.", quote: "Found a flight $200 cheaper than booking directly. ZIVO is my go-to now.", rating: 5 },
+              { name: "James L.", quote: "The all-in-one approach saves so much time. Flights + hotel + car in one search.", rating: 5 },
+              { name: "Priya K.", quote: "Love the transparent pricing. No surprises at checkout.", rating: 5 },
+            ].map((t) => (
+              <Card key={t.name} className="hover:shadow-lg transition-all">
+                <CardContent className="p-5">
+                  <div className="flex gap-0.5 mb-3">
+                    {Array(t.rating).fill(0).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3 italic">"{t.quote}"</p>
+                  <p className="text-sm font-semibold">{t.name}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </motion.section>
 
