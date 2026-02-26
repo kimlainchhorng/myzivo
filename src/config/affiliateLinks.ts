@@ -632,7 +632,7 @@ export const AFFILIATE_DISCLOSURE_TEXT = {
 export function openAffiliateLink(type: keyof typeof AFFILIATE_LINKS): void {
   const link = AFFILIATE_LINKS[type];
   if (!link) {
-    console.warn(`[Affiliate] Unknown link type: ${type}`);
+    // Unknown link type - fail silently in production
     return;
   }
   
