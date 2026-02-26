@@ -121,7 +121,7 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
                     "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
                     getAccentColor()
                   )}>
-                    <data.icon className="w-6 h-6 text-white" />
+                    <data.icon className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
@@ -180,12 +180,12 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
                                 {item.badge && (
                                   <Badge className={cn(
                                     "text-[9px] px-1.5 py-0 h-4 border-0 shadow-md font-bold uppercase tracking-wide",
-                                    item.badge === "New" && "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/40",
-                                    item.badge === "Hot" && "bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-rose-500/40",
-                                    item.badge === "Save" && "bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-amber-500/40",
-                                    item.badge === "Popular" && "bg-gradient-to-r from-sky-500 to-blue-500 text-white shadow-sky-500/40",
-                                    item.badge === "Green" && "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-500/40",
-                                    !["New", "Hot", "Save", "Popular", "Green"].includes(item.badge || "") && "bg-gradient-to-r from-primary to-teal-500 text-white shadow-primary/40"
+                                    item.badge === "New" && "bg-gradient-to-r from-emerald-500 to-teal-500 text-primary-foreground shadow-emerald-500/40",
+                                    item.badge === "Hot" && "bg-gradient-to-r from-rose-500 to-orange-500 text-primary-foreground shadow-rose-500/40",
+                                    item.badge === "Save" && "bg-gradient-to-r from-amber-500 to-yellow-500 text-primary-foreground shadow-amber-500/40",
+                                    item.badge === "Popular" && "bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground shadow-sky-500/40",
+                                    item.badge === "Green" && "bg-gradient-to-r from-emerald-500 to-green-500 text-primary-foreground shadow-emerald-500/40",
+                                    !["New", "Hot", "Save", "Popular", "Green"].includes(item.badge || "") && "bg-gradient-to-r from-primary to-teal-500 text-primary-foreground shadow-primary/40"
                                   )}>
                                     {item.badge}
                                   </Badge>

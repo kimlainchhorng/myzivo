@@ -318,15 +318,15 @@ const FlightDetails = () => {
 
               {/* Quick Info */}
               <div className="flex flex-wrap justify-center gap-6 mt-6 pt-6 border-t border-white/10">
-                <div className="flex items-center gap-2 text-white/80">
+                <div className="flex items-center gap-2 text-primary-foreground/80">
                   <Calendar className="w-4 h-4" />
                   <span>{searchParams?.departDate ? format(parseISO(searchParams.departDate), "EEEE, MMMM d, yyyy") : "Date not specified"}</span>
                 </div>
-                <div className="flex items-center gap-2 text-white/80">
+                <div className="flex items-center gap-2 text-primary-foreground/80">
                   <Users className="w-4 h-4" />
                   <span>{passengerCount} Passenger{passengerCount > 1 ? "s" : ""}</span>
                 </div>
-                <div className="flex items-center gap-2 text-white/80">
+                <div className="flex items-center gap-2 text-primary-foreground/80">
                   <Globe className="w-4 h-4" />
                   <span>{searchParams?.tripType === "roundtrip" ? "Round Trip" : "One Way"}</span>
                 </div>

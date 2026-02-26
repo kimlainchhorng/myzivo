@@ -540,7 +540,7 @@ export default function EatsLanding() {
               <div className="container mx-auto px-4 relative z-10">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mb-8">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-orange-500/20">
-                    <UtensilsCrossed className="w-8 h-8 text-white" />
+                    <UtensilsCrossed className="w-8 h-8 text-primary-foreground" />
                   </div>
                   <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3">ZIVO <span className="text-primary">Eats</span></h1>
                   <p className="text-muted-foreground text-lg">Delicious food from local restaurants, delivered fast.</p>
@@ -600,7 +600,7 @@ export default function EatsLanding() {
                   className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4 mb-6">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-                      <Award className="w-6 h-6 text-white" />
+                      <Award className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-foreground">{dashPassActive ? "ZIVO Eats Pass ✓" : "ZIVO Eats Pass"}</p>
@@ -626,7 +626,7 @@ export default function EatsLanding() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4 flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-                    <Award className="w-6 h-6 text-white" />
+                    <Award className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-bold text-foreground">{loyaltyInfo.tier} Member · {loyaltyInfo.currentPoints} pts</p>
@@ -864,7 +864,7 @@ export default function EatsLanding() {
                               </span>
                             )}
                             {restaurant.popular && (
-                              <span className="absolute bottom-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white flex items-center gap-1">
+                              <span className="absolute bottom-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-primary-foreground flex items-center gap-1">
                                 <Flame className="w-3 h-3" /> Popular
                               </span>
                             )}
@@ -1339,7 +1339,7 @@ export default function EatsLanding() {
                 <div className="flex gap-1.5">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all",
-                      i < loyaltyStamps ? "bg-amber-500 text-white" : "bg-muted/40 text-muted-foreground/40")}>
+                      i < loyaltyStamps ? "bg-amber-500 text-primary-foreground" : "bg-muted/40 text-muted-foreground/40")}>
                       {i < loyaltyStamps ? "★" : "☆"}
                     </div>
                   ))}

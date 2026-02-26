@@ -150,7 +150,7 @@ const TravelInsurance = () => {
             </div>
 
             <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xl shadow-cyan-500/40">
+              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground border-0 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xl shadow-cyan-500/40">
                 <Sparkles className="w-4 h-4 mr-2" />
                 New Service
               </Badge>
@@ -165,7 +165,7 @@ const TravelInsurance = () => {
                 lost luggage, and more.
               </p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
-                <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+                <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
                   Get Protected
                   <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
@@ -184,7 +184,7 @@ const TravelInsurance = () => {
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
                   <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                    <stat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                    <stat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
                   </div>
                   <p className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">{stat.value}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
@@ -214,7 +214,7 @@ const TravelInsurance = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <CardContent className="p-4 sm:pt-8 sm:pb-6 relative">
                     <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}>
-                      <type.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                      <type.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
                     </div>
                     <h3 className="font-bold text-sm sm:text-xl mb-1 sm:mb-2">{type.label}</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">{type.description}</p>
@@ -249,7 +249,7 @@ const TravelInsurance = () => {
                         : "shadow-xl hover:shadow-2xl"
                     }`}>
                       {plan.recommended && (
-                        <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-teal-400 text-white border-0 px-3 sm:px-4 py-1 sm:py-1.5 font-semibold shadow-lg text-xs sm:text-sm">
+                        <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-teal-400 text-primary-foreground border-0 px-3 sm:px-4 py-1 sm:py-1.5 font-semibold shadow-lg text-xs sm:text-sm">
                           <Zap className="w-3 h-3 mr-1" />
                           Popular
                         </Badge>
@@ -257,7 +257,7 @@ const TravelInsurance = () => {
                       <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8">
                         <RadioGroupItem value={plan.id} id={plan.id} className="sr-only" />
                         <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg ${plan.glow}`}>
-                          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
                         </div>
                         <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                         <div className="mt-4">
@@ -288,7 +288,7 @@ const TravelInsurance = () => {
                         <Button 
                           className={`w-full h-11 sm:h-12 font-bold rounded-xl touch-manipulation active:scale-[0.98] ${
                             selectedPlan === plan.id 
-                              ? "bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30" 
+                              ? "bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30" 
                               : "bg-muted hover:bg-muted/80"
                           }`}
                         >
@@ -323,7 +323,7 @@ const TravelInsurance = () => {
                         style={{ animationDelay: `${index * 75}ms` }}
                       >
                         <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                          <benefit.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                          <benefit.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
                         </div>
                         <h4 className="font-bold text-sm sm:text-lg mb-1">{benefit.title}</h4>
                         <p className="text-xs sm:text-sm text-muted-foreground">{benefit.description}</p>
@@ -346,7 +346,7 @@ const TravelInsurance = () => {
               <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-10">Get instant coverage and peace of mind for your next trip</p>
               
               <div className="inline-block mb-6 sm:mb-10">
-                <Button size="lg" className="h-12 sm:h-16 px-6 sm:px-10 text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-2 sm:gap-3 touch-manipulation active:scale-[0.98]">
+                <Button size="lg" className="h-12 sm:h-16 px-6 sm:px-10 text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-2 sm:gap-3 touch-manipulation active:scale-[0.98]">
                   Get Insured Now
                   <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </Button>
@@ -398,7 +398,7 @@ const TravelInsurance = () => {
               ].map(s => (
                 <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-cyan-500/20 transition-all bg-card/80">
                   <span className="text-3xl">{s.emoji}</span>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-white font-bold text-sm flex items-center justify-center mx-auto my-3">{s.step}</div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-primary-foreground font-bold text-sm flex items-center justify-center mx-auto my-3">{s.step}</div>
                   <p className="font-bold text-sm">{s.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
                 </div>

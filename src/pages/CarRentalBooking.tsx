@@ -614,7 +614,7 @@ const CarRentalBooking = () => {
                   className={cn("rounded-2xl p-4 text-left transition-all border relative",
                     selectedProtection === tier.id ? "border-violet-500 bg-violet-500/5 shadow-lg" : "border-border/40 bg-card hover:border-border")}>
                   {"badge" in tier && tier.badge && (
-                    <span className="absolute -top-2 right-3 text-[8px] font-bold bg-violet-500 text-white px-2 py-0.5 rounded-full">{tier.badge}</span>
+                    <span className="absolute -top-2 right-3 text-[8px] font-bold bg-violet-500 text-primary-foreground px-2 py-0.5 rounded-full">{tier.badge}</span>
                   )}
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-bold text-foreground">{tier.name}</h3>

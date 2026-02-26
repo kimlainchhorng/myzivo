@@ -84,7 +84,7 @@ const VerifyEmail = () => {
             <Button
               onClick={handleResendEmail}
               disabled={isResending}
-              className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 rounded-xl touch-manipulation active:scale-[0.98]"
+              className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90 rounded-xl touch-manipulation active:scale-[0.98]"
             >
               {isResending ? (
                 <RefreshCw className="h-5 w-5 animate-spin" />

@@ -48,62 +48,62 @@ const badgeConfig: Record<BadgeVariant, {
   "popular": {
     icon: TrendingUp,
     label: "Popular",
-    colors: "from-amber-500 to-orange-500 text-white shadow-amber-500/30",
-    iconColors: "text-white"
+    colors: "from-amber-500 to-orange-500 text-primary-foreground shadow-amber-500/30",
+    iconColors: "text-primary-foreground"
   },
   "sale": {
     icon: Zap,
     label: "Sale",
-    colors: "from-red-500 to-rose-600 text-white shadow-red-500/30",
-    iconColors: "text-white"
+    colors: "from-red-500 to-rose-600 text-primary-foreground shadow-red-500/30",
+    iconColors: "text-primary-foreground"
   },
   "new": {
     icon: Sparkles,
     label: "New",
-    colors: "from-blue-500 to-indigo-600 text-white shadow-blue-500/30",
-    iconColors: "text-white"
+    colors: "from-blue-500 to-indigo-600 text-primary-foreground shadow-blue-500/30",
+    iconColors: "text-primary-foreground"
   },
   "premium": {
     icon: Crown,
     label: "Premium",
-    colors: "from-amber-400 to-amber-600 text-white shadow-amber-500/30",
-    iconColors: "text-white"
+    colors: "from-amber-400 to-amber-600 text-primary-foreground shadow-amber-500/30",
+    iconColors: "text-primary-foreground"
   },
   "verified": {
     icon: Shield,
     label: "Verified",
-    colors: "from-emerald-500 to-teal-600 text-white shadow-emerald-500/30",
-    iconColors: "text-white"
+    colors: "from-emerald-500 to-teal-600 text-primary-foreground shadow-emerald-500/30",
+    iconColors: "text-primary-foreground"
   },
   "fast": {
     icon: Zap,
     label: "Fast",
-    colors: "from-sky-500 to-cyan-600 text-white shadow-sky-500/30",
-    iconColors: "text-white"
+    colors: "from-sky-500 to-cyan-600 text-primary-foreground shadow-sky-500/30",
+    iconColors: "text-primary-foreground"
   },
   "eco": {
     icon: Leaf,
     label: "Eco",
-    colors: "from-green-500 to-emerald-600 text-white shadow-green-500/30",
-    iconColors: "text-white"
+    colors: "from-green-500 to-emerald-600 text-primary-foreground shadow-green-500/30",
+    iconColors: "text-primary-foreground"
   },
   "hot": {
     icon: Flame,
     label: "Hot Deal",
-    colors: "from-orange-500 to-red-500 text-white shadow-orange-500/30",
-    iconColors: "text-white"
+    colors: "from-orange-500 to-red-500 text-primary-foreground shadow-orange-500/30",
+    iconColors: "text-primary-foreground"
   },
   "favorite": {
     icon: Heart,
     label: "Top Pick",
-    colors: "from-pink-500 to-rose-500 text-white shadow-pink-500/30",
-    iconColors: "text-white"
+    colors: "from-pink-500 to-rose-500 text-primary-foreground shadow-pink-500/30",
+    iconColors: "text-primary-foreground"
   },
   "limited": {
     icon: Clock,
     label: "Limited",
-    colors: "from-purple-500 to-violet-600 text-white shadow-purple-500/30",
-    iconColors: "text-white"
+    colors: "from-purple-500 to-violet-600 text-primary-foreground shadow-purple-500/30",
+    iconColors: "text-primary-foreground"
   }
 };
 

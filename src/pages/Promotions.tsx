@@ -466,7 +466,7 @@ const Promotions = () => {
                             }`}>
                               <Star className={`h-5 w-5 sm:h-6 sm:w-6 ${
                                 reward.available && loyaltyPoints.current >= reward.points
-                                  ? "text-white"
+                                  ? "text-primary-foreground"
                                   : "text-muted-foreground"
                               }`} />
                             </div>

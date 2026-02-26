@@ -65,12 +65,12 @@ export default function CarRentalLanding() {
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-primary-foreground">
                 <CarFront className="w-4 h-4 text-violet-400" />
-                <span className="text-white/80">Compare car rental prices</span>
+                <span className="text-primary-foreground/80">Compare car rental prices</span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 {formattedLocation ? (
                   <>Car Rental in <span className="text-violet-400">{formattedLocation}</span></>
                 ) : (
@@ -78,7 +78,7 @@ export default function CarRentalLanding() {
                 )}
               </h1>
               
-              <p className="text-lg text-white/80 mb-8">
+              <p className="text-lg text-primary-foreground/80 mb-8">
                 Compare prices from Hertz, Enterprise, Avis, Budget and more. No booking fees on ZIVO.
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function CarRentalLanding() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
-                <div key={badge.text} className="flex items-center gap-2 text-sm text-white/70">
+                <div key={badge.text} className="flex items-center gap-2 text-sm text-primary-foreground/70">
                   <badge.icon className="w-4 h-4 text-violet-400" />
                   <span>{badge.text}</span>
                 </div>
