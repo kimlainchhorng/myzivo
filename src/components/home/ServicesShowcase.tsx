@@ -63,9 +63,9 @@ export default function ServicesShowcase() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tighter mb-3">
             Everything you need,{" "}
-            <span className="text-primary">one platform</span>
+            <span className="gradient-text-primary">one platform</span>
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
             From flights to food — ZIVO has you covered for every part of your journey.
@@ -83,7 +83,7 @@ export default function ServicesShowcase() {
             >
               <Link
                 to={service.href}
-                 className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.98]"
+                 className="group block p-6 sm:p-7 card-premium text-center h-full relative hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-2 transition-all duration-300 touch-manipulation active:scale-[0.98]"
               >
                 {/* Badge */}
                 {'badge' in service && service.badge && (

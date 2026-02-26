@@ -121,8 +121,13 @@ export default function HeroSection() {
 
       {/* Desktop: Split layout */}
       <div className="hidden lg:grid lg:grid-cols-2 min-h-[80vh]">
-        <div className="flex items-center px-8 xl:px-16 py-16 bg-background relative z-10">
-          <div className="max-w-xl">
+        <div className="flex items-center px-8 xl:px-16 py-16 bg-background relative z-10 overflow-hidden">
+          {/* Subtle gradient mesh for depth */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 -left-20 w-80 h-80 rounded-full bg-primary/[0.04] blur-[100px]" />
+            <div className="absolute bottom-1/4 right-0 w-60 h-60 rounded-full bg-[hsl(var(--flights)/0.04)] blur-[80px]" />
+          </div>
+          <div className="max-w-xl relative z-10">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -152,7 +157,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="text-4xl xl:text-[3.5rem] font-bold text-foreground mb-5 leading-[1.1] tracking-tight text-shimmer"
+              className="text-4xl xl:text-[3.75rem] font-extrabold text-foreground mb-5 leading-[1.08] tracking-tighter"
             >
               <AnimatePresence mode="wait">
                 <motion.span
@@ -189,7 +194,7 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 onClick={scrollToSearch}
-                className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 hover:scale-[1.02] transition-transform"
+                className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 hover:scale-[1.02] transition-all shadow-[0_0_24px_hsl(var(--primary)/0.25)] hover:shadow-[0_0_36px_hsl(var(--primary)/0.35)]"
               >
                 <Search className="w-5 h-5" />
                 Search Now
