@@ -133,7 +133,7 @@ export default function HotelResultCardPro({
               )}
             </div>
             {freeCancellation && (
-              <Badge className="absolute top-3 left-3 bg-emerald-500/90 text-white text-[10px] gap-1">
+              <Badge className="absolute top-3 left-3 bg-emerald-500/90 text-primary-foreground text-[10px] gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 Free Cancellation
               </Badge>
@@ -159,7 +159,7 @@ export default function HotelResultCardPro({
                   {/* Rating Badge */}
                   <div className="flex flex-col items-end shrink-0">
                     <div className={cn(
-                      "px-2 py-1 rounded text-white font-bold text-sm",
+                      "px-2 py-1 rounded text-primary-foreground font-bold text-sm",
                       ratingInfo.color
                     )}>
                       {rating.toFixed(1)}

@@ -124,7 +124,7 @@ export default function PopularDestinationsGrid({
                 {/* Text Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
                   <h3 className={cn(
-                    "font-bold text-white text-sm truncate transition-colors",
+                    "font-bold text-primary-foreground text-sm truncate transition-colors",
                     `group-hover:${colors.accent}`
                   )}>
                     {destination.city}

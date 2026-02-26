@@ -304,7 +304,7 @@ const LiveChatWidget = () => {
                 >
                   <ArrowLeftRight className="w-4 h-4 text-primary-foreground" />
                 </button>
-                <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
+                <button onClick={() => setIsOpen(false)} className="text-primary-foreground/80 hover:text-primary-foreground">
                   <X className="w-5 h-5" />
                 </button>
               </div>

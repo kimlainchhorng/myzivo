@@ -125,7 +125,7 @@ const FlightInsuranceUpsell = () => {
                 )}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500 text-white border-0">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500 text-primary-foreground border-0">
                     Most Popular
                   </Badge>
                 )}
@@ -136,7 +136,7 @@ const FlightInsuranceUpsell = () => {
                   </div>
                   {isSelected && (
                     <div className={cn("w-6 h-6 rounded-full flex items-center justify-center", `bg-${plan.color}-500`)}>
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-4 h-4 text-primary-foreground" />
                     </div>
                   )}
                 </div>

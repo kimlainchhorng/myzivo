@@ -143,7 +143,7 @@ export default function ExperienceGallery({
                   {/* Label */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h3 className={cn(
-                      "font-semibold text-white text-sm transition-colors",
+                      "font-semibold text-primary-foreground text-sm transition-colors",
                       `group-hover:${colors.text}`
                     )}>
                       {photo.label}

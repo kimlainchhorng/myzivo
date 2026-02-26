@@ -33,7 +33,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
             >
               <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative">
                 {dest.trending && (
-                  <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs">
+                  <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-primary-foreground text-xs">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     Trending
                   </Badge>

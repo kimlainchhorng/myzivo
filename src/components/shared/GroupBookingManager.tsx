@@ -205,7 +205,7 @@ const GroupBookingManager = ({
 
                 {/* Payment Status */}
                 {member.paid ? (
-                  <Badge className="bg-emerald-500 text-white text-xs">
+                  <Badge className="bg-emerald-500 text-primary-foreground text-xs">
                     <CreditCard className="w-3 h-3 mr-1" />
                     Paid
                   </Badge>

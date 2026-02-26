@@ -88,7 +88,7 @@ export default function CarCategoryTiles({
 
                   {/* Category name overlay */}
                   <div className="absolute bottom-2 left-2 right-2">
-                    <h3 className="font-bold text-white text-sm sm:text-base drop-shadow-lg">
+                    <h3 className="font-bold text-primary-foreground text-sm sm:text-base drop-shadow-lg">
                       {category.label}
                     </h3>
                   </div>

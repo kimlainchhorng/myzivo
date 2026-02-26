@@ -103,7 +103,7 @@ const FlightSocialShare = () => {
             <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-dashed border-border hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-primary to-teal-400 rounded-xl flex items-center justify-center">
-                  <Plane className="w-6 h-6 text-white" />
+                  <Plane className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">ZIVO Flight Trip</p>

@@ -468,7 +468,7 @@ export default function Deals() {
               ].map(c => (
                 <Card key={c.user} className="border-border/40 hover:border-primary/20 transition-all">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                       {c.user.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="flex-1 min-w-0">

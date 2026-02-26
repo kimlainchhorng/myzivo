@@ -58,14 +58,14 @@ const FlightBundleDeals = () => {
             >
               {bundle.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-sky-500 text-white border-0">
+                  <Badge className="bg-sky-500 text-primary-foreground border-0">
                     <Star className="w-3 h-3 mr-1" /> Most Popular
                   </Badge>
                 </div>
               )}
 
               <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${bundle.color} flex items-center justify-center mb-4`}>
-                <Package className="w-7 h-7 text-white" />
+                <Package className="w-7 h-7 text-primary-foreground" />
               </div>
 
               <h3 className="text-xl font-bold mb-2">{bundle.name}</h3>

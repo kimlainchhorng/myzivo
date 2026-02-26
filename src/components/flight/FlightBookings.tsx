@@ -151,7 +151,7 @@ const FlightBookings = () => {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
                         <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                          <Plane className="h-7 w-7 text-white" />
+                          <Plane className="h-7 w-7 text-primary-foreground" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">

@@ -132,7 +132,7 @@ function IncidentCard({ incident }: { incident: Incident }) {
               </p>
             )}
           </div>
-          <Badge className={cn(severity.color, "text-white")}>
+          <Badge className={cn(severity.color, "text-primary-foreground")}>
             {severity.label}
           </Badge>
         </div>

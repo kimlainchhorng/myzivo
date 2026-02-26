@@ -39,7 +39,7 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
             </div>
             
             {/* Headline */}
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 leading-tight">
               Your Dream <br />
               <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
                 Getaway Awaits
@@ -47,21 +47,21 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
             </h2>
             
             {/* Description */}
-            <p className="text-white/80 text-base sm:text-lg mb-6 max-w-md">
+            <p className="text-primary-foreground/80 text-base sm:text-lg mb-6 max-w-md">
               Compare prices from 100+ booking sites and find the perfect hotel at the best rate. No hidden fees, no surprises.
             </p>
             
             {/* Trust Indicators */}
             <div className="flex flex-wrap gap-4 mb-8">
-              <div className="flex items-center gap-2 text-white/70 text-sm">
+              <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Star className="w-4 h-4 text-amber-400" />
                 <span>4.8/5 Rating</span>
               </div>
-              <div className="flex items-center gap-2 text-white/70 text-sm">
+              <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Shield className="w-4 h-4 text-emerald-400" />
                 <span>Secure Booking</span>
               </div>
-              <div className="flex items-center gap-2 text-white/70 text-sm">
+              <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Clock className="w-4 h-4 text-sky-400" />
                 <span>24/7 Support</span>
               </div>
@@ -71,7 +71,7 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
             <div className="flex flex-wrap gap-4">
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 gap-2"
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-primary-foreground shadow-lg shadow-amber-500/30 gap-2"
               >
                 <Sparkles className="w-5 h-5" />
                 Explore Deals
@@ -80,7 +80,7 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
               <Button 
                 size="lg"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
+                className="border-white/30 text-primary-foreground hover:bg-white/10 backdrop-blur-sm"
               >
                 Learn More
               </Button>

@@ -34,7 +34,7 @@ const FlightLoyaltyProgram = () => {
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${currentTier.color} flex items-center justify-center`}>
-              <Plane className="w-10 h-10 text-white" />
+              <Plane className="w-10 h-10 text-primary-foreground" />
             </div>
             <div className="flex-1 text-center md:text-left">
               <p className="text-sm text-muted-foreground">Your Status</p>
@@ -63,7 +63,7 @@ const FlightLoyaltyProgram = () => {
                 <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-sky-500 text-xs">Current</Badge>
               )}
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tier.color} flex items-center justify-center mx-auto mb-3`}>
-                <Star className="w-6 h-6 text-white" />
+                <Star className="w-6 h-6 text-primary-foreground" />
               </div>
               <h4 className="font-bold text-center mb-1">{tier.name}</h4>
               <p className="text-xs text-muted-foreground text-center mb-3">{tier.miles.toLocaleString()}+ miles</p>
@@ -80,7 +80,7 @@ const FlightLoyaltyProgram = () => {
         </div>
 
         <div className="text-center mt-8">
-          <Button className="bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold">
+          <Button className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground font-semibold">
             <Gift className="w-4 h-4 mr-2" />
             Join SkyMiles Free
           </Button>

@@ -318,7 +318,7 @@ const HelpCenter = () => {
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-destructive to-red-600 flex items-center justify-center shrink-0 shadow-lg shadow-destructive/30">
-                        <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                        <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
                       </div>
                       <div>
                         <h3 className="font-bold text-base sm:text-lg text-destructive mb-1 sm:mb-2">Emergency & Safety</h3>
@@ -347,7 +347,7 @@ const HelpCenter = () => {
                   {ticketSubmitted ? (
                     <div className="text-center py-8 sm:py-10 animate-in fade-in zoom-in-95 duration-200">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-emerald-500/30">
-                        <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                        <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground" />
                       </div>
                       <h3 className="font-bold text-xl sm:text-2xl mb-2">Ticket Submitted!</h3>
                       <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
@@ -407,7 +407,7 @@ const HelpCenter = () => {
                           className="min-h-[120px] sm:min-h-[150px] rounded-xl resize-none"
                         />
                       </div>
-                      <Button type="submit" className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 gap-2 touch-manipulation active:scale-[0.98]">
+                      <Button type="submit" className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 gap-2 touch-manipulation active:scale-[0.98]">
                         <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                         Submit Ticket
                       </Button>
