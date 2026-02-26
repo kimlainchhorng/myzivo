@@ -66,6 +66,9 @@ const ridePreferences = [
   { id: "child-seat", icon: Baby, label: "Child Seat", description: "Car seat needed" },
   { id: "luggage", icon: Briefcase, label: "Luggage", description: "Extra trunk space" },
   { id: "accessibility", icon: Users, label: "Accessible", description: "Wheelchair accessible" },
+  { id: "wifi", icon: Zap, label: "Wi-Fi", description: "In-car Wi-Fi access" },
+  { id: "charger", icon: CreditCard, label: "Charger", description: "Phone charging cable" },
+  { id: "no-stops", icon: Route, label: "Direct Route", description: "No detours" },
 ];
 
 const tipOptions = [
@@ -92,6 +95,21 @@ const recentRides = [
   { id: "r1", from: "123 Main St", to: "Airport Terminal B", time: "Yesterday", price: "$28.50", vehicle: "Black" },
   { id: "r2", from: "Home", to: "Downtown Office", time: "2 days ago", price: "$14.20", vehicle: "Standard" },
   { id: "r3", from: "Whole Foods", to: "Home", time: "Last week", price: "$9.80", vehicle: "Green" },
+  { id: "r4", from: "Hotel Grand", to: "Convention Center", time: "Last week", price: "$11.50", vehicle: "Comfort" },
+  { id: "r5", from: "Home", to: "Airport Terminal A", time: "2 weeks ago", price: "$32.00", vehicle: "Black SUV" },
+];
+
+// Carbon offset data
+const carbonOffsetInfo = {
+  treesPerRide: 0.02,
+  co2PerMile: 0.41, // lbs
+  offsetCostPerRide: 0.25,
+};
+
+// Ride pass subscription
+const ridePassTiers = [
+  { id: "basic", name: "ZIVO Pass", price: "$9.99/mo", savings: "Save up to 15%", features: ["Priority matching", "No surge pricing", "Free cancellations"] },
+  { id: "premium", name: "ZIVO Pass+", price: "$24.99/mo", savings: "Save up to 30%", features: ["All Basic perks", "Free upgrades", "Airport lounge access", "Dedicated support"] },
 ];
 
 // Inner payment form using Stripe Elements
@@ -385,6 +403,12 @@ export default function RequestRidePage() {
   const [showSafety, setShowSafety] = useState(false);
   const [roundTrip, setRoundTrip] = useState(false);
   const [notifyOnArrival, setNotifyOnArrival] = useState(true);
+  const [carbonOffset, setCarbonOffset] = useState(false);
+  const [showRidePass, setShowRidePass] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | "wallet">("card");
+  const [surgeActive] = useState(Math.random() > 0.6);
+  const [favoriteDrivers] = useState(["Marcus T.", "Sarah L.", "David K."]);
+  const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -759,6 +783,107 @@ export default function RequestRidePage() {
                     <p className="text-[10px] text-muted-foreground">Get a push notification when driver arrives</p>
                   </div>
                 </div>
+
+                {/* Carbon Offset */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setCarbonOffset(!carbonOffset)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", carbonOffset ? "bg-emerald-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", carbonOffset ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-emerald-500" /> Carbon Offset</p>
+                    <p className="text-[10px] text-muted-foreground">+$0.25 · Plant trees to offset your trip emissions</p>
+                  </div>
+                </div>
+
+                {/* Favorite Driver */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setRequestFavoriteDriver(!requestFavoriteDriver)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", requestFavoriteDriver ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", requestFavoriteDriver ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> Request favorite driver</p>
+                    <p className="text-[10px] text-muted-foreground">{favoriteDrivers.slice(0, 2).join(", ")} +{favoriteDrivers.length - 2} more</p>
+                  </div>
+                </div>
+
+                {/* Surge Warning Banner */}
+                {surgeActive && (
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground">High demand in your area</p>
+                      <p className="text-[10px] text-muted-foreground">Prices may be 1.2-1.5x higher · Wait 10 min for lower rates</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Payment Method Selector */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <CreditCard className="w-3 h-3" /> Payment Method
+                  </h3>
+                  <div className="flex gap-2">
+                    {([
+                      { id: "card" as const, label: "Card", icon: CreditCard },
+                      { id: "cash" as const, label: "Cash", icon: DollarSign },
+                      { id: "wallet" as const, label: "ZIVO Pay", icon: Zap },
+                    ]).map(pm => {
+                      const PMIcon = pm.icon;
+                      return (
+                        <button key={pm.id} onClick={() => setSelectedPaymentMethod(pm.id)}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                            selectedPaymentMethod === pm.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40 hover:bg-muted"
+                          )}>
+                          <PMIcon className="w-3.5 h-3.5" />
+                          {pm.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ZIVO Ride Pass Banner */}
+                <button onClick={() => setShowRidePass(!showRidePass)}
+                  className="w-full rounded-2xl bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20 p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center shrink-0">
+                    <Crown className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-xs font-bold text-foreground">ZIVO Ride Pass</p>
+                    <p className="text-[10px] text-muted-foreground">Save up to 30% on every ride · From $9.99/mo</p>
+                  </div>
+                  <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", showRidePass && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showRidePass && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2 overflow-hidden">
+                      {ridePassTiers.map(tier => (
+                        <div key={tier.id} className="rounded-xl bg-card border border-border/40 p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-foreground">{tier.name}</span>
+                            <span className="text-xs font-bold text-primary">{tier.price}</span>
+                          </div>
+                          <p className="text-[10px] text-emerald-500 font-bold mb-1.5">{tier.savings}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {tier.features.map(f => (
+                              <span key={f} className="text-[9px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full">{f}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" onClick={() => toast.info("Ride Pass subscription coming soon!")} className="w-full rounded-xl text-xs font-bold">
+                        Learn More
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 pt-2">

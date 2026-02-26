@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 
-const categories = ["All", "American", "Italian", "Asian", "Mexican", "Healthy", "Desserts"];
+const categories = ["All", "American", "Italian", "Asian", "Mexican", "Healthy", "Desserts", "Breakfast", "Seafood"];
 
 const dietaryFilters = [
   { id: "vegetarian", label: "🥬 Vegetarian", icon: Leaf },
@@ -72,6 +72,30 @@ const restaurants = [
       { id: "m24", name: "Edamame", price: 5.99, description: "Steamed with sea salt", calories: 190, allergens: ["soy"] },
     ]
   },
+  { id: "sweet-dreams", name: "Sweet Dreams Bakery", cuisine: "Desserts", price: "$$", rating: 4.8, time: "15-25 min", prepTime: 8, freeDelivery: true, image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=400", featured: "Red Velvet Cake · $8.99", popular: true, dietary: ["vegetarian"],
+    menu: [
+      { id: "m25", name: "Red Velvet Cake", price: 8.99, description: "Cream cheese frosting, rich cocoa", calories: 420, allergens: ["gluten", "dairy", "egg"] },
+      { id: "m26", name: "Chocolate Lava Cake", price: 9.99, description: "Warm molten center, vanilla ice cream", calories: 580, allergens: ["gluten", "dairy", "egg"] },
+      { id: "m27", name: "Macarons Box (6)", price: 12.99, description: "Assorted French macarons", calories: 360, allergens: ["nuts", "dairy", "egg"] },
+      { id: "m28", name: "Crème Brûlée", price: 7.99, description: "Classic French custard", calories: 320, allergens: ["dairy", "egg"] },
+    ]
+  },
+  { id: "morning-glory", name: "Morning Glory", cuisine: "Breakfast", price: "$", rating: 4.6, time: "15-20 min", prepTime: 10, freeDelivery: false, image: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&q=80&w=400", featured: "Avocado Toast · $10.99", popular: false, dietary: ["vegetarian"],
+    menu: [
+      { id: "m29", name: "Avocado Toast", price: 10.99, description: "Sourdough, poached egg, chili flakes", calories: 380, allergens: ["gluten", "egg"] },
+      { id: "m30", name: "Pancake Stack", price: 11.99, description: "Buttermilk pancakes, maple syrup, berries", calories: 650, allergens: ["gluten", "dairy", "egg"] },
+      { id: "m31", name: "Breakfast Burrito", price: 12.99, description: "Eggs, chorizo, cheese, salsa", calories: 720, allergens: ["gluten", "dairy", "egg"] },
+      { id: "m32", name: "Cold Brew Coffee", price: 4.99, description: "24-hour cold brew with oat milk", calories: 80, allergens: [] },
+    ]
+  },
+  { id: "ocean-catch", name: "Ocean Catch", cuisine: "Seafood", price: "$$$", rating: 4.7, time: "30-40 min", prepTime: 22, freeDelivery: false, image: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&q=80&w=400", featured: "Lobster Roll · $22.99", popular: false, dietary: ["gluten-free"],
+    menu: [
+      { id: "m33", name: "Lobster Roll", price: 22.99, description: "Maine lobster, butter, brioche bun", calories: 580, allergens: ["shellfish", "gluten", "dairy"] },
+      { id: "m34", name: "Fish & Chips", price: 16.99, description: "Beer-battered cod, tartar sauce", calories: 780, allergens: ["gluten", "fish"] },
+      { id: "m35", name: "Clam Chowder", price: 9.99, description: "New England style, sourdough bowl", calories: 420, allergens: ["shellfish", "dairy", "gluten"] },
+      { id: "m36", name: "Grilled Shrimp Skewers", price: 18.99, description: "Garlic butter, lemon, herbs", calories: 340, allergens: ["shellfish"] },
+    ]
+  },
 ];
 
 interface CartItem {
@@ -84,6 +108,22 @@ const tipOptions = [
   { id: "15", label: "15%", pct: 0.15 },
   { id: "20", label: "20%", pct: 0.20 },
   { id: "25", label: "25%", pct: 0.25 },
+  { id: "30", label: "30%", pct: 0.30 },
+];
+
+const loyaltyInfo = {
+  pointsPerDollar: 10,
+  pointsForFreeDelivery: 500,
+  currentPoints: 320,
+  tier: "Silver",
+  nextTier: "Gold",
+  pointsToNextTier: 180,
+};
+
+const mealDeals = [
+  { id: "deal1", name: "Lunch Combo", description: "Any main + drink for $14.99", savings: "Save $3", restaurant: "joes-grill" },
+  { id: "deal2", name: "Family Pack", description: "4 mains + 2 sides for $39.99", savings: "Save $12", restaurant: "el-azteca" },
+  { id: "deal3", name: "Sweet Tooth", description: "Any 2 desserts for $14.99", savings: "Save $5", restaurant: "sweet-dreams" },
 ];
 
 const previousOrders = [
@@ -201,6 +241,15 @@ export default function EatsLanding() {
   const [scheduledDelivery, setScheduledDelivery] = useState(false);
   const [deliveryTime, setDeliveryTime] = useState("asap");
   const [rateOrder, setRateOrder] = useState<number | null>(null);
+  const [noUtensils, setNoUtensils] = useState(false);
+  const [showMealDeals, setShowMealDeals] = useState(false);
+  const [giftOrder, setGiftOrder] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+  const totalCalories = cart.reduce((sum, item) => {
+    const restaurant = restaurants.find(r => r.id === item.restaurantId);
+    const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
+    return sum + (menuItem?.calories ?? 0) * item.quantity;
+  }, 0);
 
   const filtered = restaurants.filter(r => {
     const matchesCategory = active === "All" || r.cuisine === active;
@@ -364,6 +413,52 @@ export default function EatsLanding() {
 
             <section className="py-12 sm:py-16">
               <div className="container mx-auto px-4">
+                {/* Loyalty Points Banner */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 p-4 flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-foreground">{loyaltyInfo.tier} Member · {loyaltyInfo.currentPoints} pts</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-amber-500" style={{ width: `${(loyaltyInfo.currentPoints / (loyaltyInfo.currentPoints + loyaltyInfo.pointsToNextTier)) * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{loyaltyInfo.pointsToNextTier} to {loyaltyInfo.nextTier}</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Meal Deals */}
+                <div className="mb-6">
+                  <button onClick={() => setShowMealDeals(!showMealDeals)}
+                    className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all touch-manipulation mb-3">
+                    <Gift className="w-4 h-4 text-orange-500" /> Meal Deals
+                    <ChevronRight className={cn("w-3 h-3 transition-transform", showMealDeals && "rotate-90")} />
+                  </button>
+                  <AnimatePresence>
+                    {showMealDeals && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 overflow-hidden">
+                        {mealDeals.map(deal => (
+                          <div key={deal.id} className="flex-shrink-0 w-56 p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/5 border border-orange-500/20">
+                            <p className="text-xs font-bold text-foreground">{deal.name}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{deal.description}</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-[10px] font-bold text-orange-500">{deal.savings}</span>
+                              <button onClick={() => {
+                                const r = restaurants.find(res => res.id === deal.restaurant);
+                                if (r) { setSelectedRestaurant(r.id); setStep("restaurant"); }
+                              }} className="text-[10px] font-bold text-primary touch-manipulation">Order →</button>
+                            </div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* Previous orders */}
                 <div className="mb-6">
                   <button onClick={() => setShowPreviousOrders(!showPreviousOrders)}
@@ -683,10 +778,49 @@ export default function EatsLanding() {
                     <Plus className="w-3.5 h-3.5" /> Add more items
                   </button>
 
+                  {/* Utensils opt-out + calories */}
+                  <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                    <button onClick={() => setNoUtensils(!noUtensils)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", noUtensils ? "bg-emerald-500" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", noUtensils ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-emerald-500" /> Skip utensils</p>
+                      <p className="text-[10px] text-muted-foreground">Help reduce plastic waste 🌍</p>
+                    </div>
+                  </div>
+
+                  {/* Gift order toggle */}
+                  <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                    <button onClick={() => setGiftOrder(!giftOrder)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", giftOrder ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", giftOrder ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-primary" /> Send as gift</p>
+                      <p className="text-[10px] text-muted-foreground">Add a personal message</p>
+                    </div>
+                  </div>
+                  {giftOrder && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                      <Input placeholder="Write a gift message..." value={giftMessage} onChange={(e) => setGiftMessage(e.target.value)} className="h-10 rounded-xl text-sm" />
+                    </motion.div>
+                  )}
+
                   <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3 text-sm">
                     <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-bold">${cartTotal.toFixed(2)}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Delivery fee</span><span className="font-bold">{deliveryFee === 0 ? <span className="text-primary">Free</span> : `$${deliveryFee.toFixed(2)}`}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Service fee</span><span className="font-bold">${serviceFee.toFixed(2)}</span></div>
+                    {totalCalories > 0 && (
+                      <div className="flex justify-between text-muted-foreground/60">
+                        <span className="flex items-center gap-1 text-xs"><Flame className="w-3 h-3" /> Total calories</span>
+                        <span className="text-xs font-medium">{totalCalories} cal</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-primary/60">
+                      <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> Loyalty points earned</span>
+                      <span className="text-xs font-bold text-primary">+{Math.floor(cartTotal * loyaltyInfo.pointsPerDollar)} pts</span>
+                    </div>
                     <div className="flex justify-between pt-3 border-t border-border/30">
                       <span className="font-bold text-base">Total</span>
                       <span className="font-bold text-xl text-primary">${(cartTotal + deliveryFee + serviceFee).toFixed(2)}</span>
