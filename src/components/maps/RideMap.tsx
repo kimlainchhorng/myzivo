@@ -2,12 +2,11 @@
  * RideMap - Google Maps component for ride booking
  * Fetches API key from edge function, shows pickup/dropoff markers and route
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { GoogleMap, useJsApiLoader, Marker, Polyline } from "@react-google-maps/api";
+/// <reference types="google.maps" />
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
-const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 
 const darkMapStyle = [
   { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
@@ -28,37 +27,86 @@ interface RideMapProps {
   className?: string;
 }
 
-// Hook to fetch Google Maps API key
-function useGoogleMapsApiKey() {
-  const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
-  const [isKeyLoading, setIsKeyLoading] = useState(!apiKey);
+// Singleton script loader to prevent "different options" error
+let googleMapsPromise: Promise<void> | null = null;
+let googleMapsLoaded = false;
 
-  useEffect(() => {
-    if (apiKey) return;
-    
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("maps-api-key");
-        if (!cancelled && data?.key) {
-          setApiKey(data.key);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        if (!cancelled) setIsKeyLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [apiKey]);
+function loadGoogleMapsScript(apiKey: string): Promise<void> {
+  if (googleMapsLoaded && (window as any).google?.maps) {
+    return Promise.resolve();
+  }
+  if (googleMapsPromise) return googleMapsPromise;
 
-  return { apiKey, isKeyLoading };
+  googleMapsPromise = new Promise<void>((resolve, reject) => {
+    if ((window as any).google?.maps) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      googleMapsLoaded = true;
+      resolve();
+    };
+    script.onerror = () => {
+      googleMapsPromise = null;
+      reject(new Error("Failed to load Google Maps"));
+    };
+    document.head.appendChild(script);
+  });
+  return googleMapsPromise;
 }
 
 export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps) {
-  const { apiKey, isKeyLoading } = useGoogleMapsApiKey();
+  const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
+  const [isReady, setIsReady] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  if (isKeyLoading) {
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      let key = apiKey;
+
+      // Fetch key from edge function if not available
+      if (!key) {
+        try {
+          const { data } = await supabase.functions.invoke("maps-api-key");
+          if (!cancelled && data?.key) {
+            key = data.key;
+            setApiKey(key);
+          }
+        } catch {
+          if (!cancelled) setFailed(true);
+          return;
+        }
+      }
+
+      if (!key) {
+        if (!cancelled) setFailed(true);
+        return;
+      }
+
+      // Load script via singleton
+      try {
+        await loadGoogleMapsScript(key);
+        if (!cancelled) setIsReady(true);
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (failed) {
+    return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
+  }
+
+  if (!isReady) {
     return (
       <div className={`bg-gradient-to-b from-muted/80 to-background flex items-center justify-center ${className || ""}`}>
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -66,114 +114,117 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, cl
     );
   }
 
-  if (!apiKey) {
-    return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
-  }
-
-  return <GoogleMapView apiKey={apiKey} pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} routePolyline={routePolyline} className={className} />;
+  return <NativeGoogleMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} routePolyline={routePolyline} className={className} />;
 }
 
-// Actual Google Map (only rendered when apiKey is available)
-function GoogleMapView({ apiKey, pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps & { apiKey: string }) {
-  const { isLoaded, loadError } = useJsApiLoader({ googleMapsApiKey: apiKey });
+// Renders the map using the global google.maps API (no useJsApiLoader)
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, className }: RideMapProps) {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+    mapRef.current = new google.maps.Map(mapContainerRef.current, {
+      center: pickupCoords || DEFAULT_CENTER,
+      zoom: 13,
+      disableDefaultUI: true,
+      zoomControl: false,
+      styles: darkMapStyle,
+      gestureHandling: "greedy",
+    });
   }, []);
 
+  // Update markers and bounds
   useEffect(() => {
-    if (!mapRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Clear old markers
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+
+    if (pickupCoords) {
+      markersRef.current.push(new google.maps.Marker({
+        position: pickupCoords,
+        map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#22c55e",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+        },
+      }));
+    }
+
+    if (dropoffCoords) {
+      markersRef.current.push(new google.maps.Marker({
+        position: dropoffCoords,
+        map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#ef4444",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+        },
+      }));
+    }
+
+    // Fit bounds
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
-      mapRef.current.fitBounds(bounds, 60);
+      map.fitBounds(bounds, 60);
     } else if (pickupCoords) {
-      mapRef.current.panTo(pickupCoords);
-      mapRef.current.setZoom(15);
+      map.panTo(pickupCoords);
+      map.setZoom(15);
     } else if (dropoffCoords) {
-      mapRef.current.panTo(dropoffCoords);
-      mapRef.current.setZoom(15);
+      map.panTo(dropoffCoords);
+      map.setZoom(15);
     }
   }, [pickupCoords, dropoffCoords]);
 
-  if (loadError) return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
-  if (!isLoaded) {
-    return (
-      <div className={`bg-gradient-to-b from-muted/80 to-background flex items-center justify-center animate-pulse ${className || ""}`}>
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Update polyline
+  useEffect(() => {
+    const map = mapRef.current;
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null);
+      polylineRef.current = null;
+    }
+    if (map && routePolyline && routePolyline.length > 1) {
+      polylineRef.current = new google.maps.Polyline({
+        path: routePolyline,
+        strokeColor: "#22c55e",
+        strokeWeight: 4,
+        strokeOpacity: 0.8,
+        map,
+      });
+    }
+  }, [routePolyline]);
 
-  return (
-    <div className={className}>
-      <GoogleMap
-        mapContainerStyle={MAP_CONTAINER_STYLE}
-        center={pickupCoords || DEFAULT_CENTER}
-        zoom={13}
-        onLoad={onLoad}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: false,
-          styles: darkMapStyle,
-          gestureHandling: "greedy",
-        }}
-      >
-        {pickupCoords && (
-          <Marker
-            position={pickupCoords}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#22c55e",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 3,
-            }}
-          />
-        )}
-        {dropoffCoords && (
-          <Marker
-            position={dropoffCoords}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#ef4444",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 3,
-            }}
-          />
-        )}
-        {routePolyline && routePolyline.length > 1 && (
-          <Polyline
-            path={routePolyline}
-            options={{ strokeColor: "#22c55e", strokeWeight: 4, strokeOpacity: 0.8 }}
-          />
-        )}
-      </GoogleMap>
-    </div>
-  );
+  return <div ref={mapContainerRef} className={className} style={{ width: "100%", height: "100%" }} />;
 }
 
 // Styled fallback when map is unavailable
 function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapProps, "pickupCoords" | "dropoffCoords" | "className">) {
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
-      {/* Styled grid background simulating a map */}
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary)/0.15)] via-[hsl(var(--muted)/0.5)] to-background">
         <div className="absolute inset-0 opacity-10" style={{
           backgroundImage: "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }} />
-        {/* Simulated roads */}
         <div className="absolute top-1/3 left-0 right-0 h-[2px] bg-primary/20" />
         <div className="absolute top-0 bottom-0 left-1/3 w-[2px] bg-primary/20" />
         <div className="absolute top-0 bottom-0 right-1/4 w-[2px] bg-primary/15" />
         <div className="absolute bottom-1/4 left-0 right-0 h-[2px] bg-primary/15" />
-        {/* Pickup dot */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse" />
           <div className="absolute inset-0 w-4 h-4 rounded-full bg-primary/30 animate-ping" />
