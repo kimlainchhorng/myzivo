@@ -447,6 +447,20 @@ export default function RequestRidePage() {
   const [waitTimeGuarantee, setWaitTimeGuarantee] = useState(false);
   const [showMusicPicker, setShowMusicPicker] = useState(false);
   const [rideInsurance, setRideInsurance] = useState(false);
+  const [luggageSize, setLuggageSize] = useState<"none" | "small" | "medium" | "large">("none");
+  const [emergencySOS, setEmergencySOS] = useState(false);
+  const [showDriverChat, setShowDriverChat] = useState(false);
+  const [driverChatMessages, setDriverChatMessages] = useState<Array<{from: string; text: string; time: string}>>([
+    { from: "driver", text: "I'm on my way! Look for a blue Toyota.", time: "Just now" },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [fareLocked, setFareLocked] = useState(false);
+  const [showRoutePreview, setShowRoutePreview] = useState(false);
+  const [rideStats] = useState({ totalRides: 142, totalMiles: 1847, avgRating: 4.9, savedCO2: "34 lbs" });
+  const [tempPreference, setTempPreference] = useState<"cool" | "warm" | "no-pref">("no-pref");
+  const [showRideStats, setShowRideStats] = useState(false);
+  const [returnTrip, setReturnTrip] = useState(false);
+  const [returnDelay, setReturnDelay] = useState("1hr");
 
   const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
@@ -856,6 +870,122 @@ export default function RequestRidePage() {
                     <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Extended wait guarantee</p>
                     <p className="text-[10px] text-muted-foreground">5 min free wait at pickup · +$0.99</p>
                   </div>
+                </div>
+
+                {/* Luggage Size */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Briefcase className="w-3.5 h-3.5 text-primary" /> Luggage</p>
+                  <div className="flex gap-2">
+                    {(["none", "small", "medium", "large"] as const).map(size => (
+                      <button key={size} onClick={() => setLuggageSize(size)}
+                        className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                          luggageSize === size ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        {size === "none" ? "None" : size === "small" ? "🧳 Small" : size === "medium" ? "🧳🧳 Med" : "🧳🧳🧳 Large"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Temperature Preference */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Thermometer className="w-3.5 h-3.5 text-primary" /> Car temperature</p>
+                  <div className="flex gap-2">
+                    {([
+                      { id: "cool" as const, label: "❄️ Cool" },
+                      { id: "warm" as const, label: "🔥 Warm" },
+                      { id: "no-pref" as const, label: "🤷 No pref" },
+                    ]).map(t => (
+                      <button key={t.id} onClick={() => setTempPreference(t.id)}
+                        className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                          tempPreference === t.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fare Lock */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => { setFareLocked(!fareLocked); if (!fareLocked) toast.success("🔒 Fare locked for 5 minutes!"); }}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", fareLocked ? "bg-emerald-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", fareLocked ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-emerald-500" /> Lock this fare</p>
+                    <p className="text-[10px] text-muted-foreground">Lock price for 5 min during surge · +$1.49</p>
+                  </div>
+                  {fareLocked && <span className="text-[10px] font-bold text-emerald-500">🔒 Locked</span>}
+                </div>
+
+                {/* Return Trip */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setReturnTrip(!returnTrip)}
+                      className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", returnTrip ? "bg-primary" : "bg-muted/60")}>
+                      <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnTrip ? "left-[18px]" : "left-0.5")} />
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-primary" /> Schedule return trip</p>
+                      <p className="text-[10px] text-muted-foreground">Book a ride back automatically</p>
+                    </div>
+                  </div>
+                  {returnTrip && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2 mt-2">
+                      {["30min", "1hr", "2hr", "3hr", "custom"].map(d => (
+                        <button key={d} onClick={() => setReturnDelay(d)}
+                          className={cn("flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all touch-manipulation",
+                            returnDelay === d ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground")}>
+                          {d}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Emergency SOS */}
+                <div className="rounded-2xl bg-red-500/5 border border-red-500/20 p-3 flex items-center gap-3">
+                  <button onClick={() => { setEmergencySOS(true); toast.error("🚨 Emergency SOS activated — sharing location with emergency contacts"); }}
+                    className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 touch-manipulation active:scale-90">
+                    <Phone className="w-5 h-5 text-red-500" />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-red-500">Emergency SOS</p>
+                    <p className="text-[10px] text-muted-foreground">Share location with emergency contacts</p>
+                  </div>
+                </div>
+
+                {/* Ride Stats */}
+                <div className="rounded-2xl bg-card border border-border/40 p-4">
+                  <button onClick={() => setShowRideStats(!showRideStats)}
+                    className="w-full flex items-center justify-between">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-500" /> Your ride stats</p>
+                    <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showRideStats && "rotate-90")} />
+                  </button>
+                  <AnimatePresence>
+                    {showRideStats && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden">
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                          <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                            <p className="text-lg font-bold text-foreground">{rideStats.totalRides}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-bold">Total Rides</p>
+                          </div>
+                          <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                            <p className="text-lg font-bold text-foreground">{rideStats.totalMiles.toLocaleString()}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-bold">Miles</p>
+                          </div>
+                          <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                            <p className="text-lg font-bold text-amber-500">⭐ {rideStats.avgRating}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-bold">Avg Rating</p>
+                          </div>
+                          <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                            <p className="text-lg font-bold text-emerald-500">{rideStats.savedCO2}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-bold">CO₂ Saved</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Address inputs */}

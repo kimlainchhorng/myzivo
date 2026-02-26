@@ -3,7 +3,7 @@
  * Premium glassmorphism style matching the ZIVO super-app
  */
 import { useState, useEffect } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight, Users, Calendar } from "lucide-react";
+import { Star, Clock, ArrowRight, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, MessageSquare, Gift, PartyPopper, Navigation, RefreshCw, Flame, Award, Sparkles, Phone, Share2, Copy, Leaf, AlertTriangle, Filter, X, ThumbsUp, Percent, History, Bookmark, ChevronRight, Users, Calendar, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -289,13 +289,28 @@ export default function EatsLanding() {
   const [splitBill, setSplitBill] = useState(false);
   const [splitBillCount, setSplitBillCount] = useState(2);
   const [mealCombo, setMealCombo] = useState(false);
-  const [loyaltyStamps, setLoyaltyStamps] = useState(7); // out of 10
+  const [loyaltyStamps, setLoyaltyStamps] = useState(7);
   const [showQA, setShowQA] = useState(false);
   const [liveTrackingStep, setLiveTrackingStep] = useState(0);
   const [substitutePreference, setSubstitutePreference] = useState<"contact" | "similar" | "refund">("contact");
   const [tableReservation, setTableReservation] = useState(false);
   const [mealPlanActive, setMealPlanActive] = useState(false);
   const [nutritionMode, setNutritionMode] = useState(false);
+  const [moodQuiz, setMoodQuiz] = useState<"none" | "comfort" | "healthy" | "adventurous" | "quick">("none");
+  const [restaurantChat, setRestaurantChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{from: string; text: string}>>([
+    { from: "restaurant", text: "Hi! How can we help with your order?" },
+  ]);
+  const [restaurantChatInput, setRestaurantChatInput] = useState("");
+  const [allergyPassport, setAllergyPassport] = useState<string[]>([]);
+  const [cateringMode, setCateringMode] = useState(false);
+  const [cateringHeadcount, setCateringHeadcount] = useState(10);
+  const [orderCountdown, setOrderCountdown] = useState<number | null>(null);
+  const [photoMenuView, setPhotoMenuView] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
+  const [mealReminder, setMealReminder] = useState(false);
+  const [favoriteItems, setFavoriteItems] = useState<string[]>([]);
+  const [dineInOption, setDineInOption] = useState(false);
   const totalCalories = cart.reduce((sum, item) => {
     const restaurant = restaurants.find(r => r.id === item.restaurantId);
     const menuItem = restaurant?.menu.find(m => m.id === item.menuItemId);
@@ -1044,10 +1059,7 @@ export default function EatsLanding() {
                 </div>
               </div>
 
-              {/* Eco packaging + curbside */}
-              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setEcoPackaging(!ecoPackaging)}
-                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", ecoPackaging ? "bg-emerald-500" : "bg-muted/60")}>
+
 
               {/* Split Bill */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
@@ -1126,17 +1138,133 @@ export default function EatsLanding() {
                 </div>
               </div>
 
-              {/* Meal Plan */}
-              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setMealPlanActive(!mealPlanActive); if (!mealPlanActive) toast.success("📋 Meal plan activated! Save 15% on weekly orders"); }}
-                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", mealPlanActive ? "bg-primary" : "bg-muted/60")}>
-                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", mealPlanActive ? "left-[18px]" : "left-0.5")} />
-                </button>
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> Weekly meal plan</p>
-                  <p className="text-[10px] text-muted-foreground">Subscribe & save 15% on 5+ orders/week</p>
+              {/* Mood Quiz */}
+              <div className="rounded-2xl bg-gradient-to-r from-violet-500/10 to-primary/10 border border-violet-500/20 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2">🎯 What's your food mood?</p>
+                <div className="flex gap-2 flex-wrap">
+                  {([
+                    { id: "comfort" as const, emoji: "🍔", label: "Comfort" },
+                    { id: "healthy" as const, emoji: "🥗", label: "Healthy" },
+                    { id: "adventurous" as const, emoji: "🌮", label: "Adventurous" },
+                    { id: "quick" as const, emoji: "⚡", label: "Quick bite" },
+                  ]).map(m => (
+                    <button key={m.id} onClick={() => { setMoodQuiz(m.id); toast.info(`${m.emoji} Showing ${m.label.toLowerCase()} picks!`); }}
+                      className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                        moodQuiz === m.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {m.emoji} {m.label}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Allergy Passport */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Allergy Passport</p>
+                <div className="flex gap-2 flex-wrap">
+                  {["Dairy", "Gluten", "Nuts", "Shellfish", "Egg", "Soy"].map(a => (
+                    <button key={a} onClick={() => setAllergyPassport(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
+                      className={cn("px-2.5 py-1.5 rounded-full text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                        allergyPassport.includes(a) ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {allergyPassport.includes(a) ? "⚠️ " : ""}{a}
+                    </button>
+                  ))}
+                </div>
+                {allergyPassport.length > 0 && (
+                  <p className="text-[10px] text-red-500 mt-2 font-medium">Items with {allergyPassport.join(", ")} will be flagged</p>
+                )}
+              </div>
+
+              {/* Catering Mode */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setCateringMode(!cateringMode)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", cateringMode ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", cateringMode ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">🏢 Catering mode</p>
+                    <p className="text-[10px] text-muted-foreground">Large order with platters & setup</p>
+                  </div>
+                </div>
+                {cateringMode && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
+                    <p className="text-[10px] text-muted-foreground mb-1">Headcount</p>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setCateringHeadcount(Math.max(5, cateringHeadcount - 5))}
+                        className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center text-foreground font-bold touch-manipulation">-</button>
+                      <span className="text-sm font-bold text-foreground">{cateringHeadcount} people</span>
+                      <button onClick={() => setCateringHeadcount(cateringHeadcount + 5)}
+                        className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold touch-manipulation">+</button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Dine-In Option */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setDineInOption(!dineInOption); if (!dineInOption) toast.info("🍽️ Switched to dine-in — skip delivery!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", dineInOption ? "bg-primary" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", dineInOption ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><UtensilsCrossed className="w-3.5 h-3.5 text-primary" /> Dine-in instead</p>
+                  <p className="text-[10px] text-muted-foreground">Order ahead & eat at the restaurant</p>
+                </div>
+              </div>
+
+              {/* Meal Reminder */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setMealReminder(!mealReminder); if (!mealReminder) toast.success("⏰ We'll remind you to order at your usual time!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", mealReminder ? "bg-primary" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", mealReminder ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-primary" /> Daily meal reminder</p>
+                  <p className="text-[10px] text-muted-foreground">Get nudged at your usual lunch/dinner time</p>
+                </div>
+              </div>
+
+              {/* Restaurant Chat */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <button onClick={() => setRestaurantChat(!restaurantChat)}
+                  className="w-full flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-primary" /> Chat with restaurant</p>
+                  <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", restaurantChat && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {restaurantChat && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden">
+                      <div className="mt-3 space-y-2 max-h-32 overflow-y-auto">
+                        {chatMessages.map((msg, i) => (
+                          <div key={i} className={cn("rounded-xl px-3 py-2 text-xs max-w-[80%]",
+                            msg.from === "restaurant" ? "bg-muted/50 text-foreground" : "bg-primary text-primary-foreground ml-auto")}>
+                            {msg.text}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Input value={restaurantChatInput} onChange={e => setRestaurantChatInput(e.target.value)}
+                          placeholder="Type a message..." className="h-8 text-xs" />
+                        <button onClick={() => {
+                          if (restaurantChatInput.trim()) {
+                            setChatMessages(prev => [...prev, { from: "user", text: restaurantChatInput }]);
+                            setRestaurantChatInput("");
+                            setTimeout(() => setChatMessages(prev => [...prev, { from: "restaurant", text: "Got it! We'll take care of that. 👍" }]), 1000);
+                          }
+                        }} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95">
+                          Send
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Eco packaging + curbside */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setEcoPackaging(!ecoPackaging)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", ecoPackaging ? "bg-emerald-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", ecoPackaging ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">

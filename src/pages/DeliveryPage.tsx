@@ -220,9 +220,22 @@ export default function DeliveryPage() {
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
   const [signatureType, setSignatureType] = useState<"any" | "recipient" | "adult">("any");
   const [showDeliveryAnalytics, setShowDeliveryAnalytics] = useState(false);
-  const [deliveryCount] = useState(12); // total past deliveries
+  const [deliveryCount] = useState(12);
   const [avgDeliveryTime] = useState("2.4 hrs");
   const [onTimeRate] = useState(96);
+  const [packageDimensions, setPackageDimensions] = useState({ length: "", width: "", height: "" });
+  const [whiteGloveService, setWhiteGloveService] = useState(false);
+  const [slaGuarantee, setSlaGuarantee] = useState(false);
+  const [senderVerification, setSenderVerification] = useState(false);
+  const [showShipmentComparison, setShowShipmentComparison] = useState(false);
+  const [specialHandling, setSpecialHandling] = useState<"none" | "top-load" | "keep-dry" | "this-side-up">("none");
+  const [deliveryAttempts, setDeliveryAttempts] = useState(1);
+  const [leaveAtDoor, setLeaveAtDoor] = useState(false);
+  const [deliveryPhoto, setDeliveryPhoto] = useState(false);
+  const [neighborDelivery, setNeighborDelivery] = useState(false);
+  const [packageTrackerShared, setPackageTrackerShared] = useState(false);
+  const [deliveryRating] = useState(4.8);
+  const [totalShipments] = useState(47);
   const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
@@ -755,6 +768,143 @@ export default function DeliveryPage() {
               </div>
 
               {/* Carbon Neutral */}
+
+              {/* Package Dimensions */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Ruler className="w-3.5 h-3.5 text-violet-500" /> Package Dimensions (optional)</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-[9px] text-muted-foreground uppercase font-bold">Length</label>
+                    <Input value={packageDimensions.length} onChange={e => setPackageDimensions(prev => ({...prev, length: e.target.value}))}
+                      placeholder="in" className="h-8 text-xs mt-0.5" />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-muted-foreground uppercase font-bold">Width</label>
+                    <Input value={packageDimensions.width} onChange={e => setPackageDimensions(prev => ({...prev, width: e.target.value}))}
+                      placeholder="in" className="h-8 text-xs mt-0.5" />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-muted-foreground uppercase font-bold">Height</label>
+                    <Input value={packageDimensions.height} onChange={e => setPackageDimensions(prev => ({...prev, height: e.target.value}))}
+                      placeholder="in" className="h-8 text-xs mt-0.5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Handling */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Special Handling</p>
+                <div className="flex gap-2 flex-wrap">
+                  {([
+                    { id: "none" as const, label: "None" },
+                    { id: "top-load" as const, label: "⬆️ Top Load" },
+                    { id: "keep-dry" as const, label: "💧 Keep Dry" },
+                    { id: "this-side-up" as const, label: "📦 This Side Up" },
+                  ]).map(h => (
+                    <button key={h.id} onClick={() => setSpecialHandling(h.id)}
+                      className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
+                        specialHandling === h.id ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {h.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* White Glove Service */}
+              <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 p-3 flex items-center gap-3">
+                <button onClick={() => { setWhiteGloveService(!whiteGloveService); if (!whiteGloveService) toast.success("🤵 White-glove service added — premium handling & setup!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", whiteGloveService ? "bg-amber-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", whiteGloveService ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">🤵 White-glove service</p>
+                  <p className="text-[10px] text-muted-foreground">Premium handling, unpacking & setup · +$19.99</p>
+                </div>
+              </div>
+
+              {/* SLA Guarantee */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => { setSlaGuarantee(!slaGuarantee); if (!slaGuarantee) toast.info("✅ On-time guarantee — full refund if late!"); }}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", slaGuarantee ? "bg-emerald-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", slaGuarantee ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> On-time guarantee</p>
+                  <p className="text-[10px] text-muted-foreground">Full refund if delivery is late · +$2.99</p>
+                </div>
+              </div>
+
+              {/* Leave at Door / Neighbor */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setLeaveAtDoor(!leaveAtDoor)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", leaveAtDoor ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", leaveAtDoor ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">🚪 Leave at door</p>
+                  <p className="text-[10px] text-muted-foreground">Safe spot delivery with photo proof</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setNeighborDelivery(!neighborDelivery)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", neighborDelivery ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", neighborDelivery ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Allow neighbor delivery</p>
+                  <p className="text-[10px] text-muted-foreground">If not home, deliver to a neighbor</p>
+                </div>
+              </div>
+
+              {/* Delivery Attempts */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><RefreshCw className="w-3.5 h-3.5 text-violet-500" /> Delivery attempts</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3].map(n => (
+                    <button key={n} onClick={() => setDeliveryAttempts(n)}
+                      className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation",
+                        deliveryAttempts === n ? "bg-violet-500 text-white shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
+                      {n} {n === 1 ? "attempt" : "attempts"}
+                    </button>
+                  ))}
+                </div>
+                {deliveryAttempts > 1 && <p className="text-[10px] text-violet-500 mt-2 font-medium">+${((deliveryAttempts - 1) * 2.99).toFixed(2)} per additional attempt</p>}
+              </div>
+
+              {/* Shipment Stats */}
+              <div className="rounded-2xl bg-card border border-border/40 p-4">
+                <button onClick={() => setShowDeliveryAnalytics(!showDeliveryAnalytics)}
+                  className="w-full flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-500" /> Your shipping stats</p>
+                  <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showDeliveryAnalytics && "rotate-90")} />
+                </button>
+                <AnimatePresence>
+                  {showDeliveryAnalytics && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden">
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                        <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                          <p className="text-lg font-bold text-foreground">{totalShipments}</p>
+                          <p className="text-[9px] text-muted-foreground uppercase font-bold">Shipments</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                          <p className="text-lg font-bold text-foreground">{avgDeliveryTime}</p>
+                          <p className="text-[9px] text-muted-foreground uppercase font-bold">Avg Time</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                          <p className="text-lg font-bold text-emerald-500">{onTimeRate}%</p>
+                          <p className="text-[9px] text-muted-foreground uppercase font-bold">On-Time</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/30 p-2.5 text-center">
+                          <p className="text-lg font-bold text-amber-500">⭐ {deliveryRating}</p>
+                          <p className="text-[9px] text-muted-foreground uppercase font-bold">Rating</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
                 <button onClick={() => setCarbonNeutral(!carbonNeutral)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", carbonNeutral ? "bg-emerald-500" : "bg-muted/60")}>
