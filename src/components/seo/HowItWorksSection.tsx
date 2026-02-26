@@ -59,9 +59,9 @@ export default function HowItWorksSection() {
                     "w-14 h-14 rounded-2xl bg-gradient-to-br mx-auto mb-4 flex items-center justify-center shadow-lg",
                     item.color
                   )}>
-                    <item.icon className="w-7 h-7 text-white" />
+                    <item.icon className="w-7 h-7 text-primary-foreground" />
                   </div>
-                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                     {item.step}
                   </div>
                   <h3 className="font-bold text-lg mb-2">{item.title}</h3>

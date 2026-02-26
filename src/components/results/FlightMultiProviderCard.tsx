@@ -68,22 +68,22 @@ export function FlightMultiProviderCard({
       {(flight.isBestPrice || flight.isFastest || flight.isBestValue || savingsPercent > 0) && (
         <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {savingsPercent > 0 && (
-            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
               Save up to {savingsPercent}%
             </Badge>
           )}
           {flight.isBestPrice && (
-            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
               <Zap className="w-3 h-3" /> Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (
-            <Badge className="bg-amber-500 text-white text-[10px] gap-1">
+            <Badge className="bg-amber-500 text-primary-foreground text-[10px] gap-1">
               <Star className="w-3 h-3" /> Best Value
             </Badge>
           )}
           {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
-            <Badge className="bg-purple-500 text-white text-[10px] gap-1">
+            <Badge className="bg-purple-500 text-primary-foreground text-[10px] gap-1">
               <Clock className="w-3 h-3" /> Fastest Route
             </Badge>
           )}
@@ -251,7 +251,7 @@ export function FlightMultiProviderCard({
                             <Badge variant="outline" className="text-[9px] py-0 h-4">Official</Badge>
                           )}
                           {provider.isBestDeal && (
-                            <Badge className="bg-emerald-500 text-white text-[9px] py-0 h-4">Best deal</Badge>
+                            <Badge className="bg-emerald-500 text-primary-foreground text-[9px] py-0 h-4">Best deal</Badge>
                           )}
                         </p>
                         {provider.discount && (
@@ -273,7 +273,7 @@ export function FlightMultiProviderCard({
                         className={cn(
                           "gap-1 font-medium min-h-[36px] touch-manipulation",
                           provider.isOfficialPrice 
-                            ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
+                            ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-primary-foreground"
                             : "bg-primary hover:bg-primary/90 text-primary-foreground"
                         )}
                       >

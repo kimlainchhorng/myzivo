@@ -171,7 +171,7 @@ export function EmptyResults({
           {onClearFilters && (
             <Button
               onClick={onClearFilters}
-              className={cn("gap-2 text-white font-semibold rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg", config.bg)}
+              className={cn("gap-2 text-primary-foreground font-semibold rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg", config.bg)}
             >
               <FilterX className="w-4 h-4" />
               Clear All Filters
@@ -314,7 +314,7 @@ export function EmptyResults({
             >
               <CardContent className="p-4 text-center">
                 {item.badge && (
-                  <Badge className={cn("text-white text-[10px] mb-3", item.badgeColor)}>
+                  <Badge className={cn("text-primary-foreground text-[10px] mb-3", item.badgeColor)}>
                     {item.badge}
                   </Badge>
                 )}
@@ -343,7 +343,7 @@ export function EmptyResults({
           <Button
             onClick={partnerCta.onClick}
             size="lg"
-            className={cn("gap-2 text-white font-semibold px-8 rounded-xl min-h-[48px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg hover:shadow-xl", config.bg)}
+            className={cn("gap-2 text-primary-foreground font-semibold px-8 rounded-xl min-h-[48px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-lg hover:shadow-xl", config.bg)}
           >
             {partnerCta.label || "Continue to secure booking"}
             <ExternalLink className="w-4 h-4" />

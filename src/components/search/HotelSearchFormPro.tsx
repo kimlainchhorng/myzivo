@@ -433,7 +433,7 @@ export default function HotelSearchFormPro({
         className={cn(
           "w-full h-12 sm:h-14 mt-5 font-bold text-base sm:text-lg rounded-xl",
           "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-600 hover:via-orange-600 hover:to-amber-600",
-          "text-white shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40",
+          "text-primary-foreground shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40",
           "transition-all duration-300 active:scale-[0.98]",
           "disabled:opacity-50 disabled:cursor-not-allowed"
         )}

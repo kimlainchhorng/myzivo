@@ -94,12 +94,12 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
       {(car.isBestDeal || isElectric) && (
         <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {car.isBestDeal && (
-            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
               Best Value
             </Badge>
           )}
           {isElectric && (
-            <Badge className="bg-green-500 text-white text-[10px] gap-1">
+            <Badge className="bg-green-500 text-primary-foreground text-[10px] gap-1">
               <Zap className="w-3 h-3" /> Electric
             </Badge>
           )}

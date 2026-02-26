@@ -88,7 +88,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
             >
               {/* Top Banner */}
               {index === 0 && (
-                <div className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-center py-1 text-xs font-medium flex items-center justify-center gap-1">
+                <div className="bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground text-center py-1 text-xs font-medium flex items-center justify-center gap-1">
                   <Award className="w-3 h-3" /> Recommended
                 </div>
               )}
@@ -129,7 +129,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
                 
                 <Button 
                   size="sm"
-                  className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
+                  className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
                 >
                   <Smartphone className="w-4 h-4" />
                   Get eSIM

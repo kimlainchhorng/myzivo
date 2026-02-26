@@ -99,17 +99,17 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
             </Badge>
           )}
           {flight.isBestPrice && !flight.priceUpdated && (
-            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+            <Badge className="bg-emerald-500 text-primary-foreground text-[10px] gap-1">
               <Zap className="w-3 h-3" /> Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (
-            <Badge className="bg-amber-500 text-white text-[10px] gap-1">
+            <Badge className="bg-amber-500 text-primary-foreground text-[10px] gap-1">
               <Star className="w-3 h-3" /> Best Value
             </Badge>
           )}
           {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
-            <Badge className="bg-purple-500 text-white text-[10px] gap-1">
+            <Badge className="bg-purple-500 text-primary-foreground text-[10px] gap-1">
               <Clock className="w-3 h-3" /> Fastest Route
             </Badge>
           )}

@@ -108,7 +108,7 @@ export default function AirportTransfersSection({ className = '', destination }:
                     
                     <Button 
                       size="sm"
-                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
+                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
                     >
                       Book Transfer
                       <ExternalLink className="w-3 h-3" />

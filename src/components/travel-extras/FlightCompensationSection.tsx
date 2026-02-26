@@ -92,7 +92,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
               onClick={() => handlePartnerClick(partner)}
             >
               {index === 0 && (
-                <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-1 text-xs font-medium">
+                <div className="bg-gradient-to-r from-red-500 to-orange-500 text-primary-foreground text-center py-1 text-xs font-medium">
                   Most Trusted
                 </div>
               )}
@@ -134,7 +134,7 @@ export default function FlightCompensationSection({ className = '' }: FlightComp
                 
                 <Button 
                   size="sm"
-                  className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
+                  className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
                 >
                   <Euro className="w-4 h-4" />
                   Check My Compensation

@@ -104,7 +104,7 @@ export function FiltersSheet({
           <Button
             onClick={handleApply}
             disabled={isLoading}
-            className={cn("flex-1 text-white font-semibold rounded-xl h-12 active:scale-[0.97] transition-all duration-200 touch-manipulation shadow-lg", colors.button)}
+            className={cn("flex-1 text-primary-foreground font-semibold rounded-xl h-12 active:scale-[0.97] transition-all duration-200 touch-manipulation shadow-lg", colors.button)}
           >
             {isLoading ? (
               <>
@@ -144,7 +144,7 @@ export function FiltersTrigger({ onClick, activeCount = 0, service = "flights", 
       <SlidersHorizontal className="w-4 h-4" />
       Filters
       {activeCount > 0 && (
-        <Badge className={cn("ml-1 h-5 px-1.5 text-xs text-white", colors.badge)}>
+        <Badge className={cn("ml-1 h-5 px-1.5 text-xs text-primary-foreground", colors.badge)}>
           {activeCount}
         </Badge>
       )}

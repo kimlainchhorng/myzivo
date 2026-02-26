@@ -113,7 +113,7 @@ export default function PopularDestinationsGrid({
                 {/* Trending Badge */}
                 {isTrending && (
                   <Badge className={cn(
-                    "absolute top-2 right-2 text-[10px] text-white border-0 shadow-lg",
+                    "absolute top-2 right-2 text-[10px] text-primary-foreground border-0 shadow-lg",
                     colors.badge
                   )}>
                     <TrendingUp className="w-3 h-3 mr-1" />
