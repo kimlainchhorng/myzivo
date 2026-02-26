@@ -121,10 +121,10 @@ export default function VideoAdsSection() {
                       transition={{ delay: 0.2 }}
                     >
                       <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4", active.accent)}>
-                        <Icon className="w-6 h-6 text-white" />
+                        <Icon className="w-6 h-6 text-primary-foreground" />
                       </div>
-                      <h3 className="text-3xl sm:text-4xl font-bold text-white mb-2">{active.title}</h3>
-                      <p className="text-white/80 text-lg mb-6">{active.subtitle}</p>
+                      <h3 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-2">{active.title}</h3>
+                      <p className="text-primary-foreground/80 text-lg mb-6">{active.subtitle}</p>
                       <Link
                         to={active.href}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-background text-foreground rounded-xl font-semibold hover:bg-background/90 transition-all active:scale-[0.97] touch-manipulation"
@@ -145,8 +145,8 @@ export default function VideoAdsSection() {
 
                 {/* Play button overlay (decorative) */}
                 <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm">
-                  <Play className="w-3 h-3 text-white fill-white" />
-                  <span className="text-[11px] text-white/80 font-medium">Watch Promo</span>
+                  <Play className="w-3 h-3 text-primary-foreground fill-primary-foreground" />
+                  <span className="text-[11px] text-primary-foreground/80 font-medium">Watch Promo</span>
                 </div>
               </motion.div>
             </AnimatePresence>

@@ -105,7 +105,7 @@ const DestinationGuides = () => {
                 
                 <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-black/50 rounded-full">
                   <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  <span className="text-xs text-white">{dest.rating}</span>
+                  <span className="text-xs text-primary-foreground">{dest.rating}</span>
                 </div>
               </div>
 

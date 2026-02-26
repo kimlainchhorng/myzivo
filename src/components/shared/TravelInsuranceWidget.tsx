@@ -131,12 +131,12 @@ const TravelInsuranceWidget = ({
                       : "border-muted-foreground"
                   )}>
                     {selectedPlan === plan.id && (
-                      <Check className="w-2.5 h-2.5 text-white" />
+                      <Check className="w-2.5 h-2.5 text-primary-foreground" />
                     )}
                   </div>
                   <span className="font-medium">{plan.name}</span>
                   {plan.recommended && (
-                    <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                    <Badge className="bg-emerald-500 text-primary-foreground text-[10px] px-1.5 py-0">
                       Best Value
                     </Badge>
                   )}
@@ -179,7 +179,7 @@ const TravelInsuranceWidget = ({
                 : "border-muted-foreground"
             )}>
               {selectedPlan === null && (
-                <Check className="w-2.5 h-2.5 text-white" />
+                <Check className="w-2.5 h-2.5 text-primary-foreground" />
               )}
             </div>
             <span className="text-sm">No thanks, I'll take the risk</span>

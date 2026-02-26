@@ -178,7 +178,7 @@ const AppTravel = () => {
             onClick={handleSearch}
             className={cn(
               "w-full h-13 rounded-xl font-bold gap-2 text-base shadow-lg transition-all duration-200",
-              `bg-gradient-to-r ${activeTabConfig.gradient} hover:opacity-90 text-white`
+              `bg-gradient-to-r ${activeTabConfig.gradient} hover:opacity-90 text-primary-foreground`
             )}
           >
             <Search className="w-5 h-5" />
@@ -236,7 +236,7 @@ const AppTravel = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="font-bold text-xl text-sky-500">${flight.price}</p>
-                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md font-bold" onClick={handleBookNow}>
+                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
                         View Deal <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>
@@ -276,7 +276,7 @@ const AppTravel = () => {
                         <p className="font-bold text-xl text-amber-500">${hotel.price}</p>
                         <p className="text-[10px] text-muted-foreground">per night</p>
                       </div>
-                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md font-bold" onClick={handleBookNow}>
+                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
                         View Deal <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>
@@ -311,7 +311,7 @@ const AppTravel = () => {
                         <p className="font-bold text-xl text-emerald-500">${car.price}</p>
                         <p className="text-[10px] text-muted-foreground">per day</p>
                       </div>
-                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md font-bold" onClick={handleBookNow}>
+                      <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
                         View Deal <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>

@@ -133,11 +133,11 @@ export default function HotelExperienceGallery({ onCategorySelect, className }: 
                     "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-3 backdrop-blur-sm",
                     "bg-white/20 group-hover:bg-white/30 transition-all duration-200"
                   )}>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                   </div>
                   
                   {/* Title */}
-                  <h3 className="font-display text-base sm:text-lg lg:text-xl font-bold text-white mb-0.5">
+                  <h3 className="font-display text-base sm:text-lg lg:text-xl font-bold text-primary-foreground mb-0.5">
                     {exp.title}
                   </h3>
                   <p className="text-white/70 text-xs sm:text-sm mb-2 hidden sm:block">
@@ -146,10 +146,10 @@ export default function HotelExperienceGallery({ onCategorySelect, className }: 
                   
                   {/* Properties Count */}
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-white/20 text-white border-0 text-xs">
+                    <Badge className="bg-white/20 text-primary-foreground border-0 text-xs">
                       {exp.properties} properties
                     </Badge>
-                    <ArrowRight className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-primary-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
                 

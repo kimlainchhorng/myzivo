@@ -114,7 +114,7 @@ export default function AnimatedCityHero({
       <div className="relative z-10 w-full p-8 sm:p-12">
         <div className="container mx-auto max-w-7xl">
           {/* Main Title with Year Badge */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tighter mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-primary-foreground uppercase tracking-tighter mb-4">
             {city}{" "}
             <span className={cn(
               serviceType === "flights" && "text-flights",

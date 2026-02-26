@@ -103,7 +103,7 @@ export default function AirportTransfersPage() {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-teal-500 to-primary text-white font-semibold">
+                <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-teal-500 to-primary text-primary-foreground font-semibold">
                   Search Transfers
                 </Button>
                 <p className="text-xs text-muted-foreground mt-3">

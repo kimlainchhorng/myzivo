@@ -51,7 +51,7 @@ const BookingProgressBar = ({ steps, className }: BookingProgressBarProps) => {
             <div className="flex flex-col items-center">
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center transition-all",
-                step.completed && "bg-primary text-white",
+                step.completed && "bg-primary text-primary-foreground",
                 step.active && !step.completed && "bg-primary/20 text-primary border-2 border-primary",
                 !step.completed && !step.active && "bg-muted text-muted-foreground"
               )}>

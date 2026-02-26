@@ -77,7 +77,7 @@ const FlightTravelTips = () => {
                   "bg-gradient-to-br shadow-lg transition-transform group-hover:scale-110",
                   tip.color
                 )}>
-                  <tip.icon className="w-6 h-6 text-white" />
+                  <tip.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <h3 className="font-display font-bold text-lg mb-2 group-hover:text-sky-400 transition-colors">
                   {tip.title}

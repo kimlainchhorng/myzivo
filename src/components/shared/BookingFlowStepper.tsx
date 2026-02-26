@@ -80,7 +80,7 @@ const BookingFlowStepper = ({
                 step.status === "upcoming" && "w-8 h-8 bg-muted border-2 border-border"
               )}>
                 {step.status === "completed" ? (
-                  <Check className="w-4 h-4 text-white" />
+                  <Check className="w-4 h-4 text-primary-foreground" />
                 ) : step.status === "current" ? (
                   <Icon className="w-5 h-5 text-primary-foreground" />
                 ) : (

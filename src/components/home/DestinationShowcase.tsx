@@ -89,7 +89,7 @@ export default function DestinationShowcase() {
                     className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card active:scale-90 transition-all touch-manipulation"
                     aria-label={`Save ${dest.city}`}
                   >
-                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-white"}`} />
+                    <Heart className={`w-4 h-4 transition-colors ${saved.has(dest.city) ? "text-red-500 fill-red-500" : "text-primary-foreground"}`} />
                   </button>
                   <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 shadow-md">
                     Explore <ArrowRight className="w-3 h-3" />
@@ -99,14 +99,14 @@ export default function DestinationShowcase() {
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <div className="flex items-end justify-between">
                     <div>
-                      <h3 className="text-white font-bold text-xl tracking-tight">{dest.city}</h3>
-                      <p className="text-white/70 text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
+                      <h3 className="text-primary-foreground font-bold text-xl tracking-tight">{dest.city}</h3>
+                      <p className="text-primary-foreground/70 text-sm">{dest.code} · {dest.country} · {dest.tagline}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-white/60 text-xs flex items-center gap-1">
                         <Plane className="w-3 h-3" /> Flights from
                       </p>
-                      <p className="text-white font-bold text-xl">{dest.from}</p>
+                      <p className="text-primary-foreground font-bold text-xl">{dest.from}</p>
                     </div>
                   </div>
                 </div>

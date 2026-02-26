@@ -82,7 +82,7 @@ const CrossSellBanner = ({
       <div className="relative p-4 flex items-center gap-4">
         {/* Icon */}
         <div className={cn("p-3 rounded-xl shrink-0 shadow-lg", data.iconBg)}>
-          <Icon className="w-6 h-6 text-white" />
+          <Icon className="w-6 h-6 text-primary-foreground" />
         </div>
         
         {/* Content */}

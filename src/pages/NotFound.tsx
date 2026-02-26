@@ -30,7 +30,7 @@ const NotFound = () => {
         {/* Icon */}
         <div className="flex justify-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/30">
-            <Compass className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            <Compass className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
           </div>
         </div>
 
@@ -49,7 +49,7 @@ const NotFound = () => {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-          <Button asChild size="lg" className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+          <Button asChild size="lg" className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
             <Link to="/">
               <Home className="w-5 h-5" />
               Go Home

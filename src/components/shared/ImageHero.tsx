@@ -168,7 +168,7 @@ export default function ImageHero({
           </div>
           
           {/* Headlines */}
-          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 text-white leading-tight tracking-tight drop-shadow-lg">
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 text-primary-foreground leading-tight tracking-tight drop-shadow-lg">
             {content.headline.split(' ').slice(0, -2).join(' ')}{' '}
             <span className={cn("bg-gradient-to-r bg-clip-text text-transparent", content.textGradient)}>
               {content.headline.split(' ').slice(-2).join(' ')}

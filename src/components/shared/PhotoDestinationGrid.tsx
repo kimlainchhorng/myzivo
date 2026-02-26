@@ -114,7 +114,7 @@ export default function PhotoDestinationGrid({
                 {/* Text Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
                   <h3 className={cn(
-                    "font-bold text-white text-lg mb-0.5 transition-colors",
+                    "font-bold text-primary-foreground text-lg mb-0.5 transition-colors",
                     `group-hover:${colors.text}`
                   )}>
                     {destination.city}

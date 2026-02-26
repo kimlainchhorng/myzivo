@@ -306,7 +306,7 @@ export default function DestinationCardsGrid({
 
                 {/* City name overlay */}
                 <div className="absolute bottom-2 left-2 right-2">
-                  <h3 className="font-bold text-white text-sm sm:text-base drop-shadow-lg">
+                  <h3 className="font-bold text-primary-foreground text-sm sm:text-base drop-shadow-lg">
                     {dest.city}
                   </h3>
                   <p className="text-white/80 text-xs">
