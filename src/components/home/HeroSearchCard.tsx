@@ -77,7 +77,7 @@ export default function HeroSearchCard() {
           </div>
 
           {/* Search Forms */}
-          <div className="p-5 sm:p-6">
+          <div id={`search-panel-${activeTab}`} role="tabpanel" aria-label={`${activeTab} search`} className="p-5 sm:p-6">
             {activeTab === "flights" && (
               <div className="space-y-4">
                 {/* Trip type toggle */}
