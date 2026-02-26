@@ -27,8 +27,22 @@ import {
   Crown,
   Zap,
   Shield,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  Star,
+  MapPin,
+  Calendar,
+  ChevronRight,
+  Heart,
+  Eye,
+  DollarSign,
+  Percent,
+  Target,
+  Leaf,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type DealCategoryType = 'all' | 'flights' | 'hotels' | 'cars' | 'last-minute';
 
@@ -255,6 +269,160 @@ export default function Deals() {
               </Button>
             </div>
           </motion.div>
+        </section>
+
+        {/* === WAVE 6: Smart Deal Intelligence === */}
+        <section className="container mx-auto px-4 mt-16 space-y-8">
+          {/* Price Predictions */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> Price Predictions</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { route: "NYC → Miami", prediction: "Drop 12%", timing: "Next week", confidence: 89, trend: "down", icon: TrendingDown, color: "text-emerald-500" },
+                { route: "LAX → London", prediction: "Rise 8%", timing: "2 weeks", confidence: 76, trend: "up", icon: TrendingUp, color: "text-destructive" },
+                { route: "SFO → Tokyo", prediction: "Drop 18%", timing: "3 weeks", confidence: 92, trend: "down", icon: TrendingDown, color: "text-emerald-500" },
+              ].map(p => (
+                <Card key={p.route} className="border-border/40 hover:border-primary/20 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Plane className="w-3.5 h-3.5 text-sky-500" />
+                      <span className="text-xs font-bold text-foreground">{p.route}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p.icon className={cn("w-4 h-4", p.color)} />
+                      <span className={cn("text-sm font-bold", p.color)}>{p.prediction}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{p.timing} · {p.confidence}% confidence</p>
+                    <div className="h-1.5 rounded-full bg-muted/50 mt-2 overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${p.confidence}%` }} transition={{ duration: 1 }} className={cn("h-full rounded-full", p.trend === "down" ? "bg-emerald-500" : "bg-destructive")} />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Seasonal Deal Calendar */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-amber-500" /> Best Time to Book</h2>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {[
+                { month: "Mar", savings: "15%", heat: "bg-amber-500/20" },
+                { month: "Apr", savings: "22%", heat: "bg-emerald-500/20" },
+                { month: "May", savings: "18%", heat: "bg-emerald-500/15" },
+                { month: "Jun", savings: "5%", heat: "bg-destructive/10" },
+                { month: "Jul", savings: "3%", heat: "bg-destructive/15" },
+                { month: "Aug", savings: "8%", heat: "bg-amber-500/10" },
+                { month: "Sep", savings: "25%", heat: "bg-emerald-500/25" },
+                { month: "Oct", savings: "30%", heat: "bg-emerald-500/30" },
+                { month: "Nov", savings: "20%", heat: "bg-emerald-500/20" },
+                { month: "Dec", savings: "2%", heat: "bg-destructive/20" },
+                { month: "Jan", savings: "28%", heat: "bg-emerald-500/25" },
+                { month: "Feb", savings: "24%", heat: "bg-emerald-500/20" },
+              ].map(m => (
+                <div key={m.month} className={cn("text-center p-3 rounded-xl border border-border/30", m.heat)}>
+                  <p className="text-xs font-bold text-foreground">{m.month}</p>
+                  <p className="text-[10px] text-emerald-600 font-bold">{m.savings}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trending Destinations */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> Trending Now</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { city: "Cancún", country: "Mexico", change: "+42%", searches: "12.5K", price: "$189", flag: "🇲🇽" },
+                { city: "Barcelona", country: "Spain", change: "+38%", searches: "9.2K", price: "$342", flag: "🇪🇸" },
+                { city: "Bali", country: "Indonesia", change: "+55%", searches: "8.7K", price: "$425", flag: "🇮🇩" },
+                { city: "Dubai", country: "UAE", change: "+29%", searches: "7.1K", price: "$512", flag: "🇦🇪" },
+              ].map(d => (
+                <Card key={d.city} className="border-border/40 hover:border-primary/20 hover:shadow-md transition-all group cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{d.flag}</span>
+                      <div>
+                        <p className="text-xs font-bold text-foreground">{d.city}</p>
+                        <p className="text-[10px] text-muted-foreground">{d.country}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm font-bold text-primary">from {d.price}</span>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px]"><TrendingUp className="w-2.5 h-2.5 mr-0.5" />{d.change}</Badge>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground mt-1"><Eye className="w-2.5 h-2.5 inline mr-0.5" />{d.searches} searches this week</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Savings Calculator */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><DollarSign className="w-5 h-5 text-emerald-500" /> Your Savings Potential</h2>
+            <Card className="border-emerald-500/20 bg-emerald-500/5">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: "Avg Savings", value: "$127", sub: "per booking" },
+                    { label: "Best Deals", value: "Tue-Wed", sub: "booking day" },
+                    { label: "Advance", value: "21 days", sub: "optimal window" },
+                    { label: "Members Save", value: "+18%", sub: "extra discount" },
+                  ].map(s => (
+                    <div key={s.label} className="text-center">
+                      <p className="text-lg font-bold text-emerald-600">{s.value}</p>
+                      <p className="text-xs font-bold text-foreground">{s.label}</p>
+                      <p className="text-[9px] text-muted-foreground">{s.sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Deal Score Explainer */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-violet-500" /> How We Score Deals</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { factor: "Price vs Historical", weight: "40%", desc: "Compared to 90-day average", icon: BarChart3, color: "text-sky-500" },
+                { factor: "Demand Trend", weight: "30%", desc: "Search popularity & availability", icon: TrendingUp, color: "text-amber-500" },
+                { factor: "Value Rating", weight: "30%", desc: "Quality, timing & flexibility", icon: Star, color: "text-violet-500" },
+              ].map(f => (
+                <Card key={f.factor} className="border-border/40">
+                  <CardContent className="p-4">
+                    <f.icon className={cn("w-5 h-5 mb-2", f.color)} />
+                    <p className="text-xs font-bold text-foreground">{f.factor}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.desc}</p>
+                    <Badge className="mt-2 bg-muted/50 text-foreground border-0 text-[9px]">{f.weight} weight</Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Eco Deals */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Leaf className="w-5 h-5 text-emerald-500" /> Eco-Friendly Deals</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { title: "Direct Flights Only", savings: "Save up to $80", co2: "-45% CO2", desc: "Skip layovers, reduce emissions" },
+                { title: "Green Hotels", savings: "From $89/night", co2: "Certified", desc: "LEED certified properties with renewable energy" },
+              ].map(e => (
+                <Card key={e.title} className="border-emerald-500/20 hover:border-emerald-500/30 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-bold text-foreground">{e.title}</p>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px]">{e.co2}</Badge>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{e.desc}</p>
+                    <p className="text-xs font-bold text-emerald-600 mt-2">{e.savings}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Disclaimer */}
