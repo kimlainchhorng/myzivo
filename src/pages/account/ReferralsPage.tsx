@@ -32,28 +32,28 @@ export default function ReferralsPage() {
     switch (status) {
       case "pending":
         return (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-500">
             <Clock className="w-3 h-3" />
             Signed Up
           </span>
         );
       case "qualified":
         return (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-sky-500/20 text-sky-500">
             <Check className="w-3 h-3" />
             First Booking
           </span>
         );
       case "credited":
         return (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-500">
             <Gift className="w-3 h-3" />
             Points Earned
           </span>
         );
       case "expired":
         return (
-          <span className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-zinc-500">
+          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
             Expired
           </span>
         );
@@ -63,15 +63,15 @@ export default function ReferralsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="Referrals — ZIVO" description="Invite friends and earn rewards" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -85,7 +85,7 @@ export default function ReferralsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-primary/20 to-zinc-900 border border-primary/30 rounded-3xl p-6"
+          className="bg-gradient-to-br from-primary/20 to-card border border-primary/30 rounded-3xl p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
@@ -93,21 +93,21 @@ export default function ReferralsPage() {
             </div>
             <div>
               <p className="font-bold text-lg">Your Invite Code</p>
-              <p className="text-sm text-zinc-400">Share with friends</p>
+              <p className="text-sm text-muted-foreground">Share with friends</p>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="h-16 bg-zinc-800/50 rounded-2xl animate-pulse" />
+            <div className="h-16 bg-muted/50 rounded-2xl animate-pulse" />
           ) : (
             <>
-              <div className="bg-zinc-900/80 rounded-2xl p-4 mb-4">
+              <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 mb-4">
                 <p className="text-2xl font-mono font-bold text-center tracking-widest">
                   {referralCode?.code || "---"}
                 </p>
               </div>
 
-              <p className="text-xs text-zinc-500 mb-4 text-center truncate">
+              <p className="text-xs text-muted-foreground/60 mb-4 text-center truncate">
                 {getShareUrl()}
               </p>
 
@@ -115,14 +115,14 @@ export default function ReferralsPage() {
                 <Button
                   onClick={copyReferralLink}
                   variant="outline"
-                  className="flex-1 h-12 rounded-xl border-white/10 bg-zinc-900 hover:bg-zinc-800"
+                  className="flex-1 h-12 rounded-xl"
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   Copy Link
                 </Button>
                 <Button
                   onClick={shareReferral}
-                  className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90"
+                  className="flex-1 h-12 rounded-xl"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
@@ -137,7 +137,7 @@ export default function ReferralsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-zinc-900/80 border border-white/5 rounded-2xl p-5"
+          className="bg-card border border-border/50 rounded-2xl p-5"
         >
           <h2 className="font-bold text-lg mb-4">How It Works</h2>
           <div className="space-y-4">
@@ -147,7 +147,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <p className="font-medium">Share your link</p>
-                <p className="text-sm text-zinc-500">Send to friends & family</p>
+                <p className="text-sm text-muted-foreground">Send to friends & family</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -156,7 +156,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <p className="font-medium">They sign up</p>
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted-foreground">
                   Get {REFERRAL_REWARDS.newUser.points} ZIVO Points
                 </p>
               </div>
@@ -167,7 +167,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <p className="font-medium">They book</p>
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted-foreground">
                   You earn {REFERRAL_REWARDS.referrer.pointsPerReferral} ZIVO Points
                 </p>
               </div>
@@ -181,22 +181,22 @@ export default function ReferralsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-gradient-to-br from-amber-500/10 to-zinc-900 border border-amber-500/20 rounded-2xl p-5"
+            className="bg-gradient-to-br from-amber-500/10 to-card border border-amber-500/20 rounded-2xl p-5"
           >
             <div className="flex items-center gap-3 mb-3">
-              <Crown className="w-5 h-5 text-amber-400" />
+              <Crown className="w-5 h-5 text-amber-500" />
               <h2 className="font-bold">Your Tier: {currentTier.tier_name}</h2>
             </div>
-            <p className="text-sm text-zinc-400 mb-3">
+            <p className="text-sm text-muted-foreground mb-3">
               {referralCode?.total_referrals || 0} referrals completed
             </p>
             {nextTier && (
-              <div className="bg-zinc-900/60 rounded-xl p-3">
-                <p className="text-xs text-zinc-500">
+              <div className="bg-muted/30 rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">
                   {nextTier.min_referrals - (referralCode?.total_referrals || 0)} more to reach{" "}
-                  <span className="text-amber-400 font-medium">{nextTier.tier_name}</span>
+                  <span className="text-amber-500 font-medium">{nextTier.tier_name}</span>
                 </p>
-                <div className="mt-2 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
                     style={{
@@ -220,24 +220,24 @@ export default function ReferralsPage() {
         >
           <h2 className="font-bold text-lg mb-4">Your Referrals</h2>
           {!referrals || referrals.length === 0 ? (
-            <div className="bg-zinc-900/80 border border-white/5 rounded-2xl p-8 text-center">
-              <Users className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500">No referrals yet</p>
-              <p className="text-sm text-zinc-600 mt-1">Share your code to get started!</p>
+            <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
+              <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+              <p className="text-muted-foreground">No referrals yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Share your code to get started!</p>
             </div>
           ) : (
             <div className="space-y-3">
               {referrals.map((referral) => (
                 <div
                   key={referral.id}
-                  className="bg-zinc-900/80 border border-white/5 rounded-xl p-4 flex items-center justify-between"
+                  className="bg-card border border-border/50 rounded-xl p-4 flex items-center justify-between"
                 >
                   <div>
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-muted-foreground">
                       {format(new Date(referral.created_at), "MMM d, yyyy")}
                     </p>
                     {referral.status === "credited" && (
-                      <p className="text-xs text-emerald-400 mt-1">
+                      <p className="text-xs text-emerald-500 mt-1">
                         +{REFERRAL_REWARDS.referrer.pointsPerReferral} points
                       </p>
                     )}
@@ -250,7 +250,7 @@ export default function ReferralsPage() {
         </motion.div>
 
         {/* Terms */}
-        <div className="text-xs text-zinc-600 space-y-1">
+        <div className="text-xs text-muted-foreground/60 space-y-1">
           {REFERRAL_TERMS.map((term, i) => (
             <p key={i}>• {term}</p>
           ))}
@@ -260,7 +260,7 @@ export default function ReferralsPage() {
         <Button
           onClick={() => navigate("/account/wallet")}
           variant="outline"
-          className="w-full h-12 rounded-xl border-white/10 bg-zinc-900 hover:bg-zinc-800"
+          className="w-full h-12 rounded-xl"
         >
           <ExternalLink className="w-4 h-4 mr-2" />
           View Credit Wallet
