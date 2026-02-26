@@ -174,7 +174,7 @@ export default function FlightSearchHero({
             </Badge>
           </div>
           
-          <Badge className="mb-2 sm:mb-4 px-2.5 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-white border-0 shadow-md shadow-sky-500/30 text-[10px] sm:text-xs">
+          <Badge className="mb-2 sm:mb-4 px-2.5 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-primary-foreground border-0 shadow-md shadow-sky-500/30 text-[10px] sm:text-xs">
             <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
             ZIVO Flights
           </Badge>
@@ -232,7 +232,7 @@ export default function FlightSearchHero({
                       className={cn(
                         "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs transition-all duration-200 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 touch-manipulation active:scale-95",
                         tripType === item.type
-                          ? "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-600 text-white shadow-md shadow-sky-500/30"
+                          ? "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-600 text-primary-foreground shadow-md shadow-sky-500/30"
                           : "bg-muted/80 text-foreground/70 border border-border/60"
                       )}
                     >

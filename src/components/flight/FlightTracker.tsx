@@ -117,7 +117,7 @@ export default function FlightTracker({
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={cn("gap-1", statusConfig[currentStatus].color, "text-white border-0")}>
+            <Badge className={cn("gap-1", statusConfig[currentStatus].color, "text-primary-foreground border-0")}>
               <StatusIcon className="w-3 h-3" />
               {statusConfig[currentStatus].label}
               {currentStatus === 'delayed' && status?.delayMinutes && (

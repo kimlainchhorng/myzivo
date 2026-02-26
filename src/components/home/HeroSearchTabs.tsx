@@ -26,7 +26,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
             value="flights" 
             className={cn(
               "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
-              "data-[state=active]:bg-flights data-[state=active]:text-white data-[state=active]:shadow-lg"
+              "data-[state=active]:bg-flights data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
             )}
           >
             <Plane className="w-4 h-4" />
@@ -36,7 +36,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
             value="hotels" 
             className={cn(
               "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
-              "data-[state=active]:bg-hotels data-[state=active]:text-white data-[state=active]:shadow-lg"
+              "data-[state=active]:bg-hotels data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
             )}
           >
             <Hotel className="w-4 h-4" />
@@ -46,7 +46,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
             value="cars" 
             className={cn(
               "flex items-center gap-2 h-12 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
-              "data-[state=active]:bg-cars data-[state=active]:text-white data-[state=active]:shadow-lg"
+              "data-[state=active]:bg-cars data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
             )}
           >
             <CarFront className="w-4 h-4" />

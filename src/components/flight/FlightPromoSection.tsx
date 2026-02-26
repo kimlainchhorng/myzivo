@@ -38,7 +38,7 @@ export default function FlightPromoSection({ className, onPromoClick }: FlightPr
       icon: Flame,
       iconBg: "bg-orange-500/20",
       badge: "Ends Soon",
-      badgeColor: "bg-red-500 text-white",
+      badgeColor: "bg-red-500 text-primary-foreground",
       features: ["Business Class", "Premium Economy", "Lounge Access"],
       countdown: { hours: 47, minutes: 32 },
     },
@@ -54,7 +54,7 @@ export default function FlightPromoSection({ className, onPromoClick }: FlightPr
       icon: Crown,
       iconBg: "bg-amber-500/20",
       badge: "VIP Only",
-      badgeColor: "bg-gradient-to-r from-amber-500 to-yellow-500 text-white",
+      badgeColor: "bg-gradient-to-r from-amber-500 to-yellow-500 text-primary-foreground",
       features: ["Priority Boarding", "Seat Upgrade", "Free Baggage"],
     },
     {
@@ -69,7 +69,7 @@ export default function FlightPromoSection({ className, onPromoClick }: FlightPr
       icon: Gift,
       iconBg: "bg-sky-500/20",
       badge: "New User",
-      badgeColor: "bg-sky-500 text-white",
+      badgeColor: "bg-sky-500 text-primary-foreground",
       features: ["No Minimum", "Any Destination", "Any Airline"],
     },
     {
@@ -84,7 +84,7 @@ export default function FlightPromoSection({ className, onPromoClick }: FlightPr
       icon: Sparkles,
       iconBg: "bg-emerald-500/20",
       badge: "Popular",
-      badgeColor: "bg-emerald-500 text-white",
+      badgeColor: "bg-emerald-500 text-primary-foreground",
       features: ["Fri-Sun Travel", "Domestic Flights", "Economy Class"],
     },
   ];
@@ -163,7 +163,7 @@ export default function FlightPromoSection({ className, onPromoClick }: FlightPr
 
                 {/* Discount Badge */}
                 <div className={cn(
-                  "inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r text-white font-bold text-lg mb-4",
+                  "inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r text-primary-foreground font-bold text-lg mb-4",
                   promo.bgGradient
                 )}>
                   <Percent className="w-4 h-4" />

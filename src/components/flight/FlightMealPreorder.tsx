@@ -106,7 +106,7 @@ const FlightMealPreorder = () => {
 
                 {isSelected && (
                   <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
+                    <Check className="w-4 h-4 text-primary-foreground" />
                   </div>
                 )}
 

@@ -92,14 +92,14 @@ export default function TestimonialsSection() {
                   </p>
 
                   <div className="flex items-center justify-center gap-3">
-                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white", accentColor)}>
+                    <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground", accentColor)}>
                       {t.avatar}
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-sm">{t.name}</p>
                       <div className="flex items-center gap-2">
                         <p className="text-xs text-muted-foreground">{t.location}</p>
-                        <span className={cn("inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full text-white", accentColor)}>
+                        <span className={cn("inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full text-primary-foreground", accentColor)}>
                           {t.service}
                         </span>
                       </div>

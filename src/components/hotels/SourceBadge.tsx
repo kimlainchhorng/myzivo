@@ -55,7 +55,7 @@ export function BestPriceBadge({ className, size = "default" }: BestPriceBadgePr
         size === "sm" ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-1",
         "border-0",
         // Using semantic success colors from design system
-        "bg-hotels text-white hover:bg-hotels/90",
+        "bg-hotels text-primary-foreground hover:bg-hotels/90",
         className
       )}
     >

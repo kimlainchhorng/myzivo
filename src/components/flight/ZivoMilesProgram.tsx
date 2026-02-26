@@ -196,10 +196,10 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                 ZIVO Miles
                 <Badge className={cn(
                   "border-0",
-                  currentTier.name === 'Gold' && "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
+                  currentTier.name === 'Gold' && "bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground",
                   currentTier.name === 'Silver' && "bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-primary-foreground",
-                  currentTier.name === 'Platinum' && "bg-gradient-to-r from-cyan-400 to-blue-500 text-white",
-                  currentTier.name === 'Bronze' && "bg-gradient-to-r from-orange-400 to-amber-500 text-white"
+                  currentTier.name === 'Platinum' && "bg-gradient-to-r from-cyan-400 to-blue-500 text-primary-foreground",
+                  currentTier.name === 'Bronze' && "bg-gradient-to-r from-orange-400 to-amber-500 text-primary-foreground"
                 )}>
                   <currentTier.icon className="w-3 h-3 mr-1" />
                   {currentTier.name} Member
@@ -433,12 +433,12 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                   )}
                 >
                   {option.popular && (
-                    <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white">
+                    <Badge className="absolute -top-2 -right-2 bg-amber-500 text-primary-foreground">
                       Popular
                     </Badge>
                   )}
                   {option.limited && (
-                    <Badge className="absolute -top-2 -right-2 bg-rose-500 text-white animate-pulse">
+                    <Badge className="absolute -top-2 -right-2 bg-rose-500 text-primary-foreground animate-pulse">
                       Limited: {option.stock} left
                     </Badge>
                   )}

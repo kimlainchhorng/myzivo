@@ -55,7 +55,7 @@ const LoyaltyTierWidget = ({
           <Crown className="w-4 h-4 text-amber-400" />
           <h3 className="font-semibold text-sm">Loyalty Status</h3>
         </div>
-        <Badge className={cn("bg-gradient-to-r text-white border-0", currentTier.color)}>
+        <Badge className={cn("bg-gradient-to-r text-primary-foreground border-0", currentTier.color)}>
           {currentTier.name}
         </Badge>
       </div>

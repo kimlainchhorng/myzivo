@@ -135,7 +135,7 @@ const UserTestimonials = () => {
           </div>
 
           {/* Highlight Badge */}
-          <Badge className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+          <Badge className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground border-0">
             {testimonials[activeIndex].highlight}
           </Badge>
         </div>

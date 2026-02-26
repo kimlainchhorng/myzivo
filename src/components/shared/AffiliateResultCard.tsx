@@ -108,9 +108,9 @@ const serviceColors = {
 };
 
 const badgeVariants = {
-  hot: 'bg-gradient-to-r from-red-500 to-orange-500 text-white',
-  deal: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
-  popular: 'bg-gradient-to-r from-sky-500 to-blue-500 text-white',
+  hot: 'bg-gradient-to-r from-red-500 to-orange-500 text-primary-foreground',
+  deal: 'bg-gradient-to-r from-emerald-500 to-green-500 text-primary-foreground',
+  popular: 'bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground',
   verified: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30',
   new: 'bg-violet-500/20 text-violet-500 border-violet-500/30',
 };
@@ -302,7 +302,7 @@ export default function AffiliateResultCard(props: AffiliateResultCardProps) {
                         <span className="text-sm text-muted-foreground line-through">
                           ${originalPrice}
                         </span>
-                        <Badge className="bg-emerald-500 text-white text-[10px]">
+                        <Badge className="bg-emerald-500 text-primary-foreground text-[10px]">
                           -{discountPercent}%
                         </Badge>
                       </>
