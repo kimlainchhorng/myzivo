@@ -85,7 +85,7 @@ export default function FeaturedHotelsSection() {
                     <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
                   </button>
                   {hotel.freeCancellation && (
-                    <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/90 text-white shadow-sm">
+                    <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/90 text-primary-foreground shadow-sm">
                       Free Cancellation
                     </span>
                   )}

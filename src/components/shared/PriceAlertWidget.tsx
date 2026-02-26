@@ -121,7 +121,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
           </div>
           <div className="flex items-center gap-2">
             {readyToBuy.length > 0 && (
-              <Badge className="bg-emerald-500 text-white animate-pulse">
+              <Badge className="bg-emerald-500 text-primary-foreground animate-pulse">
                 <BellRing className="w-3 h-3 mr-1" />
                 {readyToBuy.length} ready!
               </Badge>
@@ -164,7 +164,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-sm truncate">{alert.route}</p>
                     {isReady && (
-                      <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                      <Badge className="bg-emerald-500 text-primary-foreground text-[10px] px-1.5 py-0">
                         <Check className="w-3 h-3 mr-0.5" />
                         Target hit!
                       </Badge>

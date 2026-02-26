@@ -52,7 +52,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
               loading="lazy"
             />
             {hotel.freeCancellation && (
-              <Badge className="absolute top-2 left-2 bg-emerald-500/90 text-white text-xs">
+              <Badge className="absolute top-2 left-2 bg-emerald-500/90 text-primary-foreground text-xs">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Free Cancellation
               </Badge>
@@ -125,7 +125,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
               </div>
               <Button 
                 onClick={() => onViewDeal(hotel)}
-                className="bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-md shadow-hotels/20"
+                className="bg-hotels hover:bg-hotels/90 text-primary-foreground font-semibold gap-2 rounded-xl min-h-[44px] touch-manipulation active:scale-[0.97] transition-all duration-200 shadow-md shadow-hotels/20"
               >
                 Book with Provider
                 <ExternalLink className="w-4 h-4" />

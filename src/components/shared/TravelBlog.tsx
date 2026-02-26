@@ -79,7 +79,7 @@ const TravelBlog = () => {
               <div className={`relative ${index === 0 ? "aspect-video" : "aspect-square"} bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center`}>
                 <post.icon className={`${index === 0 ? "w-16 h-16" : "w-10 h-10"} ${post.iconColor}`} />
                 {post.featured && (
-                  <Badge className="absolute top-3 left-3 bg-orange-500 text-white border-0">
+                  <Badge className="absolute top-3 left-3 bg-orange-500 text-primary-foreground border-0">
                     Featured
                   </Badge>
                 )}

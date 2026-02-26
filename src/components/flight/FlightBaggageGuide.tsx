@@ -73,7 +73,7 @@ const FlightBaggageGuide = () => {
                   "w-14 h-14 rounded-2xl flex items-center justify-center mb-4",
                   "bg-gradient-to-br", bag.color
                 )}>
-                  <Icon className="w-7 h-7 text-white" />
+                  <Icon className="w-7 h-7 text-primary-foreground" />
                 </div>
 
                 <h3 className="font-bold text-lg mb-3">{bag.type}</h3>
