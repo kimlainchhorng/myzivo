@@ -63,7 +63,7 @@ const RewardsProgress = ({
             <div className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30 mb-6">
               <div className="flex items-center gap-4 mb-4">
               <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentTier.color} flex items-center justify-center`}>
-                  <currentTier.Icon className="w-8 h-8 text-white" />
+                  <currentTier.Icon className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Current Status</p>
@@ -100,7 +100,7 @@ const RewardsProgress = ({
                         : "bg-muted/50"
                     )}
                   >
-                    <tier.Icon className={cn("w-5 h-5", currentPoints >= tier.points ? "text-white" : "text-muted-foreground")} />
+                    <tier.Icon className={cn("w-5 h-5", currentPoints >= tier.points ? "text-primary-foreground" : "text-muted-foreground")} />
                   </div>
                   <p className={cn(
                     "text-xs font-medium",

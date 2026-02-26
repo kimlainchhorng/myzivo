@@ -87,7 +87,7 @@ const AirportTransferBridge = ({
               Pre-book your ride to {destination}
             </p>
           </div>
-          <Badge className="bg-gradient-to-r from-sky-500 to-blue-500 text-white">
+          <Badge className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground">
             <Shield className="w-3 h-3 mr-1" />
             Meet & Greet
           </Badge>

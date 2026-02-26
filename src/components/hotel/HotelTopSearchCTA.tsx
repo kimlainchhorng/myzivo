@@ -91,7 +91,7 @@ export default function HotelTopSearchCTA({
         <div className="flex flex-col items-end gap-2 shrink-0">
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation active:scale-[0.98]"
+            className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-primary-foreground shadow-lg shadow-amber-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation active:scale-[0.98]"
             onClick={handleSearchClick}
           >
             <Search className="w-4 h-4" />

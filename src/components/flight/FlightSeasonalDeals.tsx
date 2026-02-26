@@ -95,7 +95,7 @@ const FlightSeasonalDeals = () => {
                 ))}
               </div>
 
-              <Button variant="outline" className="w-full group-hover:bg-sky-500 group-hover:text-white transition-colors" size="sm">
+              <Button variant="outline" className="w-full group-hover:bg-sky-500 group-hover:text-primary-foreground transition-colors" size="sm">
                 Explore <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
