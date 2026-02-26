@@ -74,7 +74,7 @@ export default function PartnerWithZivo() {
         {/* Hero */}
         <section className="text-center">
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/30">
-            <Handshake className="h-10 w-10 text-white" />
+            <Handshake className="h-10 w-10 text-primary-foreground" />
           </div>
           <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">
             Become a ZIVO Partner
@@ -95,7 +95,7 @@ export default function PartnerWithZivo() {
               <Card key={type.title} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                 <CardContent className="p-6 text-center">
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
-                    <type.icon className="h-7 w-7 text-white" />
+                    <type.icon className="h-7 w-7 text-primary-foreground" />
                   </div>
                   <h4 className="font-bold text-lg mb-2">{type.title}</h4>
                   <p className="text-sm text-muted-foreground">{type.description}</p>
@@ -199,7 +199,7 @@ export default function PartnerWithZivo() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-teal-400 text-white h-12"
+                  className="w-full bg-gradient-to-r from-primary to-teal-400 text-primary-foreground h-12"
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Submit Partnership Inquiry

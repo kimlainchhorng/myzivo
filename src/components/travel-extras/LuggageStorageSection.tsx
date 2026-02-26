@@ -53,7 +53,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
             onClick={handleClick}
           >
             {/* Top Banner */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 flex items-center justify-center gap-2 text-sm">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground py-2 px-4 flex items-center justify-center gap-2 text-sm">
               <Luggage className="w-4 h-4" />
               <span className="font-medium">Travel Extras • Luggage Storage</span>
             </div>
@@ -88,7 +88,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
                   
                   <Button 
                     size="lg"
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 shadow-md shadow-purple-500/20"
+                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 shadow-md shadow-purple-500/20"
                   >
                     <Luggage className="w-5 h-5" />
                     Find Storage Near You

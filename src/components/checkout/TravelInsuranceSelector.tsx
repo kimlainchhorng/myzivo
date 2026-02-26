@@ -71,7 +71,7 @@ export function TravelInsuranceSelector({
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm">{plan.name}</span>
                   {plan.badge && (
-                    <Badge className="bg-sky-500 hover:bg-sky-500 text-white text-[10px] px-1.5 py-0">
+                    <Badge className="bg-sky-500 hover:bg-sky-500 text-primary-foreground text-[10px] px-1.5 py-0">
                       Recommended
                     </Badge>
                   )}
