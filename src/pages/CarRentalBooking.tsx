@@ -146,6 +146,55 @@ const CarRentalBooking = () => {
   const [showCarReviews, setShowCarReviews] = useState(false);
   const [showInsuranceComparison, setShowInsuranceComparison] = useState(false);
 
+  // === WAVE 4: Road Trip Intelligence ===
+  const [showFuelCalc, setShowFuelCalc] = useState(false);
+  const [showTollEstimator, setShowTollEstimator] = useState(false);
+  const [showParkingFinder, setShowParkingFinder] = useState(false);
+  const [showRoadTripPlanner, setShowRoadTripPlanner] = useState(false);
+  const [showVehicleCompare, setShowVehicleCompare] = useState(false);
+  const [showRentalTips, setShowRentalTips] = useState(false);
+
+  // Fuel cost calculator
+  const fuelEstimates = [
+    { carType: "Economy (32 mpg)", distance: 300, gallons: 9.4, cost: "$33", fuelType: "Regular" },
+    { carType: "Midsize (28 mpg)", distance: 300, gallons: 10.7, cost: "$38", fuelType: "Regular" },
+    { carType: "SUV (22 mpg)", distance: 300, gallons: 13.6, cost: "$48", fuelType: "Regular" },
+    { carType: "EV (3.5 mi/kWh)", distance: 300, gallons: 0, cost: "$12", fuelType: "Electric" },
+  ];
+
+  // Toll estimator
+  const tollEstimates = [
+    { route: "NYC → Boston", tolls: "$18.50", ezPass: "$13.20", bridges: 1, tunnels: 0 },
+    { route: "LA → San Diego", tolls: "$6.00", ezPass: "$4.50", bridges: 0, tunnels: 0 },
+    { route: "Chicago → Detroit", tolls: "$12.00", ezPass: "$8.80", bridges: 1, tunnels: 0 },
+    { route: "Miami → Orlando", tolls: "$22.00", ezPass: "$16.50", bridges: 0, tunnels: 0 },
+  ];
+
+  // Parking finder
+  const parkingOptions = [
+    { location: "Airport Terminal Lot", rate: "$18/day", type: "Covered", distance: "0 min walk", reservable: true },
+    { location: "Economy Lot A", rate: "$8/day", type: "Open air", distance: "5 min shuttle", reservable: true },
+    { location: "Off-site Park N Fly", rate: "$6/day", type: "Covered", distance: "8 min shuttle", reservable: true },
+    { location: "Hotel valet", rate: "$25/day", type: "Valet", distance: "At lobby", reservable: false },
+  ];
+
+  // Road trip planner
+  const roadTripStops = [
+    { stop: "Rest stop", interval: "Every 2 hrs", amenities: ["Restrooms", "Gas", "Snacks"], tip: "Stretch for 10 min" },
+    { stop: "Scenic overlook", interval: "Route-dependent", amenities: ["Photo ops", "Walking trails"], tip: "Check sunrise/sunset timing" },
+    { stop: "EV charging", interval: "Every 150 mi", amenities: ["Fast charge (30 min)", "Nearby dining"], tip: "Plan stops with PlugShare app" },
+  ];
+
+  // Rental tips
+  const rentalTips = [
+    { tip: "Book 3-6 weeks ahead for best rates", icon: "📅", category: "Timing" },
+    { tip: "Always photograph the car before driving off", icon: "📸", category: "Protection" },
+    { tip: "Check credit card for included rental insurance", icon: "💳", category: "Savings" },
+    { tip: "Return with full tank to avoid $9+/gal refuel fees", icon: "⛽", category: "Savings" },
+    { tip: "Decline GPS — use your phone instead", icon: "📱", category: "Savings" },
+    { tip: "Book at off-airport locations to save 20-30%", icon: "📍", category: "Savings" },
+  ];
+
   // Damage inspection checklist
   const inspectionItems = [
     { id: "exterior", label: "Exterior body", icon: "🚗", checked: false },
@@ -735,6 +784,95 @@ const CarRentalBooking = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* === WAVE 4: Road Trip Intelligence === */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-4xl space-y-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">🚗 Road Trip Intelligence</h2>
+
+            {/* Fuel Calculator */}
+            <button onClick={() => setShowFuelCalc(!showFuelCalc)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Fuel className="w-4 h-4 text-amber-500" /> Fuel Cost Estimator
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showFuelCalc && "rotate-90")} />
+            </button>
+            {showFuelCalc && (
+              <div className="space-y-2 pt-2">
+                {fuelEstimates.map(f => (
+                  <div key={f.carType} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{f.carType}</p><p className="text-[10px] text-muted-foreground">{f.distance} mi · {f.fuelType}</p></div>
+                    <span className="text-sm font-bold text-emerald-500">{f.cost}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Toll Estimator */}
+            <button onClick={() => setShowTollEstimator(!showTollEstimator)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <DollarSign className="w-4 h-4 text-sky-500" /> Toll Estimates
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showTollEstimator && "rotate-90")} />
+            </button>
+            {showTollEstimator && (
+              <div className="space-y-2 pt-2">
+                {tollEstimates.map(t => (
+                  <div key={t.route} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{t.route}</p><p className="text-[10px] text-muted-foreground">{t.bridges} bridge(s) · EZ-Pass: {t.ezPass}</p></div>
+                    <span className="text-sm font-bold text-foreground">{t.tolls}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Parking Finder */}
+            <button onClick={() => setShowParkingFinder(!showParkingFinder)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <MapPin className="w-4 h-4 text-violet-500" /> Airport Parking Options
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showParkingFinder && "rotate-90")} />
+            </button>
+            {showParkingFinder && (
+              <div className="space-y-2 pt-2">
+                {parkingOptions.map(p => (
+                  <div key={p.location} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{p.location}</p><p className="text-[10px] text-muted-foreground">{p.type} · {p.distance}</p></div>
+                    <div className="text-right"><p className="text-sm font-bold text-foreground">{p.rate}</p>{p.reservable && <p className="text-[9px] text-emerald-500">Reservable</p>}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Road Trip Stops */}
+            <button onClick={() => setShowRoadTripPlanner(!showRoadTripPlanner)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Car className="w-4 h-4 text-emerald-500" /> Road Trip Stop Guide
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showRoadTripPlanner && "rotate-90")} />
+            </button>
+            {showRoadTripPlanner && (
+              <div className="space-y-2 pt-2">
+                {roadTripStops.map(s => (
+                  <div key={s.stop} className="rounded-xl bg-card border border-border/40 p-4">
+                    <p className="text-xs font-bold text-foreground">{s.stop} <span className="text-muted-foreground font-normal">({s.interval})</span></p>
+                    <div className="flex flex-wrap gap-1 mt-2">{s.amenities.map(a => <span key={a} className="px-2 py-0.5 rounded-full bg-muted/50 text-[10px] text-muted-foreground">{a}</span>)}</div>
+                    <p className="text-xs text-amber-500 mt-2">💡 {s.tip}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Rental Tips */}
+            <button onClick={() => setShowRentalTips(!showRentalTips)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Award className="w-4 h-4 text-amber-500" /> Pro Rental Tips
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[10px] ml-auto">Expert</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showRentalTips && "rotate-90")} />
+            </button>
+            {showRentalTips && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                {rentalTips.map(t => (
+                  <div key={t.tip} className="flex items-start gap-2 p-3 rounded-xl bg-card border border-border/40">
+                    <span className="text-lg">{t.icon}</span>
+                    <div><p className="text-xs text-foreground">{t.tip}</p><p className="text-[10px] text-emerald-500 font-bold">{t.category}</p></div>
                   </div>
                 ))}
               </div>

@@ -166,8 +166,62 @@ export default function HotelsPage() {
   const [showSustainability, setShowSustainability] = useState(false);
   const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [showRoomComparison, setShowRoomComparison] = useState(false);
-  const [showVirtualTour, setShowVirtualTour] = useState(false);
+   const [showVirtualTour, setShowVirtualTour] = useState(false);
   const [showWishlistShare, setShowWishlistShare] = useState(false);
+
+  // === WAVE 4: Guest Intelligence ===
+  const [showAccessibility, setShowAccessibility] = useState(false);
+  const [showLocalEvents, setShowLocalEvents] = useState(false);
+  const [showDiningGuide, setShowDiningGuide] = useState(false);
+  const [showCheckInGuide, setShowCheckInGuide] = useState(false);
+  const [showPetPolicy, setShowPetPolicy] = useState(false);
+  const [showLateCheckout, setShowLateCheckout] = useState(false);
+
+  // Accessibility features
+  const accessibilityFeatures = [
+    { feature: "Wheelchair accessible rooms", available: true, icon: "♿" },
+    { feature: "Roll-in shower", available: true, icon: "🚿" },
+    { feature: "Visual alarm", available: true, icon: "🔔" },
+    { feature: "Braille signage", available: true, icon: "📋" },
+    { feature: "Service animal friendly", available: true, icon: "🐕" },
+    { feature: "Elevator access", available: true, icon: "🛗" },
+  ];
+
+  // Local events
+  const localEvents = [
+    { name: "Jazz in the Park", date: "Mar 8", distance: "0.3 mi", price: "Free", category: "Music" },
+    { name: "Food & Wine Festival", date: "Mar 10-12", distance: "1.2 mi", price: "$45", category: "Food" },
+    { name: "Art Walk Downtown", date: "Mar 15", distance: "0.5 mi", price: "Free", category: "Art" },
+    { name: "Comedy Night Live", date: "Mar 9", distance: "0.8 mi", price: "$25", category: "Entertainment" },
+  ];
+
+  // Dining guide
+  const nearbyDining = [
+    { name: "Le Petit Bistro", cuisine: "French", distance: "0.2 mi", rating: 4.8, priceRange: "$$$", reservation: true },
+    { name: "Sakura House", cuisine: "Japanese", distance: "0.4 mi", rating: 4.6, priceRange: "$$", reservation: false },
+    { name: "The Rooftop Bar", cuisine: "Cocktails & Tapas", distance: "In hotel", rating: 4.9, priceRange: "$$$", reservation: true },
+    { name: "Corner Deli", cuisine: "American", distance: "0.1 mi", rating: 4.3, priceRange: "$", reservation: false },
+  ];
+
+  // Check-in guide
+  const checkInInfo = {
+    standardCheckIn: "3:00 PM",
+    earlyCheckIn: "Available from 12:00 PM (+$30)",
+    lateCheckOut: "Until 2:00 PM (+$25)",
+    expressCheckIn: "Mobile key available",
+    documents: ["Valid photo ID", "Credit card on file", "Booking confirmation"],
+    parking: "$35/night valet, $25/night self-park",
+  };
+
+  // Pet policy
+  const petPolicy = {
+    allowed: true,
+    fee: "$50/night",
+    maxWeight: "50 lbs",
+    maxPets: 2,
+    amenities: ["Pet bed", "Water bowl", "Treats at check-in", "Dog walking service ($25)", "Nearby dog park (0.3 mi)"],
+    restrictions: "Must be leashed in common areas",
+  };
 
   // Neighborhood guides (Airbnb)
   const neighborhoods = [
@@ -642,6 +696,98 @@ export default function HotelsPage() {
               <div className="flex items-center gap-2 text-muted-foreground"><CheckCircle className="w-4 h-4 text-hotels" /><span className="text-sm">Secure booking on partner sites</span></div>
               <div className="flex items-center gap-2 text-muted-foreground"><span className="text-sm">Support: info@hizivo.com</span></div>
             </div>
+          </div>
+        </section>
+
+        {/* === WAVE 4: Guest Intelligence === */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-4xl space-y-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">🏨 Guest Intelligence</h2>
+
+            {/* Accessibility */}
+            <button onClick={() => setShowAccessibility(!showAccessibility)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <span>♿</span> Accessibility Features
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showAccessibility && "rotate-90")} />
+            </button>
+            {showAccessibility && (
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                {accessibilityFeatures.map(f => (
+                  <div key={f.feature} className="flex items-center gap-2 p-3 rounded-xl bg-card border border-border/40">
+                    <span>{f.icon}</span>
+                    <span className="text-xs text-foreground">{f.feature}</span>
+                    <CheckCircle className="w-3 h-3 text-emerald-500 ml-auto" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Local Events */}
+            <button onClick={() => setShowLocalEvents(!showLocalEvents)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <CalendarDays className="w-4 h-4 text-violet-500" /> Events Near Your Stay
+              <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[10px] ml-auto">Live</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showLocalEvents && "rotate-90")} />
+            </button>
+            {showLocalEvents && (
+              <div className="space-y-2 pt-2">
+                {localEvents.map(e => (
+                  <div key={e.name} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{e.name}</p><p className="text-[10px] text-muted-foreground">{e.date} · {e.distance} · {e.category}</p></div>
+                    <span className="text-xs font-bold text-primary">{e.price}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Dining Guide */}
+            <button onClick={() => setShowDiningGuide(!showDiningGuide)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <span>🍽️</span> Nearby Dining
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showDiningGuide && "rotate-90")} />
+            </button>
+            {showDiningGuide && (
+              <div className="space-y-2 pt-2">
+                {nearbyDining.map(d => (
+                  <div key={d.name} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                    <div className="flex-1"><p className="text-xs font-bold text-foreground">{d.name}</p><p className="text-[10px] text-muted-foreground">{d.cuisine} · {d.distance} · {d.priceRange}</p></div>
+                    <div className="text-right"><p className="text-xs font-bold text-amber-500">★ {d.rating}</p>{d.reservation && <p className="text-[9px] text-emerald-500">Reservable</p>}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Check-in Guide */}
+            <button onClick={() => setShowCheckInGuide(!showCheckInGuide)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Clock className="w-4 h-4 text-sky-500" /> Check-in & Parking Guide
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showCheckInGuide && "rotate-90")} />
+            </button>
+            {showCheckInGuide && (
+              <div className="rounded-xl bg-card border border-border/40 p-4 space-y-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div><span className="text-muted-foreground">Check-in:</span> <b className="text-foreground">{checkInInfo.standardCheckIn}</b></div>
+                  <div><span className="text-muted-foreground">Early:</span> <b className="text-foreground">{checkInInfo.earlyCheckIn}</b></div>
+                  <div><span className="text-muted-foreground">Late out:</span> <b className="text-foreground">{checkInInfo.lateCheckOut}</b></div>
+                  <div><span className="text-muted-foreground">Express:</span> <b className="text-emerald-500">{checkInInfo.expressCheckIn}</b></div>
+                </div>
+                <p className="text-xs text-muted-foreground">🅿️ {checkInInfo.parking}</p>
+                <div className="text-xs text-muted-foreground"><b>Required:</b> {checkInInfo.documents.join(", ")}</div>
+              </div>
+            )}
+
+            {/* Pet Policy */}
+            <button onClick={() => setShowPetPolicy(!showPetPolicy)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <span>🐾</span> Pet Policy
+              {petPolicy.allowed && <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[10px] ml-auto">Pet Friendly</Badge>}
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showPetPolicy && "rotate-90")} />
+            </button>
+            {showPetPolicy && (
+              <div className="rounded-xl bg-card border border-emerald-500/20 p-4 space-y-2">
+                <div className="grid grid-cols-3 gap-2 text-xs text-center">
+                  <div><p className="font-bold text-foreground">{petPolicy.fee}</p><p className="text-muted-foreground">Per night</p></div>
+                  <div><p className="font-bold text-foreground">{petPolicy.maxWeight}</p><p className="text-muted-foreground">Max weight</p></div>
+                  <div><p className="font-bold text-foreground">{petPolicy.maxPets}</p><p className="text-muted-foreground">Max pets</p></div>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">{petPolicy.amenities.map(a => <span key={a} className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px]">{a}</span>)}</div>
+              </div>
+            )}
           </div>
         </section>
 
