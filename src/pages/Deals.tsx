@@ -425,6 +425,63 @@ export default function Deals() {
           </div>
         </section>
 
+        {/* === WAVE 11: Rich Deals Content === */}
+
+        {/* Deal Comparison Table */}
+        <section className="container mx-auto px-4 mt-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Percent className="w-5 h-5 text-primary" /> Deal Type Comparison</h2>
+            <Card className="border-border/40 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-4 text-[10px] font-bold text-muted-foreground border-b border-border/30 p-3">
+                  <span>Deal Type</span><span>Avg Savings</span><span>Availability</span><span>Best For</span>
+                </div>
+                {[
+                  { type: "Flash Sales", savings: "30-50%", avail: "2-6 hours", best: "Flexible travelers" },
+                  { type: "Early Bird", savings: "15-25%", avail: "60+ days out", best: "Planners" },
+                  { type: "Last Minute", savings: "20-40%", avail: "< 7 days", best: "Spontaneous trips" },
+                  { type: "Bundle Deals", savings: "18-30%", avail: "Always", best: "Multi-service bookings" },
+                  { type: "Member Exclusive", savings: "10-20%", avail: "ZIVO Plus only", best: "Frequent travelers" },
+                ].map(r => (
+                  <div key={r.type} className="grid grid-cols-4 text-xs p-3 border-b border-border/20 hover:bg-muted/30 transition-colors">
+                    <span className="font-bold">{r.type}</span>
+                    <span className="text-emerald-500 font-bold">{r.savings}</span>
+                    <span className="text-muted-foreground">{r.avail}</span>
+                    <span className="text-muted-foreground">{r.best}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Recently Claimed */}
+        <section className="container mx-auto px-4 mt-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500" /> Recently Claimed</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { user: "Jason M.", deal: "NYC → Miami flight", saved: "$142", time: "2 min ago" },
+                { user: "Priya K.", deal: "Hilton Barcelona 4 nights", saved: "$230", time: "5 min ago" },
+                { user: "Alex T.", deal: "BMW rental in LA", saved: "$95", time: "8 min ago" },
+                { user: "Maria S.", deal: "London hotel + flight bundle", saved: "$310", time: "12 min ago" },
+              ].map(c => (
+                <Card key={c.user} className="border-border/40 hover:border-primary/20 transition-all">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {c.user.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate"><span className="text-primary">{c.user}</span> claimed {c.deal}</p>
+                      <p className="text-[10px] text-muted-foreground">Saved {c.saved} • {c.time}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Disclaimer */}
         <section className="container mx-auto px-4 mt-12">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">

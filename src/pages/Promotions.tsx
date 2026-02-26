@@ -491,6 +491,74 @@ const Promotions = () => {
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* === WAVE 11: Rich Promotions Content === */}
+
+        {/* Seasonal Campaigns */}
+        <div className="mt-10 mb-8">
+          <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-eats" />
+            Seasonal Campaigns
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { name: "Spring Break Deals", period: "Mar 1 – Apr 15", discount: "Up to 35% off", desc: "Flights & hotels to top beach destinations", emoji: "🌴", gradient: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20" },
+              { name: "Summer Sale", period: "Jun 1 – Aug 31", discount: "Up to 40% off", desc: "Early bird Europe & Asia packages", emoji: "☀️", gradient: "from-amber-500/10 to-orange-500/10 border-amber-500/20" },
+              { name: "Holiday Special", period: "Nov 15 – Jan 5", discount: "Up to 50% off", desc: "Year-end travel extravaganza", emoji: "🎄", gradient: "from-destructive/10 to-rose-500/10 border-destructive/20" },
+            ].map(c => (
+              <Card key={c.name} className={`border ${c.gradient} hover:shadow-lg transition-all`}>
+                <CardContent className="p-5">
+                  <span className="text-2xl">{c.emoji}</span>
+                  <h4 className="font-bold text-sm mt-2">{c.name}</h4>
+                  <p className="text-[10px] text-muted-foreground">{c.period}</p>
+                  <p className="text-sm font-bold text-primary mt-2">{c.discount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{c.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Savings Milestones */}
+        <Card className="mb-8 border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
+          <CardContent className="p-6">
+            <h3 className="font-bold text-lg mb-4 text-center">Your Savings Milestones</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+              {[
+                { milestone: "$50 Saved", status: "Unlocked", emoji: "🥉", unlocked: true },
+                { milestone: "$200 Saved", status: "Unlocked", emoji: "🥈", unlocked: true },
+                { milestone: "$500 Saved", status: "$320 to go", emoji: "🥇", unlocked: false },
+                { milestone: "$1,000 Saved", status: "$820 to go", emoji: "💎", unlocked: false },
+              ].map(m => (
+                <div key={m.milestone} className={`p-4 rounded-xl border ${m.unlocked ? "border-primary/20 bg-primary/5" : "border-border/50 bg-muted/20 opacity-60"}`}>
+                  <span className="text-2xl">{m.emoji}</span>
+                  <p className="text-xs font-bold mt-2">{m.milestone}</p>
+                  <p className="text-[10px] text-muted-foreground">{m.status}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Promo Tips */}
+        <div className="mb-8">
+          <h3 className="font-display font-bold text-lg mb-4 text-center">💡 Pro Tips to Save More</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {[
+              { tip: "Stack promo codes with loyalty points for maximum discounts", icon: "🔥" },
+              { tip: "Book on Tuesdays for the cheapest flight prices on average", icon: "📅" },
+              { tip: "Refer 5 friends to unlock the Gold referral tier ($25/referral)", icon: "👥" },
+              { tip: "Enable deal alerts to get notified of flash sales instantly", icon: "🔔" },
+            ].map(t => (
+              <Card key={t.tip} className="border-border/50 hover:border-primary/20 transition-all">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <span className="text-lg">{t.icon}</span>
+                  <p className="text-sm text-muted-foreground">{t.tip}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   );
