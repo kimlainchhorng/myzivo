@@ -96,7 +96,7 @@ export default function ServicesShowcase() {
                 {/* Background image */}
                 <img
                   src={service.image}
-                  alt={service.title}
+                  alt={`${service.title} — ${service.description}`}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   loading="lazy"
                 />
@@ -136,7 +136,7 @@ export default function ServicesShowcase() {
                       <p className="text-sm text-muted-foreground">{service.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300" style={{ color: `hsl(var(${service.accentVar}))` }}>
+                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300" style={{ color: `hsl(var(${service.accentVar}))` }}>
                     Explore <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
