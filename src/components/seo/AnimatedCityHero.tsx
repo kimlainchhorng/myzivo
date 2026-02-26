@@ -1,7 +1,7 @@
  import { motion, type Variants } from "framer-motion";
 import { Shield, Clock, Globe, Plane, Hotel, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { destinationPhotos, DestinationCity } from "@/config/photos";
+import { destinationPhotos, wideCityHeroPhotos, DestinationCity } from "@/config/photos";
 import cityHeroGlassSunset from "@/assets/city-hero-glass-sunset.jpg";
 
 /**
@@ -74,11 +74,11 @@ export default function AnimatedCityHero({
   // Get the current year + 1 for forward-looking SEO
   const dynamicYear = new Date().getFullYear() + 1;
   
-  // Get city photo from existing photo system
+  // Prefer wide 16:9 hero, fall back to square destination photo, then generic
+  const wideHero = wideCityHeroPhotos[citySlug as DestinationCity];
   const cityPhoto = destinationPhotos[citySlug as DestinationCity];
-  // Fallback to premium glass-sunset image if city-specific photo unavailable
-  const heroSrc = cityPhoto?.src || cityHeroGlassSunset;
-  const heroAlt = cityPhoto?.alt || `Modern ${city} cityscape at sunset`;
+  const heroSrc = wideHero?.src || cityPhoto?.src || cityHeroGlassSunset;
+  const heroAlt = wideHero?.alt || cityPhoto?.alt || `Modern ${city} cityscape at sunset`;
 
   // Default subtitle based on service type
   const defaultSubtitle = `Book the best ${config.tagline} in ${city} via ZIVO.`;
@@ -108,7 +108,7 @@ export default function AnimatedCityHero({
       )}
       
       {/* Gradient Overlay for text legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-slate-950/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-background/30" />
 
       {/* Content */}
       <div className="relative z-10 w-full p-8 sm:p-12">
