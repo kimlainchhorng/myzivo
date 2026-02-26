@@ -72,6 +72,11 @@ const tipOptions = [
   { id: "custom", label: "Custom", amount: 0 },
 ];
 
+const savedPlaces = [
+  { id: "home", label: "Home", icon: "🏠", address: "" },
+  { id: "work", label: "Work", icon: "💼", address: "" },
+];
+
 // Inner payment form using Stripe Elements
 function PaymentForm({ 
   onSuccess, isProcessing, setIsProcessing, totalCents,
@@ -120,7 +125,7 @@ function PaymentForm({
 }
 
 // Step progress indicator
-function RideStepIndicator({ currentStep }: { currentStep: "address" | "pricing" | "payment" }) {
+function RideStepIndicator({ currentStep }: { currentStep: "address" | "pricing" | "payment" | "finding" }) {
   const steps = [
     { id: "address", label: "Route", icon: MapPin },
     { id: "pricing", label: "Price", icon: DollarSign },
@@ -181,13 +186,15 @@ export default function RequestRidePage() {
   const [selectedTip, setSelectedTip] = useState("none");
   const [customTip, setCustomTip] = useState("");
 
-  const [step, setStep] = useState<"address" | "pricing" | "payment">("address");
+  const [step, setStep] = useState<"address" | "pricing" | "payment" | "finding">("address");
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [draftJobId, setDraftJobId] = useState<string | null>(null);
   const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState("");
 
   const togglePreference = (id: string) => {
     setSelectedPreferences(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
@@ -297,17 +304,20 @@ export default function RequestRidePage() {
 
   const handlePaymentSuccess = async () => {
     if (!draftJobId) return;
+    setStep("finding");
     try {
       const { error: updateError } = await supabase.from("jobs").update({ status: "requested" } as any).eq("id", draftJobId);
       if (updateError) console.error("[RequestRide] status update error:", updateError);
       const { error: dispatchError } = await supabase.functions.invoke("dispatch-start", { body: { job_id: draftJobId, offer_ttl_seconds: 25 } });
       if (dispatchError) console.error("[RequestRide] dispatch-start error:", dispatchError);
-      navigate(`/trip-status/${draftJobId}`);
-    } catch { navigate(`/trip-status/${draftJobId}`); }
+      // Auto-navigate after showing finding animation
+      setTimeout(() => navigate(`/trip-status/${draftJobId}`), 3000);
+    } catch { setTimeout(() => navigate(`/trip-status/${draftJobId}`), 2000); }
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
   const handleBack = () => {
+    if (step === "finding") return; // Can't go back during driver search
     if (step === "payment") setStep("pricing");
     else if (step === "pricing") setStep("address");
     else navigate(-1);
@@ -408,16 +418,48 @@ export default function RequestRidePage() {
                 )}
 
                 {/* Quick actions row */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button variant="ghost" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation}
                     className="gap-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/5">
                     {isGettingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
                     Use my location
                   </Button>
+                  {savedPlaces.map(place => (
+                    <button key={place.id} onClick={() => { if (place.address) { setPickupAddress(place.address); } else { toast.info(`Set your ${place.label} address in Settings`); } }}
+                      className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition px-2 py-1.5 rounded-lg bg-muted/30 border border-border/30 touch-manipulation active:scale-95">
+                      <span>{place.icon}</span> {place.label}
+                    </button>
+                  ))}
                   <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition px-1">
                     <Plus className="w-3.5 h-3.5" /> Add stop
                   </button>
                 </div>
+
+                {/* Schedule ride toggle */}
+                <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                  <button onClick={() => setIsScheduled(!isScheduled)}
+                    className={cn("w-10 h-6 rounded-full transition-all relative", isScheduled ? "bg-primary" : "bg-muted/60")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", isScheduled ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary" /> Schedule for later</p>
+                    {!isScheduled && <p className="text-[10px] text-muted-foreground">Ride now · ASAP pickup</p>}
+                  </div>
+                </div>
+                {isScheduled && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="grid grid-cols-2 gap-2">
+                    {["Today 2:00 PM", "Today 5:00 PM", "Tomorrow 9:00 AM", "Tomorrow 12:00 PM"].map(time => (
+                      <button key={time} onClick={() => setScheduleTime(time)}
+                        className={cn(
+                          "p-3 rounded-xl border text-left transition-all touch-manipulation active:scale-95",
+                          scheduleTime === time ? "border-primary bg-primary/5" : "border-border/40 bg-card hover:border-primary/20"
+                        )}>
+                        <p className="font-bold text-xs text-foreground">{time.split(" ").slice(0, 1)}</p>
+                        <p className="text-[10px] text-muted-foreground">{time.split(" ").slice(1).join(" ")}</p>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 pt-2">
@@ -623,6 +665,37 @@ export default function RequestRidePage() {
                 <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "night", variables: { colorPrimary: "hsl(142, 76%, 36%)", borderRadius: "12px" } } }}>
                   <PaymentForm onSuccess={handlePaymentSuccess} isProcessing={isProcessingPayment} setIsProcessing={setIsProcessingPayment} totalCents={(pricing?.total ?? 0) + Math.round(tipAmount * 100)} />
                 </Elements>
+              </motion.div>
+            )}
+
+            {/* FINDING DRIVER */}
+            {step === "finding" && (
+              <motion.div key="finding" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-20 space-y-6 text-center">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-emerald-500/20 flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary flex items-center justify-center">
+                    <Car className="w-7 h-7 text-primary" />
+                  </motion.div>
+                </motion.div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Finding your driver...</h2>
+                  <p className="text-sm text-muted-foreground">Matching you with the nearest available driver</p>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Verified drivers</span>
+                  <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" /> 4.8+ rated</span>
+                </div>
+                {isScheduled && scheduleTime && (
+                  <div className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary">
+                    <Clock className="w-3.5 h-3.5 inline mr-1.5" />Scheduled: {scheduleTime}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

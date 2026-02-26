@@ -119,8 +119,14 @@ export default function EatsLanding() {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [isFavorite, setIsFavorite] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filtered = active === "All" ? restaurants : restaurants.filter((r) => r.cuisine === active);
+  const filtered = restaurants.filter(r => {
+    const matchesCategory = active === "All" || r.cuisine === active;
+    const matchesSearch = !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) || r.menu.some(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
+  const orderNumber = `ZE-${Date.now().toString(36).toUpperCase().slice(-6)}`;
   const currentRestaurant = restaurants.find(r => r.id === selectedRestaurant);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -185,13 +191,18 @@ export default function EatsLanding() {
                   <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3">ZIVO <span className="text-primary">Eats</span></h1>
                   <p className="text-muted-foreground text-lg">Delicious food from local restaurants, delivered fast.</p>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="max-w-xl mx-auto">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="max-w-xl mx-auto space-y-3">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input placeholder="Search restaurants or dishes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-12 rounded-xl bg-card border-border/50" />
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input placeholder="Enter your delivery address" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className="pl-10 h-12 rounded-xl bg-card border-border/50" />
                     </div>
-                    <Button className="h-12 rounded-xl font-semibold gap-2 px-6"><Search className="w-4 h-4" /> Search</Button>
                   </div>
                 </motion.div>
               </div>
@@ -208,6 +219,13 @@ export default function EatsLanding() {
                   ))}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filtered.length === 0 && (
+                    <div className="col-span-full text-center py-16">
+                      <UtensilsCrossed className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground font-medium">No restaurants found</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">Try a different search or category</p>
+                    </div>
+                  )}
                   {filtered.map((restaurant, i) => (
                     <motion.div key={restaurant.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
                       <div className="group relative rounded-2xl bg-card border border-border/40 overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200">
@@ -505,8 +523,9 @@ export default function EatsLanding() {
                 <PartyPopper className="w-10 h-10 text-primary-foreground" />
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                <h1 className="text-2xl font-bold text-foreground mb-2">Order Confirmed!</h1>
+                <h1 className="text-2xl font-bold text-foreground mb-2">Order Confirmed! 🎉</h1>
                 <p className="text-muted-foreground">Your food is being prepared and will arrive in 25-35 minutes.</p>
+                <p className="text-xs font-mono text-primary/80 mt-2 bg-primary/5 px-3 py-1.5 rounded-full inline-block">Order #{orderNumber}</p>
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}

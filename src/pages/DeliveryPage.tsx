@@ -52,6 +52,9 @@ export default function DeliveryPage() {
   const [requireSignature, setRequireSignature] = useState(false);
   const [scheduledTime, setScheduledTime] = useState("now");
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [includeInsurance, setIncludeInsurance] = useState(true);
+  const [packageWeight, setPackageWeight] = useState("");
+  const trackingId = `ZD-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 
   const currentSize = packageSizes.find(s => s.id === selectedSize);
   const currentSpeed = deliverySpeed.find(s => s.id === selectedSpeed);
@@ -60,7 +63,7 @@ export default function DeliveryPage() {
   const fragileFee = isFragile ? 2.99 : 0;
   const signatureFee = requireSignature ? 1.99 : 0;
   const totalPrice = basePrice * speedMultiplier + fragileFee + signatureFee;
-  const insuranceFee = 1.99;
+  const insuranceFee = includeInsurance ? 1.99 : 0;
 
   const steps = ["address", "package", "review"] as const;
   const stepLabels = ["Route", "Package", "Review"];
@@ -281,12 +284,33 @@ export default function DeliveryPage() {
                 </div>
               </div>
 
-              {/* Description + delivery note */}
+              {/* Description, weight, delivery note */}
               <div className="space-y-3">
                 <Input placeholder="What's inside? (optional)" value={packageDescription} onChange={(e) => setPackageDescription(e.target.value)} className="h-12 rounded-xl" />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Scale className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Weight (lbs)" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} className="h-12 rounded-xl pl-10" />
+                  </div>
+                  <button className="h-12 px-4 rounded-xl border border-dashed border-border/60 bg-card text-muted-foreground hover:border-violet-500/40 hover:text-violet-500 transition-all flex items-center gap-2 text-xs font-medium touch-manipulation active:scale-95">
+                    <Camera className="w-4 h-4" /> Add Photo
+                  </button>
+                </div>
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
                   <Input placeholder="Delivery instructions (e.g., leave at door)" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} className="h-10 rounded-xl text-sm" />
+                </div>
+              </div>
+
+              {/* Insurance toggle */}
+              <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
+                <button onClick={() => setIncludeInsurance(!includeInsurance)}
+                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", includeInsurance ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", includeInsurance ? "left-[18px]" : "left-0.5")} />
+                </button>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-violet-500" /> Package Insurance</p>
+                  <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99</p>
                 </div>
               </div>
 
@@ -370,7 +394,7 @@ export default function DeliveryPage() {
                 )}
                 {fragileFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Fragile handling</span><span className="font-bold">${fragileFee.toFixed(2)}</span></div>}
                 {signatureFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Signature required</span><span className="font-bold">${signatureFee.toFixed(2)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Insurance</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>
+                {includeInsurance && <div className="flex justify-between"><span className="text-muted-foreground">Insurance</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>}
                 <div className="flex justify-between pt-3 border-t border-border/30">
                   <span className="font-bold text-base">Total</span>
                   <span className="font-bold text-xl text-violet-500">${(totalPrice + insuranceFee).toFixed(2)}</span>
@@ -379,7 +403,7 @@ export default function DeliveryPage() {
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
                 <Shield className="w-3.5 h-3.5 text-violet-500/60" />
-                <span>Package insured up to $500 · Secured by ZIVO</span>
+                <span>{includeInsurance ? "Package insured up to $500" : "No insurance"} · Secured by ZIVO</span>
               </div>
 
               <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
@@ -397,8 +421,9 @@ export default function DeliveryPage() {
                   <PartyPopper className="w-10 h-10 text-white" />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                  <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed!</h1>
+                  <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed! 📦</h1>
                   <p className="text-muted-foreground">A courier will be assigned shortly. Track your package in real-time.</p>
+                  <p className="text-xs font-mono text-violet-500/80 mt-2 bg-violet-500/5 px-3 py-1.5 rounded-full inline-block">Tracking: {trackingId}</p>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
