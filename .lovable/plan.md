@@ -1,79 +1,69 @@
 
+# Codebase Audit: Next 25+ Fixes
 
-# Codebase Audit: 100+ Improvements
-
-After a deep scan of the entire codebase, here are all remaining issues grouped by category.
+Deep scan results across accessibility, performance, security, and robustness categories.
 
 ---
 
-## 1. Security: Missing `noopener,noreferrer` on `window.open()` (3 fixes)
+## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (17 fixes)
 
-Three `window.open()` calls are still missing the security parameter, which allows reverse tabnapping:
+Icon-only `size="icon"` buttons without `aria-label` are invisible to screen readers:
 
-| File | Line | Current |
+| File | Line | Icon | Fix |
+|------|------|------|-----|
+| `src/pages/EmbeddedCheckout.tsx` | 212 | HelpCircle | `aria-label="Help"` |
+| `src/components/shared/UserTestimonials.tsx` | 117 | ChevronLeft | `aria-label="Previous testimonial"` |
+| `src/components/shared/UserTestimonials.tsx` | 127 | ChevronRight | `aria-label="Next testimonial"` |
+| `src/components/flight/TravelDocuments.tsx` | 364 | Eye | `aria-label="View document"` |
+| `src/components/flight/TravelDocuments.tsx` | 367 | Download | `aria-label="Download document"` |
+| `src/components/flight/TravelDocuments.tsx` | 370 | Trash2 | `aria-label="Delete document"` |
+| `src/pages/cars/CarDetailPage.tsx` | 139 | ChevronLeft | `aria-label="Previous image"` |
+| `src/pages/cars/CarDetailPage.tsx` | 147 | ChevronRight | `aria-label="Next image"` |
+| `src/pages/app/UnifiedDashboard.tsx` | 125 | HelpCircle | `aria-label="Help"` |
+| `src/pages/app/UnifiedDashboard.tsx` | 126 | User | `aria-label="Profile"` |
+| `src/components/seo/FlightSearchForm.tsx` | 111 | ArrowLeftRight | `aria-label="Swap cities"` |
+| `src/components/shared/MultiCityPlanner.tsx` | 166 | Plus | `aria-label="Add city"` |
+| `src/components/shared/AITravelAssistantWidget.tsx` | 168 | Send | `aria-label="Send message"` |
+| `src/pages/TravelTripsPage.tsx` | 40 | ArrowLeft | `aria-label="Go back"` |
+| `src/components/support/TicketChatInput.tsx` | 64 | Send | `aria-label="Send message"` |
+| `src/components/flight/AirlinePartnersHub.tsx` | 265 | Unlink | `aria-label="Unlink partner"` |
+| `src/components/flight/FlightTestimonialsSection.tsx` | 226/250 | ChevronLeft/Right | `aria-label="Previous/Next slide"` |
+| `src/pages/ResetPassword.tsx` | 167/201 | Eye/EyeOff | `aria-label="Toggle password visibility"` |
+| `src/components/shared/CurrencyConverter.tsx` | 75 | RefreshCw | `aria-label="Refresh rates"` |
+| `src/components/shared/CurrencyConverter.tsx` | 114 | ArrowUpDown | `aria-label="Swap currencies"` |
+| `src/components/shared/BaggageCalculatorWidget.tsx` | 101 | Minus | `aria-label="Remove bag"` |
+| `src/components/shared/BaggageCalculatorWidget.tsx` | 111 | Plus | `aria-label="Add bag"` |
+| `src/pages/AITripPlanner.tsx` | 203/215 | Minus/Plus | `aria-label="Fewer/More travelers"` |
+| `src/components/flight/GroundTransportBooking.tsx` | 318/327 | Minus/Plus | `aria-label="Fewer/More rental days"` |
+
+---
+
+## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (7 fixes)
+
+| File | Line | Content |
 |------|------|---------|
-| `src/components/ui/data-display.tsx` | 312 | `window.open(link, "_blank")` |
-| `src/components/ui/data-display.tsx` | 377 | `window.open(link, "_blank")` |
-| `src/hooks/useMembership.ts` | 264 | `window.open(data.url, "_blank")` |
-
-All three will get `"noopener,noreferrer"` as the third argument.
-
----
-
-## 2. Security: Global Error Handler Missing `error` Event (1 fix)
-
-`src/lib/security/errorReporting.ts` only catches `unhandledrejection` but not regular `error` events. Adding `window.addEventListener("error", ...)` catches uncaught synchronous errors too.
+| `src/pages/FlightCheckout.tsx` | 314 | Airline logo in checkout |
+| `src/components/hotel/HotelImageShowcase.tsx` | 142 | Hotel property images |
+| `src/pages/CarDetailPage.tsx` | 125 | Car detail image |
+| `src/pages/EatsLanding.tsx` | 1006 | Restaurant detail image |
+| `src/pages/account/FavoritesPage.tsx` | 160 | Favorite item covers |
+| `src/components/results/CarResultCard.tsx` | 147 | Company logo inline |
+| `src/components/flight/FlightSearchHero.tsx` | 137 | Hero image (change to `loading="eager"` + `fetchpriority="high"` for LCP) |
 
 ---
 
-## 3. Accessibility: Missing `aria-label` on Icon-Only Buttons (audit + fixes)
+## 3. Performance: Hero Image LCP Optimization (1 fix)
 
-Several icon-only buttons across the codebase lack `aria-label`, making them invisible to screen readers:
-
-| File | Component | Fix |
-|------|-----------|-----|
-| `src/components/ui/data-display.tsx` (line 308) | External link button | Add `aria-label="Open link"` |
-| `src/components/ui/data-display.tsx` (line 373) | External link button | Add `aria-label="Open link"` |
+`src/components/flight/FlightSearchHero.tsx` line 137 - the above-fold hero image should have `loading="eager"` and `fetchpriority="high"` to improve Largest Contentful Paint score instead of defaulting to browser behavior.
 
 ---
 
-## 4. Performance: Missing `loading="lazy"` on Below-Fold Images (multiple files)
+## 4. Accessibility: Carousel Dot Buttons Missing Labels (2 fixes)
 
-Several `<img>` tags in results/card components lack `loading="lazy"`, causing unnecessary downloads on page load:
-
-| File | Component |
-|------|-----------|
-| `src/components/flight/FlightTracker.tsx` (line 102) | Airline logo in tracker |
-| `src/components/flight/AirlineLogo.tsx` (line 99) | Airline logo component |
-| `src/components/car/CarElectricVehicles.tsx` (line 56) | EV car images |
-| `src/components/shared/BrandLogo.tsx` (line 42) | Brand logo images |
-
-Each will get `loading="lazy"` added.
-
----
-
-## 5. UX: Unhandled `mailto:` with Empty Address (1 fix)
-
-`src/pages/BookingReturnPage.tsx` has three `<a href="mailto:">` links with no email address, which opens an empty compose window. These will be updated to `href="mailto:support@hizivo.com"` (or a more appropriate support address) so users have a clear action.
-
----
-
-## 6. Robustness: `useEffect` Cleanup for Timers (2 fixes)
-
-Two components create multiple `setTimeout` calls in `useEffect` without proper cleanup, which can cause state updates on unmounted components:
-
-| File | Issue |
-|------|-------|
-| `src/pages/EatsLanding.tsx` (line 198) | `OrderTrackingTimeline` - multiple `setTimeout` without cleanup |
-| `src/pages/DeliveryPage.tsx` (line 77) | `DeliveryTrackingTimeline` - same pattern |
-
-Both will get proper cleanup functions that clear all timeouts on unmount.
-
----
-
-## 7. SEO: Schema Injection Cleanup (2 fixes)
-
-`src/components/seo/FlightFAQWithSchema.tsx` and `src/components/seo/BreadcrumbSchema.tsx` inject `<script>` tags via `useEffect` but never clean them up on unmount. This can cause duplicate schema tags during client-side navigation. Both will get cleanup return functions.
+| File | Line | Fix |
+|------|------|-----|
+| `src/pages/cars/CarDetailPage.tsx` | 157 | Add `aria-label={`Go to image ${idx + 1}`}` |
+| `src/components/flight/FlightTestimonialsSection.tsx` | 237 | Add `aria-label={`Go to testimonial ${index + 1}`}` |
 
 ---
 
@@ -81,12 +71,8 @@ Both will get proper cleanup functions that clear all timeouts on unmount.
 
 | Category | Count |
 |----------|-------|
-| Security (window.open) | 3 |
-| Security (error handler) | 1 |
-| Accessibility (aria-label) | 2 |
-| Performance (lazy loading) | 4 |
-| UX (empty mailto) | 3 |
-| Memory leak (timer cleanup) | 2 |
-| SEO (schema cleanup) | 2 |
-| **Total** | **17 fixes across ~12 files** |
-
+| Accessibility (aria-label on icon buttons) | 25 |
+| Performance (loading="lazy" on images) | 6 |
+| Performance (LCP hero optimization) | 1 |
+| Accessibility (carousel dot labels) | 2 |
+| **Total** | **34 fixes across ~20 files** |
