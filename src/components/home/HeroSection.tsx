@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Search, Plane, Hotel, Car, ArrowDown } from "lucide-react";
+import { ArrowRight, Search, Hotel, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import heroImg1 from "@/assets/hero-homepage-cinematic.jpg";
 import heroImg2 from "@/assets/hero-travel-2.jpg";
@@ -20,15 +20,29 @@ const stats = [
   { value: "2M+", label: "Travelers" },
 ];
 
+const SLIDE_DURATION = 7000;
+
 export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    setProgress(0);
+  }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, []);
+    const interval = setInterval(nextSlide, SLIDE_DURATION);
+    const progressInterval = setInterval(() => {
+      setProgress((p) => Math.min(p + 100 / (SLIDE_DURATION / 50), 100));
+    }, 50);
+    return () => { clearInterval(interval); clearInterval(progressInterval); };
+  }, [nextSlide, currentSlide]);
+
+  const goToSlide = (i: number) => {
+    setCurrentSlide(i);
+    setProgress(0);
+  };
 
   const scrollToSearch = () => {
     const el = document.getElementById("hero-search-card");
@@ -37,9 +51,8 @@ export default function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-background">
-      {/* ─── MOBILE: Full-bleed immersive hero ─── */}
+      {/* ─── MOBILE ─── */}
       <div className="lg:hidden relative min-h-[85vh] flex flex-col justify-end">
-        {/* Background image */}
         <AnimatePresence mode="wait">
           <motion.img
             key={currentSlide}
@@ -55,10 +68,8 @@ export default function HeroSection() {
           />
         </AnimatePresence>
 
-        {/* Cinematic gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-        {/* Content */}
         <div className="relative z-10 px-5 pb-8 pt-20">
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -113,49 +124,51 @@ export default function HeroSection() {
             </Button>
           </motion.div>
 
-          {/* Slide indicators */}
+          {/* Progress indicators */}
           <div className="flex gap-2 mt-6 justify-center">
             {heroSlides.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`rounded-full transition-all duration-300 touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center ${
-                  i === currentSlide
-                    ? "bg-primary w-8 h-2.5"
-                    : "bg-muted-foreground/30 w-2.5 h-2.5"
-                }`}
+                onClick={() => goToSlide(i)}
+                className="relative rounded-full overflow-hidden touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center"
                 aria-label={`View slide ${i + 1}`}
-              />
+              >
+                <div className={`transition-all duration-300 ${
+                  i === currentSlide ? "w-8 h-2.5 bg-primary/30" : "w-2.5 h-2.5 bg-muted-foreground/30"
+                } rounded-full`} />
+                {i === currentSlide && (
+                  <div
+                    className="absolute left-0 top-0 h-full bg-primary rounded-full transition-none"
+                    style={{ width: `${progress}%` }}
+                  />
+                )}
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ─── DESKTOP: Full-bleed cinematic hero ─── */}
+      {/* ─── DESKTOP ─── */}
       <div className="hidden lg:block relative min-h-[92vh]">
-        {/* Background image with Ken Burns slow zoom */}
         <AnimatePresence mode="wait">
           <motion.img
             key={currentSlide}
             src={heroSlides[currentSlide].src}
             alt={heroSlides[currentSlide].alt}
-            initial={{ opacity: 0, scale: 1.08 }}
+            initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1.02 }}
             exit={{ opacity: 0, scale: 1 }}
-            transition={{ opacity: { duration: 1.5 }, scale: { duration: 7, ease: "linear" } }}
+            transition={{ opacity: { duration: 1.5 }, scale: { duration: 8, ease: "linear" } }}
             className="absolute inset-0 w-full h-full object-cover will-change-transform"
             loading="eager"
             fetchPriority="high"
           />
         </AnimatePresence>
 
-        {/* Cinematic gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-        {/* Subtle vignette */}
         <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 150px 60px hsl(var(--background) / 0.3)" }} />
 
-        {/* Content */}
         <div className="relative z-10 h-full min-h-[92vh] flex items-center">
           <div className="container mx-auto px-8 xl:px-16">
             <div className="max-w-2xl">
@@ -261,19 +274,27 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Slide indicators - bottom center */}
+        {/* Progress bar indicators - bottom center */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
           {heroSlides.map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrentSlide(i)}
-              className={`rounded-full transition-all duration-300 touch-manipulation ${
-                i === currentSlide
-                  ? "bg-primary w-10 h-3 shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
-                  : "bg-foreground/20 hover:bg-foreground/40 w-3 h-3"
-              }`}
+              onClick={() => goToSlide(i)}
+              className="relative rounded-full overflow-hidden touch-manipulation"
               aria-label={`View slide ${i + 1}`}
-            />
+            >
+              <div className={`transition-all duration-300 ${
+                i === currentSlide
+                  ? "w-12 h-3 bg-primary/30"
+                  : "w-3 h-3 bg-foreground/20 hover:bg-foreground/40"
+              } rounded-full`} />
+              {i === currentSlide && (
+                <div
+                  className="absolute left-0 top-0 h-full bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
+                  style={{ width: `${progress}%`, transition: "none" }}
+                />
+              )}
+            </button>
           ))}
         </div>
 

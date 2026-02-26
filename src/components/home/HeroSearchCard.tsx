@@ -47,22 +47,30 @@ export default function HeroSearchCard() {
           {/* Gradient top accent */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--hotels))] to-[hsl(var(--rides))] opacity-60" />
           {/* Tabs */}
-          <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide">
-             {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation active:scale-[0.97] min-h-[48px]",
-                  activeTab === tab.id
-                    ? `${tab.border} ${tab.color} ${tab.bg}`
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-              >
-                <tab.icon className={cn("w-4 h-4 shrink-0", activeTab === tab.id ? tab.color : "")} />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
+          <div className="flex border-b border-border/50 overflow-x-auto scrollbar-hide relative">
+             {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-1 justify-center min-w-0 relative touch-manipulation active:scale-[0.97] min-h-[48px]",
+                    isActive
+                      ? `${tab.border} ${tab.color} ${tab.bg}`
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  )}
+                >
+                  <motion.div
+                    animate={{ scale: isActive ? 1.1 : 1, rotate: isActive ? -6 : 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  >
+                    <tab.icon className={cn("w-4 h-4 shrink-0", isActive ? tab.color : "")} />
+                  </motion.div>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Search Forms */}
