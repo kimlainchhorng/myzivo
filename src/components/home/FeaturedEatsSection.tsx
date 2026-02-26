@@ -1,5 +1,5 @@
 /**
- * FeaturedEatsSection - Food delivery cards with ratings and badges
+ * FeaturedEatsSection - Food delivery cards with quick order
  */
 import { useState } from "react";
 import { Star, Clock, ArrowRight, Truck, ShoppingCart } from "lucide-react";
@@ -37,6 +37,7 @@ export default function FeaturedEatsSection() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
         >
           <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "hsl(var(--eats))" }}>Local favorites</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
               Order <span className="text-primary">Food Delivery</span>
             </h2>
@@ -49,7 +50,7 @@ export default function FeaturedEatsSection() {
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {categories.map((c) => (
-             <button
+            <button
               key={c}
               onClick={() => setActive(c)}
               className={cn(active === c ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
@@ -70,22 +71,20 @@ export default function FeaturedEatsSection() {
             >
               <Link
                 to="/eats"
-                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-200 touch-manipulation active:scale-[0.99]"
+                className="group block rounded-2xl bg-card border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={food.image} alt={food.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                  {/* Premium overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity duration-500" />
                   {food.freeDelivery && (
                     <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-sm flex items-center gap-1">
                       <Truck className="w-3 h-3" /> Free Delivery
                     </span>
                   )}
-                  {/* Quick order button on hover */}
-                   <button
+                  <button
                     onClick={(e) => handleQuickOrder(e, food.name)}
                     className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
-                    aria-label="Quick order"
+                    aria-label={`Quick order ${food.name}`}
                   >
                     <ShoppingCart className="w-4 h-4" />
                   </button>
@@ -95,7 +94,7 @@ export default function FeaturedEatsSection() {
                   <p className="text-xs text-muted-foreground mb-3">{food.restaurant}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {food.rating}</span>
+                      <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-[hsl(var(--hotels))] fill-current" /> {food.rating}</span>
                       <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {food.time}</span>
                     </div>
                     <div className="text-right">

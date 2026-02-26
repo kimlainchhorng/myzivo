@@ -1,5 +1,5 @@
 /**
- * Stats Section - Full-width dramatic counters with gradient accents
+ * Stats Section - Dramatic counters with accent-colored icon rings
  */
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
@@ -7,10 +7,10 @@ import { Plane, Users, Globe, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
-  { icon: Users, value: 2000000, label: "Travelers Served", suffix: "+", decimals: 0, color: "text-[hsl(var(--flights))]" },
-  { icon: Plane, value: 500, label: "Airlines Compared", suffix: "+", decimals: 0, color: "text-primary" },
-  { icon: Globe, value: 190, label: "Countries Covered", suffix: "+", decimals: 0, color: "text-[hsl(var(--cars))]" },
-  { icon: Shield, value: 99.9, label: "Uptime Guarantee", suffix: "%", decimals: 1, color: "text-[hsl(var(--hotels))]" },
+  { icon: Users, value: 2000000, label: "Travelers Served", suffix: "+", decimals: 0, colorVar: "--flights" },
+  { icon: Plane, value: 500, label: "Airlines Compared", suffix: "+", decimals: 0, colorVar: "--primary" },
+  { icon: Globe, value: 190, label: "Countries Covered", suffix: "+", decimals: 0, colorVar: "--cars" },
+  { icon: Shield, value: 99.9, label: "Uptime Guarantee", suffix: "%", decimals: 1, colorVar: "--hotels" },
 ];
 
 function AnimatedCounter({ value, suffix, decimals = 0 }: { value: number; suffix: string; decimals?: number }) {
@@ -71,10 +71,14 @@ export default function StatsSection() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="text-center group"
             >
-              <div className={cn(
-                "w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center bg-muted/50 border border-border/50 group-hover:scale-110 transition-transform duration-200",
-              )}>
-                <stat.icon className={cn("w-7 h-7", stat.color)} />
+              <div
+                className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center border group-hover:scale-110 transition-transform duration-200"
+                style={{
+                  backgroundColor: `hsl(var(${stat.colorVar}) / 0.1)`,
+                  borderColor: `hsl(var(${stat.colorVar}) / 0.2)`,
+                }}
+              >
+                <stat.icon className="w-7 h-7" style={{ color: `hsl(var(${stat.colorVar}))` }} />
               </div>
               <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tighter mb-2">
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} decimals={stat.decimals} />

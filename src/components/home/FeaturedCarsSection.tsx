@@ -1,5 +1,5 @@
 /**
- * FeaturedCarsSection - Car rental deals with premium cards
+ * FeaturedCarsSection - Car rental cards with filter chips
  */
 import { useState } from "react";
 import { Star, Users, Fuel, ArrowRight, DoorOpen } from "lucide-react";
@@ -30,6 +30,7 @@ export default function FeaturedCarsSection() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
         >
           <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "hsl(var(--cars))" }}>Best deals</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
               Popular <span className="text-primary">Car Rentals</span>
             </h2>
@@ -43,7 +44,7 @@ export default function FeaturedCarsSection() {
         {/* Filter chips */}
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {filters.map((f) => (
-             <button
+            <button
               key={f}
               onClick={() => setActive(f)}
               className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
@@ -64,13 +65,11 @@ export default function FeaturedCarsSection() {
             >
               <Link
                 to="/rent-car"
-                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-200 touch-manipulation active:scale-[0.99]"
+                className="group block rounded-2xl bg-card border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-video overflow-hidden bg-muted/50">
                   <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                  {/* Premium overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   {car.cheapest && (
                     <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-sm">
                       Best Price
@@ -80,8 +79,8 @@ export default function FeaturedCarsSection() {
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-base">{car.name}</h3>
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" />
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-[hsl(var(--hotels))] fill-current" />
                       <span className="text-xs font-semibold text-foreground">{car.rating}</span>
                     </div>
                   </div>

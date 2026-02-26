@@ -1,5 +1,5 @@
 /**
- * FeaturedHotelsSection - Hotel room cards with premium features
+ * FeaturedHotelsSection - Hotel cards with premium hover effects
  */
 import { useState } from "react";
 import { Star, MapPin, ArrowRight, Heart, Wifi, Waves, Dumbbell } from "lucide-react";
@@ -45,6 +45,7 @@ export default function FeaturedHotelsSection() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10"
         >
           <div>
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "hsl(var(--hotels))" }}>Handpicked stays</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
               Featured <span className="text-primary">Hotels</span>
             </h2>
@@ -66,26 +67,23 @@ export default function FeaturedHotelsSection() {
             >
               <Link
                 to="/hotels"
-                 className="group block card-premium overflow-hidden hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-200 touch-manipulation active:scale-[0.99]"
+                className="group block rounded-2xl bg-card border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-300 touch-manipulation active:scale-[0.99]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                  {/* Premium overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg">
                     ${hotel.price}<span className="text-xs font-normal opacity-80">/night</span>
                   </div>
-                  {/* Save icon */}
-                   <button
+                  <button
                     onClick={(e) => toggleSave(e, hotel.name)}
                     className="absolute top-3 left-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
-                    aria-label="Save hotel"
+                    aria-label={`Save ${hotel.name}`}
                   >
-                    <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
+                    <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(hotel.name) ? "text-destructive fill-current" : "text-foreground"}`} />
                   </button>
                   {hotel.freeCancellation && (
-                    <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/90 text-primary-foreground shadow-sm">
+                    <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/90 text-primary-foreground shadow-sm backdrop-blur-sm">
                       Free Cancellation
                     </span>
                   )}
@@ -98,11 +96,10 @@ export default function FeaturedHotelsSection() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, j) => (
-                        <Star key={j} className={`w-3.5 h-3.5 ${j < Math.floor(hotel.rating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} />
+                        <Star key={j} className={`w-3.5 h-3.5 ${j < Math.floor(hotel.rating) ? "text-[hsl(var(--hotels))] fill-current" : "text-muted-foreground/30"}`} />
                       ))}
                       <span className="text-xs font-semibold ml-1">{hotel.rating}</span>
                     </div>
-                    {/* Amenity icons */}
                     <div className="flex items-center gap-1.5">
                       {hotel.amenities.map((a) => {
                         const Icon = amenityIcons[a];

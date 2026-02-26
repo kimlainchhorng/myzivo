@@ -1,5 +1,5 @@
 /**
- * ServicesShowcase - Premium service cards with image backgrounds
+ * ServicesShowcase - Premium bento grid with glassmorphism overlays
  */
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -19,9 +19,10 @@ const services = [
     description: "500+ airlines, real-time prices",
     href: "/flights",
     image: imgFlights,
-    accent: "from-[hsl(var(--flights))]",
+    accentVar: "--flights",
     badge: "Popular",
-    span: "sm:col-span-2 lg:col-span-2",
+    span: "sm:col-span-2 lg:col-span-2 lg:row-span-2",
+    tall: true,
   },
   {
     icon: Hotel,
@@ -29,7 +30,7 @@ const services = [
     description: "Best rates worldwide",
     href: "/hotels",
     image: imgHotels,
-    accent: "from-[hsl(var(--hotels))]",
+    accentVar: "--hotels",
   },
   {
     icon: CarFront,
@@ -37,7 +38,7 @@ const services = [
     description: "Flexible pickup & return",
     href: "/rent-car",
     image: imgCars,
-    accent: "from-[hsl(var(--cars))]",
+    accentVar: "--cars",
   },
   {
     icon: Car,
@@ -45,7 +46,7 @@ const services = [
     description: "Fast pickups, upfront pricing",
     href: "/rides",
     image: imgRides,
-    accent: "from-[hsl(var(--rides))]",
+    accentVar: "--rides",
   },
   {
     icon: UtensilsCrossed,
@@ -53,7 +54,7 @@ const services = [
     description: "Local restaurants delivered",
     href: "/eats",
     image: imgEats,
-    accent: "from-[hsl(var(--eats))]",
+    accentVar: "--eats",
   },
 ];
 
@@ -67,6 +68,7 @@ export default function ServicesShowcase() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-3">Our Services</span>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tighter mb-3">
             Everything you need,{" "}
             <span className="gradient-text-primary">one platform</span>
@@ -77,7 +79,7 @@ export default function ServicesShowcase() {
         </motion.div>
 
         {/* Bento grid layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" style={{ gridAutoRows: "220px" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto" style={{ gridAutoRows: "200px" }}>
           {services.map((service, i) => (
             <motion.div
               key={service.title}
@@ -95,12 +97,18 @@ export default function ServicesShowcase() {
                 <img
                   src={service.image}
                   alt={service.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   loading="lazy"
                 />
 
-                {/* Dark gradient overlay for text */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+                {/* Dark gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+
+                {/* Accent color glow on hover */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                  style={{ background: `radial-gradient(ellipse at bottom, hsl(var(${service.accentVar})), transparent 70%)` }}
+                />
 
                 {/* Badge */}
                 {"badge" in service && service.badge && (
@@ -112,15 +120,23 @@ export default function ServicesShowcase() {
                 {/* Content */}
                 <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="w-10 h-10 rounded-xl bg-background/20 backdrop-blur-sm flex items-center justify-center border border-foreground/10">
-                      <service.icon className="w-5 h-5 text-foreground" />
-                    </div>
+                    <motion.div
+                      whileHover={{ rotate: -8, scale: 1.15 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="w-11 h-11 rounded-xl backdrop-blur-md flex items-center justify-center border"
+                      style={{
+                        backgroundColor: `hsl(var(${service.accentVar}) / 0.15)`,
+                        borderColor: `hsl(var(${service.accentVar}) / 0.25)`,
+                      }}
+                    >
+                      <service.icon className="w-5 h-5" style={{ color: `hsl(var(${service.accentVar}))` }} />
+                    </motion.div>
                     <div>
                       <h3 className="font-bold text-lg text-foreground leading-tight">{service.title}</h3>
                       <p className="text-sm text-muted-foreground">{service.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  <div className="flex items-center gap-1 mt-3 text-sm font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300" style={{ color: `hsl(var(${service.accentVar}))` }}>
                     Explore <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
