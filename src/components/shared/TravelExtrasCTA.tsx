@@ -51,7 +51,7 @@ const getExtras = (currentService: ServiceType): ExtraService[] => {
       title: "Need a Car?",
       description: "Compare rental cars from trusted providers",
       icon: Car,
-      link: "/car-rental",
+      link: "/rent-car",
       color: "text-violet-500",
       gradient: "from-violet-500/10 to-purple-500/10",
     },
