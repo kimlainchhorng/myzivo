@@ -1,69 +1,85 @@
 
-# Codebase Audit: Next 25+ Fixes
 
-Deep scan results across accessibility, performance, security, and robustness categories.
+# Codebase Audit: Next 40+ Fixes
+
+Deep scan across accessibility, performance, security, and production-readiness categories.
 
 ---
 
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (17 fixes)
+## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (8 fixes)
 
-Icon-only `size="icon"` buttons without `aria-label` are invisible to screen readers:
+Remaining icon-only buttons without `aria-label`:
 
 | File | Line | Icon | Fix |
 |------|------|------|-----|
-| `src/pages/EmbeddedCheckout.tsx` | 212 | HelpCircle | `aria-label="Help"` |
-| `src/components/shared/UserTestimonials.tsx` | 117 | ChevronLeft | `aria-label="Previous testimonial"` |
-| `src/components/shared/UserTestimonials.tsx` | 127 | ChevronRight | `aria-label="Next testimonial"` |
-| `src/components/flight/TravelDocuments.tsx` | 364 | Eye | `aria-label="View document"` |
-| `src/components/flight/TravelDocuments.tsx` | 367 | Download | `aria-label="Download document"` |
-| `src/components/flight/TravelDocuments.tsx` | 370 | Trash2 | `aria-label="Delete document"` |
-| `src/pages/cars/CarDetailPage.tsx` | 139 | ChevronLeft | `aria-label="Previous image"` |
-| `src/pages/cars/CarDetailPage.tsx` | 147 | ChevronRight | `aria-label="Next image"` |
-| `src/pages/app/UnifiedDashboard.tsx` | 125 | HelpCircle | `aria-label="Help"` |
-| `src/pages/app/UnifiedDashboard.tsx` | 126 | User | `aria-label="Profile"` |
-| `src/components/seo/FlightSearchForm.tsx` | 111 | ArrowLeftRight | `aria-label="Swap cities"` |
-| `src/components/shared/MultiCityPlanner.tsx` | 166 | Plus | `aria-label="Add city"` |
-| `src/components/shared/AITravelAssistantWidget.tsx` | 168 | Send | `aria-label="Send message"` |
-| `src/pages/TravelTripsPage.tsx` | 40 | ArrowLeft | `aria-label="Go back"` |
-| `src/components/support/TicketChatInput.tsx` | 64 | Send | `aria-label="Send message"` |
-| `src/components/flight/AirlinePartnersHub.tsx` | 265 | Unlink | `aria-label="Unlink partner"` |
-| `src/components/flight/FlightTestimonialsSection.tsx` | 226/250 | ChevronLeft/Right | `aria-label="Previous/Next slide"` |
-| `src/pages/ResetPassword.tsx` | 167/201 | Eye/EyeOff | `aria-label="Toggle password visibility"` |
-| `src/components/shared/CurrencyConverter.tsx` | 75 | RefreshCw | `aria-label="Refresh rates"` |
-| `src/components/shared/CurrencyConverter.tsx` | 114 | ArrowUpDown | `aria-label="Swap currencies"` |
-| `src/components/shared/BaggageCalculatorWidget.tsx` | 101 | Minus | `aria-label="Remove bag"` |
-| `src/components/shared/BaggageCalculatorWidget.tsx` | 111 | Plus | `aria-label="Add bag"` |
-| `src/pages/AITripPlanner.tsx` | 203/215 | Minus/Plus | `aria-label="Fewer/More travelers"` |
-| `src/components/flight/GroundTransportBooking.tsx` | 318/327 | Minus/Plus | `aria-label="Fewer/More rental days"` |
+| `src/pages/business/BusinessAccountPage.tsx` | 137 | ArrowLeft | `aria-label="Go back"` |
+| `src/pages/Profile.tsx` | 154-161 | ArrowLeft | `aria-label="Go back"` |
+| `src/pages/security/VulnerabilityDisclosure.tsx` | 32 | ArrowLeft | `aria-label="Go back"` |
+| `src/components/shared/PromoCodeBanner.tsx` | 63-68 | Copy/Check | `aria-label="Copy promo code"` |
+| `src/components/search/FlightSearchFormPro.tsx` | 285-290 | ArrowLeftRight | `aria-label="Swap cities"` |
+| `src/components/search/FlightSearchFormPro.tsx` | 518-524 | Minus | `aria-label="Fewer passengers"` |
+| `src/components/search/FlightSearchFormPro.tsx` | 528-534 | Plus | `aria-label="More passengers"` |
 
 ---
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (7 fixes)
+## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (8 fixes)
+
+Images without `loading="lazy"` that are below the fold:
 
 | File | Line | Content |
 |------|------|---------|
-| `src/pages/FlightCheckout.tsx` | 314 | Airline logo in checkout |
-| `src/components/hotel/HotelImageShowcase.tsx` | 142 | Hotel property images |
-| `src/pages/CarDetailPage.tsx` | 125 | Car detail image |
-| `src/pages/EatsLanding.tsx` | 1006 | Restaurant detail image |
-| `src/pages/account/FavoritesPage.tsx` | 160 | Favorite item covers |
-| `src/components/results/CarResultCard.tsx` | 147 | Company logo inline |
-| `src/components/flight/FlightSearchHero.tsx` | 137 | Hero image (change to `loading="eager"` + `fetchpriority="high"` for LCP) |
+| `src/pages/FlightTravelerInfo.tsx` | 274 | Airline logo in traveler info |
+| `src/pages/FlightDetails.tsx` | 231 | Airline logo in detail header |
+| `src/components/hotel/HotelResultCardPro.tsx` | 124 | Hotel result card image |
+| `src/components/hotel/HotelInspirationalBanner.tsx` | 22 | Hotel banner image (could be above fold - use `loading="eager"` + `fetchPriority="high"`) |
+| `src/components/hotel/HotelExperienceGallery.tsx` | 117 | Experience gallery images |
+| `src/components/seo/PopularRoutesGrid.tsx` | 61 | Airline logo in route cards |
 
 ---
 
-## 3. Performance: Hero Image LCP Optimization (1 fix)
+## 3. Production: Remove `console.log` Statements (12 fixes)
 
-`src/components/flight/FlightSearchHero.tsx` line 137 - the above-fold hero image should have `loading="eager"` and `fetchpriority="high"` to improve Largest Contentful Paint score instead of defaulting to browser behavior.
+Per the production-lockdown policy, these `console.log` calls should be removed or replaced with proper error handling:
+
+| File | Lines | Content |
+|------|-------|---------|
+| `src/lib/partnerRedirectLog.ts` | 76-78 | `console.log('[PartnerRedirect] Logged redirect:')` |
+| `src/lib/partnerRedirectLog.ts` | 146-148 | `console.log('[SearchSession] Logged session:')` |
+| `src/lib/affiliateTracking.ts` | 105 | `console.log("[Affiliate Tracking]")` |
+| `src/lib/outboundTracking.ts` | 119 | `console.log('[Hizovo Tracking] Click logged:')` |
+| `src/hooks/useSupportTickets.ts` | 438 | `console.log('[useAddTicketMessage] Push sent')` |
+| `src/hooks/usePushNotifications.ts` | 107 | `console.log("[Push] Registration token:")` |
+| `src/hooks/usePushNotifications.ts` | 123 | `console.log("[Push] Notification received:")` |
+| `src/hooks/usePushNotifications.ts` | 136 | `console.log("[Push] Action performed:")` |
+| `src/hooks/usePushNotifications.ts` | 193 | `console.log("[Push] Token unregistered")` |
+| `src/pages/Feedback.tsx` | 76 | `console.log("Feedback submitted:")` |
+| `src/components/shared/AirportTransferBridge.tsx` | 63 | `console.log("Booking transfer:")` |
+| `src/contexts/CustomerCityContext.tsx` | 159 | `console.log('No match for detected city')` |
+
+Note: `usePWAUpdate.ts`, `supabaseErrors.ts`, `CurrencyContext.tsx`, and `BookingReturnPage.tsx` logs are operational/debug and should remain at most as `console.debug`.
 
 ---
 
-## 4. Accessibility: Carousel Dot Buttons Missing Labels (2 fixes)
+## 4. Downgrade Debug-Level Logs to `console.debug` (6 fixes)
+
+These logs provide operational info but should not pollute production console:
+
+| File | Lines | Change |
+|------|-------|--------|
+| `src/hooks/usePWAUpdate.ts` | 28 | `console.log` -> `console.debug` |
+| `src/hooks/usePWAUpdate.ts` | 33 | `console.log` -> `console.debug` |
+| `src/hooks/usePWAUpdate.ts` | 36 | `console.log` -> `console.debug` |
+| `src/hooks/usePWAUpdate.ts` | 52 | `console.log` -> `console.debug` |
+| `src/lib/supabaseErrors.ts` | 160 | `console.log` -> `console.debug` |
+| `src/lib/supabaseErrors.ts` | 176 | `console.log` -> `console.debug` |
+
+---
+
+## 5. Accessibility: `<button>` Elements Missing Labels (1 fix)
 
 | File | Line | Fix |
 |------|------|-----|
-| `src/pages/cars/CarDetailPage.tsx` | 157 | Add `aria-label={`Go to image ${idx + 1}`}` |
-| `src/components/flight/FlightTestimonialsSection.tsx` | 237 | Add `aria-label={`Go to testimonial ${index + 1}`}` |
+| `src/components/shared/PriceAlertWidget.tsx` | 167-170 | The `<button>` remove alert has no label. Add `aria-label="Remove alert"` |
 
 ---
 
@@ -71,8 +87,10 @@ Icon-only `size="icon"` buttons without `aria-label` are invisible to screen rea
 
 | Category | Count |
 |----------|-------|
-| Accessibility (aria-label on icon buttons) | 25 |
+| Accessibility (aria-label on icon buttons) | 8 |
 | Performance (loading="lazy" on images) | 6 |
-| Performance (LCP hero optimization) | 1 |
-| Accessibility (carousel dot labels) | 2 |
-| **Total** | **34 fixes across ~20 files** |
+| Production (remove console.log) | 12 |
+| Production (downgrade to console.debug) | 6 |
+| Accessibility (plain button labels) | 1 |
+| **Total** | **33 fixes across ~18 files** |
+
