@@ -102,17 +102,6 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "mapbox-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-              }
-            }
-          },
-          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "StaleWhileRevalidate",
             options: {
