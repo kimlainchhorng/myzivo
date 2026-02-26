@@ -34,6 +34,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { useSavedSearches, type SavedSearch } from "@/hooks/useSavedSearches";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import PageTransition from "@/components/shared/PageTransition";
 
 const serviceIcons: Record<string, typeof Plane> = {
   flights: Plane,
@@ -84,7 +85,7 @@ export default function SavedSearchesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageTransition className="min-h-screen bg-background">
       <NavBar />
 
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-3xl">
@@ -329,7 +330,7 @@ export default function SavedSearchesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive/60 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-8 w-8 text-destructive/60 hover:text-destructive md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                               onClick={() => deleteSearch(s.id)}
                               aria-label="Delete search"
                             >
@@ -348,6 +349,6 @@ export default function SavedSearchesPage() {
       </main>
 
       <Footer />
-    </div>
+    </PageTransition>
   );
 }

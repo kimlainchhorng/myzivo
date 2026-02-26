@@ -40,6 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import PageTransition from "@/components/shared/PageTransition";
 
 interface CityStop {
   id: string;
@@ -290,7 +291,7 @@ export default function MultiCityBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageTransition className="min-h-screen bg-background">
       <NavBar />
 
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-4xl">
@@ -711,6 +712,6 @@ export default function MultiCityBuilder() {
       </main>
 
       <Footer />
-    </div>
+    </PageTransition>
   );
 }
