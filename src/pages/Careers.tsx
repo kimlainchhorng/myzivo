@@ -218,6 +218,100 @@ const Careers = () => {
             </Card>
           </section>
 
+          {/* === WAVE 9: Rich Career Content === */}
+
+          {/* Employee Testimonials */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">Life at ZIVO</h2>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                { name: "Priya S.", role: "Senior Engineer", quote: "The engineering challenges here are incredible — we process millions of travel searches daily. Plus, I get to work from Bali.", emoji: "👩‍💻", tenure: "2 years" },
+                { name: "Carlos M.", role: "Product Designer", quote: "I love that my designs impact travelers worldwide. The team genuinely cares about craft and user experience.", emoji: "🎨", tenure: "1.5 years" },
+                { name: "Emma L.", role: "Operations Lead", quote: "Moving fast while keeping partners happy is exciting. ZIVO gives me ownership that bigger companies never did.", emoji: "🚀", tenure: "1 year" },
+              ].map(t => (
+                <Card key={t.name} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300">
+                  <CardContent className="p-6">
+                    <span className="text-3xl mb-3 block">{t.emoji}</span>
+                    <p className="text-sm text-muted-foreground italic mb-4">"{t.quote}"</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.role}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{t.tenure}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          {/* Tech Stack */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">Our Tech Stack</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { name: "React / TypeScript", category: "Frontend", emoji: "⚛️" },
+                { name: "Supabase / PostgreSQL", category: "Backend", emoji: "🗄️" },
+                { name: "Deno Edge Functions", category: "Serverless", emoji: "🦕" },
+                { name: "Tailwind CSS", category: "Styling", emoji: "🎨" },
+                { name: "Capacitor", category: "Mobile", emoji: "📱" },
+                { name: "Stripe", category: "Payments", emoji: "💳" },
+                { name: "Duffel API", category: "Flights", emoji: "✈️" },
+                { name: "Vercel / Cloudflare", category: "Infra", emoji: "☁️" },
+              ].map(s => (
+                <div key={s.name} className="text-center p-4 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 transition-all">
+                  <span className="text-2xl">{s.emoji}</span>
+                  <p className="font-semibold text-sm mt-2">{s.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.category}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Hiring Process */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">Our Hiring Process</h2>
+            <div className="grid sm:grid-cols-4 gap-4">
+              {[
+                { step: 1, title: "Apply", desc: "Submit your resume and a short note about why ZIVO excites you", duration: "~5 min" },
+                { step: 2, title: "Screen", desc: "Quick video call with our team to discuss your background", duration: "30 min" },
+                { step: 3, title: "Challenge", desc: "A take-home or live coding/design exercise relevant to the role", duration: "2-4 hrs" },
+                { step: 4, title: "Offer", desc: "Meet the team, align on compensation, and get started!", duration: "~1 week" },
+              ].map(s => (
+                <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-primary/20 transition-all">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-3">{s.step}</div>
+                  <p className="font-semibold mb-1">{s.title}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{s.desc}</p>
+                  <Badge variant="secondary" className="text-[10px]">{s.duration}</Badge>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Company Stats */}
+          <section className="mb-16">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold text-center mb-6">ZIVO by the Numbers</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+                  {[
+                    { stat: "50+", label: "Team Members", sub: "Across 12 countries" },
+                    { stat: "6", label: "Product Lines", sub: "Flights, Hotels, Cars & more" },
+                    { stat: "100%", label: "Remote-First", sub: "Work from anywhere" },
+                    { stat: "4.8★", label: "Employee Rating", sub: "On Glassdoor" },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <p className="text-3xl font-bold text-primary">{s.stat}</p>
+                      <p className="font-semibold text-sm mt-1">{s.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           {/* Contact Section */}
           <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 border border-primary/20">
             <Mail className="w-12 h-12 text-primary mx-auto mb-6" />

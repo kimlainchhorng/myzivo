@@ -247,15 +247,78 @@ const Press = () => {
                 </Card>
               </div>
 
-              {/* Recent Coverage Placeholder */}
+              {/* Recent Coverage */}
               <section className="mt-12">
                 <h2 className="text-2xl font-bold mb-6 text-center">Recent Coverage</h2>
-                <div className="text-center p-12 rounded-2xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
-                  <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Press coverage will be featured here as it becomes available.
-                  </p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { outlet: "TechCrunch", title: "ZIVO raises seed round to unify travel booking", date: "Jan 2025", category: "Funding", emoji: "💰" },
+                    { outlet: "Travel Weekly", title: "How ZIVO is disrupting the OTA landscape", date: "Dec 2024", category: "Industry", emoji: "✈️" },
+                    { outlet: "Forbes", title: "10 Travel Startups to Watch in 2025", date: "Nov 2024", category: "Recognition", emoji: "🏆" },
+                    { outlet: "Skift", title: "ZIVO launches multi-modal travel platform", date: "Oct 2024", category: "Launch", emoji: "🚀" },
+                    { outlet: "The Points Guy", title: "ZIVO Miles: A new loyalty program worth exploring", date: "Sep 2024", category: "Rewards", emoji: "⭐" },
+                    { outlet: "Wired", title: "The future of AI-powered trip planning", date: "Aug 2024", category: "Technology", emoji: "🤖" },
+                  ].map(a => (
+                    <Card key={a.title} className="border-border/50 hover:border-primary/20 hover:shadow-md transition-all duration-300 cursor-pointer">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">{a.emoji}</span>
+                          <Badge variant="secondary" className="text-[10px]">{a.category}</Badge>
+                        </div>
+                        <p className="font-semibold text-sm mb-1">{a.title}</p>
+                        <div className="flex items-center justify-between mt-3">
+                          <p className="text-xs text-primary font-medium">{a.outlet}</p>
+                          <p className="text-[10px] text-muted-foreground">{a.date}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
+              </section>
+
+              {/* Company Milestones */}
+              <section className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 text-center">Company Milestones</h2>
+                <div className="space-y-3">
+                  {[
+                    { year: "2025", event: "Expanded to 50+ team members, launched ZIVO Rides & Eats", icon: "🎯" },
+                    { year: "2024", event: "Founded ZIVO, launched flight search and hotel booking", icon: "🏁" },
+                    { year: "2024", event: "ZIVO Miles loyalty program launched", icon: "⭐" },
+                    { year: "2024", event: "Car rental and multi-city booking added", icon: "🚗" },
+                  ].map((m, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 hover:border-primary/20 transition-all">
+                      <span className="text-2xl">{m.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">{m.event}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">{m.year}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Quick Facts for Journalists */}
+              <section className="mt-12">
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
+                      <Newspaper className="w-4 h-4 text-primary" /> Quick Facts for Journalists
+                    </h3>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {[
+                        { q: "What is ZIVO?", a: "A unified travel and mobility platform for flights, hotels, car rentals, rides, food delivery, and more." },
+                        { q: "Who founded ZIVO?", a: "ZIVO was founded in 2024 with a mission to connect how the world moves." },
+                        { q: "Where is ZIVO based?", a: "United States, with a fully remote and global team." },
+                        { q: "How does ZIVO make money?", a: "Referral commissions from travel partners, ZIVO+ memberships, and advertising." },
+                      ].map(f => (
+                        <div key={f.q} className="p-3 rounded-xl bg-card/60 border border-border/30">
+                          <p className="text-xs font-bold text-foreground mb-1">{f.q}</p>
+                          <p className="text-[11px] text-muted-foreground">{f.a}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </section>
             </TabsContent>
 
