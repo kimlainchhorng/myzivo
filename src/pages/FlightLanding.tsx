@@ -63,6 +63,67 @@ const FlightLanding = () => {
   const [showTravelerReviews, setShowTravelerReviews] = useState(false);
   const [selectedFareClass, setSelectedFareClass] = useState("economy");
 
+  // === WAVE 4: Travel Intelligence ===
+  const [showBaggageCalc, setShowBaggageCalc] = useState(false);
+  const [showAirportGuide, setShowAirportGuide] = useState(false);
+  const [showLayoverPlanner, setShowLayoverPlanner] = useState(false);
+  const [showTravelChecklist, setShowTravelChecklist] = useState(false);
+  const [showVisaChecker, setShowVisaChecker] = useState(false);
+  const [showJetLagHelper, setShowJetLagHelper] = useState(false);
+
+  // Baggage calculator
+  const baggageRules = [
+    { airline: "Delta", carryOn: "22x14x9", personal: "18x14x8", checked: "$35 first, $45 second", overweight: "$100 (51-70 lbs)" },
+    { airline: "United", carryOn: "22x14x9", personal: "17x10x9", checked: "$40 first, $50 second", overweight: "$100 (51-70 lbs)" },
+    { airline: "American", carryOn: "22x14x9", personal: "18x14x8", checked: "$35 first, $45 second", overweight: "$100 (51-70 lbs)" },
+    { airline: "Southwest", carryOn: "24x16x10", personal: "18.5x13.5x8.5", checked: "2 bags FREE", overweight: "$75 (51-100 lbs)" },
+  ];
+
+  // Airport guide
+  const airportGuide = {
+    terminals: [
+      { name: "Terminal 1", airlines: ["Delta", "KLM", "Air France"], lounges: 3, restaurants: 12, gates: "1-32" },
+      { name: "Terminal 4", airlines: ["JetBlue", "Emirates", "Swiss"], lounges: 5, restaurants: 18, gates: "1-38" },
+    ],
+    tips: ["TSA PreCheck line at Terminal 1 Gate 8", "Best coffee: Blue Bottle, Terminal 4", "Free Wi-Fi everywhere, 30 min sessions"],
+    transitTime: "Allow 15 min between terminals via AirTrain",
+  };
+
+  // Layover planner
+  const layoverActivities = [
+    { duration: "2-3 hrs", activities: ["Lounge access ($45)", "Duty-free shopping", "Quick meal at food court"], tip: "Stay near your gate" },
+    { duration: "4-6 hrs", activities: ["Airport spa ($60)", "City express tour ($89)", "Premium lounge + shower"], tip: "Check gate reassignment" },
+    { duration: "6+ hrs", activities: ["City day pass ($129)", "Airport hotel nap room ($50/4hrs)", "Local food tour ($79)"], tip: "Verify visa requirements for transit" },
+  ];
+
+  // Travel checklist
+  const travelChecklist = [
+    { category: "Documents", items: ["Passport (6mo validity)", "Visa/ESTA", "Boarding pass", "Travel insurance", "Hotel confirmation"] },
+    { category: "Packing", items: ["Carry-on essentials", "Chargers & adapters", "Medications", "Change of clothes in carry-on"] },
+    { category: "Before Flight", items: ["Online check-in (24hrs)", "Seat selection", "Download entertainment", "Notify bank of travel"] },
+  ];
+
+  // Visa checker
+  const visaInfo = [
+    { country: "UK", requirement: "Visa-free (6 months)", processing: "N/A", cost: "Free" },
+    { country: "EU/Schengen", requirement: "ETIAS required 2025+", processing: "Minutes", cost: "€7" },
+    { country: "Japan", requirement: "Visa-free (90 days)", processing: "N/A", cost: "Free" },
+    { country: "Australia", requirement: "ETA required", processing: "Minutes", cost: "AUD $20" },
+  ];
+
+  // Jet lag helper
+  const jetLagTips = {
+    timezoneDiff: 8,
+    adjustDays: 4,
+    tips: [
+      "Start adjusting sleep 3 days before",
+      "Stay hydrated — drink 8oz water per flight hour",
+      "Avoid alcohol and caffeine 4 hrs before sleep",
+      "Get sunlight at destination morning",
+      "Use melatonin 0.5mg at destination bedtime",
+    ],
+  };
+
   // AI Price prediction
   const pricePrediction = {
     recommendation: "Buy now",
@@ -787,6 +848,124 @@ const FlightLanding = () => {
                 Tickets are issued by authorized partners under airline rules.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* === WAVE 4: Travel Intelligence === */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-4xl space-y-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">✈️ Travel Intelligence Tools</h2>
+
+            {/* Baggage Calculator */}
+            <button onClick={() => setShowBaggageCalc(!showBaggageCalc)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <BaggageClaim className="w-4 h-4 text-sky-500" /> Airline Baggage Rules
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showBaggageCalc && "rotate-90")} />
+            </button>
+            <AnimatePresence>
+              {showBaggageCalc && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="space-y-3 pt-2">
+                    {baggageRules.map(r => (
+                      <div key={r.airline} className="rounded-xl bg-card border border-border/40 p-4">
+                        <p className="text-sm font-bold text-foreground mb-2">{r.airline}</p>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <span>Carry-on: <b className="text-foreground">{r.carryOn}</b></span>
+                          <span>Personal: <b className="text-foreground">{r.personal}</b></span>
+                          <span>Checked: <b className="text-foreground">{r.checked}</b></span>
+                          <span>Overweight: <b className="text-foreground">{r.overweight}</b></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Airport Guide */}
+            <button onClick={() => setShowAirportGuide(!showAirportGuide)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <MapPin className="w-4 h-4 text-amber-500" /> Airport Guide
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[10px] ml-auto">Popular</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showAirportGuide && "rotate-90")} />
+            </button>
+            {showAirportGuide && (
+              <div className="space-y-3 pt-2">
+                {airportGuide.terminals.map(t => (
+                  <div key={t.name} className="rounded-xl bg-card border border-border/40 p-4">
+                    <p className="text-sm font-bold text-foreground">{t.name} <span className="text-xs text-muted-foreground">Gates {t.gates}</span></p>
+                    <p className="text-xs text-muted-foreground mt-1">{t.airlines.join(", ")} · {t.lounges} lounges · {t.restaurants} restaurants</p>
+                  </div>
+                ))}
+                <div className="space-y-1">
+                  {airportGuide.tips.map(tip => <p key={tip} className="text-xs text-emerald-500">💡 {tip}</p>)}
+                </div>
+              </div>
+            )}
+
+            {/* Layover Planner */}
+            <button onClick={() => setShowLayoverPlanner(!showLayoverPlanner)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Clock className="w-4 h-4 text-violet-500" /> Layover Planner
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showLayoverPlanner && "rotate-90")} />
+            </button>
+            {showLayoverPlanner && (
+              <div className="space-y-3 pt-2">
+                {layoverActivities.map(l => (
+                  <div key={l.duration} className="rounded-xl bg-card border border-border/40 p-4">
+                    <p className="text-sm font-bold text-violet-500">{l.duration}</p>
+                    <ul className="mt-2 space-y-1">{l.activities.map(a => <li key={a} className="text-xs text-muted-foreground">• {a}</li>)}</ul>
+                    <p className="text-xs text-amber-500 mt-2">⚠️ {l.tip}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Visa Checker */}
+            <button onClick={() => setShowVisaChecker(!showVisaChecker)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Globe className="w-4 h-4 text-emerald-500" /> Visa Requirements (US Passport)
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showVisaChecker && "rotate-90")} />
+            </button>
+            {showVisaChecker && (
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                {visaInfo.map(v => (
+                  <div key={v.country} className="rounded-xl bg-card border border-border/40 p-3 text-center">
+                    <p className="text-sm font-bold text-foreground">{v.country}</p>
+                    <p className="text-xs text-emerald-500 font-bold">{v.requirement}</p>
+                    <p className="text-[10px] text-muted-foreground">{v.cost}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Travel Checklist */}
+            <button onClick={() => setShowTravelChecklist(!showTravelChecklist)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <CheckCircle className="w-4 h-4 text-sky-500" /> Pre-Flight Checklist
+              <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showTravelChecklist && "rotate-90")} />
+            </button>
+            {showTravelChecklist && (
+              <div className="space-y-3 pt-2">
+                {travelChecklist.map(c => (
+                  <div key={c.category} className="rounded-xl bg-card border border-border/40 p-4">
+                    <p className="text-sm font-bold text-foreground mb-2">{c.category}</p>
+                    <div className="space-y-1">{c.items.map(i => <label key={i} className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="rounded" /> {i}</label>)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Jet Lag Helper */}
+            <button onClick={() => setShowJetLagHelper(!showJetLagHelper)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+              <Sparkles className="w-4 h-4 text-amber-500" /> Jet Lag Recovery Plan
+              <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[10px] ml-auto">AI</Badge>
+              <ChevronRight className={cn("w-4 h-4 transition-transform", showJetLagHelper && "rotate-90")} />
+            </button>
+            {showJetLagHelper && (
+              <div className="rounded-xl bg-gradient-to-br from-violet-500/5 to-amber-500/5 border border-violet-500/20 p-4">
+                <div className="flex gap-4 mb-3">
+                  <div className="text-center"><p className="text-lg font-bold text-violet-500">{jetLagTips.timezoneDiff}h</p><p className="text-[10px] text-muted-foreground">Time diff</p></div>
+                  <div className="text-center"><p className="text-lg font-bold text-amber-500">{jetLagTips.adjustDays}d</p><p className="text-[10px] text-muted-foreground">Adjust time</p></div>
+                </div>
+                <div className="space-y-1.5">{jetLagTips.tips.map(t => <p key={t} className="text-xs text-muted-foreground">✦ {t}</p>)}</div>
+              </div>
+            )}
           </div>
         </section>
       </main>
