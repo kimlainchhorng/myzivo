@@ -45,7 +45,7 @@ const PromoCodeBanner = () => {
               
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
-                  <Badge className={`bg-gradient-to-r ${promo.color} text-white border-0`}>
+                  <Badge className={`bg-gradient-to-r ${promo.color} text-primary-foreground border-0`}>
                     {promo.discount}
                   </Badge>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">

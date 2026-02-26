@@ -122,8 +122,8 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
                 Status Tiers
                 <Badge className={cn(
                   "border-0",
-                  currentTier === 'gold' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' :
-                  currentTier === 'platinum' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' :
+                  currentTier === 'gold' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground' :
+                  currentTier === 'platinum' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground' :
                   'bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-primary-foreground'
                 )}>
                   {currentTierData.name} Member

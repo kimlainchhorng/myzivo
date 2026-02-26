@@ -98,7 +98,7 @@ const DestinationGuides = () => {
                 <dest.icon className={`w-12 h-12 ${dest.iconColor}`} />
                 
                 {dest.trending && (
-                  <Badge className="absolute top-3 left-3 bg-teal-500 text-white border-0">
+                  <Badge className="absolute top-3 left-3 bg-teal-500 text-primary-foreground border-0">
                     <TrendingUp className="w-3 h-3 mr-1" /> Trending
                   </Badge>
                 )}

@@ -103,7 +103,7 @@ const QuickActionsSection = () => {
           <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-lg sm:shadow-xl shadow-primary/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:rotate-3">
-                <Zap className="w-5 h-5 sm:w-7 sm:h-7 text-white relative z-10" />
+                <Zap className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground relative z-10" />
                 {/* CSS Shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" style={{ transform: 'skewX(-15deg)' }} />
               </div>
@@ -123,7 +123,7 @@ const QuickActionsSection = () => {
                 style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
               >
                 <QuickAction
-                  icon={<action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+                  icon={<action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
                   label={action.label}
                   description={action.description}
                   onClick={() => navigate(action.href)}
