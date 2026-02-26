@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, Mail, Loader2, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
@@ -49,13 +51,19 @@ const ForgotPassword = () => {
   if (emailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background safe-area-top safe-area-bottom">
+        <SEOHead title="Check Your Email – ZIVO" description="Password reset link sent." noIndex={true} />
         {/* Background gradients */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-success/20 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
-          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-primary/10 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
         </div>
 
-        <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md relative z-10"
+        >
           <Card className="glass-card border-white/10 shadow-2xl">
             <CardHeader className="text-center space-y-4 pb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-success/10 flex items-center justify-center">
@@ -95,20 +103,26 @@ const ForgotPassword = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background safe-area-top safe-area-bottom">
+      <SEOHead title="Forgot Password – ZIVO" description="Reset your ZIVO account password." noIndex={true} />
       {/* Background gradients */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/15 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-primary/10 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
       </div>
 
-      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+        className="w-full max-w-md relative z-10"
+      >
         <Card className="glass-card border-white/10 shadow-2xl">
           <CardHeader className="text-center space-y-4 pb-6">
             {/* Logo */}
@@ -209,7 +223,7 @@ const ForgotPassword = () => {
             Sign in
           </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };
