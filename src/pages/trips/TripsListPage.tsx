@@ -135,13 +135,13 @@ export default function TripsListPage() {
                   return (
                     <motion.div key={booking.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                       <Card 
-                        className="cursor-pointer hover:border-primary/40 transition-all"
+                        className="cursor-pointer hover:border-primary/40 transition-all touch-manipulation"
                         onClick={() => navigate(`/flights/confirmation/${booking.id}?success=true`)}
                       >
                         <CardContent className="p-4 sm:p-5">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                                 <Plane className="w-5 h-5 text-primary" />
                               </div>
                               <div className="min-w-0">
@@ -167,6 +167,32 @@ export default function TripsListPage() {
                                 {booking.currency} {Number(booking.total_amount).toFixed(2)}
                               </p>
                             </div>
+                          </div>
+
+                          {/* Quick actions - always visible on mobile */}
+                          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 text-xs gap-1.5 flex-1 min-h-[44px] touch-manipulation"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/flights/confirmation/${booking.id}?success=true`);
+                              }}
+                            >
+                              <Ticket className="w-3.5 h-3.5" /> View E-Ticket
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 text-xs gap-1.5 min-h-[44px] touch-manipulation"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(booking.booking_reference || booking.pnr || '');
+                              }}
+                            >
+                              <Share2 className="w-3.5 h-3.5" /> Copy Ref
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -268,28 +294,28 @@ function TripCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-2 mt-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs"
+              className="h-9 text-xs min-h-[44px] touch-manipulation"
               onClick={(e) => {
                 e.stopPropagation();
                 navigator.clipboard.writeText(`${window.location.origin}/trip/${trip.id}`);
               }}
             >
-              <Share2 className="w-3 h-3 mr-1" /> Share
+              <Share2 className="w-3.5 h-3.5 mr-1" /> Share
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-destructive hover:text-destructive"
+              className="h-9 text-xs text-destructive hover:text-destructive min-h-[44px] touch-manipulation"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
             >
-              <Trash2 className="w-3 h-3 mr-1" /> Delete
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
             </Button>
           </div>
         </CardContent>

@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Hotel, Compass, Car } from "lucide-react";
+import { ChevronRight, Hotel, Compass, Car, Plane } from "lucide-react";
 import type { TravelOrder } from "@/hooks/useMyTrips";
 
 interface TripCardProps {
@@ -34,6 +34,8 @@ function getItemIcon(type: string) {
   switch (type) {
     case "hotel":
       return <Hotel className="w-4 h-4" />;
+    case "flight":
+      return <Plane className="w-4 h-4" />;
     case "activity":
       return <Compass className="w-4 h-4" />;
     case "transfer":
