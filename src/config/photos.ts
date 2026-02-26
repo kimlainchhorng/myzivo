@@ -22,6 +22,14 @@ import heroHomepagePremium from "@/assets/hero-homepage-premium.jpg";
 import cityHeroGlassSunset from "@/assets/city-hero-glass-sunset.jpg";
 import flightHeroLuxury from "@/assets/flight-hero-luxury.jpg";
 
+// Import wide 16:9 city hero images
+import heroCityNewYork from "@/assets/hero-city-newyork.jpg";
+import heroCityMiami from "@/assets/hero-city-miami.jpg";
+import heroCityParis from "@/assets/hero-city-paris.jpg";
+import heroCityTokyo from "@/assets/hero-city-tokyo.jpg";
+import heroCityDubai from "@/assets/hero-city-dubai.jpg";
+import heroCityLosAngeles from "@/assets/hero-city-losangeles.jpg";
+
 // Import service card assets
 import serviceFlights from "@/assets/service-flights.jpg";
 import serviceHotels from "@/assets/service-hotels.jpg";
@@ -183,6 +191,37 @@ export const premiumHeroPhotos = {
   cityGeneric: {
     src: cityHeroGlassSunset,
     alt: "Modern glass skyscraper reflecting golden sunset",
+  },
+};
+
+// ============================================
+// WIDE CITY HERO PHOTOS (16:9 for city landing pages)
+// Premium panoramic hero images for top destinations
+// ============================================
+export const wideCityHeroPhotos: Partial<Record<DestinationCity, { src: string; alt: string }>> = {
+  "new-york": {
+    src: heroCityNewYork,
+    alt: "New York City Manhattan skyline panorama at golden hour sunset",
+  },
+  miami: {
+    src: heroCityMiami,
+    alt: "Miami Beach skyline with turquoise ocean at sunset",
+  },
+  paris: {
+    src: heroCityParis,
+    alt: "Paris Eiffel Tower and Seine River at golden hour",
+  },
+  tokyo: {
+    src: heroCityTokyo,
+    alt: "Tokyo Shibuya crossing at night with neon lights",
+  },
+  dubai: {
+    src: heroCityDubai,
+    alt: "Dubai Burj Khalifa and skyline at sunset",
+  },
+  "los-angeles": {
+    src: heroCityLosAngeles,
+    alt: "Los Angeles skyline with Hollywood Hills at golden hour",
   },
 };
 
