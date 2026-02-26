@@ -3,6 +3,7 @@
  * Unified notification center with category filtering
  */
 import { useState, useMemo } from 'react';
+import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
 import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,7 @@ const NotificationsPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead title="Notifications – ZIVO" description="View your travel alerts, order updates, and promotional offers." noIndex={true} />
       {/* Premium Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-2xl border-b border-border/30">
         <div className="px-4 py-3 safe-area-top">

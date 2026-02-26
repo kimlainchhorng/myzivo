@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowLeft, Shield, Lock, CheckCircle, ExternalLink, Tag, X, CheckCircle2, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -62,7 +63,12 @@ export default function CarCheckoutPage() {
       </header>
 
       <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="container mx-auto px-4 max-w-3xl"
+        >
           {/* Back Link */}
           <Link 
             to={`/rent-car/traveler-info?${searchParams.toString()}`}
@@ -97,10 +103,10 @@ export default function CarCheckoutPage() {
           </div>
 
           {/* Security Message */}
-          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-6 mb-6">
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-6 mb-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center shrink-0">
-                <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Shield className="w-6 h-6 text-emerald-500" />
               </div>
               <div>
                 <h2 className="font-semibold text-lg text-foreground mb-1">
@@ -190,7 +196,7 @@ export default function CarCheckoutPage() {
           </div>
 
           <RampGlobalDisclaimer className="mt-6" />
-        </div>
+        </motion.div>
       </main>
     </div>
   );

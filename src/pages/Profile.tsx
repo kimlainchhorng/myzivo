@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -143,6 +144,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-20 safe-area-top safe-area-bottom">
+      <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
       {/* Background effects - simplified for mobile */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
       <div className="pointer-events-none absolute top-1/4 right-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
