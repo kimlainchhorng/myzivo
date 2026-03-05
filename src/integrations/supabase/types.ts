@@ -34456,6 +34456,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_versions: {
+        Row: {
+          created_at: string
+          html: string
+          id: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          html: string
+          id?: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          html?: string
+          id?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       sla_definitions: {
         Row: {
           created_at: string | null
