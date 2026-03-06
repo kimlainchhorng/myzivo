@@ -98,7 +98,7 @@ export default function HeroSearchCard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
