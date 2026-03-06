@@ -113,11 +113,11 @@ export default function HeroSearchCard() {
                   </div>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Dates" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Dates" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                     <Search className="w-4 h-4" /> Search
