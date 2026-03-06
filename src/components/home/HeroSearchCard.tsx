@@ -102,7 +102,7 @@ export default function HeroSearchCard() {
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                     {/* Swap button */}
                     <button
                       className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-200 z-10 hidden sm:flex hover:scale-110"
