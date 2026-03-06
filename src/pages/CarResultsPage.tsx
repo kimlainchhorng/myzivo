@@ -484,7 +484,7 @@ export default function CarResultsPage() {
 
                 {/* Results Grid */}
                 {!isLoading && carCards.length > 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 stagger-results">
                     {carCards.map((car) => (
                       <RampCarCard key={car.id} car={car} onViewDeal={handleViewDeal} />
                     ))}

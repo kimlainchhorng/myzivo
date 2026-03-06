@@ -374,7 +374,7 @@ export default function HotelResultsPage() {
 
                 {/* Results */}
                 {!isLoading && hotelCards.length > 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 stagger-results">
                     {hotelCards.map((hotel, index) => (
                       <React.Fragment key={hotel.id}>
                         <HotelResultCard hotel={hotel} onViewDeal={handleViewDeal} />
