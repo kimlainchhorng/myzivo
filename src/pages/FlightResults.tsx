@@ -567,7 +567,7 @@ const FlightResults = () => {
 
               {/* Results - Only show if we have real API prices */}
               {!isLoading && isRealPrice && flightCards.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4 stagger-results">
                   {flightCards.map((flight, index) => (
                     <React.Fragment key={flight.id}>
                       <FlightResultCard 

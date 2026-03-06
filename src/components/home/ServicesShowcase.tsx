@@ -91,7 +91,7 @@ export default function ServicesShowcase() {
             >
               <Link
                 to={service.href}
-                className="group relative block h-full rounded-2xl overflow-hidden touch-manipulation active:scale-[0.98] transition-transform duration-200"
+                className="group relative block h-full rounded-2xl overflow-hidden touch-manipulation active:scale-[0.98] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 {/* Background image */}
                 <img

@@ -236,7 +236,7 @@ export default function HeroSection() {
                 <Button
                   size="lg"
                   onClick={scrollToSearch}
-                  className="h-14 px-10 text-lg font-bold rounded-2xl gap-3 shadow-[0_0_30px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] hover:scale-[1.02] transition-all duration-300"
+                  className="h-14 px-10 text-lg font-bold rounded-2xl gap-3 shadow-[0_0_30px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] hover:scale-[1.02] transition-all duration-300 glow-green-btn"
                 >
                   <Search className="w-5 h-5" />
                   Search Flights

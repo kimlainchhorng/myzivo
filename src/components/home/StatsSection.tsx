@@ -80,7 +80,7 @@ export default function StatsSection() {
               >
                 <stat.icon className="w-7 h-7" style={{ color: `hsl(var(${stat.colorVar}))` }} />
               </div>
-              <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tighter mb-2">
+              <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tighter mb-2 counter-tick">
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} decimals={stat.decimals} />
               </p>
               <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>

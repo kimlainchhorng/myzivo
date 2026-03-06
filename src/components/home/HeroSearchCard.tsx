@@ -39,9 +39,9 @@ export default function HeroSearchCard() {
     <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12" aria-label="Search flights, hotels, cars, rides, and restaurants">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          initial={{ opacity: 0, y: 24, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl border border-border/50 overflow-hidden border-glow relative"
         >
           {/* Gradient top accent */}
@@ -98,11 +98,11 @@ export default function HeroSearchCard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Where from?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Where to?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                     {/* Swap button */}
                     <button
                       className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/50 shadow-sm flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-200 z-10 hidden sm:flex hover:scale-110"
@@ -113,11 +113,11 @@ export default function HeroSearchCard() {
                   </div>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Dates" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Dates" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                    <Input placeholder="Passengers" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                   </div>
                   <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                     <Search className="w-4 h-4" /> Search
@@ -130,15 +130,15 @@ export default function HeroSearchCard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="City, hotel, or destination" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="City, hotel, or destination" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Check-in / Check-out" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Check-in / Check-out" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Guests & rooms" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Guests & rooms" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
@@ -150,15 +150,15 @@ export default function HeroSearchCard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Pickup location" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Pickup location" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Pickup date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Pickup date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Return date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Return date" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
@@ -170,11 +170,11 @@ export default function HeroSearchCard() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-                  <Input placeholder="Where are you?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Where are you?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
-                  <Input placeholder="Where are you going?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Where are you going?" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
@@ -186,7 +186,7 @@ export default function HeroSearchCard() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="relative sm:col-span-2">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Enter your delivery address" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50" />
+                  <Input placeholder="Enter your delivery address" className="pl-10 h-12 rounded-xl bg-muted/30 border-border/50 input-focus-glow" />
                 </div>
                 <Button onClick={handleSearch} className="h-12 rounded-xl font-semibold gap-2 text-base hover:scale-[1.02] active:scale-[0.98] transition-transform">
                   <Search className="w-4 h-4" /> Search
