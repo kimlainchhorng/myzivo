@@ -863,6 +863,97 @@
     box-shadow: 0 1px 0 hsl(142 71% 45% / 0.3), 0 2px 8px hsl(142 71% 45% / 0.1);
   }
 
+  /* =============================================
+     2026 PREMIUM POLISH UTILITIES
+     ============================================= */
+
+  /* Input focus glow - premium feel on search inputs */
+  .input-focus-glow {
+    @apply transition-all duration-300;
+  }
+  .input-focus-glow:focus-within {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12), 0 0 16px hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  /* Animated gradient border - rotating conic gradient */
+  .border-gradient-animated {
+    position: relative;
+    border: none !important;
+  }
+  .border-gradient-animated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--gradient-angle, 0deg),
+      hsl(var(--flights)),
+      hsl(var(--hotels)),
+      hsl(var(--cars)),
+      hsl(var(--primary)),
+      hsl(var(--flights))
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotate-gradient 6s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes rotate-gradient {
+    to { --gradient-angle: 360deg; }
+  }
+
+  @property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* Card hover lift with service-specific glow */
+  .card-hover-flights:hover {
+    box-shadow: 0 8px 30px -8px hsl(var(--flights) / 0.15), var(--shadow-card-hover);
+  }
+  .card-hover-hotels:hover {
+    box-shadow: 0 8px 30px -8px hsl(var(--hotels) / 0.15), var(--shadow-card-hover);
+  }
+  .card-hover-cars:hover {
+    box-shadow: 0 8px 30px -8px hsl(var(--cars) / 0.15), var(--shadow-card-hover);
+  }
+
+  /* Smooth counter ticker */
+  .counter-tick {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .counter-tick:hover {
+    transform: scale(1.08);
+  }
+
+  /* Radial gradient background for sections */
+  .bg-gradient-radial {
+    background: radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.06) 0%, transparent 60%);
+  }
+
+  /* Stagger children with CSS - extended for results lists */
+  .stagger-results > * {
+    opacity: 0;
+    animation: fade-in-up 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .stagger-results > *:nth-child(1) { animation-delay: 0s; }
+  .stagger-results > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger-results > *:nth-child(3) { animation-delay: 0.12s; }
+  .stagger-results > *:nth-child(4) { animation-delay: 0.18s; }
+  .stagger-results > *:nth-child(5) { animation-delay: 0.24s; }
+  .stagger-results > *:nth-child(6) { animation-delay: 0.3s; }
+  .stagger-results > *:nth-child(7) { animation-delay: 0.36s; }
+  .stagger-results > *:nth-child(8) { animation-delay: 0.42s; }
+  .stagger-results > *:nth-child(n+9) { animation-delay: 0.48s; }
+
 /* =============================================
    MOBILE RESPONSIVE FIXES
    ============================================= */
