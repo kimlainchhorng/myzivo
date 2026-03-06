@@ -39,9 +39,9 @@ export default function HeroSearchCard() {
     <section id="hero-search-card" className="relative z-20 -mt-8 sm:-mt-12 pb-8 sm:pb-12" aria-label="Search flights, hotels, cars, rides, and restaurants">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          initial={{ opacity: 0, y: 24, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl border border-border/50 overflow-hidden border-glow relative"
         >
           {/* Gradient top accent */}
