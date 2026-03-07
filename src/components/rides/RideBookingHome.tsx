@@ -800,7 +800,7 @@ export default function RideBookingHome() {
                           <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <div className="px-4 pb-4 pt-1">
+                        <div className="px-4 pt-1" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
                           <Button
                             className="w-full h-13 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                             onClick={() => setViewStep("pickup-confirm")}
