@@ -535,13 +535,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ PICKUP CONFIRMATION ═══════ */}
         {viewStep === "pickup-confirm" && (
-          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               onBack={() => setViewStep("vehicle")}
             />
-            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
 
               <AddressAutocomplete
