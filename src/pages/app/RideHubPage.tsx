@@ -143,6 +143,10 @@ export default function RideHubPage() {
             {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
             {activeTab === "lost" && <div className="p-4"><LostItemReport onSubmit={(d) => console.log(d)} onContactDriver={() => toast.info("Calling...")} /></div>}
             {activeTab === "a11y" && <div className="p-4"><AccessibilityHub /></div>}
+            {activeTab === "prefs" && <div className="p-4"><RidePreferences /></div>}
+            {activeTab === "eco" && <div className="p-4"><RideEcoTracker /></div>}
+            {activeTab === "business" && <div className="p-4"><RideBusinessManager /></div>}
+            {activeTab === "feedback" && <div className="p-4"><RideFeedbackCenter /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
