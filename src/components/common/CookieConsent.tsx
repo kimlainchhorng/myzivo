@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Cookie, X, Settings, Shield } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CookiePreferences {
   essential: boolean;
