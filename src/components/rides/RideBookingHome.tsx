@@ -1,10 +1,8 @@
 /**
  * RideBookingHome — Uber-style ride booking with 3 screens
- * Screen 1: Map + nearby cars + "Hello, User" + "Where to?" + saved places
- * Screen 2: Map with route + "Choose a ride" vehicle list
- * Screen 3: Map with route labels + confirmed vehicle selection
+ * Uses real Google Maps via RideMap component
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import RideMap from "@/components/maps/RideMap";
 
 /* ─── Data ─── */
 const savedPlaces = [
@@ -40,8 +39,8 @@ const autocompleteResults = [
 
 const vehicleOptions = [
   {
-    id: "zivoX",
-    name: "ZivoX",
+    id: "economy",
+    name: "Economy",
     desc: "Affordable rides, all to yourself",
     eta: "7:45",
     price: "$12.20",
@@ -49,22 +48,22 @@ const vehicleOptions = [
     icon: Car,
   },
   {
-    id: "black",
-    name: "Black",
-    desc: "Luxury rides with professional drivers",
+    id: "comfort",
+    name: "Comfort",
+    desc: "Extra legroom and top-rated drivers",
+    eta: "7:50",
+    price: "$19.90",
+    capacity: 4,
+    icon: Users,
+  },
+  {
+    id: "luxury",
+    name: "Luxury",
+    desc: "Premium rides with professional drivers",
     eta: "7:47",
     price: "$35.10",
     capacity: 4,
     icon: Crown,
-  },
-  {
-    id: "zivoXL",
-    name: "ZivoXL",
-    desc: "Fits up to 6 passengers",
-    eta: "7:50",
-    price: "$19.90",
-    capacity: 6,
-    icon: Users,
   },
 ];
 
@@ -78,175 +77,32 @@ const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
   { id: "history", label: "History", icon: History },
 ];
 
-/* ─── Nearby Cars (animated) ─── */
-function NearbyCars() {
-  const [cars, setCars] = useState([
-    { id: 1, x: 22, y: 38, rot: 45 },
-    { id: 2, x: 58, y: 28, rot: -30 },
-    { id: 3, x: 35, y: 62, rot: 120 },
-    { id: 4, x: 72, y: 55, rot: -60 },
-    { id: 5, x: 15, y: 52, rot: 90 },
-  ]);
+/* ─── Coordinates for route display ─── */
+const MOCK_PICKUP = { lat: 40.7128, lng: -73.9857 };
+const MOCK_DROPOFF = { lat: 40.7580, lng: -73.9855 };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCars((prev) =>
-        prev.map((c) => ({
-          ...c,
-          x: Math.max(5, Math.min(90, c.x + (Math.random() - 0.5) * 3)),
-          y: Math.max(5, Math.min(90, c.y + (Math.random() - 0.5) * 3)),
-          rot: c.rot + (Math.random() - 0.5) * 20,
-        }))
-      );
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <>
-      {cars.map((c) => (
-        <motion.div
-          key={c.id}
-          className="absolute z-10"
-          animate={{ left: `${c.x}%`, top: `${c.y}%`, rotate: c.rot }}
-          transition={{ duration: 2.5, ease: "easeInOut" }}
-        >
-          <div className="w-6 h-6 rounded-full bg-card border border-border/40 shadow-sm flex items-center justify-center">
-            <Car className="w-3.5 h-3.5 text-foreground" />
-          </div>
-        </motion.div>
-      ))}
-    </>
-  );
-}
-
-/* ─── Map Component ─── */
-function MapView({
+/* ─── Map Section Wrapper ─── */
+function MapSection({
   showRoute = false,
-  showLabels = false,
-  pickup,
-  dropoff,
   onBack,
   compact = false,
   children,
 }: {
   showRoute?: boolean;
-  showLabels?: boolean;
-  pickup?: string;
-  dropoff?: string;
   onBack?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
 }) {
   return (
     <div className={cn(
-      "relative w-full overflow-hidden bg-background",
+      "relative w-full overflow-hidden",
       compact ? "h-[50vh] min-h-[300px]" : "h-[48vh] min-h-[280px]"
     )}>
-      {/* Surface tint */}
-      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
-
-      {/* Street grid */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
-        {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((y) => (
-          <line key={`h${y}`} x1="0" y1={y} x2="200" y2={y} stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
-        ))}
-        {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((x) => (
-          <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
-        ))}
-        <line x1="12" y1="188" x2="188" y2="24" stroke="hsl(var(--border))" strokeWidth="1.2" opacity="0.16" />
-
-        {showRoute && (
-          <>
-            <motion.path
-              d="M 65 140 L 65 110 L 90 80 L 120 55 L 145 35"
-              stroke="hsl(var(--primary))"
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.2, ease: "easeInOut" }}
-            />
-            <path
-              d="M 65 140 L 65 110 L 90 80 L 120 55 L 145 35"
-              stroke="hsl(var(--primary))"
-              strokeWidth="7"
-              fill="none"
-              opacity="0.14"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </>
-        )}
-      </svg>
-
-      {/* Street labels */}
-      <span className="absolute text-[8px] font-semibold text-muted-foreground/30 tracking-wide" style={{ left: "10%", top: "25%" }}>SOHO</span>
-      <span className="absolute text-[8px] font-semibold text-muted-foreground/30 tracking-wide" style={{ left: "50%", top: "15%" }}>EAST VILLAGE</span>
-      <span className="absolute text-[8px] font-semibold text-muted-foreground/30 tracking-wide" style={{ left: "8%", top: "55%" }}>FINANCIAL DISTRICT</span>
-      <span className="absolute text-[8px] font-semibold text-muted-foreground/30 tracking-wide" style={{ left: "55%", top: "65%" }}>DOWNTOWN</span>
-
-      {/* Route markers */}
-      {showRoute && (
-        <>
-          <div className="absolute z-20" style={{ left: "32%", top: "68%" }}>
-            <div className="-translate-x-1/2 -translate-y-1/2">
-              <div className="w-4 h-4 rounded-full bg-foreground border-[3px] border-card shadow-lg" />
-            </div>
-            {showLabels && pickup && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap"
-              >
-                <div className="bg-card border border-border/30 rounded-lg px-2.5 py-1 shadow-md text-[10px] font-bold text-foreground flex items-center gap-1">
-                  <Home className="w-3 h-3" />
-                  {pickup}
-                  <ChevronRight className="w-2.5 h-2.5 text-muted-foreground" />
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          <div className="absolute z-20" style={{ left: "72%", top: "17%" }}>
-            <div className="-translate-x-1/2 -translate-y-1/2">
-              <div className="w-5 h-5 rounded-sm bg-foreground shadow-lg flex items-center justify-center">
-                <div className="w-2.5 h-2.5 rounded-sm bg-card" />
-              </div>
-            </div>
-            {showLabels && dropoff && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap"
-              >
-                <div className="bg-card border border-border/30 rounded-lg px-2.5 py-1 shadow-md text-[10px] font-bold text-foreground flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {dropoff}
-                  <ChevronRight className="w-2.5 h-2.5 text-muted-foreground" />
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Center user marker (home screen only) */}
-      {!showRoute && (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-          <motion.div
-            animate={{ scale: [1, 1.8, 1], opacity: [0.25, 0, 0.25] }}
-            transition={{ repeat: Infinity, duration: 2.5 }}
-            className="absolute inset-0 w-8 h-8 -m-1 rounded-full bg-primary/30"
-          />
-          <div className="w-6 h-6 rounded-full bg-primary border-[3px] border-card shadow-xl" />
-        </div>
-      )}
-
-      {/* Nearby cars (home only) */}
-      {!showRoute && <NearbyCars />}
+      <RideMap
+        pickupCoords={showRoute ? MOCK_PICKUP : null}
+        dropoffCoords={showRoute ? MOCK_DROPOFF : null}
+        className="w-full h-full"
+      />
 
       {/* Navigation controls */}
       <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
@@ -254,14 +110,14 @@ function MapView({
         <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">−</button>
       </div>
 
-      {/* ZIVO locator */}
+      {/* Locator */}
       <div className="absolute top-16 right-3 z-20">
         <div className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
           <Navigation className="w-4 h-4 text-primary" />
         </div>
       </div>
 
-      {/* Back button overlay (for inner screens) */}
+      {/* Back button overlay */}
       {onBack && (
         <div className="absolute top-16 left-3 z-20">
           <button
@@ -273,7 +129,6 @@ function MapView({
         </div>
       )}
 
-      {/* Slot for floating tabs or other overlays */}
       {children}
     </div>
   );
@@ -341,7 +196,7 @@ export default function RideBookingHome() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [focusedInput, setFocusedInput] = useState<"pickup" | "destination" | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState("zivoX");
+  const [selectedVehicle, setSelectedVehicle] = useState("economy");
 
   const now = new Date();
   const hour = now.getHours();
@@ -413,7 +268,7 @@ export default function RideBookingHome() {
             className="flex flex-col flex-1"
           >
             {/* Map with floating tabs */}
-            <MapView compact>
+            <MapSection compact>
               {/* Floating Ride Mode Tabs */}
               <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4">
                 <div className="flex items-center gap-1.5 bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-1 shadow-lg">
@@ -438,14 +293,12 @@ export default function RideBookingHome() {
                   })}
                 </div>
               </div>
-            </MapView>
+            </MapSection>
 
             {/* Bottom booking panel */}
             <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
-              {/* Greeting */}
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
 
-              {/* Where to? bar */}
               <button
                 onClick={() => setViewStep("search")}
                 className="w-full mt-4 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3.5 transition-colors hover:bg-muted/40 active:scale-[0.98]"
@@ -459,7 +312,6 @@ export default function RideBookingHome() {
                 </div>
               </button>
 
-              {/* Saved places */}
               <div className="mt-5 space-y-0">
                 {savedPlaces.map((place, i) => {
                   const Icon = place.icon;
@@ -502,7 +354,6 @@ export default function RideBookingHome() {
             exit={{ opacity: 0, y: 10 }}
             className="flex flex-col flex-1 bg-background"
           >
-            {/* Header */}
             <div className="flex items-center gap-3 px-4 pt-4 pb-2">
               <button
                 onClick={() => setViewStep("home")}
@@ -513,7 +364,6 @@ export default function RideBookingHome() {
               <h2 className="text-lg font-black text-foreground">Where to?</h2>
             </div>
 
-            {/* Route inputs */}
             <div className="px-4 pt-2">
               <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
                 <div className="flex items-center gap-3">
@@ -543,7 +393,6 @@ export default function RideBookingHome() {
               </div>
             </div>
 
-            {/* Autocomplete results */}
             <div className="flex-1 overflow-y-auto px-4 pt-3">
               <AnimatePresence>
                 {focusedInput && (pickup || destination) && filteredSuggestions.length > 0 && (
@@ -572,7 +421,6 @@ export default function RideBookingHome() {
                 )}
               </AnimatePresence>
 
-              {/* Saved + Recent (when no search active) */}
               {!focusedInput && (
                 <div className="space-y-0">
                   {savedPlaces.map((place) => {
@@ -618,7 +466,6 @@ export default function RideBookingHome() {
               )}
             </div>
 
-            {/* Continue button */}
             {pickup && destination && !focusedInput && (
               <div className="px-4 pb-4 pt-2">
                 <Button
@@ -641,10 +488,8 @@ export default function RideBookingHome() {
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col flex-1"
           >
-            <MapView
+            <MapSection
               showRoute
-              pickup={pickup || "Home"}
-              dropoff={destination || "Destination"}
               onBack={() => setViewStep("search")}
             />
 
@@ -690,11 +535,8 @@ export default function RideBookingHome() {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1"
           >
-            <MapView
+            <MapSection
               showRoute
-              showLabels
-              pickup={pickup || "Home"}
-              dropoff={destination || "Destination"}
               onBack={() => setViewStep("vehicle")}
             />
 
