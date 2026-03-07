@@ -95,7 +95,6 @@ function MapSection({
   driverCoords,
   userLocation,
   routePolyline,
-  onBack,
   onLocateUser,
   compact = false,
   children,
@@ -105,7 +104,6 @@ function MapSection({
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
-  onBack?: () => void;
   onLocateUser?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
@@ -134,8 +132,8 @@ function MapSection({
 
   return (
     <div className={cn(
-      "relative w-full overflow-hidden flex-1",
-      compact ? "min-h-[250px]" : "min-h-[200px]"
+      "relative w-full overflow-hidden",
+      compact ? "flex-1 min-h-[200px]" : "flex-[2] min-h-[180px] max-h-[45vh]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
@@ -149,12 +147,12 @@ function MapSection({
         className="absolute inset-0"
       />
 
-      <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
+      <div className="absolute right-3 bottom-14 z-20 flex flex-col gap-1">
         <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
         <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
 
-      <div className="absolute top-16 right-3 z-20">
+      <div className="absolute top-3 right-3 z-20">
         <button
           onClick={handleLocateClick}
           className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
@@ -164,13 +162,6 @@ function MapSection({
         </button>
       </div>
 
-      {onBack && (
-        <div className="absolute top-16 left-3 z-20">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </button>
-        </div>
-      )}
       {children}
     </div>
   );
@@ -651,23 +642,25 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-              onBack={() => {
-                setViewStep("search");
-                setRouteData(null);
-              }}
               onLocateUser={handleLocateUser}
               userLocation={userLocation}
-            />
+            >
+              <div className="absolute top-3 left-3 z-30">
+                <button onClick={() => { setViewStep("search"); setRouteData(null); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </MapSection>
 
             {/* Route info bottom card */}
-            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
+            <div className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 px-5 pt-4 pb-3 shadow-[0_-8px_20px_hsl(var(--foreground)/0.06)]">
               {/* Addresses */}
-              <div className="flex items-start gap-3 mb-4">
+              <div className="flex items-start gap-3 mb-3">
                 <div className="flex flex-col items-center gap-0.5 mt-1">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                   <div className="w-0.5 h-6 bg-border/50" />
@@ -687,7 +680,7 @@ export default function RideBookingHome() {
 
               {/* Trip stats */}
               {routeData && (
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-2.5 mb-3">
                   <div className="flex-1 flex items-center gap-2 rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
                     <Timer className="w-4 h-4 text-primary shrink-0" />
                     <div>
@@ -733,13 +726,18 @@ export default function RideBookingHome() {
 
         {/* ═══════ VEHICLE SELECTION ═══════ */}
         {viewStep === "vehicle" && (
-          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-              onBack={() => setViewStep("route-preview")}
-            />
+            >
+              <div className="absolute top-3 left-3 z-30">
+                <button onClick={() => setViewStep("route-preview")} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </MapSection>
             <div className="shrink-0 bg-background relative z-10 max-h-[55vh] overflow-y-auto">
               {/* Trip summary bar */}
               {routeData && (
@@ -813,8 +811,13 @@ export default function RideBookingHome() {
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-              onBack={() => setViewStep("vehicle")}
-            />
+            >
+              <div className="absolute top-3 left-3 z-30">
+                <button onClick={() => setViewStep("vehicle")} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </MapSection>
             <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
 
