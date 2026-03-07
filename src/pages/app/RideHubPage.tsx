@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -38,6 +38,10 @@ import RidePreferences from "@/components/rides/RidePreferences";
 import RideEcoTracker from "@/components/rides/RideEcoTracker";
 import RideBusinessManager from "@/components/rides/RideBusinessManager";
 import RideFeedbackCenter from "@/components/rides/RideFeedbackCenter";
+import RideSpecialtyModes from "@/components/rides/RideSpecialtyModes";
+import RideSmartAnalytics from "@/components/rides/RideSmartAnalytics";
+import RideEntertainment from "@/components/rides/RideEntertainment";
+import RideGifting from "@/components/rides/RideGifting";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -73,6 +77,10 @@ const tabs = [
   { id: "eco", label: "Eco", icon: Leaf },
   { id: "business", label: "Business", icon: Briefcase },
   { id: "feedback", label: "Feedback", icon: ThumbsUp },
+  { id: "specialty", label: "Special", icon: Dog },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
+  { id: "entertain", label: "Music", icon: Music },
+  { id: "gifting", label: "Gifting", icon: Gift },
 ];
 
 export default function RideHubPage() {
@@ -147,6 +155,10 @@ export default function RideHubPage() {
             {activeTab === "eco" && <div className="p-4"><RideEcoTracker /></div>}
             {activeTab === "business" && <div className="p-4"><RideBusinessManager /></div>}
             {activeTab === "feedback" && <div className="p-4"><RideFeedbackCenter /></div>}
+            {activeTab === "specialty" && <div className="p-4"><RideSpecialtyModes /></div>}
+            {activeTab === "analytics" && <div className="p-4"><RideSmartAnalytics /></div>}
+            {activeTab === "entertain" && <div className="p-4"><RideEntertainment /></div>}
+            {activeTab === "gifting" && <div className="p-4"><RideGifting /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
