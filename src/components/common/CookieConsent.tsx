@@ -17,6 +17,8 @@ interface CookiePreferences {
 }
 
 const CookieConsent = () => {
+  const location = useLocation();
+  const isRideHub = location.pathname.startsWith("/rides/hub");
   const [isVisible, setIsVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
