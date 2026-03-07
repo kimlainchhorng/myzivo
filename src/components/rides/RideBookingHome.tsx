@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → vehicle → pickup-confirm → matching → tracking → complete
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,7 @@ import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 /* ─── Types ─── */
 interface PlaceData {
@@ -74,40 +75,49 @@ function MapSection({
   pickupCoords,
   dropoffCoords,
   driverCoords,
+  userLocation,
   onBack,
+  onLocateUser,
   compact = false,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
   driverCoords?: { lat: number; lng: number } | null;
+  userLocation?: { lat: number; lng: number } | null;
   onBack?: () => void;
+  onLocateUser?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
 }) {
   return (
     <div className={cn(
       "relative w-full overflow-hidden flex-1",
-      compact ? "min-h-0" : "min-h-0"
+      compact ? "min-h-[250px]" : "min-h-[200px]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
         dropoffCoords={dropoffCoords || null}
         driverCoords={driverCoords || null}
+        userLocation={userLocation || null}
         className="w-full h-full"
       />
       <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">+</button>
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">−</button>
+        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
+        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
       <div className="absolute top-16 right-3 z-20">
-        <div className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+        <button
+          onClick={onLocateUser}
+          className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
+          aria-label="Center on my location"
+        >
           <Navigation className="w-4 h-4 text-primary" />
-        </div>
+        </button>
       </div>
       {onBack && (
         <div className="absolute top-16 left-3 z-20">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
         </div>
@@ -171,7 +181,9 @@ function VehicleRow({
 export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+  const { getCurrentLocation } = useCurrentLocation();
+
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
@@ -191,6 +203,19 @@ export default function RideBookingHome() {
   const [trackingStatus, setTrackingStatus] = useState<"arriving" | "waiting" | "in_transit" | "almost_there">("arriving");
   const [trackingEta, setTrackingEta] = useState(4);
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Fetch user location on mount
+  useEffect(() => {
+    getCurrentLocation()
+      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .catch(() => {}); // silently fail — map will use default center
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLocateUser = useCallback(() => {
+    getCurrentLocation()
+      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .catch(() => toast.error("Could not get your location"));
+  }, [getCurrentLocation]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -346,7 +371,7 @@ export default function RideBookingHome() {
         {viewStep === "home" && (
           <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {/* Map fills remaining space */}
-            <MapSection compact />
+            <MapSection compact userLocation={userLocation} onLocateUser={handleLocateUser} />
 
             {/* Bottom panel — fixed height, no scroll */}
             <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
