@@ -133,7 +133,7 @@ function MapSection({
   return (
     <div className={cn(
       "relative w-full overflow-hidden",
-      compact ? "flex-1 min-h-[200px]" : "flex-[3] min-h-[200px] max-h-[65vh]"
+      compact ? "absolute inset-0" : "flex-[3] min-h-[200px] max-h-[65vh]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
@@ -157,7 +157,7 @@ function MapSection({
         </button>
       </div>
 
-      <div className="absolute right-3 bottom-4 z-20 flex flex-col gap-1">
+      <div className="absolute right-3 z-20 flex flex-col gap-1" style={{ bottom: "calc(34vh + 8px)" }}>
         <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
         <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
@@ -671,7 +671,7 @@ export default function RideBookingHome() {
               }}
               animate={{
                 height: sheetExpanded ? "65vh" : "auto",
-                maxHeight: sheetExpanded ? "65vh" : "38vh",
+                maxHeight: sheetExpanded ? "65vh" : "32vh",
               }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
               className="absolute bottom-0 left-0 right-0 z-10 bg-background rounded-t-[1.25rem] border-t border-border/30 shadow-[0_-8px_24px_hsl(var(--foreground)/0.1)] flex flex-col overflow-hidden"
@@ -684,9 +684,9 @@ export default function RideBookingHome() {
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
-                <div className="px-4 pb-3 shrink-0">
+                <div className="px-4 pb-2 shrink-0">
                   {/* Addresses */}
-                  <div className="flex items-start gap-3 mb-2.5">
+                  <div className="flex items-start gap-3 mb-2">
                     <div className="flex flex-col items-center gap-0.5 mt-0.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                       <div className="w-0.5 h-5 bg-border/50" />
