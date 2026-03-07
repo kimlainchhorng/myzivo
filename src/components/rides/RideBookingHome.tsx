@@ -95,7 +95,6 @@ function MapSection({
   driverCoords,
   userLocation,
   routePolyline,
-  onBack,
   onLocateUser,
   compact = false,
   children,
@@ -105,7 +104,6 @@ function MapSection({
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
-  onBack?: () => void;
   onLocateUser?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
