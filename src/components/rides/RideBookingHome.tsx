@@ -670,18 +670,18 @@ export default function RideBookingHome() {
               }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 shadow-[0_-12px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
-              style={{ touchAction: "none" }}
+              style={{ touchAction: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+              <div className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing">
                 <div className="w-10 h-1.5 rounded-full bg-muted-foreground/20" />
               </div>
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
-                <div className="px-5 pb-3">
+                <div className="px-5 pb-4">
                   {/* Addresses */}
-                  <div className="flex items-start gap-3 mb-2">
+                  <div className="flex items-start gap-3 mb-3">
                     <div className="flex flex-col items-center gap-0.5 mt-1">
                       <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                       <div className="w-0.5 h-6 bg-border/50" />
@@ -737,12 +737,14 @@ export default function RideBookingHome() {
                           <span className="ml-3 text-sm text-muted-foreground">Calculating route...</span>
                         </div>
                       ) : (
-                        <Button
-                          className="w-full h-13 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                          onClick={() => setSheetExpanded(true)}
-                        >
-                          Choose a ride
-                        </Button>
+                        <div style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))" }}>
+                          <Button
+                            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                            onClick={() => setSheetExpanded(true)}
+                          >
+                            Choose a ride
+                          </Button>
+                        </div>
                       )}
                     </>
                   )}
@@ -800,7 +802,7 @@ export default function RideBookingHome() {
                           <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <div className="px-4 pb-4 pt-1">
+                        <div className="px-4 pt-1" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
                           <Button
                             className="w-full h-13 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                             onClick={() => setViewStep("pickup-confirm")}
