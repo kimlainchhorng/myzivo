@@ -649,10 +649,6 @@ export default function RideBookingHome() {
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-              onBack={() => {
-                setViewStep("search");
-                setRouteData(null);
-              }}
               onLocateUser={handleLocateUser}
               userLocation={userLocation}
             />
