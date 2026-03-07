@@ -46,6 +46,10 @@ import RideRewardsGamification from "@/components/rides/RideRewardsGamification"
 import RideCorporateFleet from "@/components/rides/RideCorporateFleet";
 import RideAccessibilityPlus from "@/components/rides/RideAccessibilityPlus";
 import RideRouteIntelligence from "@/components/rides/RideRouteIntelligence";
+import RideAdvancedSafety from "@/components/rides/RideAdvancedSafety";
+import RideTravelIntegration from "@/components/rides/RideTravelIntegration";
+import RideFamilyAccounts from "@/components/rides/RideFamilyAccounts";
+import RideSubscriptionHub from "@/components/rides/RideSubscriptionHub";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
