@@ -296,31 +296,84 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
 
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-muted/40 to-background">
-        <div className="absolute inset-0 opacity-[0.07]" style={{
-          backgroundImage: "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }} />
-        <div className="absolute top-[30%] left-0 right-0 h-[3px] bg-primary/15 rounded-full" />
-        <div className="absolute top-[60%] left-[10%] right-[20%] h-[2px] bg-primary/10 rounded-full" />
-        <div className="absolute top-0 bottom-0 left-[35%] w-[3px] bg-primary/15 rounded-full" />
-        <div className="absolute top-0 bottom-0 right-[25%] w-[2px] bg-primary/10 rounded-full" />
+      {/* ZIVO-branded map background */}
+      <div className="absolute inset-0 bg-[hsl(var(--muted))]">
+        {/* Road grid pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="hsl(var(--foreground))" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
 
-        {/* Pickup marker */}
-        <div className="absolute top-[40%] left-[45%]">
-          <div className="w-5 h-5 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse border-2 border-background" />
-          <div className="absolute inset-0 w-5 h-5 rounded-full bg-primary/20 animate-ping" />
+        {/* Simulated roads */}
+        <div className="absolute inset-0">
+          {/* Main horizontal road */}
+          <div className="absolute top-[35%] left-0 right-0 h-[6px] bg-foreground/10 rounded-full" />
+          <div className="absolute top-[55%] left-[5%] right-[15%] h-[4px] bg-foreground/8 rounded-full" />
+          <div className="absolute top-[72%] left-[10%] right-[5%] h-[5px] bg-foreground/10 rounded-full" />
+          
+          {/* Main vertical road */}
+          <div className="absolute top-0 bottom-0 left-[40%] w-[6px] bg-foreground/10 rounded-full" />
+          <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[4px] bg-foreground/8 rounded-full" />
+          <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] bg-foreground/6 rounded-full" />
+          
+          {/* Diagonal roads */}
+          <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] bg-foreground/6 rounded-full origin-left rotate-[25deg]" />
+          <div className="absolute top-[60%] left-[50%] w-[40%] h-[3px] bg-foreground/6 rounded-full origin-left -rotate-[15deg]" />
+          
+          {/* Block fills for neighborhoods */}
+          <div className="absolute top-[8%] left-[5%] w-[30%] h-[22%] rounded-lg bg-foreground/[0.03]" />
+          <div className="absolute top-[42%] left-[45%] w-[25%] h-[15%] rounded-lg bg-foreground/[0.03]" />
+          <div className="absolute top-[62%] left-[8%] w-[20%] h-[18%] rounded-lg bg-foreground/[0.03]" />
+          
+          {/* Water feature */}
+          <div className="absolute bottom-0 right-0 w-[35%] h-[25%] bg-primary/[0.06] rounded-tl-[3rem]" />
         </div>
 
+        {/* Pickup marker with pulse */}
+        <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" />
+          <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-pulse" />
+          <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 border-2 border-background relative z-10" />
+        </div>
+
+        {/* Dropoff marker */}
         {dropoffCoords && (
-          <div className="absolute top-[55%] left-[60%]">
-            <div className="w-4 h-4 rounded-full bg-destructive shadow-lg shadow-destructive/30 border-2 border-background" />
+          <div className="absolute top-[58%] left-[62%] -translate-x-1/2 -translate-y-1/2">
+            <div className="w-3.5 h-3.5 rounded-full bg-primary/70 shadow-md border-2 border-background" />
           </div>
         )}
 
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <div className="px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/30 text-[10px] text-muted-foreground font-medium">
-            Map preview
+        {/* Route line between markers */}
+        {dropoffCoords && (
+          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
+            <line x1="42%" y1="38%" x2="62%" y2="58%" stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray="8,4" opacity="0.4" />
+          </svg>
+        )}
+
+        {/* Simulated nearby driver dots */}
+        {[
+          { top: "28%", left: "55%" },
+          { top: "45%", left: "25%" },
+          { top: "65%", left: "50%" },
+        ].map((pos, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 rounded-full bg-primary/40"
+            style={{ top: pos.top, left: pos.left, animationDelay: `${i * 0.5}s` }}
+          >
+            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '3s', animationDelay: `${i * 0.7}s` }} />
+          </div>
+        ))}
+
+        {/* ZIVO branding */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="px-3 py-1.5 rounded-full bg-card/90 backdrop-blur-sm border border-border/30 shadow-sm">
+            <span className="text-[10px] font-bold text-primary">ZIVO</span>
+            <span className="text-[10px] text-muted-foreground ml-1">Map</span>
           </div>
         </div>
       </div>
