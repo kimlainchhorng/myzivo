@@ -320,7 +320,7 @@ const App = () => (
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
-                <Route path="/rides" element={<RequestRidePage />} />
+                <Route path="/rides" element={<PreserveQueryRedirect to="/rides/hub" />} />
                 <Route path="/rides/track/:tripId" element={<RideTrackingPage />} />
                 <Route path="/rides/hub" element={<RideHubPage />} />
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
