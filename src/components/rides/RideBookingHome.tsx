@@ -290,7 +290,7 @@ export default function RideBookingHome() {
 
   // New state for enhanced flow
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
-  const [rideCategory, setRideCategory] = useState<"popular" | "premium" | "more">("popular");
+  const [rideCategory, setRideCategory] = useState<"popular" | "premium">("popular");
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
 
