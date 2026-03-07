@@ -261,6 +261,9 @@ export default function RideBookingHome() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
+  const filteredVehicles = carSeatFilter
+    ? vehicleOptions.filter((v) => v.carSeat)
+    : vehicleOptions;
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
 
   const handleTabChange = (tab: RideTab) => {
