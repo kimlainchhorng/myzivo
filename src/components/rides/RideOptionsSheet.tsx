@@ -75,7 +75,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Equipped with 1 child car seat",
     price: 39.95,
     seats: 4,
-    image: "/vehicles/economy-car.png",
+    image: "/vehicles/economy-car-v2.png",
   },
   {
     id: "xl-car-seat",
