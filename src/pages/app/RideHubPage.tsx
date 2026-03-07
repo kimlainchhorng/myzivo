@@ -158,7 +158,7 @@ export default function RideHubPage() {
       </div>
 
       {/* Tab content */}
-      <div className="pb-6">
+      <div className={cn("flex-1", activeTab !== "book" && "pb-6")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
