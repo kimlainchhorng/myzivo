@@ -126,7 +126,7 @@ const tabs = [
 
 export default function RideHubPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("search");
+  const [activeTab, setActiveTab] = useState("book");
 
   return (
     <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")}>
