@@ -255,14 +255,13 @@ function VehicleRow({
 
 /* ─── Vehicle image map ─── */
 const VEHICLE_IMAGES: Record<string, string> = {
-  "economy":        "/vehicles/economy-car-v2.png",
-  "xl":             "/vehicles/xl-car-v2.png",
-  "share":          "/vehicles/share-car-v2.png",
-  "comfort":        "/vehicles/comfort-car-v2.png",
-  "luxury":         "/vehicles/luxury-car-v2.png",
-  "car-seat":       "/vehicles/economy-car.svg",
-  "xl-car-seat":    "/vehicles/xl-car.svg",
-  "black-car-seat": "/vehicles/black-car.svg",
+  "economy":   "/vehicles/economy-car-v2.png",
+  "share":     "/vehicles/share-car-v2.png",
+  "comfort":   "/vehicles/comfort-car-v2.png",
+  "ev":        "/vehicles/economy-car-v2.png",
+  "black-lane": "/vehicles/luxury-car-v2.png",
+  "black-xl":  "/vehicles/xl-car-v2.png",
+  "luxury-xl": "/vehicles/luxury-car-v2.png",
 };
 
 const etaTime = (minutesFromNow: number) =>
