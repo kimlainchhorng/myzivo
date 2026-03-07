@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, CreditCard, Users } from "lucide-react";
 
-type RideCategory = "Popular" | "Premium" | "More";
+type RideCategory = "Popular" | "Premium";
 
 type RideOption = {
   id: string;
@@ -27,16 +27,6 @@ const rideOptionsSeed: RideOption[] = [
     image: "/vehicles/economy-car-v2.png",
   },
   {
-    id: "xl",
-    name: "ZIVO XL",
-    category: "Popular",
-    eta: "3:21 pm",
-    description: "Extra space for groups",
-    price: 28.33,
-    seats: 6,
-    image: "/vehicles/xl-car-v2.png",
-  },
-  {
     id: "share",
     name: "ZIVO Share",
     category: "Popular",
@@ -50,7 +40,7 @@ const rideOptionsSeed: RideOption[] = [
   {
     id: "comfort",
     name: "ZIVO Comfort",
-    category: "Premium",
+    category: "Popular",
     eta: "3:24 pm",
     description: "Top-rated drivers, extra legroom",
     price: 45.61,
@@ -58,54 +48,44 @@ const rideOptionsSeed: RideOption[] = [
     image: "/vehicles/comfort-car-v2.png",
   },
   {
-    id: "luxury",
-    name: "ZIVO Luxury",
-    category: "Premium",
+    id: "ev",
+    name: "ZIVO EV",
+    category: "Popular",
     eta: "3:25 pm",
+    description: "Electric, zero-emission rides",
+    price: 27.50,
+    seats: 4,
+    image: "/vehicles/economy-car-v2.png",
+  },
+  {
+    id: "black-lane",
+    name: "ZIVO BLACK Lane",
+    category: "Premium",
+    eta: "3:26 pm",
     description: "Premium with professional drivers",
     price: 73.23,
     seats: 4,
     image: "/vehicles/luxury-car-v2.png",
   },
   {
-    id: "car-seat",
-    name: "ZIVO Car Seat",
-    category: "More",
-    eta: "3:26 pm",
-    description: "Equipped with 1 child car seat",
-    price: 39.95,
-    seats: 4,
-    image: "/vehicles/economy-car-v2.png",
-  },
-  {
-    id: "xl-car-seat",
-    name: "ZIVO XL Car Seat",
-    category: "More",
+    id: "black-xl",
+    name: "ZIVO BLACK XL",
+    category: "Premium",
     eta: "3:27 pm",
-    description: "Larger vehicle with car seat",
-    price: 47.11,
+    description: "Premium SUV for groups",
+    price: 89.50,
     seats: 6,
-    image: "/vehicles/xl-car.png",
+    image: "/vehicles/xl-car-v2.png",
   },
   {
-    id: "black-car-seat",
-    name: "ZIVO Black Car Seat",
-    category: "More",
+    id: "luxury-xl",
+    name: "ZIVO Luxury XL",
+    category: "Premium",
     eta: "3:28 pm",
-    description: "Premium with car seat",
-    price: 81.39,
-    seats: 4,
-    image: "/vehicles/black-car.png",
-  },
-  {
-    id: "wav",
-    name: "ZIVO WAV",
-    category: "More",
-    eta: "3:29 pm",
-    description: "Wheelchair-accessible rides",
-    price: 33.50,
-    seats: 4,
-    image: "/vehicles/wav-car.png",
+    description: "Luxury spacious SUV experience",
+    price: 95.99,
+    seats: 6,
+    image: "/vehicles/luxury-car-v2.png",
   },
 ];
 
@@ -113,7 +93,7 @@ function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-const categories: RideCategory[] = ["Popular", "Premium", "More"];
+const categories: RideCategory[] = ["Popular", "Premium"];
 
 interface RideOptionsSheetProps {
   onConfirm?: (rideId: string) => void;
