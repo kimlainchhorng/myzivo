@@ -1,6 +1,6 @@
 /**
- * RideBookingHome — Uber-style ride booking with 3 screens
- * Uses real Google Maps via RideMap component
+ * RideBookingHome — Complete ride booking flow
+ * Flow: home → search → vehicle → pickup-confirm → matching → tracking → complete
  */
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,15 +9,30 @@ import {
   MapPin, Navigation, ChevronRight, ArrowLeft, Home,
   Building2, Car, Crown, Users, Zap,
   CheckCircle, History, ChevronDown, Clock,
-  CreditCard, User, Bell, CalendarClock, Map
+  CreditCard, User, Bell, CalendarClock, Map,
+  Star, Phone, MessageSquare, Shield, Banknote,
+  Smartphone, Wallet, X
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { supabase } from "@/integrations/supabase/client";
 import RideMap from "@/components/maps/RideMap";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+
+/* ─── Types ─── */
+interface PlaceData {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+type ViewStep = "home" | "search" | "vehicle" | "pickup-confirm" | "matching" | "tracking" | "complete";
+type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
 const savedPlaces = [
@@ -31,44 +46,11 @@ const recentDestinations = [
   { id: "3", address: "Central Mall, 88 Shopping Dr", time: "Last week" },
 ];
 
-const autocompleteResults = [
-  { id: "a1", primary: "Downtown Convention Center", secondary: "100 Convention Way, Downtown" },
-  { id: "a2", primary: "Downtown Gym & Fitness", secondary: "55 Fitness Ave, Downtown" },
-  { id: "a3", primary: "Downtown Medical Center", secondary: "200 Health Blvd, Suite 300" },
-];
-
 const vehicleOptions = [
-  {
-    id: "economy",
-    name: "Economy",
-    desc: "Affordable rides, all to yourself",
-    eta: "7:45",
-    price: "$12.20",
-    capacity: 4,
-    icon: Car,
-  },
-  {
-    id: "comfort",
-    name: "Comfort",
-    desc: "Extra legroom and top-rated drivers",
-    eta: "7:50",
-    price: "$19.90",
-    capacity: 4,
-    icon: Users,
-  },
-  {
-    id: "luxury",
-    name: "Luxury",
-    desc: "Premium rides with professional drivers",
-    eta: "7:47",
-    price: "$35.10",
-    capacity: 4,
-    icon: Crown,
-  },
+  { id: "economy", name: "Zivo Economy", desc: "Affordable rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car },
+  { id: "comfort", name: "Zivo Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Users },
+  { id: "luxury", name: "Zivo Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown },
 ];
-
-type ViewStep = "home" | "search" | "vehicle" | "confirm";
-type RideTab = "book" | "reserve" | "map" | "history";
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
   { id: "book", label: "Book", icon: Car },
@@ -77,18 +59,29 @@ const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
   { id: "history", label: "History", icon: History },
 ];
 
-/* ─── Coordinates for route display ─── */
-const MOCK_PICKUP = { lat: 40.7128, lng: -73.9857 };
-const MOCK_DROPOFF = { lat: 40.7580, lng: -73.9855 };
+/* ─── Mock driver for matching simulation ─── */
+const MOCK_DRIVER = {
+  name: "Marcus T.",
+  initials: "MT",
+  rating: 4.92,
+  trips: 2847,
+  vehicle: "Silver Toyota Camry",
+  plate: "ABC 1234",
+  phone: "+1 (555) 123-4567",
+};
 
 /* ─── Map Section Wrapper ─── */
 function MapSection({
-  showRoute = false,
+  pickupCoords,
+  dropoffCoords,
+  driverCoords,
   onBack,
   compact = false,
   children,
 }: {
-  showRoute?: boolean;
+  pickupCoords?: { lat: number; lng: number } | null;
+  dropoffCoords?: { lat: number; lng: number } | null;
+  driverCoords?: { lat: number; lng: number } | null;
   onBack?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
@@ -99,42 +92,33 @@ function MapSection({
       compact ? "h-[50vh] min-h-[300px]" : "h-[48vh] min-h-[280px]"
     )}>
       <RideMap
-        pickupCoords={showRoute ? MOCK_PICKUP : null}
-        dropoffCoords={showRoute ? MOCK_DROPOFF : null}
+        pickupCoords={pickupCoords || null}
+        dropoffCoords={dropoffCoords || null}
+        driverCoords={driverCoords || null}
         className="w-full h-full"
       />
-
-      {/* Navigation controls */}
       <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
         <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">+</button>
         <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">−</button>
       </div>
-
-      {/* Locator */}
       <div className="absolute top-16 right-3 z-20">
         <div className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
           <Navigation className="w-4 h-4 text-primary" />
         </div>
       </div>
-
-      {/* Back button overlay */}
       {onBack && (
         <div className="absolute top-16 left-3 z-20">
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
-          >
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
         </div>
       )}
-
       {children}
     </div>
   );
 }
 
-/* ─── Vehicle Row (Uber-style) ─── */
+/* ─── Vehicle Row ─── */
 function VehicleRow({
   vehicle,
   selected,
@@ -165,12 +149,11 @@ function VehicleRow({
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {vehicle.eta}
-          {vehicle.desc && <span className="hidden sm:inline"> · {vehicle.desc}</span>}
+          {vehicle.etaMin} min · {vehicle.desc}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-base font-bold text-foreground">{vehicle.price}</p>
+        <p className="text-base font-bold text-foreground">${vehicle.price.toFixed(2)}</p>
       </div>
       {selected && (
         <motion.div
@@ -193,31 +176,29 @@ export default function RideBookingHome() {
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
-  const [pickup, setPickup] = useState("");
-  const [destination, setDestination] = useState("");
-  const [focusedInput, setFocusedInput] = useState<"pickup" | "destination" | null>(null);
+  const [pickup, setPickup] = useState<PlaceData | null>(null);
+  const [destination, setDestination] = useState<PlaceData | null>(null);
+  const [pickupDisplay, setPickupDisplay] = useState("");
+  const [destinationDisplay, setDestinationDisplay] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
+  const [rideRequestId, setRideRequestId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Matching state
+  const [matchPhase, setMatchPhase] = useState<"searching" | "found">("searching");
+  const [scanAngle, setScanAngle] = useState(0);
+
+  // Tracking state
+  const [trackingStatus, setTrackingStatus] = useState<"arriving" | "waiting" | "in_transit" | "almost_there">("arriving");
+  const [trackingEta, setTrackingEta] = useState(4);
+  const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
-  const filteredSuggestions = autocompleteResults.filter((r) =>
-    r.primary.toLowerCase().includes(
-      (focusedInput === "pickup" ? pickup : destination).toLowerCase()
-    )
-  );
-
-  const selectAddress = useCallback(
-    (address: string) => {
-      if (focusedInput === "pickup") setPickup(address);
-      else setDestination(address);
-      setFocusedInput(null);
-    },
-    [focusedInput]
-  );
+  const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
 
   const handleTabChange = (tab: RideTab) => {
     setActiveTab(tab);
@@ -225,27 +206,153 @@ export default function RideBookingHome() {
     else if (tab === "history") navigate("/rides/history");
   };
 
-  const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
+  const handlePickupSelect = useCallback((place: PlaceData) => {
+    setPickup(place);
+    setPickupDisplay(place.address);
+  }, []);
+
+  const handleDestinationSelect = useCallback((place: PlaceData) => {
+    setDestination(place);
+    setDestinationDisplay(place.address);
+  }, []);
+
+  const handleSavedPlace = (address: string) => {
+    setDestinationDisplay(address);
+    // Use mock coords since saved places don't have real coords
+    setDestination({ address, lat: 40.758, lng: -73.9855 });
+    setPickupDisplay("Current Location");
+    setPickup({ address: "Current Location", lat: 40.7128, lng: -73.9857 });
+    setViewStep("vehicle");
+  };
+
+  /* ─── Request Ride — Supabase Insert ─── */
+  const handleRequestRide = async () => {
+    if (!user || !pickup || !destination) {
+      toast.error("Please sign in and select locations");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.from("ride_requests").insert({
+        user_id: user.id,
+        pickup_address: pickup.address,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: destination.address,
+        dropoff_lat: destination.lat,
+        dropoff_lng: destination.lng,
+        ride_type: selectedVehicle,
+        quoted_total: currentVehicle.price,
+        status: "searching",
+        customer_name: user.user_metadata?.full_name || "",
+        customer_phone: user.user_metadata?.phone || "",
+      }).select("id").single();
+
+      if (error) throw error;
+
+      setRideRequestId(data.id);
+      setViewStep("matching");
+      setMatchPhase("searching");
+
+      // Simulate driver matching after 4 seconds
+      setTimeout(async () => {
+        setMatchPhase("found");
+        // Update status in DB
+        if (data.id) {
+          await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", data.id);
+        }
+      }, 4000);
+    } catch (err: any) {
+      console.error("[RideBooking] Request error:", err);
+      toast.error("Failed to request ride. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* ─── Start tracking after driver found ─── */
+  const startTracking = () => {
+    setViewStep("tracking");
+    setTrackingStatus("arriving");
+    setTrackingEta(4);
+
+    // Simulate driver movement
+    if (pickup) {
+      const startLat = pickup.lat + 0.01;
+      const startLng = pickup.lng - 0.008;
+      setDriverCoords({ lat: startLat, lng: startLng });
+
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        const progress = Math.min(step / 20, 1);
+        setDriverCoords({
+          lat: startLat + (pickup.lat - startLat) * progress,
+          lng: startLng + (pickup.lng - startLng) * progress,
+        });
+        setTrackingEta(Math.max(1, 4 - Math.floor(progress * 4)));
+
+        if (progress >= 0.5) setTrackingStatus("waiting");
+        if (progress >= 1) {
+          clearInterval(interval);
+          setTrackingStatus("waiting");
+          setTrackingEta(0);
+        }
+      }, 1500);
+    }
+  };
+
+  /* ─── Complete trip ─── */
+  const handleCompleteTrip = async () => {
+    setViewStep("complete");
+    if (rideRequestId) {
+      await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
+    }
+  };
+
+  /* ─── Payment ─── */
+  const handlePayment = async (method: string) => {
+    toast.success(`Payment via ${method} processed!`);
+    if (rideRequestId) {
+      await supabase.from("ride_requests").update({ payment_status: "paid" }).eq("id", rideRequestId);
+    }
+    // Reset
+    setTimeout(() => {
+      setViewStep("home");
+      setPickup(null);
+      setDestination(null);
+      setPickupDisplay("");
+      setDestinationDisplay("");
+      setRideRequestId(null);
+      setMatchPhase("searching");
+      setTrackingStatus("arriving");
+    }, 1500);
+  };
+
+  /* ─── Scan animation for matching ─── */
+  useState(() => {
+    if (viewStep === "matching" && matchPhase === "searching") {
+      const iv = setInterval(() => setScanAngle((a) => (a + 3) % 360), 30);
+      return () => clearInterval(iv);
+    }
+  });
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
-      {/* ═══════ FIXED HEADER BAR ═══════ */}
+      {/* ═══════ HEADER ═══════ */}
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center justify-between h-14 px-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => viewStep === "home" ? navigate(-1) : setViewStep("home")}
             className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-            aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-
           <h1 className="font-bold text-lg text-foreground">Ride Hub</h1>
-
           <button
             onClick={() => navigate("/notifications")}
             className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-            aria-label="Notifications"
           >
             <Bell className="w-5 h-5 text-muted-foreground" />
             {unreadCount > 0 && (
@@ -258,18 +365,10 @@ export default function RideBookingHome() {
       </header>
 
       <AnimatePresence mode="wait">
-        {/* ═══════ HOME SCREEN ═══════ */}
+        {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
-          <motion.div
-            key="home"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="flex flex-col flex-1"
-          >
-            {/* Map with floating tabs */}
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
             <MapSection compact>
-              {/* Floating Ride Mode Tabs */}
               <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4">
                 <div className="flex items-center gap-1.5 bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-1 shadow-lg">
                   {rideTabs.map((tab) => {
@@ -281,9 +380,7 @@ export default function RideBookingHome() {
                         onClick={() => handleTabChange(tab.id)}
                         className={cn(
                           "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all touch-manipulation min-h-[36px]",
-                          isActive
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                          isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                         )}
                       >
                         <TabIcon className="w-3.5 h-3.5" />
@@ -295,10 +392,8 @@ export default function RideBookingHome() {
               </div>
             </MapSection>
 
-            {/* Bottom booking panel */}
             <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
-
               <button
                 onClick={() => setViewStep("search")}
                 className="w-full mt-4 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3.5 transition-colors hover:bg-muted/40 active:scale-[0.98]"
@@ -318,12 +413,7 @@ export default function RideBookingHome() {
                   return (
                     <button
                       key={place.id}
-                      onClick={() => {
-                        setDestination(place.address);
-                        setPickup("Current Location");
-                        setViewStep("vehicle");
-                        toast.success(`Going to ${place.name}`);
-                      }}
+                      onClick={() => handleSavedPlace(place.address)}
                       className={cn(
                         "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-colors hover:bg-muted/10",
                         i < savedPlaces.length - 1 && "border-b border-border/15"
@@ -345,20 +435,11 @@ export default function RideBookingHome() {
           </motion.div>
         )}
 
-        {/* ═══════ SEARCH SCREEN ═══════ */}
+        {/* ═══════ SEARCH ═══════ */}
         {viewStep === "search" && (
-          <motion.div
-            key="search"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="flex flex-col flex-1 bg-background"
-          >
+          <motion.div key="search" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex flex-col flex-1 bg-background">
             <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-              <button
-                onClick={() => setViewStep("home")}
-                className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
-              >
+              <button onClick={() => setViewStep("home")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
                 <ArrowLeft className="w-4 h-4 text-foreground" />
               </button>
               <h2 className="text-lg font-black text-foreground">Where to?</h2>
@@ -373,100 +454,82 @@ export default function RideBookingHome() {
                     <div className="w-3 h-3 rounded-sm bg-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
-                    <Input
+                    <AddressAutocomplete
                       placeholder="Pickup location"
-                      value={pickup}
-                      onChange={(e) => setPickup(e.target.value)}
-                      onFocus={() => setFocusedInput("pickup")}
-                      className="h-11 rounded-xl text-sm font-semibold bg-card border-0 focus:ring-2 focus:ring-primary/20"
-                      autoFocus
+                      value={pickupDisplay}
+                      onSelect={handlePickupSelect}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
-                    <Input
+                    <AddressAutocomplete
                       placeholder="Where to?"
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      onFocus={() => setFocusedInput("destination")}
-                      className="h-11 rounded-xl text-sm font-semibold bg-card border-0 focus:ring-2 focus:ring-primary/20"
+                      value={destinationDisplay}
+                      onSelect={handleDestinationSelect}
+                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pt-3">
-              <AnimatePresence>
-                {focusedInput && (pickup || destination) && filteredSuggestions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="space-y-0"
-                  >
-                    {filteredSuggestions.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => selectAddress(s.primary)}
-                        className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10 last:border-0"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{s.primary}</p>
-                          <p className="text-xs text-muted-foreground">{s.secondary}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {!focusedInput && (
-                <div className="space-y-0">
-                  {savedPlaces.map((place) => {
-                    const Icon = place.icon;
-                    return (
-                      <button
-                        key={place.id}
-                        onClick={() => {
-                          setDestination(place.address);
-                          toast.success(`Destination: ${place.name}`);
-                        }}
-                        className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-foreground">{place.name}</p>
-                          <p className="text-xs text-muted-foreground">{place.address}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {recentDestinations.map((dest) => (
-                    <button
-                      key={dest.id}
-                      onClick={() => {
-                        setDestination(dest.address.split(",")[0]);
-                        toast.success("Destination set");
-                      }}
-                      className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                        <History className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                        <p className="text-xs text-muted-foreground">{dest.time}</p>
-                      </div>
-                    </button>
-                  ))}
+            {/* Map preview when destination selected */}
+            {destination && (
+              <div className="px-4 pt-3">
+                <div className="h-32 rounded-xl overflow-hidden border border-border/30">
+                  <RideMap
+                    pickupCoords={pickup}
+                    dropoffCoords={destination}
+                    className="w-full h-full"
+                  />
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto px-4 pt-3">
+              {/* Saved places */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
+              {savedPlaces.map((place) => {
+                const Icon = place.icon;
+                return (
+                  <button
+                    key={place.id}
+                    onClick={() => handleSavedPlace(place.address)}
+                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground">{place.name}</p>
+                      <p className="text-xs text-muted-foreground">{place.address}</p>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* Recent destinations */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+              {recentDestinations.map((dest) => (
+                <button
+                  key={dest.id}
+                  onClick={() => {
+                    setDestinationDisplay(dest.address.split(",")[0]);
+                    setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                  }}
+                  className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                >
+                  <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                    <History className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                    <p className="text-xs text-muted-foreground">{dest.time}</p>
+                  </div>
+                </button>
+              ))}
             </div>
 
-            {pickup && destination && !focusedInput && (
+            {pickup && destination && (
               <div className="px-4 pb-4 pt-2">
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
@@ -479,99 +542,284 @@ export default function RideBookingHome() {
           </motion.div>
         )}
 
-        {/* ═══════ VEHICLE SELECTION SCREEN ═══════ */}
+        {/* ═══════ VEHICLE SELECTION ═══════ */}
         {viewStep === "vehicle" && (
-          <motion.div
-            key="vehicle"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="flex flex-col flex-1"
-          >
+          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
             <MapSection
-              showRoute
+              pickupCoords={pickup}
+              dropoffCoords={destination}
               onBack={() => setViewStep("search")}
             />
-
             <div className="flex-1 bg-background relative z-10">
               <div className="px-5 pt-4 pb-2">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
               </div>
-
               <div className="border-t border-border/15">
                 {vehicleOptions.map((v) => (
-                  <VehicleRow
-                    key={v.id}
-                    vehicle={v}
-                    selected={selectedVehicle === v.id}
-                    onSelect={() => setSelectedVehicle(v.id)}
-                  />
+                  <VehicleRow key={v.id} vehicle={v} selected={selectedVehicle === v.id} onSelect={() => setSelectedVehicle(v.id)} />
                 ))}
               </div>
-
               <div className="px-4 py-3 border-t border-border/15 flex items-center gap-3">
                 <CreditCard className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
-
               <div className="px-4 pb-4 pt-2">
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                  onClick={() => setViewStep("confirm")}
+                  onClick={() => setViewStep("pickup-confirm")}
                 >
-                  Confirm {currentVehicle.name} · {currentVehicle.price}
+                  Confirm {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
                 </Button>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ═══════ CONFIRM / RIDE CONFIRMED ═══════ */}
-        {viewStep === "confirm" && (
-          <motion.div
-            key="confirm"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col flex-1"
-          >
+        {/* ═══════ PICKUP CONFIRMATION ═══════ */}
+        {viewStep === "pickup-confirm" && (
+          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
             <MapSection
-              showRoute
+              pickupCoords={pickup}
+              dropoffCoords={destination}
               onBack={() => setViewStep("vehicle")}
             />
+            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+              <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
 
-            <div className="flex-1 bg-background relative z-10">
-              <div className="px-5 pt-4 pb-2">
-                <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
+              <AddressAutocomplete
+                placeholder="Edit pickup location"
+                value={pickupDisplay}
+                onSelect={handlePickupSelect}
+                className="mb-3"
+              />
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                <MapPin className="w-4 h-4 text-foreground" />
+                <span className="font-medium text-foreground">To:</span>
+                <span className="truncate">{destination?.address || destinationDisplay}</span>
               </div>
 
-              <div className="border-t border-border/15">
-                {vehicleOptions.map((v) => (
-                  <VehicleRow
-                    key={v.id}
-                    vehicle={v}
-                    selected={selectedVehicle === v.id}
-                    onSelect={() => setSelectedVehicle(v.id)}
-                  />
-                ))}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
+                  {(() => { const Icon = currentVehicle.icon; return <Icon className="w-5 h-5 text-foreground" />; })()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground">{currentVehicle.name}</p>
+                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min · {currentVehicle.capacity} seats</p>
+                </div>
+                <p className="text-lg font-bold text-foreground">${currentVehicle.price.toFixed(2)}</p>
               </div>
 
-              <div className="px-4 pb-4 pt-2">
-                <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-                  onClick={() => {
-                    toast.success("Ride confirmed! Finding your driver...");
-                    setTimeout(() => {
-                      setViewStep("home");
-                      setPickup("");
-                      setDestination("");
-                    }, 2000);
-                  }}
-                >
-                  <Zap className="w-5 h-5" />
-                  Confirm {currentVehicle.name}
+              <Button
+                className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+                onClick={handleRequestRide}
+                disabled={isSubmitting}
+              >
+                <Zap className="w-5 h-5" />
+                {isSubmitting ? "Requesting..." : "Request Ride"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ═══════ DRIVER MATCHING ═══════ */}
+        {viewStep === "matching" && (
+          <motion.div key="matching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 bg-background">
+            {matchPhase === "searching" ? (
+              <div className="flex-1 flex flex-col items-center justify-center px-6">
+                {/* Radar animation */}
+                <div className="relative w-48 h-48 mb-8">
+                  <div className="absolute inset-0 rounded-full border-2 border-border/30" />
+                  <div className="absolute inset-6 rounded-full border border-border/20" />
+                  <div className="absolute inset-12 rounded-full border border-border/15" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+                  </div>
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ transformOrigin: "center center" }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-gradient-to-r from-primary/80 to-transparent origin-left" />
+                  </motion.div>
+                  {/* Nearby driver dots */}
+                  {[45, 120, 230, 310].map((angle, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-3 h-3 rounded-full bg-primary/60"
+                      style={{
+                        top: `${50 - Math.cos((angle * Math.PI) / 180) * 35}%`,
+                        left: `${50 + Math.sin((angle * Math.PI) / 180) * 35}%`,
+                      }}
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                    />
+                  ))}
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Finding your driver</h3>
+                <p className="text-sm text-muted-foreground text-center">Searching nearby drivers for your {currentVehicle.name}...</p>
+                <Button variant="ghost" className="mt-6 text-destructive" onClick={() => {
+                  setViewStep("home");
+                  if (rideRequestId) {
+                    supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+                  }
+                }}>
+                  Cancel
                 </Button>
               </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center px-6">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <CheckCircle className="w-10 h-10 text-primary" />
+                  </div>
+                </motion.div>
+                <h3 className="text-xl font-bold text-foreground mb-1">Driver found!</h3>
+
+                <div className="w-full mt-6 p-4 rounded-2xl bg-card border border-border/30">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-primary/20 text-primary font-bold">{MOCK_DRIVER.initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips} trips</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Car className="w-4 h-4" />
+                    <span>{MOCK_DRIVER.vehicle}</span>
+                    <span className="ml-auto font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
+                  </div>
+                </div>
+
+                <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background mt-6" onClick={startTracking}>
+                  Track Driver
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ═══════ LIVE TRACKING ═══════ */}
+        {viewStep === "tracking" && (
+          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1">
+            <MapSection
+              pickupCoords={pickup}
+              dropoffCoords={destination}
+              driverCoords={driverCoords}
+            />
+            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-foreground">
+                    {trackingStatus === "waiting" ? "Driver has arrived" : `Arriving in ${trackingEta} min`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle} · {MOCK_DRIVER.plate}</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                  <Shield className="w-3.5 h-3.5" />
+                  Trip protected
+                </div>
+              </div>
+
+              <Progress value={trackingStatus === "waiting" ? 100 : (1 - trackingEta / 4) * 100} className="h-1.5 mb-4" />
+
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 mb-4">
+                <Avatar className="w-10 h-10">
+                  <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">{MOCK_DRIVER.initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground">{MOCK_DRIVER.name}</p>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <span className="text-xs text-muted-foreground">{MOCK_DRIVER.rating}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-foreground" />
+                  </button>
+                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-foreground" />
+                  </button>
+                </div>
+              </div>
+
+              {trackingStatus === "waiting" && (
+                <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background" onClick={handleCompleteTrip}>
+                  Start Ride
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ═══════ TRIP COMPLETE / PAYMENT ═══════ */}
+        {viewStep === "complete" && (
+          <motion.div key="complete" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col flex-1 bg-background px-4 pt-6 pb-4">
+            <div className="text-center mb-6">
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-primary" />
+                </div>
+              </motion.div>
+              <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
+              <p className="text-sm text-muted-foreground mt-1">{pickup?.address} → {destination?.address}</p>
+            </div>
+
+            {/* Fare breakdown */}
+            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
+              <h4 className="text-sm font-bold text-foreground mb-3">Fare Summary</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Base fare</span>
+                  <span className="text-foreground">${(currentVehicle.price * 0.4).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Distance</span>
+                  <span className="text-foreground">${(currentVehicle.price * 0.35).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Time</span>
+                  <span className="text-foreground">${(currentVehicle.price * 0.15).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Service fee</span>
+                  <span className="text-foreground">${(currentVehicle.price * 0.10).toFixed(2)}</span>
+                </div>
+                <div className="border-t border-border/30 pt-2 flex justify-between">
+                  <span className="font-bold text-foreground">Total</span>
+                  <span className="font-bold text-foreground text-lg">${currentVehicle.price.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment options */}
+            <div className="space-y-2">
+              <Button className="w-full h-12 rounded-xl bg-foreground text-background font-bold gap-2" onClick={() => handlePayment("Card")}>
+                <CreditCard className="w-4 h-4" />
+                Pay with Card
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Apple Pay")}>
+                  <Smartphone className="w-4 h-4" />
+                  Apple Pay
+                </Button>
+                <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Google Pay")}>
+                  <Wallet className="w-4 h-4" />
+                  Google Pay
+                </Button>
+              </div>
+              <Button variant="ghost" className="w-full h-12 rounded-xl font-bold gap-2 text-muted-foreground" onClick={() => handlePayment("Cash")}>
+                <Banknote className="w-4 h-4" />
+                Pay with Cash
+              </Button>
             </div>
           </motion.div>
         )}
