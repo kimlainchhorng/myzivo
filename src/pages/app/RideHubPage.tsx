@@ -114,6 +114,7 @@ export default function RideHubPage() {
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
+            {activeTab === "match" && <div className="p-4"><RideDriverMatch /></div>}
             {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
             {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
             {activeTab === "loyalty" && <div className="p-4"><RideLoyaltyCard /></div>}
@@ -127,7 +128,8 @@ export default function RideHubPage() {
             {activeTab === "group" && <div className="p-4"><GroupRidePlanner /></div>}
             {activeTab === "places" && <div className="p-4"><SmartSavedPlaces /></div>}
             {activeTab === "chat" && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
-            {activeTab === "safety" && <div className="p-4"><SafetyModePanel /></div>}
+            {activeTab === "safety" && <div className="p-4"><RideSafetyCenter /></div>}
+            {activeTab === "alerts" && <div className="p-4"><RideNotificationCenter /></div>}
             {activeTab === "pass" && <div className="pt-4"><RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} /></div>}
             {activeTab === "receipt" && <div className="p-4"><RideReceiptCard /></div>}
             {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
