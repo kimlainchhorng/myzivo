@@ -22,6 +22,27 @@ const darkMapStyle = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
+const lightMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e0e0e0" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#dadada" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#c0c0c0" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8f5" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e8f5e9" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#c8e6c9" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+];
+
+function getMapStyle(): google.maps.MapTypeStyle[] {
+  // Detect dark mode from document
+  const isDark = document.documentElement.classList.contains("dark");
+  return isDark ? darkMapStyle : lightMapStyle;
+}
+
 interface RideMapProps {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
