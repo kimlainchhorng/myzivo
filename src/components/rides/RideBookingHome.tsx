@@ -184,6 +184,12 @@ function VehicleRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-base font-bold text-foreground">{vehicle.name}</span>
+          {vehicle.carSeat && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+              <Baby className="w-3 h-3" />
+              Car seat
+            </span>
+          )}
           <div className="flex items-center gap-0.5">
             <User className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">{vehicle.capacity}</span>
