@@ -59,6 +59,7 @@ const tabs = [
   { id: "places", label: "Places", icon: MapPin },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "safety", label: "Safety", icon: Shield },
+  { id: "alerts", label: "Alerts", icon: Bell },
   { id: "pass", label: "Ride Pass", icon: Crown },
   { id: "receipt", label: "Receipt", icon: Receipt },
   { id: "rate", label: "Rate", icon: Star },
