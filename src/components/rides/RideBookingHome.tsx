@@ -171,7 +171,7 @@ function VehicleRow({
 export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { unreadCount } = useNotifications(20);
+  
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
