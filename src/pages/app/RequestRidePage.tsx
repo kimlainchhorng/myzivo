@@ -2061,6 +2061,21 @@ export default function RequestRidePage() {
               <p className="text-[10px] text-muted-foreground text-center">🌳 You've helped plant {carbonDashboard.treesPlanted} trees this month</p>
             </div>
           )}
+
+          {/* Ride Hub Quick Access */}
+          <button
+            onClick={() => navigate("/rides/hub")}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/30 transition-all touch-manipulation active:scale-[0.98]"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-bold text-foreground">Ride Hub</p>
+              <p className="text-[10px] text-muted-foreground">Insights, Ride Pass, receipts & more</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-primary" />
+          </button>
         </div>
       )}
 
