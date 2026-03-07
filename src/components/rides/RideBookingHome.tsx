@@ -11,7 +11,7 @@ import {
   CheckCircle, History, ChevronDown, Clock,
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
-  Smartphone, Wallet, X
+  Smartphone, Wallet, X, Baby, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
