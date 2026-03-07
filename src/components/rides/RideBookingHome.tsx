@@ -12,7 +12,7 @@ import {
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer
+  Route, Timer, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -249,10 +249,18 @@ export default function RideBookingHome() {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
+  // Layout height constants — must stay in sync with the CSS classes in AppHeader, ZivoMobileNav,
+  // and the header/tabs rendered below. Update these if those components change their heights.
+  // HEADER_HEIGHT: matches AppHeader h-14 (14 * 4px = 56px)
+  // BOTTOM_NAV_HEIGHT: matches ZivoMobileNav h-[64px] inner div height
+  const HEADER_HEIGHT = 56;        // px — AppHeader bar height (h-14)
+  const TABS_HEIGHT = 48;          // px — ride tabs row (py-2 + button height ~32px)
+  const HEADER_TABS_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT; // = 104
+  const BOTTOM_NAV_HEIGHT = 64;    // px — ZivoMobileNav inner h-[64px] (see ZivoMobileNav.tsx)
+  const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
+
   const COLLAPSED_SHEET_HEIGHT = 260;
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560);
-  const BOTTOM_NAV_HEIGHT = 72;
-  const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
@@ -499,621 +507,683 @@ export default function RideBookingHome() {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <AnimatePresence mode="wait">
-        {/* ═══════ HOME ═══════ */}
-        {viewStep === "home" && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="relative flex-1 min-h-0 overflow-hidden flex flex-col">
-            <MapSection compact userLocation={userLocation} onLocateUser={handleLocateUser} />
+    <div className="relative h-[100dvh] overflow-hidden bg-background">
 
-            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
-              <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
-              <button
-                onClick={() => setViewStep("search")}
-                className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
-              >
-                <MapPin className="w-5 h-5 text-foreground" />
-                <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card border border-border/30">
-                  <Clock className="w-3.5 h-3.5 text-foreground" />
-                  <span className="text-xs font-semibold text-foreground">Now</span>
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                </div>
-              </button>
+      {/* ═══════ 1. HEADER — normal flow, always visible ═══════ */}
+      <div className="relative z-20 flex items-center h-14 px-4 bg-background border-b border-border/20">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="flex-1 text-center font-black text-lg">Ride Hub</h1>
+        <button
+          onClick={() => navigate("/notifications")}
+          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          aria-label="Notifications"
+        >
+          <Bell className="w-5 h-5 text-muted-foreground" />
+        </button>
+      </div>
 
-              <div className="mt-3 space-y-0">
-                {savedPlaces.map((place, i) => {
-                  const Icon = place.icon;
-                  return (
-                    <button
-                      key={place.id}
-                      onClick={() => handleSavedPlace(place.address)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
-                        i < savedPlaces.length - 1 && "border-b border-border/15"
-                      )}
-                    >
-                      <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground">{place.name}</p>
-                        <p className="text-xs text-muted-foreground">{place.address}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  );
-                })}
+      {/* ═══════ 2. RIDE TABS — normal flow, only on home step ═══════ */}
+      {viewStep === "home" && (
+        <div className="relative z-20 flex gap-1 px-4 py-2 bg-background border-b border-border/10 overflow-x-auto scrollbar-none">
+          {rideTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all",
+                activeTab === tab.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:bg-muted/30"
+              )}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ═══════ 3. MAP VIEWPORT LAYER — absolute, behind all sheets ═══════ */}
+      {(viewStep === "home" || viewStep === "route-preview" || viewStep === "pickup-confirm" || viewStep === "tracking") && (
+        <div
+          className="absolute left-0 right-0 z-0"
+          style={{
+            top: viewStep === "home" ? HEADER_TABS_HEIGHT : HEADER_HEIGHT,
+            bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+          }}
+        >
+          <MapSection
+            compact
+            pickupCoords={viewStep !== "home" ? pickup : null}
+            dropoffCoords={viewStep !== "home" ? destination : null}
+            userLocation={userLocation}
+            onLocateUser={handleLocateUser}
+            routePolyline={viewStep !== "home" ? (routeData?.polyline ?? null) : null}
+            driverCoords={viewStep === "tracking" ? driverCoords : null}
+          />
+        </div>
+      )}
+
+      {/* ═══════ Floating back button — route-preview ═══════ */}
+      {viewStep === "route-preview" && (
+        <button
+          onClick={() => setViewStep("search")}
+          className="absolute z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center touch-manipulation"
+          style={{ top: HEADER_HEIGHT + 12, left: 12 }}
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
+        </button>
+      )}
+
+      {/* ═══════ Floating back button — pickup-confirm ═══════ */}
+      {viewStep === "pickup-confirm" && (
+        <button
+          onClick={() => { setSheetExpanded(true); setViewStep("route-preview"); }}
+          className="absolute z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center touch-manipulation"
+          style={{ top: HEADER_HEIGHT + 12, left: 12 }}
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
+        </button>
+      )}
+
+      {/* ═══════ 4a. HOME bottom sheet — overlays map ═══════ */}
+      {viewStep === "home" && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+        >
+          <div className="px-5 pt-5 pb-3">
+            <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
+            <button
+              onClick={() => setViewStep("search")}
+              className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
+            >
+              <MapPin className="w-5 h-5 text-foreground" />
+              <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card border border-border/30">
+                <Clock className="w-3.5 h-3.5 text-foreground" />
+                <span className="text-xs font-semibold text-foreground">Now</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
               </div>
-            </div>
-          </motion.div>
-        )}
+            </button>
 
-        {/* ═══════ SEARCH ═══════ */}
-        {viewStep === "search" && (
-          <motion.div key="search" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex flex-col flex-1 bg-background">
-            <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-              <button onClick={() => setViewStep("home")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0" aria-label="Go back">
-                <ArrowLeft className="w-4 h-4 text-foreground" />
-              </button>
-              <h2 className="text-lg font-black text-foreground">Where to?</h2>
-            </div>
-
-            <div className="px-4 pt-2">
-              <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-center gap-0.5">
-                    <div className="w-3 h-3 rounded-full bg-foreground" />
-                    <div className="w-0.5 h-8 bg-border/50" />
-                    <div className="w-3 h-3 rounded-sm bg-foreground" />
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <AddressAutocomplete
-                      placeholder="Pickup location"
-                      value={pickupDisplay}
-                      onSelect={handlePickupSelect}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                    />
-                    <AddressAutocomplete
-                      placeholder="Where to?"
-                      value={destinationDisplay}
-                      onSelect={handleDestinationSelect}
-                      proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
-                      className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 pt-3">
-              {/* Saved places */}
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
-              {savedPlaces.map((place) => {
+            <div className="mt-3 space-y-0">
+              {savedPlaces.map((place, i) => {
                 const Icon = place.icon;
                 return (
                   <button
                     key={place.id}
                     onClick={() => handleSavedPlace(place.address)}
-                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                    className={cn(
+                      "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
+                      i < savedPlaces.length - 1 && "border-b border-border/15"
+                    )}
                   >
-                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
                       <Icon className="w-4 h-4 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground">{place.name}</p>
                       <p className="text-xs text-muted-foreground">{place.address}</p>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* Recent destinations */}
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
-              {recentDestinations.map((dest) => (
+      {/* ═══════ SEARCH — full-screen overlay below header ═══════ */}
+      {viewStep === "search" && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
+          style={{ top: HEADER_HEIGHT }}
+        >
+          <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+            <button onClick={() => setViewStep("home")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0" aria-label="Go back">
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
+            <h2 className="text-lg font-black text-foreground">Where to?</h2>
+          </div>
+
+          <div className="px-4 pt-2">
+            <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className="w-3 h-3 rounded-full bg-foreground" />
+                  <div className="w-0.5 h-8 bg-border/50" />
+                  <div className="w-3 h-3 rounded-sm bg-foreground" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <AddressAutocomplete
+                    placeholder="Pickup location"
+                    value={pickupDisplay}
+                    onSelect={handlePickupSelect}
+                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
+                  />
+                  <AddressAutocomplete
+                    placeholder="Where to?"
+                    value={destinationDisplay}
+                    onSelect={handleDestinationSelect}
+                    proximity={pickup ? { lat: pickup.lat, lng: pickup.lng } : undefined}
+                    className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:text-sm [&_input]:font-semibold [&_input]:bg-card [&_input]:border-0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 pt-3">
+            {/* Saved places */}
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
+            {savedPlaces.map((place) => {
+              const Icon = place.icon;
+              return (
                 <button
-                  key={dest.id}
-                  onClick={() => {
-                    setDestinationDisplay(dest.address.split(",")[0]);
-                    setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                  }}
+                  key={place.id}
+                  onClick={() => handleSavedPlace(place.address)}
                   className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
                 >
                   <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                    <History className="w-4 h-4 text-muted-foreground" />
+                    <Icon className="w-4 h-4 text-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                    <p className="text-xs text-muted-foreground">{dest.time}</p>
+                    <p className="text-sm font-bold text-foreground">{place.name}</p>
+                    <p className="text-xs text-muted-foreground">{place.address}</p>
                   </div>
                 </button>
-              ))}
-            </div>
+              );
+            })}
 
-            {pickup && destination && (
-              <div className="px-4 pb-4 pt-2">
-                <Button
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                  onClick={handleConfirmSearch}
-                  disabled={isLoadingRoute}
-                >
-                  {isLoadingRoute ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      Finding route...
-                    </span>
-                  ) : (
-                    "Choose a ride"
-                  )}
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ═══════ ROUTE PREVIEW + VEHICLE (merged draggable sheet) ═══════ */}
-        {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="relative flex-1 min-h-0 overflow-hidden">
-            {/* Back button */}
-            <button onClick={() => setViewStep("search")} className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
-              <ArrowLeft className="w-4 h-4 text-foreground" />
-            </button>
-
-            {/* Map fills entire area */}
-            <div className="absolute inset-0">
-              <MapSection
-                pickupCoords={pickup}
-                dropoffCoords={destination}
-                routePolyline={routeData?.polyline}
-                onLocateUser={handleLocateUser}
-                userLocation={userLocation}
-                compact
-              />
-            </div>
-
-            {/* Zoom controls — positioned dynamically above collapsed sheet */}
-            <div
-              className="absolute right-3 flex flex-col gap-2 z-20"
-              style={{
-                bottom: `calc(${COLLAPSED_SHEET_HEIGHT}px + ${BOTTOM_NAV_HEIGHT}px + 16px + ${SAFE_BOTTOM})`,
-              }}
-            >
-              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
-              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">−</button>
-            </div>
-
-            {/* Draggable bottom sheet — absolute overlay above bottom nav */}
-            <motion.div
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.12}
-              onDragEnd={(_, info) => {
-                const shouldExpand = info.offset.y < -80 || info.velocity.y < -500;
-                const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
-                if (shouldExpand) setSheetExpanded(true);
-                else if (shouldCollapse) setSheetExpanded(false);
-              }}
-              animate={{
-                height: sheetExpanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
-              }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
-              style={{
-                bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
-                touchAction: "none",
-              }}
-            >
-              {/* Drag handle */}
-              <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
-
-              <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Route info — always visible */}
-                <div className="px-5 pt-3 pb-2 shrink-0">
-                  {/* Addresses */}
-                  <div className="flex items-start gap-3 mb-2">
-                    <div className="flex flex-col items-center gap-0.5 mt-0.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                      <div className="w-0.5 h-5 bg-border/50" />
-                      <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
-                        <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
-                        <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Trip stats */}
-                  {routeData && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
-                        <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <div>
-                          <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
-                          <p className="text-[9px] text-muted-foreground">Trip time</p>
-                        </div>
-                      </div>
-                      <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
-                        <Route className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <div>
-                          <p className="text-sm font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
-                          <p className="text-[9px] text-muted-foreground">Distance</p>
-                        </div>
-                      </div>
-                      {routeData.traffic_level && (
-                        <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
-                          <Car className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <div>
-                            <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
-                            <p className="text-[9px] text-muted-foreground">Traffic</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Choose a ride button — only in collapsed state */}
-                {!sheetExpanded && (
-                  <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
-                    {isLoadingRoute ? (
-                      <div className="flex items-center justify-center py-3">
-                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
-                      </div>
-                    ) : (
-                      <Button
-                        className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                        onClick={() => setSheetExpanded(true)}
-                      >
-                        Choose a ride
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Vehicle selection — only in expanded state */}
-                <AnimatePresence>
-                  {sheetExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex-1 overflow-hidden flex flex-col border-t border-border/15"
-                    >
-                      <div className="px-4 pt-2 pb-1 flex items-center justify-between shrink-0">
-                        <h3 className="text-sm font-bold text-foreground">Choose a ride</h3>
-                        <button
-                          onClick={() => {
-                            setCarSeatFilter(!carSeatFilter);
-                            if (!carSeatFilter && !currentVehicle.carSeat) {
-                              setSelectedVehicle("car-seat");
-                            } else if (carSeatFilter && currentVehicle.carSeat) {
-                              setSelectedVehicle("economy");
-                            }
-                          }}
-                          className={cn(
-                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all",
-                            carSeatFilter
-                              ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
-                              : "bg-muted/20 text-muted-foreground border-border/30"
-                          )}
-                        >
-                          <Baby className="w-3 h-3" />
-                          Car seat
-                        </button>
-                      </div>
-
-                      {/* Scrollable vehicle list */}
-                      <div className="flex-1 overflow-y-auto">
-                        {filteredVehicles.map((v) => (
-                          <VehicleRow
-                            key={v.id}
-                            vehicle={v}
-                            selected={selectedVehicle === v.id}
-                            onSelect={() => setSelectedVehicle(v.id)}
-                            price={routeData ? calcPrice(v, routeData.distance_miles) : v.basePrice}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Sticky bottom: payment + confirm */}
-                      <div className="shrink-0 border-t border-border/15">
-                        <div className="px-4 py-1.5 flex items-center gap-3">
-                          <CreditCard className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div className="px-4 pt-0.5" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
-                          <Button
-                            className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                            onClick={() => setViewStep("pickup-confirm")}
-                          >
-                            Choose {currentVehicle.name} · ${currentPrice.toFixed(2)}
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* ═══════ PICKUP CONFIRMATION ═══════ */}
-        {viewStep === "pickup-confirm" && (
-          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <MapSection
-              pickupCoords={pickup}
-              dropoffCoords={destination}
-              routePolyline={routeData?.polyline}
-            >
-              <div className="absolute top-3 left-3 z-30">
-                <button onClick={() => { setSheetExpanded(true); setViewStep("route-preview"); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
-                  <ArrowLeft className="w-4 h-4 text-foreground" />
-                </button>
-              </div>
-            </MapSection>
-            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
-              <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
-
-              <AddressAutocomplete
-                placeholder="Edit pickup location"
-                value={pickupDisplay}
-                onSelect={handlePickupSelect}
-                className="mb-3"
-              />
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                <MapPin className="w-4 h-4 text-foreground" />
-                <span className="font-medium text-foreground">To:</span>
-                <span className="truncate">{destination?.address || destinationDisplay}</span>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
-                  {(() => { const Icon = currentVehicle.icon; return <Icon className="w-5 h-5 text-foreground" />; })()}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-foreground">{currentVehicle.name}</p>
-                    {currentVehicle.carSeat && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
-                        <Baby className="w-3 h-3" /> Car seat
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min · {currentVehicle.capacity} seats</p>
-                </div>
-                <p className="text-lg font-bold text-foreground">${currentPrice.toFixed(2)}</p>
-              </div>
-
-              {routeData && (
-                <div className="flex items-center gap-3 px-1 mb-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{routeData.duration_minutes} min</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><Route className="w-3 h-3" />{routeData.distance_miles} mi</span>
-                </div>
-              )}
-
-              <Button
-                className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-                onClick={handleRequestRide}
-                disabled={isSubmitting}
+            {/* Recent destinations */}
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+            {recentDestinations.map((dest) => (
+              <button
+                key={dest.id}
+                onClick={() => {
+                  setDestinationDisplay(dest.address.split(",")[0]);
+                  setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                }}
+                className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
               >
-                <Zap className="w-5 h-5" />
-                {isSubmitting ? "Requesting..." : "Request Ride"}
+                <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                  <History className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
+                  <p className="text-xs text-muted-foreground">{dest.time}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {pickup && destination && (
+            <div className="px-4 pb-4 pt-2">
+              <Button
+                className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                onClick={handleConfirmSearch}
+                disabled={isLoadingRoute}
+              >
+                {isLoadingRoute ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                    Finding route...
+                  </span>
+                ) : (
+                  "Choose a ride"
+                )}
               </Button>
             </div>
-          </motion.div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* ═══════ DRIVER MATCHING ═══════ */}
-        {viewStep === "matching" && (
-          <motion.div key="matching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 bg-background">
-            {matchPhase === "searching" ? (
-              <div className="flex-1 flex flex-col items-center justify-center px-6">
-                <div className="relative w-48 h-48 mb-8">
-                  <div className="absolute inset-0 rounded-full border-2 border-border/30" />
-                  <div className="absolute inset-6 rounded-full border border-border/20" />
-                  <div className="absolute inset-12 rounded-full border border-border/15" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
-                  </div>
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{ transformOrigin: "center center" }}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  >
-                    <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-gradient-to-r from-primary/80 to-transparent origin-left" />
-                  </motion.div>
-                  {[45, 120, 230, 310].map((angle, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute w-3 h-3 rounded-full bg-primary/60"
-                      style={{
-                        top: `${50 - Math.cos((angle * Math.PI) / 180) * 35}%`,
-                        left: `${50 + Math.sin((angle * Math.PI) / 180) * 35}%`,
-                      }}
-                      animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-                    />
-                  ))}
+      {/* ═══════ Zoom controls — route-preview only, above collapsed sheet ═══════ */}
+      {viewStep === "route-preview" && (
+        <div
+          className="absolute right-3 flex flex-col gap-2 z-20"
+          style={{
+            bottom: `calc(${COLLAPSED_SHEET_HEIGHT}px + ${BOTTOM_NAV_HEIGHT}px + 16px + ${SAFE_BOTTOM})`,
+          }}
+        >
+          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
+          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">−</button>
+        </div>
+      )}
+
+      {/* ═══════ 4b. ROUTE PREVIEW — draggable bottom sheet overlaying map ═══════ */}
+      {viewStep === "route-preview" && (
+        <motion.div
+          drag="y"
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={0.12}
+          onDragEnd={(_, info) => {
+            const shouldExpand = info.offset.y < -80 || info.velocity.y < -500;
+            const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
+            if (shouldExpand) setSheetExpanded(true);
+            else if (shouldCollapse) setSheetExpanded(false);
+          }}
+          animate={{
+            height: sheetExpanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
+          }}
+          transition={{ type: "spring", stiffness: 320, damping: 34 }}
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
+          style={{
+            bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+            touchAction: "none",
+          }}
+        >
+          {/* Drag handle */}
+          <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
+
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Route info — always visible */}
+            <div className="px-5 pt-3 pb-2 shrink-0">
+              {/* Addresses */}
+              <div className="flex items-start gap-3 mb-2">
+                <div className="flex flex-col items-center gap-0.5 mt-0.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                  <div className="w-0.5 h-5 bg-border/50" />
+                  <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Finding your driver</h3>
-                <p className="text-sm text-muted-foreground text-center">Searching nearby drivers for your {currentVehicle.name}...</p>
-                <Button variant="ghost" className="mt-6 text-destructive" onClick={() => {
-                  setViewStep("home");
-                  if (rideRequestId) {
-                    supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
-                  }
-                }}>
-                  Cancel
-                </Button>
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
+                    <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
+                    <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center px-6">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <CheckCircle className="w-10 h-10 text-primary" />
+
+              {/* Trip stats */}
+              {routeData && (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                    <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
+                      <p className="text-[9px] text-muted-foreground">Trip time</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                    <Route className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
+                      <p className="text-[9px] text-muted-foreground">Distance</p>
+                    </div>
+                  </div>
+                  {routeData.traffic_level && (
+                    <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
+                      <Car className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
+                        <p className="text-[9px] text-muted-foreground">Traffic</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Choose a ride button — only in collapsed state */}
+            {!sheetExpanded && (
+              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+                {isLoadingRoute ? (
+                  <div className="flex items-center justify-center py-3">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                    onClick={() => setSheetExpanded(true)}
+                  >
+                    Choose a ride
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Vehicle selection — only in expanded state */}
+            <AnimatePresence>
+              {sheetExpanded && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 overflow-hidden flex flex-col border-t border-border/15"
+                >
+                  <div className="px-4 pt-2 pb-1 flex items-center justify-between shrink-0">
+                    <h3 className="text-sm font-bold text-foreground">Choose a ride</h3>
+                    <button
+                      onClick={() => {
+                        setCarSeatFilter(!carSeatFilter);
+                        if (!carSeatFilter && !currentVehicle.carSeat) {
+                          setSelectedVehicle("car-seat");
+                        } else if (carSeatFilter && currentVehicle.carSeat) {
+                          setSelectedVehicle("economy");
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all",
+                        carSeatFilter
+                          ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
+                          : "bg-muted/20 text-muted-foreground border-border/30"
+                      )}
+                    >
+                      <Baby className="w-3 h-3" />
+                      Car seat
+                    </button>
+                  </div>
+
+                  {/* Scrollable vehicle list */}
+                  <div className="flex-1 overflow-y-auto">
+                    {filteredVehicles.map((v) => (
+                      <VehicleRow
+                        key={v.id}
+                        vehicle={v}
+                        selected={selectedVehicle === v.id}
+                        onSelect={() => setSelectedVehicle(v.id)}
+                        price={routeData ? calcPrice(v, routeData.distance_miles) : v.basePrice}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Sticky bottom: payment + confirm */}
+                  <div className="shrink-0 border-t border-border/15">
+                    <div className="px-4 py-1.5 flex items-center gap-3">
+                      <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="px-4 pt-0.5" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+                      <Button
+                        className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        onClick={() => setViewStep("pickup-confirm")}
+                      >
+                        Choose {currentVehicle.name} · ${currentPrice.toFixed(2)}
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
-                <h3 className="text-xl font-bold text-foreground mb-1">Driver found!</h3>
-
-                <div className="w-full mt-6 p-4 rounded-2xl bg-card border border-border/30">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-primary/20 text-primary font-bold">{MOCK_DRIVER.initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
-                      <div className="flex items-center gap-1.5">
-                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips} trips</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Car className="w-4 h-4" />
-                    <span>{MOCK_DRIVER.vehicle}</span>
-                    <span className="ml-auto font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
-                  </div>
-                </div>
-
-                <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background mt-6" onClick={startTracking}>
-                  Track Driver
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ═══════ LIVE TRACKING ═══════ */}
-        {viewStep === "tracking" && (
-          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <MapSection
-              pickupCoords={pickup}
-              dropoffCoords={destination}
-              driverCoords={driverCoords}
-              routePolyline={routeData?.polyline}
-            />
-            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm font-bold text-foreground">
-                    {trackingStatus === "waiting" ? "Driver has arrived" : `Arriving in ${trackingEta} min`}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle} · {MOCK_DRIVER.plate}</p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-primary">
-                  <Shield className="w-3.5 h-3.5" />
-                  Trip protected
-                </div>
-              </div>
-
-              <Progress value={trackingStatus === "waiting" ? 100 : (1 - trackingEta / 4) * 100} className="h-1.5 mb-4" />
-
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 mb-4">
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">{MOCK_DRIVER.initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">{MOCK_DRIVER.name}</p>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    <span className="text-xs text-muted-foreground">{MOCK_DRIVER.rating}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Call driver">
-                    <Phone className="w-4 h-4 text-foreground" />
-                  </button>
-                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Message driver">
-                    <MessageSquare className="w-4 h-4 text-foreground" />
-                  </button>
-                </div>
-              </div>
-
-              {trackingStatus === "waiting" && (
-                <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background" onClick={handleCompleteTrip}>
-                  Start Ride
-                </Button>
               )}
-            </div>
-          </motion.div>
-        )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
 
-        {/* ═══════ TRIP COMPLETE / PAYMENT ═══════ */}
-        {viewStep === "complete" && (
-          <motion.div key="complete" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col flex-1 bg-background px-4 pt-6 pb-4">
-            <div className="text-center mb-6">
+      {/* ═══════ 4c. PICKUP CONFIRM — bottom sheet overlaying map ═══════ */}
+      {viewStep === "pickup-confirm" && (
+        <div
+          className="absolute left-0 right-0 z-30 bg-background rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4 overflow-y-auto"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+        >
+          <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
+
+          <AddressAutocomplete
+            placeholder="Edit pickup location"
+            value={pickupDisplay}
+            onSelect={handlePickupSelect}
+            className="mb-3"
+          />
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <MapPin className="w-4 h-4 text-foreground" />
+            <span className="font-medium text-foreground">To:</span>
+            <span className="truncate">{destination?.address || destinationDisplay}</span>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
+              {(() => { const Icon = currentVehicle.icon; return <Icon className="w-5 h-5 text-foreground" />; })()}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-foreground">{currentVehicle.name}</p>
+                {currentVehicle.carSeat && (
+                  <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+                    <Baby className="w-3 h-3" /> Car seat
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min · {currentVehicle.capacity} seats</p>
+            </div>
+            <p className="text-lg font-bold text-foreground">${currentPrice.toFixed(2)}</p>
+          </div>
+
+          {routeData && (
+            <div className="flex items-center gap-3 px-1 mb-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{routeData.duration_minutes} min</span>
+              <span>·</span>
+              <span className="flex items-center gap-1"><Route className="w-3 h-3" />{routeData.distance_miles} mi</span>
+            </div>
+          )}
+
+          <Button
+            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+            onClick={handleRequestRide}
+            disabled={isSubmitting}
+          >
+            <Zap className="w-5 h-5" />
+            {isSubmitting ? "Requesting..." : "Request Ride"}
+          </Button>
+        </div>
+      )}
+
+      {/* ═══════ DRIVER MATCHING — full-screen overlay ═══════ */}
+      {viewStep === "matching" && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
+          style={{ top: HEADER_HEIGHT }}
+        >
+          {matchPhase === "searching" ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-6">
+              <div className="relative w-48 h-48 mb-8">
+                <div className="absolute inset-0 rounded-full border-2 border-border/30" />
+                <div className="absolute inset-6 rounded-full border border-border/20" />
+                <div className="absolute inset-12 rounded-full border border-border/15" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+                </div>
+                <motion.div
+                  className="absolute inset-0"
+                  style={{ transformOrigin: "center center" }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                >
+                  <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-gradient-to-r from-primary/80 to-transparent origin-left" />
+                </motion.div>
+                {[45, 120, 230, 310].map((angle, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-3 h-3 rounded-full bg-primary/60"
+                    style={{
+                      top: `${50 - Math.cos((angle * Math.PI) / 180) * 35}%`,
+                      left: `${50 + Math.sin((angle * Math.PI) / 180) * 35}%`,
+                    }}
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                  />
+                ))}
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Finding your driver</h3>
+              <p className="text-sm text-muted-foreground text-center">Searching nearby drivers for your {currentVehicle.name}...</p>
+              <Button variant="ghost" className="mt-6 text-destructive" onClick={() => {
+                setViewStep("home");
+                if (rideRequestId) {
+                  supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+                }
+              }}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center px-6">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-8 h-8 text-primary" />
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <CheckCircle className="w-10 h-10 text-primary" />
                 </div>
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
-              <p className="text-sm text-muted-foreground mt-1">{pickup?.address} → {destination?.address}</p>
-            </div>
+              <h3 className="text-xl font-bold text-foreground mb-1">Driver found!</h3>
 
-            {/* Fare breakdown */}
-            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
-              <h4 className="text-sm font-bold text-foreground mb-3">Fare Summary</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Base fare</span>
-                  <span className="text-foreground">${(currentPrice * 0.4).toFixed(2)}</span>
+              <div className="w-full mt-6 p-4 rounded-2xl bg-card border border-border/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback className="bg-primary/20 text-primary font-bold">{MOCK_DRIVER.initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips} trips</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Distance ({routeData?.distance_miles ?? "—"} mi)</span>
-                  <span className="text-foreground">${(currentPrice * 0.35).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Time ({routeData?.duration_minutes ?? "—"} min)</span>
-                  <span className="text-foreground">${(currentPrice * 0.15).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Service fee</span>
-                  <span className="text-foreground">${(currentPrice * 0.10).toFixed(2)}</span>
-                </div>
-                <div className="border-t border-border/30 pt-2 flex justify-between">
-                  <span className="font-bold text-foreground">Total</span>
-                  <span className="font-bold text-foreground text-lg">${currentPrice.toFixed(2)}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Car className="w-4 h-4" />
+                  <span>{MOCK_DRIVER.vehicle}</span>
+                  <span className="ml-auto font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Payment options */}
+              <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background mt-6" onClick={startTracking}>
+                Track Driver
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════ 4d. LIVE TRACKING — bottom sheet overlaying map ═══════ */}
+      {viewStep === "tracking" && (
+        <div
+          className="absolute left-0 right-0 z-30 bg-background rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-bold text-foreground">
+                {trackingStatus === "waiting" ? "Driver has arrived" : `Arriving in ${trackingEta} min`}
+              </p>
+              <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle} · {MOCK_DRIVER.plate}</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium text-primary">
+              <Shield className="w-3.5 h-3.5" />
+              Trip protected
+            </div>
+          </div>
+
+          <Progress value={trackingStatus === "waiting" ? 100 : (1 - trackingEta / 4) * 100} className="h-1.5 mb-4" />
+
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 mb-4">
+            <Avatar className="w-10 h-10">
+              <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">{MOCK_DRIVER.initials}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">{MOCK_DRIVER.name}</p>
+              <div className="flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                <span className="text-xs text-muted-foreground">{MOCK_DRIVER.rating}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Call driver">
+                <Phone className="w-4 h-4 text-foreground" />
+              </button>
+              <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Message driver">
+                <MessageSquare className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
+          </div>
+
+          {trackingStatus === "waiting" && (
+            <Button className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background" onClick={handleCompleteTrip}>
+              Start Ride
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* ═══════ TRIP COMPLETE / PAYMENT — full-screen overlay ═══════ */}
+      {viewStep === "complete" && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background overflow-y-auto px-4 pt-6 pb-4"
+          style={{ top: HEADER_HEIGHT }}
+        >
+          <div className="text-center mb-6">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-8 h-8 text-primary" />
+              </div>
+            </motion.div>
+            <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
+            <p className="text-sm text-muted-foreground mt-1">{pickup?.address} → {destination?.address}</p>
+          </div>
+
+          {/* Fare breakdown */}
+          <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
+            <h4 className="text-sm font-bold text-foreground mb-3">Fare Summary</h4>
             <div className="space-y-2">
-              <Button className="w-full h-12 rounded-xl bg-foreground text-background font-bold gap-2" onClick={() => handlePayment("Card")}>
-                <CreditCard className="w-4 h-4" />
-                Pay with Card
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Apple Pay")}>
-                  <Smartphone className="w-4 h-4" />
-                  Apple Pay
-                </Button>
-                <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Google Pay")}>
-                  <Wallet className="w-4 h-4" />
-                  Google Pay
-                </Button>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Base fare</span>
+                <span className="text-foreground">${(currentPrice * 0.4).toFixed(2)}</span>
               </div>
-              <Button variant="ghost" className="w-full h-12 rounded-xl font-bold gap-2 text-muted-foreground" onClick={() => handlePayment("Cash")}>
-                <Banknote className="w-4 h-4" />
-                Pay with Cash
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Distance ({routeData?.distance_miles ?? "—"} mi)</span>
+                <span className="text-foreground">${(currentPrice * 0.35).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Time ({routeData?.duration_minutes ?? "—"} min)</span>
+                <span className="text-foreground">${(currentPrice * 0.15).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Service fee</span>
+                <span className="text-foreground">${(currentPrice * 0.10).toFixed(2)}</span>
+              </div>
+              <div className="border-t border-border/30 pt-2 flex justify-between">
+                <span className="font-bold text-foreground">Total</span>
+                <span className="font-bold text-foreground text-lg">${currentPrice.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment options */}
+          <div className="space-y-2">
+            <Button className="w-full h-12 rounded-xl bg-foreground text-background font-bold gap-2" onClick={() => handlePayment("Card")}>
+              <CreditCard className="w-4 h-4" />
+              Pay with Card
+            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Apple Pay")}>
+                <Smartphone className="w-4 h-4" />
+                Apple Pay
+              </Button>
+              <Button variant="outline" className="h-12 rounded-xl font-bold gap-2" onClick={() => handlePayment("Google Pay")}>
+                <Wallet className="w-4 h-4" />
+                Google Pay
               </Button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Button variant="ghost" className="w-full h-12 rounded-xl font-bold gap-2 text-muted-foreground" onClick={() => handlePayment("Cash")}>
+              <Banknote className="w-4 h-4" />
+              Pay with Cash
+            </Button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
