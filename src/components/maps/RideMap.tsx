@@ -237,9 +237,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     if (map && decodedRoute && decodedRoute.length > 1) {
       polylineRef.current = new google.maps.Polyline({
         path: decodedRoute,
-        strokeColor: "#22c55e",
-        strokeWeight: 5,
-        strokeOpacity: 0.85,
+        strokeColor: "#10b981",
+        strokeWeight: 4,
+        strokeOpacity: 0.9,
         geodesic: true,
         map,
       });
