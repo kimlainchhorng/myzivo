@@ -134,8 +134,8 @@ function MapSection({
 
   return (
     <div className={cn(
-      "relative w-full overflow-hidden flex-1",
-      compact ? "min-h-[250px]" : "min-h-[200px]"
+      "relative w-full overflow-hidden",
+      compact ? "flex-1 min-h-[200px]" : "flex-[2] min-h-[180px] max-h-[45vh]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
@@ -149,12 +149,12 @@ function MapSection({
         className="absolute inset-0"
       />
 
-      <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
+      <div className="absolute right-3 bottom-14 z-20 flex flex-col gap-1">
         <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
         <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
 
-      <div className="absolute top-16 right-3 z-20">
+      <div className="absolute top-3 right-3 z-20">
         <button
           onClick={handleLocateClick}
           className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
@@ -164,13 +164,6 @@ function MapSection({
         </button>
       </div>
 
-      {onBack && (
-        <div className="absolute top-16 left-3 z-20">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </button>
-        </div>
-      )}
       {children}
     </div>
   );
