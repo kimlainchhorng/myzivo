@@ -313,6 +313,8 @@ export default function RideBookingHome() {
         status: "searching",
         customer_name: user.user_metadata?.full_name || "",
         customer_phone: user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
       }).select("id").single();
 
       if (error) throw error;
