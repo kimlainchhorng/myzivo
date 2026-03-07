@@ -20,6 +20,7 @@ interface AppLayoutProps {
   transparentHeader?: boolean;
   headerRightAction?: ReactNode;
   className?: string;
+  fixedHeight?: boolean;
 }
 
 const AppLayout = ({
