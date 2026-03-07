@@ -645,6 +645,12 @@ export default function RideBookingHome() {
         {/* ═══════ ROUTE PREVIEW ═══════ */}
         {viewStep === "route-preview" && (
           <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Back button on map */}
+            <div className="absolute top-3 left-3 z-30">
+              <button onClick={() => { setViewStep("search"); setRouteData(null); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                <ArrowLeft className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
