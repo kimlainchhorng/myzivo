@@ -325,6 +325,9 @@ const AppHome = () => {
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
 
+          {/* ─── LIVE TRIP TRACKER ─── */}
+          <LiveTripTracker />
+
           {/* ─── QUICK ESTIMATE CARD (Ultra Premium) ─── */}
           <motion.button
             whileTap={{ scale: 0.98 }}
