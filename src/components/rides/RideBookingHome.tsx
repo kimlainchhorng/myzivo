@@ -257,7 +257,7 @@ function VehicleRow({
 
 /* ─── Vehicle image map ─── */
 const VEHICLE_IMAGES: Record<string, string> = {
-  "economy":        "/vehicles/economy-car.svg",
+  "economy":        "/vehicles/economy-car-v2.png",
   "xl":             "/vehicles/xl-car.svg",
   "share":          "/vehicles/share-car.svg",
   "comfort":        "/vehicles/comfort-car.svg",
