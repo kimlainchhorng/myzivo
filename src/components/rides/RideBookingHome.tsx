@@ -1217,8 +1217,6 @@ export default function RideBookingHome() {
               </div>
             </div>
           </div>
-        </div>
-      )}
 
           <div className="border-t border-border/15 pt-3 flex gap-2">
             <Button
