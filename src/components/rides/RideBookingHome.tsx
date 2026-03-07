@@ -653,7 +653,12 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW + VEHICLE (merged draggable sheet) ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 min-h-0 overflow-hidden relative">
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="relative h-[calc(100dvh-140px)] overflow-hidden">
+            {/* Back button */}
+            <button onClick={() => setViewStep("search")} className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
+
             {/* Map fills entire area */}
             <div className="absolute inset-0">
               <MapSection
