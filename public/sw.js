@@ -56,7 +56,7 @@ if (workbox) {
     ({ request }) => request.mode === 'navigate',
     new workbox.strategies.NetworkFirst({
       cacheName: 'navigation-cache',
-      networkTimeoutSeconds: 3,
+      networkTimeoutSeconds: 10,
       plugins: [
         new workbox.cacheableResponse.CacheableResponsePlugin({
           statuses: [0, 200],
@@ -164,8 +164,6 @@ self.addEventListener('activate', (event) => {
       const keepCaches = [
         'google-fonts-stylesheets',
         'google-fonts-webfonts',
-        'navigation-cache',
-        'api-cache',
       ];
       return Promise.all(
         cacheNames

@@ -34,11 +34,20 @@ export function usePWAUpdate(): PWAUpdateState {
           },
           onRegisteredSW(swUrl, registration) {
             console.debug('[PWA] Service worker registered:', swUrl);
-            // Check for updates every 60 seconds
+
+            if (registration?.waiting) {
+              console.debug('[PWA] Waiting service worker found, applying update');
+              setNeedRefresh(true);
+              updateFn(true);
+              return;
+            }
+
             if (registration) {
-              setInterval(() => {
-                registration.update();
-              }, 60 * 1000);
+              const checkForUpdate = () => registration.update();
+              setInterval(checkForUpdate, 60 * 1000);
+              document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') checkForUpdate();
+              });
             }
           },
           onRegisterError(error) {
