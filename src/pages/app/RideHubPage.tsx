@@ -131,7 +131,7 @@ export default function RideHubPage() {
   const [activeTab, setActiveTab] = useState("book");
 
   return (
-    <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")}>
+    <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")} className={activeTab === "book" ? "flex flex-col overflow-hidden" : ""}>
       {/* Tab bar */}
       <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
         <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
@@ -158,7 +158,9 @@ export default function RideHubPage() {
       </div>
 
       {/* Tab content */}
-      <div className={cn("flex-1", activeTab !== "book" && "pb-6")}>
+      <div className={cn(
+        activeTab === "book" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : "pb-6"
+      )}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -166,8 +168,9 @@ export default function RideHubPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
+            className={activeTab === "book" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : ""}
           >
-            {activeTab === "book" && <div className=""><RideBookingHome /></div>}
+            {activeTab === "book" && <RideBookingHome />}
             {activeTab === "reserve" && <div className=""><ZivoReserve /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}

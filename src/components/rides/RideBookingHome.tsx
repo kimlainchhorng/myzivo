@@ -338,7 +338,7 @@ export default function RideBookingHome() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--header-h,56px)-var(--tab-h,44px)-var(--nav-h,72px))] overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header provided by parent RideHubPage / AppLayout */}
 
       <AnimatePresence mode="wait">
