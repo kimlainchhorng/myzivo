@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -31,6 +31,9 @@ import RideQuickSearch from "@/components/rides/RideQuickSearch";
 import RideTripHistory from "@/components/rides/RideTripHistory";
 import RideMapPreview from "@/components/rides/RideMapPreview";
 import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
+import RideDriverMatch from "@/components/rides/RideDriverMatch";
+import RideSafetyCenter from "@/components/rides/RideSafetyCenter";
+import RideNotificationCenter from "@/components/rides/RideNotificationCenter";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,6 +44,7 @@ const tabs = [
   { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "tracking", label: "Live Trip", icon: Navigation },
+  { id: "match", label: "Match", icon: Car },
   { id: "confirm", label: "Confirm", icon: Star },
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "loyalty", label: "Loyalty", icon: Award },
@@ -55,6 +59,7 @@ const tabs = [
   { id: "places", label: "Places", icon: MapPin },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "safety", label: "Safety", icon: Shield },
+  { id: "alerts", label: "Alerts", icon: Bell },
   { id: "pass", label: "Ride Pass", icon: Crown },
   { id: "receipt", label: "Receipt", icon: Receipt },
   { id: "rate", label: "Rate", icon: Star },
@@ -109,6 +114,7 @@ export default function RideHubPage() {
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
+            {activeTab === "match" && <div className="p-4"><RideDriverMatch /></div>}
             {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
             {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
             {activeTab === "loyalty" && <div className="p-4"><RideLoyaltyCard /></div>}
@@ -122,7 +128,8 @@ export default function RideHubPage() {
             {activeTab === "group" && <div className="p-4"><GroupRidePlanner /></div>}
             {activeTab === "places" && <div className="p-4"><SmartSavedPlaces /></div>}
             {activeTab === "chat" && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
-            {activeTab === "safety" && <div className="p-4"><SafetyModePanel /></div>}
+            {activeTab === "safety" && <div className="p-4"><RideSafetyCenter /></div>}
+            {activeTab === "alerts" && <div className="p-4"><RideNotificationCenter /></div>}
             {activeTab === "pass" && <div className="pt-4"><RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} /></div>}
             {activeTab === "receipt" && <div className="p-4"><RideReceiptCard /></div>}
             {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
