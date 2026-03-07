@@ -152,7 +152,7 @@ function MapSection({
         <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
 
-      <div className="absolute top-3 right-3 z-20">
+      <div className="absolute top-14 right-3 z-20">
         <button
           onClick={handleLocateClick}
           className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
