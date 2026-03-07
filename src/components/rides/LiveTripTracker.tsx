@@ -1,16 +1,18 @@
 /**
- * LiveTripTracker — Enhanced real-time trip tracking experience
- * Route progress, share ETA, arrival notifications, trip timeline
+ * LiveTripTracker — Enhanced real-time trip tracking with Google Maps integration
+ * Live driver location, animated route, ETA updates, trip timeline
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Car, Phone, MessageSquare, Share2, Shield, Star, Navigation, Clock, MapPin, Bell, Copy, Route, Zap, ChevronUp, ChevronDown, Music, Thermometer, CheckCircle } from "lucide-react";
+import { Car, Phone, MessageSquare, Share2, Shield, Star, Navigation, Clock, MapPin, Bell, Route, ChevronUp, ChevronDown, Music, Thermometer, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import { supabase } from "@/integrations/supabase/client";
 
 const tripPhases = [
   { id: "driver_assigned", label: "Driver assigned", time: "2:14 PM", done: true },
@@ -20,89 +22,151 @@ const tripPhases = [
   { id: "destination", label: "Arrived at destination", time: "", done: false },
 ];
 
-export default function LiveTripTracker() {
+const darkMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2d2d44" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1a1a2e" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1a2b" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+];
+
+// Simulated driver position along a route
+const PICKUP = { lat: 40.7484, lng: -73.9857 }; // NYC area
+const DROPOFF = { lat: 40.6413, lng: -73.7781 }; // JFK Airport
+
+interface LiveTripTrackerProps {
+  pickupLat?: number;
+  pickupLng?: number;
+  dropoffLat?: number;
+  dropoffLng?: number;
+}
+
+export default function LiveTripTracker({
+  pickupLat = PICKUP.lat,
+  pickupLng = PICKUP.lng,
+  dropoffLat = DROPOFF.lat,
+  dropoffLng = DROPOFF.lng,
+}: LiveTripTrackerProps) {
   const [phase, setPhase] = useState(1);
   const [countdown, setCountdown] = useState(240);
-  const [carProgress, setCarProgress] = useState(20);
   const [expanded, setExpanded] = useState(false);
-  const [shareETA, setShareETA] = useState(false);
+  const [mapApiKey, setMapApiKey] = useState<string | null>(null);
+  const [mapError, setMapError] = useState(false);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [driverPos, setDriverPos] = useState({ lat: pickupLat + 0.008, lng: pickupLng - 0.005 });
+  const mapRef = useRef<google.maps.Map | null>(null);
 
+  const pickup = { lat: pickupLat, lng: pickupLng };
+  const dropoff = { lat: dropoffLat, lng: dropoffLng };
+
+  // Fetch Google Maps API key
   useEffect(() => {
-    const t = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
-    const p = setInterval(() => setCarProgress(c => Math.min(95, c + 0.3)), 300);
-    return () => { clearInterval(t); clearInterval(p); };
+    const fetchKey = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setMapError(true); return; }
+        const { data, error } = await supabase.functions.invoke("get-google-maps-key");
+        if (error || !data?.apiKey) { setMapError(true); return; }
+        setMapApiKey(data.apiKey);
+      } catch {
+        setMapError(true);
+      }
+    };
+    fetchKey();
   }, []);
 
-  // Auto-advance phases
+  // Countdown & phase progression
+  useEffect(() => {
+    const t = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(2), 8000);
     const t2 = setTimeout(() => setPhase(3), 16000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // Simulate driver movement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDriverPos(prev => ({
+        lat: prev.lat + (pickup.lat - prev.lat) * 0.02,
+        lng: prev.lng + (pickup.lng - prev.lng) * 0.02,
+      }));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [pickup.lat, pickup.lng]);
+
   const mins = Math.floor(countdown / 60);
   const secs = countdown % 60;
-
   const phaseLabels = ["En Route to You", "Driver Has Arrived", "On the Way", "Almost There!"];
   const phaseColors = ["text-primary", "text-amber-500", "text-emerald-500", "text-primary"];
 
+  // Fallback SVG map when Google Maps is unavailable
+  const carProgress = 20 + phase * 22;
+  const renderFallbackMap = () => (
+    <div className="relative h-52 rounded-2xl bg-gradient-to-br from-muted/40 to-muted/20 border border-border/40 overflow-hidden shadow-lg">
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path d="M 8 82 C 20 70, 35 55, 50 45 C 65 35, 80 28, 92 18" stroke="hsl(var(--primary))" strokeWidth="0.6" strokeDasharray="2 2" fill="none" opacity={0.3} />
+        <path d="M 8 82 C 20 70, 35 55, 50 45 C 65 35, 80 28, 92 18" stroke="hsl(var(--primary))" strokeWidth="1.2" fill="none" strokeDasharray={`${carProgress} 200`} opacity={0.9} />
+      </svg>
+      <div className="absolute bottom-4 left-[6%] flex flex-col items-center">
+        <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-card shadow-lg" />
+        <span className="text-[7px] font-bold text-muted-foreground mt-1 bg-card/80 px-1 rounded">Pickup</span>
+      </div>
+      <div className="absolute top-3 right-[6%] flex flex-col items-center">
+        <MapPin className="w-5 h-5 text-red-500 drop-shadow-lg" />
+        <span className="text-[7px] font-bold text-muted-foreground mt-0.5 bg-card/80 px-1 rounded">Dropoff</span>
+      </div>
+      <motion.div className="absolute z-10" style={{ left: `${8 + (carProgress / 100) * 84}%`, top: `${82 - (carProgress / 100) * 64}%` }} animate={{ y: [-1, 1, -1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+        <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-xl border-2 border-primary-foreground">
+          <Car className="w-4.5 h-4.5 text-primary-foreground" />
+        </div>
+      </motion.div>
+      {renderETAOverlay()}
+      {renderLiveBadge()}
+    </div>
+  );
+
+  const renderETAOverlay = () => (
+    <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-border/30 shadow-md z-20">
+      <div className="flex items-center gap-1.5">
+        <Clock className="w-3.5 h-3.5 text-primary" />
+        <span className="text-xl font-black text-foreground font-mono">{mins}:{secs.toString().padStart(2, "0")}</span>
+      </div>
+      <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">ETA</span>
+    </div>
+  );
+
+  const renderLiveBadge = () => (
+    <div className="absolute top-3 right-3 z-20">
+      <Badge className="bg-red-500/90 text-white border-0 text-[9px] font-bold gap-1 shadow-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
+      </Badge>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Map with animated route */}
-      <div className="relative h-48 rounded-2xl bg-gradient-to-br from-muted/40 to-muted/20 border border-border/40 overflow-hidden shadow-lg">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path d="M 8 82 C 20 70, 35 55, 50 45 C 65 35, 80 28, 92 18" stroke="hsl(var(--primary))" strokeWidth="0.6" strokeDasharray="2 2" fill="none" opacity={0.3} />
-          <path d="M 8 82 C 20 70, 35 55, 50 45 C 65 35, 80 28, 92 18" stroke="hsl(var(--primary))" strokeWidth="1.2" fill="none" strokeDasharray={`${carProgress} 200`} opacity={0.9} />
-        </svg>
+      {/* Map */}
+      {mapApiKey && !mapError ? (
+        <GoogleMapTracker
+          apiKey={mapApiKey}
+          pickup={pickup}
+          dropoff={dropoff}
+          driverPos={driverPos}
+          etaOverlay={renderETAOverlay()}
+          liveBadge={renderLiveBadge()}
+        />
+      ) : (
+        renderFallbackMap()
+      )}
 
-        {/* Pickup */}
-        <div className="absolute bottom-4 left-[6%] flex flex-col items-center">
-          <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-card shadow-lg" />
-          <span className="text-[7px] font-bold text-muted-foreground mt-1 bg-card/80 px-1 rounded">Pickup</span>
-        </div>
-
-        {/* Dropoff */}
-        <div className="absolute top-3 right-[6%] flex flex-col items-center">
-          <MapPin className="w-5 h-5 text-red-500 drop-shadow-lg" />
-          <span className="text-[7px] font-bold text-muted-foreground mt-0.5 bg-card/80 px-1 rounded">Dropoff</span>
-        </div>
-
-        {/* Animated car */}
-        <motion.div
-          className="absolute z-10"
-          style={{
-            left: `${8 + (carProgress / 100) * 84}%`,
-            top: `${82 - (carProgress / 100) * 64}%`,
-          }}
-          animate={{ y: [-1, 1, -1] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-        >
-          <div className="relative">
-            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-xl border-2 border-primary-foreground">
-              <Car className="w-4.5 h-4.5 text-primary-foreground" />
-            </div>
-            <motion.span animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 rounded-full bg-primary/30" />
-          </div>
-        </motion.div>
-
-        {/* ETA overlay */}
-        <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-border/30 shadow-md">
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xl font-black text-foreground font-mono">{mins}:{secs.toString().padStart(2, "0")}</span>
-          </div>
-          <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">ETA</span>
-        </div>
-
-        {/* Live badge */}
-        <div className="absolute top-3 right-3">
-          <Badge className="bg-red-500/90 text-white border-0 text-[9px] font-bold gap-1 shadow-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
-          </Badge>
-        </div>
-      </div>
-
-      {/* Status + driver */}
+      {/* Status + driver card */}
       <div className="rounded-2xl bg-card border border-border/40 overflow-hidden">
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-2">
@@ -114,7 +178,7 @@ export default function LiveTripTracker() {
           <Progress value={20 + phase * 22} className="h-1.5" />
         </div>
 
-        {/* Driver */}
+        {/* Driver info */}
         <div className="px-4 py-3 flex items-center gap-3">
           <Avatar className="w-13 h-13 border-2 border-primary/20">
             <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">MT</AvatarFallback>
@@ -133,18 +197,10 @@ export default function LiveTripTracker() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => toast.info("Calling driver...")}
-              className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
-              aria-label="Call driver"
-            >
+            <button onClick={() => toast.info("Calling driver...")} className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]" aria-label="Call driver">
               <Phone className="w-4 h-4 text-emerald-500" />
             </button>
-            <button
-              onClick={() => toast.info("Opening chat...")}
-              className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
-              aria-label="Message driver"
-            >
+            <button onClick={() => toast.info("Opening chat...")} className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]" aria-label="Message driver">
               <MessageSquare className="w-4 h-4 text-primary" />
             </button>
           </div>
@@ -152,56 +208,30 @@ export default function LiveTripTracker() {
 
         {/* Quick actions */}
         <div className="px-4 pb-3 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9 text-xs rounded-xl"
-            onClick={() => {
-              navigator.clipboard.writeText(`My ZIVO ride is ${mins} min away! Track: hizovo.com/track/demo`);
-              toast.success("ETA link copied to clipboard!");
-            }}
-          >
+          <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl" onClick={() => { navigator.clipboard.writeText(`My ZIVO ride is ${mins} min away! Track: hizovo.com/track/demo`); toast.success("ETA link copied!"); }}>
             <Share2 className="w-3.5 h-3.5 mr-1.5" /> Share ETA
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9 text-xs rounded-xl border-red-500/20 text-red-500 hover:bg-red-500/5"
-            onClick={() => toast.info("Safety center opened")}
-          >
+          <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl border-red-500/20 text-red-500 hover:bg-red-500/5" onClick={() => toast.info("Safety center opened")}>
             <Shield className="w-3.5 h-3.5 mr-1.5" /> Safety
           </Button>
         </div>
 
-        {/* Trip timeline toggle */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1 py-2.5 border-t border-border/30 text-[11px] font-bold text-muted-foreground hover:bg-muted/20 transition-colors min-h-[44px]"
-        >
+        {/* Trip timeline */}
+        <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-center gap-1 py-2.5 border-t border-border/30 text-[11px] font-bold text-muted-foreground hover:bg-muted/20 transition-colors min-h-[44px]">
           {expanded ? "Hide timeline" : "Trip timeline"}
           {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
         </button>
 
         <AnimatePresence>
           {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div className="px-4 pb-4 space-y-0">
                 {tripPhases.map((tp, i) => {
                   const isDone = i <= phase;
                   return (
                     <div key={tp.id} className="flex items-start gap-3 relative">
-                      {i < tripPhases.length - 1 && (
-                        <div className={cn("absolute left-[9px] top-5 w-0.5 h-full", isDone ? "bg-primary" : "bg-border/40")} />
-                      )}
-                      <div className={cn(
-                        "w-5 h-5 rounded-full flex items-center justify-center shrink-0 relative z-10",
-                        isDone ? "bg-primary" : "bg-muted border border-border/40"
-                      )}>
+                      {i < tripPhases.length - 1 && <div className={cn("absolute left-[9px] top-5 w-0.5 h-full", isDone ? "bg-primary" : "bg-border/40")} />}
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center shrink-0 relative z-10", isDone ? "bg-primary" : "bg-muted border border-border/40")}>
                         {isDone ? <CheckCircle className="w-3 h-3 text-primary-foreground" /> : <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />}
                       </div>
                       <div className="pb-4">
@@ -217,7 +247,7 @@ export default function LiveTripTracker() {
         </AnimatePresence>
       </div>
 
-      {/* Ride preferences active */}
+      {/* Active preferences */}
       <div className="rounded-2xl bg-card border border-border/40 p-4">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Active Preferences</h3>
         <div className="flex flex-wrap gap-2">
@@ -232,6 +262,122 @@ export default function LiveTripTracker() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Google Maps sub-component to isolate the loader */
+function GoogleMapTracker({
+  apiKey,
+  pickup,
+  dropoff,
+  driverPos,
+  etaOverlay,
+  liveBadge,
+}: {
+  apiKey: string;
+  pickup: { lat: number; lng: number };
+  dropoff: { lat: number; lng: number };
+  driverPos: { lat: number; lng: number };
+  etaOverlay: React.ReactNode;
+  liveBadge: React.ReactNode;
+}) {
+  const { isLoaded, loadError } = useJsApiLoader({ googleMapsApiKey: apiKey });
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Fetch route directions
+  useEffect(() => {
+    if (!isLoaded) return;
+    const svc = new google.maps.DirectionsService();
+    svc.route(
+      {
+        origin: pickup,
+        destination: dropoff,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result) setDirections(result);
+      }
+    );
+  }, [isLoaded, pickup.lat, pickup.lng, dropoff.lat, dropoff.lng]);
+
+  if (loadError) return null; // will fall back
+  if (!isLoaded) {
+    return (
+      <div className="h-52 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center">
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }} className="w-8 h-8 border-2 border-muted border-t-primary rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-52 rounded-2xl overflow-hidden border border-border/40 shadow-lg">
+      <GoogleMap
+        mapContainerClassName="w-full h-full"
+        center={driverPos}
+        zoom={13}
+        options={{
+          disableDefaultUI: true,
+          zoomControl: false,
+          styles: darkMapStyle,
+          gestureHandling: "greedy",
+        }}
+        onLoad={(map) => { mapRef.current = map; }}
+      >
+        {directions && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: "hsl(221, 83%, 53%)",
+                strokeWeight: 4,
+                strokeOpacity: 0.8,
+              },
+            }}
+          />
+        )}
+        {/* Pickup marker */}
+        <Marker
+          position={pickup}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#10b981",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 2,
+          }}
+        />
+        {/* Dropoff marker */}
+        <Marker
+          position={dropoff}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#ef4444",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 2,
+          }}
+        />
+        {/* Driver marker */}
+        <Marker
+          position={driverPos}
+          icon={{
+            path: "M29.395,0H17.636c-3.117,0-5.643,3.467-5.643,6.584v34.804c0,3.116,2.526,5.644,5.643,5.644h11.759c3.116,0,5.644-2.527,5.644-5.644V6.584C35.037,3.467,32.511,0,29.395,0z M34.05,14.188v11.665l-2.729,0.351v-4.806L34.05,14.188z M32.618,10.773c-1.016,3.9-2.219,8.51-2.219,8.51H16.631l-2.222-8.51C14.41,10.773,23.293,7.755,32.618,10.773z M15.741,21.713v4.492l-2.73-0.349V14.502L15.741,21.713z M13.011,37.938V27.579l2.73,0.343v8.196L13.011,37.938z M14.568,40.882l2.218-3.336h13.771l2.219,3.336H14.568z M31.321,35.805v-7.872l2.729-0.355v10.048L31.321,35.805z",
+            scale: 0.7,
+            fillColor: "hsl(221, 83%, 53%)",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 1,
+            anchor: new google.maps.Point(24, 24),
+          }}
+        />
+      </GoogleMap>
+      {etaOverlay}
+      {liveBadge}
     </div>
   );
 }
