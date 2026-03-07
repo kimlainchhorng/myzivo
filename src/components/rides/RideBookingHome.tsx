@@ -644,111 +644,114 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW + VEHICLE (merged draggable sheet) ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
-            <MapSection
-              pickupCoords={pickup}
-              dropoffCoords={destination}
-              routePolyline={routeData?.polyline}
-              onLocateUser={handleLocateUser}
-              userLocation={userLocation}
-            />
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 min-h-0 overflow-hidden relative">
+            {/* Map fills entire area */}
+            <div className="absolute inset-0">
+              <MapSection
+                pickupCoords={pickup}
+                dropoffCoords={destination}
+                routePolyline={routeData?.polyline}
+                onLocateUser={handleLocateUser}
+                userLocation={userLocation}
+                compact
+              />
+            </div>
 
-            {/* Draggable bottom sheet */}
+            {/* Draggable bottom sheet — absolute overlay */}
             <motion.div
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.15}
+              dragElastic={0.12}
               onDragEnd={(_, info) => {
-                if (info.offset.y < -50 || info.velocity.y < -300) {
+                if (info.offset.y < -40 || info.velocity.y < -200) {
                   setSheetExpanded(true);
-                } else if (info.offset.y > 50 || info.velocity.y > 300) {
+                } else if (info.offset.y > 40 || info.velocity.y > 200) {
                   setSheetExpanded(false);
                 }
               }}
               animate={{
-                height: sheetExpanded ? "60vh" : "auto",
+                height: sheetExpanded ? "65vh" : "auto",
+                maxHeight: sheetExpanded ? "65vh" : "38vh",
               }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 shadow-[0_-12px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
-              style={{ touchAction: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="absolute bottom-0 left-0 right-0 z-10 bg-background rounded-t-[1.25rem] border-t border-border/30 shadow-[0_-8px_24px_hsl(var(--foreground)/0.1)] flex flex-col overflow-hidden"
+              style={{ touchAction: "none" }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing">
-                <div className="w-10 h-1.5 rounded-full bg-muted-foreground/20" />
+              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing shrink-0">
+                <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
               </div>
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
-                <div className="px-5 pb-4">
+                <div className="px-4 pb-3 shrink-0">
                   {/* Addresses */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="flex flex-col items-center gap-0.5 mt-1">
+                  <div className="flex items-start gap-3 mb-2.5">
+                    <div className="flex flex-col items-center gap-0.5 mt-0.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                      <div className="w-0.5 h-6 bg-border/50" />
+                      <div className="w-0.5 h-5 bg-border/50" />
                       <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                     </div>
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-1.5">
                       <div>
-                        <p className="text-xs text-muted-foreground">Pickup</p>
-                        <p className="text-sm font-semibold text-foreground truncate">{pickup?.address || pickupDisplay}</p>
+                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
+                        <p className="text-sm font-semibold text-foreground truncate leading-tight">{pickup?.address || pickupDisplay}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Destination</p>
-                        <p className="text-sm font-semibold text-foreground truncate">{destination?.address || destinationDisplay}</p>
+                        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
+                        <p className="text-sm font-semibold text-foreground truncate leading-tight">{destination?.address || destinationDisplay}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Trip stats */}
                   {routeData && (
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="flex-1 flex items-center gap-1.5 rounded-xl bg-muted/20 border border-border/20 px-2 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                         <Timer className="w-3.5 h-3.5 text-primary shrink-0" />
                         <div>
-                          <p className="text-base font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
-                          <p className="text-[10px] text-muted-foreground">Trip time</p>
+                          <p className="text-sm font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
+                          <p className="text-[9px] text-muted-foreground">Trip time</p>
                         </div>
                       </div>
-                      <div className="flex-1 flex items-center gap-1.5 rounded-xl bg-muted/20 border border-border/20 px-2 py-1.5">
+                      <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                         <Route className="w-3.5 h-3.5 text-primary shrink-0" />
                         <div>
-                          <p className="text-base font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
-                          <p className="text-[10px] text-muted-foreground">Distance</p>
+                          <p className="text-sm font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
+                          <p className="text-[9px] text-muted-foreground">Distance</p>
                         </div>
                       </div>
                       {routeData.traffic_level && (
-                        <div className="flex-1 flex items-center gap-1.5 rounded-xl bg-muted/20 border border-border/20 px-2 py-1.5">
+                        <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
                           <Car className="w-3.5 h-3.5 text-primary shrink-0" />
                           <div>
                             <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
-                            <p className="text-[10px] text-muted-foreground">Traffic</p>
+                            <p className="text-[9px] text-muted-foreground">Traffic</p>
                           </div>
                         </div>
                       )}
                     </div>
                   )}
-
-                  {/* Choose a ride button — only in collapsed state */}
-                  {!sheetExpanded && (
-                    <>
-                      {isLoadingRoute ? (
-                        <div className="flex items-center justify-center py-4">
-                          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          <span className="ml-3 text-sm text-muted-foreground">Calculating route...</span>
-                        </div>
-                      ) : (
-                        <div style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))" }}>
-                          <Button
-                            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                            onClick={() => setSheetExpanded(true)}
-                          >
-                            Choose a ride
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
+
+                {/* Choose a ride button — only in collapsed state */}
+                {!sheetExpanded && (
+                  <div className="px-4 shrink-0" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
+                    {isLoadingRoute ? (
+                      <div className="flex items-center justify-center py-3">
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        onClick={() => setSheetExpanded(true)}
+                      >
+                        Choose a ride
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {/* Vehicle selection — only in expanded state */}
                 <AnimatePresence>
@@ -759,8 +762,8 @@ export default function RideBookingHome() {
                       exit={{ opacity: 0 }}
                       className="flex-1 overflow-hidden flex flex-col border-t border-border/15"
                     >
-                      <div className="px-5 pt-2 pb-1.5 flex items-center justify-between">
-                        <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
+                      <div className="px-4 pt-2 pb-1 flex items-center justify-between shrink-0">
+                        <h3 className="text-sm font-bold text-foreground">Choose a ride</h3>
                         <button
                           onClick={() => {
                             setCarSeatFilter(!carSeatFilter);
@@ -771,13 +774,13 @@ export default function RideBookingHome() {
                             }
                           }}
                           className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all",
                             carSeatFilter
                               ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
                               : "bg-muted/20 text-muted-foreground border-border/30"
                           )}
                         >
-                          <Baby className="w-3.5 h-3.5" />
+                          <Baby className="w-3 h-3" />
                           Car seat
                         </button>
                       </div>
@@ -797,14 +800,14 @@ export default function RideBookingHome() {
 
                       {/* Sticky bottom: payment + confirm */}
                       <div className="shrink-0 border-t border-border/15">
-                        <div className="px-4 py-2 flex items-center gap-3">
+                        <div className="px-4 py-1.5 flex items-center gap-3">
                           <CreditCard className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <div className="px-4 pt-1" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
+                        <div className="px-4 pt-0.5" style={{ paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0px))" }}>
                           <Button
-                            className="w-full h-13 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                            className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                             onClick={() => setViewStep("pickup-confirm")}
                           >
                             Choose {currentVehicle.name} · ${currentPrice.toFixed(2)}
