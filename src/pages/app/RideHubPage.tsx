@@ -117,6 +117,10 @@ const tabs = [
   { id: "wellness", label: "Wellness", icon: Heart },
   { id: "pay-adv", label: "Pay+", icon: Wallet },
   { id: "ai-assist", label: "AI", icon: Brain },
+  { id: "scheduling", label: "Scheduling", icon: CalendarDays },
+  { id: "safety-adv2", label: "Dashcam", icon: Camera },
+  { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
+  { id: "a11y-adv", label: "A11y+", icon: Accessibility },
 ];
 
 export default function RideHubPage() {
