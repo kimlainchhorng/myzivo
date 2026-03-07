@@ -179,16 +179,18 @@ function VehicleRow({
     <button
       onClick={onSelect}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-4 text-left transition-all border-b border-border/15 last:border-0",
-        selected ? "bg-muted/30" : "hover:bg-muted/10"
+        "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all border-b border-border/10 last:border-0",
+        selected
+          ? "bg-primary/5 border-l-4 border-l-primary"
+          : "hover:bg-muted/10 border-l-4 border-l-transparent"
       )}
     >
-      <div className="w-16 h-12 flex items-center justify-center shrink-0">
-        <Icon className="w-10 h-10 text-foreground" />
+      <div className="w-12 h-10 flex items-center justify-center shrink-0">
+        <Icon className="w-8 h-8 text-foreground" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-bold text-foreground">{vehicle.name}</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
           {vehicle.carSeat && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
               <Baby className="w-3 h-3" />
@@ -200,22 +202,18 @@ function VehicleRow({
             <span className="text-xs text-muted-foreground">{vehicle.capacity}</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {vehicle.etaMin} min · {vehicle.desc}
+        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">
+          {vehicle.etaMin} min away · {vehicle.desc}
         </p>
       </div>
-      <div className="text-right shrink-0">
-        <p className="text-base font-bold text-foreground">${price.toFixed(2)}</p>
+      <div className="text-right shrink-0 flex flex-col items-end gap-1">
+        <p className="text-sm font-bold text-foreground">${price.toFixed(2)}</p>
+        {selected && (
+          <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+            <CheckCircle className="w-3 h-3 text-white" />
+          </div>
+        )}
       </div>
-      {selected && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="w-5 h-5 rounded-full bg-foreground flex items-center justify-center shrink-0 ml-1"
-        >
-          <CheckCircle className="w-3.5 h-3.5 text-background" />
-        </motion.div>
-      )}
     </button>
   );
 }
@@ -259,7 +257,7 @@ export default function RideBookingHome() {
   const BOTTOM_NAV_HEIGHT = 64;    // px — ZivoMobileNav inner h-[64px] (see ZivoMobileNav.tsx)
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
-  const COLLAPSED_SHEET_HEIGHT = 260;
+  const COLLAPSED_SHEET_HEIGHT = 230;
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560);
 
   // Route data
@@ -512,7 +510,14 @@ export default function RideBookingHome() {
       {/* ═══════ 1. HEADER — normal flow, always visible ═══════ */}
       <div className="relative z-20 flex items-center h-14 px-4 bg-background border-b border-border/20">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (viewStep === "route-preview") setViewStep("search");
+            else if (viewStep === "pickup-confirm") {
+              setSheetExpanded(true);
+              setViewStep("route-preview");
+            }
+            else navigate(-1);
+          }}
           className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
           aria-label="Go back"
         >
@@ -568,30 +573,6 @@ export default function RideBookingHome() {
             driverCoords={viewStep === "tracking" ? driverCoords : null}
           />
         </div>
-      )}
-
-      {/* ═══════ Floating back button — route-preview ═══════ */}
-      {viewStep === "route-preview" && (
-        <button
-          onClick={() => setViewStep("search")}
-          className="absolute z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center touch-manipulation"
-          style={{ top: HEADER_HEIGHT + 12, left: 12 }}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-        </button>
-      )}
-
-      {/* ═══════ Floating back button — pickup-confirm ═══════ */}
-      {viewStep === "pickup-confirm" && (
-        <button
-          onClick={() => { setSheetExpanded(true); setViewStep("route-preview"); }}
-          className="absolute z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center touch-manipulation"
-          style={{ top: HEADER_HEIGHT + 12, left: 12 }}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-        </button>
       )}
 
       {/* ═══════ 4a. HOME bottom sheet — overlays map ═══════ */}
@@ -878,13 +859,13 @@ export default function RideBookingHome() {
                         }
                       }}
                       className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
                         carSeatFilter
-                          ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
-                          : "bg-muted/20 text-muted-foreground border-border/30"
+                          ? "bg-sky-500 text-white border-sky-500 shadow-sm"
+                          : "bg-background text-muted-foreground border-border/40 hover:border-sky-300"
                       )}
                     >
-                      <Baby className="w-3 h-3" />
+                      <Baby className="w-3.5 h-3.5" />
                       Car seat
                     </button>
                   </div>
@@ -904,7 +885,10 @@ export default function RideBookingHome() {
 
                   {/* Sticky bottom: payment + confirm */}
                   <div className="shrink-0 border-t border-border/15">
-                    <div className="px-4 py-1.5 flex items-center gap-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-2.5 pb-1">
+                      Payment
+                    </p>
+                    <div className="px-4 py-2 flex items-center gap-3">
                       <CreditCard className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
