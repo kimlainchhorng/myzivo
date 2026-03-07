@@ -297,36 +297,22 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
       {/* ZIVO-branded map background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card to-primary/10">
-        {/* Road grid pattern */}
-        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="hsl(var(--foreground))" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, hsl(160 40% 12%), hsl(200 30% 14%), hsl(160 30% 10%))' }}>
+        {/* Grid */}
+        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="zg" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#zg)"/>
         </svg>
-
-        {/* Simulated roads */}
-        <div className="absolute inset-0">
-          <div className="absolute top-[35%] left-0 right-0 h-[6px] bg-foreground/15 rounded-full" />
-          <div className="absolute top-[55%] left-[5%] right-[15%] h-[4px] bg-foreground/12 rounded-full" />
-          <div className="absolute top-[72%] left-[10%] right-[5%] h-[5px] bg-foreground/15 rounded-full" />
-          <div className="absolute top-0 bottom-0 left-[40%] w-[6px] bg-foreground/15 rounded-full" />
-          <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[4px] bg-foreground/12 rounded-full" />
-          <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] bg-foreground/10 rounded-full" />
-          <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] bg-foreground/10 rounded-full origin-left rotate-[25deg]" />
-          <div className="absolute top-[60%] left-[50%] w-[40%] h-[3px] bg-foreground/10 rounded-full origin-left -rotate-[15deg]" />
-          
-          {/* Block fills */}
-          <div className="absolute top-[8%] left-[5%] w-[30%] h-[22%] rounded-lg bg-primary/[0.04]" />
-          <div className="absolute top-[42%] left-[45%] w-[25%] h-[15%] rounded-lg bg-primary/[0.04]" />
-          <div className="absolute top-[62%] left-[8%] w-[20%] h-[18%] rounded-lg bg-primary/[0.04]" />
-          
-          {/* Water feature */}
-          <div className="absolute bottom-0 right-0 w-[35%] h-[25%] bg-primary/[0.08] rounded-tl-[3rem]" />
-        </div>
+        {/* Roads */}
+        <div className="absolute top-[35%] left-0 right-0 h-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
+        <div className="absolute top-[55%] left-[5%] right-[15%] h-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
+        <div className="absolute top-[72%] left-[10%] right-[5%] h-[4px] rounded-full" style={{background:'rgba(255,255,255,0.1)'}}/>
+        <div className="absolute top-0 bottom-0 left-[40%] w-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
+        <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
+        <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.07)'}}/>
+        <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] rounded-full origin-left rotate-[25deg]" style={{background:'rgba(255,255,255,0.06)'}}/>
+        {/* Water */}
+        <div className="absolute bottom-0 right-0 w-[35%] h-[25%] rounded-tl-[3rem]" style={{background:'rgba(16,185,129,0.12)'}}/>
 
         {/* Pickup marker with pulse */}
         <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
