@@ -340,29 +340,7 @@ export default function RideBookingHome() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
-      {/* ═══════ HEADER ═══════ */}
-      <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/30">
-        <div className="flex items-center justify-between h-14 px-4">
-          <button
-            onClick={() => viewStep === "home" ? navigate(-1) : setViewStep("home")}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <h1 className="font-bold text-lg text-foreground">Ride Hub</h1>
-          <button
-            onClick={() => navigate("/notifications")}
-            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
+      {/* Header provided by parent RideHubPage / AppLayout */}
 
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
