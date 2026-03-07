@@ -384,6 +384,15 @@ const AppHome = () => {
             ))}
           </div>
 
+          {/* ─── QUICK REORDER CAROUSEL ─── */}
+          <QuickReorderCarousel />
+
+          {/* ─── TRAVEL ITINERARY CARD ─── */}
+          <TravelItineraryCard />
+
+          {/* ─── PRICE ALERTS WIDGET ─── */}
+          <PriceAlertsWidget />
+
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
             <div>
