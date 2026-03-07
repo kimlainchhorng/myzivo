@@ -50,6 +50,10 @@ import RideAdvancedSafety from "@/components/rides/RideAdvancedSafety";
 import RideTravelIntegration from "@/components/rides/RideTravelIntegration";
 import RideFamilyAccounts from "@/components/rides/RideFamilyAccounts";
 import RideSubscriptionHub from "@/components/rides/RideSubscriptionHub";
+import RideSmartPricing from "@/components/rides/RideSmartPricing";
+import RideDriverComm from "@/components/rides/RideDriverComm";
+import RideSocialFeatures from "@/components/rides/RideSocialFeatures";
+import RideAnalyticsDashboard from "@/components/rides/RideAnalyticsDashboard";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
