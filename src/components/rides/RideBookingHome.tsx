@@ -374,10 +374,10 @@ export default function RideBookingHome() {
             className="flex flex-col flex-1"
           >
             {/* Map */}
-            <MapView showMenu />
+            <MapView showMenu compact />
 
             {/* Bottom content */}
-            <div className="flex-1 bg-background relative z-10 px-5 pt-5 pb-4">
+            <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               {/* Greeting */}
               <h2 className="text-xl font-black text-foreground">{greeting}, Anton</h2>
 
