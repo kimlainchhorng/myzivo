@@ -147,7 +147,7 @@ function MapSection({
         className="absolute inset-0"
       />
 
-      <div className="absolute right-3 bottom-14 z-20 flex flex-col gap-1">
+      <div className="absolute right-3 bottom-20 z-20 flex flex-col gap-1">
         <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
         <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
