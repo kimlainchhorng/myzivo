@@ -12,7 +12,7 @@ import {
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer, Bell
+  Route, Timer, Bell, Package, Plane, Hotel
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 /* ─── Types ─── */
@@ -49,7 +48,13 @@ type ViewStep =
   | "driver-assigned"
   | "driver-en-route"
   | "trip-in-progress"
-  | "trip-complete";
+  | "trip-complete"
+  // legacy aliases kept for backward compatibility
+  | "vehicle"
+  | "pickup-confirm"
+  | "matching"
+  | "tracking"
+  | "complete";
 
 type RideTab = "book" | "reserve" | "map" | "history";
 
@@ -67,16 +72,16 @@ const recentDestinations = [
 
 const vehicleOptions = [
   // Popular
-  { id: "economy", category: "popular" as const, name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 4, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "xl", category: "popular" as const, name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 1.80, basePrice: 4.50, capacity: 6, icon: Users, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "share", category: "popular" as const, name: "ZIVO Share", desc: "Share and save money", etaMin: 7, pricePerMile: 0.90, basePrice: 2.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.65 },
+  { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 4, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 1.80, basePrice: 4.50, capacity: 6, icon: Users, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 0.90, basePrice: 2.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
   // Premium
-  { id: "comfort", category: "premium" as const, name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 4, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "luxury", category: "premium" as const, name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "comfort", category: "premium", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 4, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "luxury", category: "premium", name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   // More
-  { id: "car-seat", category: "more" as const, name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, pricePerMile: 1.80, basePrice: 5.50, capacity: 4, icon: Car, carSeat: true, surgeMultiplier: 1.0 },
-  { id: "xl-car-seat", category: "more" as const, name: "ZIVO XL Car Seat", desc: "Larger vehicle with car seat", etaMin: 7, pricePerMile: 2.20, basePrice: 6.50, capacity: 6, icon: Users, carSeat: true, surgeMultiplier: 1.0 },
-  { id: "black-car-seat", category: "more" as const, name: "ZIVO Black Car Seat", desc: "Premium with car seat", etaMin: 8, pricePerMile: 4.20, basePrice: 10.00, capacity: 4, icon: Crown, carSeat: true, surgeMultiplier: 1.0 },
+  { id: "car-seat", category: "more", name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, pricePerMile: 1.80, basePrice: 5.50, capacity: 4, icon: Car, carSeat: true, surgeMultiplier: 1.0 },
+  { id: "xl-car-seat", category: "more", name: "ZIVO XL Car Seat", desc: "Larger vehicle with car seat", etaMin: 7, pricePerMile: 2.20, basePrice: 6.50, capacity: 6, icon: Users, carSeat: true, surgeMultiplier: 1.0 },
+  { id: "black-car-seat", category: "more", name: "ZIVO Black Car Seat", desc: "Premium with car seat", etaMin: 8, pricePerMile: 4.20, basePrice: 10.00, capacity: 4, icon: Crown, carSeat: true, surgeMultiplier: 1.0 },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
@@ -86,22 +91,32 @@ const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
   { id: "history", label: "History", icon: History },
 ];
 
+const homeServices = [
+  { id: "ride", label: "Ride", icon: Car },
+  { id: "delivery", label: "Delivery", icon: Package },
+  { id: "flights", label: "Flights", icon: Plane },
+  { id: "hotels", label: "Hotels", icon: Hotel },
+];
+
 /* ─── Price calculator ─── */
-function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, durationMinutes = 0): number {
-  const TIME_RATE = 0.25;
-  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + TIME_RATE * durationMinutes) * vehicle.surgeMultiplier;
+const PRICE_PER_MINUTE = 0.25; // time component of fare
+
+function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number, durationMinutes = 0, surge = 1.0): number {
+  const raw = (vehicle.basePrice + vehicle.pricePerMile * distanceMiles + PRICE_PER_MINUTE * durationMinutes) * surge * vehicle.surgeMultiplier;
   return Math.round(raw * 100) / 100;
 }
 
 /* ─── Mock driver ─── */
 const MOCK_DRIVER = {
   name: "Marcus T.",
+  fullName: "Marcus Thompson",
   initials: "MT",
   rating: 4.92,
   trips: 2847,
   vehicle: "Silver Toyota Camry",
   plate: "ABC 1234",
   phone: "+1 (555) 123-4567",
+  etaMin: 5,
 };
 
 /* ─── Map Section Wrapper ─── */
@@ -150,7 +165,6 @@ function MapSection({
           className="absolute inset-0 h-full w-full"
         />
       </div>
-
       <button
         onClick={handleLocateClick}
         className="absolute right-3 top-14 z-20 w-12 h-12 rounded-full bg-card shadow-md flex items-center justify-center"
@@ -158,36 +172,41 @@ function MapSection({
       >
         <Navigation className="w-4 h-4 text-primary" />
       </button>
-
       {children}
     </div>
   );
 }
 
-/* ─── Vehicle Row ─── */
+/* ─── Vehicle Row (for ride-options) ─── */
 function VehicleRow({
   vehicle,
   selected,
   onSelect,
   price,
+  originalPrice,
+  surgeActive,
 }: {
   vehicle: (typeof vehicleOptions)[0];
   selected: boolean;
   onSelect: () => void;
   price: number;
+  originalPrice?: number;
+  surgeActive?: boolean;
 }) {
   const Icon = vehicle.icon;
-  const isShare = vehicle.surgeMultiplier < 1;
-  const fullPrice = isShare ? Math.round((price / vehicle.surgeMultiplier) * 100) / 100 : null;
-  const etaTime = new Date(Date.now() + vehicle.etaMin * 60000)
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-    .toLowerCase();
+  const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
+  const etaHour = etaDate.getHours();
+  const etaMin = etaDate.getMinutes();
+  const etaAmPm = etaHour >= 12 ? "pm" : "am";
+  const etaHour12 = etaHour % 12 || 12;
+  const etaStr = `${etaHour12}:${String(etaMin).padStart(2, "0")}${etaAmPm}`;
+  const isDiscount = vehicle.surgeMultiplier < 1.0;
 
   return (
     <button
       onClick={onSelect}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all border-b border-border/10 last:border-0",
+        "w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-b border-border/10 last:border-0",
         selected
           ? "bg-primary/5 border-l-4 border-l-primary"
           : "hover:bg-muted/10 border-l-4 border-l-transparent"
@@ -205,22 +224,23 @@ function VehicleRow({
               Car seat
             </span>
           )}
-          <div className="flex items-center gap-0.5">
-            <User className="w-3 h-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{vehicle.capacity}</span>
+          <div className="flex items-center gap-0.5 text-muted-foreground">
+            <User className="w-3 h-3" />
+            <span className="text-xs">{vehicle.capacity}</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{vehicle.desc}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="text-xs text-muted-foreground">{etaStr} · {vehicle.desc}</span>
+        </div>
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
-        <p className="text-[11px] text-muted-foreground">{etaTime}</p>
-        {isShare && fullPrice ? (
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-[10px] text-muted-foreground line-through">${fullPrice.toFixed(2)}</span>
-            <span className="text-sm font-bold text-emerald-600">${price.toFixed(2)}</span>
-          </div>
+        {surgeActive && originalPrice && (
+          <span className="line-through text-muted-foreground text-xs">${originalPrice.toFixed(2)}</span>
+        )}
+        {isDiscount ? (
+          <span className="text-sm font-bold text-green-600">🟢 ${price.toFixed(2)}</span>
         ) : (
-          <p className="text-sm font-bold text-foreground">${price.toFixed(2)}</p>
+          <span className="text-sm font-bold text-foreground">${price.toFixed(2)}</span>
         )}
         {selected && (
           <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center mt-0.5">
@@ -251,6 +271,8 @@ export default function RideBookingHome() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
 
+  // New state for enhanced flow
+  const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
   const [rideCategory, setRideCategory] = useState<"popular" | "premium" | "more">("popular");
   const [rating, setRating] = useState(0);
   const [tip, setTip] = useState<number | null>(null);
@@ -264,14 +286,11 @@ export default function RideBookingHome() {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
-  // Layout height constants — must stay in sync with the CSS classes in AppHeader, ZivoMobileNav,
-  // and the header/tabs rendered below. Update these if those components change their heights.
-  // HEADER_HEIGHT: matches AppHeader h-14 (14 * 4px = 56px)
-  // BOTTOM_NAV_HEIGHT: matches ZivoMobileNav h-[64px] inner div height
-  const HEADER_HEIGHT = 56;        // px — AppHeader bar height (h-14)
-  const TABS_HEIGHT = 48;          // px — ride tabs row (py-2 + button height ~32px)
-  const HEADER_TABS_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT; // = 104
-  const BOTTOM_NAV_HEIGHT = 64;    // px — ZivoMobileNav inner h-[64px] (see ZivoMobileNav.tsx)
+  // Layout height constants
+  const HEADER_HEIGHT = 56;
+  const TABS_HEIGHT = 48;
+  const HEADER_TABS_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT;
+  const BOTTOM_NAV_HEIGHT = 64;
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
   const COLLAPSED_SHEET_HEIGHT = 230;
@@ -281,17 +300,112 @@ export default function RideBookingHome() {
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
-  // Tracking state
-  const [trackingEta, setTrackingEta] = useState(4);
+  // Driver tracking
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [driverEta, setDriverEta] = useState(MOCK_DRIVER.etaMin);
   const trackingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch user location on mount
   useEffect(() => {
     getCurrentLocation()
       .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
-      .catch(() => {}); // silently fail — map will use default center
+      .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-advance: searching → driver-assigned after 4s
+  useEffect(() => {
+    if (viewStep !== "searching") return;
+    const t = setTimeout(async () => {
+      setViewStep("driver-assigned");
+      if (rideRequestId) {
+        await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
+      }
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [viewStep, rideRequestId]);
+
+  // Auto-advance: driver-assigned → driver-en-route after 5s
+  useEffect(() => {
+    if (viewStep !== "driver-assigned") return;
+    setDriverEta(MOCK_DRIVER.etaMin);
+    const t = setTimeout(() => {
+      setViewStep("driver-en-route");
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [viewStep]);
+
+  // Driver en-route animation: move toward pickup
+  useEffect(() => {
+    if (viewStep !== "driver-en-route") return;
+    if (!pickup) return;
+
+    const startLat = pickup.lat + 0.01;
+    const startLng = pickup.lng - 0.008;
+    setDriverCoords({ lat: startLat, lng: startLng });
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      const progress = Math.min(step / 20, 1);
+      setDriverCoords({
+        lat: startLat + (pickup.lat - startLat) * progress,
+        lng: startLng + (pickup.lng - startLng) * progress,
+      });
+      setDriverEta(Math.max(0, MOCK_DRIVER.etaMin - Math.floor(progress * MOCK_DRIVER.etaMin)));
+
+      if (progress >= 1) {
+        clearInterval(interval);
+        setViewStep("trip-in-progress");
+      }
+    }, 1500);
+
+    trackingIntervalRef.current = interval;
+    return () => clearInterval(interval);
+  }, [viewStep, pickup]);
+
+  // Auto-advance: trip-in-progress → trip-complete after 8s
+  useEffect(() => {
+    if (viewStep !== "trip-in-progress") return;
+
+    // Move driver toward destination
+    if (pickup && destination) {
+      const startLat = pickup.lat;
+      const startLng = pickup.lng;
+      let step = 0;
+
+      const interval = setInterval(() => {
+        step++;
+        const progress = Math.min(step / 20, 1);
+        setDriverCoords({
+          lat: startLat + (destination.lat - startLat) * progress,
+          lng: startLng + (destination.lng - startLng) * progress,
+        });
+      }, 400);
+
+      trackingIntervalRef.current = interval;
+
+      const t = setTimeout(async () => {
+        clearInterval(interval);
+        setViewStep("trip-complete");
+        if (rideRequestId) {
+          await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
+        }
+      }, 8000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(t);
+      };
+    }
+
+    const t = setTimeout(async () => {
+      setViewStep("trip-complete");
+      if (rideRequestId) {
+        await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
+      }
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [viewStep, pickup, destination, rideRequestId]);
 
   const handleLocateUser = useCallback(() => {
     getCurrentLocation()
@@ -304,17 +418,32 @@ export default function RideBookingHome() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
-  const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
+  const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle) ?? vehicleOptions[0];
   const currentPrice = routeData
-    ? calcPrice(currentVehicle, routeData.distance_miles, routeData.duration_minutes)
-    : currentVehicle.basePrice;
-
-  const categoryVehicles = vehicleOptions.filter((v) => v.category === rideCategory);
+    ? calcPrice(currentVehicle, routeData.distance_miles, routeData.duration_minutes, surgeMultiplier)
+    : calcPrice(currentVehicle, 0, 0, surgeMultiplier);
 
   const handleTabChange = (tab: RideTab) => {
     setActiveTab(tab);
     if (tab === "reserve") navigate("/rides/reserve");
     else if (tab === "history") navigate("/rides/history");
+  };
+
+  /* ─── Back navigation ─── */
+  const handleBack = () => {
+    if (viewStep === "search") setViewStep("home");
+    else if (viewStep === "route-preview") setViewStep("search");
+    else if (viewStep === "ride-options") setViewStep("route-preview");
+    else if (viewStep === "confirm-ride") setViewStep("ride-options");
+    else if (
+      viewStep === "driver-assigned" ||
+      viewStep === "driver-en-route" ||
+      viewStep === "trip-in-progress"
+    ) {
+      toast.info("Trip in progress");
+    } else {
+      navigate(-1);
+    }
   };
 
   const handlePickupSelect = useCallback((place: PlaceData) => {
@@ -326,7 +455,6 @@ export default function RideBookingHome() {
     setDestination(place);
     setDestinationDisplay(place.address);
 
-    // Auto-set pickup to current location if not set
     let pickupData = pickup;
     if (!pickupData) {
       pickupData = userLocation
@@ -336,11 +464,10 @@ export default function RideBookingHome() {
       setPickupDisplay("Current Location");
     }
 
-    // Auto-fetch route and go to preview
     if (pickupData && place.lat && place.lng) {
       fetchRoute(pickupData, place);
     }
-  }, [pickup, userLocation]);
+  }, [pickup, userLocation]); // fetchRoute is intentionally omitted to avoid infinite loop
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
@@ -353,7 +480,7 @@ export default function RideBookingHome() {
     fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
   };
 
-  /* ─── Fetch route from edge function ─── */
+  /* ─── Fetch route ─── */
   const fetchRoute = async (from: PlaceData, to: PlaceData) => {
     if (!from.lat || !to.lat) return;
     setIsLoadingRoute(true);
@@ -379,7 +506,6 @@ export default function RideBookingHome() {
           traffic_level: data.traffic_level,
         });
       } else {
-        // Fallback with estimated values
         const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
         const distMiles = distKm * 0.621371;
         setRouteData({
@@ -390,7 +516,6 @@ export default function RideBookingHome() {
       }
     } catch (err) {
       console.error("[RideBooking] Route fetch error:", err);
-      // Fallback estimate
       const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
       const distMiles = distKm * 0.621371;
       setRouteData({
@@ -406,7 +531,6 @@ export default function RideBookingHome() {
     setViewStep("route-preview");
   };
 
-  /* ─── Proceed from search to route preview ─── */
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
     fetchRoute(pickup, destination);
@@ -444,7 +568,7 @@ export default function RideBookingHome() {
 
       setRideRequestId(data.id);
       setViewStep("searching");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("[RideBooking] Request error:", err);
       toast.error("Failed to request ride. Please try again.");
     } finally {
@@ -452,82 +576,9 @@ export default function RideBookingHome() {
     }
   };
 
-  /* ─── Auto-advance: searching → driver-assigned after 4s ─── */
-  useEffect(() => {
-    if (viewStep !== "searching") return;
-    const t = setTimeout(async () => {
-      setViewStep("driver-assigned");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", rideRequestId);
-      }
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [viewStep, rideRequestId]);
-
-  /* ─── Auto-advance: driver-assigned → driver-en-route after 5s ─── */
-  useEffect(() => {
-    if (viewStep !== "driver-assigned") return;
-    const t = setTimeout(() => setViewStep("driver-en-route"), 5000);
-    return () => clearTimeout(t);
-  }, [viewStep]);
-
-  /* ─── Start tracking when entering driver-en-route ─── */
-  const startTracking = useCallback(() => {
-    setTrackingEta(4);
-    if (pickup) {
-      const startLat = pickup.lat + 0.01;
-      const startLng = pickup.lng - 0.008;
-      setDriverCoords({ lat: startLat, lng: startLng });
-
-      let step = 0;
-      if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
-      trackingIntervalRef.current = setInterval(() => {
-        step++;
-        const progress = Math.min(step / 20, 1);
-        setDriverCoords({
-          lat: startLat + (pickup.lat - startLat) * progress,
-          lng: startLng + (pickup.lng - startLng) * progress,
-        });
-        setTrackingEta(Math.max(1, 4 - Math.floor(progress * 4)));
-
-        if (progress >= 1) {
-          clearInterval(trackingIntervalRef.current!);
-          trackingIntervalRef.current = null;
-          setViewStep("trip-in-progress");
-        }
-      }, 1500);
-    }
-  }, [pickup]);
-
-  useEffect(() => {
-    if (viewStep !== "driver-en-route") return;
-    startTracking();
-    return () => {
-      if (trackingIntervalRef.current) {
-        clearInterval(trackingIntervalRef.current);
-        trackingIntervalRef.current = null;
-      }
-    };
-  }, [viewStep, startTracking]);
-
-  /* ─── Auto-advance: trip-in-progress → trip-complete after 8s ─── */
-  useEffect(() => {
-    if (viewStep !== "trip-in-progress") return;
-    const t = setTimeout(async () => {
-      setViewStep("trip-complete");
-      if (rideRequestId) {
-        await supabase.from("ride_requests").update({ status: "completed" }).eq("id", rideRequestId);
-      }
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [viewStep, rideRequestId]);
-
-  /* ─── Reset all state back to home ─── */
-  const resetToHome = () => {
-    if (trackingIntervalRef.current) {
-      clearInterval(trackingIntervalRef.current);
-      trackingIntervalRef.current = null;
-    }
+  /* ─── Reset state ─── */
+  const handleReset = () => {
+    if (trackingIntervalRef.current) clearInterval(trackingIntervalRef.current);
     setViewStep("home");
     setPickup(null);
     setDestination(null);
@@ -535,26 +586,31 @@ export default function RideBookingHome() {
     setDestinationDisplay("");
     setRideRequestId(null);
     setRouteData(null);
-    setSheetExpanded(false);
+    setDriverCoords(null);
+    setDriverEta(MOCK_DRIVER.etaMin);
     setRating(0);
     setTip(null);
-    setDriverCoords(null);
-    setTrackingEta(4);
+    setSurgeMultiplier(1.0);
+    setRideCategory("popular");
   };
+
+  /* ─── Cancel ride ─── */
+  const handleCancelRide = async () => {
+    if (rideRequestId) {
+      await supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
+    }
+    handleReset();
+  };
+
+  const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
-      {/* ═══════ 1. HEADER — normal flow, always visible ═══════ */}
+      {/* ═══════ 1. HEADER — always visible ═══════ */}
       <div className="relative z-20 flex items-center h-14 px-4 bg-background border-b border-border/20">
         <button
-          onClick={() => {
-            if (viewStep === "route-preview") setViewStep("search");
-            else if (viewStep === "ride-options") setViewStep("route-preview");
-            else if (viewStep === "confirm-ride") setViewStep("ride-options");
-            else if (viewStep === "search") setViewStep("home");
-            else navigate(-1);
-          }}
+          onClick={handleBack}
           className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
           aria-label="Go back"
         >
@@ -570,7 +626,7 @@ export default function RideBookingHome() {
         </button>
       </div>
 
-      {/* ═══════ 2. RIDE TABS — normal flow, only on home step ═══════ */}
+      {/* ═══════ 2. RIDE TABS — only on home step ═══════ */}
       {viewStep === "home" && (
         <div className="relative z-20 flex gap-1 px-4 py-2 bg-background border-b border-border/10 overflow-x-auto scrollbar-none">
           {rideTabs.map((tab) => (
@@ -591,14 +647,17 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ 3. MAP VIEWPORT LAYER — absolute, behind all sheets ═══════ */}
-      {(
-        viewStep === "home" ||
-        viewStep === "route-preview" ||
-        viewStep === "searching" ||
-        viewStep === "driver-assigned" ||
-        viewStep === "driver-en-route" ||
-        viewStep === "trip-in-progress"
+      {/* ═══════ 3. MAP VIEWPORT LAYER ═══════ */}
+      {(viewStep === "home"
+        || viewStep === "route-preview"
+        || viewStep === "ride-options"
+        || viewStep === "confirm-ride"
+        || viewStep === "searching"
+        || viewStep === "driver-assigned"
+        || viewStep === "driver-en-route"
+        || viewStep === "trip-in-progress"
+        || viewStep === "pickup-confirm"
+        || viewStep === "tracking"
       ) && (
         <div
           className="absolute left-0 right-0 z-0"
@@ -613,13 +672,15 @@ export default function RideBookingHome() {
             dropoffCoords={["route-preview", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
-            routePolyline={routeData?.polyline ?? null}
-            driverCoords={["driver-en-route", "trip-in-progress"].includes(viewStep) ? driverCoords : null}
+            routePolyline={viewStep !== "home" ? (routeData?.polyline ?? null) : null}
+            driverCoords={
+              (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
+            }
           />
         </div>
       )}
 
-      {/* ═══════ 4a. HOME bottom sheet — overlays map ═══════ */}
+      {/* ═══════ 4a. HOME bottom sheet ═══════ */}
       {viewStep === "home" && (
         <div
           className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
@@ -640,6 +701,7 @@ export default function RideBookingHome() {
               </div>
             </button>
 
+            {/* Saved places */}
             <div className="mt-3 space-y-0">
               {savedPlaces.map((place, i) => {
                 const Icon = place.icon;
@@ -665,28 +727,23 @@ export default function RideBookingHome() {
               })}
             </div>
 
-            {/* Services row */}
-            <div className="mt-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Services</p>
-              <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-                {[
-                  { label: "Ride", icon: Car, color: "bg-emerald-500/10 text-emerald-600" },
-                  { label: "Delivery", icon: Zap, color: "bg-orange-500/10 text-orange-600" },
-                  { label: "Reserve", icon: CalendarClock, color: "bg-sky-500/10 text-sky-600" },
-                  { label: "Rentals", icon: Crown, color: "bg-violet-500/10 text-violet-600" },
-                  { label: "Flights", icon: Shield, color: "bg-amber-500/10 text-amber-600" },
-                ].map((svc) => (
-                  <button
-                    key={svc.label}
-                    onClick={() => svc.label === "Ride" ? setViewStep("search") : toast.info(`${svc.label} coming soon!`)}
-                    className="flex flex-col items-center gap-1.5 shrink-0"
-                  >
-                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center", svc.color)}>
-                      <svc.icon className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-semibold text-foreground">{svc.label}</span>
-                  </button>
-                ))}
+            {/* Get anywhere service grid */}
+            <div className="mt-4 border-t border-border/15 pt-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Get anywhere</p>
+              <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
+                {homeServices.map((svc) => {
+                  const Icon = svc.icon;
+                  return (
+                    <button
+                      key={svc.id}
+                      onClick={() => toast.info("Coming soon!")}
+                      className="flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-xl bg-muted/30 border border-border/20 shrink-0 hover:bg-muted/50 active:scale-95 transition-all"
+                    >
+                      <Icon className="w-5 h-5 text-foreground" />
+                      <span className="text-[10px] font-semibold text-foreground">{svc.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -734,7 +791,6 @@ export default function RideBookingHome() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 pt-3">
-            {/* Saved places */}
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
             {savedPlaces.map((place) => {
               const Icon = place.icon;
@@ -755,7 +811,6 @@ export default function RideBookingHome() {
               );
             })}
 
-            {/* Recent destinations */}
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
             {recentDestinations.map((dest) => (
               <button
@@ -798,7 +853,7 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ Zoom controls — route-preview only, above collapsed sheet ═══════ */}
+      {/* ═══════ Zoom controls — route-preview only ═══════ */}
       {viewStep === "route-preview" && (
         <div
           className="absolute right-3 flex flex-col gap-2 z-20"
@@ -811,7 +866,7 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ 4b. ROUTE PREVIEW — draggable bottom sheet overlaying map ═══════ */}
+      {/* ═══════ 4b. ROUTE PREVIEW — draggable bottom sheet ═══════ */}
       {viewStep === "route-preview" && (
         <motion.div
           drag="y"
@@ -829,13 +884,11 @@ export default function RideBookingHome() {
             touchAction: "none",
           }}
         >
-          {/* Drag handle */}
           <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
 
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Route info */}
             <div className="px-5 pt-3 pb-2 shrink-0">
-              {/* Addresses */}
               <div className="flex items-start gap-3 mb-2">
                 <div className="flex flex-col items-center gap-0.5 mt-0.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary" />
@@ -854,7 +907,6 @@ export default function RideBookingHome() {
                 </div>
               </div>
 
-              {/* Trip stats */}
               {routeData && (
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/20 px-2 py-1.5">
@@ -884,20 +936,42 @@ export default function RideBookingHome() {
               )}
             </div>
 
-            {/* Choose a ride button */}
-            <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
-              {isLoadingRoute ? (
-                <div className="flex items-center justify-center py-3">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
-                </div>
-              ) : (
-                <Button
-                  className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                  onClick={() => setViewStep("ride-options")}
+            {/* Choose a ride button — collapsed */}
+            {!sheetExpanded && (
+              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+                {isLoadingRoute ? (
+                  <div className="flex items-center justify-center py-3">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-muted-foreground">Calculating route...</span>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                    onClick={() => setViewStep("ride-options")}
+                  >
+                    Choose a ride
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Expanded — also go to ride-options */}
+            <AnimatePresence>
+              {sheetExpanded && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 overflow-hidden flex flex-col items-center justify-center px-4 border-t border-border/15"
                 >
-                  Choose a ride
-                </Button>
+                  <p className="text-sm text-muted-foreground mb-4">Browse available rides</p>
+                  <Button
+                    className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background"
+                    onClick={() => setViewStep("ride-options")}
+                  >
+                    See ride options
+                  </Button>
+                </motion.div>
               )}
             </div>
           </div>
@@ -910,66 +984,73 @@ export default function RideBookingHome() {
           className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
           style={{ top: HEADER_HEIGHT }}
         >
-          {/* Back + title */}
+          {/* Header row */}
           <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
-            <button onClick={() => setViewStep("route-preview")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0" aria-label="Go back">
+            <button
+              onClick={() => setViewStep("route-preview")}
+              className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
+              aria-label="Go back"
+            >
               <ArrowLeft className="w-4 h-4 text-foreground" />
             </button>
-            <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
-          </div>
-
-          {/* Promo badge */}
-          <div className="px-4 pb-2 shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              15% promo applied
-            </span>
+            <h2 className="text-lg font-black text-foreground flex-1">Choose a ride</h2>
+            <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-bold" aria-label="15% promo applied">15% promo applied</span>
           </div>
 
           {/* Category tabs */}
-          <div className="flex gap-1 px-4 pb-2 shrink-0">
+          <div className="flex gap-2 px-4 pb-3 shrink-0">
             {(["popular", "premium", "more"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setRideCategory(cat)}
                 className={cn(
-                  "flex-1 py-1.5 rounded-full text-sm font-semibold capitalize transition-all",
+                  "flex-1 py-2 rounded-full text-sm font-bold capitalize transition-all",
                   rideCategory === cat
                     ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-muted/30"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                 )}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat}
               </button>
             ))}
           </div>
 
-          {/* Scrollable vehicle list */}
-          <div className="flex-1 overflow-y-auto border-t border-border/15">
-            {categoryVehicles.map((v) => (
-              <VehicleRow
-                key={v.id}
-                vehicle={v}
-                selected={selectedVehicle === v.id}
-                onSelect={() => setSelectedVehicle(v.id)}
-                price={routeData ? calcPrice(v, routeData.distance_miles, routeData.duration_minutes) : v.basePrice}
-              />
-            ))}
+          {/* Vehicle list */}
+          <div className="flex-1 overflow-y-auto">
+            {filteredVehiclesByCategory.map((v) => {
+              const price = routeData
+                ? calcPrice(v, routeData.distance_miles, routeData.duration_minutes, surgeMultiplier)
+                : calcPrice(v, 0, 0, surgeMultiplier);
+              const originalPrice = routeData
+                ? calcPrice(v, routeData.distance_miles, routeData.duration_minutes, 1.0)
+                : v.basePrice;
+              return (
+                <VehicleRow
+                  key={v.id}
+                  vehicle={v}
+                  selected={selectedVehicle === v.id}
+                  onSelect={() => setSelectedVehicle(v.id)}
+                  price={price}
+                  originalPrice={originalPrice}
+                  surgeActive={surgeMultiplier > 1.0}
+                />
+              );
+            })}
           </div>
 
-          {/* Sticky bottom */}
+          {/* Sticky footer */}
           <div className="shrink-0 border-t border-border/15">
             <div className="px-4 py-2 flex items-center gap-3">
               <CreditCard className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground flex-1">Visa .... 4242</span>
+              <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </div>
-            <div className="px-4 pt-0.5" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
+            <div className="px-4 pb-4">
               <Button
                 className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                 onClick={() => setViewStep("confirm-ride")}
               >
-                Confirm {currentVehicle.name} - ${currentPrice.toFixed(2)}
+                Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
               </Button>
             </div>
           </div>
@@ -979,96 +1060,83 @@ export default function RideBookingHome() {
       {/* ═══════ CONFIRM RIDE — full-screen overlay ═══════ */}
       {viewStep === "confirm-ride" && (
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
+          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col overflow-y-auto"
           style={{ top: HEADER_HEIGHT }}
         >
-          {/* Back */}
           <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
-            <button onClick={() => setViewStep("ride-options")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0" aria-label="Go back">
+            <button
+              onClick={() => setViewStep("ride-options")}
+              className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
+              aria-label="Go back"
+            >
               <ArrowLeft className="w-4 h-4 text-foreground" />
             </button>
-            <h2 className="text-xl font-black text-foreground">Confirm your ride</h2>
+            <h2 className="text-lg font-black text-foreground">Confirm your ride</h2>
           </div>
 
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
-            {/* Pickup/destination card */}
-            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
+          <div className="px-4 pb-4 space-y-0">
+            {/* Route */}
+            <div className="rounded-2xl bg-muted/15 border border-border/20 p-4 mb-3">
               <div className="flex items-start gap-3">
                 <div className="flex flex-col items-center gap-0.5 mt-0.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                  <div className="w-0.5 h-5 bg-border/50" />
+                  <div className="w-0.5 h-8 bg-border/50" />
                   <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
                 </div>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div>
-                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Pickup</p>
-                    <p className="text-sm font-semibold text-foreground truncate">{pickup?.address || pickupDisplay}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Destination</p>
-                    <p className="text-sm font-semibold text-foreground truncate">{destination?.address || destinationDisplay}</p>
-                  </div>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <p className="text-sm font-semibold text-foreground truncate">{pickup?.address || pickupDisplay}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">{destination?.address || destinationDisplay}</p>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle */}
-            <div className="border-t border-border/15 pt-4 mb-4">
+            {/* Vehicle summary */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
               <div className="flex items-center gap-3">
-                {(() => { const Icon = currentVehicle.icon; return <Icon className="w-8 h-8 text-foreground shrink-0" />; })()}
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">{currentVehicle.name} - {currentVehicle.capacity} seats</p>
-                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min away - {currentVehicle.desc}</p>
+                <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
+                  {(() => { const Icon = currentVehicle.icon; return <Icon className="w-5 h-5 text-foreground" />; })()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">{currentVehicle.name} · {currentVehicle.capacity} seats</p>
+                  <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min away · {currentVehicle.desc}</p>
                 </div>
                 <p className="text-lg font-bold text-foreground">${currentPrice.toFixed(2)}</p>
               </div>
             </div>
 
             {/* Payment */}
-            <div className="border-t border-border/15 pt-4 mb-4">
+            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
               <div className="flex items-center gap-3">
                 <CreditCard className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground flex-1">Visa .... 4242</span>
-                <button className="text-xs font-semibold text-primary">Change</button>
+                <span className="text-sm text-foreground flex-1">Visa •••• 4242</span>
+                <button className="text-xs font-bold text-primary">Change &gt;</button>
               </div>
             </div>
 
-            {/* Promo code */}
-            <div className="border-t border-border/15 pt-4 mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-foreground">Promo code</span>
-                <button
-                  onClick={() => toast.info("Promo code added!")}
-                  className="text-xs font-semibold text-primary"
-                >
-                  Add
-                </button>
-              </div>
+            {/* Promo */}
+            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3 flex items-center justify-between">
+              <span className="text-sm text-foreground">Promo code</span>
+              <button className="text-xs font-bold text-primary">Add &gt;</button>
             </div>
 
-            {/* Trip info */}
-            <div className="border-t border-border/15 pt-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Timer className="w-3.5 h-3.5" />
-                  {routeData?.duration_minutes ?? 19} min
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Route className="w-3.5 h-3.5" />
-                  {routeData?.distance_miles ?? 10.6} mi
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Car className="w-3.5 h-3.5" />
-                  {routeData?.traffic_level ?? "Light"}
-                </span>
+            {/* Route info */}
+            {routeData && (
+              <div className="rounded-2xl bg-muted/15 border border-border/20 p-3 mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                <Timer className="w-3.5 h-3.5" />
+                <span>{routeData.duration_minutes} min</span>
+                <span>·</span>
+                <Route className="w-3.5 h-3.5" />
+                <span>{routeData.distance_miles} mi</span>
+                {routeData.traffic_level && (
+                  <>
+                    <span>·</span>
+                    <span className="capitalize">{routeData.traffic_level} traffic</span>
+                  </>
+                )}
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Sticky bottom: Request Ride */}
-          <div className="shrink-0 border-t border-border/15 px-4 pt-3" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
             <Button
               className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
               onClick={handleRequestRide}
@@ -1081,279 +1149,330 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ SEARCHING — bottom sheet overlaying map ═══════ */}
+      {/* ═══════ SEARCHING — bottom sheet over map ═══════ */}
       {viewStep === "searching" && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 280 }}
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-4 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 260 }}
         >
-          <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <div className="flex flex-col items-center px-6 pt-4 pb-4">
-            <motion.div
-              className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3"
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <div className="w-6 h-6 rounded-full bg-emerald-500" />
-            </motion.div>
-            <h3 className="text-lg font-bold text-foreground mb-0.5">Finding your driver...</h3>
-            <p className="text-sm text-muted-foreground mb-3">Searching nearby drivers</p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4 w-full justify-center">
-              <span>Drivers nearby: <span className="font-semibold text-foreground">5</span></span>
-              <span>Estimated pickup: <span className="font-semibold text-foreground">4 minutes</span></span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
+          <div className="flex flex-col items-center justify-center h-[calc(100%-28px)]">
+            {/* Animated dots */}
+            <div className="flex gap-2 mb-4">
               {[0, 1, 2].map((i) => (
-                <motion.div
+                <motion.span
                   key={i}
-                  className="w-2 h-2 rounded-full bg-primary"
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
+                  className="w-3 h-3 rounded-full bg-primary"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
                 />
               ))}
             </div>
 
-            <button
-              onClick={() => {
-                if (rideRequestId) {
-                  supabase.from("ride_requests").update({ status: "cancelled" }).eq("id", rideRequestId);
-                }
-                resetToHome();
-              }}
-              className="text-sm font-semibold text-destructive"
+            <h3 className="text-lg font-bold text-foreground mb-1">Finding your driver…</h3>
+            <p className="text-sm text-muted-foreground mb-1">Searching nearby drivers</p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+              <span>Drivers nearby: 5</span>
+              <span>·</span>
+              <span>Estimated pickup: {currentVehicle.etaMin} min</span>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive/80"
+              onClick={handleCancelRide}
             >
               Cancel ride
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
-      {/* ═══════ DRIVER ASSIGNED — bottom sheet overlaying map ═══════ */}
+      {/* ═══════ DRIVER ASSIGNED — bottom sheet over map ═══════ */}
       {viewStep === "driver-assigned" && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 340 }}
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-3 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
-          <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
 
-          <div className="px-5 pt-3 pb-4">
-            <h3 className="text-base font-bold text-foreground">Meet your driver at pickup</h3>
-            <p className="text-sm text-muted-foreground mb-4">Driver arriving in 5 minutes</p>
+          <h3 className="text-base font-bold text-foreground text-center mb-0.5">Meet your driver at pickup</h3>
+          <p className="text-xs text-muted-foreground text-center mb-3">Driver arriving in {MOCK_DRIVER.etaMin} minutes.</p>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/30 mb-4">
-              <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-background">{MOCK_DRIVER.initials}</span>
-              </div>
-              <div className="flex-1">
+          <div className="border-t border-border/15 pt-3">
+            <div className="flex items-center gap-3 mb-3">
+              <Avatar className="w-14 h-14 shrink-0">
+                <AvatarFallback className="bg-foreground text-background font-bold text-lg">{MOCK_DRIVER.initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
                 <p className="font-bold text-foreground">{MOCK_DRIVER.name}</p>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                  <span>{MOCK_DRIVER.rating} - {MOCK_DRIVER.trips.toLocaleString()} trips</span>
+                <div className="flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span className="text-sm text-muted-foreground">{MOCK_DRIVER.rating} · {MOCK_DRIVER.trips.toLocaleString()} trips</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{MOCK_DRIVER.vehicle}</p>
                 <p className="text-xs font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</p>
               </div>
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => toast.info("Opening in-app chat...")}
-                className="flex-1 flex items-center justify-center gap-2 h-11 rounded-2xl bg-muted/40 text-sm font-semibold text-foreground"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Message
-              </button>
-              <button
-                onClick={() => toast.info("Calling Marcus T....")}
-                className="flex-1 flex items-center justify-center gap-2 h-11 rounded-2xl bg-muted/40 text-sm font-semibold text-foreground"
-              >
-                <Phone className="w-4 h-4" />
-                Call
-              </button>
-              <button
-                onClick={resetToHome}
-                className="w-11 h-11 flex items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground"
-                aria-label="Cancel ride"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* ═══════ DRIVER EN ROUTE — bottom sheet overlaying map ═══════ */}
-      {viewStep === "driver-en-route" && (
-        <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
-        >
-          <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
-
-          <div className="px-5 pt-3 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Car className="w-5 h-5 text-primary shrink-0" />
-              <p className="text-base font-bold text-foreground">Driver arriving in {trackingEta} min</p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 border-t border-border/15 pt-3">
-              <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
-              <span>-</span>
-              <span>{MOCK_DRIVER.vehicle}</span>
-              <span>-</span>
-              <span className="font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => toast.info("Opening in-app chat...")}
-                className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-muted/40 text-sm font-semibold text-foreground"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Message
-              </button>
-              <button
-                onClick={() => toast.info("Calling driver...")}
-                className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-muted/40 text-sm font-semibold text-foreground"
-              >
-                <Phone className="w-4 h-4" />
-                Call
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ TRIP IN PROGRESS — bottom sheet overlaying map ═══════ */}
-      {viewStep === "trip-in-progress" && (
-        <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
-        >
-          <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
-
-          <div className="px-5 pt-3 pb-4">
-            <p className="text-base font-bold text-foreground mb-0.5">Heading to destination</p>
-            <p className="text-sm text-muted-foreground mb-3">ETA: {trackingEta} min</p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 border-t border-border/15 pt-3">
-              <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
-              <span>-</span>
-              <span>{MOCK_DRIVER.vehicle}</span>
-              <span>-</span>
-              <span className="font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => toast.info("Trip link copied to clipboard!")}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl bg-muted/40 text-xs font-semibold text-foreground"
-              >
-                <Route className="w-3.5 h-3.5" />
-                Share Trip
-              </button>
-              <button
-                onClick={() => toast.info("Calling driver...")}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl bg-muted/40 text-xs font-semibold text-foreground"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                Call
-              </button>
-              <button
-                onClick={() => toast.info("ZIVO Safety Center opened")}
-                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl bg-muted/40 text-xs font-semibold text-foreground"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                Safety
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ TRIP COMPLETE — full-screen overlay (z-50, top:0) ═══════ */}
-      {viewStep === "trip-complete" && (
-        <div className="absolute left-0 right-0 bottom-0 z-50 bg-background overflow-y-auto" style={{ top: 0 }}>
-          <div className="px-5 pt-12 pb-8">
-            <div className="text-center mb-6">
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
-                <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-10 h-10 text-emerald-500" />
-                </div>
-              </motion.div>
-              <h2 className="text-2xl font-black text-foreground">Trip Complete!</h2>
-              <p className="text-sm text-muted-foreground mt-1">You have arrived safely</p>
-            </div>
-
-            {/* Trip summary */}
-            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
-              <h4 className="text-sm font-bold text-foreground mb-3">Trip summary</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pickup</span>
-                  <span className="text-foreground font-medium text-right max-w-[60%] truncate">{pickup?.address || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Destination</span>
-                  <span className="text-foreground font-medium text-right max-w-[60%] truncate">{destination?.address || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span className="text-foreground font-medium">{routeData?.duration_minutes ?? 19} min</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Distance</span>
-                  <span className="text-foreground font-medium">{routeData?.distance_miles ?? 10.6} mi</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Amount</span>
-                  <span className="text-foreground font-bold">${currentPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment</span>
-                  <span className="text-foreground font-medium">Visa .... 4242</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Rate driver */}
-            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
-              <p className="text-sm font-bold text-foreground mb-2">Rate your driver  {MOCK_DRIVER.name}</p>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} onClick={() => setRating(star)}>
-                    <Star className={cn("w-7 h-7", star <= rating ? "text-amber-500 fill-amber-500" : "text-muted-foreground/40")} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tip */}
-            <div className="rounded-2xl bg-card border border-border/30 p-4 mb-6">
-              <p className="text-sm font-bold text-foreground mb-3">Add a tip?</p>
-              <div className="flex gap-2">
-                {([1, 2, 5, null] as (number | null)[]).map((amount, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setTip(tip === amount ? null : amount)}
-                    className={cn(
-                      "flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all",
-                      tip === amount
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-background text-foreground border-border/30"
-                    )}
-                  >
-                    {amount === null ? "Custom" : `$${amount}`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <div className="border-t border-border/15 pt-3 flex gap-2">
             <Button
-              className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-              onClick={resetToHome}
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Opening chat...")}
             >
-              Done
+              <MessageSquare className="w-4 h-4" />
+              Message
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Calling driver...")}
+            >
+              <Phone className="w-4 h-4" />
+              Call
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm text-destructive border-destructive/30 hover:bg-destructive/5"
+              onClick={handleCancelRide}
+            >
+              <X className="w-4 h-4" />
+              Cancel
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* ═══════ DRIVER EN ROUTE — bottom sheet over map ═══════ */}
+      {viewStep === "driver-en-route" && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-3 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 200 }}
+        >
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+
+          <h3 className="text-base font-bold text-foreground mb-2">
+            Driver arriving in {driverEta > 0 ? `${driverEta} min` : "now"}
+          </h3>
+
+          <div className="flex items-center gap-2 mb-3 text-sm">
+            <Car className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-muted-foreground">{MOCK_DRIVER.vehicle}</span>
+            <span className="text-muted-foreground">|</span>
+            <span className="font-mono font-bold text-foreground">{MOCK_DRIVER.plate}</span>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Opening chat...")}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Message
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Calling driver...")}
+            >
+              <Phone className="w-4 h-4" />
+              Call
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ TRIP IN PROGRESS — bottom sheet over map ═══════ */}
+      {viewStep === "trip-in-progress" && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] px-5 pt-3 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
+        >
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-muted-foreground/25" />
+
+          <h3 className="text-base font-bold text-foreground mb-0.5">Heading to destination</h3>
+          {routeData && (
+            <p className="text-xs text-muted-foreground mb-2">ETA: {routeData.duration_minutes} min</p>
+          )}
+
+          <div className="flex items-center gap-2 mb-3 text-sm">
+            <Car className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="font-semibold text-foreground">{MOCK_DRIVER.name}</span>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-muted-foreground truncate">{MOCK_DRIVER.vehicle}</span>
+            <span className="text-muted-foreground">|</span>
+            <span className="font-mono font-bold text-foreground shrink-0">{MOCK_DRIVER.plate}</span>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Trip link copied!")}
+            >
+              <Route className="w-4 h-4" />
+              Share Trip
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Calling driver...")}
+            >
+              <Phone className="w-4 h-4" />
+              Call
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
+              onClick={() => toast.info("Safety center opened")}
+            >
+              <Shield className="w-4 h-4" />
+              Safety
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ TRIP COMPLETE — full-screen overlay ═══════ */}
+      {(viewStep === "trip-complete" || viewStep === "complete") && (
+        <div
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
+        >
+          <div className="text-center mb-6">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-8 h-8 text-primary" />
+              </div>
+            </motion.div>
+            <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
+            <p className="text-sm text-muted-foreground mt-1">You've arrived</p>
+          </div>
+        </div>
+      )}
+
+          {/* Trip summary */}
+          <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
+            <h4 className="text-sm font-bold text-foreground mb-3">Trip summary</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pickup</span>
+                <span className="text-foreground text-right max-w-[60%] truncate">{pickup?.address || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Destination</span>
+                <span className="text-foreground text-right max-w-[60%] truncate">{destination?.address || "—"}</span>
+              </div>
+              {routeData && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Duration</span>
+                    <span className="text-foreground">{routeData.duration_minutes} min</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Distance</span>
+                    <span className="text-foreground">{routeData.distance_miles} mi</span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between border-t border-border/20 pt-2">
+                <span className="font-bold text-foreground">Amount</span>
+                <span className="font-bold text-foreground">${currentPrice.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment</span>
+                <span className="text-foreground">Visa •••• 4242</span>
+              </div>
+            </div>
+
+          {/* Rate driver */}
+          <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
+            <h4 className="text-sm font-bold text-foreground mb-3">Rate {MOCK_DRIVER.name}</h4>
+            <div className="flex justify-center gap-2 mb-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button key={star} onClick={() => setRating(star)} className="touch-manipulation">
+                  <Star
+                    className={cn(
+                      "w-8 h-8 transition-colors",
+                      star <= rating ? "text-amber-500 fill-amber-500" : "text-border"
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Add tip */}
+          <div className="rounded-2xl bg-card border border-border/30 p-4 mb-6">
+            <h4 className="text-sm font-bold text-foreground mb-3">Add a tip?</h4>
+            <div className="flex gap-2">
+              {[1, 2, 5].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setTip(tip === amount ? null : amount)}
+                  className={cn(
+                    "flex-1 py-2 rounded-xl border text-sm font-bold transition-all",
+                    tip === amount
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-background text-foreground border-border/40 hover:border-foreground/30"
+                  )}
+                >
+                  ${amount}
+                </button>
+              ))}
+              <button
+                onClick={() => toast.info("Custom tip coming soon!")}
+                className="flex-1 py-2 rounded-xl border text-sm font-bold bg-background text-foreground border-border/40 hover:border-foreground/30 transition-all"
+              >
+                Custom
+              </button>
+            </div>
+          </div>
+
+          <Button
+            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+            onClick={handleReset}
+          >
+            Done
+          </Button>
+        </div>
+      )}
+
+      {/* ═══════ Legacy: PICKUP CONFIRM (backward compat) ═══════ */}
+      {viewStep === "pickup-confirm" && (
+        <div
+          className="absolute left-0 right-0 z-30 bg-background rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4 overflow-y-auto"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
+        >
+          <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
+          <AddressAutocomplete
+            placeholder="Edit pickup location"
+            value={pickupDisplay}
+            onSelect={handlePickupSelect}
+            className="mb-3"
+          />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <MapPin className="w-4 h-4 text-foreground" />
+            <span className="font-medium text-foreground">To:</span>
+            <span className="truncate">{destination?.address || destinationDisplay}</span>
+          </div>
+          <Button
+            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+            onClick={handleRequestRide}
+            disabled={isSubmitting}
+          >
+            <Zap className="w-5 h-5" />
+            {isSubmitting ? "Requesting..." : "Request Ride"}
+          </Button>
         </div>
       )}
 
