@@ -1,82 +1,50 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+# Ride Hub UI Overhaul — Uber-Style Layout
 
+## Current State
+The component already has a solid Uber-style structure with home/search/vehicle/confirm steps, an SVG map fallback, animated cars, and a bottom booking panel. The main issues are:
+- No proper header bar (back arrow, title, bell icon)
+- No floating ride mode tabs (Book/Reserve/Map/History)
+- The map and bottom panel styling need polish to match the requested spec
 
----
+## Plan
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+### 1. Add Top Header Bar
+Add a fixed header above the map with:
+- Left: Back arrow icon (navigates back or to previous page)
+- Center: "Ride Hub" title text
+- Right: Bell notification icon
+- Semi-transparent background with backdrop blur so map shows through
 
+### 2. Add Floating Ride Mode Tabs
+Horizontal pill tabs floating between the map and bottom panel:
+- **Book** (active, green highlight), **Reserve**, **Map**, **History**
+- Positioned absolutely at the bottom of the map area
+- Active tab gets `bg-primary text-primary-foreground`, inactive gets `bg-card/80`
+- "Reserve" navigates to ZivoReserve, "History" to RideTripHistory, "Map" stays on map view
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+### 3. Refine Map Section
+- Increase map height to fill top ~50% of screen
+- Keep the SVG grid, animated cars, user location green dot, and zoom controls
+- Remove the menu button (replaced by header)
 
+### 4. Refine Bottom Booking Panel
+- White card with rounded top corners (`rounded-t-3xl`), soft upward shadow
+- Greeting: "Good evening, {User Name}" (use auth context for real name)
+- "Where to?" search bar with "Now" time selector button on right
+- Saved locations (Home/Work) with address below each, clickable to start booking
+- Clean dividers between saved locations
 
----
+### 5. Connect User Name from Auth
+- Import `useAuth` to get the real user's name for the greeting instead of hardcoded "Anton"
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+### Files Modified
+- `src/components/rides/RideBookingHome.tsx` — all changes in this single file
 
+### Technical Details
+- Header: new `<div>` at top of home view with `sticky top-0 z-30`
+- Tabs: new state `activeTab` with values `book | reserve | map | history`; only `book` renders the booking flow, others navigate to existing components or show placeholders
+- Bottom panel keeps existing "Where to?" → search → vehicle → confirm flow
+- All styling uses theme tokens (no hardcoded colors)
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
-
-
----
-
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
-
-
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
-
-
----
-
-## 5. Security: `console.warn` with User Data in Production (1 fix)
-
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
