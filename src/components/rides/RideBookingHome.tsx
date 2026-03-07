@@ -644,20 +644,20 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            {/* Back button on map */}
-            <div className="absolute top-3 left-3 z-30">
-              <button onClick={() => { setViewStep("search"); setRouteData(null); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
-                <ArrowLeft className="w-4 h-4 text-foreground" />
-              </button>
-            </div>
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
               onLocateUser={handleLocateUser}
               userLocation={userLocation}
-            />
+            >
+              <div className="absolute top-3 left-3 z-30">
+                <button onClick={() => { setViewStep("search"); setRouteData(null); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </MapSection>
 
             {/* Route info bottom card */}
             <div className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 px-5 pt-4 pb-3 shadow-[0_-8px_20px_hsl(var(--foreground)/0.06)]">
