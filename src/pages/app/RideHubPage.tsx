@@ -131,36 +131,43 @@ export default function RideHubPage() {
   const [activeTab, setActiveTab] = useState("book");
 
   return (
-    <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")} fixedHeight={activeTab === "book"} className={activeTab === "book" ? "flex flex-col overflow-hidden" : ""}>
-      {/* Tab bar */}
-      <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
-        <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                )}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
+    <AppLayout
+      title="Ride Hub"
+      showBack
+      onBack={() => navigate("/rides")}
+      fixedHeight={activeTab === "book"}
+      hideHeader={activeTab === "book"}
+      className={activeTab === "book" ? "overflow-hidden" : ""}
+    >
+      {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
+      {activeTab !== "book" && (
+        <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
+          <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tab content */}
-      <div className={cn(
-        activeTab === "book" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : "pb-6"
-      )}>
+      <div className={cn(activeTab === "book" ? "" : "pb-6")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -168,7 +175,7 @@ export default function RideHubPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={activeTab === "book" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : ""}
+            className={activeTab === "book" ? "" : ""}
           >
             {activeTab === "book" && <RideBookingHome />}
             {activeTab === "reserve" && <div className=""><ZivoReserve /></div>}
