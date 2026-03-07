@@ -75,7 +75,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Equipped with 1 child car seat",
     price: 39.95,
     seats: 4,
-    image: "/vehicles/economy-car.svg",
+    image: "/vehicles/car-seat-car.svg",
   },
   {
     id: "xl-car-seat",
@@ -96,6 +96,16 @@ const rideOptionsSeed: RideOption[] = [
     price: 81.39,
     seats: 4,
     image: "/vehicles/black-car.svg",
+  },
+  {
+    id: "wav",
+    name: "ZIVO WAV",
+    category: "More",
+    eta: "3:29 pm",
+    description: "Wheelchair-accessible rides",
+    price: 33.50,
+    seats: 4,
+    image: "/vehicles/wav-car.svg",
   },
 ];
 
