@@ -11,14 +11,20 @@ import { decodePolyline } from "@/services/mapsApi";
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
 
 const darkMapStyle = [
-  { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#255763" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2c6675" }] },
+  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
@@ -167,7 +173,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       zoomControl: false,
       styles: getMapStyle(),
       gestureHandling: "greedy",
-      mapId: "zivo-ride-map",
     });
   }, []);
 
@@ -277,7 +282,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [driverCoords]);
 
-  return <div ref={mapContainerRef} className={className} style={{ width: "100%", height: "100%" }} />;
+  return <div ref={mapContainerRef} className={`absolute inset-0 ${className || ""}`} />;
 }
 
 // Premium fallback when map is unavailable
