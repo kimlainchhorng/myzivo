@@ -47,9 +47,13 @@ const recentDestinations = [
 ];
 
 const vehicleOptions = [
-  { id: "economy", name: "Zivo Economy", desc: "Affordable rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car },
-  { id: "comfort", name: "Zivo Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Users },
-  { id: "luxury", name: "Zivo Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown },
+  { id: "economy", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car, carSeat: false },
+  { id: "xl", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, price: 16.80, capacity: 6, icon: Users, carSeat: false },
+  { id: "comfort", name: "ZIVO Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Sparkles, carSeat: false },
+  { id: "luxury", name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown, carSeat: false },
+  { id: "car-seat", name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, price: 17.50, capacity: 4, icon: Car, carSeat: true },
+  { id: "xl-car-seat", name: "ZIVO XL Car Seat", desc: "Larger vehicle with 1 child car seat", etaMin: 7, price: 22.80, capacity: 6, icon: Users, carSeat: true },
+  { id: "black-car-seat", name: "ZIVO Black Car Seat", desc: "Premium ride with 1 child car seat", etaMin: 8, price: 42.00, capacity: 4, icon: Crown, carSeat: true },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
