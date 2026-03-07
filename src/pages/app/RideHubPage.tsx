@@ -191,6 +191,10 @@ export default function RideHubPage() {
             {activeTab === "travel" && <div className="p-4"><RideTravelIntegration /></div>}
             {activeTab === "family" && <div className="p-4"><RideFamilyAccounts /></div>}
             {activeTab === "subscribe" && <div className="p-4"><RideSubscriptionHub /></div>}
+            {activeTab === "smart-price" && <div className="p-4"><RideSmartPricing /></div>}
+            {activeTab === "driver-comm" && <div className="p-4"><RideDriverComm /></div>}
+            {activeTab === "social-feat" && <div className="p-4"><RideSocialFeatures /></div>}
+            {activeTab === "ride-analytics" && <div className="p-4"><RideAnalyticsDashboard /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
