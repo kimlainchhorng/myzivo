@@ -886,7 +886,6 @@ export default function RideBookingHome() {
 
                   {/* Sticky bottom: payment + confirm */}
                   <div className="shrink-0 border-t border-border/15">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-2.5 pb-0.5">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-2.5 pb-1">
                       Payment
                     </p>
