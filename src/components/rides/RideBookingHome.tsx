@@ -512,7 +512,10 @@ export default function RideBookingHome() {
         <button
           onClick={() => {
             if (viewStep === "route-preview") setViewStep("search");
-            else if (viewStep === "pickup-confirm") { setSheetExpanded(true); setViewStep("route-preview"); }
+            else if (viewStep === "pickup-confirm") {
+              setSheetExpanded(true);
+              setViewStep("route-preview");
+            }
             else if (viewStep === "search") setViewStep("home");
             else navigate(-1);
           }}
