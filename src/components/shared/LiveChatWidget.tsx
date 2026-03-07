@@ -34,6 +34,8 @@ const ESCALATION_CATEGORIES = [
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-chat`;
 
 const LiveChatWidget = () => {
+  const location = useLocation();
+  const isRidesPage = location.pathname.startsWith("/rides");
   const [isOpen, setIsOpen] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>("ai");
   const [messages, setMessages] = useState<ChatMessage[]>([
