@@ -40,6 +40,10 @@ import useEmblaCarousel from "embla-carousel-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
+import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
+import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
+import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
+import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
@@ -321,6 +325,9 @@ const AppHome = () => {
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
 
+          {/* ─── LIVE TRIP TRACKER ─── */}
+          <LiveTripTracker />
+
           {/* ─── QUICK ESTIMATE CARD (Ultra Premium) ─── */}
           <motion.button
             whileTap={{ scale: 0.98 }}
@@ -376,6 +383,15 @@ const AppHome = () => {
               </motion.button>
             ))}
           </div>
+
+          {/* ─── QUICK REORDER CAROUSEL ─── */}
+          <QuickReorderCarousel />
+
+          {/* ─── TRAVEL ITINERARY CARD ─── */}
+          <TravelItineraryCard />
+
+          {/* ─── PRICE ALERTS WIDGET ─── */}
+          <PriceAlertsWidget />
 
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
