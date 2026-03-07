@@ -755,7 +755,7 @@ export default function RideBookingHome() {
 
                 {/* Choose a ride button — only in collapsed state */}
                 {!sheetExpanded && (
-                  <div className="px-4 shrink-0" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
+                  <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
                     {isLoadingRoute ? (
                       <div className="flex items-center justify-center py-3">
                         <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
