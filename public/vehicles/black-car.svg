@@ -1,92 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
   <defs>
-    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#000" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    <linearGradient id="blackBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#252535"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </linearGradient>
+    <radialGradient id="blackShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.38)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
     </radialGradient>
-    <linearGradient id="body-black" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3a3f47"/>
-      <stop offset="40%" stop-color="#1e2228"/>
-      <stop offset="100%" stop-color="#0d1117"/>
-    </linearGradient>
-    <linearGradient id="body-side-black" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2c3038"/>
-      <stop offset="100%" stop-color="#0d1117"/>
-    </linearGradient>
-    <linearGradient id="front-black" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#21262d"/>
-      <stop offset="100%" stop-color="#0d1117"/>
-    </linearGradient>
-    <linearGradient id="roof-black" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#080a0e"/>
-      <stop offset="100%" stop-color="#020305"/>
-    </linearGradient>
-    <linearGradient id="glass-black" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2d6080" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#0f2a3d" stop-opacity="0.6"/>
-    </linearGradient>
-    <linearGradient id="wheel-rim-b" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#d8d8d8"/>
-      <stop offset="100%" stop-color="#888"/>
-    </linearGradient>
   </defs>
-
-  <ellipse cx="80" cy="84" rx="66" ry="6" fill="url(#shadow)"/>
-
-  <!-- Body — longest wheelbase -->
-  <path d="M12 54 L12 73 Q12 77 16 77 L128 77 Q132 77 132 73 L132 54 Z" fill="url(#body-side-black)"/>
-  <path d="M12 54 L30 44 L140 44 L132 54 Z" fill="url(#body-black)"/>
-  <path d="M132 44 L140 44 L140 73 Q140 77 136 77 L132 77 L132 44 Z" fill="url(#front-black)"/>
-
-  <!-- Cabin — low fastback profile -->
-  <path d="M32 54 L44 26 L114 26 L126 54 Z" fill="url(#body-side-black)"/>
-  <path d="M44 26 L48 20 L120 20 L122 26 L114 26 Z" fill="url(#roof-black)"/>
-  <path d="M114 26 L120 20 L132 38 L132 44 L126 54 Z" fill="#020305"/>
-
-  <!-- Windows -->
-  <path d="M40 53 L48 27 L74 27 L74 53 Z" fill="url(#glass-black)"/>
-  <path d="M78 53 L78 27 L110 27 L118 53 Z" fill="url(#glass-black)"/>
-  <path d="M118 53 L110 27 L118 22 L128 40 Z" fill="url(#glass-black)"/>
-  <line x1="76" y1="27" x2="76" y2="53" stroke="#020305" stroke-width="2"/>
-
-  <!-- Chrome accent line -->
-  <path d="M14 60 L130 60" stroke="#4a4e57" stroke-width="1" stroke-opacity="0.6"/>
-  <!-- Chrome belt line -->
-  <path d="M36 53 L126 53" stroke="#4a4e57" stroke-width="0.8" stroke-opacity="0.4"/>
-  <!-- Door handles — chrome -->
-  <rect x="60" y="55.5" width="16" height="3" rx="1.5" fill="#4a4e57" stroke="#2c3038" stroke-width="0.5"/>
-  <rect x="96" y="55.5" width="16" height="3" rx="1.5" fill="#4a4e57" stroke="#2c3038" stroke-width="0.5"/>
-  <!-- Mirror -->
-  <path d="M129 47 L137 44 L138 50 L130 52 Z" fill="#1e2228"/>
-  <!-- Grille — luxury horizontal slats -->
-  <rect x="132" y="59" width="7" height="11" rx="1" fill="#080a0e"/>
-  <rect x="133" y="60.5" width="5" height="1.2" rx="0.5" fill="#3a3f47"/>
-  <rect x="133" y="63" width="5" height="1.2" rx="0.5" fill="#3a3f47"/>
-  <rect x="133" y="65.5" width="5" height="1.2" rx="0.5" fill="#3a3f47"/>
-  <rect x="133" y="68" width="5" height="1.2" rx="0.5" fill="#3a3f47"/>
-  <!-- Headlight — full-width LED -->
-  <path d="M130 50 L139 50 L140 56 L130 57 Z" fill="#fffde7" fill-opacity="0.92"/>
-  <rect x="130" y="48.5" width="9" height="1.5" rx="0.75" fill="#ffe566" fill-opacity="0.98"/>
-  <!-- Taillight — thin LED strip -->
-  <rect x="12" y="52" width="3" height="13" rx="1" fill="#e03131" fill-opacity="0.92"/>
-  <!-- Roof highlight (subtle on black) -->
-  <path d="M50 21 Q82 17 118 21" stroke="white" stroke-width="1.5" stroke-opacity="0.12" fill="none" stroke-linecap="round"/>
-
-  <!-- Wheels — sportier rim pattern -->
-  <circle cx="40" cy="77" r="14" fill="#10131a"/>
-  <circle cx="40" cy="77" r="10" fill="#1e2228"/>
-  <circle cx="40" cy="77" r="6.5" fill="url(#wheel-rim-b)"/>
-  <circle cx="40" cy="77" r="2.8" fill="#1e2228"/>
-  <line x1="40" y1="70.5" x2="40" y2="83.5" stroke="#aaa" stroke-width="1.5" stroke-opacity="0.7"/>
-  <line x1="33.5" y1="77" x2="46.5" y2="77" stroke="#aaa" stroke-width="1.5" stroke-opacity="0.7"/>
-  <line x1="35.4" y1="72.4" x2="44.6" y2="81.6" stroke="#aaa" stroke-width="1.2" stroke-opacity="0.5"/>
-  <line x1="44.6" y1="72.4" x2="35.4" y2="81.6" stroke="#aaa" stroke-width="1.2" stroke-opacity="0.5"/>
-  <circle cx="112" cy="77" r="14" fill="#10131a"/>
-  <circle cx="112" cy="77" r="10" fill="#1e2228"/>
-  <circle cx="112" cy="77" r="6.5" fill="url(#wheel-rim-b)"/>
-  <circle cx="112" cy="77" r="2.8" fill="#1e2228"/>
-  <line x1="112" y1="70.5" x2="112" y2="83.5" stroke="#aaa" stroke-width="1.5" stroke-opacity="0.7"/>
-  <line x1="105.5" y1="77" x2="118.5" y2="77" stroke="#aaa" stroke-width="1.5" stroke-opacity="0.7"/>
-  <line x1="107.4" y1="72.4" x2="116.6" y2="81.6" stroke="#aaa" stroke-width="1.2" stroke-opacity="0.5"/>
-  <line x1="116.6" y1="72.4" x2="107.4" y2="81.6" stroke="#aaa" stroke-width="1.2" stroke-opacity="0.5"/>
+  <!-- Drop shadow (dark gray for luxury) -->
+  <ellipse cx="100" cy="91" rx="82" ry="7" fill="url(#blackShadow)"/>
+  <!-- Rear wheel -->
+  <circle cx="150" cy="77" r="13" fill="#141420"/>
+  <circle cx="150" cy="77" r="6" fill="#444458"/>
+  <circle cx="150" cy="77" r="2.5" fill="#141420"/>
+  <!-- Front wheel -->
+  <circle cx="53" cy="77" r="13" fill="#141420"/>
+  <circle cx="53" cy="77" r="6" fill="#444458"/>
+  <circle cx="53" cy="77" r="2.5" fill="#141420"/>
+  <!-- Luxury body (low profile, slightly lower) -->
+  <rect x="20" y="56" width="162" height="22" rx="9" fill="url(#blackBody)"/>
+  <!-- Window trim accent -->
+  <rect x="63" y="55" width="89" height="2" rx="1" fill="#2a2a3e"/>
+  <!-- Cabin (sleek low profile) -->
+  <path d="M 63,56 L 77,26 L 137,26 L 151,56 Z" fill="#0d0d1a"/>
+  <!-- Subtle roof highlight -->
+  <path d="M 81,27 L 135,27 L 135,29 L 81,29 Z" fill="rgba(255,255,255,0.05)"/>
+  <!-- Front window (dark tinted) -->
+  <path d="M 70,55 L 83,28 L 112,28 L 112,55 Z" fill="rgba(30,40,80,0.70)"/>
+  <!-- Rear window (dark tinted) -->
+  <path d="M 116,55 L 116,28 L 135,28 L 148,55 Z" fill="rgba(30,40,80,0.65)"/>
+  <!-- Subtle blue window reflection -->
+  <path d="M 72,51 L 79,34 L 83,34 L 76,51 Z" fill="rgba(60,100,180,0.18)"/>
+  <!-- Door line -->
+  <line x1="112" y1="56" x2="112" y2="78" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+  <!-- Headlight (premium thin DRL) -->
+  <rect x="22" y="62" width="10" height="3" rx="1.5" fill="rgba(220,235,255,0.85)"/>
+  <!-- Taillight (thin horizontal) -->
+  <rect x="170" y="62" width="8" height="3" rx="1.5" fill="rgba(180,30,30,0.90)"/>
+  <!-- Chrome door handles -->
+  <rect x="92" y="67" width="10" height="2" rx="1" fill="rgba(80,90,130,0.5)"/>
+  <rect x="124" y="67" width="10" height="2" rx="1" fill="rgba(80,90,130,0.5)"/>
 </svg>
