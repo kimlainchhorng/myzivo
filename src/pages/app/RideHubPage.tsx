@@ -63,11 +63,13 @@ import RideSafetyAdvanced from "@/components/rides/RideSafetyAdvanced";
 import RideLoyaltyRewards from "@/components/rides/RideLoyaltyRewards";
 import RideAccessibilityAdvanced from "@/components/rides/RideAccessibilityAdvanced";
 import RideBookingHome from "@/components/rides/RideBookingHome";
+import ZivoReserve from "@/components/rides/ZivoReserve";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const tabs = [
   { id: "book", label: "Book", icon: Zap },
+  { id: "reserve", label: "Reserve", icon: CalendarDays },
   { id: "map", label: "Map", icon: MapIcon },
   { id: "history", label: "History", icon: History },
   { id: "calendar", label: "Calendar", icon: CalendarDays },
