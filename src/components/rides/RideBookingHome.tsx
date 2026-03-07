@@ -737,12 +737,14 @@ export default function RideBookingHome() {
                           <span className="ml-3 text-sm text-muted-foreground">Calculating route...</span>
                         </div>
                       ) : (
-                        <Button
-                          className="w-full h-13 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                          onClick={() => setSheetExpanded(true)}
-                        >
-                          Choose a ride
-                        </Button>
+                        <div style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))" }}>
+                          <Button
+                            className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                            onClick={() => setSheetExpanded(true)}
+                          >
+                            Choose a ride
+                          </Button>
+                        </div>
                       )}
                     </>
                   )}
