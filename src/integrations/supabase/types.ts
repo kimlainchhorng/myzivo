@@ -13291,6 +13291,7 @@ export type Database = {
           bank_connected: boolean | null
           can_go_online: boolean
           cancel_count: number
+          car_seat_capable: boolean
           city: string | null
           city_id: string | null
           completion_rate: number | null
@@ -13391,6 +13392,7 @@ export type Database = {
           bank_connected?: boolean | null
           can_go_online?: boolean
           cancel_count?: number
+          car_seat_capable?: boolean
           city?: string | null
           city_id?: string | null
           completion_rate?: number | null
@@ -13491,6 +13493,7 @@ export type Database = {
           bank_connected?: boolean | null
           can_go_online?: boolean
           cancel_count?: number
+          car_seat_capable?: boolean
           city?: string | null
           city_id?: string | null
           completion_rate?: number | null
@@ -32350,6 +32353,7 @@ export type Database = {
           admin_override_reason: string | null
           admin_price_override: number | null
           assigned_driver_id: string | null
+          car_seat_type: string | null
           commission_amount: number | null
           created_at: string
           customer_email: string | null
@@ -32384,6 +32388,7 @@ export type Database = {
           quoted_total: number | null
           refund_status: string | null
           refunded_at: string | null
+          requires_car_seat: boolean
           ride_type: string
           ride_type_multiplier: number | null
           scheduled_at: string | null
@@ -32399,6 +32404,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          car_seat_type?: string | null
           commission_amount?: number | null
           created_at?: string
           customer_email?: string | null
@@ -32433,6 +32439,7 @@ export type Database = {
           quoted_total?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          requires_car_seat?: boolean
           ride_type?: string
           ride_type_multiplier?: number | null
           scheduled_at?: string | null
@@ -32448,6 +32455,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          car_seat_type?: string | null
           commission_amount?: number | null
           created_at?: string
           customer_email?: string | null
@@ -32482,6 +32490,7 @@ export type Database = {
           quoted_total?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          requires_car_seat?: boolean
           ride_type?: string
           ride_type_multiplier?: number | null
           scheduled_at?: string | null

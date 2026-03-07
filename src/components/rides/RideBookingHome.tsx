@@ -11,7 +11,7 @@ import {
   CheckCircle, History, ChevronDown, Clock,
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
-  Smartphone, Wallet, X
+  Smartphone, Wallet, X, Baby, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,13 @@ const recentDestinations = [
 ];
 
 const vehicleOptions = [
-  { id: "economy", name: "Zivo Economy", desc: "Affordable rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car },
-  { id: "comfort", name: "Zivo Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Users },
-  { id: "luxury", name: "Zivo Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown },
+  { id: "economy", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car, carSeat: false },
+  { id: "xl", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, price: 16.80, capacity: 6, icon: Users, carSeat: false },
+  { id: "comfort", name: "ZIVO Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Sparkles, carSeat: false },
+  { id: "luxury", name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown, carSeat: false },
+  { id: "car-seat", name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, price: 17.50, capacity: 4, icon: Car, carSeat: true },
+  { id: "xl-car-seat", name: "ZIVO XL Car Seat", desc: "Larger vehicle with 1 child car seat", etaMin: 7, price: 22.80, capacity: 6, icon: Users, carSeat: true },
+  { id: "black-car-seat", name: "ZIVO Black Car Seat", desc: "Premium ride with 1 child car seat", etaMin: 8, price: 42.00, capacity: 4, icon: Crown, carSeat: true },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
@@ -180,6 +184,12 @@ function VehicleRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-base font-bold text-foreground">{vehicle.name}</span>
+          {vehicle.carSeat && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+              <Baby className="w-3 h-3" />
+              Car seat
+            </span>
+          )}
           <div className="flex items-center gap-0.5">
             <User className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">{vehicle.capacity}</span>
@@ -222,6 +232,7 @@ export default function RideBookingHome() {
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [carSeatFilter, setCarSeatFilter] = useState(false);
 
   // Matching state
   const [matchPhase, setMatchPhase] = useState<"searching" | "found">("searching");
@@ -250,6 +261,9 @@ export default function RideBookingHome() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
+  const filteredVehicles = carSeatFilter
+    ? vehicleOptions.filter((v) => v.carSeat)
+    : vehicleOptions;
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
 
   const handleTabChange = (tab: RideTab) => {
@@ -299,6 +313,8 @@ export default function RideBookingHome() {
         status: "searching",
         customer_name: user.user_metadata?.full_name || "",
         customer_phone: user.user_metadata?.phone || "",
+        requires_car_seat: currentVehicle.carSeat,
+        car_seat_type: currentVehicle.carSeat ? "standard" : null,
       }).select("id").single();
 
       if (error) throw error;
@@ -560,12 +576,32 @@ export default function RideBookingHome() {
               dropoffCoords={destination}
               onBack={() => setViewStep("search")}
             />
-            <div className="shrink-0 bg-background relative z-10">
-              <div className="px-5 pt-4 pb-2">
+            <div className="shrink-0 bg-background relative z-10 max-h-[55vh] overflow-y-auto">
+              <div className="px-5 pt-4 pb-2 flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
+                <button
+                  onClick={() => {
+                    setCarSeatFilter(!carSeatFilter);
+                    // Reset selection if current selection doesn't match filter
+                    if (!carSeatFilter && !currentVehicle.carSeat) {
+                      setSelectedVehicle("car-seat");
+                    } else if (carSeatFilter && currentVehicle.carSeat) {
+                      setSelectedVehicle("economy");
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                    carSeatFilter
+                      ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
+                      : "bg-muted/20 text-muted-foreground border-border/30"
+                  )}
+                >
+                  <Baby className="w-3.5 h-3.5" />
+                  Car seat
+                </button>
               </div>
               <div className="border-t border-border/15">
-                {vehicleOptions.map((v) => (
+                {filteredVehicles.map((v) => (
                   <VehicleRow key={v.id} vehicle={v} selected={selectedVehicle === v.id} onSelect={() => setSelectedVehicle(v.id)} />
                 ))}
               </div>
@@ -579,7 +615,7 @@ export default function RideBookingHome() {
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                   onClick={() => setViewStep("pickup-confirm")}
                 >
-                  Confirm {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
+                  Choose {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
                 </Button>
               </div>
             </div>
