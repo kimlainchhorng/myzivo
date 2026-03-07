@@ -55,7 +55,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Top-rated drivers, extra legroom",
     price: 45.61,
     seats: 4,
-    image: "/vehicles/comfort-car.png",
+    image: "/vehicles/comfort-car-v2.png",
   },
   {
     id: "luxury",
