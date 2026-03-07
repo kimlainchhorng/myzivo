@@ -62,11 +62,12 @@ import RideSchedulingRecurring from "@/components/rides/RideSchedulingRecurring"
 import RideSafetyAdvanced from "@/components/rides/RideSafetyAdvanced";
 import RideLoyaltyRewards from "@/components/rides/RideLoyaltyRewards";
 import RideAccessibilityAdvanced from "@/components/rides/RideAccessibilityAdvanced";
+import RideBookingHome from "@/components/rides/RideBookingHome";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const tabs = [
-  { id: "search", label: "Search", icon: Zap },
+  { id: "book", label: "Book", icon: Zap },
   { id: "map", label: "Map", icon: MapIcon },
   { id: "history", label: "History", icon: History },
   { id: "calendar", label: "Calendar", icon: CalendarDays },
@@ -125,7 +126,7 @@ const tabs = [
 
 export default function RideHubPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("search");
+  const [activeTab, setActiveTab] = useState("book");
 
   return (
     <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")}>
@@ -164,8 +165,8 @@ export default function RideHubPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
+            {activeTab === "book" && <div className=""><RideBookingHome /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
-            {activeTab === "map" && <div className="p-4"><RideMapPreview /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
