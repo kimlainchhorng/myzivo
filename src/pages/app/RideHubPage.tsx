@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, CreditCard, User } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -24,14 +24,22 @@ import RideBookingConfirmation from "@/components/rides/RideBookingConfirmation"
 import LiveTripTracker from "@/components/rides/LiveTripTracker";
 import RideWallet from "@/components/rides/RideWallet";
 import DriverProfileCard from "@/components/rides/DriverProfileCard";
+import RideSocialHub from "@/components/rides/RideSocialHub";
+import RideLoyaltyCard from "@/components/rides/RideLoyaltyCard";
+import RideSpendingAnalytics from "@/components/rides/RideSpendingAnalytics";
+import RideQuickSearch from "@/components/rides/RideQuickSearch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const tabs = [
+  { id: "search", label: "Search", icon: Zap },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "tracking", label: "Live Trip", icon: Navigation },
   { id: "confirm", label: "Confirm", icon: Star },
   { id: "wallet", label: "Wallet", icon: Wallet },
+  { id: "loyalty", label: "Loyalty", icon: Award },
+  { id: "spending", label: "Spending", icon: PieChart },
+  { id: "social", label: "Social", icon: Share2 },
   { id: "driver", label: "Driver", icon: User },
   { id: "surge", label: "Demand", icon: Car },
   { id: "compare", label: "Compare", icon: DollarSign },
@@ -50,7 +58,7 @@ const tabs = [
 
 export default function RideHubPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("insights");
+  const [activeTab, setActiveTab] = useState("search");
 
   return (
     <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")}>
@@ -89,10 +97,14 @@ export default function RideHubPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
+            {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
             {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
             {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
+            {activeTab === "loyalty" && <div className="p-4"><RideLoyaltyCard /></div>}
+            {activeTab === "spending" && <div className="p-4"><RideSpendingAnalytics /></div>}
+            {activeTab === "social" && <div className="p-4"><RideSocialHub /></div>}
             {activeTab === "driver" && <div className="p-4"><DriverProfileCard /></div>}
             {activeTab === "surge" && <div className="p-4"><SurgePricingMap /></div>}
             {activeTab === "compare" && <div className="p-4"><FareComparisonTool /></div>}
