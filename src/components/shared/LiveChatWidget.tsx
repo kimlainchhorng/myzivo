@@ -247,14 +247,15 @@ const LiveChatWidget = () => {
     <>
       {/* Floating Action Button */}
       <AnimatePresence>
-        {!isOpen && (
+        {!isOpen && !isRidesPage && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
             className="fixed right-4 md:right-6 z-50 w-14 h-14 bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-xl shadow-primary/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-            style={{ bottom: "calc(160px + env(safe-area-inset-bottom, 0px))" }}
+            style={{ bottom: "calc(72px + 88px + env(safe-area-inset-bottom, 0px))" }}
+          >
           >
             <MessageCircle className="w-6 h-6 text-primary-foreground" />
             {/* Online dot */}
