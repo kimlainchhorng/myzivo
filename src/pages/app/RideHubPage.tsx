@@ -58,6 +58,10 @@ import RideMarketplace from "@/components/rides/RideMarketplace";
 import RideWellnessComfort from "@/components/rides/RideWellnessComfort";
 import RidePaymentsAdvanced from "@/components/rides/RidePaymentsAdvanced";
 import RideAIAssistant from "@/components/rides/RideAIAssistant";
+import RideSchedulingRecurring from "@/components/rides/RideSchedulingRecurring";
+import RideSafetyAdvanced from "@/components/rides/RideSafetyAdvanced";
+import RideLoyaltyRewards from "@/components/rides/RideLoyaltyRewards";
+import RideAccessibilityAdvanced from "@/components/rides/RideAccessibilityAdvanced";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
