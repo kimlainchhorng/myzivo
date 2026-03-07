@@ -344,15 +344,16 @@ export default function RideBookingHome() {
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Map fills remaining space */}
             <MapSection compact />
 
-
-            <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
+            {/* Bottom panel — fixed height, no scroll */}
+            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
               <button
                 onClick={() => setViewStep("search")}
-                className="w-full mt-4 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3.5 transition-colors hover:bg-muted/40 active:scale-[0.98]"
+                className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
               >
                 <MapPin className="w-5 h-5 text-foreground" />
                 <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
@@ -363,7 +364,7 @@ export default function RideBookingHome() {
                 </div>
               </button>
 
-              <div className="mt-5 space-y-0">
+              <div className="mt-3 space-y-0">
                 {savedPlaces.map((place, i) => {
                   const Icon = place.icon;
                   return (
@@ -371,7 +372,7 @@ export default function RideBookingHome() {
                       key={place.id}
                       onClick={() => handleSavedPlace(place.address)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-colors hover:bg-muted/10",
+                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
                         i < savedPlaces.length - 1 && "border-b border-border/15"
                       )}
                     >
