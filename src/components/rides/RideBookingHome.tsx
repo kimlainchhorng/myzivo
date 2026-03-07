@@ -205,17 +205,17 @@ function VehicleRow({
     <button
       onClick={onSelect}
       className={cn(
-        "w-full flex items-center gap-3 px-3 py-3 text-left transition-all border-b border-border/10 last:border-0",
+        "w-full flex items-center gap-4 px-4 py-3.5 text-left transition-all border-b border-border/10 last:border-0",
         selected
           ? "bg-green-500/8 border-l-4 border-l-green-500"
           : "hover:bg-muted/10 border-l-4 border-l-transparent"
       )}
     >
-      <div className="w-14 shrink-0 flex items-center justify-center">
+      <div className="w-[72px] shrink-0 flex items-center justify-center">
         <img
           src={VEHICLE_IMAGES[vehicle.id] ?? "/vehicles/economy-car.svg"}
           alt={vehicle.name}
-          className="w-14 h-auto"
+          className="w-[72px] h-[44px] object-contain"
         />
       </div>
       <div className="flex-1 min-w-0">
@@ -1110,7 +1110,7 @@ export default function RideBookingHome() {
           </div>
 
           {/* Payment row */}
-          <div className="shrink-0 border-t border-border/20 px-5 py-3 flex items-center gap-3">
+          <div className="shrink-0 mt-4 pt-3 border-t border-border/20 px-5 py-3 flex items-center gap-3">
             <CreditCard className="w-5 h-5 text-muted-foreground" />
             <span className="flex-1 text-sm text-foreground font-medium">Visa •••• 4242</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
