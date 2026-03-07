@@ -133,7 +133,7 @@ function MapSection({
   return (
     <div className={cn(
       "relative w-full overflow-hidden",
-      compact ? "flex-1 min-h-[200px]" : "flex-[2] min-h-[180px] max-h-[45vh]"
+      compact ? "flex-1 min-h-[200px]" : "flex-[2] min-h-[180px] max-h-[40vh]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
