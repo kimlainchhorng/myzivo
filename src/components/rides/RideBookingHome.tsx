@@ -681,7 +681,7 @@ export default function RideBookingHome() {
                 {/* Route info — always visible */}
                 <div className="px-5 pb-4">
                   {/* Addresses */}
-                  <div className="flex items-start gap-3 mb-2">
+                  <div className="flex items-start gap-3 mb-3">
                     <div className="flex flex-col items-center gap-0.5 mt-1">
                       <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                       <div className="w-0.5 h-6 bg-border/50" />
