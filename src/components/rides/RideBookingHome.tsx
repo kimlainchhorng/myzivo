@@ -1,6 +1,6 @@
 /**
  * RideBookingHome — Complete ride booking flow
- * Flow: home → search → vehicle → pickup-confirm → matching → tracking → complete
+ * Flow: home → search → route-preview → vehicle → pickup-confirm → matching → tracking → complete
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,8 @@ import {
   CheckCircle, History, ChevronDown, Clock,
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
-  Smartphone, Wallet, X, Baby, Sparkles
+  Smartphone, Wallet, X, Baby, Sparkles,
+  Route, Timer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,14 @@ interface PlaceData {
   lng: number;
 }
 
-type ViewStep = "home" | "search" | "vehicle" | "pickup-confirm" | "matching" | "tracking" | "complete";
+interface RouteData {
+  distance_miles: number;
+  duration_minutes: number;
+  polyline: string | null;
+  traffic_level?: string;
+}
+
+type ViewStep = "home" | "search" | "route-preview" | "vehicle" | "pickup-confirm" | "matching" | "tracking" | "complete";
 type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
@@ -47,13 +55,13 @@ const recentDestinations = [
 ];
 
 const vehicleOptions = [
-  { id: "economy", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, price: 12.50, capacity: 4, icon: Car, carSeat: false },
-  { id: "xl", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, price: 16.80, capacity: 6, icon: Users, carSeat: false },
-  { id: "comfort", name: "ZIVO Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, price: 18.90, capacity: 4, icon: Sparkles, carSeat: false },
-  { id: "luxury", name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, price: 34.20, capacity: 4, icon: Crown, carSeat: false },
-  { id: "car-seat", name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, price: 17.50, capacity: 4, icon: Car, carSeat: true },
-  { id: "xl-car-seat", name: "ZIVO XL Car Seat", desc: "Larger vehicle with 1 child car seat", etaMin: 7, price: 22.80, capacity: 6, icon: Users, carSeat: true },
-  { id: "black-car-seat", name: "ZIVO Black Car Seat", desc: "Premium ride with 1 child car seat", etaMin: 8, price: 42.00, capacity: 4, icon: Crown, carSeat: true },
+  { id: "economy", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 4, icon: Car, carSeat: false },
+  { id: "xl", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 1.80, basePrice: 4.50, capacity: 6, icon: Users, carSeat: false },
+  { id: "comfort", name: "ZIVO Comfort", desc: "Extra legroom, top-rated drivers", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 4, icon: Sparkles, carSeat: false },
+  { id: "luxury", name: "ZIVO Luxury", desc: "Premium with professional drivers", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false },
+  { id: "car-seat", name: "ZIVO Car Seat", desc: "Equipped with 1 child car seat", etaMin: 6, pricePerMile: 1.80, basePrice: 5.50, capacity: 4, icon: Car, carSeat: true },
+  { id: "xl-car-seat", name: "ZIVO XL Car Seat", desc: "Larger vehicle with 1 child car seat", etaMin: 7, pricePerMile: 2.20, basePrice: 6.50, capacity: 6, icon: Users, carSeat: true },
+  { id: "black-car-seat", name: "ZIVO Black Car Seat", desc: "Premium ride with 1 child car seat", etaMin: 8, pricePerMile: 4.20, basePrice: 10.00, capacity: 4, icon: Crown, carSeat: true },
 ];
 
 const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
@@ -62,6 +70,12 @@ const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
   { id: "map", label: "Map", icon: Map },
   { id: "history", label: "History", icon: History },
 ];
+
+/* ─── Price calculator ─── */
+function calcPrice(vehicle: typeof vehicleOptions[0], distanceMiles: number): number {
+  const raw = vehicle.basePrice + vehicle.pricePerMile * distanceMiles;
+  return Math.round(raw * 100) / 100;
+}
 
 /* ─── Mock driver for matching simulation ─── */
 const MOCK_DRIVER = {
@@ -80,6 +94,7 @@ function MapSection({
   dropoffCoords,
   driverCoords,
   userLocation,
+  routePolyline,
   onBack,
   onLocateUser,
   compact = false,
@@ -89,6 +104,7 @@ function MapSection({
   dropoffCoords?: { lat: number; lng: number } | null;
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  routePolyline?: string | null;
   onBack?: () => void;
   onLocateUser?: () => void;
   compact?: boolean;
@@ -126,6 +142,7 @@ function MapSection({
         dropoffCoords={dropoffCoords || null}
         driverCoords={driverCoords || null}
         userLocation={userLocation || null}
+        routePolyline={routePolyline || null}
         onMapReady={(map) => {
           mapRef.current = map;
         }}
@@ -164,10 +181,12 @@ function VehicleRow({
   vehicle,
   selected,
   onSelect,
+  price,
 }: {
   vehicle: (typeof vehicleOptions)[0];
   selected: boolean;
   onSelect: () => void;
+  price: number;
 }) {
   const Icon = vehicle.icon;
   return (
@@ -200,7 +219,7 @@ function VehicleRow({
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-base font-bold text-foreground">${vehicle.price.toFixed(2)}</p>
+        <p className="text-base font-bold text-foreground">${price.toFixed(2)}</p>
       </div>
       {selected && (
         <motion.div
@@ -234,9 +253,12 @@ export default function RideBookingHome() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [carSeatFilter, setCarSeatFilter] = useState(false);
 
+  // Route data
+  const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
   // Matching state
   const [matchPhase, setMatchPhase] = useState<"searching" | "found">("searching");
-  const [scanAngle, setScanAngle] = useState(0);
 
   // Tracking state
   const [trackingStatus, setTrackingStatus] = useState<"arriving" | "waiting" | "in_transit" | "almost_there">("arriving");
@@ -265,6 +287,7 @@ export default function RideBookingHome() {
     ? vehicleOptions.filter((v) => v.carSeat)
     : vehicleOptions;
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
+  const currentPrice = routeData ? calcPrice(currentVehicle, routeData.distance_miles) : currentVehicle.basePrice;
 
   const handleTabChange = (tab: RideTab) => {
     setActiveTab(tab);
@@ -284,11 +307,71 @@ export default function RideBookingHome() {
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
-    // Use mock coords since saved places don't have real coords
     setDestination({ address, lat: 40.758, lng: -73.9855 });
     setPickupDisplay("Current Location");
-    setPickup({ address: "Current Location", lat: 40.7128, lng: -73.9857 });
-    setViewStep("vehicle");
+    const pickupData = userLocation
+      ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
+      : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+    setPickup(pickupData);
+    fetchRoute(pickupData, { address, lat: 40.758, lng: -73.9855 });
+  };
+
+  /* ─── Fetch route from edge function ─── */
+  const fetchRoute = async (from: PlaceData, to: PlaceData) => {
+    if (!from.lat || !to.lat) return;
+    setIsLoadingRoute(true);
+    setRouteData(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("maps-route", {
+        body: {
+          origin_lat: from.lat,
+          origin_lng: from.lng,
+          dest_lat: to.lat,
+          dest_lng: to.lng,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.ok) {
+        setRouteData({
+          distance_miles: data.distance_miles,
+          duration_minutes: data.duration_minutes,
+          polyline: data.polyline,
+          traffic_level: data.traffic_level,
+        });
+      } else {
+        // Fallback with estimated values
+        const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
+        const distMiles = distKm * 0.621371;
+        setRouteData({
+          distance_miles: Math.round(distMiles * 10) / 10,
+          duration_minutes: Math.max(5, Math.round(distMiles * 3)),
+          polyline: null,
+        });
+      }
+    } catch (err) {
+      console.error("[RideBooking] Route fetch error:", err);
+      // Fallback estimate
+      const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
+      const distMiles = distKm * 0.621371;
+      setRouteData({
+        distance_miles: Math.round(distMiles * 10) / 10,
+        duration_minutes: Math.max(5, Math.round(distMiles * 3)),
+        polyline: null,
+      });
+    } finally {
+      setIsLoadingRoute(false);
+    }
+
+    setViewStep("route-preview");
+  };
+
+  /* ─── Proceed from search to route preview ─── */
+  const handleConfirmSearch = () => {
+    if (!pickup || !destination) return;
+    fetchRoute(pickup, destination);
   };
 
   /* ─── Request Ride — Supabase Insert ─── */
@@ -309,7 +392,9 @@ export default function RideBookingHome() {
         dropoff_lat: destination.lat,
         dropoff_lng: destination.lng,
         ride_type: selectedVehicle,
-        quoted_total: currentVehicle.price,
+        quoted_total: currentPrice,
+        distance_miles: routeData?.distance_miles ?? null,
+        duration_minutes: routeData?.duration_minutes ?? null,
         status: "searching",
         customer_name: user.user_metadata?.full_name || "",
         customer_phone: user.user_metadata?.phone || "",
@@ -326,7 +411,6 @@ export default function RideBookingHome() {
       // Simulate driver matching after 4 seconds
       setTimeout(async () => {
         setMatchPhase("found");
-        // Update status in DB
         if (data.id) {
           await supabase.from("ride_requests").update({ status: "driver_assigned" }).eq("id", data.id);
         }
@@ -345,7 +429,6 @@ export default function RideBookingHome() {
     setTrackingStatus("arriving");
     setTrackingEta(4);
 
-    // Simulate driver movement
     if (pickup) {
       const startLat = pickup.lat + 0.01;
       const startLng = pickup.lng - 0.008;
@@ -385,7 +468,6 @@ export default function RideBookingHome() {
     if (rideRequestId) {
       await supabase.from("ride_requests").update({ payment_status: "paid" }).eq("id", rideRequestId);
     }
-    // Reset
     setTimeout(() => {
       setViewStep("home");
       setPickup(null);
@@ -393,31 +475,20 @@ export default function RideBookingHome() {
       setPickupDisplay("");
       setDestinationDisplay("");
       setRideRequestId(null);
+      setRouteData(null);
       setMatchPhase("searching");
       setTrackingStatus("arriving");
     }, 1500);
   };
 
-  /* ─── Scan animation for matching ─── */
-  useState(() => {
-    if (viewStep === "matching" && matchPhase === "searching") {
-      const iv = setInterval(() => setScanAngle((a) => (a + 3) % 360), 30);
-      return () => clearInterval(iv);
-    }
-  });
-
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      {/* Header provided by parent RideHubPage / AppLayout */}
-
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
           <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            {/* Map fills remaining space */}
             <MapSection compact userLocation={userLocation} onLocateUser={handleLocateUser} />
 
-            {/* Bottom panel — fixed height, no scroll */}
             <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
               <button
@@ -465,7 +536,7 @@ export default function RideBookingHome() {
         {viewStep === "search" && (
           <motion.div key="search" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex flex-col flex-1 bg-background">
             <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-              <button onClick={() => setViewStep("home")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+              <button onClick={() => setViewStep("home")} className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0" aria-label="Go back">
                 <ArrowLeft className="w-4 h-4 text-foreground" />
               </button>
               <h2 className="text-lg font-black text-foreground">Where to?</h2>
@@ -497,19 +568,6 @@ export default function RideBookingHome() {
                 </div>
               </div>
             </div>
-
-            {/* Map preview when destination selected */}
-            {destination && (
-              <div className="px-4 pt-3">
-                <div className="h-32 rounded-xl overflow-hidden border border-border/30">
-                  <RideMap
-                    pickupCoords={pickup}
-                    dropoffCoords={destination}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex-1 overflow-y-auto px-4 pt-3">
               {/* Saved places */}
@@ -559,12 +617,102 @@ export default function RideBookingHome() {
               <div className="px-4 pb-4 pt-2">
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                  onClick={handleConfirmSearch}
+                  disabled={isLoadingRoute}
+                >
+                  {isLoadingRoute ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                      Finding route...
+                    </span>
+                  ) : (
+                    "Choose a ride"
+                  )}
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ═══════ ROUTE PREVIEW ═══════ */}
+        {viewStep === "route-preview" && (
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <MapSection
+              pickupCoords={pickup}
+              dropoffCoords={destination}
+              routePolyline={routeData?.polyline}
+              onBack={() => {
+                setViewStep("search");
+                setRouteData(null);
+              }}
+              onLocateUser={handleLocateUser}
+              userLocation={userLocation}
+            />
+
+            {/* Route info bottom card */}
+            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
+              {/* Addresses */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex flex-col items-center gap-0.5 mt-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                  <div className="w-0.5 h-6 bg-border/50" />
+                  <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
+                </div>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Pickup</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{pickup?.address || pickupDisplay}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Destination</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{destination?.address || destinationDisplay}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trip stats */}
+              {routeData && (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex-1 flex items-center gap-2 rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+                    <Timer className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground leading-none">{routeData.duration_minutes} min</p>
+                      <p className="text-[10px] text-muted-foreground">Est. trip time</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+                    <Route className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground leading-none">{routeData.distance_miles} mi</p>
+                      <p className="text-[10px] text-muted-foreground">Distance</p>
+                    </div>
+                  </div>
+                  {routeData.traffic_level && (
+                    <div className="flex-1 flex items-center gap-2 rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
+                      <Car className="w-4 h-4 text-primary shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-foreground leading-none capitalize">{routeData.traffic_level}</p>
+                        <p className="text-[10px] text-muted-foreground">Traffic</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isLoadingRoute ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-3 text-sm text-muted-foreground">Calculating route...</span>
+                </div>
+              ) : (
+                <Button
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                   onClick={() => setViewStep("vehicle")}
                 >
                   Choose a ride
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -574,15 +722,30 @@ export default function RideBookingHome() {
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
-              onBack={() => setViewStep("search")}
+              routePolyline={routeData?.polyline}
+              onBack={() => setViewStep("route-preview")}
             />
             <div className="shrink-0 bg-background relative z-10 max-h-[55vh] overflow-y-auto">
-              <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+              {/* Trip summary bar */}
+              {routeData && (
+                <div className="flex items-center gap-3 px-5 pt-3 pb-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Timer className="w-3.5 h-3.5" />
+                    <span className="font-semibold">{routeData.duration_minutes} min</span>
+                  </div>
+                  <div className="w-1 h-1 rounded-full bg-border" />
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Route className="w-3.5 h-3.5" />
+                    <span className="font-semibold">{routeData.distance_miles} mi</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="px-5 pt-2 pb-2 flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
                 <button
                   onClick={() => {
                     setCarSeatFilter(!carSeatFilter);
-                    // Reset selection if current selection doesn't match filter
                     if (!carSeatFilter && !currentVehicle.carSeat) {
                       setSelectedVehicle("car-seat");
                     } else if (carSeatFilter && currentVehicle.carSeat) {
@@ -602,7 +765,13 @@ export default function RideBookingHome() {
               </div>
               <div className="border-t border-border/15">
                 {filteredVehicles.map((v) => (
-                  <VehicleRow key={v.id} vehicle={v} selected={selectedVehicle === v.id} onSelect={() => setSelectedVehicle(v.id)} />
+                  <VehicleRow
+                    key={v.id}
+                    vehicle={v}
+                    selected={selectedVehicle === v.id}
+                    onSelect={() => setSelectedVehicle(v.id)}
+                    price={routeData ? calcPrice(v, routeData.distance_miles) : v.basePrice}
+                  />
                 ))}
               </div>
               <div className="px-4 py-3 border-t border-border/15 flex items-center gap-3">
@@ -615,7 +784,7 @@ export default function RideBookingHome() {
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                   onClick={() => setViewStep("pickup-confirm")}
                 >
-                  Choose {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
+                  Choose {currentVehicle.name} · ${currentPrice.toFixed(2)}
                 </Button>
               </div>
             </div>
@@ -628,6 +797,7 @@ export default function RideBookingHome() {
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
+              routePolyline={routeData?.polyline}
               onBack={() => setViewStep("vehicle")}
             />
             <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
@@ -646,16 +816,31 @@ export default function RideBookingHome() {
                 <span className="truncate">{destination?.address || destinationDisplay}</span>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20 mb-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
                   {(() => { const Icon = currentVehicle.icon; return <Icon className="w-5 h-5 text-foreground" />; })()}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">{currentVehicle.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">{currentVehicle.name}</p>
+                    {currentVehicle.carSeat && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+                        <Baby className="w-3 h-3" /> Car seat
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{currentVehicle.etaMin} min · {currentVehicle.capacity} seats</p>
                 </div>
-                <p className="text-lg font-bold text-foreground">${currentVehicle.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-foreground">${currentPrice.toFixed(2)}</p>
               </div>
+
+              {routeData && (
+                <div className="flex items-center gap-3 px-1 mb-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{routeData.duration_minutes} min</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1"><Route className="w-3 h-3" />{routeData.distance_miles} mi</span>
+                </div>
+              )}
 
               <Button
                 className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
@@ -674,7 +859,6 @@ export default function RideBookingHome() {
           <motion.div key="matching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 bg-background">
             {matchPhase === "searching" ? (
               <div className="flex-1 flex flex-col items-center justify-center px-6">
-                {/* Radar animation */}
                 <div className="relative w-48 h-48 mb-8">
                   <div className="absolute inset-0 rounded-full border-2 border-border/30" />
                   <div className="absolute inset-6 rounded-full border border-border/20" />
@@ -690,7 +874,6 @@ export default function RideBookingHome() {
                   >
                     <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-gradient-to-r from-primary/80 to-transparent origin-left" />
                   </motion.div>
-                  {/* Nearby driver dots */}
                   {[45, 120, 230, 310].map((angle, i) => (
                     <motion.div
                       key={i}
@@ -759,6 +942,7 @@ export default function RideBookingHome() {
               pickupCoords={pickup}
               dropoffCoords={destination}
               driverCoords={driverCoords}
+              routePolyline={routeData?.polyline}
             />
             <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <div className="flex items-center justify-between mb-3">
@@ -788,10 +972,10 @@ export default function RideBookingHome() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Call driver">
                     <Phone className="w-4 h-4 text-foreground" />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                  <button className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center" aria-label="Message driver">
                     <MessageSquare className="w-4 h-4 text-foreground" />
                   </button>
                 </div>
@@ -825,23 +1009,23 @@ export default function RideBookingHome() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Base fare</span>
-                  <span className="text-foreground">${(currentVehicle.price * 0.4).toFixed(2)}</span>
+                  <span className="text-foreground">${(currentPrice * 0.4).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Distance</span>
-                  <span className="text-foreground">${(currentVehicle.price * 0.35).toFixed(2)}</span>
+                  <span className="text-muted-foreground">Distance ({routeData?.distance_miles ?? "—"} mi)</span>
+                  <span className="text-foreground">${(currentPrice * 0.35).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="text-foreground">${(currentVehicle.price * 0.15).toFixed(2)}</span>
+                  <span className="text-muted-foreground">Time ({routeData?.duration_minutes ?? "—"} min)</span>
+                  <span className="text-foreground">${(currentPrice * 0.15).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
-                  <span className="text-foreground">${(currentVehicle.price * 0.10).toFixed(2)}</span>
+                  <span className="text-foreground">${(currentPrice * 0.10).toFixed(2)}</span>
                 </div>
                 <div className="border-t border-border/30 pt-2 flex justify-between">
                   <span className="font-bold text-foreground">Total</span>
-                  <span className="font-bold text-foreground text-lg">${currentVehicle.price.toFixed(2)}</span>
+                  <span className="font-bold text-foreground text-lg">${currentPrice.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -872,4 +1056,15 @@ export default function RideBookingHome() {
       </AnimatePresence>
     </div>
   );
+}
+
+/* ─── Haversine fallback for distance estimation ─── */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
