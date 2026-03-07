@@ -9,7 +9,7 @@ import {
   MapPin, Navigation, ChevronRight, ArrowLeft, Home,
   Building2, Car, Crown, Users, Zap,
   CheckCircle, History, ChevronDown, Clock,
-  CreditCard, User, Bell, CalendarClock, Map,
+  CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X
 } from "lucide-react";
