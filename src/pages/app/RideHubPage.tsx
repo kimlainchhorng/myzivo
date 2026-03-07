@@ -77,6 +77,10 @@ const tabs = [
   { id: "eco", label: "Eco", icon: Leaf },
   { id: "business", label: "Business", icon: Briefcase },
   { id: "feedback", label: "Feedback", icon: ThumbsUp },
+  { id: "specialty", label: "Special", icon: Dog },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
+  { id: "entertain", label: "Music", icon: Music },
+  { id: "gifting", label: "Gifting", icon: Gift },
 ];
 
 export default function RideHubPage() {
