@@ -658,7 +658,7 @@ export default function RideBookingHome() {
             />
 
             {/* Route info bottom card */}
-            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
+            <div className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 px-5 pt-4 pb-3 shadow-[0_-8px_20px_hsl(var(--foreground)/0.06)]">
               {/* Addresses */}
               <div className="flex items-start gap-3 mb-4">
                 <div className="flex flex-col items-center gap-0.5 mt-1">
