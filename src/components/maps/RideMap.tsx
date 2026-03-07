@@ -185,8 +185,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#22c55e",
+          scale: 8,
+          fillColor: "#10b981",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
@@ -201,11 +201,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#ef4444",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
+          scale: 8,
+          fillColor: "#10b981",
+          fillOpacity: 0.7,
+          strokeColor: "#065f46",
+          strokeWeight: 2,
         },
         title: "Dropoff",
       }));
