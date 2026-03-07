@@ -303,7 +303,22 @@ export default function RideBookingHome() {
   const handleDestinationSelect = useCallback((place: PlaceData) => {
     setDestination(place);
     setDestinationDisplay(place.address);
-  }, []);
+
+    // Auto-set pickup to current location if not set
+    let pickupData = pickup;
+    if (!pickupData) {
+      pickupData = userLocation
+        ? { address: "Current Location", lat: userLocation.lat, lng: userLocation.lng }
+        : { address: "Current Location", lat: 40.7128, lng: -73.9857 };
+      setPickup(pickupData);
+      setPickupDisplay("Current Location");
+    }
+
+    // Auto-fetch route and go to preview
+    if (pickupData && place.lat && place.lng) {
+      fetchRoute(pickupData, place);
+    }
+  }, [pickup, userLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSavedPlace = (address: string) => {
     setDestinationDisplay(address);
