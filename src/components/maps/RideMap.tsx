@@ -297,7 +297,7 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
       {/* ZIVO-branded map background */}
-      <div className="absolute inset-0 bg-[hsl(var(--muted))]">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.05]">
         {/* Road grid pattern */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">
           <defs>
