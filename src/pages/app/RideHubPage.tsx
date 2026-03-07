@@ -42,6 +42,10 @@ import RideSpecialtyModes from "@/components/rides/RideSpecialtyModes";
 import RideSmartAnalytics from "@/components/rides/RideSmartAnalytics";
 import RideEntertainment from "@/components/rides/RideEntertainment";
 import RideGifting from "@/components/rides/RideGifting";
+import RideRewardsGamification from "@/components/rides/RideRewardsGamification";
+import RideCorporateFleet from "@/components/rides/RideCorporateFleet";
+import RideAccessibilityPlus from "@/components/rides/RideAccessibilityPlus";
+import RideRouteIntelligence from "@/components/rides/RideRouteIntelligence";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
