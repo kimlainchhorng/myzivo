@@ -20,6 +20,7 @@ interface AppLayoutProps {
   transparentHeader?: boolean;
   headerRightAction?: ReactNode;
   className?: string;
+  fixedHeight?: boolean;
 }
 
 const AppLayout = ({
@@ -32,11 +33,15 @@ const AppLayout = ({
   transparentHeader = false,
   headerRightAction,
   className,
+  fixedHeight = false,
 }: AppLayoutProps) => {
   const { isOnline } = useNetworkStatus();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overscroll-none tap-highlight-none">
+    <div className={cn(
+      "bg-background flex flex-col overscroll-none tap-highlight-none",
+      fixedHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"
+    )}>
       {!hideHeader && (
         <AppHeader 
           title={title}
