@@ -54,6 +54,10 @@ import RideSmartPricing from "@/components/rides/RideSmartPricing";
 import RideDriverComm from "@/components/rides/RideDriverComm";
 import RideSocialFeatures from "@/components/rides/RideSocialFeatures";
 import RideAnalyticsDashboard from "@/components/rides/RideAnalyticsDashboard";
+import RideMarketplace from "@/components/rides/RideMarketplace";
+import RideWellnessComfort from "@/components/rides/RideWellnessComfort";
+import RidePaymentsAdvanced from "@/components/rides/RidePaymentsAdvanced";
+import RideAIAssistant from "@/components/rides/RideAIAssistant";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
