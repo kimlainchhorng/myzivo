@@ -133,9 +133,9 @@ function MapSection({
   return (
     <div className={cn(
       "relative w-full overflow-hidden",
-      compact ? "absolute inset-0 h-full w-full" : "flex-[3] min-h-[200px] max-h-[65vh]"
+      compact ? "absolute inset-0" : "flex-[3] min-h-[200px] max-h-[65vh]"
     )}>
-      <div className="absolute inset-0 h-full w-full">
+      <div className="absolute inset-0">
         <RideMap
           pickupCoords={pickupCoords || null}
           dropoffCoords={dropoffCoords || null}
