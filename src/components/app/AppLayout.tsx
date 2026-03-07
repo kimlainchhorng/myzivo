@@ -59,7 +59,8 @@ const AppLayout = ({
       <OfflineBanner isOffline={!isOnline} />
 
       <main className={cn(
-        "flex-1 scroll-momentum",
+        "flex-1",
+        fixedHeight ? "min-h-0 overflow-hidden flex flex-col" : "scroll-momentum",
         !hideHeader && "pt-14",
         !hideNav && "pb-nav",
         className

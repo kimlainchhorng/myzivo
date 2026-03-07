@@ -275,7 +275,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-      if ((rect.width === 0 || rect.height === 0) && frameCount < 180) {
+      if ((rect.width === 0 || rect.height === 0) && frameCount < 600) {
         frameCount += 1;
         requestAnimationFrame(initMap);
         return;
