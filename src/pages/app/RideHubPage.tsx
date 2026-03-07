@@ -44,6 +44,7 @@ const tabs = [
   { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "tracking", label: "Live Trip", icon: Navigation },
+  { id: "match", label: "Match", icon: Car },
   { id: "confirm", label: "Confirm", icon: Star },
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "loyalty", label: "Loyalty", icon: Award },
