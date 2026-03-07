@@ -65,7 +65,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Premium with professional drivers",
     price: 73.23,
     seats: 4,
-    image: "/vehicles/black-sedan.png",
+    image: "/vehicles/luxury-car-v2.png",
   },
   {
     id: "car-seat",
