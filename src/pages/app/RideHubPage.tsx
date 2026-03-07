@@ -109,6 +109,10 @@ const tabs = [
   { id: "driver-comm", label: "Comms", icon: MessageSquare },
   { id: "social-feat", label: "Community", icon: Users },
   { id: "ride-analytics", label: "Dashboard", icon: PieChart },
+  { id: "marketplace", label: "Marketplace", icon: Gavel },
+  { id: "wellness", label: "Wellness", icon: Heart },
+  { id: "pay-adv", label: "Pay+", icon: Wallet },
+  { id: "ai-assist", label: "AI", icon: Brain },
 ];
 
 export default function RideHubPage() {
