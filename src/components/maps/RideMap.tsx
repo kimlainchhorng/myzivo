@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { decodePolyline } from "@/services/mapsApi";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
+const MAP_INIT_TIMEOUT_MS = 5000;
 
 const darkMapStyle: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -65,21 +66,16 @@ let authFailRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
 (window as any).gm_authFailure = () => {
   googleMapsAuthFailed = true;
-  setTimeout(() => {
-    document.querySelectorAll('.dismissButton, .gm-err-container, [style*="background-color: white"][style*="z-index"]').forEach(el => el.remove());
-    const gmStyle = document.querySelector('style[id^="gm"]');
-    if (gmStyle) gmStyle.remove();
-  }, 100);
-  window.dispatchEvent(new CustomEvent('gmaps-auth-failure'));
+  console.error("[RideMap] Google Maps auth failure. Check API key restrictions, Maps JavaScript API enablement, and billing.");
+  window.dispatchEvent(new CustomEvent("gmaps-auth-failure"));
 
-  // Auto-retry after 10s — reset the singleton so next render retries
   if (!authFailRetryTimer) {
     authFailRetryTimer = setTimeout(() => {
       googleMapsAuthFailed = false;
       googleMapsPromise = null;
       googleMapsLoaded = false;
       authFailRetryTimer = null;
-      window.dispatchEvent(new CustomEvent('gmaps-auth-retry'));
+      window.dispatchEvent(new CustomEvent("gmaps-auth-retry"));
     }, 10_000);
   }
 };
@@ -90,7 +86,12 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   if (googleMapsPromise) return googleMapsPromise;
 
   googleMapsPromise = new Promise<void>((resolve, reject) => {
-    if ((window as any).google?.maps) { googleMapsLoaded = true; resolve(); return; }
+    if ((window as any).google?.maps) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
     script.async = true;
@@ -98,29 +99,56 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
     script.onload = () => {
       googleMapsLoaded = true;
       setTimeout(() => {
-        if (googleMapsAuthFailed) reject(new Error("Google Maps auth failed"));
-        else resolve();
-      }, 500);
+        if (googleMapsAuthFailed) {
+          reject(new Error("Google Maps auth failed"));
+        } else {
+          resolve();
+        }
+      }, 350);
     };
-    script.onerror = () => { googleMapsPromise = null; reject(new Error("Failed to load Google Maps")); };
+    script.onerror = () => {
+      googleMapsPromise = null;
+      reject(new Error("Failed to load Google Maps script"));
+    };
     document.head.appendChild(script);
   });
+
   return googleMapsPromise;
 }
 
 export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady }: RideMapProps) {
-  const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
   const [isReady, setIsReady] = useState(false);
-  const [failed, setFailed] = useState(googleMapsAuthFailed);
+  const [failed, setFailed] = useState(false);
+  const [failedReason, setFailedReason] = useState<string>("");
+  const [mapInitialized, setMapInitialized] = useState(false);
+
+  const handleFailure = useCallback((reason: string, err?: unknown) => {
+    if (err) {
+      console.error("[RideMap]", reason, err);
+    } else {
+      console.error("[RideMap]", reason);
+    }
+    setFailedReason(reason);
+    setFailed(true);
+  }, []);
 
   useEffect(() => {
-    const handleAuthFail = () => setFailed(true);
-    const handleAuthRetry = () => setFailed(false);
-    window.addEventListener('gmaps-auth-failure', handleAuthFail);
-    window.addEventListener('gmaps-auth-retry', handleAuthRetry);
+    const handleAuthFail = () => {
+      setFailedReason("Google Maps authentication failed. Verify key restrictions and billing.");
+      setFailed(true);
+    };
+    const handleAuthRetry = () => {
+      setFailed(false);
+      setFailedReason("");
+      setIsReady(false);
+      setMapInitialized(false);
+    };
+
+    window.addEventListener("gmaps-auth-failure", handleAuthFail);
+    window.addEventListener("gmaps-auth-retry", handleAuthRetry);
     return () => {
-      window.removeEventListener('gmaps-auth-failure', handleAuthFail);
-      window.removeEventListener('gmaps-auth-retry', handleAuthRetry);
+      window.removeEventListener("gmaps-auth-failure", handleAuthFail);
+      window.removeEventListener("gmaps-auth-retry", handleAuthRetry);
     };
   }, []);
 
@@ -129,31 +157,76 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
     let cancelled = false;
 
     (async () => {
-      let key = apiKey;
-      if (!key) {
-        try {
-          const { data } = await supabase.functions.invoke("maps-api-key");
-          if (!cancelled && data?.key) { key = data.key; setApiKey(key); }
-        } catch {
-          if (!cancelled) setFailed(true);
-          return;
+      const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+      let key = "";
+
+      // Prefer existing secure backend key first
+      try {
+        const { data, error } = await supabase.functions.invoke("maps-api-key");
+        if (!cancelled && !error && data?.key) {
+          key = data.key;
         }
+      } catch (err) {
+        console.warn("[RideMap] maps-api-key edge function unavailable, trying fallback key.", err);
       }
-      if (!key) { if (!cancelled) setFailed(true); return; }
+
+      if (!key && envKey) {
+        key = envKey;
+      }
+
+      if (!key) {
+        if (!cancelled) handleFailure("Google Maps key is missing. Configure maps-api-key edge function or VITE_GOOGLE_MAPS_API_KEY.");
+        return;
+      }
 
       try {
         await loadGoogleMapsScript(key);
-        if (!cancelled && !googleMapsAuthFailed) setIsReady(true);
-        else if (!cancelled) setFailed(true);
-      } catch {
-        if (!cancelled) setFailed(true);
+        if (!cancelled && !googleMapsAuthFailed) {
+          setIsReady(true);
+        } else if (!cancelled) {
+          handleFailure("Google Maps authentication failed after script load.");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          handleFailure("Google Maps script failed to initialize.", err);
+        }
       }
     })();
 
-    return () => { cancelled = true; };
-  }, [failed]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
+  }, [failed, handleFailure]);
 
-  if (failed) return <MapFallback pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className={className} />;
+  useEffect(() => {
+    if (!isReady || failed) return;
+    const timer = setTimeout(() => {
+      if (!mapInitialized) {
+        handleFailure("Map container failed to initialize. Check parent layout height/width and visibility.");
+      }
+    }, MAP_INIT_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [isReady, failed, mapInitialized, handleFailure]);
+
+  const handleMapReady = useCallback(
+    (map: google.maps.Map) => {
+      setMapInitialized(true);
+      onMapReady?.(map);
+    },
+    [onMapReady]
+  );
+
+  if (failed) {
+    return (
+      <MapFallback
+        pickupCoords={pickupCoords}
+        dropoffCoords={dropoffCoords}
+        className={className}
+        reason={failedReason || "Unable to load Google Maps"}
+      />
+    );
+  }
 
   if (!isReady) {
     return (
@@ -171,7 +244,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
       driverCoords={driverCoords}
       userLocation={userLocation}
       className={className}
-      onMapReady={onMapReady}
+      onMapReady={handleMapReady}
     />
   );
 }
@@ -190,18 +263,20 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return routePolyline;
   }, [routePolyline]);
 
-  // Initialize map — use requestAnimationFrame to ensure container has layout
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
+    let cancelled = false;
+    let frameCount = 0;
+
     const initMap = () => {
+      if (cancelled) return;
       const container = mapContainerRef.current;
       if (!container) return;
 
-      // Ensure container has dimensions before init
       const rect = container.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) {
-        // Retry on next frame
+      if ((rect.width === 0 || rect.height === 0) && frameCount < 180) {
+        frameCount += 1;
         requestAnimationFrame(initMap);
         return;
       }
@@ -215,73 +290,80 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         styles: getMapStyle(),
         gestureHandling: "greedy",
       });
+
       mapRef.current = map;
       onMapReady?.(map);
 
-      // Trigger resize after short delay to ensure tiles load
       setTimeout(() => {
-        google.maps.event.trigger(map, "resize");
-        map.setCenter(center);
+        if (!mapRef.current) return;
+        google.maps.event.trigger(mapRef.current, "resize");
+        mapRef.current.setCenter(center);
       }, 300);
     };
 
     requestAnimationFrame(initMap);
+
+    return () => {
+      cancelled = true;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ResizeObserver — trigger map resize when container dimensions change
   useEffect(() => {
     const container = mapContainerRef.current;
-    const map = mapRef.current;
-    if (!container || !map) return;
+    if (!container) return;
 
     const observer = new ResizeObserver(() => {
-      google.maps.event.trigger(map, "resize");
+      if (!mapRef.current) return;
+      google.maps.event.trigger(mapRef.current, "resize");
     });
+
     observer.observe(container);
     return () => observer.disconnect();
-  }, [mapRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Update markers and bounds
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
     if (pickupCoords) {
-      markersRef.current.push(new google.maps.Marker({
-        position: pickupCoords,
-        map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#10b981",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        },
-        title: "Pickup",
-      }));
+      markersRef.current.push(
+        new google.maps.Marker({
+          position: pickupCoords,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#10b981",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          title: "Pickup",
+        })
+      );
     }
 
     if (dropoffCoords) {
-      markersRef.current.push(new google.maps.Marker({
-        position: dropoffCoords,
-        map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#10b981",
-          fillOpacity: 0.7,
-          strokeColor: "#065f46",
-          strokeWeight: 2,
-        },
-        title: "Dropoff",
-      }));
+      markersRef.current.push(
+        new google.maps.Marker({
+          position: dropoffCoords,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#10b981",
+            fillOpacity: 0.7,
+            strokeColor: "#065f46",
+            strokeWeight: 2,
+          },
+          title: "Dropoff",
+        })
+      );
     }
 
-    // Fit bounds
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
@@ -297,13 +379,13 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [pickupCoords, dropoffCoords, driverCoords]);
 
-  // Update polyline
   useEffect(() => {
     const map = mapRef.current;
     if (polylineRef.current) {
       polylineRef.current.setMap(null);
       polylineRef.current = null;
     }
+
     if (map && decodedRoute && decodedRoute.length > 1) {
       polylineRef.current = new google.maps.Polyline({
         path: decodedRoute,
@@ -316,7 +398,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [decodedRoute]);
 
-  // Update driver marker
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -347,7 +428,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [driverCoords]);
 
-  // User location blue dot
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -377,50 +457,22 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [userLocation, pickupCoords]);
 
-  return <div ref={mapContainerRef} className={`w-full h-full ${className || ""}`} />;
+  return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] ${className || ""}`} />;
 }
 
-// Premium fallback when map is unavailable
-function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapProps, "pickupCoords" | "dropoffCoords" | "className">) {
-  useEffect(() => {
-    const cleanup = () => {
-      document.querySelectorAll('.dismissButton, .gm-err-container, .gm-style-pbc').forEach(el => el.remove());
-      document.querySelectorAll('div[style*="background-color: white"][style*="z-index"]').forEach(el => {
-        if (el.textContent?.includes("Google Maps") || el.textContent?.includes("load")) el.remove();
-      });
-    };
-    cleanup();
-    const timer = setTimeout(cleanup, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
+function MapFallback({
+  pickupCoords,
+  dropoffCoords,
+  className,
+  reason,
+}: Pick<RideMapProps, "pickupCoords" | "dropoffCoords" | "className"> & { reason: string }) {
   return (
     <div className={`relative overflow-hidden w-full h-full ${className || ""}`}>
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, hsl(160 40% 12%), hsl(200 30% 14%), hsl(160 30% 10%))' }}>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(160 40% 12%), hsl(200 30% 14%), hsl(160 30% 10%))" }}>
         <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs><pattern id="zg" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/></pattern></defs>
           <rect width="100%" height="100%" fill="url(#zg)"/>
         </svg>
-        <div className="absolute top-[35%] left-0 right-0 h-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
-        <div className="absolute top-[55%] left-[5%] right-[15%] h-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
-        <div className="absolute top-[72%] left-[10%] right-[5%] h-[4px] rounded-full" style={{background:'rgba(255,255,255,0.1)'}}/>
-        <div className="absolute top-0 bottom-0 left-[40%] w-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
-        <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
-        <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.07)'}}/>
-        <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] rounded-full origin-left rotate-[25deg]" style={{background:'rgba(255,255,255,0.06)'}}/>
-        <div className="absolute bottom-0 right-0 w-[35%] h-[25%] rounded-tl-[3rem]" style={{background:'rgba(16,185,129,0.12)'}}/>
-
-        <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
-          <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" />
-          <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-pulse" />
-          <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 border-2 border-background relative z-10" />
-        </div>
-
-        {dropoffCoords && (
-          <div className="absolute top-[58%] left-[62%] -translate-x-1/2 -translate-y-1/2">
-            <div className="w-3.5 h-3.5 rounded-full bg-primary/70 shadow-md border-2 border-background" />
-          </div>
-        )}
 
         {dropoffCoords && (
           <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
@@ -428,15 +480,16 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
           </svg>
         )}
 
-        {[
-          { top: "28%", left: "55%" },
-          { top: "45%", left: "25%" },
-          { top: "65%", left: "50%" },
-        ].map((pos, i) => (
-          <div key={i} className="absolute w-2 h-2 rounded-full bg-primary/40" style={{ top: pos.top, left: pos.left, animationDelay: `${i * 0.5}s` }}>
-            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '3s', animationDelay: `${i * 0.7}s` }} />
-          </div>
-        ))}
+        <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" />
+          <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-pulse" />
+          <div className="w-4 h-4 rounded-full bg-primary border-2 border-background relative z-10" />
+        </div>
+
+        <div className="absolute top-3 left-3 right-3 z-20 rounded-xl bg-background/90 border border-border/50 p-3 backdrop-blur-sm">
+          <p className="text-xs font-semibold text-foreground">Map unavailable</p>
+          <p className="text-[11px] text-muted-foreground mt-1">{reason}</p>
+        </div>
 
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
           <div className="px-3 py-1.5 rounded-full bg-card/90 backdrop-blur-sm border border-border/30 shadow-sm">
