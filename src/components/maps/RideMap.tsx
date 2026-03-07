@@ -202,12 +202,12 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
     if (!isReady || failed) return;
     const timer = setTimeout(() => {
       if (!mapInitialized) {
-        handleFailure("Map container failed to initialize. Check parent layout height/width and visibility.");
+        console.warn("[RideMap] Map not initialized after timeout — container may have 0 dimensions, will keep retrying");
       }
     }, MAP_INIT_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
-  }, [isReady, failed, mapInitialized, handleFailure]);
+  }, [isReady, failed, mapInitialized]);
 
   const handleMapReady = useCallback(
     (map: google.maps.Map) => {
