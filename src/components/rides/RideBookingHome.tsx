@@ -653,7 +653,12 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW + VEHICLE (merged draggable sheet) ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 min-h-0 overflow-hidden relative">
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="relative h-[calc(100dvh-140px)] overflow-hidden">
+            {/* Back button */}
+            <button onClick={() => setViewStep("search")} className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
+
             {/* Map fills entire area */}
             <div className="absolute inset-0">
               <MapSection
@@ -703,7 +708,7 @@ export default function RideBookingHome() {
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
-                <div className="px-4 pb-2 shrink-0">
+                <div className="px-5 pt-3 pb-2 shrink-0">
                   {/* Addresses */}
                   <div className="flex items-start gap-3 mb-2">
                     <div className="flex flex-col items-center gap-0.5 mt-0.5">
@@ -763,7 +768,7 @@ export default function RideBookingHome() {
                       </div>
                     ) : (
                       <Button
-                        className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                         onClick={() => setSheetExpanded(true)}
                       >
                         Choose a ride
