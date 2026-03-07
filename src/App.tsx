@@ -40,6 +40,8 @@ const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const WalletPage = lazy(() => import("./pages/app/WalletPage"));
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
+const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
+const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const DrivePage = lazy(() => import("./pages/DrivePage"));
