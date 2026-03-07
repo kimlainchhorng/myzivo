@@ -117,6 +117,7 @@ function MapView({
   dropoff,
   onBack,
   showMenu = false,
+  compact = false,
 }: {
   showRoute?: boolean;
   showLabels?: boolean;
@@ -124,9 +125,14 @@ function MapView({
   dropoff?: string;
   onBack?: () => void;
   showMenu?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className="relative w-full h-[48vh] min-h-[280px] bg-muted/20 overflow-hidden">
+    <div className={cn(
+      "relative w-full overflow-hidden",
+      compact ? "h-[40vh] min-h-[240px]" : "h-[48vh] min-h-[280px]",
+      "bg-muted/20"
+    )}>
       {/* Street grid */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
         {/* Horizontal streets */}
