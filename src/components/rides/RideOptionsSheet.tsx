@@ -85,7 +85,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Larger vehicle with car seat",
     price: 47.11,
     seats: 6,
-    image: "/vehicles/xl-car.svg",
+    image: "/vehicles/xl-car-seat.svg",
   },
   {
     id: "black-car-seat",
@@ -95,7 +95,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Premium with car seat",
     price: 81.39,
     seats: 4,
-    image: "/vehicles/black-car.svg",
+    image: "/vehicles/black-car-seat.svg",
   },
   {
     id: "wav",
