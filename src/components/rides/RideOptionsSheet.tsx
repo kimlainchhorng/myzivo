@@ -45,7 +45,7 @@ const rideOptionsSeed: RideOption[] = [
     price: 11.40,
     oldPrice: 16.29,
     seats: 2,
-    image: "/vehicles/economy-car-v2.png",
+    image: "/vehicles/share-car-v2.png",
   },
   {
     id: "comfort",
