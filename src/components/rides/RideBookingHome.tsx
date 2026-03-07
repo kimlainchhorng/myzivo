@@ -252,6 +252,63 @@ function VehicleRow({
   );
 }
 
+/* ─── Vehicle SVG Illustrations ─── */
+type CarVariant = "sedan-gray" | "sedan-white" | "sedan-black" | "suv-gray" | "sedan-silver";
+
+function VehicleSVG({ variant, className }: { variant: CarVariant; className?: string }) {
+  const configs: Record<CarVariant, { body: string; cabin: string; wheel: string; roofH: number }> = {
+    "sedan-gray":   { body: "#9ca3af", cabin: "#4b5563", wheel: "#1f2937", roofH: 11 },
+    "sedan-white":  { body: "#f1f5f9", cabin: "#cbd5e1", wheel: "#374151", roofH: 11 },
+    "sedan-black":  { body: "#1f2937", cabin: "#030712", wheel: "#374151", roofH: 11 },
+    "suv-gray":     { body: "#6b7280", cabin: "#374151", wheel: "#111827", roofH: 14 },
+    "sedan-silver": { body: "#d1d5db", cabin: "#9ca3af", wheel: "#374151", roofH: 11 },
+  };
+  const c = configs[variant] ?? configs["sedan-gray"];
+  return (
+    <svg
+      viewBox="0 0 56 36"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Body */}
+      <rect x="4" y={22 - c.roofH * 0.3} width="48" height="10" rx="4" fill={c.body} />
+      {/* Cabin / roof */}
+      <path
+        d={`M16 ${22 - c.roofH * 0.3 + 1} C18 ${22 - c.roofH} 38 ${22 - c.roofH} 40 ${22 - c.roofH * 0.3 + 1} Z`}
+        fill={c.cabin}
+      />
+      {/* Front wheel */}
+      <circle cx="42" cy="32" r="4" fill={c.wheel} />
+      <circle cx="42" cy="32" r="2" fill="#9ca3af" />
+      {/* Rear wheel */}
+      <circle cx="14" cy="32" r="4" fill={c.wheel} />
+      <circle cx="14" cy="32" r="2" fill="#9ca3af" />
+      {/* Headlight */}
+      <rect x="49" y={22 - c.roofH * 0.3 + 2} width="2" height="3" rx="1" fill="#fbbf24" opacity="0.8" />
+    </svg>
+  );
+}
+
+const getCarVariant = (id: string): CarVariant => {
+  const map: Record<string, CarVariant> = {
+    "economy": "sedan-gray",
+    "xl": "suv-gray",
+    "share": "sedan-white",
+    "comfort": "sedan-silver",
+    "luxury": "sedan-black",
+    "car-seat": "sedan-gray",
+    "xl-car-seat": "suv-gray",
+    "black-car-seat": "sedan-black",
+  };
+  return map[id] ?? "sedan-gray";
+};
+
+const etaTime = (minutesFromNow: number) =>
+  new Date(Date.now() + minutesFromNow * 60000)
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    .toLowerCase();
+
 /* ─── Main Component ─── */
 export default function RideBookingHome() {
   const navigate = useNavigate();
@@ -985,74 +1042,121 @@ export default function RideBookingHome() {
           style={{ top: HEADER_HEIGHT }}
         >
           {/* Header row */}
-          <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
-            <button
-              onClick={() => setViewStep("route-preview")}
-              className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-4 h-4 text-foreground" />
-            </button>
-            <h2 className="text-lg font-black text-foreground flex-1">Choose a ride</h2>
-            <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-bold" aria-label="15% promo applied">15% promo applied</span>
+          <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewStep("route-preview")}
+                className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
+            </div>
+            {/* Promo badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-bold text-emerald-600">15% promo applied</span>
+            </div>
           </div>
 
           {/* Category tabs */}
-          <div className="flex gap-2 px-4 pb-3 shrink-0">
+          <div className="flex gap-2 px-5 pb-3 border-b border-border/10 shrink-0">
             {(["popular", "premium", "more"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setRideCategory(cat)}
                 className={cn(
-                  "flex-1 py-2 rounded-full text-sm font-bold capitalize transition-all",
+                  "px-4 py-1.5 rounded-full text-sm font-bold transition-all capitalize",
                   rideCategory === cat
                     ? "bg-foreground text-background"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {cat}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
             ))}
           </div>
 
-          {/* Vehicle list */}
+          {/* Vehicle list — scrollable */}
           <div className="flex-1 overflow-y-auto">
-            {filteredVehiclesByCategory.map((v) => {
-              const price = routeData
-                ? calcPrice(v, routeData.distance_miles, routeData.duration_minutes, surgeMultiplier)
-                : calcPrice(v, 0, 0, surgeMultiplier);
-              const originalPrice = routeData
-                ? calcPrice(v, routeData.distance_miles, routeData.duration_minutes, 1.0)
-                : v.basePrice;
-              return (
-                <VehicleRow
-                  key={v.id}
-                  vehicle={v}
-                  selected={selectedVehicle === v.id}
-                  onSelect={() => setSelectedVehicle(v.id)}
-                  price={price}
-                  originalPrice={originalPrice}
-                  surgeActive={surgeMultiplier > 1.0}
-                />
-              );
-            })}
+            {filteredVehiclesByCategory.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setSelectedVehicle(v.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-b border-border/10 last:border-0",
+                  selectedVehicle === v.id
+                    ? "bg-emerald-50 dark:bg-emerald-950/20 border-l-[3px] border-l-emerald-500"
+                    : "hover:bg-muted/10 border-l-[3px] border-l-transparent"
+                )}
+              >
+                {/* Left: Vehicle SVG */}
+                <div className="w-14 shrink-0 flex items-center justify-center">
+                  <VehicleSVG variant={getCarVariant(v.id)} className="w-14 h-10" />
+                </div>
+
+                {/* Center: Name + meta */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-foreground">{v.name}</span>
+                    <div className="flex items-center gap-0.5">
+                      <User className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{v.capacity}</span>
+                    </div>
+                    {v.carSeat && (
+                      <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+                        Car seat
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {etaTime(v.etaMin)} · {v.desc}
+                  </p>
+                </div>
+
+                {/* Right: Price */}
+                <div className="shrink-0 text-right">
+                  {v.surgeMultiplier < 1 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-muted-foreground line-through">
+                        ${calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
+                      </span>
+                      <span className="text-sm font-bold text-emerald-500 flex items-center gap-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                        ${calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-bold text-foreground">
+                      ${calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
+                    </span>
+                  )}
+                  {selectedVehicle === v.id && (
+                    <div className="mt-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center ml-auto">
+                      <CheckCircle className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {/* Sticky footer */}
-          <div className="shrink-0 border-t border-border/15">
-            <div className="px-4 py-2 flex items-center gap-3">
-              <CreditCard className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="px-4 pb-4">
-              <Button
-                className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                onClick={() => setViewStep("confirm-ride")}
-              >
-                Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
-              </Button>
-            </div>
+          {/* Payment row */}
+          <div className="shrink-0 border-t border-border/20 px-5 py-3 flex items-center gap-3">
+            <CreditCard className="w-5 h-5 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground font-medium">Visa •••• 4242</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </div>
+
+          {/* Confirm button */}
+          <div className="shrink-0 px-5" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
+            <Button
+              className="w-full h-14 rounded-[22px] text-base font-bold bg-foreground text-background"
+              onClick={() => setViewStep("confirm-ride")}
+            >
+              Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
+            </Button>
           </div>
         </div>
       )}
