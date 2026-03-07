@@ -164,8 +164,6 @@ self.addEventListener('activate', (event) => {
       const keepCaches = [
         'google-fonts-stylesheets',
         'google-fonts-webfonts',
-        'navigation-cache',
-        'api-cache',
       ];
       return Promise.all(
         cacheNames
