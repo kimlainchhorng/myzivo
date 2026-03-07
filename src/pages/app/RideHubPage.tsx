@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -42,6 +42,10 @@ import RideSpecialtyModes from "@/components/rides/RideSpecialtyModes";
 import RideSmartAnalytics from "@/components/rides/RideSmartAnalytics";
 import RideEntertainment from "@/components/rides/RideEntertainment";
 import RideGifting from "@/components/rides/RideGifting";
+import RideRewardsGamification from "@/components/rides/RideRewardsGamification";
+import RideCorporateFleet from "@/components/rides/RideCorporateFleet";
+import RideAccessibilityPlus from "@/components/rides/RideAccessibilityPlus";
+import RideRouteIntelligence from "@/components/rides/RideRouteIntelligence";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -81,6 +85,10 @@ const tabs = [
   { id: "analytics", label: "Analytics", icon: TrendingUp },
   { id: "entertain", label: "Music", icon: Music },
   { id: "gifting", label: "Gifting", icon: Gift },
+  { id: "rewards", label: "Rewards", icon: Trophy },
+  { id: "corporate", label: "Corporate", icon: Building2 },
+  { id: "inclusive", label: "Inclusive", icon: Heart },
+  { id: "routes", label: "Routes", icon: Brain },
 ];
 
 export default function RideHubPage() {
@@ -159,6 +167,10 @@ export default function RideHubPage() {
             {activeTab === "analytics" && <div className="p-4"><RideSmartAnalytics /></div>}
             {activeTab === "entertain" && <div className="p-4"><RideEntertainment /></div>}
             {activeTab === "gifting" && <div className="p-4"><RideGifting /></div>}
+            {activeTab === "rewards" && <div className="p-4"><RideRewardsGamification /></div>}
+            {activeTab === "corporate" && <div className="p-4"><RideCorporateFleet /></div>}
+            {activeTab === "inclusive" && <div className="p-4"><RideAccessibilityPlus /></div>}
+            {activeTab === "routes" && <div className="p-4"><RideRouteIntelligence /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
