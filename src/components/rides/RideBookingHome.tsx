@@ -671,7 +671,7 @@ export default function RideBookingHome() {
               }}
               animate={{
                 height: sheetExpanded ? "65vh" : "auto",
-                maxHeight: sheetExpanded ? "65vh" : "38vh",
+                maxHeight: sheetExpanded ? "65vh" : "32vh",
               }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
               className="absolute bottom-0 left-0 right-0 z-10 bg-background rounded-t-[1.25rem] border-t border-border/30 shadow-[0_-8px_24px_hsl(var(--foreground)/0.1)] flex flex-col overflow-hidden"
