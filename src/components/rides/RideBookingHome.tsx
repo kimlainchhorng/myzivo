@@ -133,34 +133,29 @@ function MapSection({
   return (
     <div className={cn(
       "relative w-full overflow-hidden",
-      compact ? "absolute inset-0" : "flex-[3] min-h-[200px] max-h-[65vh]"
+      compact ? "absolute inset-0 h-full w-full" : "flex-[3] min-h-[200px] max-h-[65vh]"
     )}>
-      <RideMap
-        pickupCoords={pickupCoords || null}
-        dropoffCoords={dropoffCoords || null}
-        driverCoords={driverCoords || null}
-        userLocation={userLocation || null}
-        routePolyline={routePolyline || null}
-        onMapReady={(map) => {
-          mapRef.current = map;
-        }}
-        className="absolute inset-0"
-      />
-
-      <div className="absolute right-3 top-14 z-20">
-        <button
-          onClick={handleLocateClick}
-          className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
-          aria-label="Center on my location"
-        >
-          <Navigation className="w-4 h-4 text-primary" />
-        </button>
+      <div className="absolute inset-0 h-full w-full">
+        <RideMap
+          pickupCoords={pickupCoords || null}
+          dropoffCoords={dropoffCoords || null}
+          driverCoords={driverCoords || null}
+          userLocation={userLocation || null}
+          routePolyline={routePolyline || null}
+          onMapReady={(map) => {
+            mapRef.current = map;
+          }}
+          className="absolute inset-0 h-full w-full"
+        />
       </div>
 
-      <div className="absolute right-3 z-20 flex flex-col gap-1" style={{ bottom: "calc(34vh + 8px)" }}>
-        <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
-        <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
-      </div>
+      <button
+        onClick={handleLocateClick}
+        className="absolute right-3 top-14 z-20 w-12 h-12 rounded-full bg-card shadow-md flex items-center justify-center"
+        aria-label="Center on my location"
+      >
+        <Navigation className="w-4 h-4 text-primary" />
+      </button>
 
       {children}
     </div>
@@ -244,6 +239,20 @@ export default function RideBookingHome() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [carSeatFilter, setCarSeatFilter] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+
+  // Viewport height for dynamic sheet sizing
+  const [viewportHeight, setViewportHeight] = useState(800);
+  useEffect(() => {
+    const updateHeight = () => setViewportHeight(window.innerHeight);
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  const COLLAPSED_SHEET_HEIGHT = 260;
+  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560);
+  const BOTTOM_NAV_HEIGHT = 72;
+  const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
@@ -657,30 +666,40 @@ export default function RideBookingHome() {
               />
             </div>
 
-            {/* Draggable bottom sheet — absolute overlay */}
+            {/* Zoom controls — positioned dynamically above collapsed sheet */}
+            <div
+              className="absolute right-3 flex flex-col gap-2 z-20"
+              style={{
+                bottom: `calc(${COLLAPSED_SHEET_HEIGHT}px + ${BOTTOM_NAV_HEIGHT}px + 16px + ${SAFE_BOTTOM})`,
+              }}
+            >
+              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
+              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">−</button>
+            </div>
+
+            {/* Draggable bottom sheet — absolute overlay above bottom nav */}
             <motion.div
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.12}
               onDragEnd={(_, info) => {
-                if (info.offset.y < -40 || info.velocity.y < -200) {
-                  setSheetExpanded(true);
-                } else if (info.offset.y > 40 || info.velocity.y > 200) {
-                  setSheetExpanded(false);
-                }
+                const shouldExpand = info.offset.y < -80 || info.velocity.y < -500;
+                const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
+                if (shouldExpand) setSheetExpanded(true);
+                else if (shouldCollapse) setSheetExpanded(false);
               }}
               animate={{
-                height: sheetExpanded ? "65vh" : "auto",
-                maxHeight: sheetExpanded ? "65vh" : "32vh",
+                height: sheetExpanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
               }}
-              transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="absolute bottom-0 left-0 right-0 z-10 bg-background rounded-t-[1.25rem] border-t border-border/30 shadow-[0_-8px_24px_hsl(var(--foreground)/0.1)] flex flex-col overflow-hidden"
-              style={{ touchAction: "none" }}
+              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
+              style={{
+                bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+                touchAction: "none",
+              }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing shrink-0">
-                <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
-              </div>
+              <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
@@ -736,7 +755,7 @@ export default function RideBookingHome() {
 
                 {/* Choose a ride button — only in collapsed state */}
                 {!sheetExpanded && (
-                  <div className="px-4 shrink-0" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
+                  <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
                     {isLoadingRoute ? (
                       <div className="flex items-center justify-center py-3">
                         <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -805,7 +824,7 @@ export default function RideBookingHome() {
                           <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <div className="px-4 pt-0.5" style={{ paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0px))" }}>
+                        <div className="px-4 pt-0.5" style={{ paddingBottom: `calc(8px + ${SAFE_BOTTOM})` }}>
                           <Button
                             className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                             onClick={() => setViewStep("pickup-confirm")}
