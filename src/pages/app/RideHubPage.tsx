@@ -131,7 +131,7 @@ export default function RideHubPage() {
   const [activeTab, setActiveTab] = useState("book");
 
   return (
-    <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")}>
+    <AppLayout title="Ride Hub" showBack onBack={() => navigate("/rides")} className={activeTab === "book" ? "flex flex-col overflow-hidden" : ""}>
       {/* Tab bar */}
       <div className="sticky top-14 z-20 bg-background/95 backdrop-blur-lg border-b border-border/30">
         <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
