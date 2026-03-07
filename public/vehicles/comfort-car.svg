@@ -1,46 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" fill="none">
   <defs>
-    <linearGradient id="comfortBody" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E0E4EE"/>
-      <stop offset="100%" stop-color="#B4B8C2"/>
-    </linearGradient>
-    <radialGradient id="comfortShadow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="rgba(0,0,0,0.30)"/>
-      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="body-silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="40%" stop-color="#a8b4be"/>
+      <stop offset="100%" stop-color="#7a8a96"/>
+    </linearGradient>
+    <linearGradient id="body-side-silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8c4ce"/>
+      <stop offset="100%" stop-color="#6e7e8a"/>
+    </linearGradient>
+    <linearGradient id="front-silver" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b0bec8"/>
+      <stop offset="100%" stop-color="#6e8090"/>
+    </linearGradient>
+    <linearGradient id="roof-silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#20242c"/>
+      <stop offset="100%" stop-color="#10131a"/>
+    </linearGradient>
+    <linearGradient id="glass-silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a9ec8" stop-opacity="0.72"/>
+      <stop offset="100%" stop-color="#205070" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="wheel-rim-s" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8e8e8"/>
+      <stop offset="100%" stop-color="#a8a8a8"/>
+    </linearGradient>
   </defs>
-  <!-- Drop shadow -->
-  <ellipse cx="100" cy="91" rx="82" ry="7" fill="url(#comfortShadow)"/>
-  <!-- Rear wheel -->
-  <circle cx="150" cy="76" r="13" fill="#2a2a3a"/>
-  <circle cx="150" cy="76" r="6" fill="#888898"/>
-  <circle cx="150" cy="76" r="2.5" fill="#2a2a3a"/>
-  <!-- Front wheel -->
-  <circle cx="53" cy="76" r="13" fill="#2a2a3a"/>
-  <circle cx="53" cy="76" r="6" fill="#888898"/>
-  <circle cx="53" cy="76" r="2.5" fill="#2a2a3a"/>
-  <!-- Premium elongated body (slightly longer hood) -->
-  <rect x="20" y="54" width="162" height="24" rx="9" fill="url(#comfortBody)"/>
-  <!-- Chrome-like window trim accent -->
-  <rect x="62" y="53" width="91" height="2" rx="1" fill="#A8B0C0"/>
-  <!-- Cabin (sleeker, slightly longer) -->
-  <path d="M 62,54 L 76,22 L 138,22 L 152,54 Z" fill="#1C1C2E"/>
-  <!-- Roof highlight streak -->
-  <path d="M 80,23 L 136,23 L 136,25 L 80,25 Z" fill="rgba(255,255,255,0.10)"/>
-  <!-- Front window -->
-  <path d="M 69,53 L 82,24 L 112,24 L 112,53 Z" fill="rgba(182,210,235,0.55)"/>
-  <!-- Rear window -->
-  <path d="M 115,53 L 115,24 L 136,24 L 149,53 Z" fill="rgba(182,210,235,0.50)"/>
-  <!-- Window reflections -->
-  <path d="M 72,49 L 80,30 L 84,30 L 76,49 Z" fill="rgba(255,255,255,0.15)"/>
-  <!-- Door line -->
-  <line x1="112" y1="54" x2="112" y2="78" stroke="rgba(0,0,0,0.13)" stroke-width="1.5"/>
-  <!-- Headlight (elongated premium style) -->
-  <rect x="22" y="60" width="8" height="4" rx="2" fill="rgba(255,248,200,0.90)"/>
-  <rect x="23" y="61" width="4" height="2" rx="1" fill="rgba(255,255,220,1)"/>
-  <!-- Taillight (sleek horizontal) -->
-  <rect x="172" y="59" width="6" height="9" rx="2" fill="rgba(200,50,50,0.80)"/>
-  <!-- Chrome door handle hints -->
-  <rect x="93" y="66" width="10" height="2" rx="1" fill="rgba(200,210,220,0.6)"/>
-  <rect x="124" y="66" width="10" height="2" rx="1" fill="rgba(200,210,220,0.6)"/>
+
+  <ellipse cx="80" cy="84" rx="64" ry="6" fill="url(#shadow)"/>
+
+  <!-- Body -->
+  <path d="M16 53 L16 72 Q16 76 20 76 L124 76 Q128 76 128 72 L128 53 Z" fill="url(#body-side-silver)"/>
+  <path d="M16 53 L34 43 L136 43 L128 53 Z" fill="url(#body-silver)"/>
+  <path d="M128 43 L136 43 L136 72 Q136 76 132 76 L128 76 L128 43 Z" fill="url(#front-silver)"/>
+
+  <!-- Cabin — longer fastback style -->
+  <path d="M36 53 L46 27 L112 27 L122 53 Z" fill="url(#body-side-silver)"/>
+  <path d="M46 27 L50 22 L118 22 L120 27 L112 27 Z" fill="url(#roof-silver)"/>
+  <path d="M112 27 L118 22 L128 38 L128 43 L122 53 Z" fill="#10131a"/>
+
+  <!-- Windows -->
+  <path d="M42 52 L50 28 L76 28 L76 52 Z" fill="url(#glass-silver)"/>
+  <path d="M80 52 L80 28 L108 28 L116 52 Z" fill="url(#glass-silver)"/>
+  <path d="M116 52 L108 28 L116 24 L124 40 Z" fill="url(#glass-silver)"/>
+  <line x1="78" y1="28" x2="78" y2="52" stroke="#10131a" stroke-width="2"/>
+
+  <!-- Chrome body accent line -->
+  <path d="M18 58 L126 58" stroke="#d0d8e0" stroke-width="1.2" stroke-opacity="0.5"/>
+  <!-- Door handles -->
+  <rect x="60" y="55" width="15" height="3" rx="1.5" fill="#b0bec8" stroke="#6e7e8a" stroke-width="0.5"/>
+  <rect x="96" y="55" width="15" height="3" rx="1.5" fill="#b0bec8" stroke="#6e7e8a" stroke-width="0.5"/>
+  <!-- Mirror -->
+  <path d="M125 47 L132 45 L133 50 L126 51 Z" fill="#8d99a6"/>
+  <!-- Grille -->
+  <rect x="128" y="59" width="7" height="9" rx="1" fill="#10131a"/>
+  <rect x="129" y="60.5" width="5" height="1.5" rx="0.5" fill="#2c3038"/>
+  <rect x="129" y="63" width="5" height="1.5" rx="0.5" fill="#2c3038"/>
+  <rect x="129" y="65.5" width="5" height="1.5" rx="0.5" fill="#2c3038"/>
+  <!-- Headlight -->
+  <path d="M126 49 L135 49 L136 55 L126 56 Z" fill="#fffde7" fill-opacity="0.92"/>
+  <rect x="126" y="47.5" width="8" height="1.5" rx="0.75" fill="#ffe566" fill-opacity="0.95"/>
+  <!-- Taillight -->
+  <rect x="16" y="51" width="3" height="11" rx="1" fill="#e03131" fill-opacity="0.9"/>
+  <!-- Highlight -->
+  <path d="M52 23 Q84 19 116 23" stroke="white" stroke-width="2" stroke-opacity="0.3" fill="none" stroke-linecap="round"/>
+
+  <!-- Wheels -->
+  <circle cx="42" cy="76" r="13" fill="#1a1a2e"/>
+  <circle cx="42" cy="76" r="9" fill="#2d2d3d"/>
+  <circle cx="42" cy="76" r="6" fill="url(#wheel-rim-s)"/>
+  <circle cx="42" cy="76" r="2.5" fill="#444"/>
+  <line x1="42" y1="70" x2="42" y2="82" stroke="#b0b0b0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="36" y1="76" x2="48" y2="76" stroke="#b0b0b0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="37.8" y1="71.8" x2="46.2" y2="80.2" stroke="#b0b0b0" stroke-width="1" stroke-opacity="0.4"/>
+  <line x1="46.2" y1="71.8" x2="37.8" y2="80.2" stroke="#b0b0b0" stroke-width="1" stroke-opacity="0.4"/>
+  <circle cx="108" cy="76" r="13" fill="#1a1a2e"/>
+  <circle cx="108" cy="76" r="9" fill="#2d2d3d"/>
+  <circle cx="108" cy="76" r="6" fill="url(#wheel-rim-s)"/>
+  <circle cx="108" cy="76" r="2.5" fill="#444"/>
+  <line x1="108" y1="70" x2="108" y2="82" stroke="#b0b0b0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="102" y1="76" x2="114" y2="76" stroke="#b0b0b0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="103.8" y1="71.8" x2="112.2" y2="80.2" stroke="#b0b0b0" stroke-width="1" stroke-opacity="0.4"/>
+  <line x1="112.2" y1="71.8" x2="103.8" y2="80.2" stroke="#b0b0b0" stroke-width="1" stroke-opacity="0.4"/>
 </svg>
