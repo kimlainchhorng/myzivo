@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,24 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth check
-    const authHeader = req.headers.get("authorization") ?? "";
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const client = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await client.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Authentication required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { place_id } = await req.json();
 
-    // Input validation
     if (!place_id || typeof place_id !== "string" || place_id.length > 300) {
       return new Response(JSON.stringify({ error: "Invalid place_id" }), {
         status: 400,
@@ -51,14 +34,14 @@ Deno.serve(async (req) => {
       `&fields=formatted_address,geometry/location,name` +
       `&key=${encodeURIComponent(key)}`;
 
-    console.log(`[maps-place-details] Fetching details for place_id: ${place_id} (user: ${user.id})`);
+    console.log(`[maps-place-details] Fetching details for place_id: ${place_id}`);
 
     const res = await fetch(url);
     const data = await res.json();
 
     if (data.status !== "OK") {
       console.error("[maps-place-details] Google API error:", data.status, data.error_message);
-      return new Response(JSON.stringify({ error: "Place details unavailable" }), {
+      return new Response(JSON.stringify({ error: "Place details unavailable", google_status: data.status }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

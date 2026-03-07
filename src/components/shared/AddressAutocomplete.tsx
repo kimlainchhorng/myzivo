@@ -120,32 +120,51 @@ export function AddressAutocomplete({
     setIsOpen(false);
     setSuggestions([]);
     setIsLoading(true);
+    setError(null);
 
     try {
-      // Get place details with coordinates
+      // Try Place Details first
       const { data, error: fnError } = await supabase.functions.invoke("maps-place-details", {
         body: { place_id: suggestion.place_id },
       });
 
-      if (fnError) throw fnError;
-
-      if (data?.ok && data.lat != null && data.lng != null) {
+      if (!fnError && data?.ok && data.lat != null && data.lng != null) {
+        console.log("[AddressAutocomplete] Place details success:", data.address, data.lat, data.lng);
         onSelect({
-          address: suggestion.description,
+          address: data.address || suggestion.description,
           lat: data.lat,
           lng: data.lng,
         });
-      } else {
-        // Fallback - return address without coords
-        setError("Could not get coordinates");
+        return;
+      }
+
+      console.warn("[AddressAutocomplete] Place details failed, trying geocode fallback:", fnError || data?.error);
+
+      // Fallback: Use Geocoding API via maps-geocode edge function
+      const { data: geoData, error: geoError } = await supabase.functions.invoke("maps-geocode", {
+        body: { address: suggestion.description },
+      });
+
+      if (!geoError && geoData?.ok && geoData.lat != null && geoData.lng != null) {
+        console.log("[AddressAutocomplete] Geocode fallback success:", geoData.lat, geoData.lng);
         onSelect({
           address: suggestion.description,
-          lat: 0,
-          lng: 0,
+          lat: geoData.lat,
+          lng: geoData.lng,
         });
+        return;
       }
+
+      console.error("[AddressAutocomplete] Both place details and geocode failed");
+      setError("Could not get coordinates for this address");
+      // Still pass the address so UI isn't stuck
+      onSelect({
+        address: suggestion.description,
+        lat: 0,
+        lng: 0,
+      });
     } catch (err) {
-      console.error("[AddressAutocomplete] Place details error:", err);
+      console.error("[AddressAutocomplete] Selection error:", err);
       setError("Failed to get location details");
       onSelect({
         address: suggestion.description,
