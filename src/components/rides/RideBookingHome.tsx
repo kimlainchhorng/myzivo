@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → route-preview → ride-options → confirm-ride → searching → driver-assigned → driver-en-route → trip-in-progress → trip-complete
  */
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useId } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -256,36 +256,114 @@ function VehicleRow({
 type CarVariant = "sedan-gray" | "sedan-white" | "sedan-black" | "suv-gray" | "sedan-silver";
 
 function VehicleSVG({ variant, className }: { variant: CarVariant; className?: string }) {
-  const configs: Record<CarVariant, { body: string; cabin: string; wheel: string; roofH: number }> = {
-    "sedan-gray":   { body: "#9ca3af", cabin: "#4b5563", wheel: "#1f2937", roofH: 11 },
-    "sedan-white":  { body: "#f1f5f9", cabin: "#cbd5e1", wheel: "#374151", roofH: 11 },
-    "sedan-black":  { body: "#1f2937", cabin: "#030712", wheel: "#374151", roofH: 11 },
-    "suv-gray":     { body: "#6b7280", cabin: "#374151", wheel: "#111827", roofH: 14 },
-    "sedan-silver": { body: "#d1d5db", cabin: "#9ca3af", wheel: "#374151", roofH: 11 },
+  const uid = useId().replace(/:/g, "");
+  const gradId = `body-grad-${variant}-${uid}`;
+  const configs: Record<CarVariant, {
+    body: string; frontFace: string; roof: string; wheelOuter: string; hubcap: string; suv: boolean;
+  }> = {
+    "sedan-gray":   { body: "#8b949e", frontFace: "#6e7681", roof: "#0d1117", wheelOuter: "#1f2937", hubcap: "#f8fafc", suv: false },
+    "sedan-white":  { body: "#e6edf3", frontFace: "#c9d1d9", roof: "#0d1117", wheelOuter: "#30363d", hubcap: "#ffffff", suv: false },
+    "sedan-black":  { body: "#21262d", frontFace: "#161b22", roof: "#010409", wheelOuter: "#30363d", hubcap: "#f0f6fc", suv: false },
+    "suv-gray":     { body: "#6e7681", frontFace: "#484f58", roof: "#0d1117", wheelOuter: "#1f2937", hubcap: "#f8fafc", suv: true  },
+    "sedan-silver": { body: "#b1bac4", frontFace: "#8b949e", roof: "#0d1117", wheelOuter: "#21262d", hubcap: "#ffffff", suv: false },
   };
   const c = configs[variant] ?? configs["sedan-gray"];
+  const isSuv = c.suv;
+
+  // SUV is scaled ~10% taller/wider
+  const bodyX = isSuv ? 6 : 8;
+  const bodyY = isSuv ? 17 : 19;
+  const bodyW = isSuv ? 62 : 58;
+  const bodyH = isSuv ? 18 : 15;
+  const bodyRx = isSuv ? 8 : 7;
+
+  // Cabin hump top y
+  const cabinTopY = isSuv ? 7 : 8;
+  // Cabin hump spans from x=20 to x=56 (sedan) / x=18 to x=58 (suv)
+  const cabinL = isSuv ? 18 : 20;
+  const cabinR = isSuv ? 58 : 56;
+
+  // Roof glass
+  const roofL = isSuv ? 21 : 23;
+  const roofR = isSuv ? 55 : 53;
+  const roofTopY = isSuv ? 8 : 9;
+  const roofBottomY = isSuv ? 17 : 18;
+
+  // Wheels
+  const rearCx = isSuv ? 17 : 18;
+  const frontCx = isSuv ? 59 : 58;
+  const wheelCy = isSuv ? 35 : 33;
+  const tireR = isSuv ? 8 : 7;
+  const hubR = isSuv ? 4.5 : 4;
+  const axleR = isSuv ? 2.2 : 2;
+
+  // Front face depth parallelogram
+  const ffTop = bodyY;
+  const ffBot = bodyY + bodyH;
+  const ffX = bodyX + bodyW;
+
+  // Gradient rect covers cabin + body
+  const gradY = cabinTopY;
+  const gradH = bodyY + bodyH - cabinTopY;
+
   return (
-    <svg
-      viewBox="0 0 56 36"
-      className={className}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Body */}
-      <rect x="4" y={22 - c.roofH * 0.3} width="48" height="10" rx="4" fill={c.body} />
-      {/* Cabin / roof */}
+    <svg viewBox="0 0 80 52" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <radialGradient id={gradId} cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="black" stopOpacity="0.05" />
+        </radialGradient>
+      </defs>
+
+      {/* Ground shadow */}
+      <ellipse cx="40" cy="49" rx={isSuv ? 34 : 32} ry="3.5" fill="black" fillOpacity="0.1" />
+
+      {/* Body base */}
+      <rect x={bodyX} y={bodyY} width={bodyW} height={bodyH} rx={bodyRx} fill={c.body} />
+
+      {/* Cabin hump */}
       <path
-        d={`M16 ${22 - c.roofH * 0.3 + 1} C18 ${22 - c.roofH} 38 ${22 - c.roofH} 40 ${22 - c.roofH * 0.3 + 1} Z`}
-        fill={c.cabin}
+        d={`M${cabinL} ${bodyY} C${cabinL + 2} ${cabinTopY}, ${cabinR - 2} ${cabinTopY}, ${cabinR} ${bodyY} Z`}
+        fill={c.body}
       />
-      {/* Front wheel */}
-      <circle cx="42" cy="32" r="4" fill={c.wheel} />
-      <circle cx="42" cy="32" r="2" fill="#9ca3af" />
+
+      {/* Front face — 3D depth illusion */}
+      <path
+        d={`M${ffX} ${ffTop} L${ffX + 5} ${ffTop + 3} L${ffX + 5} ${ffBot + 1} L${ffX} ${ffBot} Z`}
+        fill={c.frontFace}
+      />
+
+      {/* Roof glass */}
+      <path
+        d={`M${roofL} ${roofBottomY} C${roofL + 2} ${roofTopY}, ${roofR - 2} ${roofTopY}, ${roofR} ${roofBottomY} Z`}
+        fill={c.roof}
+        fillOpacity="0.95"
+      />
+
       {/* Rear wheel */}
-      <circle cx="14" cy="32" r="4" fill={c.wheel} />
-      <circle cx="14" cy="32" r="2" fill="#9ca3af" />
-      {/* Headlight */}
-      <rect x="49" y={22 - c.roofH * 0.3 + 2} width="2" height="3" rx="1" fill="#fbbf24" opacity="0.8" />
+      <circle cx={rearCx} cy={wheelCy} r={tireR} fill={c.wheelOuter} />
+      <circle cx={rearCx} cy={wheelCy} r={hubR} fill={c.hubcap} />
+      <circle cx={rearCx} cy={wheelCy} r={axleR} fill="#374151" />
+
+      {/* Front wheel */}
+      <circle cx={frontCx} cy={wheelCy} r={tireR} fill={c.wheelOuter} />
+      <circle cx={frontCx} cy={wheelCy} r={hubR} fill={c.hubcap} />
+      <circle cx={frontCx} cy={wheelCy} r={axleR} fill="#374151" />
+
+      {/* Radial gradient overlay — studio lighting */}
+      <rect x={bodyX} y={gradY} width={bodyW} height={gradH} rx={bodyRx} fill={`url(#${gradId})`} />
+
+      {/* Headlight accent on front face */}
+      <rect x={ffX + 1} y={ffTop + 5} width="3" height="5" rx="1.5" fill="#fde68a" fillOpacity="0.9" />
+
+      {/* Roof highlight */}
+      <path
+        d={`M${roofL + 3} ${roofTopY + 2} Q${(roofL + roofR) / 2} ${roofTopY - 1} ${roofR - 3} ${roofTopY + 2}`}
+        stroke="white"
+        strokeWidth="1.2"
+        strokeOpacity="0.35"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
