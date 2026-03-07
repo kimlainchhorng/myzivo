@@ -90,13 +90,13 @@ const CookieConsent = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6"
+          className="fixed bottom-16 left-0 right-0 z-[100] p-3 md:bottom-0 md:p-6"
         >
-          <Card className="max-w-4xl mx-auto shadow-2xl border-0 bg-card/95 backdrop-blur-xl overflow-hidden">
+          <Card className="max-w-xl mx-auto shadow-2xl border-0 bg-card/95 backdrop-blur-xl overflow-hidden max-h-[72vh] overflow-y-auto md:max-w-4xl md:max-h-none">
             {/* Top gradient line */}
             <div className="h-1 bg-gradient-to-r from-primary via-teal-400 to-eats" />
             
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               {!showDetails ? (
                 <>
                   <div className="flex items-start gap-4">
