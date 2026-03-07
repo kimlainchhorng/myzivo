@@ -666,28 +666,40 @@ export default function RideBookingHome() {
               />
             </div>
 
-            {/* Draggable bottom sheet — absolute overlay */}
+            {/* Zoom controls — positioned dynamically above collapsed sheet */}
+            <div
+              className="absolute right-3 flex flex-col gap-2 z-20"
+              style={{
+                bottom: `calc(${COLLAPSED_SHEET_HEIGHT}px + ${BOTTOM_NAV_HEIGHT}px + 16px + ${SAFE_BOTTOM})`,
+              }}
+            >
+              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
+              <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">−</button>
+            </div>
+
+            {/* Draggable bottom sheet — absolute overlay above bottom nav */}
             <motion.div
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.12}
               onDragEnd={(_, info) => {
-                if (info.offset.y < -40 || info.velocity.y < -200) {
-                  setSheetExpanded(true);
-                } else if (info.offset.y > 40 || info.velocity.y > 200) {
-                  setSheetExpanded(false);
-                }
+                const shouldExpand = info.offset.y < -80 || info.velocity.y < -500;
+                const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
+                if (shouldExpand) setSheetExpanded(true);
+                else if (shouldCollapse) setSheetExpanded(false);
               }}
               animate={{
-                height: sheetExpanded ? "65vh" : "auto",
-                maxHeight: sheetExpanded ? "65vh" : "32vh",
+                height: sheetExpanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
               }}
-              transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="absolute bottom-0 left-0 right-0 z-10 bg-background rounded-t-[1.25rem] border-t border-border/30 shadow-[0_-8px_24px_hsl(var(--foreground)/0.1)] flex flex-col overflow-hidden"
-              style={{ touchAction: "none" }}
+              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
+              style={{
+                bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+                touchAction: "none",
+              }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing shrink-0">
+              <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
                 <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
               </div>
 
