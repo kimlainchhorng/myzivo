@@ -680,7 +680,7 @@ export default function RideBookingHome() {
 
               {/* Trip stats */}
               {routeData && (
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-2.5 mb-3">
                   <div className="flex-1 flex items-center gap-2 rounded-xl bg-muted/20 border border-border/20 px-3 py-2.5">
                     <Timer className="w-4 h-4 text-primary shrink-0" />
                     <div>
