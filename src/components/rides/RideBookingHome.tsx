@@ -204,6 +204,19 @@ export default function RideBookingHome() {
   const [trackingEta, setTrackingEta] = useState(4);
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Fetch user location on mount
+  useEffect(() => {
+    getCurrentLocation()
+      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .catch(() => {}); // silently fail — map will use default center
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLocateUser = useCallback(() => {
+    getCurrentLocation()
+      .then((loc) => setUserLocation({ lat: loc.lat, lng: loc.lng }))
+      .catch(() => toast.error("Could not get your location"));
+  }, [getCurrentLocation]);
+
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
