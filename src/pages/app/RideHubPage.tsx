@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -54,6 +54,10 @@ import RideSmartPricing from "@/components/rides/RideSmartPricing";
 import RideDriverComm from "@/components/rides/RideDriverComm";
 import RideSocialFeatures from "@/components/rides/RideSocialFeatures";
 import RideAnalyticsDashboard from "@/components/rides/RideAnalyticsDashboard";
+import RideMarketplace from "@/components/rides/RideMarketplace";
+import RideWellnessComfort from "@/components/rides/RideWellnessComfort";
+import RidePaymentsAdvanced from "@/components/rides/RidePaymentsAdvanced";
+import RideAIAssistant from "@/components/rides/RideAIAssistant";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -105,6 +109,10 @@ const tabs = [
   { id: "driver-comm", label: "Comms", icon: MessageSquare },
   { id: "social-feat", label: "Community", icon: Users },
   { id: "ride-analytics", label: "Dashboard", icon: PieChart },
+  { id: "marketplace", label: "Marketplace", icon: Gavel },
+  { id: "wellness", label: "Wellness", icon: Heart },
+  { id: "pay-adv", label: "Pay+", icon: Wallet },
+  { id: "ai-assist", label: "AI", icon: Brain },
 ];
 
 export default function RideHubPage() {
@@ -195,6 +203,10 @@ export default function RideHubPage() {
             {activeTab === "driver-comm" && <div className="p-4"><RideDriverComm /></div>}
             {activeTab === "social-feat" && <div className="p-4"><RideSocialFeatures /></div>}
             {activeTab === "ride-analytics" && <div className="p-4"><RideAnalyticsDashboard /></div>}
+            {activeTab === "marketplace" && <div className="p-4"><RideMarketplace /></div>}
+            {activeTab === "wellness" && <div className="p-4"><RideWellnessComfort /></div>}
+            {activeTab === "pay-adv" && <div className="p-4"><RidePaymentsAdvanced /></div>}
+            {activeTab === "ai-assist" && <div className="p-4"><RideAIAssistant /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
