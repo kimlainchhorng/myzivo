@@ -22,6 +22,27 @@ const darkMapStyle = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
+const lightMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e0e0e0" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#dadada" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#c0c0c0" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8f5" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e8f5e9" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#c8e6c9" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+];
+
+function getMapStyle(): google.maps.MapTypeStyle[] {
+  // Detect dark mode from document
+  const isDark = document.documentElement.classList.contains("dark");
+  return isDark ? darkMapStyle : lightMapStyle;
+}
+
 interface RideMapProps {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
@@ -143,8 +164,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       center: pickupCoords || DEFAULT_CENTER,
       zoom: 13,
       disableDefaultUI: true,
-      zoomControl: true,
-      styles: darkMapStyle,
+      zoomControl: false,
+      styles: getMapStyle(),
       gestureHandling: "greedy",
       mapId: "zivo-ride-map",
     });
@@ -164,8 +185,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#22c55e",
+          scale: 8,
+          fillColor: "#10b981",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
@@ -180,11 +201,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#ef4444",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
+          scale: 8,
+          fillColor: "#10b981",
+          fillOpacity: 0.7,
+          strokeColor: "#065f46",
+          strokeWeight: 2,
         },
         title: "Dropoff",
       }));
@@ -216,9 +237,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     if (map && decodedRoute && decodedRoute.length > 1) {
       polylineRef.current = new google.maps.Polyline({
         path: decodedRoute,
-        strokeColor: "#22c55e",
-        strokeWeight: 5,
-        strokeOpacity: 0.85,
+        strokeColor: "#10b981",
+        strokeWeight: 4,
+        strokeOpacity: 0.9,
         geodesic: true,
         map,
       });
@@ -275,31 +296,65 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
 
   return (
     <div className={`relative overflow-hidden ${className || ""}`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-muted/40 to-background">
-        <div className="absolute inset-0 opacity-[0.07]" style={{
-          backgroundImage: "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }} />
-        <div className="absolute top-[30%] left-0 right-0 h-[3px] bg-primary/15 rounded-full" />
-        <div className="absolute top-[60%] left-[10%] right-[20%] h-[2px] bg-primary/10 rounded-full" />
-        <div className="absolute top-0 bottom-0 left-[35%] w-[3px] bg-primary/15 rounded-full" />
-        <div className="absolute top-0 bottom-0 right-[25%] w-[2px] bg-primary/10 rounded-full" />
+      {/* ZIVO-branded map background */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, hsl(160 40% 12%), hsl(200 30% 14%), hsl(160 30% 10%))' }}>
+        {/* Grid */}
+        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="zg" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#zg)"/>
+        </svg>
+        {/* Roads */}
+        <div className="absolute top-[35%] left-0 right-0 h-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
+        <div className="absolute top-[55%] left-[5%] right-[15%] h-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
+        <div className="absolute top-[72%] left-[10%] right-[5%] h-[4px] rounded-full" style={{background:'rgba(255,255,255,0.1)'}}/>
+        <div className="absolute top-0 bottom-0 left-[40%] w-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
+        <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
+        <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.07)'}}/>
+        <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] rounded-full origin-left rotate-[25deg]" style={{background:'rgba(255,255,255,0.06)'}}/>
+        {/* Water */}
+        <div className="absolute bottom-0 right-0 w-[35%] h-[25%] rounded-tl-[3rem]" style={{background:'rgba(16,185,129,0.12)'}}/>
 
-        {/* Pickup marker */}
-        <div className="absolute top-[40%] left-[45%]">
-          <div className="w-5 h-5 rounded-full bg-primary shadow-lg shadow-primary/40 animate-pulse border-2 border-background" />
-          <div className="absolute inset-0 w-5 h-5 rounded-full bg-primary/20 animate-ping" />
+        {/* Pickup marker with pulse */}
+        <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" />
+          <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-pulse" />
+          <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 border-2 border-background relative z-10" />
         </div>
 
+        {/* Dropoff marker */}
         {dropoffCoords && (
-          <div className="absolute top-[55%] left-[60%]">
-            <div className="w-4 h-4 rounded-full bg-destructive shadow-lg shadow-destructive/30 border-2 border-background" />
+          <div className="absolute top-[58%] left-[62%] -translate-x-1/2 -translate-y-1/2">
+            <div className="w-3.5 h-3.5 rounded-full bg-primary/70 shadow-md border-2 border-background" />
           </div>
         )}
 
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <div className="px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/30 text-[10px] text-muted-foreground font-medium">
-            Map preview
+        {/* Route line between markers */}
+        {dropoffCoords && (
+          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
+            <line x1="42%" y1="38%" x2="62%" y2="58%" stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray="8,4" opacity="0.4" />
+          </svg>
+        )}
+
+        {/* Simulated nearby driver dots */}
+        {[
+          { top: "28%", left: "55%" },
+          { top: "45%", left: "25%" },
+          { top: "65%", left: "50%" },
+        ].map((pos, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 rounded-full bg-primary/40"
+            style={{ top: pos.top, left: pos.left, animationDelay: `${i * 0.5}s` }}
+          >
+            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '3s', animationDelay: `${i * 0.7}s` }} />
+          </div>
+        ))}
+
+        {/* ZIVO branding */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="px-3 py-1.5 rounded-full bg-card/90 backdrop-blur-sm border border-border/30 shadow-sm">
+            <span className="text-[10px] font-bold text-primary">ZIVO</span>
+            <span className="text-[10px] text-muted-foreground ml-1">Map</span>
           </div>
         </div>
       </div>
