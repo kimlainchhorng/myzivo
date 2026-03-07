@@ -24,7 +24,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Affordable everyday rides",
     price: 24.15,
     seats: 4,
-    image: "/vehicles/economy-car.png",
+    image: "/vehicles/economy-car-v2.png",
   },
   {
     id: "xl",
@@ -45,7 +45,7 @@ const rideOptionsSeed: RideOption[] = [
     price: 11.40,
     oldPrice: 16.29,
     seats: 2,
-    image: "/vehicles/economy-car.png",
+    image: "/vehicles/economy-car-v2.png",
   },
   {
     id: "comfort",
@@ -75,7 +75,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Equipped with 1 child car seat",
     price: 39.95,
     seats: 4,
-    image: "/vehicles/economy-car.png",
+    image: "/vehicles/economy-car-v2.png",
   },
   {
     id: "xl-car-seat",
