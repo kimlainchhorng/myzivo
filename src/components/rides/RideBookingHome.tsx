@@ -516,6 +516,7 @@ export default function RideBookingHome() {
               setSheetExpanded(true);
               setViewStep("route-preview");
             }
+            else if (viewStep === "search") setViewStep("home");
             else navigate(-1);
           }}
           className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
@@ -885,6 +886,7 @@ export default function RideBookingHome() {
 
                   {/* Sticky bottom: payment + confirm */}
                   <div className="shrink-0 border-t border-border/15">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-2.5 pb-0.5">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-2.5 pb-1">
                       Payment
                     </p>
