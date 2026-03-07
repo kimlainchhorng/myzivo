@@ -164,8 +164,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       center: pickupCoords || DEFAULT_CENTER,
       zoom: 13,
       disableDefaultUI: true,
-      zoomControl: true,
-      styles: darkMapStyle,
+      zoomControl: false,
+      styles: getMapStyle(),
       gestureHandling: "greedy",
       mapId: "zivo-ride-map",
     });
