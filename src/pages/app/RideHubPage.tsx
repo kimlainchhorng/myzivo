@@ -1,28 +1,43 @@
 /**
- * RideHubPage - Central hub for ride features: history insights, ride pass, lost items
+ * RideHubPage - Central hub for all ride features
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, ChevronRight, Car } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
 import LostItemReport from "@/components/rides/LostItemReport";
 import RideReceiptCard from "@/components/rides/RideReceiptCard";
 import RateAndTipFlow from "@/components/rides/RateAndTipFlow";
-import SplitFareSheet from "@/components/rides/SplitFareSheet";
 import SurgePricingMap from "@/components/rides/SurgePricingMap";
+import ScheduleRideSheet from "@/components/rides/ScheduleRideSheet";
+import MultiStopRoute from "@/components/rides/MultiStopRoute";
+import InRideChat from "@/components/rides/InRideChat";
+import SafetyModePanel from "@/components/rides/SafetyModePanel";
+import SmartSavedPlaces from "@/components/rides/SmartSavedPlaces";
+import GroupRidePlanner from "@/components/rides/GroupRidePlanner";
+import FareComparisonTool from "@/components/rides/FareComparisonTool";
+import AccessibilityHub from "@/components/rides/AccessibilityHub";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const tabs = [
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "surge", label: "Demand", icon: Car },
+  { id: "compare", label: "Compare", icon: DollarSign },
+  { id: "schedule", label: "Schedule", icon: Calendar },
+  { id: "multi", label: "Multi-Stop", icon: Route },
+  { id: "group", label: "Group", icon: Users },
+  { id: "places", label: "Places", icon: MapPin },
+  { id: "chat", label: "Chat", icon: MessageSquare },
+  { id: "safety", label: "Safety", icon: Shield },
   { id: "pass", label: "Ride Pass", icon: Crown },
   { id: "receipt", label: "Receipt", icon: Receipt },
   { id: "rate", label: "Rate", icon: Star },
   { id: "lost", label: "Lost Item", icon: Search },
+  { id: "a11y", label: "Access", icon: Accessibility },
 ];
 
 export default function RideHubPage() {
@@ -66,47 +81,20 @@ export default function RideHubPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === "insights" && (
-              <div className="pt-4">
-                <RideHistoryInsights />
-              </div>
-            )}
-
-            {activeTab === "surge" && (
-              <div className="p-4">
-                <SurgePricingMap />
-              </div>
-            )}
-
-            {activeTab === "pass" && (
-              <div className="pt-4">
-                <RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} />
-              </div>
-            )}
-
-            {activeTab === "receipt" && (
-              <div className="p-4">
-                <RideReceiptCard />
-              </div>
-            )}
-
-            {activeTab === "rate" && (
-              <div className="p-4">
-                <RateAndTipFlow
-                  onSubmit={(data) => console.log("Rating submitted:", data)}
-                  onSkip={() => toast.info("Skipped rating")}
-                />
-              </div>
-            )}
-
-            {activeTab === "lost" && (
-              <div className="p-4">
-                <LostItemReport
-                  onSubmit={(data) => console.log("Lost item:", data)}
-                  onContactDriver={() => toast.info("Calling driver...")}
-                />
-              </div>
-            )}
+            {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
+            {activeTab === "surge" && <div className="p-4"><SurgePricingMap /></div>}
+            {activeTab === "compare" && <div className="p-4"><FareComparisonTool /></div>}
+            {activeTab === "schedule" && <div className="p-4"><ScheduleRideSheet /></div>}
+            {activeTab === "multi" && <div className="p-4"><MultiStopRoute /></div>}
+            {activeTab === "group" && <div className="p-4"><GroupRidePlanner /></div>}
+            {activeTab === "places" && <div className="p-4"><SmartSavedPlaces /></div>}
+            {activeTab === "chat" && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
+            {activeTab === "safety" && <div className="p-4"><SafetyModePanel /></div>}
+            {activeTab === "pass" && <div className="pt-4"><RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} /></div>}
+            {activeTab === "receipt" && <div className="p-4"><RideReceiptCard /></div>}
+            {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
+            {activeTab === "lost" && <div className="p-4"><LostItemReport onSubmit={(d) => console.log(d)} onContactDriver={() => toast.info("Calling...")} /></div>}
+            {activeTab === "a11y" && <div className="p-4"><AccessibilityHub /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
