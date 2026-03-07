@@ -100,49 +100,78 @@ const CookieConsent = () => {
             
             <CardContent className="p-4 md:p-6">
               {!showDetails ? (
-                <>
-                  <div className="flex items-start gap-4">
-                    <motion.div 
-                      whileHover={{ scale: 1.1, rotate: 10 }}
-                      className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shrink-0 shadow-lg"
-                    >
-                      <Cookie className="h-7 w-7 text-primary" />
-                    </motion.div>
-                    <div className="flex-1">
-                      <h3 className="font-display font-bold text-xl mb-2 flex items-center gap-2">We Value Your Privacy <Cookie className="w-5 h-5 text-amber-500" /></h3>
-                      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                        We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
-                        By clicking "Accept All", you consent to our use of cookies. 
-                        Read our{" "}
-                        <a href="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</a>.
+                isRideHub ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        We use cookies for core features and analytics.
                       </p>
-                      <div className="flex flex-wrap gap-3">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-primary-foreground font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
-                            Accept All
-                          </Button>
-                        </motion.div>
-                        <Button variant="outline" onClick={handleRejectAll} className="font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
-                          Reject All
-                        </Button>
-                        <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2 font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
-                          <Settings className="h-4 w-4" />
-                          Customize
-                        </Button>
-                      </div>
-                    </div>
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0 rounded-xl hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
+                        className="h-8 w-8 rounded-lg"
                         onClick={handleRejectAll}
                       >
                         <X className="h-4 w-4" />
                       </Button>
-                    </motion.div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button onClick={handleAcceptAll} className="h-9 rounded-lg text-xs font-semibold bg-gradient-to-r from-primary to-teal-400 text-primary-foreground">
+                        Accept All
+                      </Button>
+                      <Button variant="outline" onClick={handleRejectAll} className="h-9 rounded-lg text-xs font-semibold">
+                        Reject
+                      </Button>
+                      <Button variant="ghost" onClick={() => setShowDetails(true)} className="h-9 rounded-lg text-xs font-semibold">
+                        Customize
+                      </Button>
+                    </div>
                   </div>
-                </>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-4">
+                      <motion.div 
+                        whileHover={{ scale: 1.1, rotate: 10 }}
+                        className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shrink-0 shadow-lg"
+                      >
+                        <Cookie className="h-7 w-7 text-primary" />
+                      </motion.div>
+                      <div className="flex-1">
+                        <h3 className="font-display font-bold text-xl mb-2 flex items-center gap-2">We Value Your Privacy <Cookie className="w-5 h-5 text-amber-500" /></h3>
+                        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                          We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
+                          By clicking "Accept All", you consent to our use of cookies. 
+                          Read our{" "}
+                          <a href="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</a>.
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-primary-foreground font-semibold shadow-lg shadow-primary/30 rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
+                              Accept All
+                            </Button>
+                          </motion.div>
+                          <Button variant="outline" onClick={handleRejectAll} className="font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
+                            Reject All
+                          </Button>
+                          <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2 font-semibold rounded-xl touch-manipulation active:scale-[0.97] transition-all duration-200 min-h-[44px]">
+                            <Settings className="h-4 w-4" />
+                            Customize
+                          </Button>
+                        </div>
+                      </div>
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 rounded-xl hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
+                          onClick={handleRejectAll}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </>
+                )
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-5">
