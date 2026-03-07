@@ -665,13 +665,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ LIVE TRACKING ═══════ */}
         {viewStep === "tracking" && (
-          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1">
+          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               driverCoords={driverCoords}
             />
-            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-bold text-foreground">
