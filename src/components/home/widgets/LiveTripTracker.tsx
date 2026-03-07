@@ -74,19 +74,19 @@ export default function LiveTripTracker() {
         .from("food_orders")
         .select("id, status, delivery_address")
         .eq("customer_id", user.id)
-        .in("status", ["confirmed", "preparing", "ready", "picked_up", "out_for_delivery"])
+        .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"])
         .order("created_at", { ascending: false })
         .limit(1);
 
       if (orders?.[0]) {
         const o = orders[0];
-        const progressMap: Record<string, number> = { confirmed: 10, preparing: 30, ready: 55, picked_up: 70, out_for_delivery: 85 };
+        const progressMap: Record<string, number> = { confirmed: 10, preparing: 30, ready: 55, out_for_delivery: 85 };
         setActiveTrip({
           id: o.id,
           type: "food",
-          status: o.status === "picked_up" ? "out_for_delivery" : o.status,
-          destination: o.delivery_address?.slice(0, 30) || "Your address",
-          eta_minutes: o.status === "out_for_delivery" ? 5 : o.status === "picked_up" ? 8 : 15,
+          status: o.status === "out_for_delivery" ? "out_for_delivery" : o.status,
+          destination: (o.delivery_address as string)?.slice(0, 30) || "Your address",
+          eta_minutes: o.status === "out_for_delivery" ? 5 : 15,
           progress: progressMap[o.status] || 20,
         });
         return;
