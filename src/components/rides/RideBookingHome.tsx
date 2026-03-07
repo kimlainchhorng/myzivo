@@ -670,10 +670,10 @@ export default function RideBookingHome() {
               }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="shrink-0 bg-background relative z-10 -mt-6 rounded-t-[1.5rem] border-t border-border/30 shadow-[0_-12px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
-              style={{ touchAction: "none" }}
+              style={{ touchAction: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+              <div className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing">
                 <div className="w-10 h-1.5 rounded-full bg-muted-foreground/20" />
               </div>
 
