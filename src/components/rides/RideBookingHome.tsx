@@ -75,40 +75,49 @@ function MapSection({
   pickupCoords,
   dropoffCoords,
   driverCoords,
+  userLocation,
   onBack,
+  onLocateUser,
   compact = false,
   children,
 }: {
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
   driverCoords?: { lat: number; lng: number } | null;
+  userLocation?: { lat: number; lng: number } | null;
   onBack?: () => void;
+  onLocateUser?: () => void;
   compact?: boolean;
   children?: React.ReactNode;
 }) {
   return (
     <div className={cn(
       "relative w-full overflow-hidden flex-1",
-      compact ? "min-h-0" : "min-h-0"
+      compact ? "min-h-[250px]" : "min-h-[200px]"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
         dropoffCoords={dropoffCoords || null}
         driverCoords={driverCoords || null}
+        userLocation={userLocation || null}
         className="w-full h-full"
       />
       <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">+</button>
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors">−</button>
+        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
+        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
       <div className="absolute top-16 right-3 z-20">
-        <div className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+        <button
+          onClick={onLocateUser}
+          className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
+          aria-label="Center on my location"
+        >
           <Navigation className="w-4 h-4 text-primary" />
-        </div>
+        </button>
       </div>
       {onBack && (
         <div className="absolute top-16 left-3 z-20">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
         </div>
