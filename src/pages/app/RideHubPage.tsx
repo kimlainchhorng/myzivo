@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel, Camera } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -58,6 +58,10 @@ import RideMarketplace from "@/components/rides/RideMarketplace";
 import RideWellnessComfort from "@/components/rides/RideWellnessComfort";
 import RidePaymentsAdvanced from "@/components/rides/RidePaymentsAdvanced";
 import RideAIAssistant from "@/components/rides/RideAIAssistant";
+import RideSchedulingRecurring from "@/components/rides/RideSchedulingRecurring";
+import RideSafetyAdvanced from "@/components/rides/RideSafetyAdvanced";
+import RideLoyaltyRewards from "@/components/rides/RideLoyaltyRewards";
+import RideAccessibilityAdvanced from "@/components/rides/RideAccessibilityAdvanced";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -113,6 +117,10 @@ const tabs = [
   { id: "wellness", label: "Wellness", icon: Heart },
   { id: "pay-adv", label: "Pay+", icon: Wallet },
   { id: "ai-assist", label: "AI", icon: Brain },
+  { id: "scheduling", label: "Scheduling", icon: CalendarDays },
+  { id: "safety-adv2", label: "Dashcam", icon: Camera },
+  { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
+  { id: "a11y-adv", label: "A11y+", icon: Accessibility },
 ];
 
 export default function RideHubPage() {
@@ -207,6 +215,10 @@ export default function RideHubPage() {
             {activeTab === "wellness" && <div className="p-4"><RideWellnessComfort /></div>}
             {activeTab === "pay-adv" && <div className="p-4"><RidePaymentsAdvanced /></div>}
             {activeTab === "ai-assist" && <div className="p-4"><RideAIAssistant /></div>}
+            {activeTab === "scheduling" && <div className="p-4"><RideSchedulingRecurring /></div>}
+            {activeTab === "safety-adv2" && <div className="p-4"><RideSafetyAdvanced /></div>}
+            {activeTab === "loyalty-rwd" && <div className="p-4"><RideLoyaltyRewards /></div>}
+            {activeTab === "a11y-adv" && <div className="p-4"><RideAccessibilityAdvanced /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
