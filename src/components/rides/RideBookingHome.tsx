@@ -811,8 +811,13 @@ export default function RideBookingHome() {
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-              onBack={() => setViewStep("vehicle")}
-            />
+            >
+              <div className="absolute top-3 left-3 z-30">
+                <button onClick={() => setViewStep("vehicle")} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </MapSection>
             <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
 
