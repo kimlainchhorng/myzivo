@@ -4,7 +4,7 @@
  */
 import { useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
-import { LocalNotifications } from "@capacitor/local-notifications" with { type: "module" };
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { toast } from "sonner";
 
 export type RideEvent =
