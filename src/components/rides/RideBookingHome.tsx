@@ -87,8 +87,8 @@ function MapSection({
 }) {
   return (
     <div className={cn(
-      "relative w-full overflow-hidden",
-      compact ? "h-[50vh] min-h-[300px]" : "h-[48vh] min-h-[280px]"
+      "relative w-full overflow-hidden flex-1",
+      compact ? "min-h-0" : "min-h-0"
     )}>
       <RideMap
         pickupCoords={pickupCoords || null}
@@ -338,21 +338,22 @@ export default function RideBookingHome() {
   });
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-7rem)]">
+    <div className="flex flex-col h-[calc(100vh-var(--header-h,56px)-var(--tab-h,44px)-var(--nav-h,72px))] overflow-hidden">
       {/* Header provided by parent RideHubPage / AppLayout */}
 
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Map fills remaining space */}
             <MapSection compact />
 
-
-            <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
+            {/* Bottom panel — fixed height, no scroll */}
+            <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
               <button
                 onClick={() => setViewStep("search")}
-                className="w-full mt-4 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3.5 transition-colors hover:bg-muted/40 active:scale-[0.98]"
+                className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
               >
                 <MapPin className="w-5 h-5 text-foreground" />
                 <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
@@ -363,7 +364,7 @@ export default function RideBookingHome() {
                 </div>
               </button>
 
-              <div className="mt-5 space-y-0">
+              <div className="mt-3 space-y-0">
                 {savedPlaces.map((place, i) => {
                   const Icon = place.icon;
                   return (
@@ -371,7 +372,7 @@ export default function RideBookingHome() {
                       key={place.id}
                       onClick={() => handleSavedPlace(place.address)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-colors hover:bg-muted/10",
+                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
                         i < savedPlaces.length - 1 && "border-b border-border/15"
                       )}
                     >
@@ -500,13 +501,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ VEHICLE SELECTION ═══════ */}
         {viewStep === "vehicle" && (
-          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               onBack={() => setViewStep("search")}
             />
-            <div className="flex-1 bg-background relative z-10">
+            <div className="shrink-0 bg-background relative z-10">
               <div className="px-5 pt-4 pb-2">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
               </div>
@@ -534,13 +535,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ PICKUP CONFIRMATION ═══════ */}
         {viewStep === "pickup-confirm" && (
-          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="pickup-confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               onBack={() => setViewStep("vehicle")}
             />
-            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <h3 className="text-base font-bold text-foreground mb-3">Confirm pickup</h3>
 
               <AddressAutocomplete
@@ -664,13 +665,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ LIVE TRACKING ═══════ */}
         {viewStep === "tracking" && (
-          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1">
+          <motion.div key="tracking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               driverCoords={driverCoords}
             />
-            <div className="flex-1 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
+            <div className="shrink-0 bg-background relative z-10 -mt-3 rounded-t-[1.5rem] border-t border-border/30 px-4 pt-4 pb-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-bold text-foreground">
