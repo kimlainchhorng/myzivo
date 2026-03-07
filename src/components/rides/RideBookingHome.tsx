@@ -9,7 +9,7 @@ import {
   MapPin, Navigation, ChevronRight, ArrowLeft, Home,
   Building2, Car, Crown, Users, Zap,
   CheckCircle, History, ChevronDown, Clock,
-  CreditCard, User, Bell, CalendarClock, Map,
+  CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X
 } from "lucide-react";
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
@@ -172,7 +171,7 @@ function VehicleRow({
 export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { unreadCount } = useNotifications(20);
+  
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
@@ -340,57 +339,14 @@ export default function RideBookingHome() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
-      {/* ═══════ HEADER ═══════ */}
-      <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/30">
-        <div className="flex items-center justify-between h-14 px-4">
-          <button
-            onClick={() => viewStep === "home" ? navigate(-1) : setViewStep("home")}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <h1 className="font-bold text-lg text-foreground">Ride Hub</h1>
-          <button
-            onClick={() => navigate("/notifications")}
-            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
+      {/* Header provided by parent RideHubPage / AppLayout */}
 
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
           <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
-            <MapSection compact>
-              <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4">
-                <div className="flex items-center gap-1.5 bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-1 shadow-lg">
-                  {rideTabs.map((tab) => {
-                    const TabIcon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabChange(tab.id)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all touch-manipulation min-h-[36px]",
-                          isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                        )}
-                      >
-                        <TabIcon className="w-3.5 h-3.5" />
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </MapSection>
+            <MapSection compact />
+
 
             <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
