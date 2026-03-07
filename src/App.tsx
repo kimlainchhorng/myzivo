@@ -303,7 +303,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<PreserveQueryRedirect to="/rides/hub" />} />
-                <Route path="/home" element={<Login />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
 
                 {/* App Dashboard */}
