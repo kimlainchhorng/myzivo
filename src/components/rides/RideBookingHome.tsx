@@ -501,13 +501,13 @@ export default function RideBookingHome() {
 
         {/* ═══════ VEHICLE SELECTION ═══════ */}
         {viewStep === "vehicle" && (
-          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+          <motion.div key="vehicle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <MapSection
               pickupCoords={pickup}
               dropoffCoords={destination}
               onBack={() => setViewStep("search")}
             />
-            <div className="flex-1 bg-background relative z-10">
+            <div className="shrink-0 bg-background relative z-10">
               <div className="px-5 pt-4 pb-2">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
               </div>
