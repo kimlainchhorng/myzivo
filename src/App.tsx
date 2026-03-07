@@ -27,7 +27,6 @@ import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 
 // Eager load critical pages
-import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
@@ -303,7 +302,7 @@ const App = () => (
           <UTMProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<PreserveQueryRedirect to="/rides/hub" />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
 
