@@ -727,13 +727,8 @@ export default function RideBookingHome() {
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
             >
-              <div className="absolute top-3 left-3 z-30">
-                <button onClick={() => setViewStep("route-preview")} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
-                  <ArrowLeft className="w-4 h-4 text-foreground" />
-                </button>
-              </div>
-            </MapSection>
-            <div className="shrink-0 bg-background relative z-10 max-h-[55vh] overflow-y-auto">
+            />
+            <div className="shrink-0 bg-background relative z-10 -mt-8 rounded-t-[1.5rem] max-h-[55vh] overflow-y-auto shadow-[0_-12px_30px_hsl(var(--foreground)/0.08)]">
               {/* Trip summary bar */}
               {routeData && (
                 <div className="flex items-center gap-3 px-5 pt-3 pb-1">
