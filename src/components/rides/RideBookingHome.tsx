@@ -700,8 +700,6 @@ export default function RideBookingHome() {
             >
               {/* Drag handle */}
               <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 cursor-grab active:cursor-grabbing shrink-0" />
-                <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
-              </div>
 
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Route info — always visible */}
