@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → vehicle → pickup-confirm → matching → tracking → complete
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -90,6 +90,28 @@ function MapSection({
   compact?: boolean;
   children?: React.ReactNode;
 }) {
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const handleZoomIn = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setZoom(Math.min((map.getZoom() ?? 14) + 1, 20));
+  };
+
+  const handleZoomOut = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setZoom(Math.max((map.getZoom() ?? 14) - 1, 3));
+  };
+
+  const handleLocateClick = () => {
+    onLocateUser?.();
+    if (mapRef.current && userLocation) {
+      mapRef.current.panTo(userLocation);
+      mapRef.current.setZoom(15);
+    }
+  };
+
   return (
     <div className={cn(
       "relative w-full overflow-hidden flex-1",
@@ -100,21 +122,27 @@ function MapSection({
         dropoffCoords={dropoffCoords || null}
         driverCoords={driverCoords || null}
         userLocation={userLocation || null}
-        className="w-full h-full"
+        onMapReady={(map) => {
+          mapRef.current = map;
+        }}
+        className="absolute inset-0"
       />
+
       <div className="absolute right-3 bottom-3 z-20 flex flex-col gap-1">
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
-        <button className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
+        <button onClick={handleZoomIn} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom in">+</button>
+        <button onClick={handleZoomOut} className="w-9 h-9 rounded-lg bg-card border border-border/30 shadow-sm flex items-center justify-center text-foreground font-bold text-base hover:bg-card/80 transition-colors" aria-label="Zoom out">−</button>
       </div>
+
       <div className="absolute top-16 right-3 z-20">
         <button
-          onClick={onLocateUser}
+          onClick={handleLocateClick}
           className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
           aria-label="Center on my location"
         >
           <Navigation className="w-4 h-4 text-primary" />
         </button>
       </div>
+
       {onBack && (
         <div className="absolute top-16 left-3 z-20">
           <button onClick={onBack} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
