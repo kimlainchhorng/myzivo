@@ -11,10 +11,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { place_id } = await req.json();
+    const { address } = await req.json();
 
-    if (!place_id || typeof place_id !== "string" || place_id.length > 300) {
-      return new Response(JSON.stringify({ error: "Invalid place_id" }), {
+    if (!address || typeof address !== "string" || address.trim().length < 3 || address.length > 300) {
+      return new Response(JSON.stringify({ error: "Address must be 3-300 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -22,34 +22,33 @@ Deno.serve(async (req) => {
 
     const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
     if (!key) {
-      console.error("[maps-place-details] GOOGLE_MAPS_API_KEY not configured");
+      console.error("[maps-geocode] GOOGLE_MAPS_API_KEY not configured");
       return new Response(JSON.stringify({ error: "Maps service unavailable" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const url = `https://maps.googleapis.com/maps/api/place/details/json` +
-      `?place_id=${encodeURIComponent(place_id)}` +
-      `&fields=formatted_address,geometry/location,name` +
+    const url = `https://maps.googleapis.com/maps/api/geocode/json` +
+      `?address=${encodeURIComponent(address.trim())}` +
       `&key=${encodeURIComponent(key)}`;
 
-    console.log(`[maps-place-details] Fetching details for place_id: ${place_id}`);
+    console.log(`[maps-geocode] Geocoding: "${address.trim()}"`);
 
     const res = await fetch(url);
     const data = await res.json();
 
-    if (data.status !== "OK") {
-      console.error("[maps-place-details] Google API error:", data.status, data.error_message);
-      return new Response(JSON.stringify({ error: "Place details unavailable", google_status: data.status }), {
+    if (data.status !== "OK" || !data.results?.length) {
+      console.error("[maps-geocode] Google API error:", data.status, data.error_message);
+      return new Response(JSON.stringify({ error: "Geocoding failed", google_status: data.status }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const result = data.result;
-    const lat = result?.geometry?.location?.lat;
-    const lng = result?.geometry?.location?.lng;
+    const result = data.results[0];
+    const lat = result.geometry?.location?.lat;
+    const lng = result.geometry?.location?.lng;
 
     if (lat == null || lng == null) {
       return new Response(JSON.stringify({ error: "No coordinates found" }), {
@@ -58,19 +57,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[maps-place-details] Found: ${result?.formatted_address} (${lat}, ${lng})`);
+    console.log(`[maps-geocode] Found: ${result.formatted_address} (${lat}, ${lng})`);
 
     return new Response(JSON.stringify({
       ok: true,
-      address: result?.formatted_address ?? "",
-      name: result?.name ?? "",
+      address: result.formatted_address,
       lat,
       lng,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("[maps-place-details] Error:", e);
+    console.error("[maps-geocode] Error:", e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
