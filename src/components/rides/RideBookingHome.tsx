@@ -768,7 +768,7 @@ export default function RideBookingHome() {
                       </div>
                     ) : (
                       <Button
-                        className="w-full h-12 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        className="w-full h-14 rounded-[22px] text-lg font-semibold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                         onClick={() => setSheetExpanded(true)}
                       >
                         Choose a ride
