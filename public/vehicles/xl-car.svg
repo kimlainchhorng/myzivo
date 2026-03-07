@@ -1,31 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 72" fill="none">
-  <ellipse cx="58" cy="66" rx="50" ry="5" fill="#000" fill-opacity="0.10"/>
-  <path d="M8 44 L15 48 L15 62 L8 58 Z" fill="#484f58"/>
-  <rect x="15" y="34" width="86" height="26" rx="11" fill="#6e7681"/>
-  <ellipse cx="33" cy="60" rx="14" ry="5" fill="#000" fill-opacity="0.15"/>
-  <ellipse cx="86" cy="60" rx="14" ry="5" fill="#000" fill-opacity="0.15"/>
-  <path d="M26 34 C30 16, 82 16, 86 34 Z" fill="#6e7681"/>
-  <path d="M101 36 L111 41 L111 58 L101 58 Z" fill="#484f58"/>
-  <path d="M30 34 C33 18, 79 18, 82 34 Z" fill="#0d1117" fill-opacity="0.95"/>
-  <path d="M80 34 L86 34 L90 46 L80 38 Z" fill="#1c2128" fill-opacity="0.7"/>
-  <circle cx="33" cy="58" r="12" fill="#1f2937"/>
-  <circle cx="33" cy="58" r="7" fill="#f8fafc"/>
-  <circle cx="33" cy="58" r="3.2" fill="#374151"/>
-  <line x1="33" y1="51" x2="33" y2="65" stroke="#9ca3af" stroke-width="1" stroke-opacity="0.5"/>
-  <line x1="26" y1="58" x2="40" y2="58" stroke="#9ca3af" stroke-width="1" stroke-opacity="0.5"/>
-  <circle cx="86" cy="58" r="12" fill="#1f2937"/>
-  <circle cx="86" cy="58" r="7" fill="#f8fafc"/>
-  <circle cx="86" cy="58" r="3.2" fill="#374151"/>
-  <line x1="86" y1="51" x2="86" y2="65" stroke="#9ca3af" stroke-width="1" stroke-opacity="0.5"/>
-  <line x1="79" y1="58" x2="93" y2="58" stroke="#9ca3af" stroke-width="1" stroke-opacity="0.5"/>
-  <rect x="15" y="16" width="86" height="44" rx="11" fill="url(#g2)" fill-opacity="0.18"/>
-  <rect x="103" y="42" width="7" height="2.5" rx="1.2" fill="#fde68a" fill-opacity="0.92"/>
-  <rect x="8" y="42" width="5" height="2.5" rx="1.2" fill="#f85149" fill-opacity="0.8"/>
-  <path d="M36 20 Q58 16 76 20" stroke="white" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" fill="none">
   <defs>
-    <radialGradient id="g2" cx="35%" cy="30%" r="65%">
-      <stop offset="0%" stop-color="white" stop-opacity="1"/>
-      <stop offset="100%" stop-color="black" stop-opacity="0"/>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="body-suv" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9aa0a6"/>
+      <stop offset="60%" stop-color="#6e7681"/>
+      <stop offset="100%" stop-color="#565d64"/>
+    </linearGradient>
+    <linearGradient id="body-side-suv" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#828a91"/>
+      <stop offset="100%" stop-color="#4a5058"/>
+    </linearGradient>
+    <linearGradient id="front-suv" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#828a91"/>
+      <stop offset="100%" stop-color="#565d64"/>
+    </linearGradient>
+    <linearGradient id="roof-suv" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1d22"/>
+      <stop offset="100%" stop-color="#0d0f13"/>
+    </linearGradient>
+    <linearGradient id="glass-suv" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a8ab0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#1a4a68" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="wheel-rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#a0a0a0"/>
+    </linearGradient>
   </defs>
+
+  <!-- Ground shadow — wider for SUV -->
+  <ellipse cx="80" cy="85" rx="68" ry="6" fill="url(#shadow)"/>
+
+  <!-- === SUV BODY — taller, boxier === -->
+  <!-- Side panel -->
+  <path d="M14 50 L14 72 Q14 76 18 76 L122 76 Q126 76 126 72 L126 50 Z" fill="url(#body-side-suv)"/>
+  <!-- Top surface -->
+  <path d="M14 50 L30 40 L136 40 L126 50 Z" fill="url(#body-suv)"/>
+  <!-- Front face -->
+  <path d="M126 40 L136 40 L136 72 Q136 76 132 76 L126 76 L126 40 Z" fill="url(#front-suv)"/>
+
+  <!-- === SUV CABIN — boxy, tall === -->
+  <!-- Cabin side -->
+  <path d="M28 50 L36 22 L114 22 L122 50 Z" fill="url(#body-side-suv)"/>
+  <!-- Cabin roof (flat for SUV) -->
+  <path d="M36 22 L40 17 L120 17 L122 22 L114 22 Z" fill="url(#roof-suv)"/>
+  <!-- Cabin front pillar -->
+  <path d="M114 22 L120 17 L128 34 L126 40 L122 50 Z" fill="#0d0f13"/>
+
+  <!-- Windows — taller, more upright for SUV -->
+  <path d="M41 49 L47 24 L74 24 L74 49 Z" fill="url(#glass-suv)"/>
+  <path d="M78 49 L78 24 L110 24 L116 49 Z" fill="url(#glass-suv)"/>
+  <!-- Front windshield -->
+  <path d="M116 49 L110 24 L118 20 L126 38 Z" fill="url(#glass-suv)"/>
+  <!-- Divider -->
+  <line x1="76" y1="24" x2="76" y2="49" stroke="#0d0f13" stroke-width="2.5"/>
+
+  <!-- === BODY DETAILS === -->
+  <!-- Body crease -->
+  <path d="M16 62 L124 62" stroke="#565d64" stroke-width="1" stroke-opacity="0.5"/>
+  <!-- Door handles -->
+  <rect x="56" y="57" width="15" height="3.5" rx="1.75" fill="#828a91" stroke="#444" stroke-width="0.5"/>
+  <rect x="92" y="57" width="15" height="3.5" rx="1.75" fill="#828a91" stroke="#444" stroke-width="0.5"/>
+  <!-- Side mirror - bigger for SUV -->
+  <path d="M123 52 L130 49 L132 55 L124 57 Z" fill="#6e7681"/>
+  <!-- Front grille - boxy SUV -->
+  <rect x="128" y="56" width="7" height="11" rx="1.5" fill="#1a1d22"/>
+  <rect x="129" y="57.5" width="5" height="1.5" rx="0.5" fill="#444"/>
+  <rect x="129" y="60.5" width="5" height="1.5" rx="0.5" fill="#444"/>
+  <rect x="129" y="63.5" width="5" height="1.5" rx="0.5" fill="#444"/>
+  <!-- Headlight - wide SUV unit -->
+  <path d="M126 48 L135 48 L136 54 L126 55 Z" fill="#fff9c4" fill-opacity="0.88"/>
+  <rect x="126" y="46.5" width="8" height="1.5" rx="0.75" fill="#ffe066" fill-opacity="0.95"/>
+  <!-- Taillight -->
+  <rect x="14" y="50" width="3" height="12" rx="1" fill="#e03131" fill-opacity="0.9"/>
+  <!-- Roof rack (SUV detail) -->
+  <rect x="40" y="16.5" width="78" height="1" rx="0.5" fill="#555" fill-opacity="0.7"/>
+
+  <!-- Roof highlight -->
+  <path d="M44 18 Q80 14 118 18" stroke="white" stroke-width="1.5" stroke-opacity="0.2" fill="none" stroke-linecap="round"/>
+
+  <!-- === WHEELS — larger for SUV === -->
+  <!-- Rear wheel -->
+  <circle cx="40" cy="76" r="14" fill="#1a1a2e"/>
+  <circle cx="40" cy="76" r="10" fill="#2d2d3d"/>
+  <circle cx="40" cy="76" r="6.5" fill="url(#wheel-rim)"/>
+  <circle cx="40" cy="76" r="2.8" fill="#555"/>
+  <line x1="40" y1="69" x2="40" y2="83" stroke="#a0a0a0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="33" y1="76" x2="47" y2="76" stroke="#a0a0a0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="35.1" y1="71.1" x2="44.9" y2="80.9" stroke="#a0a0a0" stroke-width="1" stroke-opacity="0.4"/>
+  <line x1="44.9" y1="71.1" x2="35.1" y2="80.9" stroke="#a0a0a0" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- Front wheel -->
+  <circle cx="108" cy="76" r="14" fill="#1a1a2e"/>
+  <circle cx="108" cy="76" r="10" fill="#2d2d3d"/>
+  <circle cx="108" cy="76" r="6.5" fill="url(#wheel-rim)"/>
+  <circle cx="108" cy="76" r="2.8" fill="#555"/>
+  <line x1="108" y1="69" x2="108" y2="83" stroke="#a0a0a0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="101" y1="76" x2="115" y2="76" stroke="#a0a0a0" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="103.1" y1="71.1" x2="112.9" y2="80.9" stroke="#a0a0a0" stroke-width="1" stroke-opacity="0.4"/>
+  <line x1="112.9" y1="71.1" x2="103.1" y2="80.9" stroke="#a0a0a0" stroke-width="1" stroke-opacity="0.4"/>
 </svg>
