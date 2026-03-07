@@ -973,7 +973,7 @@ export default function RideBookingHome() {
                   </Button>
                 </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         </motion.div>
       )}
