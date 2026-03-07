@@ -24,7 +24,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Affordable everyday rides",
     price: 24.15,
     seats: 4,
-    image: "/vehicles/economy-car.svg",
+    image: "/vehicles/economy-car.png",
   },
   {
     id: "xl",
@@ -34,7 +34,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Extra space for groups",
     price: 28.33,
     seats: 6,
-    image: "/vehicles/xl-car.svg",
+    image: "/vehicles/xl-car.png",
   },
   {
     id: "share",
@@ -45,7 +45,7 @@ const rideOptionsSeed: RideOption[] = [
     price: 11.40,
     oldPrice: 16.29,
     seats: 2,
-    image: "/vehicles/share-car.svg",
+    image: "/vehicles/economy-car.png",
   },
   {
     id: "comfort",
@@ -55,7 +55,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Top-rated drivers, extra legroom",
     price: 45.61,
     seats: 4,
-    image: "/vehicles/comfort-car.svg",
+    image: "/vehicles/comfort-car.png",
   },
   {
     id: "luxury",
@@ -65,7 +65,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Premium with professional drivers",
     price: 73.23,
     seats: 4,
-    image: "/vehicles/black-car.svg",
+    image: "/vehicles/black-sedan.png",
   },
   {
     id: "car-seat",
@@ -75,7 +75,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Equipped with 1 child car seat",
     price: 39.95,
     seats: 4,
-    image: "/vehicles/car-seat-car.svg",
+    image: "/vehicles/economy-car.png",
   },
   {
     id: "xl-car-seat",
@@ -85,7 +85,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Larger vehicle with car seat",
     price: 47.11,
     seats: 6,
-    image: "/vehicles/xl-car.svg",
+    image: "/vehicles/xl-car.png",
   },
   {
     id: "black-car-seat",
@@ -95,7 +95,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Premium with car seat",
     price: 81.39,
     seats: 4,
-    image: "/vehicles/black-car.svg",
+    image: "/vehicles/black-car.png",
   },
   {
     id: "wav",
@@ -105,7 +105,7 @@ const rideOptionsSeed: RideOption[] = [
     description: "Wheelchair-accessible rides",
     price: 33.50,
     seats: 4,
-    image: "/vehicles/wav-car.svg",
+    image: "/vehicles/wav-car.png",
   },
 ];
 
