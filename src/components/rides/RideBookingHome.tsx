@@ -245,6 +245,20 @@ export default function RideBookingHome() {
   const [carSeatFilter, setCarSeatFilter] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
 
+  // Viewport height for dynamic sheet sizing
+  const [viewportHeight, setViewportHeight] = useState(800);
+  useEffect(() => {
+    const updateHeight = () => setViewportHeight(window.innerHeight);
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  const COLLAPSED_SHEET_HEIGHT = 260;
+  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560);
+  const BOTTOM_NAV_HEIGHT = 72;
+  const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
+
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
