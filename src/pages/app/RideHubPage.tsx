@@ -93,6 +93,10 @@ const tabs = [
   { id: "corporate", label: "Corporate", icon: Building2 },
   { id: "inclusive", label: "Inclusive", icon: Heart },
   { id: "routes", label: "Routes", icon: Brain },
+  { id: "adv-safety", label: "Safety+", icon: ShieldCheck },
+  { id: "travel", label: "Travel", icon: Plane },
+  { id: "family", label: "Family", icon: UserPlus },
+  { id: "subscribe", label: "Subscribe", icon: Gem },
 ];
 
 export default function RideHubPage() {
