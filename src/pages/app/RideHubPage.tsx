@@ -203,6 +203,10 @@ export default function RideHubPage() {
             {activeTab === "driver-comm" && <div className="p-4"><RideDriverComm /></div>}
             {activeTab === "social-feat" && <div className="p-4"><RideSocialFeatures /></div>}
             {activeTab === "ride-analytics" && <div className="p-4"><RideAnalyticsDashboard /></div>}
+            {activeTab === "marketplace" && <div className="p-4"><RideMarketplace /></div>}
+            {activeTab === "wellness" && <div className="p-4"><RideWellnessComfort /></div>}
+            {activeTab === "pay-adv" && <div className="p-4"><RidePaymentsAdvanced /></div>}
+            {activeTab === "ai-assist" && <div className="p-4"><RideAIAssistant /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
