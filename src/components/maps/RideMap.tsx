@@ -299,7 +299,7 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
       {/* ZIVO-branded map background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.05]">
         {/* Road grid pattern */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
               <path d="M 60 0 L 0 0 0 60" fill="none" stroke="hsl(var(--foreground))" strokeWidth="0.5" />
@@ -310,27 +310,22 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
 
         {/* Simulated roads */}
         <div className="absolute inset-0">
-          {/* Main horizontal road */}
-          <div className="absolute top-[35%] left-0 right-0 h-[6px] bg-foreground/10 rounded-full" />
-          <div className="absolute top-[55%] left-[5%] right-[15%] h-[4px] bg-foreground/8 rounded-full" />
-          <div className="absolute top-[72%] left-[10%] right-[5%] h-[5px] bg-foreground/10 rounded-full" />
+          <div className="absolute top-[35%] left-0 right-0 h-[6px] bg-foreground/15 rounded-full" />
+          <div className="absolute top-[55%] left-[5%] right-[15%] h-[4px] bg-foreground/12 rounded-full" />
+          <div className="absolute top-[72%] left-[10%] right-[5%] h-[5px] bg-foreground/15 rounded-full" />
+          <div className="absolute top-0 bottom-0 left-[40%] w-[6px] bg-foreground/15 rounded-full" />
+          <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[4px] bg-foreground/12 rounded-full" />
+          <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] bg-foreground/10 rounded-full" />
+          <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] bg-foreground/10 rounded-full origin-left rotate-[25deg]" />
+          <div className="absolute top-[60%] left-[50%] w-[40%] h-[3px] bg-foreground/10 rounded-full origin-left -rotate-[15deg]" />
           
-          {/* Main vertical road */}
-          <div className="absolute top-0 bottom-0 left-[40%] w-[6px] bg-foreground/10 rounded-full" />
-          <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[4px] bg-foreground/8 rounded-full" />
-          <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] bg-foreground/6 rounded-full" />
-          
-          {/* Diagonal roads */}
-          <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] bg-foreground/6 rounded-full origin-left rotate-[25deg]" />
-          <div className="absolute top-[60%] left-[50%] w-[40%] h-[3px] bg-foreground/6 rounded-full origin-left -rotate-[15deg]" />
-          
-          {/* Block fills for neighborhoods */}
-          <div className="absolute top-[8%] left-[5%] w-[30%] h-[22%] rounded-lg bg-foreground/[0.03]" />
-          <div className="absolute top-[42%] left-[45%] w-[25%] h-[15%] rounded-lg bg-foreground/[0.03]" />
-          <div className="absolute top-[62%] left-[8%] w-[20%] h-[18%] rounded-lg bg-foreground/[0.03]" />
+          {/* Block fills */}
+          <div className="absolute top-[8%] left-[5%] w-[30%] h-[22%] rounded-lg bg-primary/[0.04]" />
+          <div className="absolute top-[42%] left-[45%] w-[25%] h-[15%] rounded-lg bg-primary/[0.04]" />
+          <div className="absolute top-[62%] left-[8%] w-[20%] h-[18%] rounded-lg bg-primary/[0.04]" />
           
           {/* Water feature */}
-          <div className="absolute bottom-0 right-0 w-[35%] h-[25%] bg-primary/[0.06] rounded-tl-[3rem]" />
+          <div className="absolute bottom-0 right-0 w-[35%] h-[25%] bg-primary/[0.08] rounded-tl-[3rem]" />
         </div>
 
         {/* Pickup marker with pulse */}
