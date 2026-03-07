@@ -167,7 +167,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       zoomControl: false,
       styles: getMapStyle(),
       gestureHandling: "greedy",
-      mapId: "zivo-ride-map",
     });
   }, []);
 
