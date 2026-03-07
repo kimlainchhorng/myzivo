@@ -973,7 +973,7 @@ export default function RideBookingHome() {
                   </Button>
                 </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         </motion.div>
       )}
@@ -1217,8 +1217,6 @@ export default function RideBookingHome() {
               </div>
             </div>
           </div>
-        </div>
-      )}
 
           <div className="border-t border-border/15 pt-3 flex gap-2">
             <Button
@@ -1345,8 +1343,8 @@ export default function RideBookingHome() {
       {/* ═══════ TRIP COMPLETE — full-screen overlay ═══════ */}
       {(viewStep === "trip-complete" || viewStep === "complete") && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
-          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] overflow-y-auto px-5 pt-5 pb-4"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, maxHeight: '80vh' }}
         >
           <div className="text-center mb-6">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
@@ -1357,8 +1355,6 @@ export default function RideBookingHome() {
             <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
             <p className="text-sm text-muted-foreground mt-1">You've arrived</p>
           </div>
-        </div>
-      )}
 
           {/* Trip summary */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
@@ -1393,6 +1389,7 @@ export default function RideBookingHome() {
                 <span className="text-foreground">Visa •••• 4242</span>
               </div>
             </div>
+          </div>
 
           {/* Rate driver */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
