@@ -28,6 +28,9 @@ import RideSocialHub from "@/components/rides/RideSocialHub";
 import RideLoyaltyCard from "@/components/rides/RideLoyaltyCard";
 import RideSpendingAnalytics from "@/components/rides/RideSpendingAnalytics";
 import RideQuickSearch from "@/components/rides/RideQuickSearch";
+import RideTripHistory from "@/components/rides/RideTripHistory";
+import RideMapPreview from "@/components/rides/RideMapPreview";
+import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
