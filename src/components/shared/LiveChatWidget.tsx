@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { MessageCircle, X, Send, Bot, User, Headphones, Loader2, Sparkles, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,8 @@ const ESCALATION_CATEGORIES = [
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-support-chat`;
 
 const LiveChatWidget = () => {
+  const location = useLocation();
+  const isRidesPage = location.pathname.startsWith("/rides");
   const [isOpen, setIsOpen] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>("ai");
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -244,14 +247,14 @@ const LiveChatWidget = () => {
     <>
       {/* Floating Action Button */}
       <AnimatePresence>
-        {!isOpen && (
+        {!isOpen && !isRidesPage && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
             className="fixed right-4 md:right-6 z-50 w-14 h-14 bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-xl shadow-primary/25 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-            style={{ bottom: "calc(160px + env(safe-area-inset-bottom, 0px))" }}
+            style={{ bottom: "calc(72px + 88px + env(safe-area-inset-bottom, 0px))" }}
           >
             <MessageCircle className="w-6 h-6 text-primary-foreground" />
             {/* Online dot */}
