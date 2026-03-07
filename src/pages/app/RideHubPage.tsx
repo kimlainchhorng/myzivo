@@ -36,6 +36,9 @@ import { toast } from "sonner";
 
 const tabs = [
   { id: "search", label: "Search", icon: Zap },
+  { id: "map", label: "Map", icon: MapIcon },
+  { id: "history", label: "History", icon: History },
+  { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "tracking", label: "Live Trip", icon: Navigation },
   { id: "confirm", label: "Confirm", icon: Star },
