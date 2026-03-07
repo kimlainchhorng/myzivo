@@ -90,6 +90,10 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
+            {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
+            {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
+            {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
+            {activeTab === "driver" && <div className="p-4"><DriverProfileCard /></div>}
             {activeTab === "surge" && <div className="p-4"><SurgePricingMap /></div>}
             {activeTab === "compare" && <div className="p-4"><FareComparisonTool /></div>}
             {activeTab === "schedule" && <div className="p-4"><ScheduleRideSheet /></div>}
