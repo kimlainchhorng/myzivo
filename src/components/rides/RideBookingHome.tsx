@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → vehicle → pickup-confirm → matching → tracking → complete
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,7 @@ import RideMap from "@/components/maps/RideMap";
 import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 /* ─── Types ─── */
 interface PlaceData {

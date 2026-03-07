@@ -1,16 +1,15 @@
 /**
  * RideMap - Google Maps component for ride booking
  * Fetches API key from edge function, shows pickup/dropoff markers and route.
- * Uses AdvancedMarkerElement when available, falls back to standard markers.
  */
 /// <reference types="google.maps" />
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { decodePolyline } from "@/services/mapsApi";
 
 const DEFAULT_CENTER = { lat: 40.7128, lng: -73.9857 };
 
-const darkMapStyle = [
+const darkMapStyle: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -28,7 +27,7 @@ const darkMapStyle = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
-const lightMapStyle = [
+const lightMapStyle: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
@@ -44,7 +43,6 @@ const lightMapStyle = [
 ];
 
 function getMapStyle(): google.maps.MapTypeStyle[] {
-  // Detect dark mode from document
   const isDark = document.documentElement.classList.contains("dark");
   return isDark ? darkMapStyle : lightMapStyle;
 }
@@ -54,13 +52,16 @@ interface RideMapProps {
   dropoffCoords?: { lat: number; lng: number } | null;
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
+  userLocation?: { lat: number; lng: number } | null;
   className?: string;
+  onMapReady?: (map: google.maps.Map) => void;
 }
 
 // Singleton script loader
 let googleMapsPromise: Promise<void> | null = null;
 let googleMapsLoaded = false;
 let googleMapsAuthFailed = false;
+let authFailRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
 (window as any).gm_authFailure = () => {
   googleMapsAuthFailed = true;
@@ -70,6 +71,17 @@ let googleMapsAuthFailed = false;
     if (gmStyle) gmStyle.remove();
   }, 100);
   window.dispatchEvent(new CustomEvent('gmaps-auth-failure'));
+
+  // Auto-retry after 10s — reset the singleton so next render retries
+  if (!authFailRetryTimer) {
+    authFailRetryTimer = setTimeout(() => {
+      googleMapsAuthFailed = false;
+      googleMapsPromise = null;
+      googleMapsLoaded = false;
+      authFailRetryTimer = null;
+      window.dispatchEvent(new CustomEvent('gmaps-auth-retry'));
+    }, 10_000);
+  }
 };
 
 function loadGoogleMapsScript(apiKey: string): Promise<void> {
@@ -96,15 +108,20 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, className }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady }: RideMapProps) {
   const [apiKey, setApiKey] = useState<string>(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(googleMapsAuthFailed);
 
   useEffect(() => {
     const handleAuthFail = () => setFailed(true);
+    const handleAuthRetry = () => setFailed(false);
     window.addEventListener('gmaps-auth-failure', handleAuthFail);
-    return () => window.removeEventListener('gmaps-auth-failure', handleAuthFail);
+    window.addEventListener('gmaps-auth-retry', handleAuthRetry);
+    return () => {
+      window.removeEventListener('gmaps-auth-failure', handleAuthFail);
+      window.removeEventListener('gmaps-auth-retry', handleAuthRetry);
+    };
   }, []);
 
   useEffect(() => {
@@ -140,41 +157,89 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
 
   if (!isReady) {
     return (
-      <div className={`bg-gradient-to-b from-muted/80 to-background flex items-center justify-center ${className || ""}`}>
+      <div className={`w-full h-full bg-gradient-to-b from-muted/80 to-background flex items-center justify-center ${className || ""}`}>
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  return <NativeGoogleMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} routePolyline={routePolyline} driverCoords={driverCoords} className={className} />;
+  return (
+    <NativeGoogleMap
+      pickupCoords={pickupCoords}
+      dropoffCoords={dropoffCoords}
+      routePolyline={routePolyline}
+      driverCoords={driverCoords}
+      userLocation={userLocation}
+      className={className}
+      onMapReady={onMapReady}
+    />
+  );
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, className }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
+  const userMarkerRef = useRef<google.maps.Marker | null>(null);
 
-  // Decode polyline if it's an encoded string
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
     if (typeof routePolyline === "string") return decodePolyline(routePolyline);
     return routePolyline;
   }, [routePolyline]);
 
-  // Initialize map
+  // Initialize map — use requestAnimationFrame to ensure container has layout
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
-    mapRef.current = new google.maps.Map(mapContainerRef.current, {
-      center: pickupCoords || DEFAULT_CENTER,
-      zoom: 13,
-      disableDefaultUI: true,
-      zoomControl: false,
-      styles: getMapStyle(),
-      gestureHandling: "greedy",
+
+    const initMap = () => {
+      const container = mapContainerRef.current;
+      if (!container) return;
+
+      // Ensure container has dimensions before init
+      const rect = container.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        // Retry on next frame
+        requestAnimationFrame(initMap);
+        return;
+      }
+
+      const center = pickupCoords || userLocation || DEFAULT_CENTER;
+      const map = new google.maps.Map(container, {
+        center,
+        zoom: 14,
+        disableDefaultUI: true,
+        zoomControl: false,
+        styles: getMapStyle(),
+        gestureHandling: "greedy",
+      });
+      mapRef.current = map;
+      onMapReady?.(map);
+
+      // Trigger resize after short delay to ensure tiles load
+      setTimeout(() => {
+        google.maps.event.trigger(map, "resize");
+        map.setCenter(center);
+      }, 300);
+    };
+
+    requestAnimationFrame(initMap);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ResizeObserver — trigger map resize when container dimensions change
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    const map = mapRef.current;
+    if (!container || !map) return;
+
+    const observer = new ResizeObserver(() => {
+      google.maps.event.trigger(map, "resize");
     });
-  }, []);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [mapRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update markers and bounds
   useEffect(() => {
@@ -232,7 +297,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [pickupCoords, dropoffCoords, driverCoords]);
 
-  // Update polyline with animated gradient
+  // Update polyline
   useEffect(() => {
     const map = mapRef.current;
     if (polylineRef.current) {
@@ -282,7 +347,37 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [driverCoords]);
 
-  return <div ref={mapContainerRef} className={`absolute inset-0 ${className || ""}`} />;
+  // User location blue dot
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (userLocation && !pickupCoords) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setPosition(userLocation);
+      } else {
+        userMarkerRef.current = new google.maps.Marker({
+          position: userLocation,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: "#4285F4",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2.5,
+          },
+          title: "You",
+          zIndex: 50,
+        });
+      }
+    } else if (userMarkerRef.current) {
+      userMarkerRef.current.setMap(null);
+      userMarkerRef.current = null;
+    }
+  }, [userLocation, pickupCoords]);
+
+  return <div ref={mapContainerRef} className={`w-full h-full ${className || ""}`} />;
 }
 
 // Premium fallback when map is unavailable
@@ -300,15 +395,12 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
   }, []);
 
   return (
-    <div className={`relative overflow-hidden ${className || ""}`}>
-      {/* ZIVO-branded map background */}
+    <div className={`relative overflow-hidden w-full h-full ${className || ""}`}>
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, hsl(160 40% 12%), hsl(200 30% 14%), hsl(160 30% 10%))' }}>
-        {/* Grid */}
         <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs><pattern id="zg" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/></pattern></defs>
           <rect width="100%" height="100%" fill="url(#zg)"/>
         </svg>
-        {/* Roads */}
         <div className="absolute top-[35%] left-0 right-0 h-[5px] rounded-full" style={{background:'rgba(255,255,255,0.12)'}}/>
         <div className="absolute top-[55%] left-[5%] right-[15%] h-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
         <div className="absolute top-[72%] left-[10%] right-[5%] h-[4px] rounded-full" style={{background:'rgba(255,255,255,0.1)'}}/>
@@ -316,46 +408,36 @@ function MapFallback({ pickupCoords, dropoffCoords, className }: Pick<RideMapPro
         <div className="absolute top-[10%] bottom-[20%] left-[65%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
         <div className="absolute top-[5%] bottom-[10%] left-[20%] w-[3px] rounded-full" style={{background:'rgba(255,255,255,0.07)'}}/>
         <div className="absolute top-[15%] left-[10%] w-[45%] h-[3px] rounded-full origin-left rotate-[25deg]" style={{background:'rgba(255,255,255,0.06)'}}/>
-        {/* Water */}
         <div className="absolute bottom-0 right-0 w-[35%] h-[25%] rounded-tl-[3rem]" style={{background:'rgba(16,185,129,0.12)'}}/>
 
-        {/* Pickup marker with pulse */}
         <div className="absolute top-[38%] left-[42%] -translate-x-1/2 -translate-y-1/2">
           <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" />
           <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-pulse" />
           <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/40 border-2 border-background relative z-10" />
         </div>
 
-        {/* Dropoff marker */}
         {dropoffCoords && (
           <div className="absolute top-[58%] left-[62%] -translate-x-1/2 -translate-y-1/2">
             <div className="w-3.5 h-3.5 rounded-full bg-primary/70 shadow-md border-2 border-background" />
           </div>
         )}
 
-        {/* Route line between markers */}
         {dropoffCoords && (
           <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
             <line x1="42%" y1="38%" x2="62%" y2="58%" stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray="8,4" opacity="0.4" />
           </svg>
         )}
 
-        {/* Simulated nearby driver dots */}
         {[
           { top: "28%", left: "55%" },
           { top: "45%", left: "25%" },
           { top: "65%", left: "50%" },
         ].map((pos, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary/40"
-            style={{ top: pos.top, left: pos.left, animationDelay: `${i * 0.5}s` }}
-          >
+          <div key={i} className="absolute w-2 h-2 rounded-full bg-primary/40" style={{ top: pos.top, left: pos.left, animationDelay: `${i * 0.5}s` }}>
             <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '3s', animationDelay: `${i * 0.7}s` }} />
           </div>
         ))}
 
-        {/* ZIVO branding */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
           <div className="px-3 py-1.5 rounded-full bg-card/90 backdrop-blur-sm border border-border/30 shadow-sm">
             <span className="text-[10px] font-bold text-primary">ZIVO</span>
