@@ -574,12 +574,32 @@ export default function RideBookingHome() {
               dropoffCoords={destination}
               onBack={() => setViewStep("search")}
             />
-            <div className="shrink-0 bg-background relative z-10">
-              <div className="px-5 pt-4 pb-2">
+            <div className="shrink-0 bg-background relative z-10 max-h-[55vh] overflow-y-auto">
+              <div className="px-5 pt-4 pb-2 flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
+                <button
+                  onClick={() => {
+                    setCarSeatFilter(!carSeatFilter);
+                    // Reset selection if current selection doesn't match filter
+                    if (!carSeatFilter && !currentVehicle.carSeat) {
+                      setSelectedVehicle("car-seat");
+                    } else if (carSeatFilter && currentVehicle.carSeat) {
+                      setSelectedVehicle("economy");
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                    carSeatFilter
+                      ? "bg-sky-500/10 text-sky-600 border-sky-500/30"
+                      : "bg-muted/20 text-muted-foreground border-border/30"
+                  )}
+                >
+                  <Baby className="w-3.5 h-3.5" />
+                  Car seat
+                </button>
               </div>
               <div className="border-t border-border/15">
-                {vehicleOptions.map((v) => (
+                {filteredVehicles.map((v) => (
                   <VehicleRow key={v.id} vehicle={v} selected={selectedVehicle === v.id} onSelect={() => setSelectedVehicle(v.id)} />
                 ))}
               </div>
@@ -593,7 +613,7 @@ export default function RideBookingHome() {
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                   onClick={() => setViewStep("pickup-confirm")}
                 >
-                  Confirm {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
+                  Choose {currentVehicle.name} · ${currentVehicle.price.toFixed(2)}
                 </Button>
               </div>
             </div>
