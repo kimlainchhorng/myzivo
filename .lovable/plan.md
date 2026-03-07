@@ -1,82 +1,60 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+# Fix Ride Hub Layout Architecture
 
+## Root Cause
 
----
+The layout breaks because the flex chain from viewport to map container is incomplete. Here is the chain:
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+```text
+AppLayout root:  min-h-screen flex flex-col   ← NOT bounded height
+  └─ <main>:     flex-1 pt-14 pb-nav flex flex-col overflow-hidden
+    └─ RideHubPage content: flex-1 flex flex-col min-h-0 overflow-hidden
+      └─ motion.div: flex-1 flex flex-col min-h-0 overflow-hidden
+        └─ RideBookingHome: flex flex-col flex-1 min-h-0
+          └─ MapSection (absolute inset-0) ← NEEDS parent with real height
+```
 
+`min-h-screen` on the root does NOT constrain height — it allows the container to grow beyond viewport. So `flex-1` children never get a bounded height, meaning `absolute inset-0` resolves to 0 height → map fails to initialize.
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+Previous fixes tried `h-[calc(100dvh-140px)]` which guessed the header+tab offset incorrectly, or `flex-1 min-h-0` which still depends on the broken root.
 
+## Fix
 
----
+Two files need changes:
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+### 1. `src/components/app/AppLayout.tsx` — Add `fixedHeight` prop
 
+Add an optional `fixedHeight?: boolean` prop. When true, change the root div from `min-h-screen` to `h-[100dvh] overflow-hidden`. This bounds the flex chain so all `flex-1` children resolve to real pixel heights.
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
+```tsx
+// Root div class changes:
+// fixedHeight=true:  "h-[100dvh] bg-background flex flex-col overflow-hidden overscroll-none tap-highlight-none"
+// fixedHeight=false: "min-h-screen bg-background flex flex-col overscroll-none tap-highlight-none" (current)
+```
 
+No other pages are affected because they don't pass `fixedHeight`.
 
----
+### 2. `src/pages/app/RideHubPage.tsx` — Pass `fixedHeight` when book tab is active
 
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
+Line 134: Add `fixedHeight={activeTab === "book"}` to `<AppLayout>`.
 
+### 3. `src/components/rides/RideBookingHome.tsx` — Simplify containers
 
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
+Now that the flex chain is bounded:
 
+- **Line 502** (root): Keep `flex flex-col flex-1 min-h-0 overflow-hidden` — works correctly with bounded parent.
+- **Line 506** (home step): Keep `relative flex-1 min-h-0 overflow-hidden flex flex-col` — MapSection absolute will have real height.
+- **Line 656** (route-preview): Change back to `relative flex-1 min-h-0 overflow-hidden` — no hardcoded calc needed.
+- **Lines 134-136** (MapSection compact): Ensure single layer: `absolute inset-0` with inner `absolute inset-0` for RideMap. Remove any extra nesting.
 
----
+### Why this works
 
-## 5. Security: `console.warn` with User Data in Production (1 fix)
+With `h-[100dvh]` on the root, the flex chain resolves:
+- Root: exactly viewport height
+- Main: fills remaining space after header (flex-1, bounded)
+- Tab bar is sticky, content div fills remaining (flex-1, bounded)
+- RideBookingHome fills remaining (flex-1, bounded)
+- MapSection `absolute inset-0` → parent has real height → map container has real width/height → Google Maps initializes successfully
+- Bottom sheet `absolute` with `bottom: calc(72px + safe-area)` → works because parent has real dimensions
 
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
