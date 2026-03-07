@@ -726,8 +726,8 @@ export default function RideBookingHome() {
               pickupCoords={pickup}
               dropoffCoords={destination}
               routePolyline={routeData?.polyline}
-            >
             />
+
             <div className="shrink-0 bg-background relative z-10 -mt-8 rounded-t-[1.5rem] max-h-[55vh] overflow-y-auto shadow-[0_-12px_30px_hsl(var(--foreground)/0.08)]">
               {/* Trip summary bar */}
               {routeData && (
