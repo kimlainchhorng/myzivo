@@ -294,7 +294,7 @@ export default function RideBookingHome() {
   const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 
   const COLLAPSED_SHEET_HEIGHT = 230;
-  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560);
+  const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
 
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
@@ -668,8 +668,8 @@ export default function RideBookingHome() {
         >
           <MapSection
             compact
-            pickupCoords={viewStep !== "home" ? pickup : null}
-            dropoffCoords={viewStep !== "home" ? destination : null}
+            pickupCoords={pickup}
+            dropoffCoords={["route-preview", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
             userLocation={userLocation}
             onLocateUser={handleLocateUser}
             routePolyline={viewStep !== "home" ? (routeData?.polyline ?? null) : null}
@@ -862,7 +862,7 @@ export default function RideBookingHome() {
           }}
         >
           <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
-          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">−</button>
+          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">-</button>
         </div>
       )}
 
@@ -873,14 +873,10 @@ export default function RideBookingHome() {
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={0.12}
           onDragEnd={(_, info) => {
-            const shouldExpand = info.offset.y < -80 || info.velocity.y < -500;
             const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
-            if (shouldExpand) setSheetExpanded(true);
-            else if (shouldCollapse) setSheetExpanded(false);
+            if (shouldCollapse) setSheetExpanded(false);
           }}
-          animate={{
-            height: sheetExpanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
-          }}
+          animate={{ height: COLLAPSED_SHEET_HEIGHT }}
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
           className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
           style={{
@@ -977,7 +973,7 @@ export default function RideBookingHome() {
                   </Button>
                 </motion.div>
               )}
-            </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       )}
@@ -1221,6 +1217,8 @@ export default function RideBookingHome() {
               </div>
             </div>
           </div>
+        </div>
+      )}
 
           <div className="border-t border-border/15 pt-3 flex gap-2">
             <Button
@@ -1347,8 +1345,8 @@ export default function RideBookingHome() {
       {/* ═══════ TRIP COMPLETE — full-screen overlay ═══════ */}
       {(viewStep === "trip-complete" || viewStep === "complete") && (
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background overflow-y-auto px-4 pt-6 pb-4"
-          style={{ top: HEADER_HEIGHT }}
+          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+          style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`, height: 220 }}
         >
           <div className="text-center mb-6">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
@@ -1359,6 +1357,8 @@ export default function RideBookingHome() {
             <h3 className="text-xl font-bold text-foreground">Trip Complete!</h3>
             <p className="text-sm text-muted-foreground mt-1">You've arrived</p>
           </div>
+        </div>
+      )}
 
           {/* Trip summary */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
@@ -1393,7 +1393,6 @@ export default function RideBookingHome() {
                 <span className="text-foreground">Visa •••• 4242</span>
               </div>
             </div>
-          </div>
 
           {/* Rate driver */}
           <div className="rounded-2xl bg-card border border-border/30 p-4 mb-4">
