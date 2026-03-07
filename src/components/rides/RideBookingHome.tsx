@@ -5,17 +5,20 @@
  * Screen 3: Map with route labels + confirmed vehicle selection
  */
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Navigation, ChevronRight, ArrowLeft, Home,
-  Building2, Plane, Car, Crown, Users, Shield, Zap,
-  CheckCircle, History, ChevronDown, Menu, Clock,
-  CreditCard, User
+  Building2, Car, Crown, Users, Zap,
+  CheckCircle, History, ChevronDown, Clock,
+  CreditCard, User, Bell, CalendarClock, Map
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 
 /* ─── Data ─── */
 const savedPlaces = [
@@ -66,6 +69,14 @@ const vehicleOptions = [
 ];
 
 type ViewStep = "home" | "search" | "vehicle" | "confirm";
+type RideTab = "book" | "reserve" | "map" | "history";
+
+const rideTabs: { id: RideTab; label: string; icon: React.ElementType }[] = [
+  { id: "book", label: "Book", icon: Car },
+  { id: "reserve", label: "Reserve", icon: CalendarClock },
+  { id: "map", label: "Map", icon: Map },
+  { id: "history", label: "History", icon: History },
+];
 
 /* ─── Nearby Cars (animated) ─── */
 function NearbyCars() {
@@ -116,39 +127,35 @@ function MapView({
   pickup,
   dropoff,
   onBack,
-  showMenu = false,
   compact = false,
+  children,
 }: {
   showRoute?: boolean;
   showLabels?: boolean;
   pickup?: string;
   dropoff?: string;
   onBack?: () => void;
-  showMenu?: boolean;
   compact?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <div className={cn(
       "relative w-full overflow-hidden bg-background",
-      compact ? "h-[40vh] min-h-[240px]" : "h-[48vh] min-h-[280px]"
+      compact ? "h-[50vh] min-h-[300px]" : "h-[48vh] min-h-[280px]"
     )}>
       {/* Surface tint */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
 
       {/* Street grid */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
-        {/* Horizontal streets */}
         {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((y) => (
           <line key={`h${y}`} x1="0" y1={y} x2="200" y2={y} stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
         ))}
-        {/* Vertical streets */}
         {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((x) => (
           <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
         ))}
-        {/* Main avenue */}
         <line x1="12" y1="188" x2="188" y2="24" stroke="hsl(var(--border))" strokeWidth="1.2" opacity="0.16" />
 
-        {/* Route polyline (when showing route) */}
         {showRoute && (
           <>
             <motion.path
@@ -162,7 +169,6 @@ function MapView({
               animate={{ pathLength: 1 }}
               transition={{ duration: 1.2, ease: "easeInOut" }}
             />
-            {/* Route shadow */}
             <path
               d="M 65 140 L 65 110 L 90 80 L 120 55 L 145 35"
               stroke="hsl(var(--primary))"
@@ -185,7 +191,6 @@ function MapView({
       {/* Route markers */}
       {showRoute && (
         <>
-          {/* Pickup marker */}
           <div className="absolute z-20" style={{ left: "32%", top: "68%" }}>
             <div className="-translate-x-1/2 -translate-y-1/2">
               <div className="w-4 h-4 rounded-full bg-foreground border-[3px] border-card shadow-lg" />
@@ -205,7 +210,6 @@ function MapView({
             )}
           </div>
 
-          {/* Dropoff marker */}
           <div className="absolute z-20" style={{ left: "72%", top: "17%" }}>
             <div className="-translate-x-1/2 -translate-y-1/2">
               <div className="w-5 h-5 rounded-sm bg-foreground shadow-lg flex items-center justify-center">
@@ -251,27 +255,26 @@ function MapView({
       </div>
 
       {/* ZIVO locator */}
-      <div className="absolute top-3 right-3 z-20">
+      <div className="absolute top-16 right-3 z-20">
         <div className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
           <Navigation className="w-4 h-4 text-primary" />
         </div>
       </div>
 
-      {/* Menu / Back button */}
-      <div className="absolute top-3 left-3 z-20">
-        {onBack ? (
+      {/* Back button overlay (for inner screens) */}
+      {onBack && (
+        <div className="absolute top-16 left-3 z-20">
           <button
             onClick={onBack}
             className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center"
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
-        ) : showMenu ? (
-          <button className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
-            <Menu className="w-4 h-4 text-foreground" />
-          </button>
-        ) : null}
-      </div>
+        </div>
+      )}
+
+      {/* Slot for floating tabs or other overlays */}
+      {children}
     </div>
   );
 }
@@ -295,12 +298,9 @@ function VehicleRow({
         selected ? "bg-muted/30" : "hover:bg-muted/10"
       )}
     >
-      {/* Car icon area */}
       <div className="w-16 h-12 flex items-center justify-center shrink-0">
         <Icon className="w-10 h-10 text-foreground" />
       </div>
-
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-base font-bold text-foreground">{vehicle.name}</span>
@@ -314,13 +314,9 @@ function VehicleRow({
           {vehicle.desc && <span className="hidden sm:inline"> · {vehicle.desc}</span>}
         </p>
       </div>
-
-      {/* Price */}
       <div className="text-right shrink-0">
         <p className="text-base font-bold text-foreground">{vehicle.price}</p>
       </div>
-
-      {/* Selection indicator */}
       {selected && (
         <motion.div
           initial={{ scale: 0 }}
@@ -336,7 +332,12 @@ function VehicleRow({
 
 /* ─── Main Component ─── */
 export default function RideBookingHome() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { unreadCount } = useNotifications(20);
+
   const [viewStep, setViewStep] = useState<ViewStep>("home");
+  const [activeTab, setActiveTab] = useState<RideTab>("book");
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [focusedInput, setFocusedInput] = useState<"pickup" | "destination" | null>(null);
@@ -345,6 +346,8 @@ export default function RideBookingHome() {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
   const filteredSuggestions = autocompleteResults.filter((r) =>
     r.primary.toLowerCase().includes(
@@ -361,10 +364,44 @@ export default function RideBookingHome() {
     [focusedInput]
   );
 
+  const handleTabChange = (tab: RideTab) => {
+    setActiveTab(tab);
+    if (tab === "reserve") navigate("/rides/reserve");
+    else if (tab === "history") navigate("/rides/history");
+  };
+
   const currentVehicle = vehicleOptions.find((v) => v.id === selectedVehicle)!;
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
+      {/* ═══════ FIXED HEADER BAR ═══════ */}
+      <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/30">
+        <div className="flex items-center justify-between h-14 px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+
+          <h1 className="font-bold text-lg text-foreground">Ride Hub</h1>
+
+          <button
+            onClick={() => navigate("/notifications")}
+            className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
+            aria-label="Notifications"
+          >
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
       <AnimatePresence mode="wait">
         {/* ═══════ HOME SCREEN ═══════ */}
         {viewStep === "home" && (
@@ -375,13 +412,38 @@ export default function RideBookingHome() {
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col flex-1"
           >
-            {/* Map */}
-            <MapView showMenu compact />
+            {/* Map with floating tabs */}
+            <MapView compact>
+              {/* Floating Ride Mode Tabs */}
+              <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4">
+                <div className="flex items-center gap-1.5 bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-1 shadow-lg">
+                  {rideTabs.map((tab) => {
+                    const TabIcon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all touch-manipulation min-h-[36px]",
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                        )}
+                      >
+                        <TabIcon className="w-3.5 h-3.5" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </MapView>
 
-            {/* Bottom content */}
+            {/* Bottom booking panel */}
             <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               {/* Greeting */}
-              <h2 className="text-xl font-black text-foreground">{greeting}, Anton</h2>
+              <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
 
               {/* Where to? bar */}
               <button
@@ -579,7 +641,6 @@ export default function RideBookingHome() {
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col flex-1"
           >
-            {/* Map with route */}
             <MapView
               showRoute
               pickup={pickup || "Home"}
@@ -587,7 +648,6 @@ export default function RideBookingHome() {
               onBack={() => setViewStep("search")}
             />
 
-            {/* Vehicle list */}
             <div className="flex-1 bg-background relative z-10">
               <div className="px-5 pt-4 pb-2">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
@@ -604,14 +664,12 @@ export default function RideBookingHome() {
                 ))}
               </div>
 
-              {/* Payment row */}
               <div className="px-4 py-3 border-t border-border/15 flex items-center gap-3">
                 <CreditCard className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground flex-1">Visa •••• 4242</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
 
-              {/* CTA */}
               <div className="px-4 pb-4 pt-2">
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
@@ -632,7 +690,6 @@ export default function RideBookingHome() {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1"
           >
-            {/* Map with labeled route */}
             <MapView
               showRoute
               showLabels
@@ -641,7 +698,6 @@ export default function RideBookingHome() {
               onBack={() => setViewStep("vehicle")}
             />
 
-            {/* Confirmation content */}
             <div className="flex-1 bg-background relative z-10">
               <div className="px-5 pt-4 pb-2">
                 <h3 className="text-base font-bold text-foreground">Choose a ride</h3>
@@ -658,7 +714,6 @@ export default function RideBookingHome() {
                 ))}
               </div>
 
-              {/* Confirm CTA */}
               <div className="px-4 pb-4 pt-2">
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
