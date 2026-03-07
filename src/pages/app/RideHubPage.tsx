@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, CreditCard, User } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -20,11 +20,19 @@ import SmartSavedPlaces from "@/components/rides/SmartSavedPlaces";
 import GroupRidePlanner from "@/components/rides/GroupRidePlanner";
 import FareComparisonTool from "@/components/rides/FareComparisonTool";
 import AccessibilityHub from "@/components/rides/AccessibilityHub";
+import RideBookingConfirmation from "@/components/rides/RideBookingConfirmation";
+import LiveTripTracker from "@/components/rides/LiveTripTracker";
+import RideWallet from "@/components/rides/RideWallet";
+import DriverProfileCard from "@/components/rides/DriverProfileCard";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const tabs = [
   { id: "insights", label: "Insights", icon: BarChart3 },
+  { id: "tracking", label: "Live Trip", icon: Navigation },
+  { id: "confirm", label: "Confirm", icon: Star },
+  { id: "wallet", label: "Wallet", icon: Wallet },
+  { id: "driver", label: "Driver", icon: User },
   { id: "surge", label: "Demand", icon: Car },
   { id: "compare", label: "Compare", icon: DollarSign },
   { id: "schedule", label: "Schedule", icon: Calendar },
@@ -82,6 +90,10 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
+            {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
+            {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
+            {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
+            {activeTab === "driver" && <div className="p-4"><DriverProfileCard /></div>}
             {activeTab === "surge" && <div className="p-4"><SurgePricingMap /></div>}
             {activeTab === "compare" && <div className="p-4"><FareComparisonTool /></div>}
             {activeTab === "schedule" && <div className="p-4"><ScheduleRideSheet /></div>}
