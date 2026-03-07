@@ -50,6 +50,10 @@ import RideAdvancedSafety from "@/components/rides/RideAdvancedSafety";
 import RideTravelIntegration from "@/components/rides/RideTravelIntegration";
 import RideFamilyAccounts from "@/components/rides/RideFamilyAccounts";
 import RideSubscriptionHub from "@/components/rides/RideSubscriptionHub";
+import RideSmartPricing from "@/components/rides/RideSmartPricing";
+import RideDriverComm from "@/components/rides/RideDriverComm";
+import RideSocialFeatures from "@/components/rides/RideSocialFeatures";
+import RideAnalyticsDashboard from "@/components/rides/RideAnalyticsDashboard";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -97,6 +101,10 @@ const tabs = [
   { id: "travel", label: "Travel", icon: Plane },
   { id: "family", label: "Family", icon: UserPlus },
   { id: "subscribe", label: "Subscribe", icon: Gem },
+  { id: "smart-price", label: "Pricing", icon: DollarSign },
+  { id: "driver-comm", label: "Comms", icon: MessageSquare },
+  { id: "social-feat", label: "Community", icon: Users },
+  { id: "ride-analytics", label: "Dashboard", icon: PieChart },
 ];
 
 export default function RideHubPage() {
@@ -183,6 +191,10 @@ export default function RideHubPage() {
             {activeTab === "travel" && <div className="p-4"><RideTravelIntegration /></div>}
             {activeTab === "family" && <div className="p-4"><RideFamilyAccounts /></div>}
             {activeTab === "subscribe" && <div className="p-4"><RideSubscriptionHub /></div>}
+            {activeTab === "smart-price" && <div className="p-4"><RideSmartPricing /></div>}
+            {activeTab === "driver-comm" && <div className="p-4"><RideDriverComm /></div>}
+            {activeTab === "social-feat" && <div className="p-4"><RideSocialFeatures /></div>}
+            {activeTab === "ride-analytics" && <div className="p-4"><RideAnalyticsDashboard /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
