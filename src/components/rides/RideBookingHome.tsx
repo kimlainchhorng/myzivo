@@ -133,9 +133,9 @@ function MapSection({
   return (
     <div className={cn(
       "relative w-full overflow-hidden",
-      compact ? "absolute inset-0 h-full w-full" : "flex-[3] min-h-[200px] max-h-[65vh]"
+      compact ? "absolute inset-0" : "flex-[3] min-h-[200px] max-h-[65vh]"
     )}>
-      <div className="absolute inset-0 h-full w-full">
+      <div className="absolute inset-0">
         <RideMap
           pickupCoords={pickupCoords || null}
           dropoffCoords={dropoffCoords || null}
@@ -503,7 +503,7 @@ export default function RideBookingHome() {
       <AnimatePresence mode="wait">
         {/* ═══════ HOME ═══════ */}
         {viewStep === "home" && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} className="relative flex-1 min-h-0 overflow-hidden flex flex-col">
             <MapSection compact userLocation={userLocation} onLocateUser={handleLocateUser} />
 
             <div className="shrink-0 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-2 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
@@ -653,7 +653,7 @@ export default function RideBookingHome() {
 
         {/* ═══════ ROUTE PREVIEW + VEHICLE (merged draggable sheet) ═══════ */}
         {viewStep === "route-preview" && (
-          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="relative h-[calc(100dvh-140px)] overflow-hidden">
+          <motion.div key="route-preview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="relative flex-1 min-h-0 overflow-hidden">
             {/* Back button */}
             <button onClick={() => setViewStep("search")} className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center">
               <ArrowLeft className="w-4 h-4 text-foreground" />
