@@ -38,6 +38,10 @@ import RidePreferences from "@/components/rides/RidePreferences";
 import RideEcoTracker from "@/components/rides/RideEcoTracker";
 import RideBusinessManager from "@/components/rides/RideBusinessManager";
 import RideFeedbackCenter from "@/components/rides/RideFeedbackCenter";
+import RideSpecialtyModes from "@/components/rides/RideSpecialtyModes";
+import RideSmartAnalytics from "@/components/rides/RideSmartAnalytics";
+import RideEntertainment from "@/components/rides/RideEntertainment";
+import RideGifting from "@/components/rides/RideGifting";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
