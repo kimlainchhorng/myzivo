@@ -282,7 +282,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [driverCoords]);
 
-  return <div ref={mapContainerRef} className={className} style={{ width: "100%", height: "100%" }} />;
+  return <div ref={mapContainerRef} className={`absolute inset-0 ${className || ""}`} />;
 }
 
 // Premium fallback when map is unavailable
