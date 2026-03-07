@@ -44,7 +44,6 @@ import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
 import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
 import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
 import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
-import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
