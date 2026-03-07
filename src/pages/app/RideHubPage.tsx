@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
