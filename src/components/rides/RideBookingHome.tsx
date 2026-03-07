@@ -117,6 +117,7 @@ function MapView({
   dropoff,
   onBack,
   showMenu = false,
+  compact = false,
 }: {
   showRoute?: boolean;
   showLabels?: boolean;
@@ -124,9 +125,14 @@ function MapView({
   dropoff?: string;
   onBack?: () => void;
   showMenu?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className="relative w-full h-[48vh] min-h-[280px] bg-muted/20 overflow-hidden">
+    <div className={cn(
+      "relative w-full overflow-hidden",
+      compact ? "h-[40vh] min-h-[240px]" : "h-[48vh] min-h-[280px]",
+      "bg-muted/20"
+    )}>
       {/* Street grid */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
         {/* Horizontal streets */}
@@ -368,10 +374,10 @@ export default function RideBookingHome() {
             className="flex flex-col flex-1"
           >
             {/* Map */}
-            <MapView showMenu />
+            <MapView showMenu compact />
 
             {/* Bottom content */}
-            <div className="flex-1 bg-background relative z-10 px-5 pt-5 pb-4">
+            <div className="flex-1 bg-background relative z-10 -mt-5 rounded-t-[2rem] border-t border-border/30 px-5 pt-5 pb-4 shadow-[0_-10px_24px_hsl(var(--foreground)/0.08)]">
               {/* Greeting */}
               <h2 className="text-xl font-black text-foreground">{greeting}, Anton</h2>
 
