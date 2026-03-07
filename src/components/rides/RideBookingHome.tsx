@@ -232,6 +232,7 @@ export default function RideBookingHome() {
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [carSeatFilter, setCarSeatFilter] = useState(false);
 
   // Matching state
   const [matchPhase, setMatchPhase] = useState<"searching" | "found">("searching");
