@@ -372,6 +372,7 @@ export default function RideBookingHome() {
       setIsLoadingRoute(false);
     }
 
+    setSheetExpanded(false);
     setViewStep("route-preview");
   };
 
