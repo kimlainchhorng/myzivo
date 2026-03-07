@@ -181,7 +181,9 @@ function VehicleRow({
 export default function RideBookingHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+  const { getCurrentLocation } = useCurrentLocation();
+
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
