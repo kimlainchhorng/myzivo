@@ -129,29 +129,31 @@ function MapView({
 }) {
   return (
     <div className={cn(
-      "relative w-full overflow-hidden",
-      compact ? "h-[40vh] min-h-[240px]" : "h-[48vh] min-h-[280px]",
-      "bg-muted/20"
+      "relative w-full overflow-hidden bg-background",
+      compact ? "h-[40vh] min-h-[240px]" : "h-[48vh] min-h-[280px]"
     )}>
+      {/* Surface tint */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
+
       {/* Street grid */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
         {/* Horizontal streets */}
-        {[20, 45, 70, 95, 120, 145, 170].map((y) => (
-          <line key={`h${y}`} x1="0" y1={y} x2="200" y2={y} stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.3" />
+        {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((y) => (
+          <line key={`h${y}`} x1="0" y1={y} x2="200" y2={y} stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
         ))}
         {/* Vertical streets */}
-        {[25, 55, 85, 115, 145, 175].map((x) => (
-          <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.3" />
+        {[18, 38, 58, 78, 98, 118, 138, 158, 178].map((x) => (
+          <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.2" />
         ))}
-        {/* Diagonal avenue */}
-        <line x1="10" y1="190" x2="180" y2="20" stroke="hsl(var(--border))" strokeWidth="1.2" opacity="0.2" />
+        {/* Main avenue */}
+        <line x1="12" y1="188" x2="188" y2="24" stroke="hsl(var(--border))" strokeWidth="1.2" opacity="0.16" />
 
         {/* Route polyline (when showing route) */}
         {showRoute && (
           <>
             <motion.path
               d="M 65 140 L 65 110 L 90 80 L 120 55 L 145 35"
-              stroke="hsl(var(--foreground))"
+              stroke="hsl(var(--primary))"
               strokeWidth="3"
               fill="none"
               strokeLinecap="round"
@@ -163,10 +165,10 @@ function MapView({
             {/* Route shadow */}
             <path
               d="M 65 140 L 65 110 L 90 80 L 120 55 L 145 35"
-              stroke="hsl(var(--foreground))"
-              strokeWidth="6"
+              stroke="hsl(var(--primary))"
+              strokeWidth="7"
               fill="none"
-              opacity="0.08"
+              opacity="0.14"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
