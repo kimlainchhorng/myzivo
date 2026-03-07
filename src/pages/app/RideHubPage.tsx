@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -46,6 +46,10 @@ import RideRewardsGamification from "@/components/rides/RideRewardsGamification"
 import RideCorporateFleet from "@/components/rides/RideCorporateFleet";
 import RideAccessibilityPlus from "@/components/rides/RideAccessibilityPlus";
 import RideRouteIntelligence from "@/components/rides/RideRouteIntelligence";
+import RideAdvancedSafety from "@/components/rides/RideAdvancedSafety";
+import RideTravelIntegration from "@/components/rides/RideTravelIntegration";
+import RideFamilyAccounts from "@/components/rides/RideFamilyAccounts";
+import RideSubscriptionHub from "@/components/rides/RideSubscriptionHub";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -89,6 +93,10 @@ const tabs = [
   { id: "corporate", label: "Corporate", icon: Building2 },
   { id: "inclusive", label: "Inclusive", icon: Heart },
   { id: "routes", label: "Routes", icon: Brain },
+  { id: "adv-safety", label: "Safety+", icon: ShieldCheck },
+  { id: "travel", label: "Travel", icon: Plane },
+  { id: "family", label: "Family", icon: UserPlus },
+  { id: "subscribe", label: "Subscribe", icon: Gem },
 ];
 
 export default function RideHubPage() {
@@ -171,6 +179,10 @@ export default function RideHubPage() {
             {activeTab === "corporate" && <div className="p-4"><RideCorporateFleet /></div>}
             {activeTab === "inclusive" && <div className="p-4"><RideAccessibilityPlus /></div>}
             {activeTab === "routes" && <div className="p-4"><RideRouteIntelligence /></div>}
+            {activeTab === "adv-safety" && <div className="p-4"><RideAdvancedSafety /></div>}
+            {activeTab === "travel" && <div className="p-4"><RideTravelIntegration /></div>}
+            {activeTab === "family" && <div className="p-4"><RideFamilyAccounts /></div>}
+            {activeTab === "subscribe" && <div className="p-4"><RideSubscriptionHub /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
