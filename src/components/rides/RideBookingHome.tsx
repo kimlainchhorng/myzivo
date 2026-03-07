@@ -2,7 +2,7 @@
  * RideBookingHome — Complete ride booking flow
  * Flow: home → search → route-preview → ride-options → confirm-ride → searching → driver-assigned → driver-en-route → trip-in-progress → trip-complete
  */
-import { useState, useCallback, useEffect, useRef, useId } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -193,7 +193,6 @@ function VehicleRow({
   originalPrice?: number;
   surgeActive?: boolean;
 }) {
-  const Icon = vehicle.icon;
   const etaDate = new Date(Date.now() + vehicle.etaMin * 60000);
   const etaHour = etaDate.getHours();
   const etaMin = etaDate.getMinutes();
@@ -212,13 +211,13 @@ function VehicleRow({
           : "hover:bg-muted/10 border-l-4 border-l-transparent"
       )}
     >
-      <motion.div
-        className="w-14 h-10 shrink-0 flex items-center justify-center"
-        animate={{ scale: selected ? 1.08 : 1 }}
-        transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      >
-        <VehicleSVG variant={getCarVariant(vehicle.id)} className="w-14 h-10" />
-      </motion.div>
+      <div className="w-14 shrink-0 flex items-center justify-center">
+        <img
+          src={VEHICLE_IMAGES[vehicle.id] ?? "/vehicles/economy-car.svg"}
+          alt={vehicle.name}
+          className="w-14 h-auto"
+        />
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-bold text-foreground">{vehicle.name}</span>
@@ -256,198 +255,16 @@ function VehicleRow({
   );
 }
 
-/* ─── Vehicle SVG Illustrations ─── */
-type CarVariant = "sedan-gray" | "sedan-white" | "sedan-black" | "suv-gray" | "sedan-silver";
-
-function VehicleSVG({ variant, className }: { variant: CarVariant; className?: string }) {
-  const uid = useId().replace(/:/g, "");
-  const gradId = `body-grad-${variant}-${uid}`;
-  const glowId = `glow-${variant}-${uid}`;
-
-  const configs: Record<CarVariant, {
-    body: string; frontFace: string; rearFace: string; roof: string; windshield: string;
-    wheelOuter: string; hubcap: string; suv: boolean;
-  }> = {
-    "sedan-gray":   { body: "#8b949e", frontFace: "#6e7681", rearFace: "#57606a", roof: "#0d1117", windshield: "#1c2128", wheelOuter: "#1f2937", hubcap: "#f8fafc", suv: false },
-    "sedan-white":  { body: "#e6edf3", frontFace: "#c9d1d9", rearFace: "#b1bac4", roof: "#0d1117", windshield: "#1c2128", wheelOuter: "#30363d", hubcap: "#ffffff", suv: false },
-    "sedan-black":  { body: "#21262d", frontFace: "#161b22", rearFace: "#0d1117", roof: "#010409", windshield: "#0d1117", wheelOuter: "#30363d", hubcap: "#f0f6fc", suv: false },
-    "suv-gray":     { body: "#6e7681", frontFace: "#484f58", rearFace: "#3d444d", roof: "#0d1117", windshield: "#1c2128", wheelOuter: "#1f2937", hubcap: "#f8fafc", suv: true  },
-    "sedan-silver": { body: "#b1bac4", frontFace: "#8b949e", rearFace: "#768390", roof: "#0d1117", windshield: "#1c2128", wheelOuter: "#21262d", hubcap: "#ffffff", suv: false },
-  };
-  const c = configs[variant] ?? configs["sedan-gray"];
-  const isSuv = c.suv;
-
-  // ── Layout constants ──
-  // Body rectangle (main side silhouette)
-  const bX  = isSuv ?  5 :  7;
-  const bY  = isSuv ? 19 : 21;
-  const bW  = isSuv ? 60 : 56;
-  const bH  = isSuv ? 14 : 12;
-  const bRx = isSuv ?  8 :  7;
-
-  // Cabin (hump on top of body)
-  const cL  = isSuv ? 14 : 16;
-  const cR  = isSuv ? 58 : 56;
-  const cTY = isSuv ?  9 : 10;
-
-  // Roof glass (sits inside cabin)
-  const rL  = isSuv ? 16 : 18;
-  const rR  = isSuv ? 56 : 54;
-  const rTY = isSuv ? 10 : 11;
-  const rBY = bY;
-
-  // Front face (3D depth — right side of car)
-  const ffX   = bX + bW;
-  const ffW   = isSuv ?  7 :  6;
-  const ffTop = bY + 3;
-  const ffBot = bY + bH - 2;
-
-  // Rear face (left side of car — small depth)
-  const rfX   = bX - 4;
-  const rfTop = bY + 4;
-  const rfBot = bY + bH - 2;
-
-  // Wheels
-  const rearCx  = isSuv ? 17 : 18;
-  const frontCx = isSuv ? 57 : 56;
-  const wCy     = isSuv ? 34 : 33;
-  const tireR   = isSuv ?  8 :  7;
-  const hubR    = isSuv ?  4.5 :  4;
-  const axleR   = isSuv ?  2.2 :  2;
-
-  // Wheel arch cutout depths
-  const archDepth = isSuv ? 5 : 4;
-
-  return (
-    <svg viewBox="0 0 80 52" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <defs>
-        <radialGradient id={gradId} cx="32%" cy="28%" r="68%">
-          <stop offset="0%"   stopColor="white" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="black"  stopOpacity="0.08" />
-        </radialGradient>
-        <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="white" stopOpacity="0.12" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* ── Ground shadow ── */}
-      <ellipse cx="39" cy="49" rx={isSuv ? 35 : 32} ry="3" fill="black" fillOpacity="0.12" />
-
-      {/* ── Rear face (left depth) ── */}
-      <path
-        d={`M${rfX} ${rfTop} L${bX} ${rfTop - 2} L${bX} ${rfBot + 2} L${rfX} ${rfBot} Z`}
-        fill={c.rearFace}
-      />
-
-      {/* ── Body base ── */}
-      <rect x={bX} y={bY} width={bW} height={bH} rx={bRx} fill={c.body} />
-
-      {/* ── Wheel arch cutouts (darkening under wheel arches) ── */}
-      <ellipse cx={rearCx}  cy={bY + bH} rx={tireR + 1} ry={archDepth} fill="black" fillOpacity="0.18" />
-      <ellipse cx={frontCx} cy={bY + bH} rx={tireR + 1} ry={archDepth} fill="black" fillOpacity="0.18" />
-
-      {/* ── Cabin hump ── */}
-      <path
-        d={`M${cL} ${bY} C${cL + 4} ${cTY}, ${cR - 4} ${cTY}, ${cR} ${bY} Z`}
-        fill={c.body}
-      />
-
-      {/* ── Front face (3D depth) ── */}
-      <path
-        d={`M${ffX} ${bY + 1} L${ffX + ffW} ${bY + 4} L${ffX + ffW} ${ffBot + 3} L${ffX} ${ffBot} Z`}
-        fill={c.frontFace}
-      />
-
-      {/* ── Front cabin depth (front face of cabin) ── */}
-      <path
-        d={`M${cR} ${bY} L${cR + (isSuv ? 5 : 4)} ${bY + 3} L${cR + (isSuv ? 5 : 4)} ${bY + 6} L${cR} ${bY} Z`}
-        fill={c.frontFace}
-        fillOpacity="0.7"
-      />
-
-      {/* ── Roof glass ── */}
-      <path
-        d={`M${rL} ${rBY} C${rL + 2} ${rTY}, ${rR - 2} ${rTY}, ${rR} ${rBY} Z`}
-        fill={c.roof}
-        fillOpacity="0.95"
-      />
-
-      {/* ── Windshield (front glass — slightly lighter than roof) ── */}
-      <path
-        d={`M${cR - (isSuv ? 10 : 8)} ${bY} L${cR} ${bY} L${cR + (isSuv ? 3 : 2)} ${bY + 5} L${cR - (isSuv ? 10 : 8)} ${bY + 2} Z`}
-        fill={c.windshield}
-        fillOpacity="0.75"
-      />
-
-      {/* ── Rear wheels (render behind body) ── */}
-      <circle cx={rearCx}  cy={wCy} r={tireR}  fill={c.wheelOuter} />
-      <circle cx={rearCx}  cy={wCy} r={hubR}   fill={c.hubcap} />
-      <circle cx={rearCx}  cy={wCy} r={axleR}  fill="#374151" />
-
-      {/* ── Front wheels ── */}
-      <circle cx={frontCx} cy={wCy} r={tireR}  fill={c.wheelOuter} />
-      <circle cx={frontCx} cy={wCy} r={hubR}   fill={c.hubcap} />
-      <circle cx={frontCx} cy={wCy} r={axleR}  fill="#374151" />
-
-      {/* ── Studio lighting gradient overlay ── */}
-      <rect x={bX} y={cTY} width={bW} height={bH + (bY - cTY)} rx={bRx} fill={`url(#${gradId})`} />
-
-      {/* ── LED headlight strip (front face) ── */}
-      <rect
-        x={ffX + 1}
-        y={ffTop + 2}
-        width={ffW - 2}
-        height="2"
-        rx="1"
-        fill="#fde68a"
-        fillOpacity="0.92"
-      />
-
-      {/* ── Taillight strip (rear face) ── */}
-      <rect
-        x={rfX}
-        y={rfTop + 2}
-        width="3"
-        height="2"
-        rx="1"
-        fill="#f85149"
-        fillOpacity="0.8"
-      />
-
-      {/* ── Roof glass highlight ── */}
-      <path
-        d={`M${rL + 4} ${rTY + 2} Q${(rL + rR) / 2} ${rTY - 1} ${rR - 4} ${rTY + 2}`}
-        stroke="white"
-        strokeWidth="1.2"
-        strokeOpacity="0.32"
-        strokeLinecap="round"
-        fill="none"
-      />
-
-      {/* ── Hubcap spoke detail ── */}
-      {[rearCx, frontCx].map((cx) => (
-        <g key={cx}>
-          <line x1={cx}        y1={wCy - hubR + 1} x2={cx}        y2={wCy + hubR - 1} stroke="#9ca3af" strokeWidth="0.7" strokeOpacity="0.5" />
-          <line x1={cx - hubR + 1} y1={wCy}        x2={cx + hubR - 1} y2={wCy}        stroke="#9ca3af" strokeWidth="0.7" strokeOpacity="0.5" />
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-const getCarVariant = (id: string): CarVariant => {
-  const map: Record<string, CarVariant> = {
-    "economy": "sedan-gray",
-    "xl": "suv-gray",
-    "share": "sedan-white",
-    "comfort": "sedan-silver",
-    "luxury": "sedan-black",
-    "car-seat": "sedan-gray",
-    "xl-car-seat": "suv-gray",
-    "black-car-seat": "sedan-black",
-  };
-  return map[id] ?? "sedan-gray";
+/* ─── Vehicle image map ─── */
+const VEHICLE_IMAGES: Record<string, string> = {
+  "economy":        "/vehicles/economy-car.svg",
+  "xl":             "/vehicles/xl-car.svg",
+  "share":          "/vehicles/share-car.svg",
+  "comfort":        "/vehicles/comfort-car.svg",
+  "luxury":         "/vehicles/black-car.svg",
+  "car-seat":       "/vehicles/economy-car.svg",
+  "xl-car-seat":    "/vehicles/xl-car.svg",
+  "black-car-seat": "/vehicles/black-car.svg",
 };
 
 const etaTime = (minutesFromNow: number) =>
@@ -1239,7 +1056,11 @@ export default function RideBookingHome() {
               >
                 {/* Left: Vehicle SVG */}
                 <div className="w-14 shrink-0 flex items-center justify-center">
-                  <VehicleSVG variant={getCarVariant(v.id)} className="w-14 h-10" />
+                  <img
+                    src={VEHICLE_IMAGES[v.id] ?? "/vehicles/economy-car.svg"}
+                    alt={v.name}
+                    className="w-14 h-auto"
+                  />
                 </div>
 
                 {/* Center: Name + meta */}
