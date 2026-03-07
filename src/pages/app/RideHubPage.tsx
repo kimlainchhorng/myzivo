@@ -31,6 +31,9 @@ import RideQuickSearch from "@/components/rides/RideQuickSearch";
 import RideTripHistory from "@/components/rides/RideTripHistory";
 import RideMapPreview from "@/components/rides/RideMapPreview";
 import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
+import RideDriverMatch from "@/components/rides/RideDriverMatch";
+import RideSafetyCenter from "@/components/rides/RideSafetyCenter";
+import RideNotificationCenter from "@/components/rides/RideNotificationCenter";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
