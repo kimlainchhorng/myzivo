@@ -243,6 +243,7 @@ export default function RideBookingHome() {
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [carSeatFilter, setCarSeatFilter] = useState(false);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
 
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
