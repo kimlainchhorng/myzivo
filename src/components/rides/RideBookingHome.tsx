@@ -825,7 +825,7 @@ export default function RideBookingHome() {
               routePolyline={routeData?.polyline}
             >
               <div className="absolute top-3 left-3 z-30">
-                <button onClick={() => setViewStep("vehicle")} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
+                <button onClick={() => { setSheetExpanded(true); setViewStep("route-preview"); }} className="w-9 h-9 rounded-full bg-card border border-border/30 shadow-sm flex items-center justify-center" aria-label="Go back">
                   <ArrowLeft className="w-4 h-4 text-foreground" />
                 </button>
               </div>
