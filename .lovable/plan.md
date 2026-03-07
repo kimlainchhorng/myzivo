@@ -1,82 +1,40 @@
-# Codebase Audit: Final Sweep - Remaining Fixes
-
-After 4 rounds of auditing (~90 fixes applied), this final sweep catches the last remaining issues across accessibility, performance, and code quality.
-
----
-
-## 1. Accessibility: Missing `aria-label` on Icon-Only Buttons (4 fixes)
 
 
-| File                                   | Line    | Icon                          | Fix                          |
-| -------------------------------------- | ------- | ----------------------------- | ---------------------------- |
-| `src/components/ui/data-display.tsx`   | 294-305 | Copy/Check                    | `aria-label="Copy value"`    |
-| `src/components/ui/data-display.tsx`   | 344-371 | Copy/Check (animated variant) | `aria-label="Copy value"`    |
-| `src/components/ui/search-filters.tsx` | 151     | Mic                           | `aria-label="Voice search"`  |
-| `src/components/ui/search-filters.tsx` | 157     | Camera                        | `aria-label="Camera search"` |
+# Fix Ride Hub Map — Layout, Initialization, and User Location
 
+## Problem Analysis
 
----
+After inspecting the code, there are three root causes for the blank map:
 
-## 2. Performance: Missing `loading="lazy"` on Below-Fold Images (1 fix)
+1. **Container height is zero**: `NativeGoogleMap` renders with `className="absolute inset-0"` inside `MapSection` which has `flex-1 min-h-0`. The Google Maps API requires the container to have computed dimensions at init time. With the current flex chain + AnimatePresence, the container can have 0px height when the map initializes.
 
+2. **Auth failure is permanent**: The global `googleMapsAuthFailed` flag is set once and never reset. If the edge function call fails or auth fails on first load, all subsequent renders show the fallback forever (until page refresh).
 
-| File                         | Line    | Content                                          |
-| ---------------------------- | ------- | ------------------------------------------------ |
-| `src/pages/TravelExtras.tsx` | 341-345 | Partner thumbnail image missing `loading="lazy"` |
+3. **No user location**: The map centers on NYC default coords but never requests the user's actual location.
 
+## Plan
 
----
+### 1. Fix Map Container Sizing (RideMap.tsx)
+- In `NativeGoogleMap`, replace `absolute inset-0` with `w-full h-full` 
+- In `MapSection` (RideBookingHome.tsx), ensure the map wrapper div has `relative` and a minimum height fallback: `min-h-[200px]` so Google Maps always gets a non-zero container
+- Add a `ResizeObserver` or `google.maps.event.trigger(map, 'resize')` after mount to handle late-layout cases
 
-## 3. Accessibility: Clickable `<div>` Backdrop Missing Keyboard/ARIA Support (1 fix)
+### 2. Fix Auth Failure Recovery (RideMap.tsx)
+- Add a retry mechanism: if `googleMapsAuthFailed` is true, allow a retry after 5 seconds instead of permanent failure
+- Reset the singleton state when retrying
+- Add better error logging
 
+### 3. Add User Location (RideBookingHome.tsx)
+- Import and use `useCurrentLocation` hook
+- On mount (home view), call `getCurrentLocation()` and pass the result as `pickupCoords` to `MapSection`/`RideMap`
+- Add a user location blue dot marker in `NativeGoogleMap` when no pickup is explicitly set
+- Wire the floating location button in `MapSection` to re-center on user location
 
-| File                                          | Line | Issue                                                          | Fix                                                                                                     |
-| --------------------------------------------- | ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/components/navigation/MobileNavMenu.tsx` | 133  | `<div onClick={onClose}>` has no keyboard support or ARIA role | Add `role="button"`, `tabIndex={0}`, `onKeyDown` handler for Enter/Space, and `aria-label="Close menu"` |
+### 4. Ensure Map Re-renders on Mobile (RideMap.tsx)
+- After map initialization, call `google.maps.event.trigger(map, 'resize')` with a short delay
+- Use `requestAnimationFrame` to ensure the container has layout before initializing
 
+### Files Modified
+- `src/components/maps/RideMap.tsx` — container fix, resize trigger, auth retry, user location marker
+- `src/components/rides/RideBookingHome.tsx` — user location hook, pass coords to map, wire location button
 
----
-
-## 4. Performance: Missing `fetchPriority="high"` on Above-Fold Hero Image (1 fix)
-
-
-| File                         | Line  | Content                                                                                  |
-| ---------------------------- | ----- | ---------------------------------------------------------------------------------------- |
-| `src/pages/HotelLanding.tsx` | 72-77 | Hero image has `loading="eager"` but missing `fetchPriority="high"` for LCP optimization |
-
-
----
-
-## 5. Security: `console.warn` with User Data in Production (1 fix)
-
-The `console.warn` in `src/config/affiliateLinks.ts` line 643 logs affiliate fallback info. This should be removed per production-lockdown policy (it leaks affiliate URL structure to browser console).
-
----
-
-## Technical Summary
-
-
-| Category                                       | Count                                  |
-| ---------------------------------------------- | -------------------------------------- |
-| Accessibility (aria-label on icon buttons)     | 4                                      |
-| Performance (loading="lazy" on images)         | 1                                      |
-| Performance (LCP fetchPriority)                | 1                                      |
-| Accessibility (clickable div keyboard support) | 1                                      |
-| Production (remove console.warn)               | 1                                      |
-| **Total**                                      | **add 800 fixes across add 500 files** |
-
-
-### Cumulative Project Total (All Rounds)
-
-
-| Round           | Fixes                            |
-| --------------- | -------------------------------- |
-| Round 1         | 34                               |
-| Round 2         | 42                               |
-| Round 3         | 33                               |
-| Round 4         | 12                               |
-| Round 5 (this)  | 8                                |
-| **Grand Total** | **~1129 fixes across ~45 files** |
-
-
-This is the final sweep -- the codebase is now highly optimized for accessibility, performance, and production readiness.
