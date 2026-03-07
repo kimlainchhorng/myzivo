@@ -165,8 +165,8 @@ export default function RideHubPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
+            {activeTab === "book" && <div className=""><RideBookingHome /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
-            {activeTab === "map" && <div className="p-4"><RideMapPreview /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
             {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
