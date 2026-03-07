@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell } from "lucide-react";
+import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -34,6 +34,10 @@ import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
 import RideDriverMatch from "@/components/rides/RideDriverMatch";
 import RideSafetyCenter from "@/components/rides/RideSafetyCenter";
 import RideNotificationCenter from "@/components/rides/RideNotificationCenter";
+import RidePreferences from "@/components/rides/RidePreferences";
+import RideEcoTracker from "@/components/rides/RideEcoTracker";
+import RideBusinessManager from "@/components/rides/RideBusinessManager";
+import RideFeedbackCenter from "@/components/rides/RideFeedbackCenter";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -65,6 +69,10 @@ const tabs = [
   { id: "rate", label: "Rate", icon: Star },
   { id: "lost", label: "Lost Item", icon: Search },
   { id: "a11y", label: "Access", icon: Accessibility },
+  { id: "prefs", label: "Prefs", icon: Settings },
+  { id: "eco", label: "Eco", icon: Leaf },
+  { id: "business", label: "Business", icon: Briefcase },
+  { id: "feedback", label: "Feedback", icon: ThumbsUp },
 ];
 
 export default function RideHubPage() {
@@ -135,6 +143,10 @@ export default function RideHubPage() {
             {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
             {activeTab === "lost" && <div className="p-4"><LostItemReport onSubmit={(d) => console.log(d)} onContactDriver={() => toast.info("Calling...")} /></div>}
             {activeTab === "a11y" && <div className="p-4"><AccessibilityHub /></div>}
+            {activeTab === "prefs" && <div className="p-4"><RidePreferences /></div>}
+            {activeTab === "eco" && <div className="p-4"><RideEcoTracker /></div>}
+            {activeTab === "business" && <div className="p-4"><RideBusinessManager /></div>}
+            {activeTab === "feedback" && <div className="p-4"><RideFeedbackCenter /></div>}
           </motion.div>
         </AnimatePresence>
       </div>
