@@ -1022,7 +1022,7 @@ export default function RideBookingHome() {
 
           {/* Category tabs */}
           <div className="flex gap-2 px-5 pb-3 border-b border-border/10 shrink-0">
-            {(["popular", "premium", "more"] as const).map((cat) => (
+            {(["popular", "premium"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setRideCategory(cat)}
