@@ -39,23 +39,6 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     const userEmail = claimsData.claims.email as string;
 
-    const {
-      ride_request_id,
-      amount_cents,
-      ride_type,
-      wallet_credit_cents = 0,
-      payment_method_id, // optional: saved card ID for auto-charge
-    } = await req.json();
-
-    if (!ride_request_id || !amount_cents || amount_cents < 50) {
-      return new Response(JSON.stringify({ error: "Invalid request: ride_request_id and amount_cents (>=50) required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const netAmount = Math.max(50, amount_cents - (wallet_credit_cents || 0));
-
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       return new Response(JSON.stringify({ error: "Stripe not configured" }), {
@@ -78,59 +61,70 @@ Deno.serve(async (req) => {
       customerId = customer.id;
     }
 
-    const piParams: any = {
-      amount: netAmount,
-      currency: "usd",
-      customer: customerId,
-      capture_method: "manual",
-      metadata: {
-        zivo_user_id: userId,
-        ride_request_id,
-        ride_type: ride_type || "economy",
-        wallet_credit_cents: String(wallet_credit_cents),
-        original_amount_cents: String(amount_cents),
-      },
-      description: `ZIVO Ride - ${ride_type || "economy"}`,
-    };
+    const { action, payment_method_id } = await req.json();
 
-    // If saved payment method provided, auto-confirm off-session
-    if (payment_method_id) {
-      piParams.payment_method = payment_method_id;
-      piParams.confirm = true;
-      piParams.off_session = true;
-      // No automatic_payment_methods when confirming with specific method
-    } else {
-      piParams.automatic_payment_methods = { enabled: true };
+    // LIST saved payment methods
+    if (action === "list") {
+      const methods = await stripe.paymentMethods.list({
+        customer: customerId,
+        type: "card",
+      });
+
+      const cards = methods.data.map((pm: any) => ({
+        id: pm.id,
+        brand: pm.card?.brand ?? "unknown",
+        last4: pm.card?.last4 ?? "****",
+        exp_month: pm.card?.exp_month,
+        exp_year: pm.card?.exp_year,
+        is_default: pm.id === (customers.data[0]?.invoice_settings?.default_payment_method),
+      }));
+
+      return new Response(JSON.stringify({ ok: true, cards, customer_id: customerId }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const paymentIntent = await stripe.paymentIntents.create(piParams);
+    // CREATE SetupIntent (for adding a new card)
+    if (action === "create_setup_intent") {
+      const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        metadata: { zivo_user_id: userId },
+      });
 
-    // Update ride_request with payment intent ID
-    const paymentStatus = paymentIntent.status === "requires_capture" ? "authorized" : "pending";
-    await supabase
-      .from("ride_requests")
-      .update({
-        payment_intent_id: paymentIntent.id,
-        payment_status: paymentStatus,
-      })
-      .eq("id", ride_request_id)
-      .eq("user_id", userId);
+      return new Response(JSON.stringify({
+        ok: true,
+        client_secret: setupIntent.client_secret,
+        customer_id: customerId,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    console.log(`[ride-payment] Created PI ${paymentIntent.id} for ride ${ride_request_id} ($${(netAmount / 100).toFixed(2)}) status=${paymentIntent.status}`);
+    // DELETE a saved payment method
+    if (action === "delete" && payment_method_id) {
+      await stripe.paymentMethods.detach(payment_method_id);
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    return new Response(JSON.stringify({
-      ok: true,
-      client_secret: paymentIntent.client_secret,
-      payment_intent_id: paymentIntent.id,
-      customer_id: customerId,
-      amount_cents: netAmount,
-      status: paymentIntent.status,
-      auto_confirmed: !!payment_method_id,
-    }), {
+    // SET DEFAULT payment method
+    if (action === "set_default" && payment_method_id) {
+      await stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: payment_method_id },
+      });
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("[ride-payment] Error:", e);
+    console.error("[manage-payment-methods] Error:", e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
