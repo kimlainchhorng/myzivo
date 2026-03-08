@@ -894,49 +894,75 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ SEARCH — split view: map top + panel bottom ═══════ */}
+      {/* ═══════ SEARCH — full map + draggable bottom sheet ═══════ */}
       {viewStep === "search" && (
         <>
-          {/* Map area with draggable pin */}
+          {/* Full-screen map behind sheet */}
           <div
             className="absolute left-0 right-0 z-0"
             style={{
               top: HEADER_HEIGHT,
-              bottom: `calc(50% + ${SAFE_BOTTOM})`,
+              bottom: 0,
             }}
           >
             <MapSection
               compact
-              pickupCoords={pickup}
+              pickupCoords={null}
               dropoffCoords={destination}
               userLocation={userLocation}
               onLocateUser={handleLocateUser}
               routePolyline={null}
+              onCenterChanged={handleMapCenterChanged}
             >
-              {/* Center pin indicator when no pickup selected */}
-              {!pickup && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                  <div className="flex flex-col items-center">
-                    <MapPin className="w-8 h-8 text-primary drop-shadow-lg" />
-                    <div className="w-2 h-2 rounded-full bg-primary/40 mt-0.5" />
+              {/* Center pin — always visible */}
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="flex flex-col items-center">
+                  <MapPin className="w-8 h-8 text-primary drop-shadow-lg" />
+                  <div className="w-2 h-2 rounded-full bg-primary/40 mt-0.5" />
+                  {isReversingGeocode && (
+                    <span className="mt-1 px-2 py-0.5 rounded-full bg-background/90 text-[10px] font-semibold text-foreground shadow-sm flex items-center gap-1">
+                      <div className="w-3 h-3 border border-foreground border-t-transparent rounded-full animate-spin" />
+                      Locating...
+                    </span>
+                  )}
+                  {!isReversingGeocode && !pickup && (
                     <span className="mt-1 px-2 py-0.5 rounded-full bg-background/90 text-[10px] font-semibold text-foreground shadow-sm">
                       Move map to set pickup
                     </span>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </MapSection>
           </div>
 
-          {/* Bottom panel */}
-          <div
-            className="absolute left-0 right-0 bottom-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
+          {/* Draggable bottom sheet */}
+          <motion.div
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col touch-none"
             style={{
-              top: "45%",
-              paddingBottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+              bottom: 0,
+              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 80px)`,
             }}
+            initial={{ y: 0 }}
+            animate={{ y: searchSheetY }}
+            drag="y"
+            dragConstraints={{ top: -(viewportHeight * 0.3), bottom: viewportHeight * 0.2 }}
+            dragElastic={0.15}
+            onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+              if (info.offset.y > 80) {
+                // Dragged down significantly — collapse (show less)
+                setSearchSheetY(viewportHeight * 0.15);
+              } else if (info.offset.y < -80) {
+                // Dragged up — expand
+                setSearchSheetY(-(viewportHeight * 0.2));
+              } else {
+                // Snap back to default
+                setSearchSheetY(0);
+              }
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
-            <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 shrink-0" />
+            {/* Drag handle */}
+            <div className="mx-auto mt-2 h-1.5 w-14 rounded-full bg-muted-foreground/25 shrink-0 cursor-grab active:cursor-grabbing" />
 
             <div className="px-4 pt-3">
               <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
@@ -994,7 +1020,7 @@ export default function RideBookingHome() {
             </div>
 
             {/* Saved & Recent list */}
-            <div className="flex-1 overflow-y-auto px-4 pt-3">
+            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2" style={{ maxHeight: viewportHeight * 0.3 }}>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
@@ -1054,7 +1080,7 @@ export default function RideBookingHome() {
             </div>
 
             {pickup && destination && (
-              <div className="px-4 pb-3 pt-2 shrink-0">
+              <div className="px-4 pb-3 pt-2 shrink-0" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                   onClick={handleConfirmSearch}
@@ -1071,7 +1097,7 @@ export default function RideBookingHome() {
                 </Button>
               </div>
             )}
-          </div>
+          </motion.div>
         </>
       )}
 
