@@ -1129,28 +1129,25 @@ export default function RideBookingHome() {
               routePolyline={null}
               onCenterChanged={handleMapCenterChanged}
             >
-              {/* Center pin — always visible above sheet */}
-              <div className="absolute inset-x-0 top-[38%] z-10 flex justify-center pointer-events-none">
-                <div className="flex flex-col items-center">
-                  {/* Pin + pulse */}
+              {/* Center pin — positioned in visible map area (upper portion above sheet) */}
+              <div className="absolute inset-x-0 top-0 z-10 flex justify-center pointer-events-none" style={{ height: '45%' }}>
+                <div className="flex flex-col items-center justify-center">
                   <div className="relative">
-                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" style={{ animationDuration: "1.8s" }} />
-                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                    <div className="absolute -inset-4 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s" }} />
+                    <div className="relative w-11 h-11 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
                       <MapPin className="w-5 h-5 text-primary-foreground" />
                     </div>
                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 border-b-[3px] border-r-[3px] border-background" />
                   </div>
-
-                  <div className="w-3 h-1.5 rounded-full bg-foreground/20 mt-2 blur-[1px]" />
-
+                  <div className="w-3 h-1.5 rounded-full bg-foreground/15 mt-2 blur-[1px]" />
                   {isReversingGeocode && (
-                    <span className="mt-2 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm">
+                    <span className="mt-2 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       Locating...
                     </span>
                   )}
                   {!isReversingGeocode && !pickup && (
-                    <span className="mt-2 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md backdrop-blur-sm">
+                    <span className="mt-2 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md backdrop-blur-sm border border-border/30">
                       Move map to set pickup
                     </span>
                   )}
