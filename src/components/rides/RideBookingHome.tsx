@@ -984,7 +984,7 @@ export default function RideBookingHome() {
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
-      {viewStep !== "home" && (
+      {viewStep !== "home" && viewStep !== "trip-complete" && (
         <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
           <button
             onClick={handleBack}
@@ -1009,8 +1009,29 @@ export default function RideBookingHome() {
       {/* ═══════ 2. HOME — Full-screen map with floating UI ═══════ */}
       {viewStep === "home" && (
         <>
-          {/* Full-screen map */}
-          <div className="absolute inset-0 z-0">
+          {/* Header for home */}
+          <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
+            <button
+              onClick={handleBack}
+              className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <h1 className="flex-1 text-center font-black text-lg tracking-tight">
+              <span className="text-primary">Zivo</span> Ride
+            </h1>
+            <button
+              onClick={() => navigate("/notifications")}
+              className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Full-screen map below header */}
+          <div className="flex-1 relative z-0">
             <MapSection
               compact
               pickupCoords={null}
@@ -1040,16 +1061,6 @@ export default function RideBookingHome() {
             </MapSection>
           </div>
 
-          {/* Floating back button */}
-          <div className="absolute top-4 left-4 z-30" style={{ top: `calc(env(safe-area-inset-top, 0px) + 12px)` }}>
-            <button
-              onClick={handleBack}
-              className="w-11 h-11 rounded-full bg-background shadow-lg shadow-foreground/8 flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation border border-border/20"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </button>
-          </div>
 
           {/* Bottom sheet — Set your destination */}
           <div
