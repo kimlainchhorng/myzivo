@@ -304,6 +304,14 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       mapRef.current = map;
       onMapReady?.(map);
 
+      // Fire onCenterChanged when map stops moving
+      map.addListener("idle", () => {
+        const c = map.getCenter();
+        if (c && onCenterChanged) {
+          onCenterChanged({ lat: c.lat(), lng: c.lng() });
+        }
+      });
+
       setTimeout(() => {
         if (!mapRef.current) return;
         google.maps.event.trigger(mapRef.current, "resize");
