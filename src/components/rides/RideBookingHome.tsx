@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import {
   MapPin, Navigation, ChevronRight, ArrowLeft, Home,
   Building2, Car, Crown, Users, Zap,
