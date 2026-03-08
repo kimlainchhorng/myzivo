@@ -689,6 +689,11 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
             const path = result.routes[0]?.overview_path;
             if (path && path.length > 1) {
               const latLngs = path.map((p) => ({ lat: p.lat(), lng: p.lng() }));
+              // Snap dropoff marker to route's actual endpoint
+              const dm = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
+              if (dm && latLngs.length > 0) {
+                dm.setPosition(latLngs[latLngs.length - 1]);
+              }
               const { bgLine, animatedLine } = animatePolyline(map, latLngs, (finalLine) => {
                 polylineRef.current = finalLine;
               });
