@@ -559,8 +559,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
           map,
           icon: {
             url: createPickupPinSvg(),
-            scaledSize: new google.maps.Size(44, 56),
-            anchor: new google.maps.Point(22, 56),
+            scaledSize: new google.maps.Size(48, 48),
+            anchor: new google.maps.Point(24, 24),
           },
           title: "Pickup",
           zIndex: 80,
@@ -575,8 +575,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
           map,
           icon: {
             url: createDropoffPinSvg(),
-            scaledSize: new google.maps.Size(40, 52),
-            anchor: new google.maps.Point(20, 52),
+            scaledSize: new google.maps.Size(44, 44),
+            anchor: new google.maps.Point(22, 22),
           },
           title: "Dropoff",
           zIndex: 79,
