@@ -125,7 +125,9 @@ Deno.serve(async (req) => {
 
     const hasZoneLikeSuggestion = baseSuggestions.some((item) => {
       const value = `${item.main_text} ${item.description}`.toLowerCase();
-      return value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures") || value.includes("zone");
+      const hasZoneKeyword = value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures") || value.includes("zone");
+      const hasAirportKeyword = value.includes("airport") || value.includes("terminal") || value.includes("gate") || value.includes("concourse") || value.includes("msy");
+      return hasZoneKeyword && hasAirportKeyword;
     });
 
     const primaryAirportSuggestion = baseSuggestions.find((item) => {
