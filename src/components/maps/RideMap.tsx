@@ -262,35 +262,36 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
 // ─── SVG marker builders ───
 
 function createPickupPinSvg(): string {
+  // Green teardrop with pulsing ring effect built via CSS overlay
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+    <svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">
       <defs>
-        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
+        <filter id="s" x="-25%" y="-10%" width="150%" height="135%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
         </filter>
       </defs>
-      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#10b981" filter="url(#s)"/>
-      <circle cx="20" cy="19" r="8" fill="#fff"/>
-      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
+      <circle cx="22" cy="22" r="20" fill="#10b981" opacity="0.12"/>
+      <circle cx="22" cy="22" r="16" fill="#10b981" opacity="0.18"/>
+      <path d="M22 55 C22 55 5 35 5 21 A17 17 0 1 1 39 21 C39 35 22 55 22 55Z" fill="#10b981" filter="url(#s)"/>
+      <circle cx="22" cy="21" r="9" fill="#fff"/>
+      <text x="22" y="26" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#10b981">Z</text>
     </svg>
   `)}`;
 }
 
 function createDropoffPinSvg(): string {
+  // Dark pin with red accent — visually distinct from pickup
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
       <defs>
-        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
+        <filter id="s2" x="-20%" y="-10%" width="140%" height="130%">
           <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
         </filter>
-        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#059669"/>
-          <stop offset="100%" stop-color="#10b981"/>
-        </linearGradient>
       </defs>
-      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="url(#g)" filter="url(#s)"/>
+      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#1e293b" filter="url(#s2)"/>
       <circle cx="20" cy="19" r="8" fill="#fff"/>
-      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#059669">Z</text>
+      <rect x="13" y="14" width="14" height="10" rx="2" fill="#ef4444" opacity="0.9"/>
+      <text x="20" y="22.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="10" fill="#fff">END</text>
     </svg>
   `)}`;
 }
@@ -358,26 +359,42 @@ function animatePolyline(
   return { bgLine, animatedLine };
 }
 
-// ─── Ambient cars around a center ───
+// ─── Ambient cars with minimum distance from pins ───
 function spawnAmbientCars(
   map: google.maps.Map,
   center: { lat: number; lng: number },
-  count = 5
+  count = 5,
+  avoidPoints: { lat: number; lng: number }[] = []
 ): google.maps.Marker[] {
   const markers: google.maps.Marker[] = [];
+  const MIN_DISTANCE = 0.008; // ~0.8km minimum distance from pins
 
   for (let i = 0; i < count; i++) {
-    const offsetLat = (Math.random() - 0.5) * 0.025;
-    const offsetLng = (Math.random() - 0.5) * 0.035;
-    const rotation = Math.floor(Math.random() * 360);
+    let lat: number, lng: number;
+    let attempts = 0;
 
+    // Keep trying until car is far enough from all pins
+    do {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
+      const dist = 0.012 + Math.random() * 0.018;
+      lat = center.lat + Math.sin(angle) * dist;
+      lng = center.lng + Math.cos(angle) * dist * 1.3;
+      attempts++;
+    } while (
+      attempts < 10 &&
+      avoidPoints.some(
+        (p) => Math.abs(p.lat - lat) < MIN_DISTANCE && Math.abs(p.lng - lng) < MIN_DISTANCE
+      )
+    );
+
+    const rotation = Math.floor(Math.random() * 360);
     const marker = new google.maps.Marker({
-      position: { lat: center.lat + offsetLat, lng: center.lng + offsetLng },
+      position: { lat, lng },
       map,
       icon: {
         url: createCarSvg(rotation),
-        scaledSize: new google.maps.Size(28, 28),
-        anchor: new google.maps.Point(14, 14),
+        scaledSize: new google.maps.Size(24, 24),
+        anchor: new google.maps.Point(12, 12),
       },
       clickable: false,
       zIndex: 10,
@@ -390,11 +407,11 @@ function spawnAmbientCars(
       const pos = m.getPosition();
       if (!pos) return;
       m.setPosition({
-        lat: pos.lat() + (Math.random() - 0.5) * 0.0003,
-        lng: pos.lng() + (Math.random() - 0.5) * 0.0004,
+        lat: pos.lat() + (Math.random() - 0.5) * 0.00025,
+        lng: pos.lng() + (Math.random() - 0.5) * 0.00035,
       });
     });
-  }, 2500);
+  }, 3000);
 
   (markers as any).__driftInterval = interval;
   return markers;
@@ -404,6 +421,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const pulseCircleRef = useRef<google.maps.Circle | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const bgPolylineRef = useRef<google.maps.Polyline | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
@@ -489,23 +507,59 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => observer.disconnect();
   }, []);
 
-  // ─── Custom pin markers + fit bounds ───
+  // ─── Custom pin markers + pulse + fit bounds ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
+    // Clear old markers & pulse
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
+    if (pulseCircleRef.current) { pulseCircleRef.current.setMap(null); pulseCircleRef.current = null; }
 
     if (pickupCoords) {
+      // Pulsing circle around pickup
+      pulseCircleRef.current = new google.maps.Circle({
+        center: pickupCoords,
+        radius: 120,
+        map,
+        fillColor: "#10b981",
+        fillOpacity: 0.08,
+        strokeColor: "#10b981",
+        strokeOpacity: 0.25,
+        strokeWeight: 1.5,
+        clickable: false,
+        zIndex: 5,
+      });
+
+      // Animate pulse
+      let growing = true;
+      const pulseInterval = setInterval(() => {
+        const circle = pulseCircleRef.current;
+        if (!circle) { clearInterval(pulseInterval); return; }
+        const r = circle.getRadius();
+        if (growing) {
+          circle.setRadius(r + 8);
+          circle.setOptions({ fillOpacity: Math.max(0.02, 0.08 - (r - 120) * 0.0005) });
+          if (r >= 220) growing = false;
+        } else {
+          circle.setRadius(r - 8);
+          circle.setOptions({ fillOpacity: Math.min(0.08, 0.02 + (220 - r) * 0.0005) });
+          if (r <= 120) growing = true;
+        }
+      }, 60);
+
+      // Store interval for cleanup
+      (pulseCircleRef as any).__interval = pulseInterval;
+
       markersRef.current.push(
         new google.maps.Marker({
           position: pickupCoords,
           map,
           icon: {
             url: createPickupPinSvg(),
-            scaledSize: new google.maps.Size(40, 52),
-            anchor: new google.maps.Point(20, 52),
+            scaledSize: new google.maps.Size(44, 56),
+            anchor: new google.maps.Point(22, 56),
           },
           title: "Pickup",
           zIndex: 80,
@@ -524,17 +578,18 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
             anchor: new google.maps.Point(20, 52),
           },
           title: "Dropoff",
-          zIndex: 80,
+          zIndex: 79,
         })
       );
     }
 
+    // Fit bounds with generous padding
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
       if (driverCoords) bounds.extend(driverCoords);
-      map.fitBounds(bounds, { top: 60, bottom: 60, left: 40, right: 40 });
+      map.fitBounds(bounds, { top: 80, bottom: 80, left: 50, right: 50 });
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
       map.setZoom(15);
@@ -543,11 +598,16 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       map.setZoom(15);
     }
 
-    // Reposition ambient cars near pickup
+    // Spawn ambient cars away from pins
+    const avoidPoints = [pickupCoords, dropoffCoords].filter(Boolean) as { lat: number; lng: number }[];
     if (pickupCoords && map) {
       clearAmbientCars();
-      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 5);
+      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 4, avoidPoints);
     }
+
+    return () => {
+      if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
+    };
   }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars]);
 
   // ─── Animated route rendering ───
