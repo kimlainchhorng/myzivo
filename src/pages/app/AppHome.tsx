@@ -53,6 +53,20 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
   pin: MapPin,
 };
 
+// ─── Top service tabs (Uber-style) ───
+const homeTabs = [
+  { id: "rides", label: "Rides", icon: Car },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed },
+] as const;
+
+// ─── Suggestions row (service shortcuts) ───
+const suggestions = [
+  { label: "Ride", icon: Car, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
+  { label: "Reserve", icon: Clock, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Rental Cars", icon: Car, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Hourly", icon: Timer, href: "/rides", badge: null, badgeColor: "" },
+];
+
 // ─── Restaurant Card (Premium) ───
 const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant; onNavigate: () => void }) => (
   <motion.button
