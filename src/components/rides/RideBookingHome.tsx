@@ -174,10 +174,10 @@ function MapSection({
       </div>
       <button
         onClick={handleLocateClick}
-        className="absolute right-3 top-14 z-20 w-12 h-12 rounded-full bg-card shadow-md flex items-center justify-center"
+        className="absolute right-3 top-14 z-20 w-10 h-10 rounded-full bg-card shadow-lg shadow-black/10 flex items-center justify-center border border-border/30 backdrop-blur-sm"
         aria-label="Center on my location"
       >
-        <Navigation className="w-4 h-4 text-primary" />
+        <Navigation className="w-4 h-4" style={{ color: '#00C853' }} />
       </button>
       {children}
     </div>
