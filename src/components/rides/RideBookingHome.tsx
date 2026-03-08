@@ -1514,13 +1514,6 @@ export default function RideBookingHome() {
           style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
           <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
-            <button
-              onClick={() => { setViewStep("ride-options"); setClientSecret(null); setPaymentStep("idle"); }}
-              className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-4 h-4 text-foreground" />
-            </button>
             <h2 className="text-lg font-black text-foreground">Confirm your ride</h2>
           </div>
 
