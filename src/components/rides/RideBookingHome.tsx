@@ -981,7 +981,7 @@ export default function RideBookingHome() {
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-background">
+    <div className="relative h-[100dvh] overflow-hidden bg-background flex flex-col">
 
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
       {viewStep !== "home" && viewStep !== "trip-complete" && (
@@ -1030,43 +1030,42 @@ export default function RideBookingHome() {
             </button>
           </div>
 
-          {/* Full-screen map below header */}
-          <div className="flex-1 relative z-0">
-            <MapSection
-              compact
-              pickupCoords={null}
-              dropoffCoords={null}
-              userLocation={userLocation}
-              showUserLocationDot
-              onLocateUser={handleLocateUser}
-              routePolyline={null}
-              onCenterChanged={handleMapCenterChanged}
-            >
-              {/* Center destination pin — ZIVO branded */}
-              <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
-                <div className="flex flex-col items-center">
-                  <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-primary-foreground" />
+          {/* Map + bottom sheet container */}
+          <div className="flex-1 relative z-0 min-h-0">
+            <div className="absolute inset-0">
+              <MapSection
+                compact
+                pickupCoords={null}
+                dropoffCoords={null}
+                userLocation={userLocation}
+                showUserLocationDot
+                onLocateUser={handleLocateUser}
+                routePolyline={null}
+                onCenterChanged={handleMapCenterChanged}
+              >
+                {/* Center destination pin — ZIVO branded */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
+                    <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
+                    {isReversingGeocode && (
+                      <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        Locating...
+                      </span>
+                    )}
                   </div>
-                  <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-primary -mt-[2px]" />
-                  <div className="w-3 h-1 rounded-full bg-foreground/15 mt-0.5 blur-[1px]" />
-                  {isReversingGeocode && (
-                    <span className="mt-1.5 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-border/30">
-                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      Locating...
-                    </span>
-                  )}
                 </div>
-              </div>
-            </MapSection>
-          </div>
+              </MapSection>
+            </div>
 
 
-          {/* Bottom sheet — Set your destination */}
-          <div
-            className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
-            style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
-          >
+            <div
+              className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
+            >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
@@ -1103,6 +1102,7 @@ export default function RideBookingHome() {
               >
                 Search destination
               </Button>
+            </div>
             </div>
           </div>
         </>
