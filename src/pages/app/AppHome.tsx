@@ -232,7 +232,7 @@ const AppHome = () => {
         {/* ─── UBER-STYLE HEADER ─── */}
         <div className="bg-background relative">
           {/* Service Tabs — Glassmorphic Chips */}
-          <div className="flex items-center gap-2 px-4 py-3 safe-area-top overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-2 px-4 py-3 safe-area-top overflow-hidden">
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
