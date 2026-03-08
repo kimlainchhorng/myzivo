@@ -504,8 +504,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
           map,
           icon: {
             url: createPickupPinSvg(),
-            scaledSize: new google.maps.Size(36, 48),
-            anchor: new google.maps.Point(18, 48),
+            scaledSize: new google.maps.Size(40, 52),
+            anchor: new google.maps.Point(20, 52),
           },
           title: "Pickup",
           zIndex: 80,
