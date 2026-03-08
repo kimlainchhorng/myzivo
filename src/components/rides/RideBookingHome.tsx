@@ -1324,7 +1324,7 @@ export default function RideBookingHome() {
               </div>
 
               {/* Action buttons row */}
-              <div className="flex gap-2.5 mt-4 overflow-x-auto scrollbar-none pb-1">
+              <div className="flex gap-2.5 mt-4 pb-1 flex-wrap">
                 <button
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
