@@ -2071,7 +2071,7 @@ export default function RequestRidePage() {
               <BarChart3 className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-sm font-bold text-foreground">Ride Hub</p>
+              <p className="text-sm font-bold text-foreground">Zivo Ride</p>
               <p className="text-[10px] text-muted-foreground">Insights, Ride Pass, receipts & more</p>
             </div>
             <ChevronRight className="w-4 h-4 text-primary" />
