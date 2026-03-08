@@ -907,7 +907,7 @@ export default function RideBookingHome() {
 
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
-            {savedPlaces.map((place) => {
+            {savedPlaces.length > 0 ? savedPlaces.map((place) => {
               const Icon = place.icon;
               return (
                 <button
@@ -924,15 +924,30 @@ export default function RideBookingHome() {
                   </div>
                 </button>
               );
-            })}
-
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
-            {recentDestinations.map((dest) => (
+            }) : (
               <button
-                key={dest.id}
-                onClick={() => {
-                  setDestinationDisplay(dest.address.split(",")[0]);
-                  setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                onClick={() => toast.info("Save a location from your profile")}
+                className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+              >
+                <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
+                  <Plus className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
+                  <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
+                </div>
+              </button>
+            )}
+
+            {recentDestinations.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+                {recentDestinations.map((dest) => (
+                  <button
+                    key={dest.id}
+                    onClick={() => {
+                      setDestinationDisplay(dest.address.split(",")[0]);
+                      setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
                 }}
                 className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
               >
