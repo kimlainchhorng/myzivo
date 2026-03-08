@@ -280,7 +280,7 @@ function createPickupPinSvg(): string {
 }
 
 function createDropoffPinSvg(): string {
-  // ZIVO-branded dark dropoff pin with "Z" badge
+  // ZIVO green dropoff pin with "Z" — matches pickup style
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
       <defs>
@@ -288,9 +288,9 @@ function createDropoffPinSvg(): string {
           <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
         </filter>
       </defs>
-      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#111827" filter="url(#s2)"/>
-      <circle cx="20" cy="19" r="9" fill="#3b82f6"/>
-      <text x="20" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="13" fill="#fff">Z</text>
+      <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="#10b981" filter="url(#s2)"/>
+      <circle cx="20" cy="19" r="9" fill="#fff"/>
+      <text x="20" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="13" fill="#10b981">Z</text>
     </svg>
   `)}`;
 }
