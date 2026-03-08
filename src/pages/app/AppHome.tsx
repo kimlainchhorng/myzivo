@@ -54,6 +54,21 @@ import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 // ─── Saved Places Icon Map ───
+// ─── Dynamic search placeholder by tab ───
+function getSearchPlaceholder(tab: string): string {
+  if (tab === "rides") return "Where to Go";
+  if (tab === "eats") {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return "Breakfast";
+    if (hour >= 11 && hour < 17) return "Lunch";
+    if (hour >= 17 && hour < 22) return "Dinner";
+    return "Late Night";
+  }
+  if (tab === "flights") return "Search Flights";
+  if (tab === "hotels") return "Search Hotels";
+  return "Where to?";
+}
+
 const savedPlaceIconMap: Record<string, LucideIcon> = {
   home: Home,
   work: Briefcase,
