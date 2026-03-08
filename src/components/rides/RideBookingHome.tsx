@@ -1137,7 +1137,7 @@ export default function RideBookingHome() {
             </div>
 
             {/* Saved & Recent list */}
-            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2" style={{ maxHeight: viewportHeight * 0.3 }}>
+            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-20" style={{ maxHeight: viewportHeight * 0.3 }}>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
