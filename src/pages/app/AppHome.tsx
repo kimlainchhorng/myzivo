@@ -340,14 +340,14 @@ const AppHome = () => {
           </div>
 
           {/* Suggestions Section */}
-          <div className="px-5 pt-4 pb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="pt-4 pb-6">
+            <div className="flex items-center justify-between mb-4 px-5">
               <h2 className="text-lg font-bold text-foreground">Suggestions</h2>
               <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation">
                 <ArrowRight className="w-5 h-5 text-foreground" />
               </button>
             </div>
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 pr-5">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 pl-5 pr-5">
               {suggestions.map((s) => (
                 <motion.button
                   key={s.label}
