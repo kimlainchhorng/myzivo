@@ -513,11 +513,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   // ─── Custom pin markers + pulse + fit bounds ───
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      console.log("[RideMap] Markers effect: map not ready");
-      return;
-    }
-    console.log("[RideMap] Markers effect:", { pickupCoords, dropoffCoords });
+    if (!map) return;
 
     // Clear old markers & pulse
     markersRef.current.forEach((m) => m.setMap(null));
