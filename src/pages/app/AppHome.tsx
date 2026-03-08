@@ -243,7 +243,7 @@ const AppHome = () => {
                   layout
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 touch-manipulation min-h-[44px]",
+                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
                     isActive
                       ? "bg-primary/15 text-primary border border-primary/30 shadow-[0_0_12px_hsl(var(--primary)/0.15)] backdrop-blur-xl"
                       : "bg-muted/40 text-muted-foreground border border-border/40 backdrop-blur-sm hover:bg-muted/60"
