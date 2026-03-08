@@ -45,6 +45,7 @@ import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
 import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
 import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
 import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
+import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
@@ -56,16 +57,16 @@ const savedPlaceIconMap: Record<string, LucideIcon> = {
 
 // ─── Top service tabs (Uber-style) ───
 const homeTabs = [
-  { id: "rides", label: "Rides", icon: Car },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed },
+  { id: "rides", label: "Rides", icon: null, image: zivoRideIcon },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, image: null },
 ] as const;
 
 // ─── Suggestions row (service shortcuts) ───
 const suggestions = [
-  { label: "Ride", icon: Car, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
-  { label: "Reserve", icon: Clock, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Rental Cars", icon: Car, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
-  { label: "Hourly", icon: Timer, href: "/rides", badge: null, badgeColor: "" },
+  { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5%", badgeColor: "bg-destructive" },
+  { label: "Reserve", icon: Clock, image: null, href: "/scheduled", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Rental Cars", icon: Car, image: null, href: "/rent-car", badge: "Promo", badgeColor: "bg-destructive" },
+  { label: "Hourly", icon: Timer, image: null, href: "/rides", badge: null, badgeColor: "" },
 ];
 
 // ─── Restaurant Card (Premium) ───
@@ -240,7 +241,11 @@ const AppHome = () => {
                       : "border-transparent text-muted-foreground"
                   )}
                 >
-                  <tab.icon className="w-5 h-5" />
+                  {tab.image ? (
+                    <img src={tab.image} alt={tab.label} className="w-6 h-6 object-contain" />
+                  ) : tab.icon ? (
+                    <tab.icon className="w-5 h-5" />
+                  ) : null}
                   {tab.label}
                 </button>
               );
@@ -339,7 +344,11 @@ const AppHome = () => {
                     </div>
                   )}
                   <div className="w-[72px] h-[72px] rounded-2xl bg-muted/40 border border-border/30 flex items-center justify-center">
-                    <s.icon className="w-8 h-8 text-foreground" />
+                    {s.image ? (
+                      <img src={s.image} alt={s.label} className="w-10 h-10 object-contain" />
+                    ) : s.icon ? (
+                      <s.icon className="w-8 h-8 text-foreground" />
+                    ) : null}
                   </div>
                   <span className="text-xs font-medium text-foreground text-center leading-tight">{s.label}</span>
                 </motion.button>
