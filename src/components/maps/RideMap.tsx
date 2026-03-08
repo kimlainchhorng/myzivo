@@ -482,8 +482,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         if (c && onCenterChanged) onCenterChanged({ lat: c.lat(), lng: c.lng() });
       });
 
-      // Spawn ambient cars
-      ambientCarsRef.current = spawnAmbientCars(map, center, 5);
+      // Spawn ambient cars (will be repositioned when coords arrive)
+      const carCenter = pickupCoords || userLocation || center;
+      ambientCarsRef.current = spawnAmbientCars(map, carCenter, 4, []);
 
       setTimeout(() => {
         if (!mapRef.current) return;
