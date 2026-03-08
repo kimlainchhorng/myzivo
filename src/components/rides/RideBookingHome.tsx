@@ -128,6 +128,7 @@ function MapSection({
   userLocation,
   routePolyline,
   onLocateUser,
+  onCenterChanged,
   compact = false,
   children,
 }: {
@@ -137,6 +138,7 @@ function MapSection({
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
   onLocateUser?: () => void;
+  onCenterChanged?: (center: { lat: number; lng: number }) => void;
   compact?: boolean;
   children?: React.ReactNode;
 }) {
@@ -163,6 +165,7 @@ function MapSection({
           userLocation={userLocation || null}
           routePolyline={routePolyline || null}
           onMapReady={(map) => { mapRef.current = map; }}
+          onCenterChanged={onCenterChanged}
           className="absolute inset-0 h-full w-full"
         />
       </div>
