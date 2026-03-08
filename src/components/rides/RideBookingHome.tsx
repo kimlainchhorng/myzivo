@@ -627,6 +627,7 @@ export default function RideBookingHome() {
   const handleMapCenterChanged = useCallback((center: { lat: number; lng: number }) => {
     // In home view: reverse geocode to show address in the destination field
     if (viewStep === "home") {
+      mapCenterRef.current = center;
       if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
       reverseGeocodeTimerRef.current = setTimeout(async () => {
         setIsReversingGeocode(true);
