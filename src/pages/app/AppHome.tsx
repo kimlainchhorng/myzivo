@@ -347,7 +347,7 @@ const AppHome = () => {
                 <ArrowRight className="w-5 h-5 text-foreground" />
               </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 pr-5">
               {suggestions.map((s) => (
                 <motion.button
                   key={s.label}
