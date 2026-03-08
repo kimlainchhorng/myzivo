@@ -260,6 +260,7 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "share":     "/vehicles/share-car-v2.png",
   "comfort":   "/vehicles/comfort-car-v2.png",
   "ev":        "/vehicles/economy-car-v2.png",
+  "xl":        "/vehicles/xl-car-v2.png",
   "black-lane": "/vehicles/luxury-car-v2.png",
   "black-xl":  "/vehicles/xl-car-v2.png",
   "luxury-xl": "/vehicles/luxury-car-v2.png",
