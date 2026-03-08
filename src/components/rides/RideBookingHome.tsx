@@ -1073,6 +1073,38 @@ export default function RideBookingHome() {
         </>
       )}
 
+      {/* ═══════ 3. MAP VIEWPORT for non-home steps ═══════ */}
+      {(viewStep === "route-preview"
+        || viewStep === "ride-options"
+        || viewStep === "confirm-ride"
+        || viewStep === "searching"
+        || viewStep === "driver-assigned"
+        || viewStep === "driver-en-route"
+        || viewStep === "trip-in-progress"
+        || viewStep === "pickup-confirm"
+        || viewStep === "tracking"
+      ) && (
+        <div
+          className="absolute left-0 right-0 z-0"
+          style={{
+            top: HEADER_HEIGHT,
+            bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+          }}
+        >
+          <MapSection
+            compact
+            pickupCoords={pickup}
+            dropoffCoords={["route-preview", "ride-options", "confirm-ride", "searching", "pickup-confirm", "driver-assigned", "driver-en-route", "trip-in-progress"].includes(viewStep) ? destination : null}
+            userLocation={userLocation}
+            onLocateUser={handleLocateUser}
+            routePolyline={routeData?.polyline ?? null}
+            driverCoords={
+              (viewStep === "driver-en-route" || viewStep === "trip-in-progress") ? driverCoords : null
+            }
+          />
+        </div>
+      )}
+
       {/* ═══════ SEARCH — full map + draggable bottom sheet ═══════ */}
       {viewStep === "search" && (
         <>
