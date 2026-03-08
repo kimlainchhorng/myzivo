@@ -976,7 +976,9 @@ export default function RideBookingHome() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="flex-1 text-center font-black text-lg">Ride Hub</h1>
+        <h1 className="flex-1 text-center font-black text-lg tracking-tight">
+          <span className="text-primary">Zivo</span> Ride
+        </h1>
         <button
           onClick={() => navigate("/notifications")}
           className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
