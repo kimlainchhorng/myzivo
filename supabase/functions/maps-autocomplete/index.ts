@@ -184,6 +184,9 @@ Deno.serve(async (req) => {
           `${detectedCode} Spirit Airlines`,
           `${detectedCode} Frontier Airlines`,
           `${detectedCode} Alaska Airlines`,
+          `${detectedCode} Allegiant Air`,
+          `${detectedCode} Hawaiian Airlines`,
+          `${detectedCode} Sun Country Airlines`,
         ];
         const phase2Groups = await Promise.all(codeQueries.map(fetchPredictions));
         mergedPredictions = [...mergedPredictions, ...phase2Groups.flat()];
