@@ -141,7 +141,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
   return googleMapsPromise;
 }
 
-export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
+export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failedReason, setFailedReason] = useState<string>("");
