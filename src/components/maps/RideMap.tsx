@@ -733,7 +733,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    if (userLocation && !pickupCoords) {
+    if (showUserLocationDot && userLocation && !pickupCoords) {
       if (userMarkerRef.current) {
         userMarkerRef.current.setPosition(userLocation);
       } else {
