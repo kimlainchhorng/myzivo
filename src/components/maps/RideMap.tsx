@@ -264,6 +264,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
 
@@ -273,6 +274,19 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return routePolyline;
   }, [routePolyline]);
 
+  // Clear any existing route visuals
+  const clearRoute = useCallback(() => {
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null);
+      polylineRef.current = null;
+    }
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setMap(null);
+      directionsRendererRef.current = null;
+    }
+  }, []);
+
+  // ─── Map init ───
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -304,7 +318,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       mapRef.current = map;
       onMapReady?.(map);
 
-      // Fire onCenterChanged when map stops moving
       map.addListener("idle", () => {
         const c = map.getCenter();
         if (c && onCenterChanged) {
@@ -326,6 +339,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Resize observer ───
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container) return;
@@ -339,6 +353,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => observer.disconnect();
   }, []);
 
+  // ─── Markers + fit bounds ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -397,24 +412,70 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [pickupCoords, dropoffCoords, driverCoords]);
 
+  // ─── Route rendering: encoded polyline OR Directions Service fallback ───
   useEffect(() => {
     const map = mapRef.current;
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null);
-      polylineRef.current = null;
+    if (!map) {
+      return;
     }
 
-    if (map && decodedRoute && decodedRoute.length > 1) {
+    clearRoute();
+
+    // Case 1: We have a decoded polyline from the API
+    if (decodedRoute && decodedRoute.length > 1) {
       polylineRef.current = new google.maps.Polyline({
         path: decodedRoute,
         strokeColor: "#10b981",
-        strokeWeight: 4,
-        strokeOpacity: 0.9,
+        strokeWeight: 5,
+        strokeOpacity: 0.85,
         geodesic: true,
         map,
       });
+      return;
     }
-  }, [decodedRoute]);
+
+    // Case 2: No polyline but we have both coords — use Directions Service
+    if (pickupCoords && dropoffCoords) {
+      const directionsService = new google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: pickupCoords,
+          destination: dropoffCoords,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
+            const renderer = new google.maps.DirectionsRenderer({
+              map,
+              directions: result,
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: "#10b981",
+                strokeWeight: 5,
+                strokeOpacity: 0.85,
+              },
+            });
+            directionsRendererRef.current = renderer;
+          } else {
+            // Last resort: draw a straight dashed line
+            polylineRef.current = new google.maps.Polyline({
+              path: [pickupCoords, dropoffCoords],
+              strokeColor: "#10b981",
+              strokeWeight: 3,
+              strokeOpacity: 0.6,
+              geodesic: true,
+              icons: [{
+                icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+                offset: "0",
+                repeat: "15px",
+              }],
+              map,
+            });
+          }
+        }
+      );
+    }
+  }, [decodedRoute, pickupCoords, dropoffCoords, clearRoute]);
 
   useEffect(() => {
     const map = mapRef.current;
