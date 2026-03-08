@@ -54,6 +54,21 @@ import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
 import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 // ─── Saved Places Icon Map ───
+// ─── Dynamic search placeholder by tab ───
+function getSearchPlaceholder(tab: string): string {
+  if (tab === "rides") return "Where to Go";
+  if (tab === "eats") {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return "Breakfast";
+    if (hour >= 11 && hour < 17) return "Lunch";
+    if (hour >= 17 && hour < 22) return "Dinner";
+    return "Late Night";
+  }
+  if (tab === "flights") return "Search Flights";
+  if (tab === "hotels") return "Search Hotels";
+  return "Where to?";
+}
+
 const savedPlaceIconMap: Record<string, LucideIcon> = {
   home: Home,
   work: Briefcase,
@@ -276,7 +291,7 @@ const AppHome = () => {
                 <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">Where to?</span>
+                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">{getSearchPlaceholder(activeHomeTab)}</span>
               </div>
             </motion.button>
           </div>
