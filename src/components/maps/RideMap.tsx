@@ -442,7 +442,7 @@ function spawnAmbientCars(
   return markers;
 }
 
-function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
+function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, showUserLocationDot = true, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
