@@ -1129,20 +1129,20 @@ export default function RideBookingHome() {
               routePolyline={null}
               onCenterChanged={handleMapCenterChanged}
             >
-              {/* Center pin — always visible */}
-              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: '-24px' }}>
+              {/* Center pin — always visible above sheet */}
+              <div className="absolute inset-x-0 top-[38%] z-10 flex justify-center pointer-events-none">
                 <div className="flex flex-col items-center">
-                  {/* Pulsing ring */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '2s' }} />
-                  {/* Pin body */}
+                  {/* Pin + pulse */}
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-primary border-[3px] border-white shadow-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-white" />
+                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-ping" style={{ animationDuration: "1.8s" }} />
+                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 border-b-[3px] border-r-[3px] border-white" />
+                    <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 border-b-[3px] border-r-[3px] border-background" />
                   </div>
-                  {/* Shadow dot */}
-                  <div className="w-3 h-1.5 rounded-full bg-black/20 mt-2 blur-[1px]" />
+
+                  <div className="w-3 h-1.5 rounded-full bg-foreground/20 mt-2 blur-[1px]" />
+
                   {isReversingGeocode && (
                     <span className="mt-2 px-2.5 py-1 rounded-full bg-background/95 text-[10px] font-semibold text-foreground shadow-md flex items-center gap-1.5 backdrop-blur-sm">
                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
