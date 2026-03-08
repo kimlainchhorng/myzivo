@@ -1220,40 +1220,52 @@ export default function RideBookingHome() {
             </MapSection>
           </div>
 
-          {/* Draggable bottom sheet */}
-          <motion.div
-            className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
-            style={{
-              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
-              height: searchSheetY < -10
-                ? `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 20px)`
-                : 'auto',
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - 20px)`,
-            }}
-            initial={{ y: 0 }}
-            animate={{ y: searchSheetY }}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: viewportHeight * 0.25 }}
-            dragElastic={0.12}
-            onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-              if (info.offset.y < -60) {
-                // Drag up → expand full (y stays 0, height grows via style)
-                setSearchSheetY(-1); // trigger expanded height
-              } else if (info.offset.y > 80) {
-                // Drag down → collapse to peek
-                setSearchSheetY(viewportHeight * 0.22);
-              } else {
-                setSearchSheetY(0);
-              }
-            }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
-              <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-            </div>
+          {/* Draggable bottom sheet — 3 snap states: peek, half (default), full */}
+          {(() => {
+            const navH = BOTTOM_NAV_HEIGHT;
+            // Sheet top position from viewport top for each state
+            const fullTop = HEADER_HEIGHT + 10; // near full screen
+            const halfTop = viewportHeight * 0.42; // default ~half
+            const peekTop = viewportHeight - navH - 90; // just handle + title visible
 
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
+            const snapPositions = { full: fullTop, half: halfTop, peek: peekTop };
+            const currentTop = snapPositions[
+              searchSheetY < -10 ? "full" : searchSheetY > 10 ? "peek" : "half"
+            ];
+
+            return (
+              <motion.div
+                className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
+                style={{
+                  top: 0,
+                  bottom: 0,
+                }}
+                initial={{ y: halfTop }}
+                animate={{ y: currentTop }}
+                drag="y"
+                dragConstraints={{ top: fullTop, bottom: peekTop }}
+                dragElastic={0.1}
+                onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+                  const currentY = currentTop + info.offset.y;
+                  // Find closest snap
+                  const mid1 = (fullTop + halfTop) / 2;
+                  const mid2 = (halfTop + peekTop) / 2;
+                  if (currentY < mid1) {
+                    setSearchSheetY(-20); // full
+                  } else if (currentY > mid2) {
+                    setSearchSheetY(20); // peek
+                  } else {
+                    setSearchSheetY(0); // half
+                  }
+                }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              >
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+                  <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+                </div>
+
+                <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20">
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
               {/* Address inputs with ZIVO-style connector */}
@@ -1584,7 +1596,9 @@ export default function RideBookingHome() {
                 </Button>
               </div>
             )}
-          </motion.div>
+              </motion.div>
+            );
+          })()}
         </>
       )}
 
