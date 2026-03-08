@@ -671,6 +671,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       });
       bgPolylineRef.current = bgLine;
       polylineRef.current = animatedLine;
+      // Snap dropoff marker to actual route endpoint
+      const dropoffMarker = (markersRef as any).__dropoffMarker as google.maps.Marker | undefined;
+      if (dropoffMarker) {
+        const lastPt = decodedRoute[decodedRoute.length - 1];
+        dropoffMarker.setPosition(lastPt);
+      }
       return;
     }
 
