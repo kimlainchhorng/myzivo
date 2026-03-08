@@ -693,6 +693,13 @@ export default function RideBookingHome() {
     }
 
     // Block same-location trips
+    console.log("[RideBooking] Same-location check:", {
+      pickupAddr: JSON.stringify(pickupData.address),
+      destAddr: JSON.stringify(place.address),
+      pickupCoords: { lat: pickupData.lat, lng: pickupData.lng },
+      destCoords: { lat: place.lat, lng: place.lng },
+      isSame: isSameLocation(pickupData, place),
+    });
     if (isSameLocation(pickupData, place)) {
       toast.error("Pickup and destination can't be the same");
       return;
