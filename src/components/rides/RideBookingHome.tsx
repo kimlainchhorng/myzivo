@@ -1045,27 +1045,36 @@ export default function RideBookingHome() {
       {/* ═══════ 4a. HOME bottom sheet ═══════ */}
       {viewStep === "home" && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+          className="absolute left-0 right-0 z-30 rounded-t-[32px] bg-background shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)]"
           style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
-          <div className="px-5 pt-5 pb-3">
-            <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          <div className="px-5 pt-2 pb-4">
+            <h2 className="text-xl font-black text-foreground tracking-tight">{greeting}, {userName}</h2>
+            
+            {/* Where to? search bar */}
             <button
               onClick={() => setViewStep("search")}
-              className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
+              className="w-full mt-4 flex items-center gap-3 bg-muted/20 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/30 hover:border-primary/20 active:scale-[0.98] group"
             >
-              <MapPin className="w-5 h-5 text-foreground" />
-              <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card border border-border/30">
-                <Clock className="w-3.5 h-3.5 text-foreground" />
-                <span className="text-xs font-semibold text-foreground">Now</span>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                <MapPin className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <span className="flex-1 text-left text-sm font-semibold text-muted-foreground">Where to?</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/20">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-bold text-foreground">Now</span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
               </div>
             </button>
 
             {/* Saved places */}
             {savedPlaces.length > 0 ? (
-              <div className="mt-3 space-y-0">
+              <div className="mt-4 space-y-0">
                 {savedPlaces.map((place, i) => {
                   const Icon = place.icon;
                   return (
@@ -1073,18 +1082,18 @@ export default function RideBookingHome() {
                       key={place.id}
                       onClick={() => handleSavedPlace(place.address)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
-                        i < savedPlaces.length - 1 && "border-b border-border/15"
+                        "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-all duration-200 hover:bg-muted/10 active:scale-[0.98]",
+                        i < savedPlaces.length - 1 && "border-b border-border/10"
                       )}
                     >
-                      <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-foreground" />
+                      <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center shrink-0">
+                        <Icon className="w-4.5 h-4.5 text-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground">{place.name}</p>
-                        <p className="text-xs text-muted-foreground">{place.address}</p>
+                        <p className="text-xs text-muted-foreground truncate">{place.address}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                     </button>
                   );
                 })}
@@ -1092,8 +1101,8 @@ export default function RideBookingHome() {
             ) : null}
 
             {/* Get anywhere service grid */}
-            <div className="mt-4 border-t border-border/15 pt-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Get anywhere</p>
+            <div className="mt-5 border-t border-border/10 pt-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Get anywhere</p>
               <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
                 {homeServices.map((svc) => {
                   const Icon = svc.icon;
@@ -1101,10 +1110,10 @@ export default function RideBookingHome() {
                     <button
                       key={svc.id}
                       onClick={() => toast.info("Coming soon!")}
-                      className="flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-xl bg-muted/30 border border-border/20 shrink-0 hover:bg-muted/50 active:scale-95 transition-all"
+                      className="flex flex-col items-center justify-center gap-2 w-[64px] h-[64px] rounded-2xl bg-muted/15 border border-border/15 shrink-0 hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200 group"
                     >
-                      <Icon className="w-5 h-5 text-foreground" />
-                      <span className="text-[10px] font-semibold text-foreground">{svc.label}</span>
+                      <Icon className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] font-bold text-foreground">{svc.label}</span>
                     </button>
                   );
                 })}
