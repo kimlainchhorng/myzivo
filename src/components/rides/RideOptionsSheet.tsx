@@ -44,7 +44,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:24 pm",
     description: "Top-rated drivers, extra legroom",
     price: 45.61,
-    seats: 4,
+    seats: 3,
     image: "/vehicles/comfort-car-v2.png",
   },
   {
@@ -54,7 +54,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:25 pm",
     description: "Electric, zero-emission rides",
     price: 27.50,
-    seats: 4,
+    seats: 3,
     image: "/vehicles/ev-car-v2.png",
   },
   {
@@ -64,7 +64,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:26 pm",
     description: "Extra space for groups",
     price: 35.00,
-    seats: 6,
+    seats: 5,
     image: "/vehicles/xl-car-v2.png",
   },
   {
@@ -225,7 +225,7 @@ export default function RideOptionsSheet({
                   {ride.id === "xl" && (
                     <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
                       <Users className="w-3 h-3" />
-                      6+
+                      5+
                     </span>
                   )}
                   <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
