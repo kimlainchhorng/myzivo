@@ -1480,10 +1480,9 @@ export default function RideBookingHome() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
 
-            {/* Saved & Recent list */}
-            <div className="pt-4">
+              {/* Saved & Recent list */}
+              <div className="pt-4">
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
