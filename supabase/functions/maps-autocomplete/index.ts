@@ -47,6 +47,21 @@ const AIRPORT_CODES = new Set([
 
 const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|pick[\s-]?up|drop[\s-]?off|zone|baggage|claim|parking|taxi|rideshare|ground\s*transport)\b/i;
 const iataCodePattern = /^[A-Z]{3}$/;
+const US_AIRLINES = [
+  "American Airlines",
+  "Delta",
+  "United Airlines",
+  "Southwest Airlines",
+  "JetBlue",
+  "Spirit Airlines",
+  "Frontier Airlines",
+  "Alaska Airlines",
+  "Allegiant Air",
+  "Hawaiian Airlines",
+  "Sun Country Airlines",
+  "Breeze Airways",
+  "Avelo Airlines",
+];
 
 function isAirportCode(input: string): string | null {
   const upper = input.trim().toUpperCase();
