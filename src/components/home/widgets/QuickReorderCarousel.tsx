@@ -23,10 +23,10 @@ interface ReorderItem {
 }
 
 const typeConfig = {
-  ride: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", accent: "emerald" },
-  food: { icon: UtensilsCrossed, color: "text-orange-500", bg: "bg-orange-500/10", accent: "orange" },
-  flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", accent: "sky" },
-  hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", accent: "amber" },
+  ride: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", accent: "emerald", vehicleImage: "/vehicles/economy-car-v2.png" },
+  food: { icon: UtensilsCrossed, color: "text-orange-500", bg: "bg-orange-500/10", accent: "orange", vehicleImage: null },
+  flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", accent: "sky", vehicleImage: null },
+  hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", accent: "amber", vehicleImage: null },
 };
 
 // Demo data
@@ -142,8 +142,12 @@ export default function QuickReorderCarousel() {
                 </div>
 
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center border border-border/30`}>
-                    <Icon className={`w-5 h-5 ${cfg.color}`} />
+                  <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center border border-border/30 overflow-hidden`}>
+                    {cfg.vehicleImage ? (
+                      <img src={cfg.vehicleImage} alt={item.type} className="w-8 h-8 object-contain" />
+                    ) : (
+                      <Icon className={`w-5 h-5 ${cfg.color}`} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">{item.title}</p>
