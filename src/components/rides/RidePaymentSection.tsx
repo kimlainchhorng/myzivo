@@ -141,7 +141,7 @@ function AuthorizeForm({ onSuccess, price, vehicleName }: {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <PaymentElement options={{ layout: "tabs" }} />
+      <PaymentElement options={{ layout: "accordion", paymentMethodOrder: ["card", "apple_pay", "google_pay"] }} />
       {error && <p className="text-xs text-destructive text-center">{error}</p>}
       <Button
         type="submit"
