@@ -301,7 +301,17 @@ Deno.serve(async (req) => {
         ]
       : [];
 
-    const suggestions = [...syntheticZones, ...baseSuggestions]
+    const syntheticAirlines = isAirportSearch && primaryAirport
+      ? US_AIRLINES.map((airline, index) => ({
+          description: `${primaryAirport.description} — ${airline}`,
+          main_text: `✈ ${airline}`,
+          place_id: `${primaryAirport.place_id}::airline-${index}`,
+          canonical_place_id: primaryAirport.place_id,
+          score: 90 - index,
+        }))
+      : [];
+
+    const suggestions = [...syntheticZones, ...syntheticAirlines, ...baseSuggestions]
       .slice(0, 20)
       .map(({ score: _score, ...item }) => item);
 
