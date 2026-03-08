@@ -71,7 +71,7 @@ const homeTabs = [
 const suggestions = [
   { label: "Ride", icon: null, image: zivoRideIcon, href: "/rides", badge: "5% Off", badgeVariant: "discount" as const },
   { label: "Reserve", icon: Clock, image: null, href: "/scheduled", badge: "Promo", badgeVariant: "promo" as const },
-  { label: "Rental Cars", icon: Car, image: null, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
+  { label: "Rental Cars", icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
   { label: "Hourly", icon: Timer, image: null, href: "/rides", badge: null, badgeVariant: null },
 ];
 
