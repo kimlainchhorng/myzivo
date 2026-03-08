@@ -673,8 +673,10 @@ export default function RideBookingHome() {
 
   const isSameLocation = useCallback((a: PlaceData | null, b: PlaceData | null) => {
     if (!a || !b) return false;
-    const sameCoords = Math.abs(a.lat - b.lat) < 0.001 && Math.abs(a.lng - b.lng) < 0.001; // ~100m
-    const sameAddress = a.address.trim().toLowerCase() === b.address.trim().toLowerCase();
+    const sameCoords = Math.abs(a.lat - b.lat) < 0.002 && Math.abs(a.lng - b.lng) < 0.002; // ~200m
+    const normA = a.address.trim().toLowerCase().replace(/[,.\s]+/g, " ");
+    const normB = b.address.trim().toLowerCase().replace(/[,.\s]+/g, " ");
+    const sameAddress = normA === normB || normA.includes(normB) || normB.includes(normA);
     return sameCoords || sameAddress;
   }, []);
 
@@ -693,6 +695,13 @@ export default function RideBookingHome() {
     }
 
     // Block same-location trips
+    console.log("[RideBooking] Same-location check:", {
+      pickupAddr: JSON.stringify(pickupData.address),
+      destAddr: JSON.stringify(place.address),
+      pickupCoords: { lat: pickupData.lat, lng: pickupData.lng },
+      destCoords: { lat: place.lat, lng: place.lng },
+      isSame: isSameLocation(pickupData, place),
+    });
     if (isSameLocation(pickupData, place)) {
       toast.error("Pickup and destination can't be the same");
       return;
@@ -743,6 +752,11 @@ export default function RideBookingHome() {
   /* ─── Fetch route ─── */
   const fetchRoute = async (from: PlaceData, to: PlaceData) => {
     if (!from.lat || !to.lat) return;
+    // Safety net: block same-location routes
+    if (isSameLocation(from, to)) {
+      toast.error("Pickup and destination can't be the same location");
+      return;
+    }
     setIsLoadingRoute(true);
     setRouteData(null);
 
