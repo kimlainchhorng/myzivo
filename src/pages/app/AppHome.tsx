@@ -354,61 +354,8 @@ const AppHome = () => {
           {/* ─── LIVE TRIP TRACKER ─── */}
           <LiveTripTracker />
 
-          {/* ─── QUICK ESTIMATE CARD (Ultra Premium) ─── */}
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/rides")}
-            className="w-full rounded-2xl bg-gradient-to-br from-primary/10 via-emerald-500/5 to-primary/8 border border-primary/15 p-5 flex items-center gap-4 touch-manipulation text-left group relative overflow-hidden shadow-sm shadow-primary/5"
-          >
-            {/* Animated shine */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.04] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 to-emerald-500/15 flex items-center justify-center border border-primary/15 shadow-inner">
-              <Zap className="w-7 h-7 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                Quick Ride
-                {estimate.surge && <Flame className="w-3.5 h-3.5 text-amber-500" />}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                <span className="text-primary font-bold">{estimate.pickupEta}</span> pickup · <span className="font-bold text-foreground">{estimate.priceRange}</span> to Downtown
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <Badge variant="outline" className={`text-[9px] font-bold shrink-0 ${estimate.surge ? 'border-amber-500/30 text-amber-600 bg-amber-500/5' : 'border-primary/20 text-primary bg-primary/5'}`}>
-                {estimate.label}
-              </Badge>
-              <ArrowRight className="w-4 h-4 text-primary/60" />
-            </div>
-          </motion.button>
 
-          {/* ─── QUICK ACTIONS GRID (3x2 Ultra Premium) ─── */}
-          <div className="grid grid-cols-3 gap-3" role="navigation" aria-label="Quick actions">
-            {quickActions.map((action, i) => (
-              <motion.button
-                key={action.label}
-                whileTap={{ scale: 0.93 }}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06, duration: 0.35, ease: "easeOut" }}
-                onClick={() => navigate(action.href)}
-                className="relative flex flex-col items-center gap-2 py-5 px-2 rounded-2xl bg-card/90 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation overflow-hidden group min-h-[120px]"
-              >
-                {/* Top accent bar with gradient */}
-                <div className={`absolute top-0 left-3 right-3 h-[2.5px] rounded-b-full bg-gradient-to-r ${action.gradient} opacity-70 group-active:opacity-100 transition-opacity`} />
-                {/* Hover glow */}
-                <div className={`absolute inset-0 bg-gradient-to-b ${action.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
-                {/* Icon container */}
-                <div className={`w-14 h-14 rounded-2xl ${action.iconBg} border border-white/[0.08] flex items-center justify-center transition-all duration-300 group-active:scale-90 shadow-sm`}>
-                  <action.icon className={`w-7 h-7 ${action.color}`} strokeWidth={1.8} />
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-bold text-foreground tracking-tight block">{action.label}</span>
-                  <span className="text-[8px] text-muted-foreground/60 font-medium">{action.tagline}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
+
 
           {/* ─── QUICK REORDER CAROUSEL ─── */}
           <QuickReorderCarousel />
