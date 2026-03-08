@@ -496,6 +496,23 @@ export default function RideBookingHome() {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
+  // Lock page scroll for full-screen ride experience
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousOverscrollBehavior = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overscrollBehavior = previousOverscrollBehavior;
+    };
+  }, []);
+
   // Layout height constants
   const HEADER_HEIGHT = 56;
   const TABS_HEIGHT = 52;
