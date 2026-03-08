@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       return score;
     };
 
-    const suggestions = uniquePredictions
+    const baseSuggestions = uniquePredictions
       .map((p: any) => {
         const description = p.description ?? "";
         const mainText = p.structured_formatting?.main_text ?? description.split(",")[0] ?? "";
@@ -121,7 +121,38 @@ Deno.serve(async (req) => {
           score,
         };
       })
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => b.score - a.score);
+
+    const hasZoneLikeSuggestion = baseSuggestions.some((item) => {
+      const value = `${item.main_text} ${item.description}`.toLowerCase();
+      return value.includes("pickup") || value.includes("drop off") || value.includes("drop-off") || value.includes("arrivals") || value.includes("departures") || value.includes("zone");
+    });
+
+    const primaryAirportSuggestion = baseSuggestions.find((item) => {
+      const value = `${item.main_text} ${item.description}`.toLowerCase();
+      return value.includes("airport") || value.includes("terminal") || value.includes("msy");
+    });
+
+    const zoneFallbackSuggestions = shouldBoostAirportContext && !hasZoneLikeSuggestion && primaryAirportSuggestion
+      ? [
+          {
+            description: `${primaryAirportSuggestion.description} — Pickup (Arrivals Zone)`,
+            main_text: "Pickup (Arrivals Zone)",
+            place_id: `${primaryAirportSuggestion.place_id}::pickup`,
+            canonical_place_id: primaryAirportSuggestion.place_id,
+            score: 100,
+          },
+          {
+            description: `${primaryAirportSuggestion.description} — Drop-off (Departures Zone)`,
+            main_text: "Drop-off (Departures Zone)",
+            place_id: `${primaryAirportSuggestion.place_id}::dropoff`,
+            canonical_place_id: primaryAirportSuggestion.place_id,
+            score: 99,
+          },
+        ]
+      : [];
+
+    const suggestions = [...zoneFallbackSuggestions, ...baseSuggestions]
       .slice(0, 10)
       .map(({ score: _score, ...item }) => item);
 
