@@ -316,6 +316,8 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "black-lane": "/vehicles/black-lane-car-v2.png",
   "black-xl":  "/vehicles/black-xl-car-v2.png",
   "luxury-xl": "/vehicles/luxury-car-v2.png",
+  "pet":       "/vehicles/pet-car-v2.png",
+  "wheelchair": "/vehicles/wheelchair-car-v2.png",
 };
 
 const etaTime = (minutesFromNow: number) =>
