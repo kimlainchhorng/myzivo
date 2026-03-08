@@ -259,14 +259,153 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
   );
 }
 
+// ─── SVG marker builders ───
+
+function createPickupPinSvg(): string {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+      <defs>
+        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+        </filter>
+      </defs>
+      <path d="M18 47 C18 47 3 30 3 18 A15 15 0 1 1 33 18 C33 30 18 47 18 47Z" fill="#10b981" filter="url(#s)"/>
+      <circle cx="18" cy="18" r="7" fill="#fff"/>
+      <circle cx="18" cy="18" r="3.5" fill="#10b981"/>
+    </svg>
+  `)}`;
+}
+
+function createDropoffPinSvg(): string {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+      <defs>
+        <filter id="s" x="-20%" y="-10%" width="140%" height="130%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+        </filter>
+      </defs>
+      <path d="M18 47 C18 47 3 30 3 18 A15 15 0 1 1 33 18 C33 30 18 47 18 47Z" fill="#111827" filter="url(#s)"/>
+      <rect x="11" y="11" width="14" height="14" rx="2" fill="#fff"/>
+      <rect x="14" y="14" width="8" height="8" rx="1" fill="#111827"/>
+    </svg>
+  `)}`;
+}
+
+function createCarSvg(rotation: number): string {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <g transform="rotate(${rotation} 14 14)">
+        <rect x="8" y="4" width="12" height="20" rx="4" fill="#111827" opacity="0.85"/>
+        <rect x="9.5" y="6" width="9" height="5" rx="2" fill="#374151"/>
+        <rect x="9.5" y="17" width="9" height="3" rx="1.5" fill="#374151"/>
+        <circle cx="9" cy="8" r="1.2" fill="#fbbf24"/>
+        <circle cx="19" cy="8" r="1.2" fill="#fbbf24"/>
+        <circle cx="9" cy="22" r="1.2" fill="#ef4444" opacity="0.8"/>
+        <circle cx="19" cy="22" r="1.2" fill="#ef4444" opacity="0.8"/>
+      </g>
+    </svg>
+  `)}`;
+}
+
+// ─── Animated polyline drawing ───
+function animatePolyline(
+  map: google.maps.Map,
+  path: google.maps.LatLng[] | { lat: number; lng: number }[],
+  onDone?: (polyline: google.maps.Polyline) => void
+) {
+  const bgLine = new google.maps.Polyline({
+    path,
+    strokeColor: "#10b981",
+    strokeWeight: 6,
+    strokeOpacity: 0.15,
+    geodesic: true,
+    map,
+  });
+
+  const animatedLine = new google.maps.Polyline({
+    path: [],
+    strokeColor: "#10b981",
+    strokeWeight: 5,
+    strokeOpacity: 0.9,
+    geodesic: true,
+    map,
+  });
+
+  const totalPoints = path.length;
+  const duration = 800;
+  const startTime = performance.now();
+
+  function step(now: number) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const pointCount = Math.max(2, Math.floor(eased * totalPoints));
+    animatedLine.setPath(path.slice(0, pointCount));
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      bgLine.setMap(null);
+      onDone?.(animatedLine);
+    }
+  }
+
+  requestAnimationFrame(step);
+  return { bgLine, animatedLine };
+}
+
+// ─── Ambient cars around a center ───
+function spawnAmbientCars(
+  map: google.maps.Map,
+  center: { lat: number; lng: number },
+  count = 5
+): google.maps.Marker[] {
+  const markers: google.maps.Marker[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const offsetLat = (Math.random() - 0.5) * 0.025;
+    const offsetLng = (Math.random() - 0.5) * 0.035;
+    const rotation = Math.floor(Math.random() * 360);
+
+    const marker = new google.maps.Marker({
+      position: { lat: center.lat + offsetLat, lng: center.lng + offsetLng },
+      map,
+      icon: {
+        url: createCarSvg(rotation),
+        scaledSize: new google.maps.Size(28, 28),
+        anchor: new google.maps.Point(14, 14),
+      },
+      clickable: false,
+      zIndex: 10,
+    });
+    markers.push(marker);
+  }
+
+  const interval = setInterval(() => {
+    markers.forEach((m) => {
+      const pos = m.getPosition();
+      if (!pos) return;
+      m.setPosition({
+        lat: pos.lat() + (Math.random() - 0.5) * 0.0003,
+        lng: pos.lng() + (Math.random() - 0.5) * 0.0004,
+      });
+    });
+  }, 2500);
+
+  (markers as any).__driftInterval = interval;
+  return markers;
+}
+
 function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoords, userLocation, className, onMapReady, onCenterChanged }: RideMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const bgPolylineRef = useRef<google.maps.Polyline | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
+  const ambientCarsRef = useRef<google.maps.Marker[]>([]);
 
   const decodedRoute = useMemo(() => {
     if (!routePolyline) return null;
@@ -274,22 +413,22 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return routePolyline;
   }, [routePolyline]);
 
-  // Clear any existing route visuals
   const clearRoute = useCallback(() => {
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null);
-      polylineRef.current = null;
-    }
-    if (directionsRendererRef.current) {
-      directionsRendererRef.current.setMap(null);
-      directionsRendererRef.current = null;
-    }
+    if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null; }
+    if (bgPolylineRef.current) { bgPolylineRef.current.setMap(null); bgPolylineRef.current = null; }
+    if (directionsRendererRef.current) { directionsRendererRef.current.setMap(null); directionsRendererRef.current = null; }
+  }, []);
+
+  const clearAmbientCars = useCallback(() => {
+    const cars = ambientCarsRef.current;
+    if ((cars as any).__driftInterval) clearInterval((cars as any).__driftInterval);
+    cars.forEach((m) => m.setMap(null));
+    ambientCarsRef.current = [];
   }, []);
 
   // ─── Map init ───
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
-
     let cancelled = false;
     let frameCount = 0;
 
@@ -297,7 +436,6 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       if (cancelled) return;
       const container = mapContainerRef.current;
       if (!container) return;
-
       const rect = container.getBoundingClientRect();
       if ((rect.width === 0 || rect.height === 0) && frameCount < 600) {
         frameCount += 1;
@@ -317,13 +455,13 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
 
       mapRef.current = map;
       onMapReady?.(map);
-
       map.addListener("idle", () => {
         const c = map.getCenter();
-        if (c && onCenterChanged) {
-          onCenterChanged({ lat: c.lat(), lng: c.lng() });
-        }
+        if (c && onCenterChanged) onCenterChanged({ lat: c.lat(), lng: c.lng() });
       });
+
+      // Spawn ambient cars
+      ambientCarsRef.current = spawnAmbientCars(map, center, 5);
 
       setTimeout(() => {
         if (!mapRef.current) return;
@@ -333,27 +471,21 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     };
 
     requestAnimationFrame(initMap);
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Resize observer ───
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container) return;
-
     const observer = new ResizeObserver(() => {
-      if (!mapRef.current) return;
-      google.maps.event.trigger(mapRef.current, "resize");
+      if (mapRef.current) google.maps.event.trigger(mapRef.current, "resize");
     });
-
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
 
-  // ─── Markers + fit bounds ───
+  // ─── Custom pin markers + fit bounds ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -367,14 +499,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
           position: pickupCoords,
           map,
           icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: "#10b981",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 3,
+            url: createPickupPinSvg(),
+            scaledSize: new google.maps.Size(36, 48),
+            anchor: new google.maps.Point(18, 48),
           },
           title: "Pickup",
+          zIndex: 80,
         })
       );
     }
@@ -385,14 +515,12 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
           position: dropoffCoords,
           map,
           icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: "#10b981",
-            fillOpacity: 0.7,
-            strokeColor: "#065f46",
-            strokeWeight: 2,
+            url: createDropoffPinSvg(),
+            scaledSize: new google.maps.Size(36, 48),
+            anchor: new google.maps.Point(18, 48),
           },
           title: "Dropoff",
+          zIndex: 80,
         })
       );
     }
@@ -402,7 +530,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
       if (driverCoords) bounds.extend(driverCoords);
-      map.fitBounds(bounds, 60);
+      map.fitBounds(bounds, { top: 60, bottom: 60, left: 40, right: 40 });
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
       map.setZoom(15);
@@ -410,65 +538,55 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       map.panTo(dropoffCoords);
       map.setZoom(15);
     }
-  }, [pickupCoords, dropoffCoords, driverCoords]);
 
-  // ─── Route rendering: encoded polyline OR Directions Service fallback ───
+    // Reposition ambient cars near pickup
+    if (pickupCoords && map) {
+      clearAmbientCars();
+      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 5);
+    }
+  }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars]);
+
+  // ─── Animated route rendering ───
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-
+    if (!map) return;
     clearRoute();
 
-    // Case 1: We have a decoded polyline from the API
     if (decodedRoute && decodedRoute.length > 1) {
-      polylineRef.current = new google.maps.Polyline({
-        path: decodedRoute,
-        strokeColor: "#10b981",
-        strokeWeight: 5,
-        strokeOpacity: 0.85,
-        geodesic: true,
-        map,
+      const { bgLine, animatedLine } = animatePolyline(map, decodedRoute, (finalLine) => {
+        polylineRef.current = finalLine;
       });
+      bgPolylineRef.current = bgLine;
+      polylineRef.current = animatedLine;
       return;
     }
 
-    // Case 2: No polyline but we have both coords — use Directions Service
     if (pickupCoords && dropoffCoords) {
       const directionsService = new google.maps.DirectionsService();
       directionsService.route(
-        {
-          origin: pickupCoords,
-          destination: dropoffCoords,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
+        { origin: pickupCoords, destination: dropoffCoords, travelMode: google.maps.TravelMode.DRIVING },
         (result, status) => {
           if (status === google.maps.DirectionsStatus.OK && result) {
-            const renderer = new google.maps.DirectionsRenderer({
-              map,
-              directions: result,
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeColor: "#10b981",
-                strokeWeight: 5,
-                strokeOpacity: 0.85,
-              },
-            });
-            directionsRendererRef.current = renderer;
+            const path = result.routes[0]?.overview_path;
+            if (path && path.length > 1) {
+              const latLngs = path.map((p) => ({ lat: p.lat(), lng: p.lng() }));
+              const { bgLine, animatedLine } = animatePolyline(map, latLngs, (finalLine) => {
+                polylineRef.current = finalLine;
+              });
+              bgPolylineRef.current = bgLine;
+              polylineRef.current = animatedLine;
+            } else {
+              const renderer = new google.maps.DirectionsRenderer({
+                map, directions: result, suppressMarkers: true,
+                polylineOptions: { strokeColor: "#10b981", strokeWeight: 5, strokeOpacity: 0.85 },
+              });
+              directionsRendererRef.current = renderer;
+            }
           } else {
-            // Last resort: draw a straight dashed line
             polylineRef.current = new google.maps.Polyline({
               path: [pickupCoords, dropoffCoords],
-              strokeColor: "#10b981",
-              strokeWeight: 3,
-              strokeOpacity: 0.6,
-              geodesic: true,
-              icons: [{
-                icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
-                offset: "0",
-                repeat: "15px",
-              }],
+              strokeColor: "#10b981", strokeWeight: 3, strokeOpacity: 0.6, geodesic: true,
+              icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "15px" }],
               map,
             });
           }
@@ -477,6 +595,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     }
   }, [decodedRoute, pickupCoords, dropoffCoords, clearRoute]);
 
+  // ─── Driver marker (car icon) ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -486,48 +605,30 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
         driverMarkerRef.current.setPosition(driverCoords);
       } else {
         driverMarkerRef.current = new google.maps.Marker({
-          position: driverCoords,
-          map,
-          icon: {
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: "#3b82f6",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            rotation: 0,
-          },
-          title: "Driver",
-          zIndex: 100,
+          position: driverCoords, map,
+          icon: { url: createCarSvg(0), scaledSize: new google.maps.Size(32, 32), anchor: new google.maps.Point(16, 16) },
+          title: "Driver", zIndex: 100,
         });
       }
-    } else if (driverMarkerRef.current) {
-      driverMarkerRef.current.setMap(null);
-      driverMarkerRef.current = null;
+      ambientCarsRef.current.forEach((m) => m.setVisible(false));
+    } else {
+      if (driverMarkerRef.current) { driverMarkerRef.current.setMap(null); driverMarkerRef.current = null; }
+      ambientCarsRef.current.forEach((m) => m.setVisible(true));
     }
   }, [driverCoords]);
 
+  // ─── User location dot ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     if (userLocation && !pickupCoords) {
       if (userMarkerRef.current) {
         userMarkerRef.current.setPosition(userLocation);
       } else {
         userMarkerRef.current = new google.maps.Marker({
-          position: userLocation,
-          map,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: "#4285F4",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2.5,
-          },
-          title: "You",
-          zIndex: 50,
+          position: userLocation, map,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#4285F4", fillOpacity: 1, strokeColor: "#ffffff", strokeWeight: 2.5 },
+          title: "You", zIndex: 50,
         });
       }
     } else if (userMarkerRef.current) {
@@ -535,6 +636,9 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       userMarkerRef.current = null;
     }
   }, [userLocation, pickupCoords]);
+
+  // Cleanup on unmount
+  useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
 
   return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] ${className || ""}`} />;
 }
