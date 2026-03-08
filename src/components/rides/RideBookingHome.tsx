@@ -1197,7 +1197,7 @@ export default function RideBookingHome() {
             </div>
 
             {pickup && destination && (
-              <div className="px-4 pb-3 pt-2 shrink-0" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
+              <div className="px-4 pb-3 pt-2 shrink-0 bg-background border-t border-border/10" style={{ paddingBottom: `calc(12px + ${SAFE_BOTTOM})` }}>
                 <Button
                   className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   onClick={handleConfirmSearch}
