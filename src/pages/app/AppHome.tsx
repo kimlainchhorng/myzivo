@@ -277,14 +277,6 @@ const AppHome = () => {
                   <Search className="w-4.5 h-4.5 text-muted-foreground" />
                 </div>
                 <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">Where to?</span>
-                <div className="h-7 w-px bg-border/50" />
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigate("/scheduled"); }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-foreground bg-muted/50 hover:bg-muted transition-colors touch-manipulation"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Later
-                </button>
               </div>
             </motion.button>
           </div>
