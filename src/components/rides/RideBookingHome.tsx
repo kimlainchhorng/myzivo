@@ -750,7 +750,7 @@ export default function RideBookingHome() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentStep, setPaymentStep] = useState<"idle" | "authorizing" | "authorized" | "failed">("idle");
 
-  const handleRequestRide = async () => {
+  const handleRequestRide = async (paymentMethodId?: string) => {
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
       return;
@@ -789,11 +789,22 @@ export default function RideBookingHome() {
           ride_request_id: rideData.id,
           amount_cents: amountCents,
           ride_type: selectedVehicle,
+          payment_method_id: paymentMethodId || undefined,
         },
       });
 
       if (piError || !piData?.ok) {
         throw new Error(piData?.error || "Failed to create payment");
+      }
+
+      // If auto-confirmed with saved card, skip to searching
+      if (piData.auto_confirmed && piData.status === "requires_capture") {
+        setPaymentStep("idle");
+        setClientSecret(null);
+        await supabase.from("ride_requests").update({ status: "searching" }).eq("id", rideData.id);
+        setViewStep("searching");
+        toast.success("Payment authorized! Finding your driver...");
+        return;
       }
 
       setClientSecret(piData.client_secret);
