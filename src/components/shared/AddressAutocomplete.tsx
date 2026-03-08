@@ -125,8 +125,9 @@ export function AddressAutocomplete({
 
     try {
       // Try Place Details first
+      const selectedPlaceId = suggestion.canonical_place_id || suggestion.place_id;
       const { data, error: fnError } = await supabase.functions.invoke("maps-place-details", {
-        body: { place_id: suggestion.place_id },
+        body: { place_id: selectedPlaceId },
       });
 
       if (!fnError && data?.ok && data.lat != null && data.lng != null) {
