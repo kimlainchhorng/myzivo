@@ -1205,18 +1205,21 @@ export default function RideBookingHome() {
                 <div className="flex items-center gap-3">
                   {/* Pickup/Stops/Dropoff indicator dots + dotted lines */}
                   <div className="flex flex-col items-center py-2">
-                    {/* Pickup dot */}
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    {/* Pickup dot with glow */}
+                    <div className="relative">
+                      <div className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
+                      <div className="relative w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                    </div>
                     {/* Lines + dots for each stop */}
                     {stops.map((stop) => (
                       <div key={stop.id} className="flex flex-col items-center">
-                        <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/30 my-1" />
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                        <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />
                       </div>
                     ))}
                     {/* Line to destination */}
-                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/30 my-1" />
-                    <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
+                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
+                    <div className="w-3 h-3 rounded-sm bg-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
