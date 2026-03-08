@@ -616,18 +616,8 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   // ─── Animated route rendering ───
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      console.log("[RideMap] Route effect: map not ready yet");
-      return;
-    }
+    if (!map) return;
     clearRoute();
-
-    console.log("[RideMap] Route effect:", { 
-      hasDecodedRoute: !!decodedRoute, 
-      decodedLen: decodedRoute?.length,
-      hasPickup: !!pickupCoords, 
-      hasDropoff: !!dropoffCoords 
-    });
 
     if (decodedRoute && decodedRoute.length > 1) {
       const { bgLine, animatedLine } = animatePolyline(map, decodedRoute, (finalLine) => {
