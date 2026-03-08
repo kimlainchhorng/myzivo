@@ -1766,26 +1766,26 @@ export default function RideBookingHome() {
           className="absolute left-0 right-0 z-40 bg-background flex flex-col"
           style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
-          <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-            <h2 className="text-lg font-black text-foreground">Choose a ride</h2>
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+            <h2 className="text-xl font-black text-foreground tracking-tight">Choose a ride</h2>
             {/* Promo badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs font-bold text-emerald-600">15% promo applied</span>
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs font-bold text-primary">15% promo applied</span>
             </div>
           </div>
 
           {/* Category tabs */}
-          <div className="flex gap-2 px-5 pb-3 border-b border-border/10 shrink-0">
+          <div className="flex gap-1.5 px-5 pb-3 shrink-0">
             {(["popular", "premium", "accessible"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setRideCategory(cat)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-sm font-bold transition-all capitalize",
+                  "px-5 py-2 rounded-full text-[13px] font-bold transition-all duration-200 active:scale-95",
                   rideCategory === cat
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-foreground text-background shadow-md"
+                    : "bg-card border border-border/30 text-muted-foreground hover:text-foreground hover:border-border/60"
                 )}
               >
                 {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -1793,145 +1793,146 @@ export default function RideBookingHome() {
             ))}
           </div>
 
-          {/* Vehicle list — scrollable */}
-          <div className="flex-1 overflow-y-auto">
-            {filteredVehiclesByCategory.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => setSelectedVehicle(v.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-b border-border/10 last:border-0",
-                  selectedVehicle === v.id
-                    ? "bg-emerald-50 dark:bg-emerald-950/20 border-l-[3px] border-l-emerald-500"
-                    : "hover:bg-muted/10 border-l-[3px] border-l-transparent"
-                )}
-              >
-                {/* Left: Vehicle SVG */}
-                <div className="w-14 shrink-0 flex items-center justify-center">
-                  <img
-                    src={VEHICLE_IMAGES[v.id] ?? "/vehicles/economy-car.svg"}
-                    alt={v.name}
-                    className="w-14 h-auto"
-                  />
-                </div>
+          {/* Divider */}
+          <div className="h-px bg-border/15 mx-5" />
 
-                {/* Center: Name + meta */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-bold text-foreground">{v.name}</span>
-                    {v.id === "economy" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
-                        <TrendingDown className="w-3 h-3" />
-                        LOW
-                      </span>
-                    )}
-                    {v.id === "share" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                        <Users className="w-3 h-3" />
-                        SAVE
-                      </span>
-                    )}
-                    {v.id === "comfort" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
-                        <Sparkles className="w-3 h-3" />
-                        TOP
-                      </span>
-                    )}
-                    {v.id === "ev" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                        <Zap className="w-3 h-3" />
-                        EV
-                      </span>
-                    )}
-                    {v.id === "xl" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
-                        <Users className="w-3 h-3" />
-                        5+
-                      </span>
-                    )}
-                    {v.id === "black-lane" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
-                        <Crown className="w-3 h-3" />
-                        VIP
-                      </span>
-                    )}
-                    {v.id === "black-xl" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
-                        <Shield className="w-3 h-3" />
-                        PREMIUM
-                      </span>
-                    )}
-                    {v.id === "luxury-xl" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
-                        <Gem className="w-3 h-3" />
-                        ELITE
-                      </span>
-                    )}
-                    {v.id === "pet" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
-                        <PawPrint className="w-3 h-3" />
-                        PET
-                      </span>
-                    )}
-                    {v.id === "wheelchair" && (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
-                        <Accessibility className="w-3 h-3" />
-                        WAV
-                      </span>
-                    )}
-                    <div className="flex items-center gap-0.5">
-                      <User className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{v.capacity}</span>
+          {/* Vehicle list — scrollable */}
+          <div className="flex-1 overflow-y-auto px-1">
+            {filteredVehiclesByCategory.map((v, index) => {
+              const isSelected = selectedVehicle === v.id;
+              const price = calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0);
+              const isDiscount = v.surgeMultiplier < 1;
+              const originalPrice = isDiscount ? calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0) : null;
+
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedVehicle(v.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3.5 px-4 py-4 text-left transition-all duration-200 active:scale-[0.98] relative",
+                    isSelected
+                      ? "bg-primary/5"
+                      : "hover:bg-muted/8",
+                    index < filteredVehiclesByCategory.length - 1 && "border-b border-border/8"
+                  )}
+                >
+                  {/* Selection indicator */}
+                  {isSelected && (
+                    <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary" />
+                  )}
+
+                  {/* Vehicle image */}
+                  <div className="w-[68px] shrink-0 flex items-center justify-center">
+                    <img
+                      src={VEHICLE_IMAGES[v.id] ?? "/vehicles/economy-car.svg"}
+                      alt={v.name}
+                      className={cn("w-[68px] h-auto transition-transform duration-200", isSelected && "scale-105")}
+                    />
+                  </div>
+
+                  {/* Center: Name + meta */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{v.name}</span>
+                      {v.id === "economy" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                          <TrendingDown className="w-3 h-3" />LOW
+                        </span>
+                      )}
+                      {v.id === "share" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold">
+                          <Users className="w-3 h-3" />SAVE
+                        </span>
+                      )}
+                      {v.id === "comfort" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                          <Sparkles className="w-3 h-3" />TOP
+                        </span>
+                      )}
+                      {v.id === "ev" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                          <Zap className="w-3 h-3" />EV
+                        </span>
+                      )}
+                      {v.id === "xl" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
+                          <Users className="w-3 h-3" />5+
+                        </span>
+                      )}
+                      {v.id === "black-lane" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                          <Crown className="w-3 h-3" />VIP
+                        </span>
+                      )}
+                      {v.id === "black-xl" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-muted/30 text-muted-foreground text-[10px] font-bold">
+                          <Shield className="w-3 h-3" />PREMIUM
+                        </span>
+                      )}
+                      {v.id === "luxury-xl" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+                          <Gem className="w-3 h-3" />ELITE
+                        </span>
+                      )}
+                      {v.id === "pet" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                          <PawPrint className="w-3 h-3" />PET
+                        </span>
+                      )}
+                      {v.id === "wheelchair" && (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                          <Accessibility className="w-3 h-3" />WAV
+                        </span>
+                      )}
+                      <div className="flex items-center gap-0.5 text-muted-foreground/60">
+                        <User className="w-3 h-3" />
+                        <span className="text-[11px]">{v.capacity}</span>
+                      </div>
                     </div>
-                    {v.carSeat && (
-                      <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 text-[10px] font-bold">
-                        Car seat
-                      </span>
+                    <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                      {etaTime(v.etaMin)} · {v.desc}
+                    </p>
+                  </div>
+
+                  {/* Right: Price + check */}
+                  <div className="shrink-0 text-right flex flex-col items-end gap-1">
+                    {isDiscount && originalPrice ? (
+                      <>
+                        <span className="text-[11px] text-muted-foreground line-through">${originalPrice.toFixed(2)}</span>
+                        <span className="text-[15px] font-bold text-primary flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+                          ${price.toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[15px] font-bold text-foreground">${price.toFixed(2)}</span>
+                    )}
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+                      </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {etaTime(v.etaMin)} · {v.desc}
-                  </p>
-                </div>
-
-                {/* Right: Price */}
-                <div className="shrink-0 text-right">
-                  {v.surgeMultiplier < 1 ? (
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs text-muted-foreground line-through">
-                        ${calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
-                      </span>
-                      <span className="text-sm font-bold text-emerald-500 flex items-center gap-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                        ${calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-sm font-bold text-foreground">
-                      ${calcPrice(v, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0).toFixed(2)}
-                    </span>
-                  )}
-                  {selectedVehicle === v.id && (
-                    <div className="mt-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center ml-auto">
-                      <CheckCircle className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
 
           {/* Payment row */}
-          <div className="shrink-0 mt-4 pt-3 border-t border-border/20 px-5 py-3 flex items-center gap-3">
-            <CreditCard className="w-5 h-5 text-muted-foreground" />
-            <span className="flex-1 text-sm text-foreground font-medium">Visa •••• 4242</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          <div className="shrink-0 border-t border-border/15">
+            <button className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-muted/8 transition-colors active:scale-[0.98]">
+              <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border/20 flex items-center justify-center">
+                <CreditCard className="w-[18px] h-[18px] text-muted-foreground" />
+              </div>
+              <span className="flex-1 text-[14px] text-foreground font-semibold text-left">Visa •••• 4242</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+            </button>
           </div>
 
           {/* Confirm button */}
-          <div className="shrink-0 px-5" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
+          <div className="shrink-0 px-5 pt-1" style={{ paddingBottom: `calc(16px + ${SAFE_BOTTOM})` }}>
             <Button
-              className="w-full h-14 rounded-[22px] text-base font-bold bg-foreground text-background"
+              className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg active:scale-[0.97] transition-all duration-200"
               onClick={() => setViewStep("confirm-ride")}
             >
               Confirm {currentVehicle.name} · ${currentPrice.toFixed(2)}
