@@ -1622,7 +1622,8 @@ export default function RideBookingHome() {
             const shouldCollapse = info.offset.y > 80 || info.velocity.y > 500;
             if (shouldCollapse) setSheetExpanded(false);
           }}
-          animate={{ height: COLLAPSED_SHEET_HEIGHT }}
+          initial={{ height: COLLAPSED_SHEET_HEIGHT, y: 0 }}
+          animate={{ height: COLLAPSED_SHEET_HEIGHT, y: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
           className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
           style={{
