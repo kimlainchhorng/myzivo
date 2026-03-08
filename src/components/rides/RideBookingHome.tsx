@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { getStripe } from "@/lib/stripe";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -337,6 +339,68 @@ const etaTime = (minutesFromNow: number) =>
   new Date(Date.now() + minutesFromNow * 60000)
     .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     .toLowerCase();
+
+/* ─── Stripe Payment Form (inside Elements provider) ─── */
+function StripePaymentForm({ onSuccess, isSubmitting, price, vehicleName }: {
+  onSuccess: () => void;
+  isSubmitting: boolean;
+  price: number;
+  vehicleName: string;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    setErrorMsg(null);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href, // fallback — we handle inline
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setErrorMsg(error.message || "Payment failed");
+      setProcessing(false);
+    } else {
+      // Payment authorized successfully
+      setProcessing(false);
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement
+        options={{
+          layout: "tabs",
+        }}
+      />
+      {errorMsg && (
+        <p className="text-sm text-destructive text-center">{errorMsg}</p>
+      )}
+      <Button
+        type="submit"
+        className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+        disabled={!stripe || processing || isSubmitting}
+      >
+        <Shield className="w-5 h-5" />
+        {processing ? "Authorizing..." : `Authorize $${price.toFixed(2)} · ${vehicleName}`}
+      </Button>
+      <p className="text-[10px] text-muted-foreground text-center">
+        Your card will be pre-authorized. Final charge applied after ride completion.
+      </p>
+    </form>
+  );
+}
 
 /* ─── Main Component ─── */
 export default function RideBookingHome() {
@@ -681,7 +745,10 @@ export default function RideBookingHome() {
     fetchRoute(pickup, destination);
   };
 
-  /* ─── Request Ride — Supabase Insert ─── */
+  /* ─── Request Ride — Create PaymentIntent + Confirm ─── */
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<"idle" | "authorizing" | "authorized" | "failed">("idle");
+
   const handleRequestRide = async () => {
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
@@ -689,8 +756,10 @@ export default function RideBookingHome() {
     }
 
     setIsSubmitting(true);
+    setPaymentStep("authorizing");
     try {
-      const { data, error } = await supabase.from("ride_requests").insert({
+      // 1. Create ride request in DB
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
         user_id: user.id,
         pickup_address: pickup.address,
         pickup_lat: pickup.lat,
@@ -702,23 +771,50 @@ export default function RideBookingHome() {
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "searching",
+        status: "pending_payment",
         customer_name: user.user_metadata?.full_name || "",
         customer_phone: user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
         car_seat_type: currentVehicle.carSeat ? "standard" : null,
       }).select("id").single();
 
-      if (error) throw error;
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
 
-      setRideRequestId(data.id);
-      setViewStep("searching");
+      // 2. Create Stripe PaymentIntent (pre-authorization)
+      const amountCents = Math.round(currentPrice * 100);
+      const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
+        body: {
+          ride_request_id: rideData.id,
+          amount_cents: amountCents,
+          ride_type: selectedVehicle,
+        },
+      });
+
+      if (piError || !piData?.ok) {
+        throw new Error(piData?.error || "Failed to create payment");
+      }
+
+      setClientSecret(piData.client_secret);
+      setPaymentStep("authorized");
     } catch (err: unknown) {
-      console.error("[RideBooking] Request error:", err);
-      toast.error("Failed to request ride. Please try again.");
+      console.error("[RideBooking] Payment error:", err);
+      toast.error("Payment failed. Please try again.");
+      setPaymentStep("failed");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** After Stripe confirms payment, proceed to searching */
+  const handlePaymentSuccess = async () => {
+    if (rideRequestId) {
+      await supabase.from("ride_requests").update({ status: "searching" }).eq("id", rideRequestId);
+    }
+    setPaymentStep("idle");
+    setClientSecret(null);
+    setViewStep("searching");
+    toast.success("Payment authorized! Finding your driver...");
   };
 
   /* ─── Reset state ─── */
@@ -737,6 +833,8 @@ export default function RideBookingHome() {
     setTip(null);
     setSurgeMultiplier(1.0);
     setRideCategory("popular");
+    setClientSecret(null);
+    setPaymentStep("idle");
   };
 
   /* ─── Cancel ride ─── */
@@ -1409,15 +1507,15 @@ export default function RideBookingHome() {
         </div>
       )}
 
-      {/* ═══════ CONFIRM RIDE — full-screen overlay ═══════ */}
+      {/* ═══════ CONFIRM RIDE — with real Stripe payment ═══════ */}
       {viewStep === "confirm-ride" && (
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-background flex flex-col overflow-y-auto"
-          style={{ top: HEADER_HEIGHT }}
+          className="absolute left-0 right-0 z-40 bg-background flex flex-col overflow-y-auto"
+          style={{ top: HEADER_HEIGHT, bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
           <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
             <button
-              onClick={() => setViewStep("ride-options")}
+              onClick={() => { setViewStep("ride-options"); setClientSecret(null); setPaymentStep("idle"); }}
               className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0"
               aria-label="Go back"
             >
@@ -1426,7 +1524,7 @@ export default function RideBookingHome() {
             <h2 className="text-lg font-black text-foreground">Confirm your ride</h2>
           </div>
 
-          <div className="px-4 pb-4 space-y-0">
+          <div className="px-4 pb-4 space-y-0 flex-1 overflow-y-auto">
             {/* Route */}
             <div className="rounded-2xl bg-muted/15 border border-border/20 p-4 mb-3">
               <div className="flex items-start gap-3">
@@ -1456,22 +1554,6 @@ export default function RideBookingHome() {
               </div>
             </div>
 
-            {/* Payment */}
-            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground flex-1">Visa •••• 4242</span>
-                <button className="text-xs font-bold text-primary">Change &gt;</button>
-              </div>
-            </div>
-
-            {/* Promo */}
-            <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3 flex items-center justify-between">
-              <span className="text-sm text-foreground">Promo code</span>
-              <button className="text-xs font-bold text-primary">Add &gt;</button>
-            </div>
-
             {/* Route info */}
             {routeData && (
               <div className="rounded-2xl bg-muted/15 border border-border/20 p-3 mb-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
@@ -1489,14 +1571,69 @@ export default function RideBookingHome() {
               </div>
             )}
 
-            <Button
-              className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
-              onClick={handleRequestRide}
-              disabled={isSubmitting}
-            >
-              <Zap className="w-5 h-5" />
-              {isSubmitting ? "Requesting..." : "Request Ride"}
-            </Button>
+            {/* Payment Section — Stripe Elements or Request button */}
+            {clientSecret ? (
+              <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Payment</p>
+                <Elements
+                  stripe={getStripe()}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: "stripe",
+                      variables: {
+                        colorPrimary: "#16a34a",
+                        borderRadius: "12px",
+                      },
+                    },
+                  }}
+                >
+                  <StripePaymentForm
+                    onSuccess={handlePaymentSuccess}
+                    isSubmitting={isSubmitting}
+                    price={currentPrice}
+                    vehicleName={currentVehicle.name}
+                  />
+                </Elements>
+              </div>
+            ) : (
+              <>
+                {/* Pre-payment: show request button to create PI */}
+                <div className="rounded-2xl bg-card border border-border/20 p-4 mb-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-foreground flex-1">Card payment via Stripe</span>
+                    <Shield className="w-4 h-4 text-primary" />
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full h-14 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg gap-2"
+                  onClick={handleRequestRide}
+                  disabled={isSubmitting}
+                >
+                  <Zap className="w-5 h-5" />
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                      Setting up payment...
+                    </span>
+                  ) : (
+                    `Pay & Request · $${currentPrice.toFixed(2)}`
+                  )}
+                </Button>
+                <p className="text-[10px] text-muted-foreground text-center mt-2">
+                  Your card will be pre-authorized. Final charge after ride completion.
+                </p>
+              </>
+            )}
+
+            {paymentStep === "failed" && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 mt-2 text-center">
+                <p className="text-sm text-destructive font-medium">Payment setup failed. Please try again.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

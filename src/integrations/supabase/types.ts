@@ -32371,6 +32371,7 @@ export type Database = {
           notes: string | null
           payment_amount: number | null
           payment_currency: string | null
+          payment_intent_id: string | null
           payment_status: string | null
           pickup_address: string
           pickup_lat: number | null
@@ -32422,6 +32423,7 @@ export type Database = {
           notes?: string | null
           payment_amount?: number | null
           payment_currency?: string | null
+          payment_intent_id?: string | null
           payment_status?: string | null
           pickup_address: string
           pickup_lat?: number | null
@@ -32473,6 +32475,7 @@ export type Database = {
           notes?: string | null
           payment_amount?: number | null
           payment_currency?: string | null
+          payment_intent_id?: string | null
           payment_status?: string | null
           pickup_address?: string
           pickup_lat?: number | null
