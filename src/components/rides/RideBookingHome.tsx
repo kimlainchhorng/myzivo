@@ -1625,9 +1625,10 @@ export default function RideBookingHome() {
           initial={{ height: COLLAPSED_SHEET_HEIGHT, y: 0 }}
           animate={{ height: COLLAPSED_SHEET_HEIGHT, y: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col overflow-hidden"
+          className="absolute left-0 right-0 z-[100] rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.15)] flex flex-col overflow-hidden border-t border-border/20"
           style={{
-            bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})`,
+            bottom: 0,
+            height: COLLAPSED_SHEET_HEIGHT,
             touchAction: "none",
           }}
         >
