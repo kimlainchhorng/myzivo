@@ -64,7 +64,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:26 pm",
     description: "Extra space for groups",
     price: 35.00,
-    seats: 6,
+    seats: 5,
     image: "/vehicles/xl-car-v2.png",
   },
   {
