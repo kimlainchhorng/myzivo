@@ -254,3 +254,6 @@ verify_jwt = false
 
 [functions.manage-payment-methods]
 verify_jwt = false
+
+[functions.maps-reverse-geocode]
+verify_jwt = false
