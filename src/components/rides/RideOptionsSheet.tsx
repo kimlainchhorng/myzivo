@@ -97,13 +97,33 @@ const rideOptionsSeed: RideOption[] = [
     seats: 6,
     image: "/vehicles/luxury-car-v2.png",
   },
+  {
+    id: "pet",
+    name: "ZIVO Pet",
+    category: "Accessible",
+    eta: "3:30 pm",
+    description: "Pet-friendly rides",
+    price: 30.00,
+    seats: 3,
+    image: "/vehicles/pet-car-v2.png",
+  },
+  {
+    id: "wheelchair",
+    name: "ZIVO Wheel Chair",
+    category: "Accessible",
+    eta: "3:32 pm",
+    description: "Wheelchair accessible vehicle",
+    price: 28.00,
+    seats: 3,
+    image: "/vehicles/wheelchair-car-v2.png",
+  },
 ];
 
 function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-const categories: RideCategory[] = ["Popular", "Premium"];
+const categories: RideCategory[] = ["Popular", "Premium", "Accessible"];
 
 interface RideOptionsSheetProps {
   onConfirm?: (rideId: string) => void;
