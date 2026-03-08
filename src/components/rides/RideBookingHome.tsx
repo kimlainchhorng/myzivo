@@ -12,7 +12,7 @@ import {
   CreditCard, User, CalendarClock, Map,
   Star, Phone, MessageSquare, Shield, Banknote,
   Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown
+  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -254,6 +254,18 @@ function VehicleRow({
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
               <Crown className="w-3 h-3" />
               VIP
+            </span>
+          )}
+          {vehicle.id === "black-xl" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+              <Shield className="w-3 h-3" />
+              PREMIUM
+            </span>
+          )}
+          {vehicle.id === "luxury-xl" && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+              <Gem className="w-3 h-3" />
+              ELITE
             </span>
           )}
           {vehicle.carSeat && (
@@ -1136,6 +1148,18 @@ export default function RideBookingHome() {
                       <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
                         <Crown className="w-3 h-3" />
                         VIP
+                      </span>
+                    )}
+                    {v.id === "black-xl" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+                        <Shield className="w-3 h-3" />
+                        PREMIUM
+                      </span>
+                    )}
+                    {v.id === "luxury-xl" && (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+                        <Gem className="w-3 h-3" />
+                        ELITE
                       </span>
                     )}
                     <div className="flex items-center gap-0.5">
