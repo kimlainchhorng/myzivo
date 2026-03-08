@@ -1338,14 +1338,12 @@ export default function RideBookingHome() {
                     <div className="mt-3 rounded-2xl bg-muted/15 border border-border/30 p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-foreground">Someone else is riding</p>
-                        {otherName && (
-                          <button
-                            onClick={() => { setOtherName(""); setOtherPhone(""); setShowPickupOther(false); }}
-                            className="text-[10px] font-semibold text-destructive"
-                          >
-                            Clear
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setShowPickupOther(false)}
+                          className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
                       </div>
                       <div className="space-y-2">
                         <div>
