@@ -67,7 +67,23 @@ Deno.serve(async (req) => {
     console.log(`[maps-autocomplete] Fetching suggestions for: "${normalizedInput}"`);
 
     const predictionGroups = await Promise.all(queryInputs.map(fetchPredictions));
-    const mergedPredictions = predictionGroups.flat();
+    let mergedPredictions = predictionGroups.flat();
+
+    if (shouldBoostAirportContext) {
+      const detectedAirportCode = mergedPredictions
+        .map((prediction: any) => {
+          const description = String(prediction?.description ?? "");
+          const match = description.match(/\(([A-Z]{3})\)/);
+          return match?.[1] ?? null;
+        })
+        .find((code): code is string => Boolean(code));
+
+      if (detectedAirportCode) {
+        const airportCodeQueries = [`${detectedAirportCode} arrivals`, `${detectedAirportCode} departures`, `${detectedAirportCode} pickup zone`];
+        const airportCodePredictionGroups = await Promise.all(airportCodeQueries.map(fetchPredictions));
+        mergedPredictions = [...mergedPredictions, ...airportCodePredictionGroups.flat()];
+      }
+    }
 
     const uniquePredictions = Array.from(
       new Map(mergedPredictions.map((p: any) => [p.place_id, p])).values()
