@@ -49,6 +49,7 @@ import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
 import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
+import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
