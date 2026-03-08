@@ -1066,7 +1066,6 @@ export default function RideBookingHome() {
             <div
               className="absolute left-0 right-0 bottom-0 z-30 rounded-t-[28px] bg-background shadow-[0_-16px_50px_hsl(var(--foreground)/0.12)]"
             >
-          >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
