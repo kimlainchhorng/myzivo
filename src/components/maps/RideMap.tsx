@@ -507,23 +507,59 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
     return () => observer.disconnect();
   }, []);
 
-  // ─── Custom pin markers + fit bounds ───
+  // ─── Custom pin markers + pulse + fit bounds ───
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
+    // Clear old markers & pulse
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
+    if (pulseCircleRef.current) { pulseCircleRef.current.setMap(null); pulseCircleRef.current = null; }
 
     if (pickupCoords) {
+      // Pulsing circle around pickup
+      pulseCircleRef.current = new google.maps.Circle({
+        center: pickupCoords,
+        radius: 120,
+        map,
+        fillColor: "#10b981",
+        fillOpacity: 0.08,
+        strokeColor: "#10b981",
+        strokeOpacity: 0.25,
+        strokeWeight: 1.5,
+        clickable: false,
+        zIndex: 5,
+      });
+
+      // Animate pulse
+      let growing = true;
+      const pulseInterval = setInterval(() => {
+        const circle = pulseCircleRef.current;
+        if (!circle) { clearInterval(pulseInterval); return; }
+        const r = circle.getRadius();
+        if (growing) {
+          circle.setRadius(r + 8);
+          circle.setOptions({ fillOpacity: Math.max(0.02, 0.08 - (r - 120) * 0.0005) });
+          if (r >= 220) growing = false;
+        } else {
+          circle.setRadius(r - 8);
+          circle.setOptions({ fillOpacity: Math.min(0.08, 0.02 + (220 - r) * 0.0005) });
+          if (r <= 120) growing = true;
+        }
+      }, 60);
+
+      // Store interval for cleanup
+      (pulseCircleRef as any).__interval = pulseInterval;
+
       markersRef.current.push(
         new google.maps.Marker({
           position: pickupCoords,
           map,
           icon: {
             url: createPickupPinSvg(),
-            scaledSize: new google.maps.Size(40, 52),
-            anchor: new google.maps.Point(20, 52),
+            scaledSize: new google.maps.Size(44, 56),
+            anchor: new google.maps.Point(22, 56),
           },
           title: "Pickup",
           zIndex: 80,
@@ -542,17 +578,18 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
             anchor: new google.maps.Point(20, 52),
           },
           title: "Dropoff",
-          zIndex: 80,
+          zIndex: 79,
         })
       );
     }
 
+    // Fit bounds with generous padding
     if (pickupCoords && dropoffCoords) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickupCoords);
       bounds.extend(dropoffCoords);
       if (driverCoords) bounds.extend(driverCoords);
-      map.fitBounds(bounds, { top: 60, bottom: 60, left: 40, right: 40 });
+      map.fitBounds(bounds, { top: 80, bottom: 80, left: 50, right: 50 });
     } else if (pickupCoords) {
       map.panTo(pickupCoords);
       map.setZoom(15);
@@ -561,11 +598,16 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
       map.setZoom(15);
     }
 
-    // Reposition ambient cars near pickup
+    // Spawn ambient cars away from pins
+    const avoidPoints = [pickupCoords, dropoffCoords].filter(Boolean) as { lat: number; lng: number }[];
     if (pickupCoords && map) {
       clearAmbientCars();
-      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 5);
+      ambientCarsRef.current = spawnAmbientCars(map, pickupCoords, 4, avoidPoints);
     }
+
+    return () => {
+      if ((pulseCircleRef as any).__interval) clearInterval((pulseCircleRef as any).__interval);
+    };
   }, [pickupCoords, dropoffCoords, driverCoords, clearAmbientCars]);
 
   // ─── Animated route rendering ───
