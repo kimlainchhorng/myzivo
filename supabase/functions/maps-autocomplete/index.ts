@@ -46,12 +46,13 @@ const AIRPORT_CODES = new Set([
 ]);
 
 const airportKeywordPattern = /\b(airport|terminal|gate|concourse|airline|arrivals?|departures?|pickup|pick[\s-]?up|drop[\s-]?off|zone|baggage|claim|parking|taxi|rideshare|ground\s*transport)\b/i;
+const iataCodePattern = /^[A-Z]{3}$/;
 
 function isAirportCode(input: string): string | null {
   const upper = input.trim().toUpperCase();
-  // Check if the whole input or a word in it is a known code
+  // Match known US airport codes first, then fallback to any IATA-like 3-letter code
   for (const word of upper.split(/\s+/)) {
-    if (AIRPORT_CODES.has(word)) return word;
+    if (AIRPORT_CODES.has(word) || iataCodePattern.test(word)) return word;
   }
   return null;
 }
