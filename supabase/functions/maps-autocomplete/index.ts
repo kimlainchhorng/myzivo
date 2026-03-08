@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
       if (!/\b(zone|pickup|pick[\s-]?up)\b/i.test(base)) queryInputs.push(`${base} pickup`);
       if (!/\b(arrivals?|departures?)\b/i.test(base)) queryInputs.push(`${base} arrivals`);
       if (!/\b(departures?)\b/i.test(base)) queryInputs.push(`${base} departures`);
+      if (!/\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|airline)\b/i.test(base)) queryInputs.push(`${base} American Airlines`);
       // Deduplicate
       const unique = Array.from(new Set(queryInputs.filter(Boolean)));
       queryInputs.length = 0;
