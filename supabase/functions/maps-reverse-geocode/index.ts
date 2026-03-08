@@ -47,7 +47,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const address = data.results[0].formatted_address;
+    const isPlusCodeAddress = (value: string) => /^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/i.test(value.trim());
+
+    const preferredTypeOrder = [
+      "street_address",
+      "premise",
+      "subpremise",
+      "route",
+      "intersection",
+      "neighborhood",
+    ];
+
+    const nonPlusCodeResults = data.results.filter((r: any) => !isPlusCodeAddress(r.formatted_address || ""));
+
+    const bestMatch =
+      preferredTypeOrder
+        .map((type) => nonPlusCodeResults.find((r: any) => Array.isArray(r.types) && r.types.includes(type)))
+        .find(Boolean) ||
+      nonPlusCodeResults[0] ||
+      data.results[0];
+
+    const address = bestMatch.formatted_address;
     console.log(`[maps-reverse-geocode] Found: ${address}`);
 
     return new Response(JSON.stringify({ ok: true, address }), {
