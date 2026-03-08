@@ -755,6 +755,10 @@ export default function RideBookingHome() {
 
   const handleConfirmSearch = () => {
     if (!pickup || !destination) return;
+    if (isSameLocation(pickup, destination)) {
+      toast.error("Please choose a different destination");
+      return;
+    }
     fetchRoute(pickup, destination);
   };
 
