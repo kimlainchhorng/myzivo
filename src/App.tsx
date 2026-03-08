@@ -30,6 +30,8 @@ import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
+const Index = lazy(() => import("./pages/Index"));
+
 // App (mobile-first) pages
 const AppHome = lazy(() => import("./pages/app/AppHome"));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
