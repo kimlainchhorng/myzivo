@@ -74,9 +74,9 @@ const vehicleOptions = [
   // Popular
   { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
   { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 0.90, basePrice: 2.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
-  { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 4, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 1.70, basePrice: 4.00, capacity: 4, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 2.00, basePrice: 5.50, capacity: 6, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 3, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 1.70, basePrice: 4.00, capacity: 3, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 2.00, basePrice: 5.50, capacity: 5, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
   // Premium
   { id: "black-lane", category: "premium", name: "ZIVO BLACK Lane", desc: "Executive black sedan service", etaMin: 6, pricePerMile: 3.80, basePrice: 8.00, capacity: 4, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
   { id: "black-xl", category: "premium", name: "ZIVO BLACK XL", desc: "Premium black SUV for groups", etaMin: 7, pricePerMile: 4.20, basePrice: 9.50, capacity: 6, icon: Crown, carSeat: false, surgeMultiplier: 1.0 },
