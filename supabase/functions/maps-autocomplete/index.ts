@@ -32,8 +32,6 @@ Deno.serve(async (req) => {
 
     let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
       `?input=${encodeURIComponent(input.trim())}` +
-      `&types=geocode|establishment` +
-      `&components=country:us` +
       `&key=${encodeURIComponent(key)}`;
 
     if (proximity?.lat && proximity?.lng) {
