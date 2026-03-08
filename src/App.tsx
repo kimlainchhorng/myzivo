@@ -518,8 +518,6 @@ const App = () => (
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
                 <Route path="/support/tickets" element={<ProtectedRoute><UserSupportTicketsPage /></ProtectedRoute>} />
                 <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
-
-const Index = lazy(() => import("./pages/Index"));
                 {/* Referrals & Feedback */}
                 <Route path="/referrals" element={<ReferralProgram />} />
                 <Route path="/invite" element={<ReferralProgram />} />
