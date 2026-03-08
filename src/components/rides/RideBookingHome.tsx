@@ -1173,7 +1173,7 @@ export default function RideBookingHome() {
 
           {/* Draggable bottom sheet */}
           <motion.div
-            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
             style={{
               bottom: 0,
               maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 180px)`,
@@ -1193,16 +1193,15 @@ export default function RideBookingHome() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             {/* Drag handle */}
-            {/* Drag handle — polished pill */}
             <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
-              <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
             </div>
 
-            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
-              <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
+              <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
-              {/* Address inputs with Uber-style connector */}
-              <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
+              {/* Address inputs with ZIVO-style connector */}
+              <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5">
                 <div className="flex items-center gap-3">
                   {/* Pickup/Stops/Dropoff indicator dots + dotted lines */}
                   <div className="flex flex-col items-center py-2">
