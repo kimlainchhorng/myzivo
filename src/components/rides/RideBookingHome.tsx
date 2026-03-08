@@ -1522,64 +1522,80 @@ export default function RideBookingHome() {
               </AnimatePresence>
 
               {/* Saved & Recent list */}
-              <div className="pt-4">
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Saved Places</p>
-              {savedPlaces.length > 0 ? savedPlaces.map((place) => {
-                const Icon = place.icon;
-                return (
-                  <button
-                    key={place.id}
-                    onClick={() => handleSavedPlace(place.address)}
-                    className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
-                      <Icon className="w-4.5 h-4.5 text-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{place.address}</p>
-                    </div>
-                  </button>
-                );
-              }) : (
-                <button
-                  onClick={() => toast.info("Save a location from your profile")}
-                  className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 border-b border-border/8"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20">
-                    <Plus className="w-4 h-4 text-primary/60" />
+              <div className="pt-5 space-y-5">
+                {/* Saved Places */}
+                <div>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Star className="w-3 h-3 text-primary/60" />
+                    Saved Places
+                  </p>
+                  <div className="space-y-1">
+                    {savedPlaces.length > 0 ? savedPlaces.map((place) => {
+                      const Icon = place.icon;
+                      return (
+                        <button
+                          key={place.id}
+                          onClick={() => handleSavedPlace(place.address)}
+                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
+                        >
+                          <div className="w-11 h-11 rounded-2xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                            <Icon className="w-[18px] h-[18px] text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-foreground">{place.name}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{place.address}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors" />
+                        </button>
+                      );
+                    }) : (
+                      <button
+                        onClick={() => toast.info("Save a location from your profile")}
+                        className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 group"
+                      >
+                        <div className="w-11 h-11 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20 group-hover:border-primary/40 transition-colors">
+                          <Plus className="w-4 h-4 text-primary/50 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
+                          <p className="text-xs text-muted-foreground/50">Home, work, gym...</p>
+                        </div>
+                      </button>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
-                    <p className="text-xs text-muted-foreground/60">Home, work, gym...</p>
-                  </div>
-                </button>
-              )}
+                </div>
 
-              {recentDestinations.length > 0 && (
-                <>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-5">Recent</p>
-                  {recentDestinations.map((dest) => (
-                    <button
-                      key={dest.id}
-                      onClick={() => {
-                        setDestinationDisplay(dest.address.split(",")[0]);
-                        setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
-                      }}
-                      className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
-                        <History className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{dest.address}</p>
-                        <p className="text-xs text-muted-foreground">{dest.time}</p>
-                      </div>
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
+                {/* Recent */}
+                {recentDestinations.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Clock className="w-3 h-3 text-muted-foreground/60" />
+                      Recent
+                    </p>
+                    <div className="space-y-1">
+                      {recentDestinations.map((dest) => (
+                        <button
+                          key={dest.id}
+                          onClick={() => {
+                            setDestinationDisplay(dest.address.split(",")[0]);
+                            setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
+                          }}
+                          className="w-full flex items-center gap-3.5 px-3 py-3 text-left rounded-2xl hover:bg-card transition-all duration-200 active:scale-[0.98] group"
+                        >
+                          <div className="w-11 h-11 rounded-2xl bg-muted/15 border border-border/20 flex items-center justify-center shrink-0 group-hover:bg-muted/25 transition-colors">
+                            <History className="w-[18px] h-[18px] text-muted-foreground/70" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-medium text-foreground truncate">{dest.address}</p>
+                            <p className="text-xs text-muted-foreground/60 mt-0.5">{dest.time}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 group-hover:text-muted-foreground/60 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {pickup && destination && (
