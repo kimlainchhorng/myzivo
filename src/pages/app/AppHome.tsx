@@ -232,10 +232,10 @@ const AppHome = () => {
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30" role="main">
       {/* Scrollable content */}
       <div className="overflow-y-auto pb-24 scroll-momentum">
-        {/* ─── UBER-STYLE HEADER ─── */}
+        {/* ─── HEADER ─── */}
         <div className="bg-background relative">
-          {/* Service Tabs — Glassmorphic Chips */}
-          <div className="flex items-center gap-2 px-4 py-3 safe-area-top overflow-hidden">
+          {/* Service Tabs — Pill Chips */}
+          <div className="flex items-center gap-2 px-4 pt-3 pb-2 safe-area-top overflow-hidden">
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
@@ -248,24 +248,17 @@ const AppHome = () => {
                   className={cn(
                     "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
                     isActive
-                      ? "bg-primary/15 text-primary border border-primary/30 shadow-[0_0_12px_hsl(var(--primary)/0.15)] backdrop-blur-xl"
-                      : "bg-muted/40 text-muted-foreground border border-border/40 backdrop-blur-sm hover:bg-muted/60"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTabGlow"
-                      className="absolute inset-0 rounded-full bg-primary/10"
-                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center gap-2">
+                  <span className="relative z-10 flex items-center gap-1.5">
                     {tab.image ? (
-                      <img src={tab.image} alt={tab.label} className="w-6 h-6 object-contain" />
+                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" />
                     ) : tab.icon ? (
-                      <tab.icon className="w-5 h-5" />
+                      <tab.icon className="w-4.5 h-4.5" />
                     ) : null}
-                    {tab.label}
+                    <span className="text-[13px]">{tab.label}</span>
                   </span>
                 </motion.button>
               );
@@ -273,19 +266,21 @@ const AppHome = () => {
           </div>
 
           {/* Where to? Search Bar */}
-          <div className="px-5 pt-5 pb-3">
+          <div className="px-5 pt-4 pb-4">
             <motion.button
               whileTap={{ scale: 0.985 }}
               onClick={() => setIsSearchOpen(true)}
               className="w-full touch-manipulation"
             >
-              <div className="bg-muted/50 rounded-full px-5 py-4 flex items-center gap-3 min-h-[56px] transition-all active:bg-muted/70">
-                <Search className="w-5 h-5 text-foreground" />
-                <span className="text-foreground font-semibold text-base flex-1 text-left">Where to?</span>
-                <div className="h-6 w-px bg-border" />
+              <div className="bg-muted/40 backdrop-blur-sm rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] border border-border/40 shadow-sm transition-all active:bg-muted/60">
+                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
+                  <Search className="w-4.5 h-4.5 text-muted-foreground" />
+                </div>
+                <span className="text-muted-foreground font-medium text-[15px] flex-1 text-left">Where to?</span>
+                <div className="h-7 w-px bg-border/50" />
                 <button
                   onClick={(e) => { e.stopPropagation(); navigate("/scheduled"); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-foreground hover:bg-muted transition-colors touch-manipulation"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-foreground bg-muted/50 hover:bg-muted transition-colors touch-manipulation"
                 >
                   <Calendar className="w-4 h-4" />
                   Later
@@ -294,74 +289,29 @@ const AppHome = () => {
             </motion.button>
           </div>
 
-          {/* Recent / Saved Locations List */}
-          <div className="px-5 pb-3">
-            {(savedLocations || []).slice(0, 3).map((loc) => {
-              const Icon = savedPlaceIconMap[loc.icon] || MapPin;
-              return (
-                <motion.button
-                  key={loc.id}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate("/rides")}
-                  className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 touch-manipulation text-left"
-                >
-                  <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{loc.label}</p>
-                    {loc.address && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{loc.address}</p>
-                    )}
-                  </div>
-                </motion.button>
-              );
-            })}
-            {(!savedLocations || savedLocations.length === 0) && (
-              <>
-                {[
-                  { name: "Set your home address", sub: "Tap to save your home", icon: Home },
-                  { name: "Set your work address", sub: "Tap to save your work", icon: Briefcase },
-                ].map((placeholder) => (
-                  <motion.button
-                    key={placeholder.name}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate("/account/saved-places")}
-                    className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 touch-manipulation text-left"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
-                      <placeholder.icon className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{placeholder.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{placeholder.sub}</p>
-                    </div>
-                  </motion.button>
-                ))}
-              </>
-            )}
-          </div>
-
           {/* Suggestions Section */}
-          <div className="pt-4 pb-6">
-            <div className="flex items-center justify-between mb-4 px-5">
-              <h2 className="text-lg font-bold text-foreground">Suggestions</h2>
-              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation">
-                <ArrowRight className="w-5 h-5 text-foreground" />
+          <div className="pb-5">
+            <div className="flex items-center justify-between mb-3 px-5">
+              <h2 className="text-base font-bold text-foreground">Suggestions</h2>
+              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+                <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="flex gap-4 overflow-x-auto overflow-y-visible scrollbar-hide pt-3 pb-2 pl-5 pr-5">
-              {suggestions.map((s) => (
+            <div className="flex gap-5 overflow-x-auto overflow-y-visible scrollbar-hide pt-3 pb-2 pl-5 pr-5">
+              {suggestions.map((s, idx) => (
                 <motion.button
                   key={s.label}
-                  whileTap={{ scale: 0.94 }}
+                  whileTap={{ scale: 0.92 }}
                   onClick={() => navigate(s.href)}
-                  className="shrink-0 flex flex-col items-center gap-2.5 w-[80px] touch-manipulation relative group"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.06 }}
+                  className="shrink-0 flex flex-col items-center gap-2 w-[72px] touch-manipulation relative group"
                 >
                   {/* Badge */}
                   {s.badge && (
                     <div className={cn(
-                      "absolute -top-2 -right-1 z-10 text-[9px] font-bold px-2 py-[3px] rounded-full shadow-sm",
+                      "absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md",
                       s.badgeVariant === "discount"
                         ? "bg-primary text-primary-foreground"
                         : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
@@ -370,18 +320,21 @@ const AppHome = () => {
                     </div>
                   )}
                   {/* Icon container */}
-                  <div className="w-[64px] h-[64px] rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
+                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center group-active:scale-95 group-hover:shadow-md group-hover:border-primary/20 transition-all duration-200">
                     {s.image ? (
-                      <img src={s.image} alt={s.label} className="w-9 h-9 object-contain" />
+                      <img src={s.image} alt={s.label} className="w-8 h-8 object-contain" />
                     ) : s.icon ? (
-                      <s.icon className="w-7 h-7 text-foreground" />
+                      <s.icon className="w-6 h-6 text-foreground" />
                     ) : null}
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight">{s.label}</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
                 </motion.button>
               ))}
             </div>
           </div>
+
+          {/* Subtle section divider */}
+          <div className="h-2 bg-muted/30" />
         </div>
 
         {/* ─── MAIN CONTENT ─── */}
