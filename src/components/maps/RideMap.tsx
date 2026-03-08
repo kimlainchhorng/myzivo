@@ -284,13 +284,13 @@ function createDropoffPinSvg(): string {
           <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
         </filter>
         <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#111827"/>
-          <stop offset="100%" stop-color="#1f2937"/>
+          <stop offset="0%" stop-color="#059669"/>
+          <stop offset="100%" stop-color="#10b981"/>
         </linearGradient>
       </defs>
       <path d="M20 51 C20 51 3 32 3 19 A17 17 0 1 1 37 19 C37 32 20 51 20 51Z" fill="url(#g)" filter="url(#s)"/>
       <circle cx="20" cy="19" r="8" fill="#fff"/>
-      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#111827">Z</text>
+      <text x="20" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="14" fill="#059669">Z</text>
     </svg>
   `)}`;
 }
