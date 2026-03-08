@@ -965,7 +965,7 @@ export default function RideBookingHome() {
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-background">
+    <div className="relative flex-1 h-full overflow-hidden bg-background">
 
       {/* ═══════ 1. HEADER — always visible ═══════ */}
       <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
