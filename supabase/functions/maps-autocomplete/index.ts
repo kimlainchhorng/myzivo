@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       .map((p: any) => {
         const description = p.description ?? "";
         const mainText = p.structured_formatting?.main_text ?? description.split(",")[0] ?? "";
-        const score = terminalOrAirlineRank(`${mainText} ${description}`);
+        const score = airportContextRank(`${mainText} ${description}`);
 
         return {
           description,
