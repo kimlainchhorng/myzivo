@@ -72,7 +72,7 @@ const recentDestinations = [
 
 const vehicleOptions = [
   // Popular
-  { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 4, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
   { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 0.90, basePrice: 2.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
   { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.20, basePrice: 5.00, capacity: 4, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
   { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 1.70, basePrice: 4.00, capacity: 4, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },

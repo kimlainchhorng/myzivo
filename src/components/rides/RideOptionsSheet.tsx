@@ -23,7 +23,7 @@ const rideOptionsSeed: RideOption[] = [
     eta: "3:20 pm",
     description: "Affordable everyday rides",
     price: 24.15,
-    seats: 4,
+    seats: 3,
     image: "/vehicles/economy-car-v2.png",
   },
   {
