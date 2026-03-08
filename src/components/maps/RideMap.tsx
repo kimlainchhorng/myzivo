@@ -254,6 +254,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, routePolyline, dr
       userLocation={userLocation}
       className={className}
       onMapReady={handleMapReady}
+      onCenterChanged={onCenterChanged}
     />
   );
 }
