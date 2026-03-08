@@ -968,20 +968,20 @@ export default function RideBookingHome() {
     <div className="relative h-[100dvh] overflow-hidden bg-background">
 
       {/* ═══════ 1. HEADER — always visible ═══════ */}
-      <div className="relative z-20 flex items-center h-14 px-4 bg-background border-b border-border/20">
+      <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
         <button
           onClick={handleBack}
-          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="flex-1 text-center font-black text-lg tracking-tight">
           <span className="text-primary">Zivo</span> Ride
         </h1>
         <button
           onClick={() => navigate("/notifications")}
-          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation"
+          className="w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
           aria-label="Notifications"
         >
           <Bell className="w-5 h-5 text-muted-foreground" />
@@ -990,16 +990,16 @@ export default function RideBookingHome() {
 
       {/* ═══════ 2. RIDE TABS — only on home step ═══════ */}
       {viewStep === "home" && (
-        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-sm border-b border-border/10 overflow-x-auto scrollbar-none">
+        <div className="relative z-20 flex gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-xl border-b border-border/5 overflow-x-auto scrollbar-none">
           {rideTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[40px]",
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-95 touch-manipulation min-h-[42px]",
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground border border-border/10"
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -1045,27 +1045,36 @@ export default function RideBookingHome() {
       {/* ═══════ 4a. HOME bottom sheet ═══════ */}
       {viewStep === "home" && (
         <div
-          className="absolute left-0 right-0 z-30 rounded-t-[28px] bg-background shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)]"
+          className="absolute left-0 right-0 z-30 rounded-t-[32px] bg-background shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)]"
           style={{ bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_BOTTOM})` }}
         >
-          <div className="px-5 pt-5 pb-3">
-            <h2 className="text-xl font-black text-foreground">{greeting}, {userName}</h2>
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          <div className="px-5 pt-2 pb-4">
+            <h2 className="text-xl font-black text-foreground tracking-tight">{greeting}, {userName}</h2>
+            
+            {/* Where to? search bar */}
             <button
               onClick={() => setViewStep("search")}
-              className="w-full mt-3 flex items-center gap-3 bg-muted/30 border border-border/30 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40 active:scale-[0.98]"
+              className="w-full mt-4 flex items-center gap-3 bg-muted/20 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/30 hover:border-primary/20 active:scale-[0.98] group"
             >
-              <MapPin className="w-5 h-5 text-foreground" />
-              <span className="flex-1 text-left text-sm font-semibold text-foreground">Where to?</span>
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card border border-border/30">
-                <Clock className="w-3.5 h-3.5 text-foreground" />
-                <span className="text-xs font-semibold text-foreground">Now</span>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                <MapPin className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <span className="flex-1 text-left text-sm font-semibold text-muted-foreground">Where to?</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/20">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-bold text-foreground">Now</span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
               </div>
             </button>
 
             {/* Saved places */}
             {savedPlaces.length > 0 ? (
-              <div className="mt-3 space-y-0">
+              <div className="mt-4 space-y-0">
                 {savedPlaces.map((place, i) => {
                   const Icon = place.icon;
                   return (
@@ -1073,18 +1082,18 @@ export default function RideBookingHome() {
                       key={place.id}
                       onClick={() => handleSavedPlace(place.address)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
-                        i < savedPlaces.length - 1 && "border-b border-border/15"
+                        "w-full flex items-center gap-3 px-1 py-3.5 text-left transition-all duration-200 hover:bg-muted/10 active:scale-[0.98]",
+                        i < savedPlaces.length - 1 && "border-b border-border/10"
                       )}
                     >
-                      <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-foreground" />
+                      <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center shrink-0">
+                        <Icon className="w-4.5 h-4.5 text-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground">{place.name}</p>
-                        <p className="text-xs text-muted-foreground">{place.address}</p>
+                        <p className="text-xs text-muted-foreground truncate">{place.address}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                     </button>
                   );
                 })}
@@ -1092,8 +1101,8 @@ export default function RideBookingHome() {
             ) : null}
 
             {/* Get anywhere service grid */}
-            <div className="mt-4 border-t border-border/15 pt-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Get anywhere</p>
+            <div className="mt-5 border-t border-border/10 pt-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Get anywhere</p>
               <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
                 {homeServices.map((svc) => {
                   const Icon = svc.icon;
@@ -1101,10 +1110,10 @@ export default function RideBookingHome() {
                     <button
                       key={svc.id}
                       onClick={() => toast.info("Coming soon!")}
-                      className="flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-xl bg-muted/30 border border-border/20 shrink-0 hover:bg-muted/50 active:scale-95 transition-all"
+                      className="flex flex-col items-center justify-center gap-2 w-[64px] h-[64px] rounded-2xl bg-muted/15 border border-border/15 shrink-0 hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200 group"
                     >
-                      <Icon className="w-5 h-5 text-foreground" />
-                      <span className="text-[10px] font-semibold text-foreground">{svc.label}</span>
+                      <Icon className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] font-bold text-foreground">{svc.label}</span>
                     </button>
                   );
                 })}
@@ -1164,7 +1173,7 @@ export default function RideBookingHome() {
 
           {/* Draggable bottom sheet */}
           <motion.div
-            className="absolute left-0 right-0 z-40 bg-background rounded-t-[28px] shadow-[0_-8px_30px_hsl(var(--foreground)/0.08)] flex flex-col"
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
             style={{
               bottom: 0,
               maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 180px)`,
@@ -1184,31 +1193,33 @@ export default function RideBookingHome() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             {/* Drag handle */}
-            {/* Drag handle — polished pill */}
             <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
-              <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
             </div>
 
-            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
-              <h2 className="text-lg font-black text-foreground mb-3">Where to?</h2>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20" style={{ maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - 140px)` }}>
+              <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
-              {/* Address inputs with Uber-style connector */}
-              <div className="rounded-2xl bg-muted/15 border border-border/30 p-3">
+              {/* Address inputs with ZIVO-style connector */}
+              <div className="rounded-2xl bg-muted/10 border border-border/20 p-3.5">
                 <div className="flex items-center gap-3">
                   {/* Pickup/Stops/Dropoff indicator dots + dotted lines */}
                   <div className="flex flex-col items-center py-2">
-                    {/* Pickup dot */}
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    {/* Pickup dot with glow */}
+                    <div className="relative">
+                      <div className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
+                      <div className="relative w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                    </div>
                     {/* Lines + dots for each stop */}
                     {stops.map((stop) => (
                       <div key={stop.id} className="flex flex-col items-center">
-                        <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/30 my-1" />
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                        <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />
                       </div>
                     ))}
                     {/* Line to destination */}
-                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/30 my-1" />
-                    <div className="w-2.5 h-2.5 rounded-sm bg-foreground" />
+                    <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
+                    <div className="w-3 h-3 rounded-sm bg-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
@@ -1247,12 +1258,12 @@ export default function RideBookingHome() {
               </div>
 
               {/* Action buttons row */}
-              <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none pb-1">
+              <div className="flex gap-2.5 mt-4 overflow-x-auto scrollbar-none pb-1">
                 <button
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/30 border border-border/30 text-xs font-semibold text-foreground whitespace-nowrap hover:bg-muted/50 active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/15 border border-border/20 text-xs font-bold text-foreground whitespace-nowrap hover:bg-primary/10 hover:border-primary/20 active:scale-95 transition-all duration-200",
                     stops.length >= MAX_STOPS && "opacity-40 pointer-events-none"
                   )}
                 >
@@ -1262,10 +1273,10 @@ export default function RideBookingHome() {
                 <button
                   onClick={() => { setShowSchedule(!showSchedule); setShowPickupOther(false); }}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showSchedule
-                      ? "bg-primary/10 border-primary/30 text-primary"
-                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                      ? "bg-primary/15 border-primary/30 text-primary"
+                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
                   )}
                 >
                   <CalendarClock className="w-3.5 h-3.5" />
@@ -1274,10 +1285,10 @@ export default function RideBookingHome() {
                 <button
                   onClick={() => { setShowPickupOther(!showPickupOther); setShowSchedule(false); }}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold whitespace-nowrap active:scale-95 transition-all",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold whitespace-nowrap active:scale-95 transition-all duration-200",
                     showPickupOther
-                      ? "bg-primary/10 border-primary/30 text-primary"
-                      : "bg-muted/30 border-border/30 text-foreground hover:bg-muted/50"
+                      ? "bg-primary/15 border-primary/30 text-primary"
+                      : "bg-muted/15 border-border/20 text-foreground hover:bg-primary/10 hover:border-primary/20"
                   )}
                 >
                   <Users className="w-3.5 h-3.5" />
@@ -1440,32 +1451,32 @@ export default function RideBookingHome() {
             </div>
 
             {/* Saved & Recent list */}
-            <div className="pt-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Saved Places</p>
+            <div className="pt-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Saved Places</p>
               {savedPlaces.length > 0 ? savedPlaces.map((place) => {
                 const Icon = place.icon;
                 return (
                   <button
                     key={place.id}
                     onClick={() => handleSavedPlace(place.address)}
-                    className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                    className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
                   >
-                    <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-foreground" />
+                    <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-4.5 h-4.5 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground">{place.address}</p>
+                      <p className="text-xs text-muted-foreground truncate">{place.address}</p>
                     </div>
                   </button>
                 );
               }) : (
                 <button
                   onClick={() => toast.info("Save a location from your profile")}
-                  className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                  className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 border-b border-border/8"
                 >
-                  <div className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center shrink-0 border border-dashed border-border/40">
-                    <Plus className="w-4 h-4 text-muted-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 border border-dashed border-primary/20">
+                    <Plus className="w-4 h-4 text-primary/60" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-muted-foreground">Add a saved place</p>
@@ -1476,7 +1487,7 @@ export default function RideBookingHome() {
 
               {recentDestinations.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Recent</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-5">Recent</p>
                   {recentDestinations.map((dest) => (
                     <button
                       key={dest.id}
@@ -1484,9 +1495,9 @@ export default function RideBookingHome() {
                         setDestinationDisplay(dest.address.split(",")[0]);
                         setDestination({ address: dest.address, lat: 40.758, lng: -73.9855 });
                       }}
-                      className="w-full flex items-center gap-3 px-1 py-3 text-left hover:bg-muted/10 transition-colors border-b border-border/10"
+                      className="w-full flex items-center gap-3 px-1 py-3.5 text-left hover:bg-muted/10 transition-all duration-200 active:scale-[0.98] border-b border-border/8"
                     >
-                      <div className="w-9 h-9 rounded-full bg-muted/30 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center shrink-0">
                         <History className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
