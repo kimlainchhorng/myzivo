@@ -46,6 +46,7 @@ import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
 import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
 import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
+import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 
 // ─── Saved Places Icon Map ───
 const savedPlaceIconMap: Record<string, LucideIcon> = {
