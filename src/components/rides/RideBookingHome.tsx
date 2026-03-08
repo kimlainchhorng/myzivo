@@ -704,6 +704,8 @@ export default function RideBookingHome() {
   }, []);
 
   const handleDestinationSelect = useCallback((place: PlaceData) => {
+    // Lock pickup from reverse-geocode overwriting
+    pickupManuallySet.current = true;
     // Stop pending reverse-geocode updates so pickup doesn't get overwritten after destination select
     if (reverseGeocodeTimerRef.current) {
       clearTimeout(reverseGeocodeTimerRef.current);
