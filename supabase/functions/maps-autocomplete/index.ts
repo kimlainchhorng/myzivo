@@ -216,28 +216,44 @@ Deno.serve(async (req) => {
       return isMainAirport && !isAirlineDesk;
     }) ?? baseSuggestions.find((item) => /\([A-Z]{3}\)/.test(item.description));
 
-    const syntheticZones = isAirportSearch && !hasRealZoneSuggestion && primaryAirport
+    const syntheticZones = isAirportSearch && primaryAirport
       ? [
-          {
-            description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
-            main_text: "✈ Pickup — Arrivals Zone",
-            place_id: `${primaryAirport.place_id}::pickup`,
-            canonical_place_id: primaryAirport.place_id,
-            score: 100,
-          },
-          {
-            description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
-            main_text: "✈ Drop-off — Departures Zone",
-            place_id: `${primaryAirport.place_id}::dropoff`,
-            canonical_place_id: primaryAirport.place_id,
-            score: 99,
-          },
+          ...(!hasRealZoneSuggestion ? [
+            {
+              description: `${primaryAirport.description} — Pickup (Arrivals Zone)`,
+              main_text: "✈ Pickup — Arrivals Zone",
+              place_id: `${primaryAirport.place_id}::pickup`,
+              canonical_place_id: primaryAirport.place_id,
+              score: 100,
+            },
+            {
+              description: `${primaryAirport.description} — Drop-off (Departures Zone)`,
+              main_text: "✈ Drop-off — Departures Zone",
+              place_id: `${primaryAirport.place_id}::dropoff`,
+              canonical_place_id: primaryAirport.place_id,
+              score: 99,
+            },
+          ] : []),
           {
             description: `${primaryAirport.description} — Terminal`,
             main_text: "✈ Terminal",
             place_id: `${primaryAirport.place_id}::terminal`,
             canonical_place_id: primaryAirport.place_id,
             score: 98,
+          },
+          {
+            description: `${primaryAirport.description} — Rideshare / Taxi Pickup`,
+            main_text: "✈ Rideshare / Taxi Pickup",
+            place_id: `${primaryAirport.place_id}::rideshare`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 97,
+          },
+          {
+            description: `${primaryAirport.description} — Ground Transportation`,
+            main_text: "✈ Ground Transportation",
+            place_id: `${primaryAirport.place_id}::ground`,
+            canonical_place_id: primaryAirport.place_id,
+            score: 96,
           },
         ]
       : [];
