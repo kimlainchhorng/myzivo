@@ -1104,6 +1104,7 @@ export default function RideBookingHome() {
                 Search destination
               </Button>
             </div>
+            </div>
           </div>
         </>
       )}
