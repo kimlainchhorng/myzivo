@@ -829,12 +829,16 @@ export default function RideBookingHome() {
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "pending_payment",
-        customer_name: user.user_metadata?.full_name || "",
-        customer_phone: user.user_metadata?.phone || "",
+        status: scheduledDate ? "scheduled" : "pending_payment",
+        customer_name: otherName.trim() || user.user_metadata?.full_name || "",
+        customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
         car_seat_type: currentVehicle.carSeat ? "standard" : null,
-        ...(stopsData.length > 0 ? { notes: `Stops: ${stopsData.map(s => s.address).join(" → ")}` } : {}),
+        notes: [
+          stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
+          scheduledDate ? `Scheduled: ${scheduledDate.toISOString()}` : "",
+          otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
+        ].filter(Boolean).join(" | ") || null,
       }).select("id").single();
 
       if (rideError) throw rideError;
