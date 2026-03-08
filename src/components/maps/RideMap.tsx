@@ -76,6 +76,7 @@ interface RideMapProps {
   routePolyline?: string | { lat: number; lng: number }[] | null;
   driverCoords?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  showUserLocationDot?: boolean;
   className?: string;
   onMapReady?: (map: google.maps.Map) => void;
   /** Fires with center lat/lng when the map stops moving (idle event) */
