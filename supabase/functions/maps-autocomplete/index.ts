@@ -118,19 +118,11 @@ Deno.serve(async (req) => {
       if (!/\b(ground\s*transport)\b/i.test(base)) queryInputs.push(`${base} ground transportation`);
       if (!/\b(baggage|claim)\b/i.test(base)) queryInputs.push(`${base} baggage claim`);
       // Airlines
-      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|allegiant|hawaiian|sun\s*country|airline)\b/i.test(base);
+      const hasAirline = /\b(american|delta|united|southwest|jetblue|spirit|frontier|alaska|allegiant|hawaiian|sun\s*country|breeze|avelo|airline)\b/i.test(base);
       if (!hasAirline) {
-        queryInputs.push(`${base} American Airlines`);
-        queryInputs.push(`${base} Delta`);
-        queryInputs.push(`${base} United Airlines`);
-        queryInputs.push(`${base} Southwest Airlines`);
-        queryInputs.push(`${base} JetBlue`);
-        queryInputs.push(`${base} Spirit Airlines`);
-        queryInputs.push(`${base} Frontier Airlines`);
-        queryInputs.push(`${base} Alaska Airlines`);
-        queryInputs.push(`${base} Allegiant Air`);
-        queryInputs.push(`${base} Hawaiian Airlines`);
-        queryInputs.push(`${base} Sun Country Airlines`);
+        for (const airline of US_AIRLINES) {
+          queryInputs.push(`${base} ${airline}`);
+        }
       }
       // Deduplicate
       const unique = Array.from(new Set(queryInputs.filter(Boolean)));
