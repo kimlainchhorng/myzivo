@@ -1005,14 +1005,17 @@ export default function RideBookingHome() {
               routePolyline={null}
               onCenterChanged={handleMapCenterChanged}
             >
-              {/* Center destination pin */}
+              {/* Center destination pin — ZIVO branded */}
               <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                 <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center shadow-lg">
-                    <div className="w-3 h-3 rounded-sm bg-background" />
+                  <div className="relative">
+                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse" style={{ animationDuration: "2s" }} />
+                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                    </div>
                   </div>
-                  <div className="w-2 h-5 bg-foreground -mt-0.5" />
-                  <div className="w-4 h-1.5 rounded-full bg-foreground/20 mt-0.5 blur-[1px]" />
+                  <div className="w-1.5 h-4 bg-primary -mt-0.5 rounded-b-full" />
+                  <div className="w-4 h-1.5 rounded-full bg-primary/20 mt-0.5 blur-[1px]" />
                 </div>
               </div>
             </MapSection>
@@ -1022,7 +1025,7 @@ export default function RideBookingHome() {
           <div className="absolute top-4 left-4 z-30" style={{ top: `calc(env(safe-area-inset-top, 0px) + 12px)` }}>
             <button
               onClick={handleBack}
-              className="w-11 h-11 rounded-full bg-background shadow-lg shadow-foreground/10 flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
+              className="w-11 h-11 rounded-full bg-background shadow-lg shadow-foreground/8 flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation border border-border/20"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -1053,17 +1056,17 @@ export default function RideBookingHome() {
                 onClick={() => setViewStep("search")}
                 className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
               >
-                <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-background" />
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
                 </div>
                 <span className="flex-1 text-left text-sm font-medium text-muted-foreground">Where to?</span>
-                <Navigation className="w-4 h-4 text-muted-foreground/50" />
+                <Navigation className="w-4 h-4 text-primary/60" />
               </button>
 
               {/* Search destination button */}
               <Button
                 onClick={() => setViewStep("search")}
-                className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] transition-all duration-200"
+                className="w-full h-13 mt-3 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/20"
                 size="lg"
               >
                 Search destination
@@ -1201,7 +1204,7 @@ export default function RideBookingHome() {
                     ))}
                     {/* Line to destination */}
                     <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                    <div className="w-3 h-3 rounded-sm bg-foreground" />
+                    <div className="w-3 h-3 rounded-sm bg-primary" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
