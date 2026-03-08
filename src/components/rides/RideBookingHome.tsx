@@ -449,10 +449,11 @@ export default function RideBookingHome() {
 
   const [viewStep, setViewStep] = useState<ViewStep>("home");
   const [activeTab, setActiveTab] = useState<RideTab>("book");
-  const [pickup, setPickup] = useState<PlaceData | null>(null);
+   const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
   const [pickupDisplay, setPickupDisplay] = useState("");
   const [destinationDisplay, setDestinationDisplay] = useState("");
+  const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
