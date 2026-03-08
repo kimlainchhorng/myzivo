@@ -820,30 +820,32 @@ export default function RideBookingHome() {
             </button>
 
             {/* Saved places */}
-            <div className="mt-3 space-y-0">
-              {savedPlaces.map((place, i) => {
-                const Icon = place.icon;
-                return (
-                  <button
-                    key={place.id}
-                    onClick={() => handleSavedPlace(place.address)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
-                      i < savedPlaces.length - 1 && "border-b border-border/15"
-                    )}
-                  >
-                    <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground">{place.address}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                );
-              })}
-            </div>
+            {savedPlaces.length > 0 ? (
+              <div className="mt-3 space-y-0">
+                {savedPlaces.map((place, i) => {
+                  const Icon = place.icon;
+                  return (
+                    <button
+                      key={place.id}
+                      onClick={() => handleSavedPlace(place.address)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/10",
+                        i < savedPlaces.length - 1 && "border-b border-border/15"
+                      )}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{place.name}</p>
+                        <p className="text-xs text-muted-foreground">{place.address}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
 
             {/* Get anywhere service grid */}
             <div className="mt-4 border-t border-border/15 pt-3">
