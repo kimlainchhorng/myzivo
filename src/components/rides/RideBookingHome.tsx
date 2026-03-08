@@ -1073,19 +1073,17 @@ export default function RideBookingHome() {
               <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
             </div>
 
-            <div className="px-5 pb-5">
+            <div className="px-5 pt-1 pb-24">
               {/* Title */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-3">
                 <h2 className="text-lg font-black text-foreground tracking-tight">Set your destination</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Drag map to move pin</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Drag map to move pin</p>
               </div>
-
-              <div className="h-px bg-border/15 mb-4" />
 
               {/* Destination input */}
               <button
                 onClick={() => setViewStep("search")}
-                className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3.5 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
+                className="w-full flex items-center gap-3 bg-muted/15 border border-border/20 rounded-2xl px-4 py-3 transition-all duration-200 hover:bg-muted/25 hover:border-primary/20 active:scale-[0.98] group"
               >
                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
@@ -1096,7 +1094,7 @@ export default function RideBookingHome() {
                 <Navigation className="w-4 h-4 text-primary/60 shrink-0" />
               </button>
 
-              {/* Choose Ride button — use pin location as destination */}
+              {/* Choose Ride button */}
               <Button
                 onClick={() => {
                   const center = mapCenterRef.current;
