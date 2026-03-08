@@ -1220,52 +1220,50 @@ export default function RideBookingHome() {
             </MapSection>
           </div>
 
-          {/* Draggable bottom sheet — 3 snap states: peek, half (default), full */}
-          {(() => {
-            const navH = BOTTOM_NAV_HEIGHT;
-            // Sheet top position from viewport top for each state
-            const fullTop = HEADER_HEIGHT + 10; // near full screen
-            const halfTop = viewportHeight * 0.42; // default ~half
-            const peekTop = viewportHeight - navH - 90; // just handle + title visible
+          {/* Draggable bottom sheet */}
+          <motion.div
+            className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
+            style={{
+              top: HEADER_HEIGHT,
+              bottom: 0,
+            }}
+            initial={false}
+            animate={{
+              y: searchSheetY < -10
+                ? 10 // full — just below header
+                : searchSheetY > 10
+                  ? viewportHeight - HEADER_HEIGHT - BOTTOM_NAV_HEIGHT - 90 // peek — just handle visible above nav
+                  : Math.round((viewportHeight - HEADER_HEIGHT) * 0.38) // half — default
+            }}
+            drag="y"
+            dragConstraints={{
+              top: 10,
+              bottom: viewportHeight - HEADER_HEIGHT - BOTTOM_NAV_HEIGHT - 90,
+            }}
+            dragElastic={0.1}
+            onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+              const fullY = 10;
+              const halfY = Math.round((viewportHeight - HEADER_HEIGHT) * 0.38);
+              const peekY = viewportHeight - HEADER_HEIGHT - BOTTOM_NAV_HEIGHT - 90;
+              const projected = (searchSheetY < -10 ? fullY : searchSheetY > 10 ? peekY : halfY) + info.offset.y;
+              const mid1 = (fullY + halfY) / 2;
+              const mid2 = (halfY + peekY) / 2;
+              if (projected < mid1) {
+                setSearchSheetY(-20); // full
+              } else if (projected > mid2) {
+                setSearchSheetY(20); // peek
+              } else {
+                setSearchSheetY(0); // half
+              }
+            }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+            </div>
 
-            const snapPositions = { full: fullTop, half: halfTop, peek: peekTop };
-            const currentTop = snapPositions[
-              searchSheetY < -10 ? "full" : searchSheetY > 10 ? "peek" : "half"
-            ];
-
-            return (
-              <motion.div
-                className="absolute left-0 right-0 z-40 bg-background rounded-t-[32px] shadow-[0_-12px_40px_hsl(var(--foreground)/0.1)] flex flex-col"
-                style={{
-                  top: 0,
-                  bottom: 0,
-                }}
-                initial={{ y: halfTop }}
-                animate={{ y: currentTop }}
-                drag="y"
-                dragConstraints={{ top: fullTop, bottom: peekTop }}
-                dragElastic={0.1}
-                onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-                  const currentY = currentTop + info.offset.y;
-                  // Find closest snap
-                  const mid1 = (fullTop + halfTop) / 2;
-                  const mid2 = (halfTop + peekTop) / 2;
-                  if (currentY < mid1) {
-                    setSearchSheetY(-20); // full
-                  } else if (currentY > mid2) {
-                    setSearchSheetY(20); // peek
-                  } else {
-                    setSearchSheetY(0); // half
-                  }
-                }}
-                transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              >
-                {/* Drag handle */}
-                <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing">
-                  <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-                </div>
-
-                <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-20">
               <h2 className="text-lg font-black text-foreground mb-4 tracking-tight">Where to?</h2>
 
               {/* Address inputs with ZIVO-style connector */}
