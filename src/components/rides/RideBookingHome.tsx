@@ -681,7 +681,10 @@ export default function RideBookingHome() {
     fetchRoute(pickup, destination);
   };
 
-  /* ─── Request Ride — Supabase Insert ─── */
+  /* ─── Request Ride — Create PaymentIntent + Confirm ─── */
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<"idle" | "authorizing" | "authorized" | "failed">("idle");
+
   const handleRequestRide = async () => {
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
@@ -689,8 +692,10 @@ export default function RideBookingHome() {
     }
 
     setIsSubmitting(true);
+    setPaymentStep("authorizing");
     try {
-      const { data, error } = await supabase.from("ride_requests").insert({
+      // 1. Create ride request in DB
+      const { data: rideData, error: rideError } = await supabase.from("ride_requests").insert({
         user_id: user.id,
         pickup_address: pickup.address,
         pickup_lat: pickup.lat,
@@ -702,23 +707,50 @@ export default function RideBookingHome() {
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "searching",
+        status: "pending_payment",
         customer_name: user.user_metadata?.full_name || "",
         customer_phone: user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
         car_seat_type: currentVehicle.carSeat ? "standard" : null,
       }).select("id").single();
 
-      if (error) throw error;
+      if (rideError) throw rideError;
+      setRideRequestId(rideData.id);
 
-      setRideRequestId(data.id);
-      setViewStep("searching");
+      // 2. Create Stripe PaymentIntent (pre-authorization)
+      const amountCents = Math.round(currentPrice * 100);
+      const { data: piData, error: piError } = await supabase.functions.invoke("create-ride-payment-intent", {
+        body: {
+          ride_request_id: rideData.id,
+          amount_cents: amountCents,
+          ride_type: selectedVehicle,
+        },
+      });
+
+      if (piError || !piData?.ok) {
+        throw new Error(piData?.error || "Failed to create payment");
+      }
+
+      setClientSecret(piData.client_secret);
+      setPaymentStep("authorized");
     } catch (err: unknown) {
-      console.error("[RideBooking] Request error:", err);
-      toast.error("Failed to request ride. Please try again.");
+      console.error("[RideBooking] Payment error:", err);
+      toast.error("Payment failed. Please try again.");
+      setPaymentStep("failed");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** After Stripe confirms payment, proceed to searching */
+  const handlePaymentSuccess = async () => {
+    if (rideRequestId) {
+      await supabase.from("ride_requests").update({ status: "searching" }).eq("id", rideRequestId);
+    }
+    setPaymentStep("idle");
+    setClientSecret(null);
+    setViewStep("searching");
+    toast.success("Payment authorized! Finding your driver...");
   };
 
   /* ─── Reset state ─── */
