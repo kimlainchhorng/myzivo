@@ -641,6 +641,7 @@ function NativeGoogleMap({ pickupCoords, dropoffCoords, routePolyline, driverCoo
   useEffect(() => () => { clearAmbientCars(); }, [clearAmbientCars]);
 
   return <div ref={mapContainerRef} className={`w-full h-full min-h-[200px] ${className || ""}`} />;
+}
 
 function MapFallback({
   pickupCoords,
