@@ -1204,7 +1204,7 @@ export default function RideBookingHome() {
                     ))}
                     {/* Line to destination */}
                     <div className="w-px flex-1 min-h-[28px] border-l-[2px] border-dashed border-muted-foreground/25 my-1" />
-                    <div className="w-3 h-3 rounded-sm bg-foreground" />
+                    <div className="w-3 h-3 rounded-sm bg-primary" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <AddressAutocomplete
