@@ -1005,14 +1005,17 @@ export default function RideBookingHome() {
               routePolyline={null}
               onCenterChanged={handleMapCenterChanged}
             >
-              {/* Center destination pin */}
+              {/* Center destination pin — ZIVO branded */}
               <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ marginBottom: 80 }}>
                 <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center shadow-lg">
-                    <div className="w-3 h-3 rounded-sm bg-background" />
+                  <div className="relative">
+                    <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse" style={{ animationDuration: "2s" }} />
+                    <div className="relative w-10 h-10 rounded-full bg-primary border-[3px] border-background shadow-xl flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                    </div>
                   </div>
-                  <div className="w-2 h-5 bg-foreground -mt-0.5" />
-                  <div className="w-4 h-1.5 rounded-full bg-foreground/20 mt-0.5 blur-[1px]" />
+                  <div className="w-1.5 h-4 bg-primary -mt-0.5 rounded-b-full" />
+                  <div className="w-4 h-1.5 rounded-full bg-primary/20 mt-0.5 blur-[1px]" />
                 </div>
               </div>
             </MapSection>
