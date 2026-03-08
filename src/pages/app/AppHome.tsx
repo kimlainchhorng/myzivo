@@ -241,7 +241,11 @@ const AppHome = () => {
                       : "border-transparent text-muted-foreground"
                   )}
                 >
-                  <tab.icon className="w-5 h-5" />
+                  {tab.image ? (
+                    <img src={tab.image} alt={tab.label} className="w-6 h-6 object-contain" />
+                  ) : tab.icon ? (
+                    <tab.icon className="w-5 h-5" />
+                  ) : null}
                   {tab.label}
                 </button>
               );
